@@ -2044,6 +2044,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
+   /** @summary For pad painter equivalent to forEachPainterInPad */
+   TPadPainter.prototype.forEachPainter = TPadPainter.prototype.forEachPainterInPad;
+
    /** @summary register for pad events receiver
      * @desc in pad painter, while pad may be drawn without canvas
      * @private */
@@ -2126,7 +2129,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!rect.changed) return false;
 
          if (!JSROOT.BatchMode)
-            btns = this.svg_layer("btns_layer");
+            btns = this.svg_layer("btns_layer", this.this_pad_name);
 
       } else {
 
@@ -2295,7 +2298,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          svg_pad = this.svg_pad();
          svg_rect = svg_pad.select(".root_pad_border");
          if (!JSROOT.BatchMode)
-            btns = this.svg_layer("btns_layer");
+            btns = this.svg_layer("btns_layer", this.this_pad_name);
       } else {
          svg_pad = svg_can.select(".primitives_layer")
              .append("svg:svg") // here was g before, svg used to blend all drawin outside
@@ -2423,6 +2426,23 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       }
    }
+
+   /** @summary try to find object by name in list of pad primitives
+     * @desc used to find title drawing
+     * @private */
+   TPadPainter.prototype.findInPrimitives = function(objname) {
+      let arr = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.arr : null;
+
+      if (arr && arr.length && objname)
+         for (let n = 0; n < arr.length; ++n) {
+            let prim = arr[n];
+            if (prim.fName === objname) return prim;
+         }
+
+      return null;
+   }
+
+
 
    TPadPainter.prototype.RemovePrimitive = function(obj) {
       if (!this.pad || !this.pad.fPrimitives) return;
@@ -2835,8 +2855,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let padpainter = new TPadPainter(this.getDom(), subpad, false);
          padpainter.DecodeOptions(snap.fOption);
-         padpainter.setPadName(this.this_pad_name); // pad painter will be registered in the canvas painters list
-         padpainter.addToPadPrimitives();
+         padpainter.addToPadPrimitives(this.this_pad_name);
          padpainter.snapid = snap.fObjectID;
 
          padpainter.createPadSvg();
@@ -3162,7 +3181,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    TPadPainter.prototype.ItemContextMenu = function(name) {
-       let rrr = this.svg_pad().node().getBoundingClientRect();
+       let rrr = this.svg_pad(this.this_pad_name).node().getBoundingClientRect();
        let evnt = { clientX: rrr.left+10, clientY: rrr.top + 10 };
 
        // use timeout to avoid conflict with mouse click and automatic menu close
@@ -3217,7 +3236,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let use_frame = (full_canvas === "frame");
 
-      let elem = use_frame ? this.svg_frame() : (full_canvas ? this.svg_canvas() : this.svg_pad());
+      let elem = use_frame ? this.svg_frame() : (full_canvas ? this.svg_canvas() : this.svg_pad(this.this_pad_name));
 
       if (elem.empty()) return Promise.resolve("");
 
@@ -3228,11 +3247,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!use_frame) // do not make transformations for the frame
       painter.forEachPainterInPad(pp => {
 
-         let item = { prnt: pp.svg_pad() };
+         let item = { prnt: pp.svg_pad(pp.this_pad_name) };
          items.push(item);
 
          // remove buttons from each subpad
-         let btns = pp.svg_layer("btns_layer");
+         let btns = pp.svg_layer("btns_layer", this.this_pad_name);
          item.btns_node = btns.node();
          if (item.btns_node) {
             item.btns_prnt = item.btns_node.parentNode;
@@ -3241,7 +3260,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          let main = pp.frame_painter();
-         if (!main || (typeof main.Render3D !== 'function')) return;
+         if (!main || (typeof main.Render3D !== 'function') || (typeof main.access_3d_kind !== 'function')) return;
 
          let can3d = main.access_3d_kind();
 
@@ -3687,7 +3706,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (this.proj_painter === 1) {
 
          let canv = JSROOT.create("TCanvas"),
-             pad = this.root_pad(),
+             pad = this.pad,
              main = this.frame_painter(), drawopt;
 
          if (kind == "X") {

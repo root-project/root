@@ -2326,10 +2326,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          return Promise.resolve(true);
 
       let histo = this.GetHisto(), st = JSROOT.gStyle,
+          pp = this.pad_painter(),
           tpainter = this.FindPainterFor(null, "title"),
           pt = tpainter ? tpainter.getObject() : null;
 
-      if (!pt) pt = this.FindInPrimitives("title");
+      if (!pt && pp && pp.findInPrimitives)
+         pt = pp.findInPrimitives("title");
       if (pt && (pt._typename !== "TPaveText")) pt = null;
 
       let draw_title = !histo.TestBit(TH1StatusBits.kNoTitle) && (st.fOptTitle > 0);
