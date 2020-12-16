@@ -2475,6 +2475,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
+   /** @summary For pad painter equivalent to forEachPainterInPad */
+   RPadPainter.prototype.forEachPainter = RPadPainter.prototype.forEachPainterInPad;
+
    /** @summary register for pad events receiver
      * @desc in pad painter, while pad may be drawn without canvas
      * @private */
@@ -2536,7 +2539,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!rect.changed) return false;
 
          if (!JSROOT.BatchMode)
-            btns = this.svg_layer("btns_layer");
+            btns = this.svg_layer("btns_layer", this.this_pad_name);
 
       } else {
 
@@ -2681,7 +2684,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return true;
       }
 
-      let svg_parent = this.svg_pad(),
+      let svg_parent = this.svg_pad(this.pad_name), // this.pad_name MUST be here to select parent pad
           svg_can = this.svg_canvas(),
           width = svg_parent.property("draw_width"),
           height = svg_parent.property("draw_height"),
@@ -2711,7 +2714,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          svg_pad = this.svg_pad();
          svg_rect = svg_pad.select(".root_pad_border");
          if (!JSROOT.BatchMode)
-            btns = this.svg_layer("btns_layer");
+            btns = this.svg_layer("btns_layer", this.this_pad_name);
       } else {
          svg_pad = svg_parent.select(".primitives_layer")
              .append("svg:svg") // here was g before, svg used to blend all drawin outside
@@ -3110,10 +3113,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let padpainter = new RPadPainter(this.getDom(), subpad, false);
          padpainter.DecodeOptions("");
-         padpainter.setPadName(this.this_pad_name); // pad painter will be registered in parent painters list
+         padpainter.addToPadPrimitives(this.this_pad_name); // only set parent pad name
          padpainter.assignSnapId(snap.fObjectID);
          padpainter.rstyle = snap.fStyle;
-         padpainter.addToPadPrimitives();
 
          padpainter.createPadSvg();
 
@@ -3392,7 +3394,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          items.push(item);
 
          // remove buttons from each subpad
-         let btns = pp.svg_layer("btns_layer");
+         let btns = pp.svg_layer("btns_layer", this.this_pad_name);
          item.btns_node = btns.node();
          if (item.btns_node) {
             item.btns_prnt = item.btns_node.parentNode;
@@ -3401,7 +3403,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          let main = pp.frame_painter();
-         if (!main || (typeof main.Render3D !== 'function')) return;
+         if (!main || (typeof main.Render3D !== 'function') || (typeof main.access_3d_kind != 'function')) return;
 
          let can3d = main.access_3d_kind();
 
@@ -3697,7 +3699,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          painter.this_pad_name = "";
          painter.setTopPainter();
       } else {
-         painter.addToPadPrimitives(painter.pad_name);
+         painter.addToPadPrimitives(painter.pad_name); // must be here due to pad painter
       }
 
       painter.createPadSvg();
