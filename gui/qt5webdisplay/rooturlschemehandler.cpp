@@ -16,6 +16,8 @@
 
 #include "rooturlschemehandler.h"
 
+#include "rootwebpage.h" // only because of logger channel
+
 #include <QBuffer>
 #include <QByteArray>
 #include <QFile>
