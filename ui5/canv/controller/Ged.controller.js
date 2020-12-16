@@ -104,7 +104,7 @@ sap.ui.define([
          }
 
          if (data._painter)
-            data._painter.InteractiveRedraw("pad", exec); // TODO: some objects can readraw directly, no need to redraw pad
+            data._painter.interactiveRedraw("pad", exec); // TODO: some objects can readraw directly, no need to redraw pad
          else if (this.currentPadPainter)
             this.currentPadPainter.Redraw();
       },
@@ -209,7 +209,7 @@ sap.ui.define([
 
          if (main && main.snapid) {
             console.log('Invoke interactive redraw ', main.snapid, kind)
-            main.InteractiveRedraw("pad", exec, kind);
+            main.interactiveRedraw("pad", exec, kind);
          } else {
             this.currentPadPainter.Redraw();
          }
@@ -257,7 +257,8 @@ sap.ui.define([
       },
 
       processHistModelChange : function(evnt, data) {
-         let pars = evnt.getParameters(), opts = data.options;
+         // let pars = evnt.getParameters();
+         let opts = data.options;
 
          opts.Mode3D = opts.Mode3Dindx > 0;
 
@@ -271,8 +272,8 @@ sap.ui.define([
          opts.Contor = parseInt(opts.Contor);
          opts.ErrorKind = parseInt(opts.ErrorKind);
 
-         if (this.currentPadPainter)
-            this.currentPadPainter.InteractiveRedraw("pad","drawopt");
+         if (this.currentPainter)
+            this.currentPainter.interactiveRedraw("pad","drawopt");
       },
 
 
