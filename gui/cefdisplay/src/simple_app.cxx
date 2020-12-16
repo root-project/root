@@ -126,7 +126,7 @@ SimpleApp::SimpleApp(bool use_viewes,
    // Windows and Linux.
 #else
    if (fUseViewes) {
-      R__LOG_ERROR("CEF") << "view framework does not supported by CEF on the platform, switching off";
+      R__LOG_ERROR(CefWebDisplayLog()) << "view framework does not supported by CEF on the platform, switching off";
       fUseViewes = false;
    }
 #endif
