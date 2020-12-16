@@ -136,13 +136,12 @@ public:
    // It is returned by TClass:NewObject and should be passed to TClass::DeleteArray or TClass::Destructor
    // to delete the object.
    // It is also used in TVirtualCollectionProxy for the same reasons.
-   class ObjectPtr
+   struct ObjectPtr
    {
       void *fPtr = nullptr;
 
       TVirtualStreamerInfo *fAllocator = nullptr;
 
-   public:
       ObjectPtr(void *ptr = nullptr, TVirtualStreamerInfo *allocator = nullptr) : fPtr(ptr), fAllocator(allocator) {}
 
       void *GetPtr() const { return fPtr; }
