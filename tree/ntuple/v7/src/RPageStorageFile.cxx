@@ -365,12 +365,12 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    const auto bytesPacked = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
    const auto pageSize = elementSize * pageInfo.fNElements;
 
-   auto pageBuffer = new unsigned char[bytesPacked];
+   unsigned char *pageBuffer = nullptr;
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
+      pageBuffer = new unsigned char[bytesPacked];
       fReader.ReadBuffer(pageBuffer, bytesOnStorage, pageInfo.fLocator.fPosition);
       fCounters->fNPageLoaded.Inc();
    } else {
-      //printf("GETTING CLUSTER %ld\n", clusterId);
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns);
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
@@ -379,11 +379,10 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
       if (!cachedPage.IsNull())
          return cachedPage;
 
+      pageBuffer = new unsigned char[bytesPacked];
       ROnDiskPage::Key key(columnId, pageNo);
-      //printf("POPULATE cluster %ld column %ld page %ld\n", clusterId, columnId, pageNo);
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
-      R__ASSERT(onDiskPage);
-      R__ASSERT(bytesOnStorage == onDiskPage->GetSize());
+      R__ASSERT(onDiskPage && (bytesOnStorage == onDiskPage->GetSize()));
       memcpy(pageBuffer, onDiskPage->GetAddress(), onDiskPage->GetSize());
    }
 
@@ -610,8 +609,7 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(RCluster *clu
       for (const auto &pi : pageRange.fPageInfos) {
          ROnDiskPage::Key key(columnId, pageNo);
          auto onDiskPage = cluster->GetOnDiskPage(key);
-         R__ASSERT(onDiskPage);
-         R__ASSERT(onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage);
+         R__ASSERT(onDiskPage && (onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage));
 
          auto taskFunc =
             [this, columnId, clusterId, firstInPage, onDiskPage,
