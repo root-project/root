@@ -51,7 +51,7 @@ void REveTableProxyBuilder::Build(const REveDataCollection* collection, REveElem
 
    if (info->GetConfigChanged() || fTable->NumChildren() == 0) {
       fTable->DestroyElements();
-      auto tableEntries =  context->GetTableViewInfo()->RefTableEntries(collection->GetItemClass()->GetName());
+      REveTableHandle::Entries_t& tableEntries =  context->GetTableViewInfo()->RefTableEntries(collection->GetItemClass()->GetName());
       for (const REveTableEntry& spec : tableEntries) {
          auto c = new REveDataColumn(spec.fName.c_str());
          fTable->AddElement(c);
