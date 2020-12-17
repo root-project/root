@@ -1427,11 +1427,8 @@ RVec<Common_t> Concatenate(const RVec<T0> &v0, const RVec<T1> &v1)
 {
    RVec<Common_t> res;
    res.reserve(v0.size() + v1.size());
-   auto &resAsVect = res.AsVector();
-   auto &v0AsVect = v0.AsVector();
-   auto &v1AsVect = v1.AsVector();
-   resAsVect.insert(resAsVect.begin(), v0AsVect.begin(), v0AsVect.end());
-   resAsVect.insert(resAsVect.end(), v1AsVect.begin(), v1AsVect.end());
+   std::copy(v0.begin(), v0.end(), std::back_inserter(res));
+   std::copy(v1.begin(), v1.end(), std::back_inserter(res));
    return res;
 }
 
