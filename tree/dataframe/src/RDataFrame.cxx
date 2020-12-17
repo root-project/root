@@ -88,17 +88,17 @@ produce several different results in one event loop. Instant actions trigger the
 | [Cache](classROOT_1_1RDF_1_1RInterface.html#aaaa0a7bb8eb21315d8daa08c3e25f6c9) | Caches in contiguous memory columns' entries. Custom columns can be cached as well, filtered entries are not cached. Users can specify which columns to save (default is all). |
 | [Count](classROOT_1_1RDF_1_1RInterface.html#a37f9e00c2ece7f53fae50b740adc1456) | Return the number of events processed. |
 | [Display](classROOT_1_1RDF_1_1RInterface.html#aee68f4411f16f00a1d46eccb6d296f01) | Obtains the events in the dataset for the requested columns. The method returns a [RDisplay](classROOT_1_1RDF_1_1RDisplay.html) instance which can be queried to get a compressed tabular representation on the standard output or a complete representation as a string. |
-| [Fill](classROOT_1_1RDF_1_1RInterface.html#a0cac4d08297c23d16de81ff25545440a) | Fill a user-defined object with the values of the specified branches, as if by calling `Obj.Fill(branch1, branch2, ...). |
+| [Fill](classROOT_1_1RDF_1_1RInterface.html#a0cac4d08297c23d16de81ff25545440a) | Fill a user-defined object with the values of the specified columns, as if by calling `Obj.Fill(col1, col2, ...). |
 | [Graph](classROOT_1_1RDF_1_1RInterface.html#a804b466ebdbddef5c7e3400cc6b89301) | Fills a TGraph with the two columns provided. If Multithread is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
-| [Histo{1D,2D,3D}](classROOT_1_1RDF_1_1RInterface.html#a247ca3aeb7ce5b95015b7fae72983055) | Fill a {one,two,three}-dimensional histogram with the processed branch values. |
-| [Max](classROOT_1_1RDF_1_1RInterface.html#a057179b1e77599466a0b02200d5cd8c3) | Return the maximum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
-| [Mean](classROOT_1_1RDF_1_1RInterface.html#ade6b020284f2f4fe9d3b09246b5f376a) | Return the mean of processed branch values.|
-| [Min](classROOT_1_1RDF_1_1RInterface.html#a7005702189e601972b6d19ecebcdc80c) | Return the minimum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
-| [Profile{1D,2D}](classROOT_1_1RDF_1_1RInterface.html#a8ef7dc16b0e9f7bc9cfbe2d9e5de0cef) | Fill a {one,two}-dimensional profile with the branch values that passed all filters. |
-| [Reduce](classROOT_1_1RDF_1_1RInterface.html#a118e723ae29834df8f2a992ded347354) | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
+| [Histo{1D,2D,3D}](classROOT_1_1RDF_1_1RInterface.html#a247ca3aeb7ce5b95015b7fae72983055) | Fill a {one,two,three}-dimensional histogram with the processed column values. |
+| [Max](classROOT_1_1RDF_1_1RInterface.html#a057179b1e77599466a0b02200d5cd8c3) | Return the maximum of processed column values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
+| [Mean](classROOT_1_1RDF_1_1RInterface.html#ade6b020284f2f4fe9d3b09246b5f376a) | Return the mean of processed column values.|
+| [Min](classROOT_1_1RDF_1_1RInterface.html#a7005702189e601972b6d19ecebcdc80c) | Return the minimum of processed column values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
+| [Profile{1D,2D}](classROOT_1_1RDF_1_1RInterface.html#a8ef7dc16b0e9f7bc9cfbe2d9e5de0cef) | Fill a {one,two}-dimensional profile with the column values that passed all filters. |
+| [Reduce](classROOT_1_1RDF_1_1RInterface.html#a118e723ae29834df8f2a992ded347354) | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the column. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
 | [Report](classROOT_1_1RDF_1_1RInterface.html#a94f322531dcb25beb8f53a602e5d6332) | Obtains statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. The method returns a RCutFlowReport instance which can be queried programmatically to get information about the effects of the individual cuts. |
 | [Stats](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a9e8fafb75abfa4faed4da18dcde01568) | Return a TStatistic object filled with the input columns. |
-| [StdDev](classROOT_1_1RDF_1_1RInterface.html#a482c4e4f81fe1e421c016f89cd281572) | Return the unbiased standard deviation of the processed branch values. |
+| [StdDev](classROOT_1_1RDF_1_1RInterface.html#a482c4e4f81fe1e421c016f89cd281572) | Return the unbiased standard deviation of the processed column values. |
 | [Sum](classROOT_1_1RDF_1_1RInterface.html#a61d03407459120df6749af43ed506891) | Return the sum of the values in the column. If the type of the column is inferred, the return type is `double`, the type of the column otherwise. |
 | [Take](classROOT_1_1RDF_1_1RInterface.html#a4fd694773a2931b6b07737ddcd1e73b4) | Extract a column from the dataset as a collection of values. If the type of the column is a C-style array, the type stored in the return container is a `ROOT::VecOps::RVec<T>` to guarantee the lifetime of the data involved. |
 
@@ -135,7 +135,7 @@ at the same time, users can just as easily specify custom code that will be exec
 1. **build a data-frame** object by specifying your data-set
 2. **apply a series of transformations** to your data
    1.  **filter** (e.g. apply some cuts) or
-   2.  **define** a new column (e.g. the result of an expensive computation on branches)
+   2.  **define** a new column (e.g. the result of an expensive computation on columns)
 3. **apply actions** to the transformed data to produce results (e.g. fill a histogram)
 
 The following table shows how analyses based on `TTreeReader` and `TTree::Draw` translate to `RDataFrame`. Follow the
