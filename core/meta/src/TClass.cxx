@@ -4975,7 +4975,7 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
 
 TClass::ObjectPtr TClass::NewObject(ENewType defConstructor, Bool_t quiet) const
 {
-   ObjectPtr p{nullptr};
+   ObjectPtr p;
 
    if (fNew) {
       // We have the new operator wrapper function,
@@ -5089,7 +5089,7 @@ void *TClass::New(void *arena, ENewType defConstructor) const
 
 TClass::ObjectPtr TClass::NewObject(void *arena, ENewType defConstructor) const
 {
-   ObjectPtr p{nullptr};
+   ObjectPtr p;
 
    if (fNew) {
       // We have the new operator wrapper function,
@@ -5192,7 +5192,7 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
 
 TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, ENewType defConstructor) const
 {
-   ObjectPtr p{nullptr};
+   ObjectPtr p;
 
    if (fNewArray) {
       // We have the new operator wrapper function,
@@ -5293,7 +5293,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
 
 TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, void *arena, ENewType defConstructor) const
 {
-   ObjectPtr p{nullptr};
+   ObjectPtr p;
 
    if (fNewArray) {
       // We have the new operator wrapper function,
