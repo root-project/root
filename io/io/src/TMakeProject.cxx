@@ -511,6 +511,9 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                      case ROOT::kSTLbitset:
                         what = "bitset";
                         break;
+                     case ROOT::kROOTRVec:
+                        what = "ROOT/RVec.hxx";
+                        break;
                      default:
                         what = "undetermined_stl_container";
                         break;

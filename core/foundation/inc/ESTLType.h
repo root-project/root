@@ -43,9 +43,10 @@ namespace ROOT {
       kSTLunorderedmultiset = 11,
       kSTLunorderedmap      = 12,
       kSTLunorderedmultimap = 13,
-      kSTLend               = 14,
+      kROOTRVec             = 14, /* ROOT type with STL container interface */
+      kSTLend               = 15,
       kSTLany               = 300 /* TVirtualStreamerInfo::kSTL */,
-      kSTLstring            = 365 /* TVirtualStreamerInfo::kSTLstring */
+      kSTLstring            = 365 /* TVirtualStreamerInfo::kSTLstring */,
    };
 
 }

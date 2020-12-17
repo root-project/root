@@ -547,6 +547,8 @@ ROOT::ESTLType TClassEdit::STLKind(std::string_view type)
             return values[k];
       }
    }
+   if (type.compare(offset, len, "ROOT::VecOps::RVec") == 0)
+      return ROOT::kROOTRVec;
    return ROOT::kNotSTL;
 }
 
