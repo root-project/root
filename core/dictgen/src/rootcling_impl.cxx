@@ -2696,6 +2696,16 @@ int GenerateFullDict(std::ostream &dictStream,
             // Register the collections
             // coverity[fun_call_w_exception] - that's just fine.
             Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
+         } else if (CRD->getName() == "RVec") {
+            static const clang::DeclContext *vecOpsDC = nullptr;
+            if (!vecOpsDC)
+               vecOpsDC = llvm::dyn_cast<clang::DeclContext>(
+                  interp.getLookupHelper().findScope("ROOT::VecOps", cling::LookupHelper::NoDiagnostics));
+            if (vecOpsDC && vecOpsDC->Equals(CRD->getDeclContext())) {
+               // Register the collections
+               // coverity[fun_call_w_exception] - that's just fine.
+               Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
+            }
          } else {
             if (!gOptIgnoreExistingDict) {
                ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes,
