@@ -347,8 +347,12 @@ public:
       return ret;
    }
 
+   R__DEPRECATED(6, 26, "Please use `std::vector<T>(rvec.begin(), rvec.end())` instead.")
    const Impl_t &AsVector() const { return fData; }
-   Impl_t &AsVector() { return fData; }
+   R__DEPRECATED(6, 26, "Please use `std::vector<T>(rvec.begin(), rvec.end())` instead.") Impl_t &AsVector()
+   {
+      return fData;
+   }
 
    // accessors
    reference at(size_type pos) { return fData.at(pos); }
