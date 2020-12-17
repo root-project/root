@@ -33,6 +33,11 @@ class TH1;
 class RooAbsBinning ;
 class Roo1DTable ;
 class RooAbsDataStore ;
+namespace RooFit {
+namespace TestStatistics {
+class RooAbsL;
+}
+}
 
 class RooAbsData : public TNamed, public RooPrintable {
 public:
@@ -241,6 +246,7 @@ protected:
   friend class RooAbsReal ;
   friend class RooAbsOptTestStatistic ;
   friend class RooAbsCachedPdf ;
+   friend class RooFit::TestStatistics::RooAbsL;
 
   virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) ;
   virtual void resetCache() ;

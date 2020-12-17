@@ -95,12 +95,12 @@ void LikelihoodSerial::evaluate() {
    switch (likelihood_type) {
    case LikelihoodType::unbinned:
    case LikelihoodType::binned: {
-      result = likelihood_->evaluate_partition(0, N_events, 0, 0);
+      result = likelihood_->evaluate_partition({0, 1}, 0, 0);
       carry = likelihood_->get_carry();
       break;
    }
    case LikelihoodType::simultaneous: {
-      result = likelihood_->evaluate_partition(0, N_events, 0, likelihood_->get_N_components());
+      result = likelihood_->evaluate_partition({0, 1}, 0, likelihood_->get_N_components());
       carry = likelihood_->get_carry();
       // TODO: this normalization part below came from RooOptTestStatistic::evaluate, probably this just means you need to do the normalization on master only when doing parallel calculation. Make sure of this! In any case, it is currently not relevant, because the norm term is 1 by default and is only overridden for the RooDataWeightAverage class.
 //      // Only apply global normalization if SimMaster doesn't have MP master

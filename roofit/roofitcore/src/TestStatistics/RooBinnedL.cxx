@@ -42,7 +42,7 @@ namespace RooFit {
 namespace TestStatistics {
 
 RooBinnedL::RooBinnedL(RooAbsPdf* pdf, RooAbsData* data) :
-   RooAbsL(pdf, data, data->numEntries(), 1)
+   RooAbsL(RooAbsL::ClonePdfData{pdf, data}, data->numEntries(), 1)
 {
    // pdf must be a RooRealSumPdf representing a yield vector for a binned likelihood calculation
    if (!dynamic_cast<RooRealSumPdf *>(pdf)) {
@@ -80,7 +80,7 @@ RooBinnedL::RooBinnedL(RooAbsPdf* pdf, RooAbsData* data) :
 ///// and the zero event is processed the extended term is added to the return
 ///// likelihood.
 //
-double RooBinnedL::evaluate_partition(std::size_t bins_begin, std::size_t bins_end, std::size_t /*components_begin*/,
+double RooBinnedL::evaluate_partition(Section bins, std::size_t /*components_begin*/,
                                       std::size_t /*components_end*/)
 {
    // Throughout the calculation, we use Kahan's algorithm for summing to
@@ -94,11 +94,11 @@ double RooBinnedL::evaluate_partition(std::size_t bins_begin, std::size_t bins_e
 
 //   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?kFALSE:kTRUE));
    // TODO: check when we might need _projDeps (it seems to be mostly empty); ties in with TODO below
-   data_->store()->recalculateCache(nullptr, bins_begin, bins_end, 1, kFALSE);
+   data_->store()->recalculateCache(nullptr, bins.begin(N_events), bins.end(N_events), 1, kFALSE);
 
    Double_t sumWeight(0), sumWeightCarry(0);
 
-   for (std::size_t i = bins_begin; i < bins_end; ++i) {
+   for (std::size_t i = bins.begin(N_events); i < bins.end(N_events); ++i) {
 
       data_->get(i);
 
@@ -169,8 +169,8 @@ double RooBinnedL::evaluate_partition(std::size_t bins_begin, std::size_t bins_e
       // If no offset is stored enable this feature now
       if (_offset == 0 && result != 0) {
          oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
-            << "RooBinnedL::evaluate_partition(" << GetName() << ") first = " << bins_begin
-            << " last = " << bins_end << " Likelihood offset now set to " << result << std::endl;
+            << "RooBinnedL::evaluate_partition(" << GetName() << ") first = " << bins.begin(N_events)
+            << " last = " << bins.end(N_events) << " Likelihood offset now set to " << result << std::endl;
          _offset = result;
          _offset_carry = carry;
       }

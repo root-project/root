@@ -23,7 +23,7 @@ class RooSimultaneousL : public RooAbsL {
 public:
    RooSimultaneousL(RooAbsPdf* pdf, RooAbsData* data, RooAbsL::Extended extended = RooAbsL::Extended::Auto);
 
-   double evaluate_partition(std::size_t events_begin, std::size_t events_end, std::size_t components_begin,
+   double evaluate_partition(Section events, std::size_t components_begin,
                              std::size_t components_end) override;
 
 private:

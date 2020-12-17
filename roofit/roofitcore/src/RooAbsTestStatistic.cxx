@@ -122,6 +122,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
 {
   // Register all parameters as servers
   RooArgSet* params = real.getParameters(&data) ;
+
   _paramSet.add(*params) ;
   delete params ;
 
@@ -652,7 +653,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->indexCat();
 
   TString simCatName(simCat.GetName());
-  TList* dsetList = const_cast<RooAbsData*>(data)->split(simCat,processEmptyDataSets());
+  std::unique_ptr<TList> dsetList{const_cast<RooAbsData*>(data)->split(simCat, processEmptyDataSets())};
   if (!dsetList) {
     coutE(Fitting) << "RooAbsTestStatistic::initSimMode(" << GetName() << ") ERROR: index category of simultaneous pdf is missing in dataset, aborting" << endl;
     throw std::string("RooAbsTestStatistic::initSimMode() ERROR, index category of simultaneous pdf is missing in dataset, aborting");
@@ -663,7 +664,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   Int_t n = 0;
   _nGof = 0;
   RooCatType* type;
-  TIterator* catIter = simCat.typeIterator();
+  std::unique_ptr<TIterator> catIter{simCat.typeIterator()};
   while ((type = (RooCatType*) catIter->Next())) {
     // Retrieve the PDF for this simCat state
     RooAbsPdf* pdf = simpdf->getPdf(type->GetName());
@@ -741,15 +742,12 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
       // Servers may have been redirected between instantiation and (deferred) initialization
 
-      RooArgSet *actualParams = binnedPdf ? binnedPdf->getParameters(dset) : pdf->getParameters(dset);
-      RooArgSet* selTargetParams = (RooArgSet*) _paramSet.selectCommon(*actualParams);
+      std::unique_ptr<RooArgSet> actualParams{binnedPdf ? binnedPdf->getParameters(dset) : pdf->getParameters(dset)};
+      std::unique_ptr<RooArgSet> selTargetParams{(RooArgSet*) _paramSet.selectCommon(*actualParams)};
 
       _gofArray[n]->recursiveRedirectServers(*selTargetParams);
 
-      delete selTargetParams;
-      delete actualParams;
-
-      ++n;
+       ++n;
 
     } else {
       if ((!dset || (0. != dset->sumEntries() && !processEmptyDataSets())) && pdf) {
@@ -762,16 +760,14 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   }
   coutI(Fitting) << "RooAbsTestStatistic::initSimMode: created " << n << " slave calculators." << endl;
   
-  // Delete datasets by hand as TList::Delete() doesn't see our datasets as 'on the heap'...
-  TIterator* iter = dsetList->MakeIterator();
-  TObject* ds;
-  while((ds = iter->Next())) {
-    delete ds;
-  }
-  delete iter;
-
-  delete dsetList;
-  delete catIter;
+//  // Delete datasets by hand as TList::Delete() doesn't see our datasets as 'on the heap'...
+//  TIterator* iter = dsetList->MakeIterator();
+//  TObject* ds;
+//  while((ds = iter->Next())) {
+//    delete ds;
+//  }
+//  delete iter;
+   // NOTE: commented out, because it actually causes two error messages, "Error in TList::Clear: A list is accessing an object (0x7f8320ae8f64) already deleted (list name = TList)" and another like that
 }
 
 

@@ -36,6 +36,11 @@ class RooPlot;
 class RooArgSet ;
 class RooLinkedList ;
 class RooAbsLValue ;
+namespace RooFit {
+namespace TestStatistics {
+class RooAbsL;
+}
+}
 
 class RooDataHist : public RooAbsData, public RooDirItem {
 public:
@@ -136,6 +141,7 @@ protected:
   friend class RooAbsCachedReal ;
   friend class RooDataHistSliceIter ;
   friend class RooAbsOptTestStatistic ;
+  friend class RooFit::TestStatistics::RooAbsL;
 
   Int_t calcTreeIndex() const ;
   void cacheValidEntries() ;

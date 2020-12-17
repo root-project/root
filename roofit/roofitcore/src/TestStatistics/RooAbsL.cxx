@@ -20,47 +20,66 @@
 // for dynamic casts in init_clones:
 #include "RooAbsRealLValue.h"
 #include "RooRealVar.h"
+#include "RooDataHist.h"
 
 // other stuff in init_clones:
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
 
+// concrete classes in getParameters (testing, remove later)
+#include "RooRealSumPdf.h"
+#include "RooProdPdf.h"
+
 namespace RooFit {
 namespace TestStatistics {
 
-RooAbsL::RooAbsL(RooAbsPdf *inpdf, RooAbsData *indata,
+RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> data,
                  std::size_t N_events, std::size_t N_components, Extended extended)
-   : pdf_(static_cast<RooAbsPdf *>(inpdf->cloneTree())), data_(static_cast<RooAbsData *>(indata->Clone())),
-     N_events(N_events), N_components(N_components)
+   : pdf_(std::move(pdf)), data_(std::move(data)), N_events(N_events), N_components(N_components)
 {
    //   std::unique_ptr<RooArgSet> obs {pdf->getObservables(*data)};
    //   data->attachBuffers(*obs);
    // Process automatic extended option
    if (extended == Extended::Auto) {
       extended_ = ((pdf_->extendMode() == RooAbsPdf::CanBeExtended || pdf_->extendMode() == RooAbsPdf::MustBeExtended))
-                     ? true
-                     : false;
+                  ? true
+                  : false;
       if (extended_) {
          oocoutI((TObject *)nullptr, Minimization)
             << "in RooAbsL ctor: p.d.f. provides expected number of events, including extended term in likelihood."
             << std::endl;
       }
    }
-
-   init_clones(*inpdf, *indata);
 }
 
+// this constructor clones the pdf/data and owns those cloned copies
+RooAbsL::RooAbsL(RooAbsL::ClonePdfData in, std::size_t N_events, std::size_t N_components, Extended extended)
+  : RooAbsL(std::shared_ptr<RooAbsPdf>(static_cast<RooAbsPdf *>(in.pdf->cloneTree())),
+     std::shared_ptr<RooAbsData>(static_cast<RooAbsData *>(in.data->Clone())), N_events, N_components, extended)
+{
+   init_clones(*in.pdf, *in.data);
+}
+
+// this constructor does not clone pdf/data and uses the shared_ptr aliasing constructor to make it non-owning
+RooAbsL::RooAbsL(RooAbsPdf *inpdf, RooAbsData *indata, std::size_t N_events, std::size_t N_components,
+                 Extended extended)
+   : RooAbsL({std::shared_ptr<RooAbsPdf>(nullptr), inpdf}, {std::shared_ptr<RooAbsData>(nullptr), indata}, N_events, N_components, extended)
+{}
+
+
 RooAbsL::RooAbsL(const RooAbsL &other)
-   : pdf_(static_cast<RooAbsPdf *>(other.pdf_->cloneTree())), data_(static_cast<RooAbsData *>(other.data_->Clone())),
+   : pdf_(other.pdf_), data_(other.data_),
      _do_offset(other._do_offset), _offset(other._offset), _offset_carry(other._offset_carry), N_events(other.N_events),
      N_components(other.N_components), extended_(other.extended_), sim_count_(other.sim_count_), eval_carry_(other.eval_carry_)
 {
-   init_clones(*other.pdf_, *other.data_);
-}
-
-RooAbsL::~RooAbsL()
-{
-   delete _normSet;
+   // it can never be one, since we just copied the shared_ptr; if it is, something really weird is going on; also they must be equal (usually either zero or two)
+   assert((pdf_.use_count() != 1) && (data_.use_count() != 1) && (pdf_.use_count() == data_.use_count()));
+   // TODO: use aliasing ctor in initialization list, and then check in body here whether pdf and data were clones; if so, they need to be cloned again (and init_clones called on them)
+   if ((pdf_.use_count() > 1) && (data_.use_count() > 1)) {
+      pdf_.reset(static_cast<RooAbsPdf *>(other.pdf_->cloneTree()));
+      data_.reset(static_cast<RooAbsData *>(other.data_->Clone()));
+      init_clones(*other.pdf_, *other.data_);
+   }
 }
 
 void RooAbsL::init_clones(RooAbsPdf &inpdf, RooAbsData &indata)
@@ -113,7 +132,7 @@ void RooAbsL::init_clones(RooAbsPdf &inpdf, RooAbsData &indata)
    //   }
 
    // Store normalization set
-   _normSet = (RooArgSet *)indata.get()->snapshot(kFALSE);
+   _normSet.reset((RooArgSet *)indata.get()->snapshot(kFALSE));
 
    // Expand list of observables with any observables used in parameterized ranges
    RooAbsArg *realDep;
@@ -239,13 +258,12 @@ void RooAbsL::init_clones(RooAbsPdf &inpdf, RooAbsData &indata)
    //   }
    //   delete origObsSet;
 
-   // TODO: do something like this maybe in RooBinnedL
-   //   // If dataset is binned, activate caching of bins that are invalid because the're outside the
-   //   // updated range definition (WVE need to add virtual interface here)
-   //   RooDataHist *tmph = dynamic_cast<RooDataHist *>(data);
-   //   if (tmph) {
-   //      tmph->cacheValidEntries();
-   //   }
+   // If dataset is binned, activate caching of bins that are invalid because they're outside the
+   // updated range definition (WVE need to add virtual interface here)
+   RooDataHist *tmph = dynamic_cast<RooDataHist *>(data_.get());
+   if (tmph) {
+      tmph->cacheValidEntries();
+   }
 
    //   // Fix RooAddPdf coefficients to original normalization range
    //   if (rangeName && strlen(rangeName)) {
@@ -331,16 +349,53 @@ void RooAbsL::init_clones(RooAbsPdf &inpdf, RooAbsData &indata)
 
    // optimization steps (copied from ROATS::optimizeCaching)
 
-   pdf_->getVal(_normSet);
+   pdf_->getVal(_normSet.get());
    // Set value caching mode for all nodes that depend on any of the observables to ADirty
    pdf_->optimizeCacheMode(*_funcObsSet);
    // Disable propagation of dirty state flags for observables
    data_->setDirtyProp(kFALSE);
+
+   // Disable reading of observables that are not used
+   data_->optimizeReadingWithCaching(*pdf_, RooArgSet(), RooArgSet()) ;
+
 }
 
 RooArgSet *RooAbsL::getParameters()
 {
-   return pdf_->getParameters(*data_);
+   auto ding = pdf_->getParameters(*data_);
+   return ding;
+
+//   // *** START HERE
+//   // WVE HACK determine if we have a RooRealSumPdf and then treat it like a binned likelihood
+//   RooAbsPdf *binnedPdf = 0;
+//   if (pdf_->getAttribute("BinnedLikelihood") && pdf_->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
+//      // Simplest case: top-level of component is a RRSP
+//      binnedPdf = pdf_.get();
+//   } else if (pdf_->IsA()->InheritsFrom(RooProdPdf::Class())) {
+//      // Default case: top-level pdf is a product of RRSP and other pdfs
+//      RooFIter iter = ((RooProdPdf *)pdf_.get())->pdfList().fwdIterator();
+//      RooAbsArg *component;
+//      while ((component = iter.next())) {
+//         if (component->getAttribute("BinnedLikelihood") &&
+//             component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
+//            binnedPdf = (RooAbsPdf *)component;
+//         }
+//         if (component->getAttribute("MAIN_MEASUREMENT")) {
+//            // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to
+//            // be passed to the slave calculator
+//            binnedPdf = (RooAbsPdf *)component;
+//         }
+//      }
+//   }
+//   // WVE END HACK
+//
+//   std::unique_ptr<RooArgSet> actualParams {binnedPdf ? binnedPdf->getParameters(data_.get()) : pdf_->getParameters(data_.get())};
+//   RooArgSet* selTargetParams = (RooArgSet *)ding->selectCommon(*actualParams);
+//
+//   std::cout << "RooAbsL::getParameters:" << std::endl;
+//   selTargetParams->Print("v");
+//
+//   return selTargetParams;
 }
 
 void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/)

@@ -219,7 +219,7 @@ void LikelihoodJob::evaluate_task(std::size_t task) {
    switch (likelihood_type) {
    case LikelihoodType::unbinned:
    case LikelihoodType::binned: {
-      result = likelihood_->evaluate_partition(first, last, 0, 0);
+      result = likelihood_->evaluate_partition({static_cast<double>(first)/N_events, static_cast<double>(last)/N_events}, 0, 0);
       break;
    }
    default: {

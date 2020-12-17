@@ -46,9 +46,9 @@ double RooRealL::get_carry() const
 Double_t RooRealL::evaluate() const
 {
    // Evaluate as straight FUNC
-   std::size_t last_event = likelihood_->get_N_events(), last_component = likelihood_->get_N_components();
+   std::size_t last_component = likelihood_->get_N_components();
 
-   Double_t ret = likelihood_->evaluate_partition(0, last_event, 0, last_component);
+   Double_t ret = likelihood_->evaluate_partition({0, 1}, 0, last_component);
 
    const Double_t norm = globalNormalization();
    ret /= norm;

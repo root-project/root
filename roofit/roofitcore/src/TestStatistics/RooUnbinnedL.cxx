@@ -39,7 +39,7 @@ namespace TestStatistics {
 
 RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data,
                            RooAbsL::Extended extended)
-   : RooAbsL(pdf, data, data->numEntries(), 1, extended)
+   : RooAbsL(RooAbsL::ClonePdfData{pdf, data}, data->numEntries(), 1, extended)
 {}
 
 RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
@@ -72,7 +72,7 @@ void RooUnbinnedL::set_apply_weight_squared(bool flag)
 ///// and the zero event is processed the extended term is added to the return
 ///// likelihood.
 //
-double RooUnbinnedL::evaluate_partition(std::size_t events_begin, std::size_t events_end,
+double RooUnbinnedL::evaluate_partition(Section events,
                                         std::size_t /*components_begin*/, std::size_t /*components_end*/)
 {
    // Throughout the calculation, we use Kahan's algorithm for summing to
@@ -86,11 +86,11 @@ double RooUnbinnedL::evaluate_partition(std::size_t events_begin, std::size_t ev
 
    //   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?kFALSE:kTRUE));
    // TODO: check when we might need _projDeps (it seems to be mostly empty); ties in with TODO below
-   data_->store()->recalculateCache(nullptr, events_begin, events_end, 1, kTRUE);
+   data_->store()->recalculateCache(nullptr, events.begin(N_events), events.end(N_events), 1, kTRUE);
 
    Double_t sumWeight(0), sumWeightCarry(0);
 
-   for (std::size_t i = events_begin; i < events_end; ++i) {
+   for (std::size_t i = events.begin(N_events); i < events.end(N_events); ++i) {
       data_->get(i);
       if (!data_->valid()) {
          continue;
@@ -104,7 +104,7 @@ double RooUnbinnedL::evaluate_partition(std::size_t events_begin, std::size_t ev
          eventWeight = data_->weightSquared();
       }
 
-      Double_t term = -eventWeight * pdf_->getLogVal(_normSet);
+      Double_t term = -eventWeight * pdf_->getLogVal(_normSet.get());
       // TODO: _normSet should be modified if _projDeps is non-null, connected to TODO above
 
       Double_t y = eventWeight - sumWeightCarry;
@@ -192,8 +192,8 @@ double RooUnbinnedL::evaluate_partition(std::size_t events_begin, std::size_t ev
       // If no offset is stored enable this feature now
       if (_offset == 0 && result != 0) {
          oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
-            << "RooUnbinnedL::evaluate_partition(" << GetName() << ") first = " << events_begin
-            << " last = " << events_end << " Likelihood offset now set to " << result << std::endl;
+            << "RooUnbinnedL::evaluate_partition(" << GetName() << ") first = " << events.begin(N_events)
+            << " last = " << events.end(N_events) << " Likelihood offset now set to " << result << std::endl;
          _offset = result;
          _offset_carry = carry;
       }

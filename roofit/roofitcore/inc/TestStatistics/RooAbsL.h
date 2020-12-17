@@ -32,16 +32,55 @@ public:
       Yes, No, Auto
    };
 
-   RooAbsL() = default;
+   /// wrapper class used to distinguish ctors
+   struct ClonePdfData {
+      RooAbsPdf * pdf;
+      RooAbsData * data;
+   };
+
+//   RooAbsL() = default;
+private:
+   RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> data,
+                    std::size_t N_events, std::size_t N_components, Extended extended);
+
+public:
    RooAbsL(RooAbsPdf *pdf, RooAbsData *data, std::size_t N_events,
            std::size_t N_components, Extended extended = Extended::Auto);
+   RooAbsL(ClonePdfData in, std::size_t N_events,
+           std::size_t N_components, Extended extended = Extended::Auto);
    RooAbsL(const RooAbsL& other);
-   virtual ~RooAbsL();
+   virtual ~RooAbsL() = default;
 
    void init_clones(RooAbsPdf& inpdf, RooAbsData& indata);
 
-   virtual double evaluate_partition(std::size_t events_begin, std::size_t events_end, std::size_t components_begin,
-                                     std::size_t components_end) = 0;
+   /// A part of some range delimited by two fractional points between 0 and 1 (inclusive).
+   struct Section {
+      Section(double begin, double end) : begin_fraction(begin), end_fraction(end)
+      {
+         if ((begin > end) || (begin < 0) || (end > 1)) {
+            throw std::domain_error("Invalid input values for section; begin must be >= 0, end <= 1 and begin < end.");
+         }
+      }
+
+      Section(const Section & section) = default;
+
+      std::size_t begin(std::size_t N_total) const {
+         return static_cast<std::size_t>(N_total * begin_fraction);
+      }
+
+      std::size_t end(std::size_t N_total) const {
+         if (end_fraction == 1) {
+            return N_total;
+         } else {
+            return static_cast<std::size_t>(N_total * end_fraction);
+         }
+      }
+
+      double begin_fraction;
+      double end_fraction;
+   };
+
+   virtual double evaluate_partition(Section events, std::size_t components_begin, std::size_t components_end) = 0;
    double get_carry() const;
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
@@ -69,9 +108,15 @@ public:
 
 protected:
    virtual void optimize_pdf();
-   std::unique_ptr<RooAbsPdf> pdf_;
-   std::unique_ptr<RooAbsData> data_;
-   RooArgSet *_normSet;      // Pointer to set with observables used for normalization
+   // Note: pdf_ and data_ can be constructed in two ways, one of which implies ownership and the other does not.
+   // Inspired by this: https://stackoverflow.com/a/61227865/1199693.
+   // The owning variant is used for classes that need a pdf/data clone (RooBinnedL and RooUnbinnedL), whereas the
+   // non-owning version is used for when a reference to the external pdf/dataset is good enough (RooSimultaneousL).
+   // This means that pdf_ and data_ are not meant to actually be shared! If there were a unique_ptr with optional
+   // ownership, we would have used that instead.
+   std::shared_ptr<RooAbsPdf> pdf_;
+   std::shared_ptr<RooAbsData> data_;
+   std::unique_ptr<RooArgSet> _normSet;      // Pointer to set with observables used for normalization
    bool _do_offset = false;
    double _offset = 0;
    double _offset_carry = 0;

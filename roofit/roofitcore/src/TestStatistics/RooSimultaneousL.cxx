@@ -20,15 +20,18 @@
 #include <TestStatistics/RooUnbinnedL.h>
 #include <ROOT/RMakeUnique.hxx>
 
+#include <algorithm>  // min, max
+
 namespace RooFit {
 namespace TestStatistics {
 
 RooSimultaneousL::RooSimultaneousL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended)
    : RooAbsL(pdf, data,
+             data->numEntries(),  // TODO: this may be misleading, because components in reality will have their own N_events...
              0,  // will be set to true value in ctor with N_components
-             data->numEntries(), extended)
+             extended)
 {
-   auto sim_pdf = dynamic_cast<RooSimultaneous *>(pdf);
+   auto sim_pdf = dynamic_cast<RooSimultaneous *>(pdf_.get());
    if (sim_pdf == nullptr) {
       throw std::logic_error("Can only build RooSimultaneousL from RooSimultaneous pdf!");
    }
@@ -38,6 +41,7 @@ RooSimultaneousL::RooSimultaneousL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Ex
    RooAbsCategoryLValue &simCat = (RooAbsCategoryLValue &)sim_pdf->indexCat();
 
    TString simCatName(simCat.GetName());
+   // Note: important not to use cloned dataset here, use the original one (which is indeed the one set to data_ for RooSimultaneousL)
    std::unique_ptr<TList> dsetList{data_->split(simCat, processEmptyDataSets())};
    if (!dsetList) {
       oocoutE((TObject *)nullptr, Fitting)
@@ -145,6 +149,7 @@ RooSimultaneousL::RooSimultaneousL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Ex
 
          // TODO: I don't think we have to redirect servers, because our classes make no use of those, but we should make sure. Do we need to reset the parameter set instead?
 //         components_.back()->recursiveRedirectServers(*selTargetParams);
+         assert(selTargetParams->equals(*components_.back()->getParameters()));
 
          ++n;
       } else {
@@ -157,12 +162,13 @@ RooSimultaneousL::RooSimultaneousL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Ex
    oocoutI((TObject *)nullptr, Fitting) << "RooSimultaneousL: created " << n << " slave calculators."
                                             << std::endl;
 
-   // Delete datasets by hand as TList::Delete() doesn't see our datasets as 'on the heap'...
-   std::unique_ptr<TIterator> iter {dsetList->MakeIterator()};
-   TObject *ds;
-   while ((ds = iter->Next())) {
-      delete ds;
-   }
+//   // Delete datasets by hand as TList::Delete() doesn't see our datasets as 'on the heap'...
+//   std::unique_ptr<TIterator> iter {dsetList->MakeIterator()};
+//   TObject *ds;
+//   while ((ds = iter->Next())) {
+//      delete ds;
+//   }
+   // NOTE: commented out, because it actually causes two error messages, "Error in TList::Clear: A list is accessing an object (0x7f8320ae8f64) already deleted (list name = TList)" and another like that
 }
 
 bool RooSimultaneousL::processEmptyDataSets() const
@@ -171,7 +177,7 @@ bool RooSimultaneousL::processEmptyDataSets() const
    return extended_;
 }
 
-double RooSimultaneousL::evaluate_partition(std::size_t events_begin, std::size_t events_end,
+double RooSimultaneousL::evaluate_partition(Section events,
                                             std::size_t components_begin, std::size_t components_end)
 {
    // Evaluate specified range of owned GOF objects
@@ -180,7 +186,10 @@ double RooSimultaneousL::evaluate_partition(std::size_t events_begin, std::size_
    // from RooAbsOptTestStatistic::combinedValue (which is virtual, so could be different for non-RooNLLVar!):
    eval_carry_ = 0;
    for (std::size_t ix = components_begin; ix < components_end; ++ix) {
-      double y = components_[ix]->evaluate_partition(events_begin, events_end, 0, 0);
+      // TODO: make sure we only calculate over events in the sub-range that the caller asked for
+//      std::size_t component_events_begin = std::max(events_begin, components_[ix]->get_N_events())  // THIS WON'T WORK, we need to somehow allow evaluate_partition to take in separate event ranges for all components...
+
+      double y = components_[ix]->evaluate_partition(events, 0, 0);
       eval_carry_ += components_[ix]->get_carry();
       y -= eval_carry_;
       double t = ret + y;

@@ -277,6 +277,7 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
 
    EXPECT_EQ(nll0, nll1);
 }
+ */
 
 TEST_F(LikelihoodSerialTest, SimUnbinned)
 {
@@ -306,7 +307,41 @@ TEST_F(LikelihoodSerialTest, SimUnbinned)
    EXPECT_EQ(nll0, nll1);
 }
 
+TEST_F(LikelihoodSerialTest, SimUnbinnedNonExtended)
+{
+   // SIMULTANEOUS FIT OF 2 UNBINNED DATASETS
 
+   w.factory("ExtendPdf::egA(Gaussian::gA(x[-10,10],mA[2,-10,10],s[3,0.1,10]),nA[1000])") ;
+   w.factory("ExtendPdf::egB(Gaussian::gB(x,mB[-2,-10,10],s),nB[100])") ;
+   w.factory("SIMUL::model(index[A,B],A=gA,B=gB)") ;
+
+   RooDataSet* dA = w.pdf("gA")->generate(*w.var("x"),1) ;
+   RooDataSet* dB = w.pdf("gB")->generate(*w.var("x"),1) ;
+   w.cat("index")->setLabel("A") ;
+   dA->addColumn(*w.cat("index")) ;
+   w.cat("index")->setLabel("B") ;
+   dB->addColumn(*w.cat("index")) ;
+
+   data = (RooDataSet*) dA->Clone() ;
+   static_cast<RooDataSet*>(data)->append(*dB) ;
+
+   pdf = w.pdf("model");
+
+   nll.reset(pdf->createNLL(*data));
+
+   likelihood =
+      std::make_shared<RooFit::TestStatistics::RooSimultaneousL>(pdf, data);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+
+   auto nll0 = nll->getVal();
+
+   nll_ts.evaluate();
+   auto nll1 = nll_ts.return_result();
+
+   EXPECT_EQ(nll0, nll1);
+}
+
+/*
 TEST_F(LikelihoodSerialTest, SimBinnedConstrained)
 {
    // Unbinned pdfs that define template histograms
