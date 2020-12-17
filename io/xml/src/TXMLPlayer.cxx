@@ -978,6 +978,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream &fs, TClass *cl, TStreamerSTL
       case ROOT::kSTLunorderedmultiset: narg = 1; break;
       case ROOT::kSTLunorderedmap: narg = 2; break;
       case ROOT::kSTLunorderedmultimap: narg = 2; break;
+      case ROOT::kROOTRVec: narg = 1; break;
 
       default: return false;
       }

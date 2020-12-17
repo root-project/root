@@ -1685,6 +1685,8 @@ namespace TStreamerInfoActions
                  || proxy.GetCollectionType() == ROOT::kSTLunorderedmap || proxy.GetCollectionType() == ROOT::kSTLunorderedmultimap
                  || proxy.GetCollectionType() == ROOT::kSTLbitset) {
          return kAssociativeLooper;
+      } else if (proxy.GetCollectionType() == ROOT::kROOTRVec && proxy.GetType() == EDataType::kBool_t) {
+         return kVectorLooper;
       } else {
          return kGenericLooper;
       }

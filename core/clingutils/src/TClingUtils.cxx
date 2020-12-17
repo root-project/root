@@ -2012,6 +2012,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          case ROOT::kSTLvector:
          case ROOT::kSTLlist:
          case ROOT::kSTLdeque:
+         case ROOT::kROOTRVec:
             methodTCP="Pushback";
             break;
          case ROOT::kSTLforwardlist:
