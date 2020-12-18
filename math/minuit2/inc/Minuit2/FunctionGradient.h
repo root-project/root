@@ -35,7 +35,7 @@ public:
    FunctionGradient(const FunctionGradient &grad) : fData(grad.fData) {}
 
    // HD: assignment shares the pointer
-   FunctionGradient &operator=(const FunctionGradient &grad) = default;
+   FunctionGradient &operator=(const FunctionGradient & /*grad*/) = default;
 
    const MnAlgebraicVector &Grad() const { return fData->Grad(); }
    const MnAlgebraicVector &Vec() const { return fData->Vec(); }
