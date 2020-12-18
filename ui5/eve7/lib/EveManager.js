@@ -55,11 +55,11 @@ sap.ui.define([], function() {
    {
       this.handle = handle;
 
-      handle.SetReceiver(this);
-      handle.Connect();
+      handle.setReceiver(this);
+      handle.connect();
    }
 
-   EveManager.prototype.OnWebsocketClosed = function() {
+   EveManager.prototype.onWebsocketClosed = function() {
       this.controllers.forEach(ctrl => {
          if (typeof ctrl.onDisconnect === "function")
              ctrl.onDisconnect();
@@ -84,7 +84,7 @@ sap.ui.define([], function() {
    }
 
 
-   EveManager.prototype.OnWebsocketOpened = function() {
+   EveManager.prototype.onWebsocketOpened = function() {
       // console.log("opened!!!");
    },
 
@@ -104,7 +104,7 @@ sap.ui.define([], function() {
    }
 
    /** Called when data comes via the websocket */
-   EveManager.prototype.OnWebsocketMsg = function(handle, msg, offset)
+   EveManager.prototype.onWebsocketMsg = function(handle, msg, offset)
    {
       // if (this.ignore_all) return;
 
@@ -118,13 +118,13 @@ sap.ui.define([], function() {
       }
 
       if (JSROOT.EVE.gDebug)
-         console.log("OnWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 1000) ? msg : (msg.substr(0,1000) + "..."));
+         console.log("onWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 1000) ? msg : (msg.substr(0,1000) + "..."));
 
       let resp = JSON.parse(msg);
 
       if (resp === undefined)
       {
-         console.log("OnWebsocketMsg can't parse json: msg len=", msg.length, " txt:", msg.substr(0,120), "...");
+         console.log("onWebsocketMsg can't parse json: msg len=", msg.length, " txt:", msg.substr(0,120), "...");
          return;
       }
 
@@ -148,7 +148,7 @@ sap.ui.define([], function() {
       else if (resp.content == "BrowseElement") {
          this.BrowseElement(resp.id);
       } else {
-         console.log("OnWebsocketMsg Unhandled message type: msg len=", msg.length, " txt:", msg.substr(0,120), "...");
+         console.log("onWebsocketMsg Unhandled message type: msg len=", msg.length, " txt:", msg.substr(0,120), "...");
       }
    }
 
@@ -174,7 +174,7 @@ sap.ui.define([], function() {
             "class" : element_class
          }
 
-         this.handle.Send(JSON.stringify(req));
+         this.handle.send(JSON.stringify(req));
       }
    }
 
@@ -771,7 +771,7 @@ sap.ui.define([], function() {
 
       msg2.arr[0].prev_sel_list = undefined;
 
-      this.handle.Inject([msg1, msg2, msg3]);
+      this.handle.inject([msg1, msg2, msg3]);
    }
 
    /** used to intercept BrowseElement call @private */
@@ -780,7 +780,7 @@ sap.ui.define([], function() {
           msg2 = { content: "BeginChanges" },
           msg3 = { content: "EndChanges" };
 
-      this.handle.Inject([msg1, msg2, msg3]);
+      this.handle.inject([msg1, msg2, msg3]);
    }
 
    /** @summary used to intercept SetRnrSelf call
@@ -801,7 +801,7 @@ sap.ui.define([], function() {
       });
       messages.push({ content: "EndChanges" });
 
-      this.handle.Inject(messages);
+      this.handle.inject(messages);
    }
 
    /** @summary used to intercept SetMainColorRGB
@@ -829,7 +829,7 @@ sap.ui.define([], function() {
       });
       messages.push({ content: "EndChanges" });
 
-      this.handle.Inject(messages);
+      this.handle.inject(messages);
    }
 
    /** Handling of MIR calls without sending data to the server.

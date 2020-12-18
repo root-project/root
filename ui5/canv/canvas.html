@@ -44,7 +44,7 @@
          painter.batch_mode = batch_mode;
 
          if (window) {
-            window.onbeforeunload = painter.WindowBeforeUnloadHanlder.bind(painter);
+            window.onbeforeunload = () => painter.WindowBeforeUnloadHanlder();
             if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
          }
 
@@ -72,7 +72,7 @@
 
             painter.UseWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
 
-            if (!batch_mode) JSROOT.registerForResize(painter);
+            if (!batch_mode) JSROOT.Painter.registerForResize(painter);
          }
       });
 

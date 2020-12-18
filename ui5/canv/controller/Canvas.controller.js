@@ -214,7 +214,7 @@ sap.ui.define([
          let name = oEvent.getParameter("item").getText();
 
          switch (name) {
-            case "Close canvas": p.OnWebsocketClosed(); p.CloseWebsocket(true); break;
+            case "Close canvas": p.onWebsocketClosed(); p.CloseWebsocket(true); break;
             case "Interrupt": p.SendWebsocket("INTERRUPT"); break;
             case "Quit ROOT": p.SendWebsocket("QUIT"); break;
             case "Canvas.png":
@@ -236,7 +236,7 @@ sap.ui.define([
       onCloseCanvasPress : function() {
          let p = this.getCanvasPainter();
          if (p) {
-            p.OnWebsocketClosed();
+            p.onWebsocketClosed();
             p.CloseWebsocket(true);
          }
       },

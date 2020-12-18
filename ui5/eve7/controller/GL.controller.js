@@ -149,15 +149,15 @@ sap.ui.define([
       {
          if (!this.mgr || !this._load_scripts || !this._render_html || !this.eveViewerId || this.viewer_class) return;
 
-         this.viewer_class = this.mgr.handle.GetUserArgs("GLViewer");
+         this.viewer_class = this.mgr.handle.getUserArgs("GLViewer");
          if ((this.viewer_class != "JSRoot") && (this.viewer_class != "Three") && (this.viewer_class != "RCore"))
             this.viewer_class = "Three";
 
-         this.htimeout = this.mgr.handle.GetUserArgs("HTimeout");
+         this.htimeout = this.mgr.handle.getUserArgs("HTimeout");
          if (this.htimeout === undefined) this.htimeout = 250;
 
          // when "Reset" - reset camera position
-         this.dblclick_action = this.mgr.handle.GetUserArgs("DblClick");
+         this.dblclick_action = this.mgr.handle.getUserArgs("DblClick");
 
          sap.ui.require(['rootui5/eve7/lib/GlViewer' + this.viewer_class],
                function(GlViewer) {
