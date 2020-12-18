@@ -6021,9 +6021,7 @@ TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
    }
    TIter nextl(GetListOfLeaves());
    while ((leaf = (TLeaf*)nextl())) {
-      if (!strcmp(leaf->GetFullName(),leafname))
-         return leaf;
-      if (strcmp(leaf->GetName(),leafname))
+      if (strcmp(leaf->GetFullName(), leafname) && strcmp(leaf->GetName(), leafname))
          continue;
       if (branchname) {
          UInt_t nbch = strlen(branchname);
