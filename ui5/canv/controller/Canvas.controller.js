@@ -143,7 +143,7 @@ sap.ui.define([
 
          if (painter && method && args) {
 
-            if (painter.ExecuteMenuCommand(method, args)) return;
+            if (painter.executeMenuCommand(method, args)) return;
             let exec = method.fExec;
             if (args) exec = exec.substr(0,exec.length-1) + args + ')';
             // invoked only when user press Ok button
