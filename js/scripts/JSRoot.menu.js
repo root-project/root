@@ -263,7 +263,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
          this.add("sub:" + (prefix ? prefix : "Text"));
          this.AddColorMenu("color", obj.fTextColor,
-            arg => { obj.fTextColor = arg; painter.InteractiveRedraw(true, getColorExec(arg, "SetTextColor")); });
+            arg => { obj.fTextColor = arg; painter.interactiveRedraw(true, getColorExec(arg, "SetTextColor")); });
 
          let align = [11, 12, 13, 21, 22, 23, 31, 32, 33];
 
@@ -272,14 +272,14 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
             this.addchk(align[n] == obj.fTextAlign,
                align[n], align[n],
                // align[n].toString() + "_h:" + hnames[Math.floor(align[n]/10) - 1] + "_v:" + vnames[align[n]%10-1], align[n],
-               function(arg) { this.getObject().fTextAlign = parseInt(arg); this.InteractiveRedraw(true, "exec:SetTextAlign(" + arg + ")"); }.bind(painter));
+               function(arg) { this.getObject().fTextAlign = parseInt(arg); this.interactiveRedraw(true, "exec:SetTextAlign(" + arg + ")"); }.bind(painter));
          }
          this.add("endsub:");
 
          this.add("sub:font");
          for (let n = 1; n < 16; ++n) {
             this.addchk(n == Math.floor(obj.fTextFont / 10), n, n,
-               function(arg) { this.getObject().fTextFont = parseInt(arg) * 10 + 2; this.InteractiveRedraw(true, "exec:SetTextFont(" + this.getObject().fTextFont + ")"); }.bind(painter));
+               function(arg) { this.getObject().fTextFont = parseInt(arg) * 10 + 2; this.interactiveRedraw(true, "exec:SetTextFont(" + this.getObject().fTextFont + ")"); }.bind(painter));
          }
          this.add("endsub:");
 
@@ -298,22 +298,22 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          if (painter.lineatt && painter.lineatt.used) {
             this.add("sub:" + preffix + "Line att");
             this.SizeMenu("width", 1, 10, 1, painter.lineatt.width,
-               arg => { painter.lineatt.Change(undefined, arg); painter.InteractiveRedraw(true, "exec:SetLineWidth(" + arg + ")"); });
+               arg => { painter.lineatt.Change(undefined, arg); painter.interactiveRedraw(true, "exec:SetLineWidth(" + arg + ")"); });
             this.AddColorMenu("color", painter.lineatt.color,
-               arg => { painter.lineatt.Change(arg); painter.InteractiveRedraw(true, getColorExec(arg, "SetLineColor")); });
+               arg => { painter.lineatt.Change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetLineColor")); });
             this.add("sub:style", function() {
                let id = prompt("Enter line style id (1-solid)", 1);
                if (id === null) return;
                id = parseInt(id);
                if (isNaN(id) || !jsrp.root_line_styles[id]) return;
                this.lineatt.Change(undefined, undefined, id);
-               this.InteractiveRedraw(true, "exec:SetLineStyle(" + id + ")");
+               this.interactiveRedraw(true, "exec:SetLineStyle(" + id + ")");
             }.bind(painter));
             for (let n = 1; n < 11; ++n) {
                let dash = jsrp.root_line_styles[n],
                    svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + n + "</text><line x1='30' y1='8' x2='100' y2='8' stroke='black' stroke-width='3' stroke-dasharray='" + dash + "'></line></svg>";
 
-               this.addchk((painter.lineatt.style == n), svg, n, function(arg) { this.lineatt.Change(undefined, undefined, parseInt(arg)); this.InteractiveRedraw(true, "exec:SetLineStyle(" + arg + ")"); }.bind(painter));
+               this.addchk((painter.lineatt.style == n), svg, n, function(arg) { this.lineatt.Change(undefined, undefined, parseInt(arg)); this.interactiveRedraw(true, "exec:SetLineStyle(" + arg + ")"); }.bind(painter));
             }
             this.add("endsub:");
             this.add("endsub:");
@@ -324,12 +324,12 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
                for (let side = -1; side <= 1; ++side)
                   this.addchk((painter.lineatt.excl_side == side), side, side, function(arg) {
                      this.lineatt.ChangeExcl(parseInt(arg));
-                     this.InteractiveRedraw();
+                     this.interactiveRedraw();
                   }.bind(painter));
                this.add("endsub:");
 
                this.SizeMenu("width", 10, 100, 10, painter.lineatt.excl_width,
-                  arg => { painter.lineatt.ChangeExcl(undefined, arg); painter.InteractiveRedraw(); });
+                  arg => { painter.lineatt.ChangeExcl(undefined, arg); painter.interactiveRedraw(); });
 
                this.add("endsub:");
             }
@@ -338,14 +338,14 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          if (painter.fillatt && painter.fillatt.used) {
             this.add("sub:" + preffix + "Fill att");
             this.AddColorMenu("color", painter.fillatt.colorindx,
-               arg => { painter.fillatt.Change(arg, undefined, painter.svg_canvas()); painter.InteractiveRedraw(true, getColorExec(arg, "SetFillColor")); }, painter.fillatt.kind);
+               arg => { painter.fillatt.Change(arg, undefined, painter.getCanvSvg()); painter.interactiveRedraw(true, getColorExec(arg, "SetFillColor")); }, painter.fillatt.kind);
             this.add("sub:style", function() {
                let id = prompt("Enter fill style id (1001-solid, 3000..3010)", this.fillatt.pattern);
                if (id === null) return;
                id = parseInt(id);
                if (isNaN(id)) return;
-               this.fillatt.Change(undefined, id, this.svg_canvas());
-               this.InteractiveRedraw(true, "exec:SetFillStyle(" + id + ")");
+               this.fillatt.Change(undefined, id, this.getCanvSvg());
+               this.interactiveRedraw(true, "exec:SetFillStyle(" + id + ")");
             }.bind(painter));
 
             let supported = [1, 1001, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3010, 3021, 3022];
@@ -354,8 +354,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
                let sample = painter.createAttFill({ std: false, pattern: supported[n], color: painter.fillatt.colorindx || 1 }),
                    svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><rect x='40' y='0' width='60' height='18' stroke='none' fill='" + sample.fillcolor() + "'></rect></svg>";
                this.addchk(painter.fillatt.pattern == supported[n], svg, supported[n], function(arg) {
-                  this.fillatt.Change(undefined, parseInt(arg), this.svg_canvas());
-                  this.InteractiveRedraw(true, "exec:SetFillStyle(" + arg + ")");
+                  this.fillatt.Change(undefined, parseInt(arg), this.getCanvSvg());
+                  this.interactiveRedraw(true, "exec:SetFillStyle(" + arg + ")");
                }.bind(painter));
             }
             this.add("endsub:");
@@ -365,9 +365,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          if (painter.markeratt && painter.markeratt.used) {
             this.add("sub:" + preffix + "Marker att");
             this.AddColorMenu("color", painter.markeratt.color,
-               arg => { painter.markeratt.Change(arg); painter.InteractiveRedraw(true, getColorExec(arg, "SetMarkerColor"));});
+               arg => { painter.markeratt.Change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetMarkerColor"));});
             this.SizeMenu("size", 0.5, 6, 0.5, painter.markeratt.size,
-               arg => { painter.markeratt.Change(undefined, undefined, arg); painter.InteractiveRedraw(true, "exec:SetMarkerSize(" + parseInt(arg) + ")"); });
+               arg => { painter.markeratt.Change(undefined, undefined, arg); painter.interactiveRedraw(true, "exec:SetMarkerSize(" + parseInt(arg) + ")"); });
 
             this.add("sub:style");
             let supported = [1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34];
@@ -378,7 +378,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
                    svg = "<svg width='60' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><path stroke='black' fill='" + (clone.fill ? "black" : "none") + "' d='" + clone.create(40, 8) + "'></path></svg>";
 
                this.addchk(painter.markeratt.style == supported[n], svg, supported[n],
-                  function(arg) { this.markeratt.Change(undefined, parseInt(arg)); this.InteractiveRedraw(true, "exec:SetMarkerStyle(" + arg + ")"); }.bind(painter));
+                  function(arg) { this.markeratt.Change(undefined, parseInt(arg)); this.interactiveRedraw(true, "exec:SetMarkerStyle(" + arg + ")"); }.bind(painter));
             }
             this.add("endsub:");
             this.add("endsub:");
@@ -390,45 +390,45 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
       AddTAxisMenu(painter, faxis, kind) {
          this.add("sub:Labels");
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kCenterLabels), "Center",
-               arg => { faxis.InvertBit(JSROOT.EAxisBits.kCenterLabels); painter.InteractiveRedraw("pad", `exec:CenterLabels(${arg})`, kind); });
+               arg => { faxis.InvertBit(JSROOT.EAxisBits.kCenterLabels); painter.interactiveRedraw("pad", `exec:CenterLabels(${arg})`, kind); });
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kLabelsVert), "Rotate",
-               arg => { faxis.InvertBit(JSROOT.EAxisBits.kLabelsVert); painter.InteractiveRedraw("pad", `exec:SetBit(TAxis::kLabelsVert,${arg})`, kind); });
+               arg => { faxis.InvertBit(JSROOT.EAxisBits.kLabelsVert); painter.interactiveRedraw("pad", `exec:SetBit(TAxis::kLabelsVert,${arg})`, kind); });
          this.AddColorMenu("Color", faxis.fLabelColor,
-               arg => { faxis.fLabelColor = arg; painter.InteractiveRedraw("pad", getColorExec(arg, "SetLabelColor"), kind); });
+               arg => { faxis.fLabelColor = arg; painter.interactiveRedraw("pad", getColorExec(arg, "SetLabelColor"), kind); });
          this.SizeMenu("Offset", 0, 0.1, 0.01, faxis.fLabelOffset,
-               arg => { faxis.fLabelOffset = arg; painter.InteractiveRedraw("pad", `exec:SetLabelOffset(${arg})`, kind); } );
+               arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw("pad", `exec:SetLabelOffset(${arg})`, kind); } );
          this.SizeMenu("Size", 0.02, 0.11, 0.01, faxis.fLabelSize,
-               arg => { faxis.fLabelSize = arg; painter.InteractiveRedraw("pad", `exec:SetLabelSize(${arg})`, kind); } );
+               arg => { faxis.fLabelSize = arg; painter.interactiveRedraw("pad", `exec:SetLabelSize(${arg})`, kind); } );
          this.add("endsub:");
          this.add("sub:Title");
          this.add("SetTitle", () => {
             let t = prompt("Enter axis title", faxis.fTitle);
-            if (t!==null) { faxis.fTitle = t; painter.InteractiveRedraw("pad", `exec:SetTitle("${t}")`, kind); }
+            if (t!==null) { faxis.fTitle = t; painter.interactiveRedraw("pad", `exec:SetTitle("${t}")`, kind); }
          });
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kCenterTitle), "Center",
-               arg => { faxis.InvertBit(JSROOT.EAxisBits.kCenterTitle); painter.InteractiveRedraw("pad", `exec:CenterTitle(${arg})`, kind); });
+               arg => { faxis.InvertBit(JSROOT.EAxisBits.kCenterTitle); painter.interactiveRedraw("pad", `exec:CenterTitle(${arg})`, kind); });
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kOppositeTitle), "Opposite",
                 () => { faxis.InvertBit(JSROOT.EAxisBits.kOppositeTitle); painter.redrawPad(); });
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kRotateTitle), "Rotate",
-               arg => { faxis.InvertBit(JSROOT.EAxisBits.kRotateTitle); painter.InteractiveRedraw("pad", `exec:RotateTitle(${arg})`, kind); });
+               arg => { faxis.InvertBit(JSROOT.EAxisBits.kRotateTitle); painter.interactiveRedraw("pad", `exec:RotateTitle(${arg})`, kind); });
          this.AddColorMenu("Color", faxis.fTitleColor,
-               arg => { faxis.fTitleColor = arg; painter.InteractiveRedraw("pad", getColorExec(arg, "SetTitleColor"), kind); });
+               arg => { faxis.fTitleColor = arg; painter.interactiveRedraw("pad", getColorExec(arg, "SetTitleColor"), kind); });
          this.SizeMenu("Offset", 0, 3, 0.2, faxis.fTitleOffset,
-                         arg => { faxis.fTitleOffset = arg; painter.InteractiveRedraw("pad", `exec:SetTitleOffset(${arg})`, kind); });
+                         arg => { faxis.fTitleOffset = arg; painter.interactiveRedraw("pad", `exec:SetTitleOffset(${arg})`, kind); });
          this.SizeMenu("Size", 0.02, 0.11, 0.01, faxis.fTitleSize,
-                         arg => { faxis.fTitleSize = arg; painter.InteractiveRedraw("pad", `exec:SetTitleSize(${arg})`, kind); });
+                         arg => { faxis.fTitleSize = arg; painter.interactiveRedraw("pad", `exec:SetTitleSize(${arg})`, kind); });
          this.add("endsub:");
          this.add("sub:Ticks");
          if (faxis._typename == "TGaxis") {
             this.AddColorMenu("Color", faxis.fLineColor,
-                     arg => { faxis.fLineColor = arg; painter.InteractiveRedraw("pad"); });
+                     arg => { faxis.fLineColor = arg; painter.interactiveRedraw("pad"); });
             this.SizeMenu("Size", -0.05, 0.055, 0.01, faxis.fTickSize,
-                     arg => { faxis.fTickSize = arg; painter.InteractiveRedraw("pad"); } );
+                     arg => { faxis.fTickSize = arg; painter.interactiveRedraw("pad"); } );
          } else {
             this.AddColorMenu("Color", faxis.fAxisColor,
-                     arg => { faxis.fAxisColor = arg; painter.InteractiveRedraw("pad", getColorExec(arg, "SetAxisColor"), kind); });
+                     arg => { faxis.fAxisColor = arg; painter.interactiveRedraw("pad", getColorExec(arg, "SetAxisColor"), kind); });
             this.SizeMenu("Size", -0.05, 0.055, 0.01, faxis.fTickLength,
-                     arg => { faxis.fTickLength = arg; painter.InteractiveRedraw("pad", `exec:SetTickLength(${arg})`, kind); });
+                     arg => { faxis.fTickLength = arg; painter.interactiveRedraw("pad", `exec:SetTickLength(${arg})`, kind); });
          }
          this.add("endsub:");
       }
