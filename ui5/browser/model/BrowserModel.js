@@ -197,7 +197,7 @@ sap.ui.define([
               sort: this.sortOrder || "",
               regex: this.itemsFilter ? "^(" + this.itemsFilter + ".*)$" : ""
            };
-           this._websocket.Send("BRREQ:" + JSON.stringify(request));
+           this._websocket.send("BRREQ:" + JSON.stringify(request));
         },
 
         // process reply from server
