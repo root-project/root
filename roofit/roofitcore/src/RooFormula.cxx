@@ -60,8 +60,7 @@ Check the tutorial rf506_msgservice.C for details.
 #include "RooAbsCategory.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
-#include "BatchHelpers.h"
-#include "RunContext.h"
+#include "RooBatchCompute.h"
 
 #include "ROOT/RMakeUnique.hxx"
 #include "TObjString.h"
@@ -367,7 +366,7 @@ Double_t RooFormula::eval(const RooArgSet* nset) const
 }
 
 
-RooSpan<double> RooFormula::evaluateSpan(const RooAbsReal* dataOwner, BatchHelpers::RunContext& inputData, const RooArgSet* nset) const {
+RooSpan<double> RooFormula::evaluateSpan(const RooAbsReal* dataOwner, RooBatchCompute::RunContext& inputData, const RooArgSet* nset) const {
   if (!_tFormula) {
     coutF(Eval) << __func__ << " (" << GetName() << "): Formula didn't compile: " << GetTitle() << endl;
     std::string what = "Formula ";
@@ -376,7 +375,7 @@ RooSpan<double> RooFormula::evaluateSpan(const RooAbsReal* dataOwner, BatchHelpe
     throw std::runtime_error(what);
   }
 
-  std::vector<BatchHelpers::BracketAdapterWithMask> valueAdapters;
+  std::vector<RooBatchCompute::BracketAdapterWithMask> valueAdapters;
   std::vector<RooSpan<const double>> inputSpans;
   size_t nData=1;
   for (const auto arg : _origList) {

@@ -30,8 +30,7 @@ that models a non-relativistic Breit-Wigner shape
 #include "RooBreitWigner.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
-#include "BatchHelpers.h"
-#include "RooFitComputeInterface.h"
+#include "RooBatchCompute.h"
 
 using namespace std;
 
@@ -67,8 +66,8 @@ Double_t RooBreitWigner::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of BreitWigner distribution.  
-RooSpan<double> RooBreitWigner::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooFitCompute::dispatch->computeBreitWigner(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), width->getValues(evalData, normSet));
+RooSpan<double> RooBreitWigner::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeBreitWigner(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), width->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -24,7 +24,7 @@
 class RooAbsRealLValue;
 class RooAbsReal;
 class RooArgSet;
-namespace BatchHelpers{ struct RunContext; }
+namespace RooBatchCompute{ struct RunContext; }
 
 class RooRealBinding : public RooAbsFunc {
 public:
@@ -59,7 +59,7 @@ protected:
   mutable std::vector<RooAbsReal*> _compList ; //!
   mutable std::vector<Double_t>    _compSave ; //!
   mutable Double_t _funcSave ; //!
-  mutable std::unique_ptr<BatchHelpers::RunContext> _evalData; /// Memory for batch evaluations
+  mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; /// Memory for batch evaluations
   
   ClassDef(RooRealBinding,0) // Function binding to RooAbsReal object
 };

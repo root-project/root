@@ -36,9 +36,7 @@ D*-D0 mass difference distributions. It computes
 #include "RooRealVar.h"
 #include "RooIntegrator1D.h"
 #include "RooAbsFunc.h"
-#include "RooVDTHeaders.h"
-#include "BatchHelpers.h"
-#include "RooFitComputeInterface.h"
+#include "RooBatchCompute.h"
 
 #include "TMath.h"
 
@@ -83,8 +81,8 @@ Double_t RooDstD0BG::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of D*-D0 mass difference distribution.  
-RooSpan<double> RooDstD0BG::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooFitCompute::dispatch->computeDstD0BG(this, evalData, dm->getValues(evalData, normSet), dm0->getValues(evalData, normSet), C->getValues(evalData, normSet), A->getValues(evalData, normSet), B->getValues(evalData, normSet));
+RooSpan<double> RooDstD0BG::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeDstD0BG(this, evalData, dm->getValues(evalData, normSet), dm0->getValues(evalData, normSet), C->getValues(evalData, normSet), A->getValues(evalData, normSet), B->getValues(evalData, normSet));
 }
 
 

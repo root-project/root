@@ -16,16 +16,11 @@
 
 #include "RunContext.h"
 
-#include "RooArgProxy.h"
-#include "RooAbsReal.h"
+#include <limits>
 
-namespace BatchHelpers {
+class RooAbsReal;
 
-/// Check if there is a span of data corresponding to the variable in this proxy.
-RooSpan<const double> RunContext::getBatch(const RooArgProxy& proxy) const {
-  return getBatch(static_cast<const RooAbsReal*>(proxy.absArg()));
-}
-
+namespace RooBatchCompute {
 
 /// Check if there is a span of data corresponding to the object passed as owner.
 RooSpan<const double> RunContext::getBatch(const RooAbsReal* owner) const {

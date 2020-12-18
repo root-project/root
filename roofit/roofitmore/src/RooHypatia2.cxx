@@ -90,11 +90,9 @@
  */
 
 #include "RooHypatia2.h"
-
+#include "RooBatchCompute.h"
 #include "RooAbsReal.h"
 #include "RooHelpers.h"
-#include "BatchHelpers.h"
-#include "RunContext.h"
 
 #include "TMath.h"
 #include "Math/SpecFunc.h"
@@ -429,7 +427,7 @@ std::pair<double, double> computeAB_zetaZero(double beta, double asigma, double 
   return {A, B};
 }
 
-using BatchHelpers::BracketAdapter;
+using RooBatchCompute::BracketAdapter;
 //////////////////////////////////////////////////////////////////////////////////////////
 /// A specialised compute function where x is an observable, and all parameters are used as
 /// parameters. Since many things can be calculated outside of the loop, it is faster.
@@ -489,8 +487,8 @@ void compute(RooSpan<double> output, RooSpan<const double> x,
 
 }
 
-RooSpan<double> RooHypatia2::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  using namespace BatchHelpers;
+RooSpan<double> RooHypatia2::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  using namespace RooBatchCompute;
 
   auto x = _x->getValues(evalData, normSet);
   auto lambda = _lambda->getValues(evalData, normSet);

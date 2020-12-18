@@ -29,7 +29,7 @@ starts with the coefficient that goes with \f$ T_1(x)=x \f$ (i.e. the linear ter
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooNameReg.h"
-#include "RooFitComputeInterface.h"
+#include "RooBatchCompute.h"
 
 #include <cmath>
 
@@ -184,7 +184,7 @@ Double_t RooChebychev::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Chebychev.  
-RooSpan<double> RooChebychev::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+RooSpan<double> RooChebychev::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
 
   RooSpan<const double> xData = _x->getValues(evalData, normSet);  
   size_t batchSize = xData.size();
@@ -197,7 +197,7 @@ RooSpan<double> RooChebychev::evaluateSpan(BatchHelpers::RunContext& evalData, c
   for (size_t i=0; i<nCoef; i++) {
     coef[i] = static_cast<const RooAbsReal &>(_coefList[i]).getVal();
   }
-  RooFitCompute::dispatch->computeChebychev(batchSize, output.data(), xData.data(), xmin, xmax, coef);
+  RooBatchCompute::dispatch->computeChebychev(batchSize, output.data(), xData.data(), xmin, xmax, coef);
   return output;
 }
 

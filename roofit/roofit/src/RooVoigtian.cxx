@@ -30,9 +30,7 @@ the selectFastAlgorithm() method.
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooMath.h"
-#include "BatchHelpers.h"
-#include "RooVDTHeaders.h"
-#include "RooFitComputeInterface.h"
+#include "RooBatchCompute.h"
 
 #include <cmath>
 #include <complex>
@@ -102,7 +100,7 @@ Double_t RooVoigtian::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Voigtian distribution.  
-RooSpan<double> RooVoigtian::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooFitCompute::dispatch->computeVoigtian(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), width->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
+RooSpan<double> RooVoigtian::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeVoigtian(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), width->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
 }
 

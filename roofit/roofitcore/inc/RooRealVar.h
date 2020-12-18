@@ -17,7 +17,6 @@
 #define ROO_REAL_VAR
 
 #include "RooAbsRealLValue.h"
-#include "RunContext.h"
 
 #include "TString.h"
 
@@ -33,6 +32,9 @@ class RooErrorVar ;
 class RooVectorDataStore ;
 class RooExpensiveObjectCache ;
 class RooRealVarSharedProperties;
+namespace RooBatchCompute{
+struct RunContext;
+}
 
 class RooRealVar : public RooAbsRealLValue {
 public:
@@ -51,7 +53,7 @@ public:
   
   // Parameter value and error accessors
   virtual Double_t getValV(const RooArgSet* nset=0) const ;
-  RooSpan<const double> getValues(BatchHelpers::RunContext& inputData, const RooArgSet*) const final;
+  RooSpan<const double> getValues(RooBatchCompute::RunContext& inputData, const RooArgSet*) const final;
 
   virtual void setVal(Double_t value);
   virtual void setVal(Double_t value, const char* rangeName);

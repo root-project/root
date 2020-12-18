@@ -97,7 +97,7 @@ public:
 
 protected:
   double evaluate() const override;
-  RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const override;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
   RooSpan<const double> binBoundaries() const;
 
 private:

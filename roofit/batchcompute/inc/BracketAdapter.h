@@ -14,42 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef ROOFIT_ROOFITCORE_INC_BATCHHELPERS_H_
-#define ROOFIT_ROOFITCORE_INC_BATCHHELPERS_H_
+#ifndef ROOFIT_BATCHCOMPUTE_BRACKETADAPTER_H
+#define ROOFIT_BATCHCOMPUTE_BRACKETADAPTER_H
 
-#include "RooRealProxy.h"
 #include "RooSpan.h"
 
 #include <vector>
 
-class RooArgSet;
-
-namespace BatchHelpers {
-  
-constexpr size_t block = 1024;
-
-struct ArrayWrapper {
-    const double * __restrict ptr;
-    bool _batch;
-    
-    constexpr double operator[](std::size_t i) const {
-      return ptr[i];
-    }
-    constexpr bool batch() const {
-      return _batch;
-    }
-};
-
-struct EvaluateInfo {
-  size_t size, nBatches;
-};
-  
-size_t findSmallestBatch(const std::vector< RooSpan<const double> >& parameters);
-
-EvaluateInfo init(std::vector< RooRealProxy > parameters, 
-                  std::vector<  ArrayWrapper* > wrappers,
-                  std::vector< double*> arrays,
-                  size_t begin, size_t batchSize );
+namespace RooBatchCompute {
 
 ///Little adapter that gives a bracket operator to types that don't
 ///have one. It completely ignores the index and returns a constant.
@@ -130,16 +102,6 @@ class BracketAdapterWithMask {
     const size_t _mask;
 };
 
-
-/// Helper class to access a batch-related part of RooAbsReal's interface, which should not leak to the outside world.
-class BatchInterfaceAccessor {
-  public:
-    static void checkBatchComputation(const RooAbsReal& theReal, const BatchHelpers::RunContext& evalData, std::size_t evtNo,
-        const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) {
-      theReal.checkBatchComputation(evalData, evtNo, normSet, relAccuracy);
-    }
-};
-
 }
 
-#endif /* ROOFIT_ROOFITCORE_INC_BATCHHELPERS_H_ */
+#endif /* ROOFIT_BATCHCOMPUTE_BRACKETADAPTER_H */

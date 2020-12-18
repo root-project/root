@@ -19,7 +19,7 @@
 #include "RooAbsReal.h"
 
 class RooArgSet ;
-namespace BatchHelpers {
+namespace RooBatchCompute {
   struct RunContext;
 }
 
@@ -37,7 +37,7 @@ public:
     return _value;
   }
 
-  RooSpan<const double> getValues(BatchHelpers::RunContext& evalData, const RooArgSet*) const;
+  RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet*) const;
 
   void writeToStream(std::ostream& os, Bool_t compact) const ;
 

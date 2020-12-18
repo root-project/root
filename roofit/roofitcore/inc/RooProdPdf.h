@@ -27,7 +27,7 @@
 #include <list>
 #include <string>
 
-namespace BatchHelpers {
+namespace RooBatchCompute {
 struct RunContext;
 }
 
@@ -103,7 +103,7 @@ public:
 private:
 
   Double_t evaluate() const ;
-  virtual RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
+  virtual RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
   RooAbsReal* makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
 

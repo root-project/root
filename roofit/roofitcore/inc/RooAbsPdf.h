@@ -36,7 +36,7 @@ class TList ;
 class RooLinkedList ;
 class RooNumGenConfig ;
 class RooRealIntegral ;
-namespace BatchHelpers {
+namespace RooBatchCompute {
 struct RunContext;
 }
 
@@ -202,10 +202,10 @@ public:
   virtual Double_t getValV(const RooArgSet* set=0) const ;
   virtual Double_t getLogVal(const RooArgSet* set=0) const ;
 
-  RooSpan<const double> getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
+  RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
   RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
       const RooArgSet* normSet = nullptr) const;
-  RooSpan<const double> getLogProbabilities(BatchHelpers::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
+  RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
 
   /// \copydoc getNorm(const RooArgSet*) const
   Double_t getNorm(const RooArgSet& nset) const { 

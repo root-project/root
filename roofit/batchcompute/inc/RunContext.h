@@ -14,8 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef ROOFIT_ROOFITCORE_INC_BATCHRUNCONTEXT_H_
-#define ROOFIT_ROOFITCORE_INC_BATCHRUNCONTEXT_H_
+#ifndef ROOFIT_BATCHCOMPUTE_RUNCONTEXT_H
+#define ROOFIT_BATCHCOMPUTE_RUNCONTEXT_H
 
 #include "RooSpan.h"
 
@@ -26,7 +26,7 @@ class RooArgSet;
 class RooAbsReal;
 class RooArgProxy;
 
-namespace BatchHelpers {
+namespace RooBatchCompute {
 
 /// Data that has to be passed around when evaluating functions / PDFs.
 struct RunContext {

@@ -50,7 +50,7 @@ protected:
 
   /// Evaluation
   Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
   ClassDef(RooPolynomial,1) // Polynomial PDF
 };

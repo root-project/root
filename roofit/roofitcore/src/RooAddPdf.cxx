@@ -74,6 +74,7 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include "RooGlobalFunc.h"
 #include "RooRealIntegral.h"
 #include "RooNaNPacker.h"
+#include "RooBatchCompute.h"
 
 #include <algorithm>
 #include <sstream>
@@ -825,7 +826,7 @@ Double_t RooAddPdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
-RooSpan<double> RooAddPdf::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+RooSpan<double> RooAddPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
   auto normAndCache = getNormAndCache(normSet);
   const RooArgSet* nset = normAndCache.first;
   CacheElem* cache = normAndCache.second;

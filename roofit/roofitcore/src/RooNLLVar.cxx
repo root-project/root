@@ -43,7 +43,6 @@ In extended mode, a
 #include "RunContext.h"
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
-#include "BatchHelpers.h"
 #include <iomanip>
 #endif
 
@@ -484,7 +483,7 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
   // Holding on to this struct in between function calls will make sure that the memory
   // is only allocated once.
   if (!_evalData) {
-    _evalData.reset(new BatchHelpers::RunContext);
+    _evalData.reset(new RooBatchCompute::RunContext);
   }
   _evalData->clear();
   _dataClone->getBatches(*_evalData, firstEvent, lastEvent-firstEvent);
@@ -498,14 +497,14 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     assert(_dataClone->valid());
     try {
       // Cross check results with strict tolerance and complain
-      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet, 1.E-13);
+      BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet, 1.E-13);
     } catch (std::exception& e) {
       std::cerr << __FILE__ << ":" << __LINE__ << " ERROR when checking batch computation for event " << evtNo << ":\n"
           << e.what() << std::endl;
 
       // It becomes a real problem if it's very wrong. We fail in this case:
       try {
-        BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet, 1.E-9);
+        BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet, 1.E-9);
       } catch (std::exception& e2) {
         assert(false);
       }

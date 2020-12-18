@@ -14,8 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef ROOFIT_ROOFITCORE_INC_ROOSPAN_H_
-#define ROOFIT_ROOFITCORE_INC_ROOSPAN_H_
+#ifndef ROOFIT_BATCHCOMPUTE_ROOSPAN_H
+#define ROOFIT_BATCHCOMPUTE_ROOSPAN_H
 
 #include "ROOT/RSpan.hxx"
 #include <vector>
@@ -150,4 +150,4 @@ private:
 };
 
 
-#endif /* ROOFIT_ROOFITCORE_INC_ROOSPAN_H_ */
+#endif /* ROOFIT_BATCHCOMPUTE_ROOSPAN_H */

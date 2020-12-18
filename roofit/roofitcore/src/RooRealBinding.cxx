@@ -30,7 +30,6 @@ of its servers and present it as a simple array oriented interface.
 #include "RooAbsRealLValue.h"
 #include "RooNameReg.h"
 #include "RooMsgService.h"
-#include "BatchHelpers.h"
 #include "RunContext.h"
 
 #include <cassert>
@@ -213,7 +212,7 @@ RooSpan<const double> RooRealBinding::getValues(std::vector<RooSpan<const double
 
   // Use _evalData to hold on to memory between integration calls
   if (!_evalData) {
-    _evalData.reset(new BatchHelpers::RunContext());
+    _evalData.reset(new RooBatchCompute::RunContext());
   } else {
     _evalData->clear();
   }

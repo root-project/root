@@ -26,9 +26,7 @@ side of maximum value
 
 #include "RooAbsReal.h"
 #include "RooMath.h"
-#include "BatchHelpers.h"
-#include "RooVDTHeaders.h"
-#include "RooFitComputeInterface.h"
+#include "RooBatchCompute.h"
 
 #include "TMath.h"
 
@@ -82,8 +80,8 @@ Double_t RooBifurGauss::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of BifurGauss distribution.  
-RooSpan<double> RooBifurGauss::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooFitCompute::dispatch->computeBifurGauss(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigmaL->getValues(evalData, normSet), sigmaR->getValues(evalData, normSet));
+RooSpan<double> RooBifurGauss::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeBifurGauss(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigmaL->getValues(evalData, normSet), sigmaR->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

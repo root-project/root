@@ -19,9 +19,7 @@ Here we also implement the analytic integral.
 #include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
-#include "BatchHelpers.h"
-#include "RooVDTHeaders.h"
-#include "RooFitComputeInterface.h"
+#include "RooBatchCompute.h"
 
 #include "TMath.h"
 
@@ -66,8 +64,8 @@ Double_t RooChiSquarePdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of ChiSquare distribution.  
-RooSpan<double> RooChiSquarePdf::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooFitCompute::dispatch->computeChiSquare(this, evalData, _x->getValues(evalData, normSet), _ndof->getValues(evalData, normSet));
+RooSpan<double> RooChiSquarePdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeChiSquare(this, evalData, _x->getValues(evalData, normSet), _ndof->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

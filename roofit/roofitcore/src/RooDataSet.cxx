@@ -89,7 +89,6 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 #include "RooSentinel.h"
 #include "RooTrace.h"
 #include "RooHelpers.h"
-#include "BatchHelpers.h"
 
 #include "TTree.h"
 #include "TH2.h"
@@ -102,10 +101,6 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 #include <iostream>
 #include <fstream>
 
-
-#if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
-char* operator+( streampos&, char* );
-#endif
 
 using namespace std;
 
@@ -1025,7 +1020,7 @@ RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t 
 /// The key to retrieve an item is the pointer of the variable that owns the data.
 /// \param first Index of first event that ends up in the batch.
 /// \param len   Number of events in each batch.
-void RooDataSet::getBatches(BatchHelpers::RunContext& evalData, std::size_t begin, std::size_t len) const {
+void RooDataSet::getBatches(RooBatchCompute::RunContext& evalData, std::size_t begin, std::size_t len) const {
   for (auto&& batch : store()->getBatches(begin, len).spans) {
     evalData.spans[batch.first] = std::move(batch.second);
   }

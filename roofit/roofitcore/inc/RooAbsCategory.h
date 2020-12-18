@@ -17,7 +17,6 @@
 #define ROO_ABS_CATEGORY
 
 #include "RooAbsArg.h"
-#include "RooSpan.h"
 
 #include <string>
 #include <map>

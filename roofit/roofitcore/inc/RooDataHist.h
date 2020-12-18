@@ -91,7 +91,7 @@ public:
   virtual Bool_t isNonPoissonWeighted() const ;
 
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const;
-  void getBatches(BatchHelpers::RunContext& evalData, std::size_t begin, std::size_t len) const;
+  void getBatches(RooBatchCompute::RunContext& evalData, std::size_t begin, std::size_t len) const;
 
   Double_t sum(Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) const ;
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) ;

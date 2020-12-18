@@ -21,7 +21,6 @@
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooSpan.h"
-#include "RunContext.h"
 #include <map>
 #include <string>
 
@@ -42,6 +41,9 @@ class RooAbsDataStore ;
 template<typename T> class TMatrixTSym;
 using TMatrixDSym = TMatrixTSym<Double_t>;
 class RooFormulaVar;
+namespace RooBatchCompute{
+struct RunContext;
+}
 
 
 class RooAbsData : public TNamed, public RooPrintable {
@@ -104,7 +106,7 @@ public:
   /// \param first Index of first event that ends up in the batch.
   /// \param len   Number of events in each batch.
   /// Needs to be overridden by derived classes. This implementation returns an empty RunContext.
-  virtual void getBatches(BatchHelpers::RunContext& evalData,
+  virtual void getBatches(RooBatchCompute::RunContext& evalData,
       std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const = 0;
 
   ////////////////////////////////////////////////////////////////////////////////

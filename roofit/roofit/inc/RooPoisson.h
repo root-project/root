@@ -43,7 +43,7 @@ protected:
   Bool_t  _protectNegative{true};
   
   Double_t evaluate() const override;
-  RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const override;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
 
   ClassDefOverride(RooPoisson,3) // A Poisson PDF
 };
