@@ -66,6 +66,33 @@ sap.ui.define([
          page.addContent(fragm);
       },
 
+     /** @summary Produce exec string for WebCanas to set color value
+       * @desc Color can be id or string, but should belong to list of known colors
+       * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color will be created on server side
+       * @private */
+      getColorExec: function(painter, col, method) {
+         let id = -1, arr = JSROOT.Painter.root_colors;
+         if (typeof col == "string") {
+            if (!col || (col == "none")) id = 0; else
+               for (let k = 1; k < arr.length; ++k)
+                  if (arr[k] == col) { id = k; break; }
+            if ((id < 0) && (col.indexOf("rgb") == 0)) id = 9999;
+         } else if (!isNaN(col) && arr[col]) {
+            id = col;
+            col = arr[id];
+         }
+
+         if (id < 0) return "";
+
+         if (id >= 50) {
+            // for higher color numbers ensure that such color exists
+            let c = d3.color(col);
+            id = "TColor::GetColor(" + c.r + "," + c.g + "," + c.b + ")";
+         }
+
+         return "exec:" + method + "(" + id + ")";
+      },
+
       /// function called when user changes model property
       /// data object includes _kind, _painter and _handle (optionally)
       modelPropertyChange : function(evnt, data) {
@@ -94,12 +121,12 @@ sap.ui.define([
                else if (item == "attline/style")
                   exec = "exec:SetLineStyle(" + pars.value + ")";
                else if (item == "attline/color")
-                  exec = data._painter.GetColorExec(pars.value, "SetLineColor");
+                  exec = this.getColorExec(data._painter, pars.value, "SetLineColor");
             } else if ((data._kind === "TAttFill") && (obj.fFillColor!==undefined) && (obj.fFillStyle!==undefined))  {
                if (item == "attfill/pattern")
                   exec = "exec:SetFillStyle(" + pars.value + ")";
                else if (item == "attfill/color")
-                  exec = data._painter.GetColorExec(pars.value, "SetFillColor");
+                  exec = this.getColorExec(data._painter, pars.value, "SetFillColor");
             }
          }
 
@@ -161,11 +188,11 @@ sap.ui.define([
                break;
             case "axiscolor":
                axis.fAxisColor = this.currentPadPainter.addColor(pars.value);
-               exec = painter.GetColorExec(pars.value, "SetAxisColor");
+               exec = this.getColorExec(painter, pars.value, "SetAxisColor");
                break;
             case "color_label":
                axis.fLabelColor = this.currentPadPainter.addColor(pars.value);
-               exec = painter.GetColorExec(pars.value, "SetLabelColor");
+               exec = this.getColorExec(painter, pars.value, "SetLabelColor");
                break;
             case "center_label":
                axis.InvertBit(JSROOT.EAxisBits.kCenterLabels);
@@ -183,7 +210,7 @@ sap.ui.define([
                break;
             case "color_title":
                axis.fLabelColor = this.currentPadPainter.addColor(pars.value);
-               exec = painter.GetColorExec(pars.value, "SetTitleColor");
+               exec = this.getColorExec(painter, pars.value, "SetTitleColor");
                break;
             case "center_title":
                axis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
