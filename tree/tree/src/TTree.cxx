@@ -6029,7 +6029,7 @@ TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
       if (t) {
-         leaf = t->GetLeaf(leafname);
+         leaf = t->GetLeaf(branchname, leafname);
          if (leaf) return leaf;
       }
    }
