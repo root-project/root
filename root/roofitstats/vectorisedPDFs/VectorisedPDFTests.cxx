@@ -29,9 +29,6 @@
 #include "RooConstVar.h"
 #include "Math/Util.h"
 #include "RooHelpers.h"
-#ifdef ROOFIT_CHECK_CACHED_VALUES
-#include "BatchHelpers.h"
-#endif
 
 #include <numeric>
 #include <ctime>
@@ -204,7 +201,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
   RooArgSet* observables = _pdf->getObservables(*_dataUniform);
   RooArgSet* parameters  = _pdf->getParameters(*_dataUniform);
 
-  std::vector<BatchHelpers::RunContext> evalData;
+  std::vector<RooBatchCompute::RunContext> evalData;
   auto callBatchFunc = [compareLogs,&evalData,this](const RooAbsPdf& pdf, std::size_t begin, std::size_t len, const RooArgSet* theNormSet)
       -> RooSpan<const double> {
     evalData.emplace_back();
@@ -347,7 +344,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
         *observables = *_dataUniform->get(i);
         _pdf->getVal(normSet);
 
-        BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*_pdf,
+        BatchInterfaceAccessor::checkBatchComputation(*_pdf,
             evalData[currentBatch-batchResults.begin()],
             currentBatchIndex, normSet, toleranceCompare);
 

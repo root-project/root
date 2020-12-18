@@ -32,7 +32,7 @@ TEST(GaussBinned, RetrieveBatches) {
   RooGaussian gaus("gaus", "gaus", x, m, s);
   auto dataHist = gaus.generateBinned(x, 10000);
 
-  BatchHelpers::RunContext evalData;
+  RooBatchCompute::RunContext evalData;
   dataHist->getBatches(evalData, 0, dataHist->numEntries());
 
   auto batchVals = gaus.getValues(evalData, nullptr);
@@ -41,7 +41,7 @@ TEST(GaussBinned, RetrieveBatches) {
   EXPECT_TRUE(std::none_of(batchVals.begin(), batchVals.end(), [](double val){return val <= 0.;}));
   std::vector<double> savedProbs(batchVals.begin(), batchVals.end());
 
-  BatchHelpers::RunContext evalDataWithNorm;
+  RooBatchCompute::RunContext evalDataWithNorm;
   dataHist->getBatches(evalDataWithNorm, 0, dataHist->numEntries());
   RooArgSet normSet(x);
   auto batchValsNorm = gaus.getValues(evalDataWithNorm, &normSet);
@@ -89,7 +89,7 @@ TEST(GaussBinned, AskForLargerBatch) {
 
   {
     RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::DataHandling);
-    BatchHelpers::RunContext evalData;
+    RooBatchCompute::RunContext evalData;
     dataHist->getBatches(evalData, 30, 21);
 
     EXPECT_FALSE(hijack.str().empty()) << "Asking for too large batch should issue error message.";
