@@ -177,14 +177,14 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             for (let n=0;n<intersects.length;++n) {
                let mesh = intersects[n].object;
                if (mesh.zoom) { kind = mesh.zoom; p = null; break; }
-               if (mesh.painter && typeof mesh.painter.FillContextMenu === 'function') {
+               if (mesh.painter && typeof mesh.painter.fillContextMenu === 'function') {
                   p = mesh.painter; break;
                }
             }
 
-         let fp = obj_painter.frame_painter();
-         if (fp && fp.ShowContextMenu)
-            fp.ShowContextMenu(kind, pos, p);
+         let fp = obj_painter.getFramePainter();
+         if (fp && fp.showContextMenu)
+            fp.showContextMenu(kind, pos, p);
       }
    }
 
@@ -1005,7 +1005,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
           rsegments = [0, 1, 1, 2, 2, 3, 3, 0],
           // reduced vertices
           rvertices = [ new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(1, 1, 0), new THREE.Vector3(1, 0, 0) ],
-          main = this.frame_painter(),
+          main = this.getFramePainter(),
           axis_zmin = main.z_handle.gr.domain()[0],
           axis_zmax = main.z_handle.gr.domain()[1],
           zmin, zmax,
@@ -1207,7 +1207,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
             let p = this.painter,
                 handle = this.handle,
-                main = p.frame_painter(),
+                main = p.getFramePainter(),
                 histo = p.GetHisto(),
                 tip = p.Get3DToolTip( this.face_to_bins_index[intersect.faceIndex] ),
                 i1 = tip.ix - 1, i2 = i1 + handle.stepi,
@@ -1360,7 +1360,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       this.mode3d = true;
 
-      let main = this.frame_painter(), // who makes axis drawing
+      let main = this.getFramePainter(), // who makes axis drawing
           is_main = this.isMainPainter(); // is main histogram
 
       if (reason == "resize")  {
@@ -1368,7 +1368,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          return Promise.resolve(this);
       }
 
-      this.DeleteAtt();
+      this.deleteAttr();
 
       this.ScanContent(true); // may be required for axis drawings
 
@@ -1384,7 +1384,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       return this.DrawingBins(reason).then(() => {
          // called when bins received from server, must be reentrant
-         let main = this.frame_painter();
+         let main = this.getFramePainter();
 
          this.DrawLego();
          this.UpdatePaletteDraw();
@@ -1402,7 +1402,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       this.mode3d = true;
 
-      let main = this.frame_painter(), // who makes axis drawing
+      let main = this.getFramePainter(), // who makes axis drawing
           is_main = this.isMainPainter(); // is main histogram
 
       if (reason == "resize") {
@@ -1419,7 +1419,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       if (this.options.maximum !== -1111) { this.zmax = this.options.maximum; zmult = 1; }
       if (main.logz && (this.zmin<=0)) this.zmin = this.zmax * 1e-5;
 
-      this.DeleteAtt();
+      this.deleteAttr();
 
       if (is_main) {
          main.create3DScene(this.options.Render3D);
@@ -1433,7 +1433,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       return this.DrawingBins(reason).then(() => {
          // called when bins received from server, must be reentrant
-         let main = this.frame_painter();
+         let main = this.getFramePainter();
 
          this.Draw3DBins();
          main.Render3D();
@@ -1490,7 +1490,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
    JSROOT.v7.RH2Painter.prototype.DrawContour3D = function(realz) {
       // for contour plots one requires handle with full range
-      let main = this.frame_painter(),
+      let main = this.getFramePainter(),
           handle = this.PrepareDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 }),
           palette = main.getHistPalette(),
           layerz = 2*main.size_z3d, pnts = [];
@@ -1522,7 +1522,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
    JSROOT.v7.RH2Painter.prototype.DrawSurf = function() {
       let histo = this.GetHisto(),
-          main = this.frame_painter(),
+          main = this.getFramePainter(),
           handle = this.PrepareDraw({rounding: false, use3d: true, extra: 1, middle: 0.5 }),
           i, j, x1, y1, x2, y2, z11, z12, z21, z22,
           di = handle.stepi, dj = handle.stepj,
@@ -1943,7 +1943,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
    }
 
    JSROOT.v7.RH2Painter.prototype.DrawError = function() {
-      let main = this.frame_painter(),
+      let main = this.getFramePainter(),
           histo = this.GetHisto(),
           handle = this.PrepareDraw({ rounding: false, use3d: true, extra: 1 }),
           zmin = main.z_handle.gr.domain()[0],
@@ -2026,7 +2026,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
           let pos = Math.floor(intersect.index / 6);
           if ((pos<0) || (pos >= this.intersect_index.length)) return null;
           let p = this.painter,
-              main = p.frame_painter(),
+              main = p.getFramePainter(),
               tip = p.Get3DToolTip(this.intersect_index[pos]),
               handle = this.handle,
               i1 = tip.ix - 1, i2 = i1 + handle.stepi,
@@ -2052,7 +2052,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
    JSROOT.v7.RH2Painter.prototype.DrawPolyLego = function() {
       let histo = this.GetHisto(),
           palette = this.getHistPalette(),
-          pmain = this.frame_painter(),
+          pmain = this.getFramePainter(),
           axis_zmin = pmain.z_handle.gr.domain()[0],
           axis_zmax = pmain.z_handle.gr.domain()[1],
           colindx, bin, i, len = histo.fBins.arr.length,
@@ -2217,7 +2217,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
          mesh.tooltip = function(/*intersects*/) {
 
-            let p = this.painter, main = p.frame_painter(),
+            let p = this.painter, main = p.getFramePainter(),
                 bin = p.getObject().fBins.arr[this.bins_index];
 
             let tip = {
@@ -2299,7 +2299,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
           j2 = this.GetSelectIndex("y", "right"),
           k1 = this.GetSelectIndex("z", "left"),
           k2 = this.GetSelectIndex("z", "right"),
-          fp = this.frame_painter(),
+          fp = this.getFramePainter(),
           res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0 },
           xi, yi, zi, xx, xside, yy, yside, zz, zside, cont;
 
@@ -2406,7 +2406,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
    }
 
    RH3Painter.prototype.GetBinTips = function (ix, iy, iz) {
-      let lines = [], pmain = this.frame_painter(), histo = this.GetHisto(),
+      let lines = [], pmain = this.getFramePainter(), histo = this.GetHisto(),
           xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y"), zaxis = this.GetAxis("z"),
           dx = 1, dy = 1, dz = 1;
 
@@ -2437,7 +2437,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
    RH3Painter.prototype.Draw3DScatter = function(handle) {
 
       let histo = this.GetHisto(),
-          main = this.frame_painter(),
+          main = this.getFramePainter(),
           i1 = handle.i1, i2 = handle.i2, di = handle.stepi,
           j1 = handle.j1, j2 = handle.j2, dj = handle.stepj,
           k1 = handle.k1, k2 = handle.k2, dk = handle.stepk,
@@ -2508,7 +2508,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          if ((indx<0) || (indx >= this.bins.length)) return null;
 
          let p = this.painter,
-             main = p.frame_painter(),
+             main = p.getFramePainter(),
              tip = p.Get3DToolTip(this.bins[indx]);
 
          tip.x1 = main.grx(p.GetAxis("x").GetBinLowEdge(tip.ix));
@@ -2536,7 +2536,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          if (this.Draw3DScatter(handle)) return;
 
       let fillcolor = this.v7EvalColor("fill_color", "red"),
-          main = this.frame_painter(),
+          main = this.getFramePainter(),
           buffer_size = 0, use_lambert = false,
           use_helper = false, use_colors = false, use_opacity = 1, use_scale = true,
           single_bin_verts, single_bin_norms,
@@ -2807,7 +2807,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             if ((indx<0) || (indx >= this.bins.length)) return null;
 
             let p = this.painter,
-                main = p.frame_painter(),
+                main = p.getFramePainter(),
                 tip = p.Get3DToolTip(this.bins[indx]),
                 grx = main.grx(p.GetAxis("x").GetBinCoord(tip.ix-0.5)),
                 gry = main.gry(p.GetAxis("y").GetBinCoord(tip.iy-0.5)),
@@ -2845,9 +2845,9 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          this.UpdatePaletteDraw();
    }
 
-   RH3Painter.prototype.Redraw = function(reason) {
+   RH3Painter.prototype.redraw = function(reason) {
 
-      let main = this.frame_painter(); // who makes axis and 3D drawing
+      let main = this.getFramePainter(); // who makes axis and 3D drawing
 
       if (reason == "resize") {
          if (main.Resize3D()) main.Render3D();
@@ -2862,7 +2862,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       this.DrawingBins(reason).then(() => {
          // called when bins received from server, must be reentrant
 
-         let main = this.frame_painter();
+         let main = this.getFramePainter();
 
          this.Draw3DBins();
          main.Render3D();
@@ -2872,7 +2872,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
    }
 
    RH3Painter.prototype.FillToolbar = function() {
-      let pp = this.pad_painter();
+      let pp = this.getPadPainter();
       if (!pp) return;
 
       pp.AddButton("auto_zoom", 'Unzoom all axes', 'ToggleZoom', "Ctrl *");
@@ -2946,7 +2946,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          isany = true;
       }
 
-      if (isany) this.frame_painter().Zoom(xmin, xmax, ymin, ymax, zmin, zmax);
+      if (isany) this.getFramePainter().Zoom(xmin, xmax, ymin, ymax, zmin, zmax);
    }
 
    RH3Painter.prototype.FillHistContextMenu = function(menu) {
@@ -2959,7 +2959,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
          this.DecodeOptions(arg);
 
-         this.InteractiveRedraw(true, "drawopt");
+         this.interactiveRedraw(true, "drawopt");
       });
    }
 
@@ -2986,7 +2986,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          }
 
          painter.ScanContent();
-         painter.Redraw();
+         painter.redraw();
          return painter;
       });
    }

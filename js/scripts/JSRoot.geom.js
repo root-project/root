@@ -212,7 +212,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             if (jsrp.closeMenu && jsrp.closeMenu()) return;
 
             jsrp.createMenu(this, evnt).then(menu => {
-                menu.painter.FillContextMenu(menu);
+                menu.painter.fillContextMenu(menu);
                 menu.show();
             });
          }
@@ -546,7 +546,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       // when drawing geometry without TCanvas, yup = true by default
       if (res._yup === undefined)
-         res._yup = this.svg_canvas().empty();
+         res._yup = this.getCanvSvg().empty();
 
       return res;
    }
@@ -623,7 +623,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    }
 
    /** @summary Fills context menu */
-   TGeoPainter.prototype.FillContextMenu = function(menu) {
+   TGeoPainter.prototype.fillContextMenu = function(menu) {
       menu.add("header: Draw options");
 
       menu.addchk(this.ctrl.update_browser, "Browser update", () => {
@@ -982,7 +982,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             }
 
          if (numnodes + numitems === 0) {
-            this.FillContextMenu(menu);
+            this.fillContextMenu(menu);
          } else {
             let many = (numnodes + numitems) > 1;
 
@@ -3904,7 +3904,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
    /** @summary Check if HTML element was resized and drawing need to be adjusted */
    TGeoPainter.prototype.checkResize = function(arg) {
-      let cp = this.canv_painter();
+      let cp = this.getCanvPainter();
 
       // firefox is the only browser which correctly supports resize of embedded canvas,
       // for others we should force canvas redrawing at every step
