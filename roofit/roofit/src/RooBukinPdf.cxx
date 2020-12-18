@@ -30,10 +30,8 @@ http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003
 #include "RooBukinPdf.h"
 #include "RooFit.h"
 #include "RooRealVar.h"
-#include "BatchHelpers.h"
-#include "RooVDTHeaders.h"
 #include "RooHelpers.h"
-#include "RooFitComputeInterface.h"
+#include "RooBatchCompute.h"
 
 #include <cmath>
 using namespace std;
@@ -144,6 +142,6 @@ Double_t RooBukinPdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Bukin distribution.  
-RooSpan<double> RooBukinPdf::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooFitCompute::dispatch->computeBukin(this, evalData, x->getValues(evalData, normSet), Xp->getValues(evalData, normSet), sigp->getValues(evalData, normSet), xi->getValues(evalData, normSet), rho1->getValues(evalData, normSet), rho2->getValues(evalData, normSet));
+RooSpan<double> RooBukinPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeBukin(this, evalData, x->getValues(evalData, normSet), Xp->getValues(evalData, normSet), sigp->getValues(evalData, normSet), xi->getValues(evalData, normSet), rho1->getValues(evalData, normSet), rho2->getValues(evalData, normSet));
 }

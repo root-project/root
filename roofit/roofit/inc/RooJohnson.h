@@ -57,7 +57,7 @@ private:
   double _massThreshold{-1.E300};
 
   Double_t evaluate() const override;
-  RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const override;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
 
   ClassDefOverride(RooJohnson,1)
 };

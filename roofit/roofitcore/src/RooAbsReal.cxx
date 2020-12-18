@@ -83,7 +83,6 @@
 #include "RooVectorDataStore.h"
 #include "RooCachedReal.h"
 #include "RooHelpers.h"
-#include "BatchHelpers.h"
 #include "RunContext.h"
 #include "ValueChecking.h"
 
@@ -310,7 +309,7 @@ Double_t RooAbsReal::getValV(const RooArgSet* nset) const
 /// \param[in] normSet   Use these variables for normalisation (relevant for PDFs), and pass this normalisation
 /// on to object serving values to us.
 /// \return RooSpan pointing to the computation results. The memory this span points to is owned by `evalData`.
-RooSpan<const double> RooAbsReal::getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
   auto item = evalData.spans.find(this);
   if (item != evalData.spans.end()) {
     return item->second;
@@ -4913,7 +4912,7 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 /// Computation results have to be stored here.
 /// \param[in]  normSet  Optional normalisation set passed down to the servers of this object.
 /// \return     Span pointing to the results. The memory is owned by `evalData`.
-RooSpan<double> RooAbsReal::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
   if (RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
     coutI(FastEvaluations) << "The class " << IsA()->GetName() << " does not implement the faster batch evaluation interface."
         << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
@@ -5030,7 +5029,7 @@ Double_t RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
 /// @param evtNo    Event from `evalData` to check for.
 /// @param normSet  Optional normalisation set that was used in computation.
 /// @param relAccuracy Accuracy required for passing the check.
-void RooAbsReal::checkBatchComputation(const BatchHelpers::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet, double relAccuracy) const {
+void RooAbsReal::checkBatchComputation(const RooBatchCompute::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet, double relAccuracy) const {
   for (const auto server : _serverList) {
     try {
       auto realServer = dynamic_cast<RooAbsReal*>(server);

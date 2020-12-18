@@ -47,9 +47,7 @@ RooPoison(N,mu) and treating the function as a PDF in mu.
 
 #include "RooRandom.h"
 #include "RooHelpers.h"
-#include "BatchHelpers.h"
-#include "RooVDTHeaders.h"
-#include "RooFitComputeInterface.h"
+#include "RooBatchCompute.h"
 
 #include "TMath.h"
 #include <Math/ProbFuncMathCore.h>
@@ -89,8 +87,8 @@ Double_t RooGamma::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Gamma PDF.  
-RooSpan<double> RooGamma::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooFitCompute::dispatch->computeGamma(this, evalData, x->getValues(evalData, normSet), gamma->getValues(evalData, normSet), beta->getValues(evalData, normSet), mu->getValues(evalData, normSet));
+RooSpan<double> RooGamma::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeGamma(this, evalData, x->getValues(evalData, normSet), gamma->getValues(evalData, normSet), beta->getValues(evalData, normSet), mu->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

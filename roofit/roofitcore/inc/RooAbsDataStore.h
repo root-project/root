@@ -27,7 +27,7 @@ class RooAbsArg ;
 class RooArgList ;
 class TIterator ;
 class TTree ;
-namespace BatchHelpers {
+namespace RooBatchCompute {
 struct RunContext;
 }
 
@@ -57,7 +57,7 @@ public:
   virtual Bool_t isWeighted() const = 0 ;
 
   /// Retrieve batches for all observables in this data store.
-  virtual BatchHelpers::RunContext getBatches(std::size_t first, std::size_t len) const = 0;
+  virtual RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const = 0;
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const = 0;
 
   // Change observable name

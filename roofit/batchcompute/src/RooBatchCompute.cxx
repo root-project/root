@@ -1,22 +1,16 @@
-// RooFitCompute Library created September 2020 by Emmanouil Michalainas
-#include "RooFitComputeInterface.h"
-
-#include "RooVDTHeaders.h"
-#include "BatchHelpers.h"
-#include "RunContext.h"
+// RooBatchCompute library created September 2020 by Emmanouil Michalainas
+#include "RooBatchCompute.h"
 #include "RooMath.h"
 
 #include <complex>
 
-using namespace BatchHelpers;
-
-namespace RooFitCompute {
+namespace RooBatchCompute {
   /**
-   * \brief Contains the part of the code of the RooFitCompute Library that needs to be compiled for every different cpu architecture.
+   * \brief Contains the part of the code of the RooBatchCompute Library that needs to be compiled for every different cpu architecture.
    *
-   * RF_ARCH is a macro that is defined by cmake. The macro gets a different name for each copy of the library, namely SSE4, AVX, AVX2, AVX512.
-   * This ensures that name clashes are avoided.
-   * \see RooFitComputeInterface, RooFitComputeClass, dispatch
+   * RF_ARCH is a macro that is defined by cmake. The macro gets a different name for each copy of the library, namely
+   * GENERIC, SSE4, AVX, AVX2, AVX512, CUDA. This ensures that name clashes are avoided.
+   * \see RooBatchComputeInterface, RooBatchComputeClass, dispatch
    */
   namespace RF_ARCH {
 
@@ -27,11 +21,11 @@ namespace RooFitCompute {
         for (size_t i=0; i<batchSize; i++) {
           const double t = M[i]/M0[i];
           const double u = 1 - t*t;
-          output[i] = C[i]*u + P[i]*_rf_fast_log(u);
+          output[i] = C[i]*u + P[i]*fast_log(u);
         }
         for (size_t i=0; i<batchSize; i++) {
           if (M[i] >= M0[i]) output[i] = 0.0;
-          else output[i] = M[i]*_rf_fast_exp(output[i]);
+          else output[i] = M[i]*fast_exp(output[i]);
         }
       }
     };
@@ -102,7 +96,7 @@ namespace RooFitCompute {
 
         for (size_t i=0; i<batchSize; i++) {
           if (X[i]-M[i]>1e-30 || X[i]-M[i]<-1e-30) {
-            output[i] = _rf_fast_exp(-0.5*output[i]*output[i]);
+            output[i] = fast_exp(-0.5*output[i]*output[i]);
           }
           else {
             output[i] = 1.0;
@@ -122,14 +116,14 @@ namespace RooFitCompute {
         const double r7 = 2*sqrt(2*log(2.0));
 
         for (size_t i=0; i<batchSize; i++) {
-          const double r1 = XI[i]*_rf_fast_isqrt(XI[i]*XI[i]+1);
-          const double r4 = 1/_rf_fast_isqrt(XI[i]*XI[i]+1);
+          const double r1 = XI[i]*fast_isqrt(XI[i]*XI[i]+1);
+          const double r4 = 1/fast_isqrt(XI[i]*XI[i]+1);
           const double hp = 1 / (SP[i]*r7);
           const double x1 = XP[i] + 0.5*SP[i]*r7*(r1-1);
           const double x2 = XP[i] + 0.5*SP[i]*r7*(r1+1);
 
           double r5 = 1.0;
-          if (XI[i]>r6 || XI[i]<-r6) r5 = XI[i]/_rf_fast_log(r4+XI[i]);
+          if (XI[i]>r6 || XI[i]<-r6) r5 = XI[i]/fast_log(r4+XI[i]);
 
           double factor=1, y=X[i]-x1, Yp=XP[i]-x1, yi=r4-XI[i], rho=R1[i];
           if (X[i]>=x2) {
@@ -142,7 +136,7 @@ namespace RooFitCompute {
 
           output[i] = rho*y*y/Yp/Yp -r3 + factor*4*r3*y*hp*r5*r4/yi/yi;
           if (X[i]>=x1 && X[i]<x2) {
-            output[i] = _rf_fast_log(1 + 4*XI[i]*r4*(X[i]-XP[i])*hp) / _rf_fast_log(1 +2*XI[i]*( XI[i]-r4 ));
+            output[i] = fast_log(1 + 4*XI[i]*r4*(X[i]-XP[i])*hp) / fast_log(1 +2*XI[i]*( XI[i]-r4 ));
             output[i] *= -output[i]*r3;
           }
           if (X[i]>=x1 && X[i]<x2 && XI[i]<r6 && XI[i]>-r6) {
@@ -150,7 +144,7 @@ namespace RooFitCompute {
           }
         }
         for (size_t i=0; i<batchSize; i++) {
-          output[i] = _rf_fast_exp(output[i]);
+          output[i] = fast_exp(output[i]);
         }
       }
     };
@@ -180,14 +174,14 @@ namespace RooFitCompute {
             output[i] = -0.5*t*t;
           } else {
             output[i] = N[i] / (N[i] -A[i]*A[i] -A[i]*t);
-            output[i] = _rf_fast_log(output[i]);
+            output[i] = fast_log(output[i]);
             output[i] *= N[i];
             output[i] -= 0.5*A[i]*A[i];
           }
         }
 
         for (size_t i=0; i<batchSize; i++) {
-          output[i] = _rf_fast_exp(output[i]);
+          output[i] = fast_exp(output[i]);
         }
       }
     };
@@ -248,11 +242,11 @@ namespace RooFitCompute {
       const double lnx0 = std::log(X[0]);
       for (size_t i=0; i<batchSize; i++) {
         double lnx;
-        if ( X.isBatch() ) lnx = _rf_fast_log(X[i]);
+        if ( X.isBatch() ) lnx = fast_log(X[i]);
         else lnx = lnx0;
 
         double arg = (N[i]-2)*lnx -X[i] -N[i]*ln2;
-        output[i] *= _rf_fast_exp(0.5*arg);
+        output[i] *= fast_exp(0.5*arg);
       }
     }
   };
@@ -266,8 +260,8 @@ namespace RooFitCompute {
         for (size_t i=0; i<batchSize; i++) {
           const double ratio = DM[i] / DM0[i];
           const double arg1 = (DM0[i]-DM[i]) / C[i];
-          const double arg2 = A[i]*_rf_fast_log(ratio);
-          output[i] = (1 -_rf_fast_exp(arg1)) * _rf_fast_exp(arg2) +B[i]*(ratio-1);
+          const double arg2 = A[i]*fast_log(ratio);
+          output[i] = (1 -fast_exp(arg1)) * fast_exp(arg2) +B[i]*(ratio-1);
         }
 
         for (size_t i=0; i<batchSize; i++) {
@@ -283,7 +277,7 @@ namespace RooFitCompute {
       void run(size_t n, double* __restrict output, Tx x, Tc c) const
       {
         for (size_t i = 0; i < n; ++i) {
-          output[i] = _rf_fast_exp(x[i]*c[i]);
+          output[i] = fast_exp(x[i]*c[i]);
         }
       }
     };
@@ -328,9 +322,9 @@ namespace RooFitCompute {
             const double invBeta = 1/B[i];
             double arg = (X[i]-M[i])*invBeta;
             output[i] -= arg;
-            arg = _rf_fast_log(arg);
+            arg = fast_log(arg);
             output[i] += arg*(G[i]-1);
-            output[i] = _rf_fast_exp(output[i]);
+            output[i] = fast_exp(output[i]);
             output[i] *= invBeta;
           }
         }
@@ -349,7 +343,7 @@ namespace RooFitCompute {
         for (std::size_t i=0; i<n; ++i) {
           const double arg = x[i]-mean[i];
           const double halfBySigmaSq = -0.5 / (sigma[i]*sigma[i]);
-          output[i] = _rf_fast_exp(arg*arg*halfBySigmaSq);
+          output[i] = fast_exp(arg*arg*halfBySigmaSq);
         }
       }
     };
@@ -369,12 +363,12 @@ namespace RooFitCompute {
         for (size_t i=0; i<n; ++i) {
           const double arg = (mass[i]-mu[i]) / lambda[i];
       #ifdef R__HAS_VDT
-          const double asinh_arg = _rf_fast_log(arg + 1/_rf_fast_isqrt(arg*arg+1));
+          const double asinh_arg = fast_log(arg + 1/fast_isqrt(arg*arg+1));
       #else
           const double asinh_arg = asinh(arg);
       #endif
           const double expo = gamma[i] + delta[i]*asinh_arg;
-          const double result = delta[i]*_rf_fast_exp(-0.5*expo*expo)*_rf_fast_isqrt(1. +arg*arg) / (sqrt_twoPi*lambda[i]);
+          const double result = delta[i]*fast_exp(-0.5*expo*expo)*fast_isqrt(1. +arg*arg) / (sqrt_twoPi*lambda[i]);
 
           const double passThrough = mass[i] >= massThreshold;
           output[i] = result*passThrough;
@@ -489,12 +483,12 @@ namespace RooFitCompute {
       {
         const double rootOf2pi = 2.506628274631000502415765284811;
         for (size_t i=0; i<batchSize; i++) {
-          double lnxOverM0 = _rf_fast_log(X[i]/M0[i]);
-          double lnk = _rf_fast_log(K[i]);
+          double lnxOverM0 = fast_log(X[i]/M0[i]);
+          double lnk = fast_log(K[i]);
           if (lnk<0) lnk = -lnk;
           double arg = lnxOverM0/lnk;
           arg *= -0.5*arg;
-          output[i] = _rf_fast_exp(arg) / (X[i]*lnk*rootOf2pi);
+          output[i] = fast_exp(arg) / (X[i]*lnk*rootOf2pi);
         }
       }
     };
@@ -516,11 +510,11 @@ namespace RooFitCompute {
         constexpr double xi = 2.3548200450309494; // 2 Sqrt( Ln(4) )
         for (size_t i=0; i<batchSize; i++) {
           double argasinh = 0.5*xi*T[i];
-          double argln = argasinh + 1/_rf_fast_isqrt(argasinh*argasinh +1);
-          double asinh = _rf_fast_log(argln);
+          double argln = argasinh + 1/fast_isqrt(argasinh*argasinh +1);
+          double asinh = fast_log(argln);
 
           double argln2 = 1 -(X[i]-P[i])*T[i]/W[i];
-          double ln    = _rf_fast_log(argln2);
+          double ln    = fast_log(argln2);
           output[i] = ln/asinh;
           output[i] *= -0.125*xi*xi*output[i];
           output[i] -= 2.0/xi/xi*asinh*asinh;
@@ -528,7 +522,7 @@ namespace RooFitCompute {
 
         //faster if you exponentiate in a seperate loop (dark magic!)
         for (size_t i=0; i<batchSize; i++) {
-          output[i] = _rf_fast_exp(output[i]);
+          output[i] = fast_exp(output[i]);
         }
       }
     };
@@ -549,15 +543,15 @@ namespace RooFitCompute {
 
         for (size_t i = 0; i < n; ++i) {
           const double x_i = noRounding ? x[i] : floor(x[i]);
-          const double logMean = _rf_fast_log(mean[i]);
+          const double logMean = fast_log(mean[i]);
           const double logPoisson = x_i * logMean - mean[i] - output[i];
-          output[i] = _rf_fast_exp(logPoisson);
+          output[i] = fast_exp(logPoisson);
 
           // Cosmetics
           if (x_i < 0.)
             output[i] = 0.;
           else if (x_i == 0.) {
-            output[i] = 1./_rf_fast_exp(mean[i]);
+            output[i] = 1./fast_exp(mean[i]);
           }
           if (protectNegative && mean[i] < 0.)
             output[i] = 1.E-3;
@@ -569,7 +563,7 @@ namespace RooFitCompute {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void startComputationPolynomial(size_t batchSize, double* __restrict output, const double* __restrict const X, int lowestOrder, std::vector<BatchHelpers::BracketAdapterWithMask>& coefList )
+    void startComputationPolynomial(size_t batchSize, double* __restrict output, const double* __restrict const X, int lowestOrder, std::vector<BracketAdapterWithMask>& coefList )
     {
       const int nCoef = coefList.size();
       if (nCoef==0 && lowestOrder==0) {
@@ -634,7 +628,7 @@ namespace RooFitCompute {
           } else if (S[i]==0.0) {
             output[i] = 1/(arg+0.25*W[i]*W[i]);
           } else if (W[i]==0.0) {
-            output[i] = _rf_fast_exp(-0.5*arg/(S[i]*S[i]));
+            output[i] = fast_exp(-0.5*arg/(S[i]*S[i]));
           } else {
             output[i] = invSqrt2/S[i];
           }
@@ -653,15 +647,16 @@ namespace RooFitCompute {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    class RooFitComputeClass : public RooFitComputeInterface {
+    class RooBatchComputeClass : public RooBatchComputeInterface {
       private:
 
         struct AnalysisInfo {
           size_t batchSize=SIZE_MAX;
           bool canDoHighPerf=true;
         };
-        /// Small helping function that determines the sizes of the batches and decides
-        /// wether to run the High performing or the Generic computation function.
+        /// Small helping function that determines the sizes of the batches and executes either
+        /// * A high-performance and optimized compute function instance, if the observable is a span and all parameters are const scalars
+        /// * A less optimized one-fits-all compute function instance that covers every other (rare) scenario
         AnalysisInfo analyseInputSpans(std::vector<RooSpan<const double>> parameters)
         {
           AnalysisInfo ret;
@@ -691,8 +686,9 @@ namespace RooFitCompute {
         }
 
       public:
-        RooFitComputeClass() {
-          RooFitCompute::dispatch = this;
+        RooBatchComputeClass() {
+          // Set the dispatch pointer to this instance of the library upon loading
+          RooBatchCompute::dispatch = this;
         }
         RooSpan<double> computeArgusBG(const RooAbsReal* caller, RunContext& evalData, RooSpan<const double> m, RooSpan<const double> m0, RooSpan<const double> c, RooSpan<const double> p)  override {
           return startComputation(caller, evalData, ArgusBGComputer{}, m, m0, c, p);
@@ -703,25 +699,25 @@ namespace RooFitCompute {
         RooSpan<double> computeBifurGauss(const RooAbsReal* caller, RunContext& evalData, RooSpan<const double> x, RooSpan<const double> mean, RooSpan<const double> sigmaL, RooSpan<const double> sigmaR)  override {
           return startComputation(caller, evalData, BifurGaussComputer{}, x, mean, sigmaL, sigmaR);
         }
-        RooSpan<double> computeBukin(const RooAbsReal* caller, BatchHelpers::RunContext& evalData, RooSpan<const double> x, RooSpan<const double> Xp, RooSpan<const double> sigp, RooSpan<const double> xi, RooSpan<const double> rho1, RooSpan<const double> rho2)  override {
+        RooSpan<double> computeBukin(const RooAbsReal* caller, RunContext& evalData, RooSpan<const double> x, RooSpan<const double> Xp, RooSpan<const double> sigp, RooSpan<const double> xi, RooSpan<const double> rho1, RooSpan<const double> rho2)  override {
           return startComputation(caller, evalData, BukinComputer{}, x, Xp, sigp, xi, rho1, rho2);
         }
-        RooSpan<double> computeBreitWigner(const RooAbsReal* caller, BatchHelpers::RunContext& evalData, RooSpan<const double> x, RooSpan<const double> mean, RooSpan<const double> width)  override {
+        RooSpan<double> computeBreitWigner(const RooAbsReal* caller, RunContext& evalData, RooSpan<const double> x, RooSpan<const double> mean, RooSpan<const double> width)  override {
           return startComputation(caller, evalData, BreitWignerComputer{}, x, mean, width);
         }
-        RooSpan<double> computeCBShape(const RooAbsReal* caller, BatchHelpers::RunContext& evalData, RooSpan<const double> m, RooSpan<const double> m0, RooSpan<const double> sigma, RooSpan<const double> alpha, RooSpan<const double> n)  override {
+        RooSpan<double> computeCBShape(const RooAbsReal* caller, RunContext& evalData, RooSpan<const double> m, RooSpan<const double> m0, RooSpan<const double> sigma, RooSpan<const double> alpha, RooSpan<const double> n)  override {
           return startComputation(caller, evalData, CBShapeComputer{}, m, m0, sigma, alpha, n);
         }
         void computeChebychev(size_t batchSize, double * __restrict output, const double * __restrict const xData, double xmin, double xmax, std::vector<double> coef)  override {
           startComputationChebychev(batchSize, output, xData, xmin, xmax, coef);
         }
-        RooSpan<double> computeChiSquare(const RooAbsReal* caller, BatchHelpers::RunContext& evalData, RooSpan<const double> x, RooSpan<const double> ndof)  override {
+        RooSpan<double> computeChiSquare(const RooAbsReal* caller, RunContext& evalData, RooSpan<const double> x, RooSpan<const double> ndof)  override {
           return startComputation(caller, evalData, ChiSquareComputer{}, x, ndof);
         }
         RooSpan<double> computeDstD0BG(const RooAbsReal* caller, RunContext& evalData, RooSpan<const double> dm, RooSpan<const double> dm0, RooSpan<const double> C, RooSpan<const double> A, RooSpan<const double> B)  override {
           return startComputation(caller, evalData, DstD0BGComputer{}, dm, dm0, C, A, B);
         }
-        RooSpan<double> computeExponential(const RooAbsReal* caller, BatchHelpers::RunContext& evalData, RooSpan<const double> x, RooSpan<const double> c)  override {
+        RooSpan<double> computeExponential(const RooAbsReal* caller, RunContext& evalData, RooSpan<const double> x, RooSpan<const double> c)  override {
           return startComputation(caller, evalData, ExponentialComputer{}, x, c);
         }
         RooSpan<double> computeGamma(const RooAbsReal* caller, RunContext& evalData, RooSpan<const double> x, RooSpan<const double> gamma, RooSpan<const double> beta, RooSpan<const double> mu)  override {
@@ -745,16 +741,16 @@ namespace RooFitCompute {
         RooSpan<double> computePoisson(const RooAbsReal* caller, RunContext& evalData, RooSpan<const double> x, RooSpan<const double> mean, bool protectNegative, bool noRounding)  override {
           return startComputation(caller, evalData, PoissonComputer{protectNegative, noRounding}, x, mean);
         }
-        void computePolynomial(size_t batchSize, double* __restrict output, const double* __restrict const X, int lowestOrder, std::vector<BatchHelpers::BracketAdapterWithMask>& coefList)  override {
+        void computePolynomial(size_t batchSize, double* __restrict output, const double* __restrict const X, int lowestOrder, std::vector<BracketAdapterWithMask>& coefList)  override {
           startComputationPolynomial(batchSize, output, X, lowestOrder, coefList);
         }
         RooSpan<double> computeVoigtian(const RooAbsReal* caller, RunContext& evalData, RooSpan<const double> x, RooSpan<const double> mean, RooSpan<const double> width, RooSpan<const double> sigma)  override {
           return startComputation(caller, evalData, VoigtianComputer{}, x, mean, width, sigma);
         }
-    }; // End class RooFitComputeClass
+    }; // End class RooBatchComputeClass
 
-    /// Create a static object to trigger the constructor which overwrites the dispatch pointer.
-    static RooFitComputeClass computeObj;
+    /// Static object to trigger the constructor which overwrites the dispatch pointer.
+    static RooBatchComputeClass computeObj;
 
   } //End namespace RF_ARCH
-} //End namespace RooFitCompute
+} //End namespace RooBatchCompute

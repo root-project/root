@@ -23,7 +23,6 @@ RooConstVar represent a constant real-valued object
 **/
 
 #include "RooConstVar.h"
-#include "BatchHelpers.h"
 #include "RunContext.h"
 
 using namespace std;
@@ -55,7 +54,7 @@ RooConstVar::RooConstVar(const RooConstVar& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return batch with 1 constant element.
-RooSpan<const double> RooConstVar::getValues(BatchHelpers::RunContext& evalData, const RooArgSet*) const {
+RooSpan<const double> RooConstVar::getValues(RooBatchCompute::RunContext& evalData, const RooArgSet*) const {
   auto item = evalData.spans.find(this);
   if (item == evalData.spans.end()) {
     return evalData.spans[this] = {&_value, 1};

@@ -25,8 +25,7 @@ Landau distribution p.d.f
 #include "RooHelpers.h"
 #include "RooFit.h"
 #include "RooRandom.h"
-#include "BatchHelpers.h"
-#include "RooFitComputeInterface.h"
+#include "RooBatchCompute.h"
 
 #include "TMath.h"
 
@@ -62,8 +61,8 @@ Double_t RooLandau::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Landau distribution.  
-RooSpan<double> RooLandau::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooFitCompute::dispatch->computeLandau(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
+RooSpan<double> RooLandau::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeLandau(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

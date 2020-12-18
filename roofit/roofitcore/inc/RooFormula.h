@@ -26,7 +26,7 @@
 #include <vector>
 #include <string>
 
-namespace BatchHelpers {
+namespace RooBatchCompute {
   struct RunContext;
 }
 class RooAbsReal;
@@ -59,7 +59,7 @@ public:
   Bool_t ok() const { return _tFormula != nullptr; }
   /// Evalute all parameters/observables, and then evaluate formula.
   Double_t eval(const RooArgSet* nset=0) const;
-  RooSpan<double> evaluateSpan(const RooAbsReal* dataOwner, BatchHelpers::RunContext& inputData, const RooArgSet* nset = nullptr) const;
+  RooSpan<double> evaluateSpan(const RooAbsReal* dataOwner, RooBatchCompute::RunContext& inputData, const RooArgSet* nset = nullptr) const;
 
   /// DEBUG: Dump state information
   void dump() const;

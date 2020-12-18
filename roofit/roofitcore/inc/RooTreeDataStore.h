@@ -17,6 +17,7 @@
 #define ROO_TREE_DATA_STORE
 
 #include "RooAbsDataStore.h"
+#include "RunContext.h"
 #include <vector>
 #include <list>
 #include <string>
@@ -68,7 +69,7 @@ public:
   virtual Double_t weight(Int_t index) const ;
   virtual Bool_t isWeighted() const { return (_wgtVar!=0||_extWgtArray!=0) ; }
 
-  virtual BatchHelpers::RunContext getBatches(std::size_t first, std::size_t len) const {
+  virtual RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const {
     //TODO
     std::cerr << "This functionality is not yet implemented for tree data stores." << std::endl;
     throw std::logic_error("getBatches() not implemented in RooTreeDataStore.");

@@ -20,19 +20,11 @@
 Flat p.d.f. in N dimensions
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooUniform.h"
+#include "RooBatchCompute.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
-#include "RooRandom.h"
-#include "RooMath.h"
 #include "RooArgSet.h"
-
-using namespace std;
 
 ClassImp(RooUniform);
 
@@ -61,7 +53,7 @@ Double_t RooUniform::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Compute multiple values of the uniform distribution (effectively return a span with ones)
-RooSpan<double> RooUniform::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* /*normSet*/) const
+RooSpan<double> RooUniform::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const
 {
   size_t nEvents = 1;
   for (auto elm : x) {
@@ -83,7 +75,7 @@ Int_t RooUniform::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   if (nx>31) {
     // Warn that analytical integration is only provided for the first 31 observables
     coutW(Integration) << "RooUniform::getAnalyticalIntegral(" << GetName() << ") WARNING: p.d.f. has " << x.getSize()
-             << " observables, analytical integration is only implemented for the first 31 observables" << endl ;
+             << " observables, analytical integration is only implemented for the first 31 observables" << std::endl ;
     nx=31 ;
   }
 
@@ -121,7 +113,7 @@ Int_t RooUniform::getGenerator(const RooArgSet& directVars, RooArgSet &generateV
   if (nx>31) {
     // Warn that analytical integration is only provided for the first 31 observables
     coutW(Integration) << "RooUniform::getGenerator(" << GetName() << ") WARNING: p.d.f. has " << x.getSize()
-             << " observables, internal integrator is only implemented for the first 31 observables" << endl ;
+             << " observables, internal integrator is only implemented for the first 31 observables" << std::endl ;
     nx=31 ;
   }
 

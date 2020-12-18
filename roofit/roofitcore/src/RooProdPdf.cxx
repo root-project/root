@@ -58,7 +58,7 @@ have to appear in any specific place in the list.
 #include "RooCustomizer.h"
 #include "RooRealIntegral.h"
 #include "RooTrace.h"
-#include "RunContext.h"
+#include "RooBatchCompute.h"
 #include "strtok.h"
 
 #include <cstring>
@@ -503,7 +503,7 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs using input data in `evalData`.
-RooSpan<double> RooProdPdf::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+RooSpan<double> RooProdPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
   int code;
   auto cache = static_cast<CacheElem*>(_cacheMgr.getObj(normSet, nullptr, &code));
 
