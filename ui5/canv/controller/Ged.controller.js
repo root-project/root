@@ -270,16 +270,16 @@ sap.ui.define([
          if (!handle) return;
 
          switch(item) {
-            case "logbase": handle.ChangeLog((pars.value == 3) ? Math.exp(1) : pars.value); break;
-            case "handle/ticksColor": handle.ChangeAxisAttr(1, "ticks_color_name", pars.value); break;
-            case "ticks_size": handle.ChangeAxisAttr(1, "ticks_size", pars.value); break;
-            case "handle/ticksSide": handle.ChangeAxisAttr(1, "ticks_side", pars.value); break;
-            case "labels_offset": handle.ChangeAxisAttr(1, "labels_offset", pars.value); break;
-            case "labels_rotate": handle.ChangeAxisAttr(1, "labels_angle", pars.value ? 180 : 0); break;
-            case "handle/fTitle": handle.ChangeAxisAttr(1, "title", pars.value); break;
-            case "title_offset": handle.ChangeAxisAttr(1, "title_offset", pars.value); break;
-            case "handle/titlePos": handle.ChangeAxisAttr(1, "title_position", pars.value); break;
-            case "title_rotate": handle.ChangeAxisAttr(1, "title_angle", pars.value ? 180 : 0); break;
+            case "logbase": handle.changeAxisLog((pars.value == 3) ? Math.exp(1) : pars.value); break;
+            case "handle/ticksColor": handle.changeAxisAttr(1, "ticks_color_name", pars.value); break;
+            case "ticks_size": handle.changeAxisAttr(1, "ticks_size", pars.value); break;
+            case "handle/ticksSide": handle.changeAxisAttr(1, "ticks_side", pars.value); break;
+            case "labels_offset": handle.changeAxisAttr(1, "labels_offset", pars.value); break;
+            case "labels_rotate": handle.changeAxisAttr(1, "labels_angle", pars.value ? 180 : 0); break;
+            case "handle/fTitle": handle.changeAxisAttr(1, "title", pars.value); break;
+            case "title_offset": handle.changeAxisAttr(1, "title_offset", pars.value); break;
+            case "handle/titlePos": handle.changeAxisAttr(1, "title_position", pars.value); break;
+            case "title_rotate": handle.changeAxisAttr(1, "title_angle", pars.value ? 180 : 0); break;
          }
       },
 
@@ -316,13 +316,13 @@ sap.ui.define([
 
          if (place == "xaxis" && painter.x_handle) {
             painter = painter.x_handle;
-            selectedClass = painter.GetAxisType();
+            selectedClass = painter.getAxisType();
          } else if (place == "yaxis" && painter.y_handle) {
             painter = painter.y_handle;
-            selectedClass = painter.GetAxisType();
+            selectedClass = painter.getAxisType();
          } else if (place == "zaxis" && painter.z_handle) {
             painter = painter.z_handle;
-            selectedClass = painter.GetAxisType();
+            selectedClass = painter.getAxisType();
          } else {
             selectedClass = obj ? obj._typename : painter.getObjectHint();
          }

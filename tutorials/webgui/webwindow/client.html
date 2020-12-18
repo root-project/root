@@ -19,7 +19,7 @@
 
     function SendMsg(txt) {
        if (conn_handle)
-          conn_handle.Send(txt);
+          conn_handle.send(txt);
     }
 
     function AddOutput(msg) {
@@ -32,14 +32,14 @@
        // callback: function(handle) { AddOutput("init done"); },  /* if necessary, initial callback can be cacthed */
        receiver: {
           // method called when connection to server is established
-          OnWebsocketOpened: function(handle) {
-             handle.Send("Init msg from client");
+          onWebsocketOpened: function(handle) {
+             handle.send("Init msg from client");
              conn_handle = handle;
              AddOutput("Connected");
           },
 
           // method with new message from server
-          OnWebsocketMsg: function(handle, msg, offset) {
+          onWebsocketMsg: function(handle, msg, offset) {
              if (typeof msg != "string") {
                 let arr = new Float32Array(msg, offset);
                 AddOutput("bin: " + arr.toString());
@@ -49,7 +49,7 @@
           },
 
           // method called when connection is gone
-          OnWebsocketClosed: function(handle) {
+          onWebsocketClosed: function(handle) {
              conn_handle = null;
              // when connection closed, close panel as well
              if (window) window.close();

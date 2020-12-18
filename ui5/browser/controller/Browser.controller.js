@@ -82,8 +82,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // this is code for the Components.js
          // this.websocket = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
 
-         this.websocket.SetReceiver(this);
-         this.websocket.Connect();
+         this.websocket.setReceiver(this);
+         this.websocket.connect();
 
          // if true, most operations are performed locally without involving server
          this.standalone = this.websocket.kind == "file";
@@ -290,7 +290,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this.setFileNameType(oEditor, fname);
                const sText = oEditor.getModel().getProperty("/code");
                oEditor.getModel().setProperty("/modified", false);
-               this.websocket.Send("SAVEFILE:" + JSON.stringify([fname, sText]));
+               this.websocket.send("SAVEFILE:" + JSON.stringify([fname, sText]));
             }.bind(this),
             onCancel: function() { },
             onFailure: function() { }
@@ -306,7 +306,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (!fullpath)
             return onSaveAs();
          oModel.setProperty("/modified", false);
-         return this.websocket.Send("SAVEFILE:" + JSON.stringify([fullpath, sText]));
+         return this.websocket.send("SAVEFILE:" + JSON.stringify([fullpath, sText]));
       },
 
       reallyRunMacro: function () {
@@ -315,7 +315,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          const fullpath = oModel.getProperty("/fullpath");
          if (fullpath === undefined)
             return this.onSaveAs();
-         return this.websocket.Send("RUNMACRO:" + fullpath);
+         return this.websocket.send("RUNMACRO:" + fullpath);
       },
 
       /** @brief Handle the "Run" button press event */
@@ -646,7 +646,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             msg = "NEWRCANVAS";
          }
          if (this.isConnected) {
-            this.websocket.Send(msg);
+            this.websocket.send(msg);
          }
       },
 
@@ -683,7 +683,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (i>0) path.push(oLinks[i].getText());
             if (oLinks[i].getId() === sId ) break;
          }
-         this.websocket.Send('CHPATH:' + JSON.stringify(path));
+         this.websocket.send('CHPATH:' + JSON.stringify(path));
          this.doReload(true);
       },
 
@@ -702,7 +702,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          console.log("Canvas selected:", oItemSelected.getAdditionalText());
 
-         this.websocket.Send("SELECT_CANVAS:" + oItemSelected.getAdditionalText());
+         this.websocket.send("SELECT_CANVAS:" + oItemSelected.getAdditionalText());
 
       },
 
@@ -735,7 +735,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                onClose: function (oAction) {
                   if (oAction === MessageBox.Action.OK) {
                      if (oItemToClose.getName() === "ROOT Canvas")
-                        pthis.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
+                        pthis.websocket.send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
 
                      oTabContainer.removeItem(oItemToClose);
 
@@ -757,14 +757,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onTerminalSubmit: function(oEvent) {
          let command = oEvent.getSource().getValue();
-         this.websocket.Send("CMD:" + command);
+         this.websocket.send("CMD:" + command);
          oEvent.getSource().setValue("");
          this.requestRootHist();
          this.requestLogs();
       },
 
       requestRootHist: function() {
-         return this.websocket.Send("ROOTHIST:");
+         return this.websocket.send("ROOTHIST:");
       },
 
       updateRootHist: function (hist) {
@@ -781,7 +781,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       requestLogs: function() {
-         return this.websocket.Send("LOGS:");
+         return this.websocket.send("LOGS:");
       },
 
       updateLogs: function(logs) {
@@ -846,7 +846,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                console.log(fullpath);
             }
          }
-         this.websocket.Send('DBLCLK: ["' + fullpath + '","' + (opt || "") + '"]');
+         this.websocket.send('DBLCLK: ["' + fullpath + '","' + (opt || "") + '"]');
       },
 
       /** @brief Double-click event handler */
@@ -876,7 +876,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                }
 
                // TODO: use plain array also here to avoid any possible confusion
-               this.websocket.Send('CHDIR:' + path);
+               this.websocket.send('CHDIR:' + path);
                return this.doReload(true);
             }
          }
@@ -912,7 +912,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return className;
       },
 
-      OnWebsocketOpened: function(handle) {
+      onWebsocketOpened: function(handle) {
          this.isConnected = true;
 
          if (this.model)
@@ -920,7 +920,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       },
 
-      OnWebsocketClosed: function() {
+      onWebsocketClosed: function() {
          // when connection closed, close panel as well
          console.log('CLOSE WINDOW WHEN CONNECTION CLOSED');
 
@@ -930,7 +930,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
      /** Entry point for all data from server */
-     OnWebsocketMsg: function(handle, msg, offset) {
+     onWebsocketMsg: function(handle, msg, offset) {
 
          if (typeof msg != "string")
             return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
@@ -1063,7 +1063,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** Quit ROOT session */
       onQuitRootPress: function(oEvent) {
-         this.websocket.Send("QUIT_ROOT");
+         this.websocket.send("QUIT_ROOT");
       },
 
       onSearch : function(oEvt) {

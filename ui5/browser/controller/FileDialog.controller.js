@@ -115,7 +115,7 @@ sap.ui.define(['rootui5/panel/Controller',
          var path = this.getBreadcrumbPath(oEvent.getSource().sId);
          if (this.kind == "OpenFile")
             this.oModel.setProperty("/fileName", "");
-         this.websocket.Send("CHPATH:" + JSON.stringify(path));
+         this.websocket.send("CHPATH:" + JSON.stringify(path));
       },
 
       /** Handler for List item press event */
@@ -132,7 +132,7 @@ sap.ui.define(['rootui5/panel/Controller',
 
             var path = this.getBreadcrumbPath();
             path.push(item.getTitle());
-            return this.websocket.Send("CHPATH:" + JSON.stringify(path));
+            return this.websocket.send("CHPATH:" + JSON.stringify(path));
          }
 
          this.oModel.setProperty("/fileName", item.getTitle());
@@ -141,7 +141,7 @@ sap.ui.define(['rootui5/panel/Controller',
       /** When selected file extenstion changed */
       onFileExtChanged: function() {
          var extName = this.oModel.getProperty("/fileExt");
-         this.websocket.Send("CHEXT:" + extName);
+         this.websocket.send("CHEXT:" + extName);
       },
 
       processInitMsg: function(msg) {
@@ -194,7 +194,7 @@ sap.ui.define(['rootui5/panel/Controller',
             this._completeDialog(fname ? "onOk" : "onCancel", fname);
 
          if (this.websocket) {
-            this.websocket.Close();
+            this.websocket.close();
             delete this.websocket;
          }
 
@@ -208,18 +208,18 @@ sap.ui.define(['rootui5/panel/Controller',
             window.open('','_self').close();
       },
 
-      OnWebsocketOpened: function(handle) {
+      onWebsocketOpened: function(handle) {
          if (this.model)
             this.model.sendFirstRequest(this.websocket);
       },
 
-      OnWebsocketClosed: function() {
+      onWebsocketClosed: function() {
          // when connection closed, close panel as well
          this.closeFileDialog();
       },
 
       /** Entry point for all data from server */
-      OnWebsocketMsg: function(handle, msg) {
+      onWebsocketMsg: function(handle, msg) {
 
          if (typeof msg != "string")
             return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
@@ -272,7 +272,7 @@ sap.ui.define(['rootui5/panel/Controller',
                type: ButtonType.Emphasized,
                press: function() {
                   oWarnDlg.close();
-                  this.websocket.Send("DLG_CONFIRM_SELECT");
+                  this.websocket.send("DLG_CONFIRM_SELECT");
                }.bind(this)
             }),
             afterClose: function() {
@@ -322,9 +322,9 @@ sap.ui.define(['rootui5/panel/Controller',
                                        // fileExtList: [{ id: "AllFiles", text: "All files (*.*)" }, { id: "png", text: "png files (*.png)"}, { id: "cxx", text: "CXX files (*.cxx)"}] });
 
          // create extra channel for the FileDialog
-         this.websocket = args.websocket.CreateChannel();
+         this.websocket = args.websocket.createChannel();
          // assign ourself as receiver of all
-         this.websocket.SetReceiver(this);
+         this.websocket.setReceiver(this);
 
          await Fragment.load({
             name: "rootui5.browser.view.filedialog",
@@ -374,7 +374,7 @@ sap.ui.define(['rootui5/panel/Controller',
             server_args = server_args.concat(args.filters || ["Any files (*)"]);
          }
 
-         args.websocket.Send("FILEDIALOG:" + JSON.stringify(server_args));
+         args.websocket.send("FILEDIALOG:" + JSON.stringify(server_args));
 
          return this;
       },
@@ -384,7 +384,7 @@ sap.ui.define(['rootui5/panel/Controller',
          var fullname = this.getFullFileName();
 
          if (this.websocket)
-            this.websocket.Send("DLGSELECT:" + JSON.stringify(fullname));
+            this.websocket.send("DLGSELECT:" + JSON.stringify(fullname));
          else
             this.closeFileDialog();
       },
@@ -392,7 +392,7 @@ sap.ui.define(['rootui5/panel/Controller',
       /** Press Cancel button Dialog */
       onCancelPress: function() {
          if (this.websocket)
-            this.websocket.Send("DLGNOSELECT");
+            this.websocket.send("DLGNOSELECT");
          else
             this.closeFileDialog();
       },

@@ -51,7 +51,7 @@
          painter.batch_mode = is_batch;
 
          if (window) {
-            window.onbeforeunload = painter.WindowBeforeUnloadHanlder.bind(painter);
+            window.onbeforeunload = () => painter.WindowBeforeUnloadHanlder();
             if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
          }
 

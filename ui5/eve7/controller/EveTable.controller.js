@@ -34,7 +34,7 @@ sap.ui.define([
          this.eveViewerId = data.eveViewerId;
          this.kind = data.kind;
 
-         var rh = this.mgr.handle.GetUserArgs("TableRowHeight");
+         var rh = this.mgr.handle.getUserArgs("TableRowHeight");
          if (rh && (rh > 0))
             this.getView().byId("table").setRowHeight(rh);
 

@@ -79,8 +79,8 @@ sap.ui.define(['sap/ui/core/Component',
          // this is code for the Components.js
          // this.websocket = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
 
-         this.websocket.SetReceiver(this);
-         this.websocket.Connect();
+         this.websocket.setReceiver(this);
+         this.websocket.connect();
 
          this.queue = []; // received draw messages
 
@@ -91,7 +91,7 @@ sap.ui.define(['sap/ui/core/Component',
          this.cfg_model = new JSONModel(this.cfg);
          this.getView().setModel(this.cfg_model);
 
-         var nobrowser = this.websocket.GetUserArgs('nobrowser') || JSROOT.decodeUrl().has('nobrowser');
+         var nobrowser = this.websocket.getUserArgs('nobrowser') || JSROOT.decodeUrl().has('nobrowser');
 
          if (nobrowser) {
             // remove main area - plain geometry drawing
@@ -152,7 +152,7 @@ sap.ui.define(['sap/ui/core/Component',
          var msg = "SETVI" + (oEvent.getParameter("selected") ? "1:" : "0:") + JSON.stringify(nodeid);
 
          // send info message to client to change visibility
-         this.websocket.Send(msg);
+         this.websocket.send(msg);
       },
 
       assignRowHandlers: function() {
@@ -166,7 +166,7 @@ sap.ui.define(['sap/ui/core/Component',
       sendViewerRequest: function(_oper, args) {
          var req = { oper: _oper, path: "", stack: [] };
          JSROOT.extend(req, args);
-         this.websocket.Send("GVREQ:" + JSON.stringify(req));
+         this.websocket.send("GVREQ:" + JSON.stringify(req));
       },
 
       /** Process reply on REveGeomRequest */
@@ -500,7 +500,7 @@ sap.ui.define(['sap/ui/core/Component',
             this.geom_model.refresh();
       },
 
-      OnWebsocketOpened: function(handle) {
+      onWebsocketOpened: function(handle) {
          this.isConnected = true;
 
          if (this.model)
@@ -510,7 +510,7 @@ sap.ui.define(['sap/ui/core/Component',
          this.checkSendRequest();
       },
 
-      OnWebsocketClosed: function() {
+      onWebsocketClosed: function() {
          // when connection closed, close panel as well
          console.log('CLOSE WINDOW WHEN CONNECTION CLOSED');
 
@@ -520,7 +520,7 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       /** Entry point for all data from server */
-      OnWebsocketMsg: function(handle, msg, offset) {
+      onWebsocketMsg: function(handle, msg, offset) {
 
          // binary data can be send only as addition to draw message
          // here data can be placed in the queue and processed when all other prerequicities are done
@@ -833,7 +833,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (this.isConnected && this.renderingDone) {
 
             if (this.creator && !this.ask_getdraw) {
-               this.websocket.Send("GETDRAW");
+               this.websocket.send("GETDRAW");
                this.ask_getdraw = true;
             }
          }
@@ -865,7 +865,7 @@ sap.ui.define(['sap/ui/core/Component',
 
          delete this.search_handler;
 
-         this.websocket.Send("SEARCH:" + (query || ""));
+         this.websocket.send("SEARCH:" + (query || ""));
       },
 
       /** when new draw options send from server */
@@ -1006,7 +1006,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (!dataUrl) return;
          var separ = dataUrl.indexOf("base64,");
          if ((separ>=0) && this.websocket && !this.standalone)
-            this.websocket.Send("IMAGE:" + name + "::" + dataUrl.substr(separ+7));
+            this.websocket.send("IMAGE:" + name + "::" + dataUrl.substr(separ+7));
       },
 
       /** Reload geometry description and base drawing, normally not required */
@@ -1066,7 +1066,7 @@ sap.ui.define(['sap/ui/core/Component',
       /** Quit ROOT session */
       onQuitRootPress: function() {
          if (!this.standalone)
-            this.websocket.Send("QUIT_ROOT");
+            this.websocket.send("QUIT_ROOT");
       },
 
       onPressMasterBack: function() {
@@ -1086,7 +1086,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (!this.standalone && this.geo_painter && this.geo_painter.ctrl.cfg) {
             var cfg = this.geo_painter.ctrl.cfg;
             cfg.build_shapes = parseInt(cfg.build_shapes);
-            this.websocket.Send("CFG:" + JSROOT.toJSON(cfg));
+            this.websocket.send("CFG:" + JSROOT.toJSON(cfg));
          }
       },
 

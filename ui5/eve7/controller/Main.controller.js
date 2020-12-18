@@ -146,7 +146,7 @@ sap.ui.define(['sap/ui/core/Component',
       /*
        * processWaitingMsg: function() { for ( var i = 0; i <
        * msgToWait.length; ++i ) {
-       * this.OnWebsocketMsg(handleToWait, msgToWait[i]); }
+       * this.onWebsocketMsg(handleToWait, msgToWait[i]); }
        * handleToWait = 0; msgToWait = []; },
        */
       event: function() {
