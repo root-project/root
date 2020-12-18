@@ -49,7 +49,7 @@ protected:
   // Function evaluation
   RooListProxy _actualVars ; 
   virtual Double_t evaluate() const ;
-  RooSpan<double> evaluateSpan(BatchHelpers::RunContext& inputData, const RooArgSet* normSet) const;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& inputData, const RooArgSet* normSet) const;
 
   Bool_t setFormula(const char* formula) ;
 

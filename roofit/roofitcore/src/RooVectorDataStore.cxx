@@ -1423,8 +1423,8 @@ void RooVectorDataStore::RealFullVector::Streamer(TBuffer &R__b)
 /// \param[in] len   Number of events in batches.
 /// \return RunContext object whose member `spans` maps RooAbsReal pointers to spans with
 /// the associated data.
-BatchHelpers::RunContext RooVectorDataStore::getBatches(std::size_t first, std::size_t len) const {
-  BatchHelpers::RunContext evalData;
+RooBatchCompute::RunContext RooVectorDataStore::getBatches(std::size_t first, std::size_t len) const {
+  RooBatchCompute::RunContext evalData;
 
   auto emplace = [this,&evalData,first,len](const RealVector* realVec) {
     auto span = realVec->getRange(first, first + len);

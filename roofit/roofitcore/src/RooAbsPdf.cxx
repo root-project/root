@@ -171,9 +171,8 @@ called for each data event.
 #include "RooRealIntegral.h"
 #include "RooWorkspace.h"
 #include "RooNaNPacker.h"
-
 #include "RooHelpers.h"
-#include "RooVDTHeaders.h"
+#include "RooBatchCompute.h"
 
 #include "TClass.h"
 #include "TMath.h"
@@ -349,7 +348,7 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 /// to the full batch.
 /// \return RooSpan with probabilities. The memory of this span is owned by `evalData`.
 /// \see RooAbsReal::getValues().
-RooSpan<const double> RooAbsPdf::getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+RooSpan<const double> RooAbsPdf::getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
   auto item = evalData.spans.find(this);
   if (item != evalData.spans.end()) {
     return item->second;
@@ -720,7 +719,7 @@ void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::s
 /// \param[in] evalData Struct with data that should be used for evaluation.
 /// \param[in] normSet Optional normalisation set to be used during computations.
 /// \return    Returns a batch of doubles that contains the log probabilities.
-RooSpan<const double> RooAbsPdf::getLogProbabilities(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const
+RooSpan<const double> RooAbsPdf::getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const
 {
   auto pdfValues = getValues(evalData, normSet);
 
@@ -734,7 +733,7 @@ RooSpan<const double> RooAbsPdf::getLogProbabilities(BatchHelpers::RunContext& e
   for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
     const double prob = pdfValues[i];
 
-    double theLog = _rf_fast_log(prob);
+    double theLog = RooBatchCompute::fast_log(prob);
 
     if (prob < 0) {
       theLog = std::numeric_limits<double>::quiet_NaN();

@@ -22,16 +22,11 @@ Plain Gaussian p.d.f
 
 #include "RooGaussian.h"
 
-#include "RooFit.h"
-#include "BatchHelpers.h"
 #include "RooRandom.h"
 #include "RooMath.h"
 #include "RooHelpers.h"
-#include "RooVDTHeaders.h"
-#include "RooFitComputeInterface.h"
+#include "RooBatchCompute.h"
 
-using namespace BatchHelpers;
-using namespace std;
 
 ClassImp(RooGaussian);
 
@@ -62,14 +57,14 @@ Double_t RooGaussian::evaluate() const
 {
   const double arg = x - mean;
   const double sig = sigma;
-  return exp(-0.5*arg*arg/(sig*sig));
+  return std::exp(-0.5*arg*arg/(sig*sig));
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Gaussian distribution.  
-RooSpan<double> RooGaussian::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooFitCompute::dispatch->computeGaussian(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
+RooSpan<double> RooGaussian::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeGaussian(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +85,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
   //The normalisation constant 1./sqrt(2*pi*sigma^2) is left out in evaluate().
   //Therefore, the integral is scaled up by that amount to make RooFit normalise
   //correctly.
-  const double resultScale = sqrt(TMath::TwoPi()) * sigma;
+  const double resultScale = std::sqrt(TMath::TwoPi()) * sigma;
 
   //Here everything is scaled and shifted into a standard normal distribution:
   const double xscale = TMath::Sqrt2() * sigma;
@@ -151,7 +146,7 @@ void RooGaussian::generateEvent(Int_t code)
       }
     }
   } else {
-    cout << "error in RooGaussian generateEvent"<< endl;
+    std::cout << "error in RooGaussian generateEvent"<< std::endl;
   }
 
   return;

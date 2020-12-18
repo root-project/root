@@ -16,9 +16,7 @@ Poisson pdf
 #include "RooRandom.h"
 #include "RooMath.h"
 #include "RooNaNPacker.h"
-#include "BatchHelpers.h"
-#include "RooVDTHeaders.h"
-#include "RooFitComputeInterface.h"
+#include "RooBatchCompute.h"
 
 #include "Math/ProbFuncMathCore.h"
 
@@ -66,8 +64,8 @@ Double_t RooPoisson::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of the Poisson distribution.  
-RooSpan<double> RooPoisson::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooFitCompute::dispatch->computePoisson(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), _protectNegative, _noRounding);
+RooSpan<double> RooPoisson::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computePoisson(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), _protectNegative, _noRounding);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

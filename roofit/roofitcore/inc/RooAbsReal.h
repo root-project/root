@@ -42,7 +42,7 @@ class RooFitResult ;
 class RooAbsMoment ;
 class RooDerivative ;
 class RooVectorDataStore ;
-namespace BatchHelpers {
+namespace RooBatchCompute{
 class BatchInterfaceAccessor;
 struct RunContext;
 }
@@ -120,7 +120,7 @@ public:
   }
 #endif
   /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
-  virtual RooSpan<const double> getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
+  virtual RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
 
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
 
@@ -429,14 +429,14 @@ protected:
   }
 #endif
 
-  virtual RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
+  virtual RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
   //---------- Interface to access batch data ---------------------------
   //
-  friend class BatchHelpers::BatchInterfaceAccessor;
+  friend class BatchInterfaceAccessor;
   
  private:
-  void checkBatchComputation(const BatchHelpers::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
+  void checkBatchComputation(const RooBatchCompute::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
 
   /// Debug version of getVal(), which is slow and does error checking.
   Double_t _DEBUG_getVal(const RooArgSet* normalisationSet) const;
@@ -564,5 +564,16 @@ protected:
 
   ClassDef(RooAbsReal,2) // Abstract real-valued variable
 };
+
+
+/// Helper class to access a batch-related part of RooAbsReal's interface, which should not leak to the outside world.
+class BatchInterfaceAccessor {
+  public:
+    static void checkBatchComputation(const RooAbsReal& theReal, const RooBatchCompute::RunContext& evalData, std::size_t evtNo,
+        const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) {
+      theReal.checkBatchComputation(evalData, evtNo, normSet, relAccuracy);
+    }
+};
+
 
 #endif
