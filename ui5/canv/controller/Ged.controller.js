@@ -133,7 +133,7 @@ sap.ui.define([
          if (data._painter)
             data._painter.interactiveRedraw("pad", exec); // TODO: some objects can readraw directly, no need to redraw pad
          else if (this.currentPadPainter)
-            this.currentPadPainter.Redraw();
+            this.currentPadPainter.redraw();
       },
 
 
@@ -238,7 +238,7 @@ sap.ui.define([
             console.log('Invoke interactive redraw ', main.snapid, kind)
             main.interactiveRedraw("pad", exec, kind);
          } else {
-            this.currentPadPainter.Redraw();
+            this.currentPadPainter.redraw();
          }
       },
 
