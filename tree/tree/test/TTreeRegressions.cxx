@@ -42,3 +42,21 @@ TEST(TTreeRegressions, CompositeTypeWithNameClash)
    t.GetEntry(0);
    EXPECT_EQ(ix, -1);
 }
+
+// Issue #6964
+TEST(TTreeRegressions, GetLeafAndFriends)
+{
+   TTree t("t", "t");
+   int x = 42;
+   t.Branch("x", &x);
+   t.Fill();
+
+   TTree t2("t2", "t2");
+   t2.Branch("x", &x);
+   t2.Fill();
+
+   EXPECT_EQ(t.GetLeaf("asdklj", "x"), nullptr);
+
+   t.AddFriend(&t2);
+   EXPECT_EQ(t.GetLeaf("asdklj", "x"), nullptr);
+}
