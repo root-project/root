@@ -473,7 +473,8 @@ if (builtin_cling)
     string(APPEND CMAKE_CXX_FLAGS " -fPIC")
     string(APPEND CMAKE_C_FLAGS " -fPIC")
   endif(LLVM_ENABLE_PIC)
-  add_subdirectory(cling)
+  # Avoid cling being installed under ROOTSYS/include.
+  add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})
 
   set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include CACHE STRING "")
