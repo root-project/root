@@ -7,7 +7,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
    function drawText() {
       let text      = this.getObject(),
-          pp        = this.pad_painter(),
+          pp        = this.getPadPainter(),
           use_frame = false,
           p         = pp.GetCoordinate(text.fPos),
           textFont  = this.v7EvalFont("text", { size: 12, color: "black", align: 22 });
@@ -27,7 +27,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    function drawLine() {
 
        let line         = this.getObject(),
-           pp           = this.pad_painter(),
+           pp           = this.getPadPainter(),
            p1           = pp.GetCoordinate(line.fP1),
            p2           = pp.GetCoordinate(line.fP2),
            line_width   = this.v7EvalAttr("line_width", 1),
@@ -53,7 +53,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    function drawBox() {
 
        let box          = this.getObject(),
-           pp           = this.pad_painter(),
+           pp           = this.getPadPainter(),
            p1           = pp.GetCoordinate(box.fP1),
            p2           = pp.GetCoordinate(box.fP2),
            line_width   = this.v7EvalAttr( "box_border_width", 1),
@@ -86,7 +86,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
    function drawMarker() {
        let marker       = this.getObject(),
-           pp           = this.pad_painter(),
+           pp           = this.getPadPainter(),
            p            = pp.GetCoordinate(marker.fP),
            marker_size  = this.v7EvalAttr( "marker_size", 1),
            marker_style = this.v7EvalAttr( "marker_style", 1),
@@ -110,7 +110,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
           width      = this.pave_width,
           height     = this.pave_height,
           nlines     = legend.fEntries.length,
-          pp         = this.pad_painter();
+          pp         = this.getPadPainter();
 
       if (legend.fTitle) nlines++;
 
