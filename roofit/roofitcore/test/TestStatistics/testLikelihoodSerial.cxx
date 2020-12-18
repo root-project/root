@@ -211,6 +211,9 @@ TEST_F(LikelihoodSerialTest, SimBinned)
    w.factory("ASUM::model_A(mu_sig[1,-1,10]*hf_sigA,mu_bkg_A[1,-1,10]*hf_bkg)");
    w.factory("ASUM::model_B(mu_sig*hf_sigB,mu_bkg_B[1,-1,10]*hf_bkg)");
 
+   w.pdf("model_A")->setAttribute("BinnedLikelihood");
+   w.pdf("model_B")->setAttribute("BinnedLikelihood");
+
    // Construct simulatenous pdf
    w.factory("SIMUL::model(index[A,B],A=model_A,B=model_B)");
 
@@ -231,7 +234,6 @@ TEST_F(LikelihoodSerialTest, SimBinned)
    EXPECT_EQ(nll0, nll1);
 }
 
-/*
 TEST_F(LikelihoodSerialTest, BinnedConstrained)
 {
    // Unbinned pdfs that define template histograms
@@ -258,9 +260,9 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
    // Construct full pdf
    w.factory("PROD::model(model_phys,model_subs)") ;
 
-   pdf = w.pdf("model_phys");
+   pdf = w.pdf("model");
    // Construct dataset from physics pdf
-   data = pdf->generateBinned(*w.var("x"));
+   data = w.pdf("model_phys")->generateBinned(*w.var("x"));
 
    nll.reset(pdf->createNLL(*data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs"))));
 
@@ -269,7 +271,8 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
    auto nll0 = nll->getVal();
 
    likelihood =
-      std::make_shared<RooFit::TestStatistics::RooConstraintL>(pdf, data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs")));
+//      std::make_shared<RooFit::TestStatistics::RooBinnedL>(pdf, data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs")));
+      std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
 
    nll_ts.evaluate();
@@ -277,7 +280,6 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
 
    EXPECT_EQ(nll0, nll1);
 }
- */
 
 TEST_F(LikelihoodSerialTest, SimUnbinned)
 {
@@ -341,7 +343,7 @@ TEST_F(LikelihoodSerialTest, SimUnbinnedNonExtended)
    EXPECT_EQ(nll0, nll1);
 }
 
-/*
+
 TEST_F(LikelihoodSerialTest, SimBinnedConstrained)
 {
    // Unbinned pdfs that define template histograms
@@ -390,7 +392,8 @@ TEST_F(LikelihoodSerialTest, SimBinnedConstrained)
    auto nll0 = nll->getVal();
 
    likelihood =
-      std::make_shared<RooFit::TestStatistics::RooSimultaneousL>(pdf, data, RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_A"),*w.var("alpha_bkg_obs_B"))));
+//      std::make_shared<RooFit::TestStatistics::RooSimultaneousL>(pdf, data, RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_A"),*w.var("alpha_bkg_obs_B"))));
+      std::make_shared<RooFit::TestStatistics::RooSimultaneousL>(pdf, data);
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
 
    nll_ts.evaluate();
@@ -398,4 +401,3 @@ TEST_F(LikelihoodSerialTest, SimBinnedConstrained)
 
    EXPECT_EQ(nll0, nll1);
 }
-*/
