@@ -934,12 +934,28 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Substitute our servers with those listed in newSet. If nameChange is false, servers and
-/// and substitutes are matched by name. If nameChange is true, servers are matched to args
-/// in newSet that have the `ORIGNAME:<servername>` attribute set. If mustReplaceAll is set,
-/// a warning is printed and error status is returned if not all servers could be successfully
-/// substituted.
-
+/// Replace all direct servers of this object with the new servers in `newServerList`.
+/// This substitutes objects that we receive values from with new objects that have the same name.
+/// \see recursiveRedirectServers() Use recursive version if servers that are only indirectly serving this object should be replaced as well.
+/// \see redirectServers() If only the direct servers of an object need to be replaced.
+///
+/// Note that changing the types of objects is generally allowed, but can be wrong if the interface of an object changes.
+/// For example, one can reparametrise a model by substituting a variable with a function:
+/// \f[
+///   f(x\, |\, a) = a \cdot x \rightarrow f(x\, |\, b) = (2.1 \cdot b) \cdot x
+/// \f]
+/// If an object, however, expects a PDF, and this is substituted with a function that isn't normalised, wrong results might be obtained
+/// or it might even crash the program. The types of the objects being substituted are not checked.
+///
+/// \param[in] newSetOrig Set of new servers that should be used instead of the current servers.
+/// \param[in] mustReplaceAll A warning is printed and error status is returned if not all servers could be
+/// substituted successfully.
+/// \param[in] nameChange If false, an object named "x" is replaced with an object named "x" in `newSetOrig`.
+/// If the object in `newSet` is called differently, set `nameChange` to true and use setStringAttribute on the x object:
+/// ```
+/// objectToReplaceX.setStringAttribute("ORIGNAME", "x")
+/// ```
+/// \param[in] isRecursionStep Internal switch used when called from recursiveRedirectServers().
 Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursionStep)
 {
   // Trivial case, no servers
@@ -1095,17 +1111,16 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
   return newServer;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively replace all servers with the new servers in `newSet`.
+/// This substitutes objects that we receive values from (also indirectly through other objects) with new objects that have the same name.
+///
+/// *Copied from redirectServers:*
+///
+/// \copydetails RooAbsArg::redirectServers
 Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t recurseInNewSet)
 {
-  // Recursively redirect all servers with new server in collection 'newSet'.
-  // Substitute our servers with those listed in newSet. If nameChange is false, servers and
-  // and substitutes are matched by name. If nameChange is true, servers are matched to args
-  // in newSet that have the 'ORIGNAME:<servername>' attribute set. If mustReplaceAll is set,
-  // a warning is printed and error status is returned if not all servers could be sucessfully
-  // substituted. If recurseInNewSet is true, the recursion algorithm also recursion into
-  // expression trees under the arguments in the new servers (i.e. those in newset)
-
-
   // Cyclic recursion protection
   static std::set<const RooAbsArg*> callStack;
   {
