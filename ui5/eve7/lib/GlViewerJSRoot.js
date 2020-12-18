@@ -211,7 +211,7 @@ sap.ui.define([
 
             if (numitems === 0) {
                // default JSROOT context menu
-               menu.painter.FillContextMenu(menu);
+               menu.painter.fillContextMenu(menu);
             } else {
                var many = numitems > 1;
 
