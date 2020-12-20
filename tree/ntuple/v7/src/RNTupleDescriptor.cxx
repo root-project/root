@@ -478,6 +478,12 @@ std::unordered_set<ROOT::Experimental::DescriptorId_t> ROOT::Experimental::RClus
 }
 
 
+bool ROOT::Experimental::RClusterDescriptor::ContainsColumn(DescriptorId_t columnId) const
+{
+   return fColumnRanges.count(columnId) > 0;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -607,6 +613,8 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNElem
 {
    NTupleSize_t result = 0;
    for (const auto &cd : fClusterDescriptors) {
+      if (!cd.second.ContainsColumn(columnId))
+         continue;
       auto columnRange = cd.second.GetColumnRange(columnId);
       result = std::max(result, columnRange.fFirstElementIndex + columnRange.fNElements);
    }
@@ -675,6 +683,8 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NT
 {
    // TODO(jblomer): binary search?
    for (const auto &cd : fClusterDescriptors) {
+      if (!cd.second.ContainsColumn(columnId))
+         continue;
       auto columnRange = cd.second.GetColumnRange(columnId);
       if (columnRange.Contains(index))
          return cd.second.GetId();
@@ -683,6 +693,7 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NT
 }
 
 
+// TODO(jblomer): fix for cases of sharded clasters
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterId) const
 {
@@ -697,6 +708,7 @@ ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterI
 }
 
 
+// TODO(jblomer): fix for cases of sharded clasters
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterId) const
 {
