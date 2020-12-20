@@ -270,6 +270,7 @@ public:
    RLocator GetLocator() const { return fLocator; }
    const RColumnRange &GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
    const RPageRange &GetPageRange(DescriptorId_t columnId) const { return fPageRanges.at(columnId); }
+   bool ContainsColumn(DescriptorId_t columnId) const;
    std::unordered_set<DescriptorId_t> GetColumnIds() const;
 };
 
