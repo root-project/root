@@ -998,3 +998,12 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterPageRange(
 {
    fDescriptor.fClusterDescriptors[clusterId].fPageRanges.emplace(pageRange.fColumnId, std::move(pageRange));
 }
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
+{
+   fDescriptor.fName = "";
+   fDescriptor.fVersion = RNTupleVersion();
+   fDescriptor.fFieldDescriptors.clear();
+   fDescriptor.fColumnDescriptors.clear();
+   fDescriptor.fClusterDescriptors.clear();
+}

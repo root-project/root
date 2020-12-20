@@ -38,14 +38,43 @@ namespace Detail {
 // clang-format on
 class RPageSourceFriends : public RPageSource {
 private:
-   struct ROriginColumn {
+   struct ROriginId {
       std::size_t fSourceIdx = 0;
-      DescriptorId_t fColumnId = kInvalidDescriptorId;
+      DescriptorId_t fId = kInvalidDescriptorId;
+   };
+
+   struct RIdBiMap {
+      std::unordered_map<DescriptorId_t, ROriginId> fVirtual2Origin;
+      std::vector<std::unordered_map<DescriptorId_t, DescriptorId_t>> fOrigin2Virtual;
+
+      void Insert(ROriginId originId, DescriptorId_t virtualId)
+      {
+         fOrigin2Virtual.resize(originId.fSourceIdx + 1);
+         fOrigin2Virtual[originId.fSourceIdx][originId.fId] = virtualId;
+         fVirtual2Origin[virtualId] = originId;
+      }
+
+      void Clear()
+      {
+         fVirtual2Origin.clear();
+         fOrigin2Virtual.clear();
+      }
+
+      DescriptorId_t GetVirtualId(const ROriginId &originId) const
+      {
+         return fOrigin2Virtual[originId.fSourceIdx].at(originId.fId);
+      }
+
+      ROriginId GetOriginId(DescriptorId_t virtualId) const
+      {
+         return fVirtual2Origin.at(virtualId);
+      }
    };
 
    RNTupleMetrics fMetrics;
    std::vector<std::unique_ptr<RPageSource>> fSources;
-   std::unordered_map<DescriptorId_t, ROriginColumn> fVirtual2OriginColumn;
+   RIdBiMap fIdBiMap;
+   std::unordered_map<void *, std::size_t> fPage2SourceIdx;
 
    RNTupleDescriptorBuilder fBuilder;
    DescriptorId_t fNextId = 1;  ///< 0 is reserved for the friend zero field

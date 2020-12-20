@@ -222,6 +222,13 @@ public:
       RPageRange(RPageRange &&other) = default;
       RPageRange &operator =(RPageRange &&other) = default;
 
+      RPageRange Clone() const {
+         RPageRange clone;
+         clone.fColumnId = fColumnId;
+         clone.fPageInfos = fPageInfos;
+         return clone;
+      }
+
       DescriptorId_t fColumnId = kInvalidDescriptorId;
       std::vector<RPageInfo> fPageInfos;
 
@@ -697,6 +704,8 @@ public:
    void AddClusterPageRange(DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange);
 
    void AddClustersFromFooter(void* footerBuffer);
+
+   void Reset();
 };
 
 } // namespace Experimental

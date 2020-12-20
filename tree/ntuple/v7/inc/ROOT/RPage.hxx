@@ -122,6 +122,12 @@ public:
    void Reset(NTupleSize_t rangeFirst) { fNElements = 0; fRangeFirst = rangeFirst; }
    void ResetCluster(const RClusterInfo &clusterInfo) { fNElements = 0; fClusterInfo = clusterInfo; }
 
+   void ChangeIds(DescriptorId_t columnId, DescriptorId_t clusterId)
+   {
+      fColumnId = columnId;
+      fClusterInfo = RClusterInfo(clusterId, fClusterInfo.GetIndexOffset());
+   }
+
    bool IsNull() const { return fBuffer == nullptr; }
    bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }
    bool operator !=(const RPage &other) const { return !(*this == other); }
