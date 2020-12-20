@@ -72,21 +72,37 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
 
    for (std::size_t i = 0; i < fSources.size(); ++i) {
       fSources[i]->Attach();
+      const auto &desc = fSources[i]->GetDescriptor();
+
       if (fSources[i]->GetNEntries() != fSources[0]->GetNEntries()) {
          fNextId = 1;
          fIdBiMap.Clear();
          fBuilder.Reset();
          throw RException(R__FAIL("mismatch in the number of entries of friend RNTuples"));
       }
-      const auto &desc = fSources[i]->GetDescriptor();
+      for (unsigned j = 0; j < i; ++j) {
+         if (fSources[j]->GetDescriptor().GetName() == desc.GetName()) {
+            fNextId = 1;
+            fIdBiMap.Clear();
+            fBuilder.Reset();
+            throw RException(R__FAIL("duplicate names of friend RNTuples"));
+         }
+      }
       AddVirtualField(desc, i, desc.GetFieldZero(), 0, desc.GetName());
 
       for (const auto &c : desc.GetClusterRange()) {
          fBuilder.AddCluster(fNextId, c.GetVersion(), c.GetFirstEntryIndex(), c.GetNEntries());
+         fBuilder.SetClusterLocator(fNextId, c.GetLocator());
          for (auto originColumnId : c.GetColumnIds()) {
             DescriptorId_t virtualColumnId = fIdBiMap.GetVirtualId({i, originColumnId});
-            fBuilder.AddClusterPageRange(virtualColumnId, c.GetPageRange(originColumnId).Clone());
-            fBuilder.AddClusterColumnRange(virtualColumnId, c.GetColumnRange(originColumnId));
+
+            auto columnRange = c.GetColumnRange(originColumnId);
+            columnRange.fColumnId = virtualColumnId;
+            fBuilder.AddClusterColumnRange(fNextId, columnRange);
+
+            auto pageRange = c.GetPageRange(originColumnId).Clone();
+            pageRange.fColumnId = virtualColumnId;
+            fBuilder.AddClusterPageRange(fNextId, std::move(pageRange));
          }
          fIdBiMap.Insert({i, c.GetId()}, fNextId);
          fNextId++;
