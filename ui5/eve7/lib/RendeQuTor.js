@@ -21,11 +21,18 @@ export class RendeQuTor
         this.scene    = scene;
         this.camera   = camera;
         this.queue    = new RC.RenderQueue(renderer);
+        this.pqueue   = new RC.RenderQueue(renderer);
+        this.make_PRP_plain();
+
+        // Depth extraction somewhat works , get float but in some unknown coordinates :)
+        // If you enable this, also enable EXT_color_buffer_float in GlViewerRCore.createRCoreRenderer
+        // this.make_PRP_depth2r();
+        // See also comments in shaders/custom/copyDepth2RReve.frag
 
         this.SSAA_value = 1;
 
         const nearPlane = 0.0625; // XXXX - pass to view_setup(vport, nfclip)
-        const farPlane = 8192;    // XXXX
+        const farPlane  = 8192;   // XXXX
 
         // Why object.pickable === false in Initialize functions ???
         // How is outline supposed to work ???
@@ -72,11 +79,97 @@ export class RendeQuTor
         {
             rq[i].view_setup(vp);
         }
+        rq = this.pqueue._renderQueue;
+        for (let i = 0; i < rq.length; i++)
+        {
+            rq[i].view_setup(vp);
+        }
     }
 
     render()
     {
         this.queue.render();
+    }
+
+    pick()
+    {
+        let foo = this.pqueue.render();
+        console.log(foo);
+
+        {
+            let glman  = this.renderer.glManager;
+            let gl     = this.renderer.gl;
+            let texref = this.pqueue._textureMap["depthr32f_picking"];
+            let tex    = glman.getTexture(texref);
+
+            console.log("Dumper:", glman, gl, texref, tex);
+
+            const fb = gl.createFramebuffer();
+			gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+			gl.framebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+
+            let x = this.renderer._pickCoordinateX;
+            let y = this.renderer._canvas.height - this.renderer._pickCoordinateY;
+            console.log(x, y);
+
+            let d = new Float32Array(9);
+            gl.readPixels(x-1, y-1, 3, 3, gl.RED, gl.FLOAT, d);
+            console.log("Pick depth at", x, ",", y, ":", d);
+            /*
+            let d = new Uint32Array(9);
+            gl.readPixels(x-1, y-1, 3, 3, gl.RED, gl.UNSIGNED_INT, d);
+            console.log("Pick depth:", d;
+            */
+
+            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+            gl.deleteFramebuffer(fb);
+        }
+    }
+
+
+    //=============================================================================
+    // Picking RenderPasses
+    //=============================================================================
+
+    make_PRP_plain()
+    {
+        var pthis = this;
+
+        this.PRP_plain = new RC.RenderPass(
+            RC.RenderPass.BASIC,
+            function (textureMap, additionalData) {},
+            function (textureMap, additionalData) { return { scene: pthis.scene, camera: pthis.camera }; },
+            RC.RenderPass.TEXTURE,
+            null,
+            "depth_picking",
+            [ { id: "color_picking", textureConfig: RC.RenderPass.DEFAULT_RGBA_TEXTURE_CONFIG } ]
+        );
+        this.PRP_plain.view_setup = function (vport) { this.viewport = vport; };
+
+        this.pqueue.pushRenderPass(this.PRP_plain);
+    }
+
+    make_PRP_depth2r()
+    {
+        this.PRP_depth2r_mat = new RC.CustomShaderMaterial("copyDepth2RReve");
+        this.PRP_depth2r_mat.lights = false;
+        var pthis = this;
+
+        this.PRP_depth2r = new RC.RenderPass(
+            RC.RenderPass.POSTPROCESS,
+            function (textureMap, additionalData) {},
+            function (textureMap, additionalData) {
+                return { material: pthis.PRP_depth2r_mat, textures: [ textureMap["depth_picking"] ] };
+            },
+            RC.RenderPass.TEXTURE,
+            null,
+            null,
+            [ { id: "depthr32f_picking", textureConfig: RC.RenderPass.FULL_FLOAT_R32F_TEXTURE_CONFIG } ]
+            // [ { id: "depthr32f_picking", textureConfig: RC.RenderPass.DEFAULT_R32UI_TEXTURE_CONFIG } ]
+        );
+        this.PRP_depth2r.view_setup = function (vport) { this.viewport = vport; };
+
+        this.pqueue.pushRenderPass(this.PRP_depth2r);
     }
 
     //=============================================================================
@@ -90,7 +183,7 @@ export class RendeQuTor
             function (textureMap, additionalData) {},
             function (textureMap, additionalData) { return { scene: pthis.scene, camera: pthis.camera }; },
             RC.RenderPass.SCREEN,
-            null,
+            null
         );
         this.RP_DirectToScreen.view_setup = function (vport) { this.viewport = vport; };
 
@@ -143,7 +236,7 @@ export class RendeQuTor
             // Bind depth texture to this ID
             "depthDefaultDefaultMaterials",
 
-            [ {id: "color_ssaa_super", textureConfig: RC.RenderPass.DEFAULT_RGBA_TEXTURE_CONFIG} ]
+            [ { id: "color_ssaa_super", textureConfig: RC.RenderPass.DEFAULT_RGBA_TEXTURE_CONFIG } ]
         );
         this.RP_SSAA_Super.view_setup = function (vport) { this.viewport = { width: vport.width*pthis.SSAA_value, height: vport.height*pthis.SSAA_value }; };
 
@@ -165,7 +258,7 @@ export class RendeQuTor
 
             // Preprocess function
             function (textureMap, additionalData) {
-                return { material: pthis.RP_SSAA_Down_mat, textures: [textureMap[this.input_texture]] };
+                return { material: pthis.RP_SSAA_Down_mat, textures: [textureMap[pthis.input_texture]] };
             },
 
             // Target
@@ -179,7 +272,7 @@ export class RendeQuTor
 
             [ { id: "color_ssaa_down", textureConfig: RC.RenderPass.DEFAULT_RGBA_TEXTURE_CONFIG } ]
         );
-        this.RP_SSAA_Down.input_texture = "color_ssaa_down";
+        this.RP_SSAA_Down.input_texture = "color_ssaa_super";
         this.RP_SSAA_Down.view_setup = function(vport) { this.viewport = vport; };
 
         this.queue.pushRenderPass(this.RP_SSAA_Down);
@@ -197,10 +290,10 @@ export class RendeQuTor
             RC.RenderPass.POSTPROCESS,
             function (textureMap, additionalData) {},
             function (textureMap, additionalData) {
-                return { material: pthis.RP_ToScreen_mat, textures: [textureMap[this.input_texture]] };
+                return { material: pthis.RP_ToScreen_mat, textures: [ textureMap[this.input_texture] ] }; // XXXX pthis or this ????
             },
             RC.RenderPass.SCREEN,
-            null,
+            null
         );
         this.RP_ToScreen.input_texture = "color_ssaa_down";
         this.RP_ToScreen.view_setup = function(vport) { this.viewport = vport; };
@@ -213,8 +306,12 @@ export class RendeQuTor
     make_RP_HighPassGaussBloom()
     {
         var pthis = this;
-
-        this.RP_HighPass_mat = new RC.CustomShaderMaterial("highPassReve");
+        // let hp = new RC.CustomShaderMaterial("highPass", {MODE: RC.HIGHPASS_MODE_BRIGHTNESS, targetColor: [0.2126, 0.7152, 0.0722], threshold: 0.75});
+        let hp = new RC.CustomShaderMaterial("highPass", { MODE: RC.HIGHPASS_MODE_DIFFERENCE,
+                                             targetColor: [0x0/255, 0x0/255, 0xff/255], threshold: 0.1});
+        console.log("XXXXXXXX", hp);
+        // let hp = new RC.CustomShaderMaterial("highPassReve");
+        this.RP_HighPass_mat = hp;
         this.RP_HighPass_mat.lights = false;
 
         this.RP_HighPass = new RC.RenderPass(
