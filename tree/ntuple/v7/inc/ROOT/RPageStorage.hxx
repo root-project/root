@@ -273,8 +273,8 @@ public:
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
    const RNTupleReadOptions &GetReadOptions() const { return fOptions; }
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
-   void DropColumn(ColumnHandle_t columnHandle) final;
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) override;
+   void DropColumn(ColumnHandle_t columnHandle) override;
 
    /// Open the physical storage container for the tree
    void Attach() { fDescriptor = AttachImpl(); }

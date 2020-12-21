@@ -17,8 +17,9 @@
 
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RPageSourceFriends.hxx>
 #include <ROOT/RPageStorage.hxx>
-#include "ROOT/RPageStorageFile.hxx"
+#include <ROOT/RPageStorageFile.hxx>
 #ifdef R__USE_IMT
 #include <ROOT/TTaskGroup.hxx>
 #endif
@@ -130,6 +131,16 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
    const RNTupleReadOptions &options)
 {
    return std::make_unique<RNTupleReader>(Detail::RPageSource::Create(ntupleName, storage, options));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::OpenFriends(
+   std::span<ROpenSpec> ntuples)
+{
+   std::vector<std::unique_ptr<Detail::RPageSource>> sources;
+   for (const auto &n : ntuples) {
+      sources.emplace_back(Detail::RPageSource::Create(n.fNTupleName, n.fStorage, n.fOptions));
+   }
+   return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceFriends>("_friends", sources));
 }
 
 ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()

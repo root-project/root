@@ -94,6 +94,9 @@ public:
    std::unique_ptr<RPageSource> Clone() const final;
    ~RPageSourceFriends() final;
 
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+   void DropColumn(ColumnHandle_t columnHandle) final;
+
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
