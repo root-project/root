@@ -23,6 +23,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <iterator>
@@ -131,6 +132,14 @@ public:
       bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
    };
 
+   struct ROpenSpec {
+      std::string fNTupleName;
+      std::string fStorage;
+      RNTupleReadOptions fOptions;
+
+      ROpenSpec() = default;
+      ROpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(s) {}
+   };
 
    /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
@@ -140,6 +149,7 @@ public:
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName,
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
+   static std::unique_ptr<RNTupleReader> OpenFriends(std::span<ROpenSpec> ntuples);
 
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on
    /// storage.
