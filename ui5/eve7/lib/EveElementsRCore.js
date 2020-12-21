@@ -29,6 +29,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
    EveElemControl.prototype.separateDraw = false;
 
+   EveElemControl.prototype.getTooltipText = function(intersect)
+   {
+      let el = this.obj3d.eve_el;
+      return el.fTitle || el.fName || "";
+   }
+
    EveElemControl.prototype.elementHighlighted = function (indx)
    {
       // default is simple selection, we ignore the indx
@@ -112,9 +118,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       return mat;
    }
 
-   EveElements.prototype.RcPickable = function (el, obj3d)
+   EveElements.prototype.RcPickable = function (el, obj3d, ctrl_class=EveElemControl)
    {
       if (el.fPickable) {
+         obj3d.get_ctrl = function() { return new ctrl_class(obj3d); }
          obj3d.colorID = el.fElementId;
          // console.log("YES Pickable for", el.fElementId, el.fName)
          return true;

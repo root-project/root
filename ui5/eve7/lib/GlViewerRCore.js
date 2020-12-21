@@ -51,24 +51,24 @@ sap.ui.define([
          // // console.log(window.location.pathname); // where are we loading from?
          // import("https://desire.physics.ucsd.edu/matevz/alja.github.io/rootui5/eve7/rnr_core/RenderCore.js").then((module) => {
 
-            import("../../eve7/rnr_core/RenderCore.js").then((module) => {
-               console.log("GlViewerRCore.onInit - RenderCore.js loaded");
+         import("../../eve7/rnr_core/RenderCore.js").then((module) => {
+            console.log("GlViewerRCore.onInit - RenderCore.js loaded");
 
-               RC = module;
-               if (this.UseRenderQueue)
-               {
-                  import("../../eve7/lib/RendeQuTor.js").then((module) => {
-                     console.log("GlViewerRCore.onInit - RenderPassesRCore.js loaded");
+            RC = module;
+            if (this.UseRenderQueue)
+            {
+               import("../../eve7/lib/RendeQuTor.js").then((module) => {
+                  console.log("GlViewerRCore.onInit - RenderPassesRCore.js loaded");
 
-                     RP = module;
-                     RendeQuTor = RP.RendeQuTor;
+                  RP = module;
+                  RendeQuTor = RP.RendeQuTor;
 
-                     pthis.bootstrap();
-                  });
-               } else {
                   pthis.bootstrap();
-               }
-            });
+               });
+            } else {
+               pthis.bootstrap();
+            }
+         });
       },
 
       bootstrap: function()
@@ -117,10 +117,16 @@ sap.ui.define([
          this.canvas.width  = w;
          this.canvas.height = h;
 
+         // Enable EXT_color_buffer_float for picking depth extraction
+         // let gl = this.canvas.getContext("webgl2");
+         // let ex = gl.getExtension("EXT_color_buffer_float");
+         // console.log("Create RCore, gl, float_color_buff:", gl, ex);
+
          this.renderer = new RC.MeshRenderer(this.canvas, RC.WEBGL2, {antialias: false, stencil: true});
          this.renderer.clearColor = "#FFFFFFFF";
          this.renderer.addShaderLoaderUrls("rootui5sys/eve7/rnr_core/shaders");
          this.renderer.addShaderLoaderUrls("rootui5sys/eve7/shaders");
+         this.renderer.pickDoNotRender = true;
 
          this.scene = new RC.Scene();
 
@@ -171,12 +177,12 @@ sap.ui.define([
          if (this.controller.kind === "3D")
          {
             /*
-              let c = new RC.Cube(100, new RC.Color(1,.6,.2));
-              c.material = new RC.MeshPhongMaterial();
-              c.material.transparent = true;
-              c.material.opacity = 0.5;
-              c.material.depthWrite  = false;
-              this.scene.add(c);
+            let c = new RC.Cube(100, new RC.Color(1,.6,.2));
+            c.material = new RC.MeshPhongMaterial();
+            c.material.transparent = true;
+            c.material.opacity = 0.5;
+            c.material.depthWrite  = false;
+            this.scene.add(c);
             */
             let ss = new RC.Stripe([0,0,0, 100,50,50, 100,200,200]);
             ss.material.lineWidth = 20.0;
@@ -184,7 +190,7 @@ sap.ui.define([
             this.scene.add(ss);
          }
 
-         this.rot_center = new THREE.Vector3(0,0,0);
+         this.rot_center = new RC.Vector3(0,0,0);
 
          if (this.UseRenderQueue)
          {
@@ -210,8 +216,14 @@ sap.ui.define([
       setupRCoreDomAndEventHandlers: function()
       {
          let dome = this.get_view().getDomRef();
-
          dome.appendChild(this.canvas);
+
+         // Setup tooltip
+         this.ttip = document.createElement('div');
+         this.ttip.setAttribute('class', 'eve_tooltip');
+         this.ttip_text = document.createElement('div');
+         this.ttip.appendChild(this.ttip_text);
+         dome.appendChild(this.ttip);
 
          this.controls = new RC.ReveCameraControls(this.camera, this.get_view().getDomRef());
 
@@ -415,15 +427,23 @@ sap.ui.define([
             this.rqt.render();
          else
             this.renderer.render( this.scene, this.camera );
+
+         // if (this.controller.kind === "3D")
+         //    window.requestAnimationFrame(this.render.bind(this));
       },
 
-      render_for_picking: function()
+      render_for_picking: function(x, y)
       {
-         // console.log("RENDER FOR PICKING", this.scene, this.camera, this.canvas, this.renderer);
+         console.log("RENDER FOR PICKING", this.scene, this.camera, this.canvas, this.renderer);
+         var o3d;
 
-         this.renderer.render( this.scene, this.camera );
+         this.renderer.pick(x, y, function(id) { o3d = id; } );
+         this.rqt.pick(this.scene, this.camera);
 
-         // this.renderQueue.render();
+         // Render to FBO or texture would work.
+         // let d   = pthis.renderer.pickedDepth;
+         console.log("pick result", o3d /* , d */);
+         return o3d;
       },
 
       //==============================================================================
@@ -442,12 +462,7 @@ sap.ui.define([
 
          this.renderer.updateViewport(w, h);
 
-         if (this.UseRenderQueue)
-         {
-            this.rqt.updateViewport(w, h);
-         }
-
-         //this.composer.reset();
+         if (this.UseRenderQueue) this.rqt.updateViewport(w, h);
 
          this.controls.update();
          this.render();
@@ -485,26 +500,21 @@ sap.ui.define([
       /** Get three.js intersect object at specified mouse position */
       getIntersectAt: function(x, y)
       {
-         let w = this.get_width();
-         let h = this.get_height();
+         console.log("GLC::onMouseMoveTimeout", x, y);
 
-         console.log("GLC::onMouseMoveTimeout", this, event, x, y);
-
-         var pthis = this;
-         this.renderer.pick(x, y, function(id)
-                            {
-                               let obj = pthis.get_manager().GetElement(id);
-                               // As things are now, depth can not be known.
-                               // Render to FBO or texture would work.
-                               // let d   = pthis.renderer.pickedDepth;
-                               console.log("pick result", id, obj /* , d */);
-                            }
-                           );
-         this.render_for_picking();
-
+         let o3d = this.render_for_picking(x, y);
+         if (o3d)
+         {
+            let w = this.get_width();
+            let h = this.get_height();
+            let mouse = new RC.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
+            return { object: o3d, mouse: mouse, w: w, h: h };
+         }
+         else
+            return null;
 
          /*
-         let mouse = new THREE.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
+         let mouse = new RC.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
 
          this.raycaster.setFromCamera(mouse, this.camera);
 
@@ -529,16 +539,16 @@ sap.ui.define([
       {
          delete this.mousemove_timeout;
 
-         var intersect = this.getIntersectAt(x,y);
+         let intersect = this.getIntersectAt(x,y);
 
-         if (!intersect)
+         if ( ! intersect)
             return this.clearHighlight();
 
          var c = intersect.object.get_ctrl();
 
-         var mouse = intersect.mouse;
+         let mouse = intersect.mouse;
 
-         c.elementHighlighted(c.extractIndex(intersect));
+         // c.elementHighlighted(c.extractIndex(intersect));
 
          this.highlighted_scene = c.obj3d.scene;
 
@@ -617,10 +627,10 @@ sap.ui.define([
 
          if (intersect) {
             if (intersect.object.eve_el)
-               menu.add("Browse to " + (intersect.object.eve_el.fName || "element"), intersect.object.eve_el.fElementId, this.controller.invokeBrowseOf.bind(this.controller));
+            menu.add("Browse to " + (intersect.object.eve_el.fName || "element"), intersect.object.eve_el.fElementId, this.controller.invokeBrowseOf.bind(this.controller));
          }
 
-         menu.add("Reset camera", this.resetThreejsRenderer);
+         menu.add("Reset camera", this.resetRenderer);
 
          menu.add("separator");
 
