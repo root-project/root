@@ -131,9 +131,7 @@ TEST(TFormulaGradientPar, BreitWignerCrossCheckAccuracyDemo)
 
 // FIXME: Add more: crystalball, cheb3, bigaus?
 
-// FIXME: Disable because of a known failure in -Druntime_cxxmodules=On.
-// This is identical to getFuncBody test failure in roottest.
-TEST(DISABLED_TFormulaGradientPar, GetGradFormula)
+TEST(TFormulaGradientPar, GetGradFormula)
 {
    TFormula f("f", "gaus");
    double p[] = {3, 1, 2};
