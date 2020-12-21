@@ -53,22 +53,22 @@ TEST(RPageStorageFriends, Basic)
       ntuple->Fill();
    }
 
-   std::vector<std::unique_ptr<RPageSource>> realSources;
-   realSources.emplace_back(std::make_unique<RPageSourceFile>("ntpl1", fileGuard1.GetPath(), RNTupleReadOptions()));
-   realSources.emplace_back(std::make_unique<RPageSourceFile>("ntpl2", fileGuard2.GetPath(), RNTupleReadOptions()));
-   RNTupleReader ntuple(std::make_unique<RPageSourceFriends>("myNTuple", realSources));
-   EXPECT_EQ(3u, ntuple.GetNEntries());
+   std::vector<RNTupleReader::ROpenSpec> friends{
+      {"ntpl1", fileGuard1.GetPath()},
+      {"ntpl2", fileGuard2.GetPath()} };
+   auto ntuple = RNTupleReader::OpenFriends(friends);
+   EXPECT_EQ(3u, ntuple->GetNEntries());
 
-   auto viewPt = ntuple.GetView<float>("ntpl1.pt");
-//   auto viewEta = ntuple.GetView<float>("ntpl2.eta");
+   auto viewPt = ntuple->GetView<float>("ntpl1.pt");
+   auto viewEta = ntuple->GetView<float>("ntpl2.eta");
 
-//   EXPECT_DOUBLE_EQ(1.0, viewPt(0));
-//   EXPECT_DOUBLE_EQ(2.0, viewPt(1));
-//   EXPECT_DOUBLE_EQ(3.0, viewPt(2));
-//
-//   EXPECT_DOUBLE_EQ(4.0, viewEta(0));
-//   EXPECT_DOUBLE_EQ(5.0, viewEta(1));
-//   EXPECT_DOUBLE_EQ(6.0, viewEta(2));
+   EXPECT_DOUBLE_EQ(1.0, viewPt(0));
+   EXPECT_DOUBLE_EQ(2.0, viewPt(1));
+   EXPECT_DOUBLE_EQ(3.0, viewPt(2));
+
+   EXPECT_DOUBLE_EQ(4.0, viewEta(0));
+   EXPECT_DOUBLE_EQ(5.0, viewEta(1));
+   EXPECT_DOUBLE_EQ(6.0, viewEta(2));
 }
 
 

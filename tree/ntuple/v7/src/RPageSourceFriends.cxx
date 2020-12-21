@@ -49,6 +49,7 @@ void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(
       .MakeDescriptor().Unwrap();
    fBuilder.AddField(virtualField);
    fBuilder.AddFieldLink(virtualParent, virtualFieldId);
+   fIdBiMap.Insert({originIdx, originField.GetId()}, virtualFieldId);
 
    for (const auto &f : originDesc.GetFieldRange(originField))
       AddVirtualField(originDesc, originIdx, f, virtualFieldId, f.GetFieldName());
@@ -119,6 +120,23 @@ ROOT::Experimental::Detail::RPageSourceFriends::Clone() const
 {
    // TODO
    return nullptr;
+}
+
+
+ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
+ROOT::Experimental::Detail::RPageSourceFriends::AddColumn(DescriptorId_t fieldId, const RColumn &column)
+{
+   auto originFieldId = fIdBiMap.GetOriginId(fieldId);
+   fSources[originFieldId.fSourceIdx]->AddColumn(originFieldId.fId, column);
+   return RPageSource::AddColumn(fieldId, column);
+}
+
+void ROOT::Experimental::Detail::RPageSourceFriends::DropColumn(ColumnHandle_t columnHandle)
+{
+   RPageSource::DropColumn(columnHandle);
+   auto originColumnId = fIdBiMap.GetOriginId(columnHandle.fId);
+   columnHandle.fId = originColumnId.fId;
+   fSources[originColumnId.fSourceIdx]->DropColumn(columnHandle);
 }
 
 
