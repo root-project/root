@@ -75,7 +75,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
    FunctionMinimum min(seed, fcn.Up());
 
    if (seed.Parameters().Vec().size() == 0) {
-      print.Error("No free parameters.");
+      print.Warn("No free parameters.");
       return min;
    }
 
