@@ -90,3 +90,5 @@ Unaligned: Unaligned.log
 
 execMissingParentValue.success: EXTRA_DIFFOPTS += -w
 
+execNonExistingFriend.log: execNonExistingFriend.C
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b execNonExistingFriend.C 2>&1 | sed -e 's?: file [A-Za-z/\].*[/\]?: file ?'  > execNonExistingFriend.log || handleError.sh --cmd='Execution of execNonExistingFriend.C > execNonExistingFriend.log' --result=$? --log=execNonExistingFriend.log --test=execNonExistingFriend
