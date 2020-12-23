@@ -76,3 +76,8 @@ endif
 
 subdir: subdir.log
 	$(TestDiff)
+
+execChainElementStatus.log: execChainElementStatus.C
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b execChainElementStatus.C  2>&1 | sed -e 's?: file [A-Za-z/\].*[/\]?: file ?' > execChainElementStatus.log 2>&1 || handleError.sh --cmd='Execution of execChainElementStatus.C > execChainElementStatus.log' --result=$? --log=execChainElementStatus.log 
+--test=execChainElementStatus
+
