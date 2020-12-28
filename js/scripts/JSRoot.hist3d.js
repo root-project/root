@@ -175,7 +175,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
             if ((axis_name==="z") && zoom_mesh.use_y_for_z) axis_name = "y";
 
-            let taxis = axis_painter.GetAxis(axis_name);
+            let taxis = axis_painter.getAxis(axis_name);
 
             let hint = { name: axis_name,
                          title: "TAxis",
@@ -184,7 +184,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
             if (taxis) { hint.name = taxis.fName; hint.title = taxis.fTitle || "histogram TAxis object"; }
 
-            hint.line = axis_name + " : " + axis_painter.AxisAsText(axis_name, axis_value);
+            hint.line = axis_name + " : " + axis_painter.axisAsText(axis_name, axis_value);
 
             return hint;
          }
@@ -212,13 +212,6 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             fp.showContextMenu(kind, pos, p);
       }
 
-   }
-
-   /** @summary Set frame activity flag
-    * @private */
-   JSROOT.TFramePainter.prototype.SetActive = function(on) {
-      if (this.control)
-         this.control.enableKeys = on && JSROOT.key_handling;
    }
 
    /** @summary call 3D rendering of the histogram drawing
@@ -511,19 +504,19 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       // this.TestAxisVisibility = HPainter_TestAxisVisibility;
 
       this.x_handle = new JSROOT.TAxisPainter(null, this.xaxis);
-      this.x_handle.ConfigureAxis("xaxis", this.xmin, this.xmax, xmin, xmax, false, [grminx, grmaxx],
+      this.x_handle.configureAxis("xaxis", this.xmin, this.xmax, xmin, xmax, false, [grminx, grmaxx],
                                        { log: pad ? pad.fLogx : 0 });
-      this.x_handle.AssignFrameMembers(this,"x");
+      this.x_handle.assignFrameMembers(this,"x");
 
       this.y_handle = new JSROOT.TAxisPainter(null, this.yaxis);
-      this.y_handle.ConfigureAxis("yaxis", this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy],
+      this.y_handle.configureAxis("yaxis", this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy],
                                       { log: pad && !opts.use_y_for_z ? pad.fLogx : 0 });
-      this.y_handle.AssignFrameMembers(this,"y");
+      this.y_handle.assignFrameMembers(this,"y");
 
       this.z_handle = new JSROOT.TAxisPainter(null, this.zaxis);
-      this.z_handle.ConfigureAxis("zaxis", this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
+      this.z_handle.configureAxis("zaxis", this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
                                        { log: pad ? pad.fLogz : 0 });
-      this.z_handle.AssignFrameMembers(this,"z");
+      this.z_handle.assignFrameMembers(this,"z");
 
       this.SetRootPadRange(pad, true); // set some coordinates typical for 3D projections in ROOT
 
@@ -532,9 +525,9 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       let textMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }),
           lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 }),
           ticklen = textsize*0.5, lbls = [], text_scale = 1,
-          xticks = this.x_handle.CreateTicks(false, true),
-          yticks = this.y_handle.CreateTicks(false, true),
-          zticks = this.z_handle.CreateTicks(false, true);
+          xticks = this.x_handle.createTicks(false, true),
+          yticks = this.y_handle.createTicks(false, true),
+          zticks = this.z_handle.createTicks(false, true);
 
       // main element, where all axis elements are placed
       let top = new THREE.Object3D();
@@ -572,7 +565,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
                let space = (xticks.next_major_grpos() - grx);
                if (draw_width > 0)
                   text_scale = Math.min(text_scale, 0.9*space/draw_width)
-               if (this.x_handle.IsCenterLabels()) text3d.grx += space/2;
+               if (this.x_handle.isCenteredLabels()) text3d.grx += space/2;
             }
          }
 
@@ -781,7 +774,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
                let space = (yticks.next_major_grpos() - gry);
                if (draw_width > 0)
                   text_scale = Math.min(text_scale, 0.9*space/draw_width)
-               if (this.y_handle.IsCenterLabels()) text3d.gry += space/2;
+               if (this.y_handle.isCenteredLabels()) text3d.gry += space/2;
             }
          }
          ticks.push(0,gry,0, (is_major ? -ticklen : -ticklen*0.6), gry, 0);
@@ -1459,7 +1452,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
          if (is_main) {
             main.create3DScene(this.options.Render3D);
-            main.SetAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
+            main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
             main.Set3DOptions(this.options);
             main.DrawXYZ(main.toplevel, { use_y_for_z: true, zmult: 1.1, zoom: JSROOT.settings.Zooming, ndim: 1 });
          }
@@ -1468,7 +1461,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             this.Draw3DBins();
             main.Render3D();
             this.UpdateStatWebCanvas();
-            main.AddKeysHandler();
+            main.addKeysHandler();
          }
       }
 
@@ -1512,7 +1505,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
          if (is_main) {
             main.create3DScene(this.options.Render3D);
-            main.SetAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
+            main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
             main.Set3DOptions(this.options);
             main.DrawXYZ(main.toplevel, { zmult: zmult, zoom: JSROOT.settings.Zooming, ndim: 2 });
          }
@@ -1521,7 +1514,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             this.Draw3DBins();
             main.Render3D();
             this.UpdateStatWebCanvas();
-            main.AddKeysHandler();
+            main.addKeysHandler();
          }
       }
 
@@ -1588,7 +1581,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          case 17: ilevels = this.GetContourLevels(); palette = this.getHistPalette(); dolines = false; break;
          case 14: dolines = false; donormals = true; break;
          case 16: ilevels = this.GetContourLevels(); dogrid = true; dolines = false; break;
-         default: ilevels = main.z_handle.CreateTicks(true); dogrid = true; break;
+         default: ilevels = main.z_handle.createTicks(true); dogrid = true; break;
       }
 
       if (ilevels) {
@@ -2349,7 +2342,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          }
       }
 
-      if ((histo.fTsumw > 0) && !fp.IsAxisZoomed("x") && !fp.IsAxisZoomed("y") && !fp.IsAxisZoomed("z")) {
+      if ((histo.fTsumw > 0) && !fp.isAxisZoomed("x") && !fp.isAxisZoomed("y") && !fp.isAxisZoomed("z")) {
          stat_sum0  = histo.fTsumw;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
@@ -2859,13 +2852,13 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       } else {
 
          main.create3DScene(this.options.Render3D);
-         main.SetAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
+         main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
          main.Set3DOptions(this.options);
          main.DrawXYZ(main.toplevel, { zoom: JSROOT.settings.Zooming, ndim: 3 });
          this.Draw3DBins();
          main.Render3D();
          this.UpdateStatWebCanvas();
-         main.AddKeysHandler();
+         main.addKeysHandler();
       }
 
       return this.drawHistTitle();
@@ -3117,9 +3110,9 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          color: this.tip_color,
          lines: [ this.tip_name,
                   "pnt: " + indx,
-                  "x: " + p.AxisAsText("x", this.graph.fX[indx]),
-                  "y: " + p.AxisAsText("y", this.graph.fY[indx]),
-                  "z: " + p.AxisAsText("z", this.graph.fZ[indx])
+                  "x: " + p.axisAsText("x", this.graph.fX[indx]),
+                  "y: " + p.axisAsText("y", this.graph.fY[indx]),
+                  "z: " + p.axisAsText("z", this.graph.fZ[indx])
                 ]
       }
    }
@@ -3159,7 +3152,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       let markeratt = new JSROOT.TAttMarkerHandler(graph),
           palette = null,
           levels = [fp.scale_zmin, fp.scale_zmax],
-          scale = fp.size_xy3d / 100 * markeratt.GetFullSize();
+          scale = fp.size_xy3d / 100 * markeratt.getFullSize();
 
       if (this.options.Circles) scale = 0.06*fp.size_xy3d;
 
@@ -3408,9 +3401,9 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             color: this.tip_color,
             lines: [ this.tip_name,
                      "pnt: " + indx/3,
-                     "x: " + p.AxisAsText("x", this.poly.fP[indx]),
-                     "y: " + p.AxisAsText("y", this.poly.fP[indx+1]),
-                     "z: " + p.AxisAsText("z", this.poly.fP[indx+2])
+                     "x: " + p.axisAsText("x", this.poly.fP[indx]),
+                     "y: " + p.axisAsText("y", this.poly.fP[indx+1]),
+                     "z: " + p.axisAsText("z", this.poly.fP[indx+2])
                    ]
          }
       }

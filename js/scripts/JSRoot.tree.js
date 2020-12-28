@@ -781,9 +781,9 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
    TDrawSelector.prototype.ShowProgress = function(value) {
       // this function should be defined not here
 
-      if (typeof document == 'undefined' || !JSROOT.progress) return;
+      if (typeof document == 'undefined' || !JSROOT.Painter) return;
 
-      if ((value === undefined) || isNaN(value)) return JSROOT.progress();
+      if ((value === undefined) || isNaN(value)) return JSROOT.Painter.showProgress();
 
       if (this.last_progress !== value) {
          let diff = value - this.last_progress;
@@ -810,10 +810,10 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
             return text_node.nodeValue = "Breaking ... ";
          }
          selector.Abort();
-         JSROOT.progress();
+         JSROOT.Painter.showProgress();
       }
 
-      JSROOT.progress(main_box);
+      JSROOT.Painter.showProgress(main_box);
       this.last_progress = value;
    }
 
@@ -1449,7 +1449,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
             case 'TLeafC': datakind = jsrio.kTString; break; // datakind = leaf.fIsUnsigned ? jsrio.kUChar : jsrio.kChar; break;
             default: return null;
          }
-         return jsrio.CreateStreamerElement(name || leaf.fName, datakind);
+         return jsrio.createStreamerElement(name || leaf.fName, datakind);
       }
 
       function FindInHandle(branch) {
@@ -1667,7 +1667,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
             if ((branch.fType === JSROOT.BranchType.kClonesNode) || (branch.fType === JSROOT.BranchType.kSTLNode)) {
 
-               elem = jsrio.CreateStreamerElement(target_name, jsrio.kInt);
+               elem = jsrio.createStreamerElement(target_name, jsrio.kInt);
 
                if (!read_mode || ((typeof read_mode === "string") && (read_mode[0] === ".")) || (read_mode === 1)) {
                   handle.process_arrays = false;
@@ -1722,7 +1722,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
                } else if (is_brelem && (nb_leaves === 1) && (leaf.fName === branch.fName) && (branch.fID == -1)) {
 
-                  elem = jsrio.CreateStreamerElement(target_name, branch.fClassName);
+                  elem = jsrio.createStreamerElement(target_name, branch.fClassName);
 
                   if (elem.fType === jsrio.kAny) {
 
@@ -1751,7 +1751,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
                   // this is basic type - can try to solve problem differently
                   if (!elem && branch.fStreamerType && (branch.fStreamerType < 20))
-                     elem = jsrio.CreateStreamerElement(target_name, branch.fStreamerType);
+                     elem = jsrio.createStreamerElement(target_name, branch.fStreamerType);
 
                } else if (nb_leaves === 1) {
                   // no special constrains for the leaf names
@@ -1764,7 +1764,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                   let arr = new Array(nb_leaves), isok = true;
                   for (let l = 0; l < nb_leaves; ++l) {
                      arr[l] = CreateLeafElem(branch.fLeaves.arr[l]);
-                     arr[l] = jsrio.CreateMember(arr[l], handle.file);
+                     arr[l] = jsrio.createMember(arr[l], handle.file);
                      if (!arr[l]) isok = false;
                   }
 
@@ -1787,7 +1787,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          }
 
          if (!member) {
-            member = jsrio.CreateMember(elem, handle.file);
+            member = jsrio.createMember(elem, handle.file);
 
             if ((member.base !== undefined) && member.basename) {
                // when element represent base class, we need handling which differ from normal IO
@@ -2074,14 +2074,14 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
             for (let nn = 0; nn < handle.arr.length; ++nn) {
                let item = handle.arr[nn],
-                  elem = jsrio.CreateStreamerElement(item.name, item.type);
+                  elem = jsrio.createStreamerElement(item.name, item.type);
 
                elem.fType = item.type + jsrio.kOffsetL;
                elem.fArrayLength = 10;
                elem.fArrayDim = 1;
                elem.fMaxIndex[0] = 10; // 10 if artificial number, will be replaced during reading
 
-               item.arrmember = jsrio.CreateMember(elem, handle.file);
+               item.arrmember = jsrio.createMember(elem, handle.file);
             }
          }
       } else {
@@ -2637,7 +2637,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
             args.nbr++;
 
             if (args.nbr >= args.branches.length) {
-               JSROOT.progress();
+               if (JSROOT.Painter) JSROOT.Painter.showProgress();
                return args.resolveFunc(args.names);
             }
 
@@ -2651,7 +2651,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                TestNextBranch();
          }
 
-         JSROOT.progress("br " + args.nbr + "/" + args.branches.length + " " + args.names[args.nbr]);
+         if (JSROOT.Painter)
+            JSROOT.Painter.showProgress("br " + args.nbr + "/" + args.branches.length + " " + args.names[args.nbr]);
 
          let br = args.branches[args.nbr],
             object_class = getBranchObjectClass(br, this),

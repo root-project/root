@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year */
-   JSROOT.version_date = "18/12/2020";
+   JSROOT.version_date = "28/12/2020";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date} */
@@ -2125,11 +2125,6 @@
       if (!typename) return false;
       return (typename === 'TList') || (typename === 'THashList') || (typename === 'TMap') ||
              (typename === 'TObjArray') || (typename === 'TClonesArray');
-   }
-
-   // Dummy function, will be redefined when JSRoot.painter is loaded
-   JSROOT.progress = (msg /*, tmout */) => {
-      if ((msg !== undefined) && (typeof msg=="string")) console.log(msg);
    }
 
    // Connects web window
