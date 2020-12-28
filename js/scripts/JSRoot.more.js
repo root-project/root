@@ -37,7 +37,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       this.createG(use_frame);
 
-      this.draw_g.attr("transform",null); // remove transofrm from interactive changes
+      this.draw_g.attr("transform", null); // remove transofrm from interactive changes
 
       this.pos_x = this.axisToSvg("x", pos_x, this.isndc);
       this.pos_y = this.axisToSvg("y", pos_y, this.isndc);
@@ -120,7 +120,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       for (let n=0;n<=polyline.fLastPoint;++n)
          cmd += ((n>0) ? "L" : "M") + func.x(polyline.fX[n]) + "," + func.y(polyline.fY[n]);
 
-      if (polyline._typename != "TPolyLine") fillatt.SetSolidColor("none");
+      if (polyline._typename != "TPolyLine") fillatt.setSolidColor("none");
 
       if (!fillatt.empty()) cmd+="Z";
 
@@ -650,7 +650,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                   x: bin.grx,
                   y: bin.gry,
                   color1: this.lineatt.color,
-                  color2: this.fillatt.fillcolor(),
+                  color2: this.fillatt.getFillColor(),
                   lines: [],
                   exact: (Math.abs(bin.grx - pnt.x) < radius) && (Math.abs(bin.gry - pnt.y) < radius) };
 
@@ -668,7 +668,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       let pmain = this.getFramePainter();
       if (pmain)
-         res.lines.push("x = " + pmain.AxisAsText("x",bin.x) + " y = " + pmain.AxisAsText("y",bin.y));
+         res.lines.push("x = " + pmain.axisAsText("x",bin.x) + " y = " + pmain.axisAsText("y",bin.y));
 
       return res;
    }
@@ -1043,14 +1043,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       lines.push(this.getObjectHint());
 
       if (d && pmain) {
-         lines.push("x = " + pmain.AxisAsText("x", d.x));
-         lines.push("y = " + pmain.AxisAsText("y", d.y));
+         lines.push("x = " + pmain.axisAsText("x", d.x));
+         lines.push("y = " + pmain.axisAsText("y", d.y));
 
          if (this.options.Errors && (pmain.x_handle.kind=='normal') && ('exlow' in d) && ((d.exlow!=0) || (d.exhigh!=0)))
-            lines.push("error x = -" + pmain.AxisAsText("x", d.exlow) + "/+" + pmain.AxisAsText("x", d.exhigh));
+            lines.push("error x = -" + pmain.axisAsText("x", d.exlow) + "/+" + pmain.axisAsText("x", d.exhigh));
 
          if ((this.options.Errors || (this.options.EF > 0)) && (pmain.y_handle.kind=='normal') && ('eylow' in d) && ((d.eylow!=0) || (d.eyhigh!=0)))
-            lines.push("error y = -" + pmain.AxisAsText("y", d.eylow) + "/+" + pmain.AxisAsText("y", d.eyhigh));
+            lines.push("error y = -" + pmain.axisAsText("y", d.eylow) + "/+" + pmain.axisAsText("y", d.eyhigh));
       }
       return lines;
    }
@@ -1379,12 +1379,12 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
          this.createAttMarker({ attr: graph, style: this.options.Mark - 100 });
 
-         this.marker_size = this.markeratt.GetFullSize();
+         this.marker_size = this.markeratt.getFullSize();
 
-         this.markeratt.reset_pos();
+         this.markeratt.resetPos();
 
          // let produce SVG at maximum 1MB
-         let maxnummarker = 1000000 / (this.markeratt.MarkerLength() + 7), step = 1;
+         let maxnummarker = 1000000 / (this.markeratt.getMarkerLength() + 7), step = 1;
 
          if (!drawbins) drawbins = this.OptimizeBins(maxnummarker); else
             if (this.CanOptimize() && (drawbins.length > 1.5*maxnummarker))
@@ -1472,7 +1472,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                   lines: this.TooltipText(d),
                   rect: best, d3bin: findbin  };
 
-      if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.fillcolor();
+      if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.getFillColor();
 
       if (best.exact) res.exact = true;
       res.menu = res.exact; // activate menu only when exactly locate bin
@@ -1659,7 +1659,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          res.menu_dist = Math.sqrt((pnt.x-res.x)*(pnt.x-res.x) + Math.pow(Math.min(Math.abs(pnt.y-res.gry1),Math.abs(pnt.y-res.gry2)),2));
       }
 
-      if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.fillcolor();
+      if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.getFillColor();
 
       if (!islines) {
          res.color1 = this.getColor(gr.fMarkerColor);
@@ -1747,8 +1747,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       } else {
          let main = this.getFramePainter();
          if (main && this.move_bin) {
-            this.move_bin.x = main.RevertAxis("x", this.move_x0 + this.pos_dx);
-            this.move_bin.y = main.RevertAxis("y", this.move_y0 + this.pos_dy);
+            this.move_bin.x = main.revertAxis("x", this.move_x0 + this.pos_dx);
+            this.move_bin.y = main.revertAxis("y", this.move_y0 + this.pos_dy);
             this.DrawGraph();
          }
       }
@@ -1766,8 +1766,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          if (main && this.bins && !not_changed) {
             for (let k=0;k<this.bins.length;++k) {
                let bin = this.bins[k];
-               bin.x = main.RevertAxis("x", main.grx(bin.x) + this.pos_dx);
-               bin.y = main.RevertAxis("y", main.gry(bin.y) + this.pos_dy);
+               bin.x = main.revertAxis("x", main.grx(bin.x) + this.pos_dx);
+               bin.y = main.revertAxis("y", main.gry(bin.y) + this.pos_dy);
                exec += "SetPoint(" + bin.indx + "," + bin.x + "," + bin.y + ");;";
                if ((bin.indx == 0) && this.matchObjectType('TCutG'))
                   exec += "SetPoint(" + (this.getObject().fNpoints-1) + "," + bin.x + "," + bin.y + ");;";
@@ -1800,16 +1800,16 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       let canp = this.getCanvPainter(), fp = this.getFramePainter();
 
       if ((method.fName == 'RemovePoint') || (method.fName == 'InsertPoint')) {
-         let pnt = fp ? fp.GetLastEventPos() : null;
+         let pnt = fp ? fp.getLastEventPos() : null;
 
-         if (!canp || canp._readonly || !fp || !pnt) return true; // ignore function
+         if (!canp || canp._readonly || !pnt) return true; // ignore function
 
          let hint = this.ExtractTooltip(pnt);
 
          if (method.fName == 'InsertPoint') {
             let main = this.getFramePainter(),
-                userx = main ? main.RevertAxis("x", pnt.x) : 0,
-                usery = main ? main.RevertAxis("y", pnt.y) : 0;
+                userx = main ? main.revertAxis("x", pnt.x) : 0,
+                usery = main ? main.revertAxis("y", pnt.y) : 0;
             canp.ShowMessage('InsertPoint(' + userx.toFixed(3) + ',' + usery.toFixed(3) + ') not yet implemented');
          } else if (this.args_menu_id && hint && (hint.binindx !== undefined)) {
             this.submitCanvExec("RemovePoint(" + hint.binindx + ")", this.args_menu_id);
@@ -2053,7 +2053,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    }
 
    /** @summary Convert axis values to text */
-   TGraphPolargramPainter.prototype.AxisAsText = function(axis, value) {
+   TGraphPolargramPainter.prototype.axisAsText = function(axis, value) {
 
       if (axis == "r") {
          if (value === Math.round(value)) return value.toString();
@@ -2303,7 +2303,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    function drawGraphPolargram(divid, polargram /*, opt*/) {
 
-      let main = JSROOT.getMainPainter(divid);
+      let main = jsrp.getElementMainPainter(divid);
       if (main) {
          if (main.getObject() === polargram) return main;
          return Promise.reject(Error("Cannot superimpose TGraphPolargram with any other drawings"));
@@ -2467,7 +2467,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
 
       let match_distance = 5;
-      if (this.markeratt && this.markeratt.used) match_distance = this.markeratt.GetFullSize();
+      if (this.markeratt && this.markeratt.used) match_distance = this.markeratt.getFullSize();
 
       if (Math.sqrt(best_dist2) > match_distance) return null;
 
@@ -2481,14 +2481,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                   radius: match_distance
                 };
 
-      res.lines.push("r = " + main.AxisAsText("r", graph.fY[bestindx]));
-      res.lines.push("phi = " + main.AxisAsText("phi",graph.fX[bestindx]));
+      res.lines.push("r = " + main.axisAsText("r", graph.fY[bestindx]));
+      res.lines.push("phi = " + main.axisAsText("phi",graph.fX[bestindx]));
 
       if (graph.fEY && graph.fEY[bestindx])
-         res.lines.push("error r = " + main.AxisAsText("r", graph.fEY[bestindx]));
+         res.lines.push("error r = " + main.axisAsText("r", graph.fEY[bestindx]));
 
       if (graph.fEX && graph.fEX[bestindx])
-         res.lines.push("error phi = " + main.AxisAsText("phi", graph.fEX[bestindx]));
+         res.lines.push("error phi = " + main.axisAsText("phi", graph.fEX[bestindx]));
 
       return res;
    }
@@ -2667,7 +2667,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       if ((pnt === null) || !spline || !main) {
          cleanup = true;
       } else {
-         xx = main.RevertAxis("x", pnt.x);
+         xx = main.revertAxis("x", pnt.x);
          indx = this.FindX(xx);
          knot = spline.fPoly[indx];
          yy = this.Eval(knot, xx);
@@ -2718,8 +2718,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       let name = this.getObjectHint();
       if (name.length > 0) res.lines.push(name);
-      res.lines.push("x = " + main.AxisAsText("x", xx))
-      res.lines.push("y = " + main.AxisAsText("y", yy));
+      res.lines.push("x = " + main.axisAsText("x", xx))
+      res.lines.push("y = " + main.axisAsText("y", yy));
       if (knot !== null) {
          res.lines.push("knot = " + indx);
          res.lines.push("B = " + jsrp.floatToString(knot.fB, JSROOT.gStyle.fStatFormat));
@@ -2794,9 +2794,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
          this.createAttMarker({ attr: spline })
 
-         this.markeratt.reset_pos();
+         this.markeratt.resetPos();
 
-         this.knot_size = this.markeratt.GetFullSize();
+         this.knot_size = this.markeratt.getFullSize();
 
          for (let n=0; n<spline.fPoly.length; n++) {
             let knot = spline.fPoly[n],
@@ -3484,7 +3484,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
                   npoints = parseInt(arr[k].substr(1));
 
-                  this.markeratt.reset_pos();
+                  this.markeratt.resetPos();
                   for (n=0;n<npoints;++n)
                      d += this.markeratt.create(func.x(obj.fBuf[indx++]), func.y(obj.fBuf[indx++]));
 
@@ -3762,9 +3762,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (url && this.isMainPainter() && is_buf && fp)
          return this.drawColorPalette(this.options.Zscale, true).then(() => {
-            fp.SetAxesRanges(JSROOT.create("TAxis"), 0, 1, JSROOT.create("TAxis"), 0, 1, null, 0, 0);
-            fp.CreateXY({ ndim: 2, check_pad_range: false });
-            fp.AddInteractive();
+            fp.setAxesRanges(JSROOT.create("TAxis"), 0, 1, JSROOT.create("TAxis"), 0, 1, null, 0, 0);
+            fp.createXY({ ndim: 2, check_pad_range: false });
+            fp.addInteractivity();
             return this;
          });
 

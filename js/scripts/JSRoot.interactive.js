@@ -683,7 +683,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             setTimeout(this.ProcessTooltipEvent.bind(this, hintsg.property('last_point'), null), 10);
       },
 
-      AddInteractive: function() {
+      addInteractivity: function() {
 
          let pp = this.getPadPainter(),
              svg = this.getFrameSvg();
@@ -694,7 +694,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              svg_y = svg.selectAll(".yaxis_container");
 
          if (!svg.property('interactive_set')) {
-            this.AddKeysHandler();
+            this.addKeysHandler();
 
             this.last_touch = new Date(0);
             this.zoom_kind = 0; // 0 - none, 1 - XY, 2 - only X, 3 - only Y, (+100 for touches)
@@ -734,7 +734,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return Promise.resolve(this);
       },
 
-      AddKeysHandler: function() {
+      addKeysHandler: function() {
          if (this.keys_handler || (typeof window == 'undefined')) return;
 
          this.keys_handler = this.ProcessKeyPress.bind(this);
@@ -744,7 +744,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       ProcessKeyPress: function(evnt) {
          let main = this.selectDom();
-         if (!JSROOT.key_handling || main.empty()) return;
+         if (!JSROOT.key_handling || main.empty() || (this.enabledKeys === false)) return;
 
          let key = "";
          switch (evnt.keyCode) {
@@ -963,14 +963,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                 idx = this.swap_xy ? 1 : 0, idy = 1 - idx;
 
             if (changed[idx] && (Math.abs(this.zoom_curr[idx] - this.zoom_origin[idx]) > 10)) {
-               xmin = Math.min(this.RevertAxis("x", this.zoom_origin[idx]), this.RevertAxis("x", this.zoom_curr[idx]));
-               xmax = Math.max(this.RevertAxis("x", this.zoom_origin[idx]), this.RevertAxis("x", this.zoom_curr[idx]));
+               xmin = Math.min(this.revertAxis("x", this.zoom_origin[idx]), this.revertAxis("x", this.zoom_curr[idx]));
+               xmax = Math.max(this.revertAxis("x", this.zoom_origin[idx]), this.revertAxis("x", this.zoom_curr[idx]));
                isany = true;
             }
 
             if (changed[idy] && (Math.abs(this.zoom_curr[idy] - this.zoom_origin[idy]) > 10)) {
-               ymin = Math.min(this.RevertAxis("y", this.zoom_origin[idy]), this.RevertAxis("y", this.zoom_curr[idy]));
-               ymax = Math.max(this.RevertAxis("y", this.zoom_origin[idy]), this.RevertAxis("y", this.zoom_curr[idy]));
+               ymin = Math.min(this.revertAxis("y", this.zoom_origin[idy]), this.revertAxis("y", this.zoom_curr[idy]));
+               ymax = Math.max(this.revertAxis("y", this.zoom_origin[idy]), this.revertAxis("y", this.zoom_curr[idy]));
                isany = true;
             }
 
@@ -1179,14 +1179,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (this.zoom_kind === 103) changed[0] = false;
 
          if (changed[xid] && (Math.abs(this.zoom_curr[xid] - this.zoom_origin[xid]) > 10)) {
-            xmin = Math.min(this.RevertAxis("x", this.zoom_origin[xid]), this.RevertAxis("x", this.zoom_curr[xid]));
-            xmax = Math.max(this.RevertAxis("x", this.zoom_origin[xid]), this.RevertAxis("x", this.zoom_curr[xid]));
+            xmin = Math.min(this.revertAxis("x", this.zoom_origin[xid]), this.revertAxis("x", this.zoom_curr[xid]));
+            xmax = Math.max(this.revertAxis("x", this.zoom_origin[xid]), this.revertAxis("x", this.zoom_curr[xid]));
             isany = true;
          }
 
          if (changed[yid] && (Math.abs(this.zoom_curr[yid] - this.zoom_origin[yid]) > 10)) {
-            ymin = Math.min(this.RevertAxis("y", this.zoom_origin[yid]), this.RevertAxis("y", this.zoom_curr[yid]));
-            ymax = Math.max(this.RevertAxis("y", this.zoom_origin[yid]), this.RevertAxis("y", this.zoom_curr[yid]));
+            ymin = Math.min(this.revertAxis("y", this.zoom_origin[yid]), this.revertAxis("y", this.zoom_curr[yid]));
+            ymax = Math.max(this.revertAxis("y", this.zoom_origin[yid]), this.revertAxis("y", this.zoom_curr[yid]));
             isany = true;
          }
 
@@ -1292,7 +1292,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
                if (pnt) frame_corner = (pnt.x>0) && (pnt.x<20) && (pnt.y>0) && (pnt.y<20);
 
-               fp.SetLastEventPos(pnt);
+               fp.setLastEventPos(pnt);
             } else if (!this.v7_frame && ((kind=="x") || (kind=="y") || (kind=="z"))) {
                exec_painter = this.getMainPainter(); // histogram painter delivers items for axis menu
             }
@@ -1390,8 +1390,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          /*
          painter.BasicInteractive = this.BasicInteractive;
-         painter.AddInteractive = this.AddInteractive;
-         painter.AddKeysHandler = this.AddKeysHandler;
+         painter.addInteractivity = this.addInteractivity;
+         painter.addKeysHandler = this.addKeysHandler;
          painter.ProcessKeyPress = this.ProcessKeyPress;
          painter.ProcessFrameClick = this.ProcessFrameClick;
          painter.startRectSel = this.startRectSel;

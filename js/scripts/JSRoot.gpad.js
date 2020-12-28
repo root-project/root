@@ -52,9 +52,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    TAxisPainter.prototype = Object.create(JSROOT.AxisBasePainter.prototype);
 
    /** @summary Use in GED to identify kind of axis */
-   TAxisPainter.prototype.GetAxisType = function() { return "TAxis"; }
+   TAxisPainter.prototype.getAxisType = function() { return "TAxis"; }
 
-   TAxisPainter.prototype.ConfigureAxis = function(name, min, max, smin, smax, vertical, range, opts) {
+   /** @summary Configure axis painter
+     * @desc Axis can be drawn inside frame <g> group with offset to 0 point for the frame
+     * Therefore one should distinguish when caclulated coordinates used for axis drawing itself or for calculation of frame coordinates
+     * @private */
+   TAxisPainter.prototype.configureAxis = function(name, min, max, smin, smax, vertical, range, opts) {
       this.name = name;
       this.full_min = min;
       this.full_max = max;
@@ -74,7 +78,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (this.kind == 'time') {
-         this.func = d3.scaleTime().domain([this.ConvertDate(smin), this.ConvertDate(smax)]);
+         this.func = d3.scaleTime().domain([this.convertDate(smin), this.convertDate(smax)]);
       } else if (this.log) {
          this.logbase = this.log === 2 ? 2 : 10;
          if (smax <= 0) smax = 1;
@@ -106,7 +110,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.scale_max = smax;
 
       if (this.kind == 'time')
-         this.gr = val => this.func(this.ConvertDate(val));
+         this.gr = val => this.func(this.convertDate(val));
       else if (this.log)
          this.gr = val => (val < this.scale_min) ? (this.vertical ? this.func.range()[0]+5 : -5) : this.func(val);
       else
@@ -199,13 +203,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Creates array with minor/middle/major ticks */
-   TAxisPainter.prototype.CreateTicks = function(only_major_as_array, optionNoexp, optionNoopt, optionInt) {
+   TAxisPainter.prototype.createTicks = function(only_major_as_array, optionNoexp, optionNoopt, optionInt) {
 
       if (optionNoopt && this.nticks && (this.kind == "normal")) this.noticksopt = true;
 
       let handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func };
 
-      handle.minor = handle.middle = handle.major = this.ProduceTicks(this.nticks);
+      handle.minor = handle.middle = handle.major = this.produceTicks(this.nticks);
 
       if (only_major_as_array) {
          let res = handle.major, delta = (this.scale_max - this.scale_min)*1e-5;
@@ -224,7 +228,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if ((this.nticks2 > 1) && (!this.log || (this.logbase === 10))) {
-         handle.minor = handle.middle = this.ProduceTicks(handle.major.length, this.nticks2);
+         handle.minor = handle.middle = this.produceTicks(handle.major.length, this.nticks2);
 
          let gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
 
@@ -232,7 +236,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if ((handle.middle.length <= handle.major.length) || (handle.middle.length > gr_range/3.5)) {
             handle.minor = handle.middle = handle.major;
          } else if ((this.nticks3 > 1) && !this.log)  {
-            handle.minor = this.ProduceTicks(handle.middle.length, this.nticks3);
+            handle.minor = this.produceTicks(handle.middle.length, this.nticks3);
             if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7)) handle.minor = handle.middle;
          }
       }
@@ -338,7 +342,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return handle;
    }
 
-   TAxisPainter.prototype.IsCenterLabels = function() {
+   /** @summary Is labels should be centered */
+   TAxisPainter.prototype.isCenteredLabels = function() {
       if (this.kind === 'labels') return true;
       if (this.log) return false;
       let axis = this.getObject();
@@ -510,7 +515,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Draw axis labels */
    TAxisPainter.prototype.drawLabels = function(axis_g, axis, w, h, handle, side, labelSize, labeloffset, tickSize, ticksPlusMinus, max_text_width) {
       let label_color = this.getColor(axis.fLabelColor),
-          center_lbls = this.IsCenterLabels(),
+          center_lbls = this.isCenteredLabels(),
           rotate_lbls = axis.TestBit(JSROOT.EAxisBits.kLabelsVert),
           textscale = 1, maxtextlen = 0, applied_scale = 0,
           label_g = [ axis_g.append("svg:g").attr("class","axis_labels") ],
@@ -632,9 +637,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
-   /** @summary function draws  TAxis or TGaxis object
-     * @returns Promise*/
-   TAxisPainter.prototype.DrawAxis = function(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width, calculate_position) {
+   /** @summary function draws TAxis or TGaxis object
+     * @returns {Promise} for drawing ready */
+   TAxisPainter.prototype.drawAxis = function(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width, calculate_position) {
 
       let axis = this.getObject(), chOpt = "",
           is_gaxis = (axis && axis._typename === 'TGaxis'),
@@ -708,7 +713,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // first draw ticks
 
-      let handle = this.CreateTicks(false, optionNoexp, optionNoopt, optionInt);
+      let handle = this.createTicks(false, optionNoexp, optionNoopt, optionInt);
 
       this.drawTicks(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing);
 
@@ -826,6 +831,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    }
 
+   /** @summary Redraw axis, used in standalone mode for TGaxis */
    TAxisPainter.prototype.redraw = function() {
 
       let gaxis = this.getObject(),
@@ -845,7 +851,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (vertical) y2 = y1; else x1 = x2;
       }
 
-      this.ConfigureAxis(vertical ? "yaxis" : "xaxis", min, max, min, max, vertical, [0, sz], {
+      this.configureAxis(vertical ? "yaxis" : "xaxis", min, max, min, max, vertical, [0, sz], {
          time_scale: gaxis.fChopt.indexOf("t") >= 0,
          log: (gaxis.fChopt.indexOf("G") >= 0) ? 1 : 0,
          reverse: reverse,
@@ -854,7 +860,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.createG();
 
-      return this.DrawAxis(this.getG(), Math.abs(w), Math.abs(h), "translate(" + x1 + "," + y2 +")");
+      return this.drawAxis(this.getG(), Math.abs(w), Math.abs(h), "translate(" + x1 + "," + y2 +")");
    }
 
    let drawGaxis = (divid, obj /*, opt*/) => {
@@ -936,25 +942,31 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Set active flag for frame - can block some events
     * @private */
-   TFramePainter.prototype.SetActive = function(/* on */) {
-      // do nothing here - key handler is handled differently
+   TFramePainter.prototype.setFrameActive = function(on) {
+      this.enabledKeys = on && JSROOT.key_handling ? true : false;
+      // used only in 3D mode where control is used
+      if (this.control)
+         this.control.enableKeys = this.enabledKeys;
    }
 
-   TFramePainter.prototype.Shrink = function(shrink_left, shrink_right) {
+   /** @summary Shrink frame size
+     * @private */
+   TFramePainter.prototype.shrinkFrame = function(shrink_left, shrink_right) {
       this.fX1NDC += shrink_left;
       this.fX2NDC -= shrink_right;
    }
 
    /** @summary Set position of last context menu event */
-   TFramePainter.prototype.SetLastEventPos = function(pnt) {
+   TFramePainter.prototype.setLastEventPos = function(pnt) {
       this.fLastEventPnt = pnt;
    }
 
-   /** @summary Return position of last event */
-   TFramePainter.prototype.GetLastEventPos = function() { return this.fLastEventPnt; }
+   /** @summary Return position of last event
+     * @private */
+   TFramePainter.prototype.getLastEventPos = function() { return this.fLastEventPnt; }
 
-   /** @summary  Returns coordinates transformation func */
-   TFramePainter.prototype.GetProjectionFunc = function() {
+   /** @summary Returns coordinates transformation func */
+   TFramePainter.prototype.getProjectionFunc = function() {
       switch (this.projection) {
          case 1: return ProjectAitoff2xy;
          case 2: return ProjectMercator2xy;
@@ -964,7 +976,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Rcalculate frame ranges using specified projection functions */
-   TFramePainter.prototype.RecalculateRange = function(Proj) {
+   TFramePainter.prototype.recalculateRange = function(Proj) {
       this.projection = Proj || 0;
 
       if ((this.projection == 2) && ((this.scale_ymin <= -90 || this.scale_ymax >=90))) {
@@ -972,7 +984,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.projection = 0;
       }
 
-      let func = this.GetProjectionFunc();
+      let func = this.getProjectionFunc();
       if (!func) return;
 
       let pnts = [ func(this.scale_xmin, this.scale_ymin),
@@ -1004,8 +1016,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
-   /** @summary Configure axes ranges */
-   TFramePainter.prototype.SetAxesRanges = function(xaxis, xmin, xmax, yaxis, ymin, ymax, zaxis, zmin, zmax) {
+   /** @summary Configure frame axes ranges */
+   TFramePainter.prototype.setAxesRanges = function(xaxis, xmin, xmax, yaxis, ymin, ymax, zaxis, zmin, zmax) {
       this.ranges_set = true;
 
       this.xaxis = xaxis;
@@ -1022,7 +1034,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Retuns axis object */
-   TFramePainter.prototype.GetAxis = function(name) {
+   TFramePainter.prototype.getAxis = function(name) {
       switch(name) {
          case "x": return this.xaxis;
          case "y": return this.yaxis;
@@ -1031,8 +1043,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return null;
    }
 
-   TFramePainter.prototype.CheckAxisZoom = function(name) {
-      let axis = this.GetAxis(name);
+   /** @summary Apply axis zooming to frame painter
+     * @private */
+   TFramePainter.prototype.applyAxisZoom = function(name) {
+      let axis = this.getAxis(name);
       if (axis && axis.TestBit(JSROOT.EAxisBits.kAxisRange)) {
          if ((axis.fFirst !== axis.fLast) && ((axis.fFirst > 1) || (axis.fLast < axis.fNbins))) {
             this['zoom_' + name + 'min'] = axis.fFirst > 1 ? axis.GetBinLowEdge(axis.fFirst) : axis.fXmin;
@@ -1044,7 +1058,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
-   TFramePainter.prototype.CheckPadUserRange = function(pad, name) {
+   /** @summary Apply axis zooming from pad user range
+     * @private */
+   TFramePainter.prototype.applyPadUserRange = function(pad, name) {
       if (!pad) return;
 
       // seems to be, not allways user range calculated
@@ -1066,7 +1082,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       }
 
-      if ((umin>=umax) || (Math.abs(umin)<eps && Math.abs(umax-1)<eps)) return;
+      if ((umin >= umax) || (Math.abs(umin) < eps && Math.abs(umax-1) < eps)) return;
 
       if (pad['fLog' + name] > 0) {
          umin = Math.exp(umin * Math.log(10));
@@ -1093,7 +1109,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      *    this.[x,y]  these are d3.scale objects
      *    this.gr[x,y]  converts root scale into graphical value
      * @private */
-   TFramePainter.prototype.CreateXY = function(opts) {
+   TFramePainter.prototype.createXY = function(opts) {
 
       this.CleanXY(); // remove all previous configurations
 
@@ -1130,16 +1146,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.zoom_ymin = this.zoom_ymax = 0;
          this.zoom_zmin = this.zoom_zmax = 0;
 
-         this.CheckAxisZoom('x');
-         if (opts.ndim && (opts.ndim > 1)) this.CheckAxisZoom('y');
-         if (opts.ndim && (opts.ndim > 2)) this.CheckAxisZoom('z');
+         this.applyAxisZoom('x');
+         if (opts.ndim && (opts.ndim > 1)) this.applyAxisZoom('y');
+         if (opts.ndim && (opts.ndim > 2)) this.applyAxisZoom('z');
 
          if (opts.check_pad_range === "pad_range") {
             let canp = this.getCanvPainter();
             // ignore range set in the online canvas
             if (!canp || !canp.online_canvas) {
-               this.CheckPadUserRange(pad, 'x');
-               this.CheckPadUserRange(pad, 'y');
+               this.applyPadUserRange(pad, 'x');
+               this.applyPadUserRange(pad, 'y');
             }
          }
       }
@@ -1160,30 +1176,30 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       // projection should be assigned
-      this.RecalculateRange(opts.Proj);
+      this.recalculateRange(opts.Proj);
 
       this.x_handle = new TAxisPainter(this.getDom(), this.xaxis, true);
       this.x_handle.setPadName(this.getPadName());
 
-      this.x_handle.ConfigureAxis("xaxis", this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0,h] : [0,w],
+      this.x_handle.configureAxis("xaxis", this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0,h] : [0,w],
                                       { reverse: this.reverse_x,
                                         log: this.swap_xy ? pad.fLogy : pad.fLogx,
                                         logcheckmin: this.swap_xy,
                                         logminfactor: 0.0001 });
 
-      this.x_handle.AssignFrameMembers(this,"x");
+      this.x_handle.assignFrameMembers(this,"x");
 
       this.y_handle = new TAxisPainter(this.getDom(), this.yaxis, true);
       this.y_handle.setPadName(this.getPadName());
 
-      this.y_handle.ConfigureAxis("yaxis", this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0,w] : [0,h],
+      this.y_handle.configureAxis("yaxis", this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0,w] : [0,h],
                                       { reverse: this.reverse_y,
                                         log: this.swap_xy ? pad.fLogx : pad.fLogy,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
                                         log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.ymax) ? 0.3 * opts.ymin_nz : 0,
                                         logminfactor: 3e-4 });
 
-      this.y_handle.AssignFrameMembers(this,"y");
+      this.y_handle.assignFrameMembers(this,"y");
 
       this.SetRootPadRange(pad);
    }
@@ -1246,7 +1262,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             else
                gridx += "M"+this.x_handle.ticks[n]+",0v"+h;
 
-         let colid = (JSROOT.gStyle.fGridColor > 0) ? JSROOT.gStyle.fGridColor : (this.GetAxis("x") ? this.GetAxis("x").fAxisColor : 1),
+         let colid = (JSROOT.gStyle.fGridColor > 0) ? JSROOT.gStyle.fGridColor : (this.getAxis("x") ? this.getAxis("x").fAxisColor : 1),
              grid_color = this.getColor(colid) || "black";
 
          if (gridx.length > 0)
@@ -1267,7 +1283,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             else
                gridy += "M0,"+this.y_handle.ticks[n]+"h"+w;
 
-         let colid = (JSROOT.gStyle.fGridColor > 0) ? JSROOT.gStyle.fGridColor : (this.GetAxis("y") ? this.GetAxis("y").fAxisColor : 1),
+         let colid = (JSROOT.gStyle.fGridColor > 0) ? JSROOT.gStyle.fGridColor : (this.getAxis("y") ? this.getAxis("y").fAxisColor : 1),
              grid_color = this.getColor(colid) || "black";
 
          if (gridy.length > 0)
@@ -1281,11 +1297,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Converts "raw" axis value into text */
-   TFramePainter.prototype.AxisAsText = function(axis, value) {
+   TFramePainter.prototype.axisAsText = function(axis, value) {
       let handle = this[axis+"_handle"];
 
       if (handle)
-         return handle.AxisAsText(value, JSROOT.settings[axis.toUpperCase() + "ValuesFormat"]);
+         return handle.axisAsText(value, JSROOT.settings[axis.toUpperCase() + "ValuesFormat"]);
 
       return value.toPrecision(4);
    }
@@ -1325,12 +1341,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let can_adjust_frame = !shrink_forbidden && JSROOT.settings.CanAdjustFrame;
 
-         let promise1 = draw_horiz.DrawAxis(layer, w, h,
+         let promise1 = draw_horiz.drawAxis(layer, w, h,
                                             draw_horiz.invert_side ? undefined : "translate(0," + h + ")",
                                             pad && pad.fTickx ? -h : 0, disable_axis_draw,
                                             undefined, false);
 
-         let promise2 = draw_vertical.DrawAxis(layer, w, h,
+         let promise2 = draw_vertical.drawAxis(layer, w, h,
                                                draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
                                                pad && pad.fTicky ? w : 0, disable_axis_draw,
                                                draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
@@ -1352,7 +1368,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                }
 
                if (shrink != 0) {
-                  this.Shrink(shrink, 0);
+                  this.shrinkFrame(shrink, 0);
                   this.redraw();
                   return this.DrawAxes(true);
                }
@@ -1399,7 +1415,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          // force white color for the canvas frame
          if (!tframe && this.fillatt.empty() && pp && pp.iscan)
-            this.fillatt.SetSolidColor('white');
+            this.fillatt.setSolidColor('white');
       }
 
       if (!tframe && pad && (pad.fFrameLineColor!==undefined))
@@ -1519,6 +1535,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.CleanFrameDrawings();
       delete this._click_handler;
       delete this._dblclick_handler;
+      delete this.enabledKeys;
 
       JSROOT.ObjectPainter.prototype.cleanup.call(this);
    }
@@ -1614,7 +1631,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Change log state of specified axis
      * @param {number} value - 0 (linear), 1 (log) or 2 (log2) */
-   TFramePainter.prototype.ChangeLog = function(axis, value) {
+   TFramePainter.prototype.changeAxisLog = function(axis, value) {
       let pp = this.getPadPainter(),
           pad = pp ? pp.getRootPad(true) : null;
       if (!pad) return;
@@ -1639,8 +1656,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Toggle log state on the specified axis */
-   TFramePainter.prototype.ToggleLog = function(axis) {
-      this.ChangeLog(axis, "toggle");
+   TFramePainter.prototype.toggleAxisLog = function(axis) {
+      this.changeAxisLog(axis, "toggle");
    }
 
    /** @summary Fill context menu for the frame
@@ -1657,9 +1674,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.add("Unzoom", this.Unzoom.bind(this, kind));
          if (pad) {
             menu.add("sub:SetLog "+kind);
-            menu.addchk(pad["fLog" + kind] == 0, "linear", "0", arg => this.ChangeLog(kind, parseInt(arg)));
-            menu.addchk(pad["fLog" + kind] == 1, "log", "1", arg => this.ChangeLog(kind, parseInt(arg)));
-            menu.addchk(pad["fLog" + kind] == 2, "log2", "2", arg => this.ChangeLog(kind, parseInt(arg)));
+            menu.addchk(pad["fLog" + kind] == 0, "linear", () => this.changeAxisLog(kind, 0));
+            menu.addchk(pad["fLog" + kind] == 1, "log", () => this.changeAxisLog(kind, 1));
+            menu.addchk(pad["fLog" + kind] == 2, "log2", () => this.changeAxisLog(kind, 2));
             menu.add("endsub:");
          }
          menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kMoreLogLabels), "More log",
@@ -1691,11 +1708,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       menu.add("Unzoom all", () => this.Unzoom("xyz"));
 
       if (pad) {
-         menu.addchk(pad.fLogx, "SetLogx", () => this.ToggleLog("x"));
-         menu.addchk(pad.fLogy, "SetLogy", () => this.ToggleLog("y"));
+         menu.addchk(pad.fLogx, "SetLogx", () => this.toggleAxisLog("x"));
+         menu.addchk(pad.fLogy, "SetLogy", () => this.toggleAxisLog("y"));
 
          if (main && (typeof main.Dimension === 'function') && (main.Dimension() > 1))
-            menu.addchk(pad.fLogz, "SetLogz", () => this.ToggleLog("z"));
+            menu.addchk(pad.fLogz, "SetLogz", () => this.toggleAxisLog("z"));
          menu.add("separator");
       }
 
@@ -1710,7 +1727,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return true;
    }
 
-   TFramePainter.prototype.FillWebObjectOptions = function(res) {
+   /** @summary Fill option object used in TWebCanvas
+     * @private */
+   TFramePainter.prototype.fillWebObjectOptions = function(res) {
+      if (!res) {
+         if (!this.snapid) return null;
+         res = { _typename: "TWebObjectOptions", snapid: this.snapid.toString(), opt: this.getDrawOpt(), fcust: "", fopt: [] };
+       }
+
       res.fcust = "frame";
       res.fopt = [this.scale_xmin || 0, this.scale_ymin || 0, this.scale_xmax || 0, this.scale_ymax || 0];
       return res;
@@ -1752,7 +1776,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
     /** @summary Function can be used for zooming into specified range
-      * @desc if both limits for each axis 0 (like xmin==xmax==0), axis will be unzoomed */
+      * @desc if both limits for each axis 0 (like xmin==xmax==0), axis will be unzoomed
+      * @param {number} xmin
+      * @param {number} xmax
+      * @param {number} [ymin]
+      * @param {number} [ymax]
+      * @param {number} [zmin]
+      * @param {number} [zmax]
+      * @returns {boolean} if zoom operation was performed */
    TFramePainter.prototype.Zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
 
       // disable zooming when axis conversion is enabled
@@ -1850,9 +1881,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return changed;
    }
 
-   /** @summary Checks if specified axes zoom */
-   TFramePainter.prototype.IsAxisZoomed = function(axis) { return this['zoom_'+axis+'min'] !== this['zoom_'+axis+'max']; }
-
+   /** @summary Checks if specified axis zoomed */
+   TFramePainter.prototype.isAxisZoomed = function(axis) {
+      return this['zoom_'+axis+'min'] !== this['zoom_'+axis+'max'];
+   }
 
    /** @summary Unzoom speicied axes */
    TFramePainter.prototype.Unzoom = function(dox, doy, doz) {
@@ -1898,45 +1930,45 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Convert graphical coordinate into axis value */
-   TFramePainter.prototype.RevertAxis = function(axis, pnt) {
+   TFramePainter.prototype.revertAxis = function(axis, pnt) {
       let handle = this[axis+"_handle"];
-      return handle ? handle.RevertPoint(pnt) : 0;
+      return handle ? handle.revertPoint(pnt) : 0;
    }
 
    /** @summary Show axis status message
-   * @desc method called normally when mouse enter main object element
-   * @private */
+    * @desc method called normally when mouse enter main object element
+    * @private */
    TFramePainter.prototype.ShowAxisStatus = function(axis_name, evnt) {
-      let taxis = this.GetAxis(axis_name), hint_name = axis_name, hint_title = "TAxis",
+      let taxis = this.getAxis(axis_name), hint_name = axis_name, hint_title = "TAxis",
           m = d3.pointer(evnt, this.getFrameSvg().node()), id = (axis_name=="x") ? 0 : 1;
 
       if (taxis) { hint_name = taxis.fName; hint_title = taxis.fTitle || ("TAxis object for " + axis_name); }
       if (this.swap_xy) id = 1-id;
 
-      let axis_value = this.RevertAxis(axis_name, m[id]);
+      let axis_value = this.revertAxis(axis_name, m[id]);
 
-      this.showObjectStatus(hint_name, hint_title, axis_name + " : " + this.AxisAsText(axis_name, axis_value), m[0]+","+m[1]);
+      this.showObjectStatus(hint_name, hint_title, axis_name + " : " + this.axisAsText(axis_name, axis_value), m[0]+","+m[1]);
    }
 
    /** @summary Add interactive keys handlers
     * @private */
-   TFramePainter.prototype.AddKeysHandler = function() {
+   TFramePainter.prototype.addKeysHandler = function() {
       if (JSROOT.BatchMode) return;
       JSROOT.require(['interactive']).then(inter => {
          inter.FrameInteractive.assign(this);
-         this.AddKeysHandler();
+         this.addKeysHandler();
       });
    }
 
    /** @summary Add interactive functionality to the frame
     * @private */
-   TFramePainter.prototype.AddInteractive = function() {
+   TFramePainter.prototype.addInteractivity = function() {
       if (JSROOT.BatchMode || (!JSROOT.settings.Zooming && !JSROOT.settings.ContextMenu))
          return Promise.resolve(false);
 
       return JSROOT.require(['interactive']).then(inter => {
          inter.FrameInteractive.assign(this);
-         return this.AddInteractive();
+         return this.addInteractivity();
       });
    }
 
@@ -2125,13 +2157,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       jsrp.selectActivePad({ pp: this, active: true });
 
       if (canp) canp.producePadEvent("select", this, _painter, pos, _place);
-   }
-
-   /** @summary Called by framework when pad is supposed to be active and get focus
-    * @private */
-   TPadPainter.prototype.SetActive = function(on) {
-      let fp = this.getFramePainter();
-      if (fp && (typeof fp.SetActive == 'function')) fp.SetActive(on);
    }
 
    /** @summary Draw pad active border
@@ -2673,7 +2698,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          evnt.preventDefault();  // disable browser context menu
 
          let fp = this.getFramePainter();
-         if (fp) fp.SetLastEventPos();
+         if (fp) fp.setLastEventPos();
       }
 
       jsrp.createMenu(this, evnt).then(menu => {
@@ -3016,7 +3041,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                this.brlayout.Create(mainid, true);
                // this.brlayout.toggleBrowserKind("float");
                this.setDom(this.brlayout.drawing_divid()); // need to create canvas
-               JSROOT.registerForResize(this.brlayout);
+               jsrp.registerForResize(this.brlayout);
             }
          }
 
@@ -3182,8 +3207,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (scan_subpads) sub.GetWebPadOptions(arg);
          } else if (sub.snapid) {
             let opt = { _typename: "TWebObjectOptions", snapid: sub.snapid.toString(), opt: sub.getDrawOpt(), fcust: "", fopt: [] };
-            if (typeof sub.FillWebObjectOptions == "function")
-               opt = sub.FillWebObjectOptions(opt);
+            if (typeof sub.fillWebObjectOptions == "function")
+               opt = sub.fillWebObjectOptions(opt);
             elem.primitives.push(opt);
          }
       }
@@ -3825,7 +3850,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    TCanvasPainter.prototype.ShowMessage = function(msg) {
       if (this.testUI5()) return;
-      JSROOT.progress(msg, 7000);
+      jsrp.showProgress(msg, 7000);
    }
 
    /** @summary Function called when canvas menu item Save is called */
@@ -3863,15 +3888,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    TCanvasPainter.prototype.SendWebsocket = function(msg) {
       if (!this._websocket) return;
-      if (this._websocket.CanSend())
-         this._websocket.Send(msg);
+      if (this._websocket.canSend())
+         this._websocket.send(msg);
       else
          console.warn("DROP SEND: " + msg);
    }
 
+   /** @summary Close websocket connecttion to canvas */
    TCanvasPainter.prototype.CloseWebsocket = function(force) {
       if (this._websocket) {
-         this._websocket.Close(force);
+         this._websocket.close(force);
          this._websocket.cleanup();
          delete this._websocket;
       }
@@ -3884,32 +3910,32 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.CloseWebsocket();
 
       this._websocket = new JSROOT.WebWindowHandle(socket_kind);
-      this._websocket.SetReceiver(this);
-      this._websocket.Connect();
+      this._websocket.setReceiver(this);
+      this._websocket.connect();
    }
 
    TCanvasPainter.prototype.UseWebsocket = function(handle, href) {
       this.CloseWebsocket();
 
       this._websocket = handle;
-      this._websocket.SetReceiver(this);
-      this._websocket.Connect(href);
+      this._websocket.setReceiver(this);
+      this._websocket.connect(href);
    }
 
-   TCanvasPainter.prototype.OnWebsocketOpened = function(/*handle*/) {
+   TCanvasPainter.prototype.onWebsocketOpened = function(/*handle*/) {
       // indicate that we are ready to recieve any following commands
    }
 
-   TCanvasPainter.prototype.OnWebsocketClosed = function(/*handle*/) {
+   TCanvasPainter.prototype.onWebsocketClosed = function(/*handle*/) {
       jsrp.closeCurrentWindow();
    }
 
    /** @summary Handle websocket messages */
-   TCanvasPainter.prototype.OnWebsocketMsg = function(handle, msg) {
+   TCanvasPainter.prototype.onWebsocketMsg = function(handle, msg) {
       console.log("GET MSG len:" + msg.length + " " + msg.substr(0,60));
 
       if (msg == "CLOSE") {
-         this.OnWebsocketClosed();
+         this.onWebsocketClosed();
          this.CloseWebsocket(true);
       } else if (msg.substr(0,6)=='SNAP6:') {
          // This is snapshot, produced with ROOT6
@@ -3920,7 +3946,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.CompleteCanvasSnapDrawing();
             let ranges = this.GetWebPadOptions(); // all data, including subpads
             if (ranges) ranges = ":" + ranges;
-            handle.Send("READY6:" + snap.fVersion + ranges); // send ready message back when drawing completed
+            handle.send("READY6:" + snap.fVersion + ranges); // send ready message back when drawing completed
          });
       } else if (msg.substr(0,5)=='MENU:') {
          // this is menu with exact identifier for object
@@ -3937,10 +3963,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              reply = "REPLY:" + cmdid + ":";
          if ((cmd == "SVG") || (cmd == "PNG") || (cmd == "JPEG")) {
             this.CreateImage(cmd.toLowerCase())
-                .then(res => handle.Send(reply + res));
+                .then(res => handle.send(reply + res));
          } else {
             console.log('Unrecognized command ' + cmd);
-            handle.Send(reply);
+            handle.send(reply);
          }
       } else if ((msg.substr(0,7)=='DXPROJ:') || (msg.substr(0,7)=='DYPROJ:')) {
          let kind = msg[1],
@@ -4121,7 +4147,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    TCanvasPainter.prototype.ProcessChanges = function(kind, painter, subelem) {
       // check if we could send at least one message more - for some meaningful actions
-      if (!this._websocket || this._readonly || !this._websocket.CanSend(2) || (typeof kind !== "string")) return;
+      if (!this._websocket || this._readonly || !this._websocket.canSend(2) || (typeof kind !== "string")) return;
 
       let msg = "";
       if (!painter) painter = this;
@@ -4137,8 +4163,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                msg = "OPTIONS6:" + painter.GetWebPadOptions("only_this");
             break;
          case "pave_moved":
-            if (painter.FillWebObjectOptions) {
-               let info = painter.FillWebObjectOptions();
+            if (painter.fillWebObjectOptions) {
+               let info = painter.fillWebObjectOptions();
                if (info) msg = "PRIMIT6:" + JSROOT.toJSON(info);
             }
             break;
@@ -4158,7 +4184,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (msg) {
          console.log("Sending " + msg.length + "  " + msg.substr(0,40));
-         this._websocket.Send(msg);
+         this._websocket.send(msg);
       }
    }
 
