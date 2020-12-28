@@ -1181,9 +1181,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       function complete(respainter, err) {
          if (err) console.log('When display ', itemname, err);
-         
+
          if (updating && item) delete item._doing_update;
-         if (!updating) JSROOT.progress();
+         if (!updating) jsrp.showProgress();
          if (respainter && (typeof respainter === 'object') && (typeof respainter.setItemName === 'function')) {
             respainter.setItemName(display_itemname, updating ? null : drawopt, h); // mark painter as created from hierarchy
             if (item && !item._painter) item._painter = respainter;
@@ -1218,17 +1218,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             drawopt = drawopt.slice(0, pos);
          }
 
-         if (!updating) JSROOT.progress("Loading " + display_itemname);
+         if (!updating) jsrp.showProgress("Loading " + display_itemname);
 
          return h.getObject(display_itemname, drawopt).then(result => {
-            if (!updating) JSROOT.progress();
+            if (!updating) jsrp.showProgress();
 
             if (!item) item = result.item;
             let obj = result.obj;
 
             if (!obj) return complete();
 
-            if (!updating) JSROOT.progress("Drawing " + display_itemname);
+            if (!updating) jsrp.showProgress("Drawing " + display_itemname);
 
             if (divid.length > 0) {
                let func = updating ? JSROOT.redraw : JSROOT.draw;
@@ -1301,7 +1301,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (!res.obj) return null;
 
-         let main_painter = JSROOT.getMainPainter(divid);
+         let main_painter = jsrp.getElementMainPainter(divid);
 
          if (main_painter && (typeof main_painter.performDrop === 'function'))
             return main_painter.performDrop(res.obj, itemname, res.item, opt).then(p => drop_complete(p));
@@ -1719,11 +1719,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return promise.then(res => {
          if (res !== -1) return res; // done
 
-         JSROOT.progress("Loading " + itemname);
+         jsrp.showProgress("Loading " + itemname);
 
          return this.getObject(itemname, "hierarchy_expand").then(res => {
 
-            JSROOT.progress();
+            jsrp.showProgress();
 
             if (res.obj) return DoExpandItem(res.item, res.obj).then(res => { return (res !== -1) ? res : undefined; });
          });
@@ -1817,7 +1817,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.forEachRootFile(item => { if (item._fullurl===filepath) isfileopened = true; });
       if (isfileopened) return Promise.resolve();
 
-      JSROOT.progress("Opening " + filepath + " ...");
+      jsrp.showProgress("Opening " + filepath + " ...");
 
       return JSROOT.openFile(filepath).then(file => {
 
@@ -1839,7 +1839,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!d3.select("#gui_fileCORS").style("background","red").empty())
              setTimeout(function() { d3.select("#gui_fileCORS").style("background",''); }, 5000);
          return false;
-      }).finally(() => JSROOT.progress());
+      }).finally(() => jsrp.showProgress());
    }
 
    /** @summary Apply loaded TStyle object
@@ -2197,7 +2197,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!this.register_resize) {
          this.register_resize = true;
-         JSROOT.registerForResize(this);
+         jsrp.registerForResize(this);
       }
    }
 

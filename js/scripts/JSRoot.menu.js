@@ -298,22 +298,22 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          if (painter.lineatt && painter.lineatt.used) {
             this.add("sub:" + preffix + "Line att");
             this.SizeMenu("width", 1, 10, 1, painter.lineatt.width,
-               arg => { painter.lineatt.Change(undefined, arg); painter.interactiveRedraw(true, "exec:SetLineWidth(" + arg + ")"); });
+               arg => { painter.lineatt.change(undefined, arg); painter.interactiveRedraw(true, "exec:SetLineWidth(" + arg + ")"); });
             this.AddColorMenu("color", painter.lineatt.color,
-               arg => { painter.lineatt.Change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetLineColor")); });
+               arg => { painter.lineatt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetLineColor")); });
             this.add("sub:style", function() {
                let id = prompt("Enter line style id (1-solid)", 1);
                if (id === null) return;
                id = parseInt(id);
                if (isNaN(id) || !jsrp.root_line_styles[id]) return;
-               this.lineatt.Change(undefined, undefined, id);
+               this.lineatt.change(undefined, undefined, id);
                this.interactiveRedraw(true, "exec:SetLineStyle(" + id + ")");
             }.bind(painter));
             for (let n = 1; n < 11; ++n) {
                let dash = jsrp.root_line_styles[n],
                    svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + n + "</text><line x1='30' y1='8' x2='100' y2='8' stroke='black' stroke-width='3' stroke-dasharray='" + dash + "'></line></svg>";
 
-               this.addchk((painter.lineatt.style == n), svg, n, function(arg) { this.lineatt.Change(undefined, undefined, parseInt(arg)); this.interactiveRedraw(true, "exec:SetLineStyle(" + arg + ")"); }.bind(painter));
+               this.addchk((painter.lineatt.style == n), svg, n, function(arg) { this.lineatt.change(undefined, undefined, parseInt(arg)); this.interactiveRedraw(true, "exec:SetLineStyle(" + arg + ")"); }.bind(painter));
             }
             this.add("endsub:");
             this.add("endsub:");
@@ -323,13 +323,13 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
                this.add("sub:side");
                for (let side = -1; side <= 1; ++side)
                   this.addchk((painter.lineatt.excl_side == side), side, side, function(arg) {
-                     this.lineatt.ChangeExcl(parseInt(arg));
+                     this.lineatt.changeExcl(parseInt(arg));
                      this.interactiveRedraw();
                   }.bind(painter));
                this.add("endsub:");
 
                this.SizeMenu("width", 10, 100, 10, painter.lineatt.excl_width,
-                  arg => { painter.lineatt.ChangeExcl(undefined, arg); painter.interactiveRedraw(); });
+                  arg => { painter.lineatt.changeExcl(undefined, arg); painter.interactiveRedraw(); });
 
                this.add("endsub:");
             }
@@ -338,13 +338,13 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          if (painter.fillatt && painter.fillatt.used) {
             this.add("sub:" + preffix + "Fill att");
             this.AddColorMenu("color", painter.fillatt.colorindx,
-               arg => { painter.fillatt.Change(arg, undefined, painter.getCanvSvg()); painter.interactiveRedraw(true, getColorExec(arg, "SetFillColor")); }, painter.fillatt.kind);
+               arg => { painter.fillatt.change(arg, undefined, painter.getCanvSvg()); painter.interactiveRedraw(true, getColorExec(arg, "SetFillColor")); }, painter.fillatt.kind);
             this.add("sub:style", function() {
                let id = prompt("Enter fill style id (1001-solid, 3000..3010)", this.fillatt.pattern);
                if (id === null) return;
                id = parseInt(id);
                if (isNaN(id)) return;
-               this.fillatt.Change(undefined, id, this.getCanvSvg());
+               this.fillatt.change(undefined, id, this.getCanvSvg());
                this.interactiveRedraw(true, "exec:SetFillStyle(" + id + ")");
             }.bind(painter));
 
@@ -352,9 +352,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
             for (let n = 0; n < supported.length; ++n) {
                let sample = painter.createAttFill({ std: false, pattern: supported[n], color: painter.fillatt.colorindx || 1 }),
-                   svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><rect x='40' y='0' width='60' height='18' stroke='none' fill='" + sample.fillcolor() + "'></rect></svg>";
+                   svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><rect x='40' y='0' width='60' height='18' stroke='none' fill='" + sample.getFillColor() + "'></rect></svg>";
                this.addchk(painter.fillatt.pattern == supported[n], svg, supported[n], function(arg) {
-                  this.fillatt.Change(undefined, parseInt(arg), this.getCanvSvg());
+                  this.fillatt.change(undefined, parseInt(arg), this.getCanvSvg());
                   this.interactiveRedraw(true, "exec:SetFillStyle(" + arg + ")");
                }.bind(painter));
             }
@@ -365,9 +365,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          if (painter.markeratt && painter.markeratt.used) {
             this.add("sub:" + preffix + "Marker att");
             this.AddColorMenu("color", painter.markeratt.color,
-               arg => { painter.markeratt.Change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetMarkerColor"));});
+               arg => { painter.markeratt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetMarkerColor"));});
             this.SizeMenu("size", 0.5, 6, 0.5, painter.markeratt.size,
-               arg => { painter.markeratt.Change(undefined, undefined, arg); painter.interactiveRedraw(true, "exec:SetMarkerSize(" + parseInt(arg) + ")"); });
+               arg => { painter.markeratt.change(undefined, undefined, arg); painter.interactiveRedraw(true, "exec:SetMarkerSize(" + parseInt(arg) + ")"); });
 
             this.add("sub:style");
             let supported = [1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34];
@@ -378,7 +378,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
                    svg = "<svg width='60' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><path stroke='black' fill='" + (clone.fill ? "black" : "none") + "' d='" + clone.create(40, 8) + "'></path></svg>";
 
                this.addchk(painter.markeratt.style == supported[n], svg, supported[n],
-                  function(arg) { this.markeratt.Change(undefined, parseInt(arg)); this.interactiveRedraw(true, "exec:SetMarkerStyle(" + arg + ")"); }.bind(painter));
+                  function(arg) { this.markeratt.change(undefined, parseInt(arg)); this.interactiveRedraw(true, "exec:SetMarkerStyle(" + arg + ")"); }.bind(painter));
             }
             this.add("endsub:");
             this.add("endsub:");

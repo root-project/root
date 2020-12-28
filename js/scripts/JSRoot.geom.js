@@ -2921,7 +2921,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             }
           };
 
-      JSROOT.progress('Loading macro ' + script_name);
+      jsrp.showProgress('Loading macro ' + script_name);
 
       return JSROOT.httpRequest(script_name, "text").then(script => {
          let lines = script.split('\n'), indx = 0;
@@ -3118,7 +3118,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          if ((now - tm0 > interval) || (res === 1) || (res === 2)) {
 
-            JSROOT.progress(this.drawing_log);
+            jsrp.showProgress(this.drawing_log);
 
             this.showDrawInfo(this.drawing_log);
 
@@ -3139,7 +3139,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          console.log(`Create tm = ${take_time} meshes ${this.ctrl.info.num_meshes} faces ${this.ctrl.info.num_faces}`);
 
       if (take_time > 300) {
-         JSROOT.progress('Rendering geometry');
+         jsrp.showProgress('Rendering geometry');
          this.showDrawInfo("Rendering");
          return setTimeout(this.completeDraw.bind(this, true), 10);
       }
@@ -3238,7 +3238,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             return console.log(`geo: ${e.data.log}`);
 
          if ('progress' in e.data)
-            return JSROOT.progress(e.data.progress);
+            return jsrp.showProgress(e.data.progress);
 
          e.data.tm3 = new Date().getTime();
 
@@ -3719,7 +3719,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       this.Render3D(0, true);
 
-      if (close_progress) JSROOT.progress();
+      if (close_progress) jsrp.showProgress();
 
       this.addOrbitControls();
 
@@ -3899,7 +3899,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    }
 
    TGeoPainter.prototype.helpText = function(msg) {
-      JSROOT.progress(msg);
+      jsrp.showProgress(msg);
    }
 
    /** @summary Check if HTML element was resized and drawing need to be adjusted */

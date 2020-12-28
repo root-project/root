@@ -347,7 +347,7 @@ JSROOT.define(['d3'], (d3) => {
      *
      * @class
      * @memberof JSROOT
-     * @param {object} args - different attributes, see {@link JSROOT.TAttMarkerHandler.SetArgs} for details
+     * @param {object} args - different attributes, see {@link JSROOT.TAttMarkerHandler.setArgs} for details
      * @private
      */
 
@@ -364,9 +364,9 @@ JSROOT.define(['d3'], (d3) => {
       this.used = true;
       this.changed = false;
 
-      this.func = this.Apply.bind(this);
+      this.func = this.apply.bind(this);
 
-      this.SetArgs(args);
+      this.setArgs(args);
 
       this.changed = false;
    }
@@ -377,7 +377,7 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string} args.color - color in HTML form like grb(1,4,5) or 'green'
      * @param {number} args.style - marker style
      * @param {number} args.size - marker size */
-   TAttMarkerHandler.prototype.SetArgs = function(args) {
+   TAttMarkerHandler.prototype.setArgs = function(args) {
       if ((typeof args == 'object') && (typeof args.fMarkerStyle == 'number')) args = { attr: args };
 
       if (args.attr) {
@@ -387,12 +387,12 @@ JSROOT.define(['d3'], (d3) => {
          if (!args.size) args.size = args.attr.fMarkerSize;
       }
 
-      this.Change(args.color, args.style, args.size);
+      this.change(args.color, args.style, args.size);
    }
 
    /** @summary Reset position, used for optimization of drawing of multiple markers
     * @private */
-   TAttMarkerHandler.prototype.reset_pos = function() { this.lastx = this.lasty = null; }
+   TAttMarkerHandler.prototype.resetPos = function() { this.lastx = this.lasty = null; }
 
    /** @summary Create marker path for given position.
      * @desc When drawing many elementary points, created path may depend from previously produced markers.
@@ -411,16 +411,16 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Returns full size of marker */
-   TAttMarkerHandler.prototype.GetFullSize = function() { return this.scale * this.size; }
+   TAttMarkerHandler.prototype.getFullSize = function() { return this.scale * this.size; }
 
    /** @summary Returns approximate length of produced marker string */
-   TAttMarkerHandler.prototype.MarkerLength = function() { return this.marker ? this.marker.length : 10; }
+   TAttMarkerHandler.prototype.getMarkerLength = function() { return this.marker ? this.marker.length : 10; }
 
    /** @summary Change marker attributes.
     *  @param {string} color - marker color
     *  @param {number} style - marker style
     *  @param {number} size - marker size */
-   TAttMarkerHandler.prototype.Change = function(color, style, size) {
+   TAttMarkerHandler.prototype.change = function(color, style, size) {
       this.changed = true;
 
       if (color !== undefined) this.color = color;
@@ -434,7 +434,7 @@ JSROOT.define(['d3'], (d3) => {
          this.marker = "h1";
          this.size = 1;
          this.optimized = true;
-         this.reset_pos();
+         this.resetPos();
          return true;
       }
 
@@ -453,7 +453,7 @@ JSROOT.define(['d3'], (d3) => {
          default: this.size = size; this.scale = 8;
       }
 
-      size = this.GetFullSize();
+      size = this.getFullSize();
 
       this.ndig = (size > 7) ? 0 : ((size > 2) ? 1 : 2);
       if (shape == 6) this.ndig++;
@@ -523,7 +523,7 @@ JSROOT.define(['d3'], (d3) => {
    TAttMarkerHandler.prototype.getFillColor = function() { return this.fill ? this.color : "none"; }
 
    /** @summary Apply marker styles to created element */
-   TAttMarkerHandler.prototype.Apply = function(selection) {
+   TAttMarkerHandler.prototype.apply = function(selection) {
       selection.style('stroke', this.stroke ? this.color : "none");
       selection.style('fill', this.fill ? this.color : "none");
    }
@@ -531,16 +531,16 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Method used when color or pattern were changed with OpenUi5 widgets.
     * @private */
    TAttMarkerHandler.prototype.verifyDirectChange = function(/* painter */) {
-      this.Change(this.color, parseInt(this.style), parseFloat(this.size));
+      this.change(this.color, parseInt(this.style), parseFloat(this.size));
    }
 
    /** @summary Create sample with marker in given SVG element
-    * @param {selection} svg - SVG element
-    * @param {number} width - width of sample SVG
-    * @param {number} height - height of sample SVG
-    * @private */
-   TAttMarkerHandler.prototype.CreateSample = function(svg, width, height) {
-      this.reset_pos();
+     * @param {selection} svg - SVG element
+     * @param {number} width - width of sample SVG
+     * @param {number} height - height of sample SVG
+     * @private */
+   TAttMarkerHandler.prototype.createSample = function(svg, width, height) {
+      this.resetPos();
 
       svg.append("path")
          .attr("d", this.create(width / 2, height / 2))
@@ -559,11 +559,11 @@ JSROOT.define(['d3'], (d3) => {
      */
 
    function TAttLineHandler(args) {
-      this.func = this.Apply.bind(this);
+      this.func = this.apply.bind(this);
       this.used = true;
       if (args._typename && (args.fLineStyle !== undefined)) args = { attr: args };
 
-      this.SetArgs(args);
+      this.setArgs(args);
    }
 
    /** @summary Set line attributes.
@@ -572,7 +572,7 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string} args.color - color in html like rgb(10,0,0) or "red"
      * @param {number} args.style - line style number
      * @param {number} args.width - line width */
-   TAttLineHandler.prototype.SetArgs = function(args) {
+   TAttLineHandler.prototype.setArgs = function(args) {
       if (args.attr) {
          args.color = args.color0 || (args.painter ? args.painter.getColor(args.attr.fLineColor) : jsrp.getColor(args.attr.fLineColor));
          if (args.width === undefined) args.width = args.attr.fLineWidth;
@@ -606,8 +606,9 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Change exclusion attributes */
-   TAttLineHandler.prototype.ChangeExcl = function(side, width) {
-      if (width !== undefined) this.excl_width = width;
+   TAttLineHandler.prototype.changeExcl = function(side, width) {
+      if (width !== undefined)
+         this.excl_width = width;
       if (side !== undefined) {
          this.excl_side = side;
          if ((this.excl_width === 0) && (this.excl_side !== 0)) this.excl_width = 20;
@@ -620,7 +621,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Applies line attribute to selection.
      * @param {object} selection - d3.js selection */
-   TAttLineHandler.prototype.Apply = function(selection) {
+   TAttLineHandler.prototype.apply = function(selection) {
       this.used = true;
       if (this.empty())
          selection.style('stroke', null)
@@ -633,15 +634,15 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Change line attributes */
-   TAttLineHandler.prototype.Change = function(color, width, style) {
+   TAttLineHandler.prototype.change = function(color, width, style) {
       if (color !== undefined) this.color = color;
       if (width !== undefined) this.width = width;
       if (style !== undefined) this.style = style;
       this.changed = true;
    }
 
-   /**@summary Create sample element inside primitive SVG - used in context menu */
-   TAttLineHandler.prototype.CreateSample = function(svg, width, height) {
+   /** @summary Create sample element inside primitive SVG - used in context menu */
+   TAttLineHandler.prototype.createSample = function(svg, width, height) {
       svg.append("path")
          .attr("d", "M0," + height / 2 + "h" + width)
          .call(this.func);
@@ -654,7 +655,7 @@ JSROOT.define(['d3'], (d3) => {
      *
      * @class
      * @memberof JSROOT
-     * @param {object} args - different arguments to set fill attributes, see {@link JSROOT.TAttFillHandler.SetArgs} for more info
+     * @param {object} args - different arguments to set fill attributes, see {@link JSROOT.TAttFillHandler.setArgs} for more info
      * @param {number} [args.kind = 2] - 1 means object drawing where combination fillcolor==0 and fillstyle==1001 means no filling,  2 means all other objects where such combination is white-color filling
      * @private
      */
@@ -666,8 +667,8 @@ JSROOT.define(['d3'], (d3) => {
       this.used = true;
       this.kind = args.kind || 2;
       this.changed = false;
-      this.func = this.Apply.bind(this);
-      this.SetArgs(args);
+      this.func = this.apply.bind(this);
+      this.setArgs(args);
       this.changed = false; // unset change property that
    }
 
@@ -678,19 +679,19 @@ JSROOT.define(['d3'], (d3) => {
      * @param {number} [args.pattern] - filll pattern id
      * @param {object} [args.svg] - SVG element to store newly created patterns
      * @param {string} [args.color_as_svg] - color in SVG format */
-   TAttFillHandler.prototype.SetArgs = function(args) {
+   TAttFillHandler.prototype.setArgs = function(args) {
       if (args.attr && (typeof args.attr == 'object')) {
          if ((args.pattern === undefined) && (args.attr.fFillStyle !== undefined)) args.pattern = args.attr.fFillStyle;
          if ((args.color === undefined) && (args.attr.fFillColor !== undefined)) args.color = args.attr.fFillColor;
       }
-      this.Change(args.color, args.pattern, args.svg, args.color_as_svg, args.painter);
+      this.change(args.color, args.pattern, args.svg, args.color_as_svg, args.painter);
    }
 
    /** @summary Apply fill style to selection */
-   TAttFillHandler.prototype.Apply = function(selection) {
+   TAttFillHandler.prototype.apply = function(selection) {
       this.used = true;
 
-      selection.style('fill', this.fillcolor());
+      selection.style('fill', this.getFillColor());
 
       if ('opacity' in this)
          selection.style('opacity', this.opacity);
@@ -700,30 +701,30 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Returns fill color (or pattern url) */
-   TAttFillHandler.prototype.fillcolor = function() { return this.pattern_url || this.color; }
+   TAttFillHandler.prototype.getFillColor = function() { return this.pattern_url || this.color; }
 
    /** @summary Returns fill color without pattern url.
     * @desc If empty, alternative color will be provided
     * @param {string} [altern] - alternative color which returned when fill color not exists
     * @private */
-   TAttFillHandler.prototype.fillcoloralt = function(altern) { return this.color && (this.color != "none") ? this.color : altern; }
+   TAttFillHandler.prototype.getFillColorAlt = function(altern) { return this.color && (this.color != "none") ? this.color : altern; }
 
    /** @summary Returns true if color not specified or fill style not specified */
    TAttFillHandler.prototype.empty = function() {
-      let fill = this.fillcolor();
+      let fill = this.getFillColor();
       return !fill || (fill == 'none');
    }
 
    /** @summary Set solid fill color as fill pattern
      * @param {string} col - solid color */
-   TAttFillHandler.prototype.SetSolidColor = function(col) {
+   TAttFillHandler.prototype.setSolidColor = function(col) {
       delete this.pattern_url;
       this.color = col;
       this.pattern = 1001;
    }
 
    /** @summary Check if solid fill is used, also color can be checked
-     * @param {string} [solid_color = undefined] - when specified, checks if fill color matches */
+     * @param {string} [solid_color] - when specified, checks if fill color matches */
    TAttFillHandler.prototype.isSolid = function(solid_color) {
       if (this.pattern !== 1001) return false;
       return !solid_color || solid_color == this.color;
@@ -735,7 +736,7 @@ JSROOT.define(['d3'], (d3) => {
       if (typeof this.pattern == 'string') this.pattern = parseInt(this.pattern);
       if (isNaN(this.pattern)) this.pattern = 0;
 
-      this.Change(this.color, this.pattern, painter ? painter.getCanvSvg() : null, true, painter);
+      this.change(this.color, this.pattern, painter ? painter.getCanvSvg() : null, true, painter);
    }
 
    /** @summary Method to change fill attributes.
@@ -744,7 +745,7 @@ JSROOT.define(['d3'], (d3) => {
      * @param {selection} svg - top canvas element for pattern storages
      * @param {string} [color_as_svg] - when color is string, interpret as normal SVG color
      * @param {object} [painter] - when specified, used to extract color by index */
-   TAttFillHandler.prototype.Change = function(color, pattern, svg, color_as_svg, painter) {
+   TAttFillHandler.prototype.change = function(color, pattern, svg, color_as_svg, painter) {
       delete this.pattern_url;
       this.changed = true;
 
@@ -933,7 +934,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Create sample of fill pattern inside SVG
     * @private */
-   TAttFillHandler.prototype.CreateSample = function(sample_svg, width, height) {
+   TAttFillHandler.prototype.createSample = function(sample_svg, width, height) {
 
       // we need to create extra handle to change
       let sample = new TAttFillHandler({ svg: sample_svg, pattern: this.pattern, color: this.color, color_as_svg: true });
@@ -1131,7 +1132,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Function used to provide svg:path for the smoothed curves.
      * @desc reuse code from d3.js. Used in TH1, TF1 and TGraph painters
-     * kind should contain "bezier" or "line".
+     * @param {string} kind  should contain "bezier" or "line".
      * If first symbol "L", then it used to continue drawing
      * @private */
    jsrp.buildSvgPath = function(kind, bins, height, ndig) {
@@ -1328,7 +1329,6 @@ JSROOT.define(['d3'], (d3) => {
     *
     * @class
     * @memberof JSROOT
-    * @private
     * @param {object|string} [dom] - dom element or id of dom element
     */
 
@@ -1338,7 +1338,8 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Assign painter to specified DOM element
-     * @param {string|object} elem - element ID or DOM Element */
+     * @param {string|object} elem - element ID or DOM Element
+     * @protected */
    BasePainter.prototype.setDom = function(elem) {
       if (elem !== undefined) {
          this.divid = elem;
@@ -1351,7 +1352,7 @@ JSROOT.define(['d3'], (d3) => {
       return this.divid;
    }
 
-   /** @summary selects main HTML element used for drawing - typically <div> element
+   /** @summary Selects main HTML element assigned for drawing
      * @desc if main element was layouted, returns main element inside layout
      * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place
      * @returns {object} d3.select object for main element for drawing */
@@ -1398,22 +1399,26 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Set painter, stored in first child element
-     * @desc Can only be done when first draing ic completed */
+     * @desc Can only be done when first drawing is completed
+     * @protected */
    BasePainter.prototype.setTopPainter = function() {
       _accessTopPainter(this, true);
    }
 
-   /** @summary Return top painter set for the selected dom element */
+   /** @summary Return top painter set for the selected dom element
+     * @protected */
    BasePainter.prototype.getTopPainter = function() {
       return _accessTopPainter(this);
    }
 
-   /** @summary Clear reference on top painter */
+   /** @summary Clear reference on top painter
+     * @protected */
    BasePainter.prototype.clearTopPainter = function() {
       _accessTopPainter(this, false);
    }
 
-   /** @summary Generic method to cleanup painter */
+   /** @summary Generic method to cleanup painter
+     * @desc Removes all visible elements and all internal data */
    BasePainter.prototype.cleanup = function(keep_origin) {
       this.clearTopPainter();
       let origin = this.selectDom('origin');
@@ -1497,7 +1502,8 @@ JSROOT.define(['d3'], (d3) => {
      *    - 'toggle' - toggle enlarge state
      *    - 'state' - return current state
      *    - 'verify' - check if element can be enlarged
-     * if action not specified, just return possibility to enlarge main div */
+     * if action not specified, just return possibility to enlarge main div
+     * @protected */
    BasePainter.prototype.enlargeMain = function(action, skip_warning) {
 
       let main = this.selectDom(true),
@@ -1558,7 +1564,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Set item name, associated with the painter
      * @desc Used by {@link JSROOT.HiearchyPainter}
-     * @protected */
+     * @private */
    BasePainter.prototype.setItemName = function(name, opt, hpainter) {
       if (typeof name === 'string')
          this._hitemname = name;
@@ -1606,7 +1612,8 @@ JSROOT.define(['d3'], (d3) => {
 
    ObjectPainter.prototype = Object.create(BasePainter.prototype);
 
-   /** @summary Assign object to the painter */
+   /** @summary Assign object to the painter
+     * @protected */
    ObjectPainter.prototype.assignObject = function(obj) {
       if (obj && (typeof obj == 'object'))
          this.draw_object = obj;
@@ -1616,7 +1623,8 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Assigns pad name where element will be drawn
      * @desc Should happend before first draw of element is performed, only for special use case
-     * @param {string} [pad_name] - on which subpad element should be draw, if not specified - use current */
+     * @param {string} [pad_name] - on which subpad element should be draw, if not specified - use current
+     * @protected */
    ObjectPainter.prototype.setPadName = function(pad_name) {
       this.pad_name = (typeof pad_name == 'string') ? pad_name : this.selectCurrentPad();
    }
@@ -1632,7 +1640,7 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.assignSnapId = function(id) { this.snapid = id; }
 
    /** @summary Generic method to cleanup painter.
-     * @desc Remove object drawing and in case of main painter - also main HTML components */
+     * @desc Remove object drawing and (in case of main painter) also main HTML components */
    ObjectPainter.prototype.cleanup = function() {
 
       this.removeG();
@@ -1677,7 +1685,8 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Checks if drawn object matches with provided typename
-    * @param {string|object} arg - typename (or object with _typename member) */
+     * @param {string|object} arg - typename (or object with _typename member)
+     * @protected */
    ObjectPainter.prototype.matchObjectType = function(arg) {
       if (!arg || !this.draw_object) return false;
       if (typeof arg === 'string') return (this.draw_object._typename === arg);
@@ -1697,7 +1706,7 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Store actual this.options together with original string
-    * @private */
+     * @private */
    ObjectPainter.prototype.storeDrawOpt = function(original) {
       if (!this.options) return;
       if (!original) original = "";
@@ -1708,8 +1717,7 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Return actual draw options as string
-     * @desc if options are not modified - returns original string which was specified for object draw
-    * @private */
+     * @desc if options are not modified - returns original string which was specified for object draw */
    ObjectPainter.prototype.getDrawOpt = function() {
       if (!this.options) return "";
       let changed = false;
@@ -1733,7 +1741,7 @@ JSROOT.define(['d3'], (d3) => {
      * @returns {boolean|Promise} for object redraw
      * @desc Two actions typically done by redraw - update object content via {@link ObjectPainter.prototype.updateObject} and
       * then redraw correspondent pad via {@link ObjectPainter.prototype.redrawPad}. If possible one should redefine
-      * only updateObject function and keep this function unchanged. But for some special painters this function it is the
+      * only updateObject function and keep this function unchanged. But for some special painters this function is the
       * only way to control how object can be update while requested from the server */
    ObjectPainter.prototype.redrawObject = function(obj, opt) {
       if (!this.updateObject(obj,opt)) return false;
@@ -1769,7 +1777,8 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary returns color from current list of colors
      * @desc First checks canvas painter and then just access global list of colors
      * @param {number} indx - color index
-     * @returns {string} with SVG color name or rgb() */
+     * @returns {string} with SVG color name or rgb()
+     * @protected */
    ObjectPainter.prototype.getColor = function(indx) {
       let jsarr = this.root_colors;
 
@@ -1781,8 +1790,10 @@ JSROOT.define(['d3'], (d3) => {
       return jsarr[indx];
    }
 
-   /** @summary add color to list of colors
-    * @private */
+   /** @summary Add color to list of colors
+     * @desc Returned color index can be used as color number in all other draw functions
+     * @returns {number} new color index
+     * @protected */
    ObjectPainter.prototype.addColor = function(color) {
       let jsarr = this.root_colors;
       if (!jsarr) {
@@ -1795,7 +1806,7 @@ JSROOT.define(['d3'], (d3) => {
       return jsarr.length - 1;
    }
 
-   /** @summary returns tooltip allowed flag.
+   /** @summary returns tooltip allowed flag
      * @desc If available, checks in canvas painter
      * @private */
    ObjectPainter.prototype.isTooltipAllowed = function() {
@@ -1813,8 +1824,8 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated.
-    * @desc Redirects to {@link JSROOT.TPadPainter.checkCanvasResize}
-    * @private */
+     * @desc Redirects to {@link JSROOT.TPadPainter.checkCanvasResize}
+     * @private */
    ObjectPainter.prototype.checkResize = function(arg) {
       let p = this.getCanvPainter();
       if (!p) return false;
@@ -1825,7 +1836,8 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary removes <g> element with object drawing
-     * @desc generic method to delete all graphical elements, associated with the painter */
+     * @desc generic method to delete all graphical elements, associated with the painter
+     * @protected */
    ObjectPainter.prototype.removeG = function() {
       if (this.draw_g) {
          this.draw_g.remove();
@@ -1840,7 +1852,8 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary (re)creates svg:g element for object drawings
      * @desc either one attach svg:g to pad list of primitives (default)
      * or svg:g element created in specified frame layer (default main_layer)
-     * @param {string} [frame_layer] - when specified, <g> element will be created inside frame layer, otherwise on the pad  */
+     * @param {string} [frame_layer] - when specified, <g> element will be created inside frame layer, otherwise on the pad
+     * @protected */
    ObjectPainter.prototype.createG = function(frame_layer) {
       if (this.draw_g) {
          // one should keep svg:g element on its place
@@ -1876,12 +1889,15 @@ JSROOT.define(['d3'], (d3) => {
       return this.draw_g;
    }
 
-   /** @summary This is main graphical SVG element, where all drawings are performed
-    * @private */
+   /** @summary Canvas main svg element
+     * @returns {object} d3 selection with canvas svg
+     * @protected */
    ObjectPainter.prototype.getCanvSvg = function() { return this.selectDom().select(".root_canvas"); }
 
-   /** @summary This is SVG element, correspondent to current pad
-    * @private */
+   /** @summary Pad svg element
+     * @param {string} [pad_name] - pad name to select, if not specified - pad where object is drawn
+     * @returns {object} d3 selection with pad svg
+     * @protected */
    ObjectPainter.prototype.getPadSvg = function(pad_name) {
       if (pad_name === undefined)
          pad_name = this.pad_name;
@@ -1902,9 +1918,9 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Method selects immediate layer under canvas/pad main element
-     * @param {string} name - layer name
-     * @param {string} [pad_name] - select pad name, use configured this.pad_name by default
-     * @private */
+     * @param {string} name - layer name, exits "primitives_layer", "btns_layer", "info_layer"
+     * @param {string} [pad_name] - pad name or used current pad name  by default
+     * @protected */
    ObjectPainter.prototype.getLayerSvg = function(name, pad_name) {
       let svg = this.getPadSvg(pad_name);
       if (svg.empty()) return svg;
@@ -1936,23 +1952,27 @@ JSROOT.define(['d3'], (d3) => {
       return curr;
    }
 
-   /** @summary returns pad painter for specified pad */
+   /** @summary returns pad painter
+     * @param {string} [pad_name] pad name or use current pad by default
+     * @protected */
    ObjectPainter.prototype.getPadPainter = function(pad_name) {
       let elem = this.getPadSvg(typeof pad_name == "string" ? pad_name : undefined);
       return elem.empty() ? null : elem.property('pad_painter');
    }
 
-   /** @summary returns canvas painter */
+   /** @summary returns canvas painter
+     * @protected */
    ObjectPainter.prototype.getCanvPainter = function() {
       let elem = this.getCanvSvg();
       return elem.empty() ? null : elem.property('pad_painter');
    }
 
-   /** @summary Return functor, which can convert x and y coordinates into pixels, used for drawing
+   /** @summary Return functor, which can convert x and y coordinates into pixels, used for drawing in the pad
      * @desc X and Y coordinates can be converted by calling func.x(x) and func.y(y)
+     * Only can be used for painting in the pad, means CreateG() should be called without arguments
      * @param {boolean} isndc - if NDC coordinates will be used
      * @param {boolean} [noround] - if set, return coordinates will not be rounded
-     * @private */
+     * @protected */
    ObjectPainter.prototype.getAxisToSvgFunc = function(isndc, nornd) {
       let func = { isndc: isndc, nornd: nornd },
           use_frame = this.draw_g && this.draw_g.property('in_frame');
@@ -1997,12 +2017,14 @@ JSROOT.define(['d3'], (d3) => {
       return func;
    }
 
-   /** @summary Converts x or y coordinate into SVG coordinates.
-    *  @param {string} axis - name like "x" or "y"
-    *  @param {number} value - axis value to convert.
-    *  @param {boolean} ndc - is value in NDC coordinates
-    *  @param {boolean} [noround] - skip rounding
-    *  @returns {number} value of requested coordiantes */
+   /** @summary Converts x or y coordinate into pad SVG coordinates.
+     * @desc Only can be used for painting in the pad, means CreateG() should be called without arguments
+     * @param {string} axis - name like "x" or "y"
+     * @param {number} value - axis value to convert.
+     * @param {boolean} ndc - is value in NDC coordinates
+     * @param {boolean} [noround] - skip rounding
+     * @returns {number} value of requested coordiantes
+     * @protected */
    ObjectPainter.prototype.axisToSvg = function(axis, value, ndc, noround) {
       let func = this.getAxisToSvgFunc(ndc, noround);
       return func[axis](value);
@@ -2013,13 +2035,14 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string} axis - name like "x" or "y"
      * @param {number} coord - graphics coordiante.
      * @param {boolean} ndc - kind of return value
-     * @returns {number} value of requested coordiantes */
+     * @returns {number} value of requested coordiantes
+     * @protected */
    ObjectPainter.prototype.svgToAxis = function(axis, coord, ndc) {
       let use_frame = this.draw_g && this.draw_g.property('in_frame');
 
       if (use_frame) {
          let main = this.getFramePainter();
-         return main ? main.RevertAxis(axis, coord) : 0;
+         return main ? main.revertAxis(axis, coord) : 0;
       }
 
       let pp = this.getPadPainter(),
@@ -2039,21 +2062,23 @@ JSROOT.define(['d3'], (d3) => {
       return value;
    }
 
-   /** @summary Returns svg element for the frame in current pad */
+   /** @summary Returns svg element for the frame in current pad
+     * @protected */
    ObjectPainter.prototype.getFrameSvg = function() { return this.getLayerSvg("primitives_layer").select(".root_frame"); }
 
-   /** @summary Returns frame painter in current pad
+   /** @summary Returns frame painter for current pad
      * @desc Pad has direct reference on frame if any
-     * @private */
+     * @protected */
    ObjectPainter.prototype.getFramePainter = function() {
       let pp = this.getPadPainter();
       return pp ? pp.getFramePainter() : null;
    }
 
-   /** @summary Returns main object painter on the pad.
+   /** @summary Returns painter for main object on the pad.
      * @desc Typically it is first histogram drawn on the pad and which draws frame axes
      * But it also can be special usecase as TASImage or TGraphPolargram
-     * @param {boolean} [not_store] - if true, prevent temporary store of main painter reference */
+     * @param {boolean} [not_store] - if true, prevent temporary storage of main painter reference
+     * @protected */
    ObjectPainter.prototype.getMainPainter = function(not_store) {
       let res = this._main_painter;
       if (!res) {
@@ -2068,12 +2093,14 @@ JSROOT.define(['d3'], (d3) => {
       return res;
    }
 
-   /** @summary Returns true if this is main painter */
+   /** @summary Returns true if this is main painter
+     * @protected */
    ObjectPainter.prototype.isMainPainter = function() { return this === this.getMainPainter(); }
 
    /** @summary Assign this as main painter on the pad
      * @desc Main painter typically responsible for axes drawing
-     * Should not be used by pad/canvas painters, but rather by objects which are drawing axis */
+     * Should not be used by pad/canvas painters, but rather by objects which are drawing axis
+     * @protected */
    ObjectPainter.prototype.setAsMainPainter = function(force) {
       let pp = this.getPadPainter();
       if (!pp)
@@ -2083,7 +2110,8 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Add painter to pad list of painters
-     * @param {string} [pad_name] - optional pad name where painter should be add */
+     * @param {string} [pad_name] - optional pad name where painter should be add
+     * @protected */
    ObjectPainter.prototype.addToPadPrimitives = function(pad_name) {
       if (pad_name !== undefined) this.setPadName(pad_name);
       let pp = this.getPadPainter(pad_name); // important - pad_name must be here, otherwise PadPainter class confuses itself
@@ -2099,7 +2127,8 @@ JSROOT.define(['d3'], (d3) => {
       return true;
    }
 
-   /** @summary Remove painter from pad list of painters */
+   /** @summary Remove painter from pad list of painters
+     * @protected */
    ObjectPainter.prototype.removeFromPadPrimitives = function() {
       let pp = this.getPadPainter();
 
@@ -2116,7 +2145,8 @@ JSROOT.define(['d3'], (d3) => {
      * See {@link JSROOT.TAttMarkerHandler} for more info.
      * Instance assigned as this.markeratt data member, recognized by GED editor
      * @param {object} args - either TAttMarker or see arguments of {@link JSROOT.TAttMarkerHandler}
-     * @returns {object} created handler */
+     * @returns {object} created handler
+     * @protected */
    ObjectPainter.prototype.createAttMarker = function(args) {
       if (!args || (typeof args !== 'object')) args = { std: true }; else
          if (args.fMarkerColor !== undefined && args.fMarkerStyle !== undefined && args.fMarkerSize !== undefined) args = { attr: args, std: false };
@@ -2129,7 +2159,7 @@ JSROOT.define(['d3'], (d3) => {
       if (!handler)
          handler = new TAttMarkerHandler(args);
       else if (!handler.changed || args.force)
-         handler.SetArgs(args);
+         handler.setArgs(args);
 
       if (args.std) this.markeratt = handler;
 
@@ -2141,7 +2171,8 @@ JSROOT.define(['d3'], (d3) => {
      * @desc Can be used to produce lines in painter.
      * See {@link JSROOT.TAttLineHandler} for more info.
      * Instance assigned as this.lineatt data member, recognized by GED editor
-     * @param {object} args - either TAttLine or see constructor arguments of {@link JSROOT.TAttLineHandler} */
+     * @param {object} args - either TAttLine or see constructor arguments of {@link JSROOT.TAttLineHandler}
+     * @protected */
    ObjectPainter.prototype.createAttLine = function(args) {
       if (!args || (typeof args !== 'object'))
          args = { std: true };
@@ -2156,7 +2187,7 @@ JSROOT.define(['d3'], (d3) => {
       if (!handler)
          handler = new TAttLineHandler(args);
       else if (!handler.changed || args.force)
-         handler.SetArgs(args);
+         handler.setArgs(args);
 
       if (args.std) this.lineatt = handler;
 
@@ -2176,7 +2207,8 @@ JSROOT.define(['d3'], (d3) => {
      * @param {number} [args.color = undefined] - integer index of fill color
      * @param {string} [args.color_as_svg = undefined] - color will be specified as SVG string, not as index from color palette
      * @param {number} [args.kind = undefined] - some special kind which is handled differently from normal patterns
-     * @returns created handle */
+     * @returns created handle
+     * @protected */
    ObjectPainter.prototype.createAttFill = function(args) {
       if (!args || (typeof args !== 'object')) args = { std: true }; else
          if (args._typename && args.fFillColor !== undefined && args.fFillStyle !== undefined) args = { attr: args, std: false };
@@ -2191,7 +2223,7 @@ JSROOT.define(['d3'], (d3) => {
       if (!handler)
          handler = new TAttFillHandler(args);
       else if (!handler.changed || args.force)
-         handler.SetArgs(args);
+         handler.setArgs(args);
 
       if (args.std) this.fillatt = handler;
 
@@ -2202,7 +2234,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary call function for each painter in the pad
      * @desc Iterate over all known painters
-    * @private */
+     * @private */
    ObjectPainter.prototype.forEachPainter = function(userfunc, kind) {
       // iterate over all painters from pad list
       let pp = this.getPadPainter();
@@ -2237,14 +2269,16 @@ JSROOT.define(['d3'], (d3) => {
          canp.ProcessChanges(info, this, subelem);
    }
 
-   /** @summary Redraw all objects in correspondent pad */
+   /** @summary Redraw all objects in the current pad
+     * @param {string} [reason] - like 'resize' or 'zoom'
+     * @protected */
    ObjectPainter.prototype.redrawPad = function(reason) {
       let pp = this.getPadPainter();
       if (pp) pp.redraw(reason);
    }
 
    /** @summary execute selected menu command, either locally or remotely
-    * @private */
+     * @private */
    ObjectPainter.prototype.executeMenuCommand = function(method) {
 
       if (method.fName == "Inspect") {
@@ -2257,11 +2291,11 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Invoke method for object via WebCanvas functionality
-    * @desc Requires that painter marked with object identifier (this.snapid) or identifier provided as second argument
-    * Canvas painter should exists and in non-readonly mode
-    * Execution string can look like "Print()".
-    * Many methods call can be chained with "Print();;Update();;Clear()"
-    * @private */
+     * @desc Requires that painter marked with object identifier (this.snapid) or identifier provided as second argument
+     * Canvas painter should exists and in non-readonly mode
+     * Execution string can look like "Print()".
+     * Many methods call can be chained with "Print();;Update();;Clear()"
+     * @private */
    ObjectPainter.prototype.submitCanvExec = function(exec, snapid) {
       if (!exec || (typeof exec != 'string')) return;
 
@@ -2271,14 +2305,15 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary remove all created draw attributes
-    * @private */
+     * @protected */
    ObjectPainter.prototype.deleteAttr = function() {
       delete this.lineatt;
       delete this.fillatt;
       delete this.markeratt;
    }
 
-   /** @summary Show object in inspector for provided object */
+   /** @summary Show object in inspector for provided object
+     * @protected */
    ObjectPainter.prototype.showInspector = function(obj) {
       let main = this.selectDom(),
          rect = jsrp.getElementRect(main),
@@ -2302,7 +2337,7 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Fill context menu for the object
-    * @private */
+     * @private */
    ObjectPainter.prototype.fillContextMenu = function(menu) {
       let title = this.getObjectHint();
       if (this.getObject() && ('_typename' in this.getObject()))
@@ -2353,6 +2388,10 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Start text drawing
      * @desc required before any text can be drawn
+     * @param {number} font_face - font id as used in ROOT font attributes
+     * @param {number} font_size - font size as used in ROOT font attributes
+     * @param {object} [draw_g] - element where text drawm, by default using main object <g> element
+     * @param {number} [max_font_size] - maximal font size, used when text can be scaled
      * @protected */
    ObjectPainter.prototype.startTextDrawing = function(font_face, font_size, draw_g, max_font_size) {
 
@@ -2377,7 +2416,7 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Apply scaling factor to all drawn text in the <g> element
-     * @desc Can be applied at any time - even in the pstprocess callbacks of text draw
+     * @desc Can be applied at any time before finishTextDrawing is called - even in the postprocess callbacks of text draw
      * @param {number} factor - scaling factor
      * @param {object} [draw_g] - drawing element for the text
      * @protected */
@@ -2387,8 +2426,8 @@ JSROOT.define(['d3'], (d3) => {
          draw_g.property('text_factor', factor);
    }
 
-   /** @summary Analyze if all text draw operations completed
-    * @private */
+   /** @summary Analyze if all text draw operations are completed
+     * @private */
    function _checkAllTextDrawing(painter, draw_g, resolveFunc) {
 
       let all_args = draw_g.property('all_args'), missing = 0;
@@ -2522,20 +2561,22 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Draw text
-    *  @param {object} arg - different text draw options
-    *  @param {string} arg.text - text to draw
-    *  @param {number} [arg.align = 12] - int value like 12 or 31
-    *  @param {string} [arg.align = undefined] - end;bottom
-    *  @param {number} [arg.x = 0] - x position
-    *  @param {number} [arg.y = 0] - y position
-    *  @param {number} [arg.width] - when specified, adjust font size in the specified box
-    *  @param {number} [arg.height] - when specified, adjust font size in the specified box
-    *  @param {number} arg.latex - 0 - plain text, 1 - normal TLatex, 2 - math
-    *  @param {string} [arg.color=black] - text color
-    *  @param {number} [arg.rotate] - rotaion angle
-    *  @param {number} [arg.font_size] - fixed font size
-    *  @param {object} [arg.draw_g] - element where to place text, if not specified central draw_g container is used
-    * @protected */
+     * @desc The only legal way to draw text, support plain, latex and math text output
+     * @param {object} arg - different text draw options
+     * @param {string} arg.text - text to draw
+     * @param {number} [arg.align = 12] - int value like 12 or 31
+     * @param {string} [arg.align = undefined] - end;bottom
+     * @param {number} [arg.x = 0] - x position
+     * @param {number} [arg.y = 0] - y position
+     * @param {number} [arg.width] - when specified, adjust font size in the specified box
+     * @param {number} [arg.height] - when specified, adjust font size in the specified box
+     * @param {number} [arg.latex] - 0 - plain text, 1 - normal TLatex, 2 - math
+     * @param {string} [arg.color=black] - text color
+     * @param {number} [arg.rotate] - rotaion angle
+     * @param {number} [arg.font_size] - fixed font size
+     * @param {object} [arg.draw_g] - element where to place text, if not specified central draw_g container is used
+     * @param {function} [arg.post_process] - optional function called when specified text is drawn
+     * @protected */
    ObjectPainter.prototype.drawText = function(arg) {
 
       if (!arg.text) arg.text = "";
@@ -2669,7 +2710,8 @@ JSROOT.define(['d3'], (d3) => {
      * @desc fillmenu_func will be called when context menu is actiavted
      * Arguments fillmenu_func are (menu,kind)
      * First is JSROOT menu object, second is object subelement like axis "x" or "y"
-     * Function should return promise with menu when items are filled */
+     * Function should return promise with menu when items are filled
+     * @param {function} fillmenu_func - function to fill custom context menu for oabject */
    ObjectPainter.prototype.configureUserContextMenu = function(fillmenu_func) {
 
       if (!fillmenu_func || (typeof fillmenu_func !== 'function'))
@@ -2778,7 +2820,6 @@ JSROOT.define(['d3'], (d3) => {
       });
    }
 
-
    /** @summary Configure user-defined tooltip handler
      * @desc Hook for the users to get tooltip information when mouse cursor moves over frame area
      * Hanlder function will be called every time when new data is selected
@@ -2796,10 +2837,10 @@ JSROOT.define(['d3'], (d3) => {
    }
 
     /** @summary Configure user-defined click handler
-     * @desc Function will be called every time when frame click was perfromed
-     * As argument, tooltip object with selected bins will be provided
-     * If handler function returns true, default handling of click will be disabled
-     * @param {function} handler - function called when mouse click is done */
+      * @desc Function will be called every time when frame click was perfromed
+      * As argument, tooltip object with selected bins will be provided
+      * If handler function returns true, default handling of click will be disabled
+      * @param {function} handler - function called when mouse click is done */
    ObjectPainter.prototype.configureUserClickHandler = function(handler) {
       let fp = this.getFramePainter();
       if (fp && fp.configureUserClickHandler)
@@ -2818,9 +2859,8 @@ JSROOT.define(['d3'], (d3) => {
    }
 
 
-   /** @summary Check if user-defined tooltip function is configured
-    * @returns {boolean}
-    * @private */
+   /** @summary Check if user-defined tooltip function was configured
+     * @returns {boolean} flag is user tooltip handler was configured */
    ObjectPainter.prototype.hasUserTooltip = function() {
       return typeof this._user_tooltip_handler == 'function';
    }
@@ -2899,7 +2939,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Assign often used members of frame painter
      * @private */
-   AxisBasePainter.prototype.AssignFrameMembers = function(fp, axis) {
+   AxisBasePainter.prototype.assignFrameMembers = function(fp, axis) {
       fp["gr"+axis] = this.gr;                    // fp.grx
       fp["log"+axis] = this.log;                  // fp.logx
       fp["scale_"+axis+"min"] = this.scale_min;   // fp.scale_xmin
@@ -2907,12 +2947,12 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Convert axis value into the Date object */
-   AxisBasePainter.prototype.ConvertDate = function(v) {
+   AxisBasePainter.prototype.convertDate = function(v) {
       return new Date(this.timeoffset + v*1000);
    }
 
    /** @summary Convert graphical point back into axis value */
-   AxisBasePainter.prototype.RevertPoint = function(pnt) {
+   AxisBasePainter.prototype.revertPoint = function(pnt) {
       let value = this.func.invert(pnt);
       return (this.kind == "time") ?  (value - this.timeoffset) / 1000 : value;
    }
@@ -2976,9 +3016,9 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Convert "raw" axis value into text */
-   AxisBasePainter.prototype.AxisAsText = function(value, fmt) {
+   AxisBasePainter.prototype.axisAsText = function(value, fmt) {
       if (this.kind == 'time')
-         value = this.ConvertDate(value);
+         value = this.convertDate(value);
       if (this.format)
          return this.format(value, false, fmt);
       return value.toPrecision(4);
@@ -2986,7 +3026,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Produce ticks for d3.scaleLog
      * @desc Fixing following problem, described [here]{@link https://stackoverflow.com/questions/64649793} */
-   AxisBasePainter.prototype.PoduceLogTicks = function(func, number) {
+   AxisBasePainter.prototype.poduceLogTicks = function(func, number) {
       function linearArray(arr) {
          let sum1 = 0, sum2 = 0;
          for (let k=1;k<arr.length;++k) {
@@ -3023,10 +3063,10 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Produce axis ticks */
-   AxisBasePainter.prototype.ProduceTicks = function(ndiv, ndiv2) {
+   AxisBasePainter.prototype.produceTicks = function(ndiv, ndiv2) {
       if (!this.noticksopt) {
          let total = ndiv * (ndiv2 || 1);
-         return this.log ? this.PoduceLogTicks(this.func, total) : this.func.ticks(total);
+         return this.log ? this.poduceLogTicks(this.func, total) : this.func.ticks(total);
       }
 
       let dom = this.func.domain(), ticks = [];
@@ -3114,13 +3154,13 @@ JSROOT.define(['d3'], (d3) => {
      * @private */
    jsrp.selectActivePad = function(args) {
       if (args.active) {
-         if (this.$active_pp && (typeof this.$active_pp.SetActive == 'function'))
-            this.$active_pp.SetActive(false);
+         let fp = this.$active_pp ? this.$active_pp.getFramePainter() : null;
+         if (fp) fp.setFrameActive(false);
 
          this.$active_pp = args.pp;
 
-         if (this.$active_pp && (typeof this.$active_pp.SetActive == 'function'))
-            this.$active_pp.SetActive(true);
+         fp = this.$active_pp ? this.$active_pp.getFramePainter() : null;
+         if (fp) fp.setFrameActive(true);
       } else if (this.$active_pp === args.pp) {
          delete this.$active_pp;
       }
@@ -3182,10 +3222,10 @@ JSROOT.define(['d3'], (d3) => {
      * @desc function used to react on browser window resize event
      * While many resize events could come in short time,
      * resize will be handled with delay after last resize event
-     * handle can be function or object with checkResize function
-     * one could specify delay after which resize event will be handled
-     * @private */
-   JSROOT.registerForResize = function(handle, delay) {
+     * @param {object|string} handle can be function or object with checkResize function or dom where painting was done
+     * @param {number} [delay] - one could specify delay after which resize event will be handled
+     * @protected */
+   jsrp.registerForResize = function(handle, delay) {
 
       if (!handle || JSROOT.BatchMode || (typeof window == 'undefined')) return;
 
@@ -3339,7 +3379,7 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string} [args.opt] - list of supported draw options (separated with semicolon) like "col;scat;"
      * @param {string} [args.icon] - icon name shown for the class in hierarchy browser
      * @param {string} [args.draw_field] - draw only data member from object, like fHistogram
-     * @private */
+     * @protected */
    jsrp.addDrawFunc = function(args) {
       drawFuncs.lst.push(args);
       return args;
@@ -3400,8 +3440,8 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Scan streamer infos for derived classes
-    * @desc Assign draw functions for such derived classes
-    * @private */
+     * @desc Assign draw functions for such derived classes
+     * @private */
    jsrp.addStreamerInfos = function(lst) {
       if (!lst) return;
 
@@ -3491,14 +3531,9 @@ JSROOT.define(['d3'], (d3) => {
       return res;
    }
 
-   /** @summary Returns array with supported draw options for the specified kind
-    * @private */
-   jsrp.getDrawOptions = function(kind /*, selector*/) {
-      return getDrawSettings(kind).opts;
-   }
-
    /** @summary Returns true if provided object class can be drawn
-    * @private */
+     * @param {string} classname - name of class to be tested
+     * @private */
    jsrp.canDraw = function(classname) {
       return getDrawSettings("ROOT." + classname).opts !== null;
    }
@@ -3534,11 +3569,9 @@ JSROOT.define(['d3'], (d3) => {
          return JSROOT.draw(divid, obj[handle.draw_field], opt);
 
       if (!handle.func && !handle.direct) {
-         console.log('Draw object with opt', opt, type_info)
          if (opt && (opt.indexOf("same") >= 0)) {
 
-            let main_painter = JSROOT.getMainPainter(divid);
-            console.log('main_painter', !!main_painter)
+            let main_painter = jsrp.getElementMainPainter(divid);
 
             if (main_painter && (typeof main_painter.performDrop === 'function'))
                return main_painter.performDrop(obj, "", null, opt);
@@ -3692,10 +3725,10 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Save object, drawn in specified element, as JSON.
      * @desc Normally it is TCanvas object with list of primitives
-     * @param {string|object} divid - id of top div element or directly DOMElement
+     * @param {string|object} dom - id of top div element or directly DOMElement
      * @returns {string} produced JSON string */
-   JSROOT.drawingJSON = function(divid) {
-      let dummy = new ObjectPainter(divid);
+   JSROOT.drawingJSON = function(dom) {
+      let dummy = new ObjectPainter(dom);
       let canp = dummy.getCanvPainter();
       return canp ? canp.ProduceJSON() : "";
    }
@@ -3723,14 +3756,14 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Create SVG image for provided object.
-    * @desc Function especially useful in Node.js environment to generate images for
-    * supported ROOT classes
-    * @param {object} args - contains different settings
-    * @param {object} args.object - object for the drawing
-    * @param {string} [args.option] - draw options
-    * @param {number} [args.width = 1200] - image width
-    * @param {number} [args.height = 800] - image height
-    * @returns {Promise} with svg code */
+     * @desc Function especially useful in Node.js environment to generate images for
+     * supported ROOT classes
+     * @param {object} args - contains different settings
+     * @param {object} args.object - object for the drawing
+     * @param {string} [args.option] - draw options
+     * @param {number} [args.width = 1200] - image width
+     * @param {number} [args.height = 800] - image height
+     * @returns {Promise} with svg code */
    JSROOT.makeSVG = function(args) {
 
       if (!args) args = {};
@@ -3789,7 +3822,7 @@ JSROOT.define(['d3'], (d3) => {
      * @param {boolean|object} arg - options on how to resize
      * @desc As first argument divid one should use same argument as for the drawing
      * As second argument, one could specify "true" value to force redrawing of
-     * the element even after minimal resize of the element
+     * the element even after minimal resize
      * Or one just supply object with exact sizes like { width:300, height:200, force:true };
      * @example
      * JSROOT.resize("drawing", { width: 500, height: 200 } );
@@ -3808,12 +3841,12 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Returns main painter object for specified HTML element - typically histogram painter
      * @param {string|object} divid - id or DOM element
      * @private */
-   JSROOT.getMainPainter = function(divid) {
+   jsrp.getElementMainPainter = function(divid) {
       let dummy = new JSROOT.ObjectPainter(divid);
       return dummy.getMainPainter(true);
    }
 
-   /** @summary Safely remove all JSROOT objects from specified element
+   /** @summary Safely remove all JSROOT drawings from specified element
      * @param {string|object} divid - id or DOM element
      * @example
      * JSROOT.cleanup("drawing");
@@ -3827,12 +3860,12 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Display progress message in the left bottom corner.
-    *  @desc Previous message will be overwritten
-    * if no argument specified, any shown messages will be removed
-    * @param {string} msg - message to display
-    * @param {number} tmout - optional timeout in milliseconds, after message will disappear
-    * @private */
-   JSROOT.progress = function(msg, tmout) {
+     * @desc Previous message will be overwritten
+     * if no argument specified, any shown messages will be removed
+     * @param {string} msg - message to display
+     * @param {number} tmout - optional timeout in milliseconds, after message will disappear
+     * @private */
+   jsrp.showProgress = function(msg, tmout) {
       if (JSROOT.BatchMode || (typeof document === 'undefined')) return;
       let id = "jsroot_progressbox",
           box = d3.select("#" + id);
@@ -3860,7 +3893,7 @@ JSROOT.define(['d3'], (d3) => {
 
       if (!isNaN(tmout) && (tmout > 0)) {
          box.property("with_timeout", true);
-         setTimeout(() => JSROOT.progress('', -1), tmout);
+         setTimeout(() => jsrp.showProgress('', -1), tmout);
       }
    }
 

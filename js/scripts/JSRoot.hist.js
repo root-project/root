@@ -397,7 +397,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       });
    }
 
-   TPavePainter.prototype.FillWebObjectOptions = function(res) {
+   /** @summary Fill option object used in TWebCanvas
+     * @private */
+   TPavePainter.prototype.fillWebObjectOptions = function(res) {
       if (!res) {
          if (!this.snapid) return null;
          res = { _typename: "TWebObjectOptions", snapid: this.snapid.toString(), opt: this.getDrawOpt(), fcust: "", fopt: [] };
@@ -863,7 +865,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       this.draw_g.selectAll("rect").style("fill", 'white');
 
-      this.z_handle.ConfigureAxis("zaxis", zmin, zmax, zmin, zmax, true, [0,s_height], { log: pad ? pad.fLogz : 0 });
+      this.z_handle.configureAxis("zaxis", zmin, zmax, zmin, zmax, true, [0,s_height], { log: pad ? pad.fLogz : 0 });
 
       if (!contour || !draw_palette || postpone_draw)
          // we need such rect to correctly calculate size
@@ -902,7 +904,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       this.z_handle.max_tick_size = Math.round(s_width*0.7);
 
-      return this.z_handle.DrawAxis(this.draw_g, s_width, s_height, "translate(" + s_width + ", 0)").then(() => {
+      return this.z_handle.drawAxis(this.draw_g, s_width, s_height, "translate(" + s_width + ", 0)").then(() => {
 
          if (can_move && ('getBoundingClientRect' in this.draw_g.node())) {
             let rect = this.draw_g.node().getBoundingClientRect();
@@ -1353,7 +1355,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
      * @memberof JSROOT.Painter
      * @private */
    let produceLegend = (divid, opt) => {
-      let main_painter = JSROOT.getMainPainter(divid);
+      let main_painter = jsrp.getElementMainPainter(divid);
       if (!main_painter) return;
 
       let pp = main_painter.getPadPainter(),
@@ -1886,7 +1888,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
    /** @summary Returns histogram axis
      * @prviate */
-   THistPainter.prototype.GetAxis = function(name) {
+   THistPainter.prototype.getAxis = function(name) {
       let histo = this.getObject();
       if (histo)
          switch(name) {
@@ -2294,8 +2296,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       // artifically add y range to display axes
       if (this.ymin === this.ymax) this.ymax += 1;
 
-      fp.SetAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
-      fp.CreateXY({ ndim: this.Dimension(),
+      fp.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
+      fp.createXY({ ndim: this.Dimension(),
                     check_pad_range: this.check_pad_range,
                     zoom_ymin: this.zoom_ymin,
                     zoom_ymax: this.zoom_ymax,
@@ -2445,7 +2447,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       let indx = 0,
           main = this.getFramePainter(),
           nbin = this['nbins'+axis] || 0,
-          taxis = this.GetAxis(axis),
+          taxis = this.getAxis(axis),
           min = main ? main['zoom_' + axis + 'min'] : 0,
           max = main ? main['zoom_' + axis + 'max'] : 0;
 
@@ -2664,11 +2666,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
     * Most of interactivity now handled by frame
     * @private
     */
-   THistPainter.prototype.AddInteractive = function() {
+   THistPainter.prototype.addInteractivity = function() {
 
       if (this.isMainPainter()) {
          let fp = this.getFramePainter();
-         if (fp) return fp.AddInteractive();
+         if (fp) return fp.addInteractivity();
       }
 
       return Promise.resolve(false);
@@ -2826,9 +2828,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                return true;
             }
             break;
-         case "ToggleLogX": fp.ToggleLog("x"); break;
-         case "ToggleLogY": fp.ToggleLog("y"); break;
-         case "ToggleLogZ": fp.ToggleLog("z"); break;
+         case "ToggleLogX": fp.toggleAxisLog("x"); break;
+         case "ToggleLogY": fp.toggleAxisLog("y"); break;
+         case "ToggleLogZ": fp.toggleAxisLog("z"); break;
          case "ToggleStatBox": this.ToggleStat(); return true;
       }
       return false;
@@ -3255,14 +3257,14 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           x1 = axis.GetBinLowEdge(bin+1);
 
       if (handle.kind === 'labels')
-         return pmain.AxisAsText(name, x1);
+         return pmain.axisAsText(name, x1);
 
       let x2 = axis.GetBinLowEdge(bin+2);
 
       if (handle.kind === 'time')
-         return pmain.AxisAsText(name, (x1+x2)/2);
+         return pmain.axisAsText(name, (x1+x2)/2);
 
-      return "[" + pmain.AxisAsText(name, x1) + ", " + pmain.AxisAsText(name, x2) + ")";
+      return "[" + pmain.axisAsText(name, x1) + ", " + pmain.axisAsText(name, x2) + ")";
    }
 
    // ========================================================================
@@ -3452,7 +3454,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }
 
       // when no range selection done, use original statistic from histogram
-      if (!fp.IsAxisZoomed("x") && (histo.fTsumw>0)) {
+      if (!fp.isAxisZoomed("x") && (histo.fTsumw>0)) {
          stat_sumw = histo.fTsumw;
          stat_sumwx = histo.fTsumwx;
          stat_sumwx2 = histo.fTsumwx2;
@@ -3736,7 +3738,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             // simply use relative move from point, can optimize in the future
             path_marker = "";
             do_marker = true;
-            this.markeratt.reset_pos();
+            this.markeratt.resetPos();
          } else {
             show_markers = false;
          }
@@ -4002,7 +4004,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (this.options.Error || this.options.Mark) {
          tips.push("x = " + xlbl);
-         tips.push("y = " + pmain.AxisAsText("y", cont));
+         tips.push("y = " + pmain.axisAsText("y", cont));
          if (this.options.Error) {
             if (xlbl[0] == "[") tips.push("error x = " + ((x2 - x1) / 2).toPrecision(4));
             tips.push("error y = " + histo.getBinError(bin + 1).toPrecision(4));
@@ -4124,7 +4126,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          show_rect = true;
 
          let msize = 3;
-         if (this.markeratt) msize = Math.max(msize, this.markeratt.GetFullSize());
+         if (this.markeratt) msize = Math.max(msize, this.markeratt.getFullSize());
 
          if (this.options.Error) {
             let cont = histo.getBinContent(findbin+1),
@@ -4189,7 +4191,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       let res = { name: histo.fName, title: histo.fTitle,
                   x: midx, y: midy, exact: true,
                   color1: this.lineatt ? this.lineatt.color : 'green',
-                  color2: this.fillatt ? this.fillatt.fillcoloralt('blue') : 'blue',
+                  color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : 'blue',
                   lines: this.GetBinTips(findbin) };
 
       if (pnt.disabled) {
@@ -4266,7 +4268,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          this.DecodeOptions(arg);
 
          if (this.options.need_fillcol && this.fillatt && this.fillatt.empty())
-            this.fillatt.Change(5,1001);
+            this.fillatt.change(5,1001);
 
          // redraw all objects in pad, inform dependent objects
          this.interactiveRedraw("pad", "drawopt");
@@ -4339,7 +4341,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          return this.drawHistTitle();
       }).then(() => {
          this.UpdateStatWebCanvas();
-         return this.AddInteractive();
+         return this.addInteractivity();
       });
    }
 
@@ -4778,7 +4780,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
       }
 
-      if (!fp.IsAxisZoomed("x") && !fp.IsAxisZoomed("y") && (histo.fTsumw > 0)) {
+      if (!fp.isAxisZoomed("x") && !fp.isAxisZoomed("y") && (histo.fTsumw > 0)) {
          stat_sum0 = histo.fTsumw;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
@@ -5143,7 +5145,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           frame_h = main.getFrameHeight(),
           levels = this.GetContourLevels(),
           palette = this.getHistPalette(),
-          func = main.GetProjectionFunc();
+          func = main.getProjectionFunc();
 
       function BuildPath(xp,yp,iminus,iplus,do_close) {
          let cmd = "", last, pnt, first, isany, matched;
@@ -5706,7 +5708,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.createAttMarker({ attr: histo, style: 5 });
 
       // reset absolution position for markers
-      this.markeratt.reset_pos();
+      this.markeratt.resetPos();
 
       handle.candle = []; // array of drawn points
 
@@ -5819,7 +5821,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
          this.createAttMarker({ attr: histo });
 
-         this.markeratt.reset_pos();
+         this.markeratt.resetPos();
 
          let path = "";
          for (i = handle.i1; i < handle.i2; ++i) {
@@ -5919,7 +5921,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
            // arrx.sort();
 
-           this.markeratt.reset_pos();
+           this.markeratt.resetPos();
 
            let path = "";
 
@@ -6010,7 +6012,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       lines.push(this.getObjectHint());
 
-      lines.push("x = " + main.AxisAsText("x", histo.fXaxis.GetBinLowEdge(p.bin+1)));
+      lines.push("x = " + main.axisAsText("x", histo.fXaxis.GetBinLowEdge(p.bin+1)));
 
       lines.push('mean y = ' + jsrp.floatToString(p.meany, JSROOT.gStyle.fStatFormat))
       lines.push('m25 = ' + jsrp.floatToString(p.m25y, JSROOT.gStyle.fStatFormat))
@@ -6052,8 +6054,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }
 
       lines.push(this.getObjectHint());
-      lines.push("x = " + pmain.AxisAsText("x", realx));
-      lines.push("y = " + pmain.AxisAsText("y", realy));
+      lines.push("x = " + pmain.axisAsText("x", realx));
+      lines.push("y = " + pmain.axisAsText("y", realy));
       if (numpoints > 0) lines.push("npnts = " + numpoints);
       lines.push("bin = " + binname);
       if (bin.fContent === Math.round(bin.fContent))
@@ -6115,7 +6117,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          let res = { name: histo.fName, title: histo.fTitle,
                      x: pnt.x, y: pnt.y,
                      color1: this.lineatt ? this.lineatt.color : 'green',
-                     color2: this.fillatt ? this.fillatt.fillcoloralt('blue') : "blue",
+                     color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : "blue",
                      exact: true, menu: true,
                      lines: this.ProvidePolyBinHints(foundindx, realx, realy) };
 
@@ -6163,7 +6165,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          let res = { name: histo.fName, title: histo.fTitle,
                      x: pnt.x, y: pnt.y,
                      color1: this.lineatt ? this.lineatt.color : 'green',
-                     color2: this.fillatt ? this.fillatt.fillcoloralt('blue') : "blue",
+                     color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : "blue",
                      lines: this.GetCandleTips(p), exact: true, menu: true };
 
          if (pnt.disabled) {
@@ -6264,7 +6266,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       let res = { name: histo.fName, title: histo.fTitle,
                   x: pnt.x, y: pnt.y,
                   color1: this.lineatt ? this.lineatt.color : 'green',
-                  color2: this.fillatt ? this.fillatt.fillcoloralt('blue') : "blue",
+                  color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : "blue",
                   lines: this.GetBinTips(i, j), exact: true, menu: true };
 
       if (this.options.Color) res.color2 = this.getHistPalette().getColor(colindx);
@@ -6354,7 +6356,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
          this.UpdateStatWebCanvas();
 
-         return this.AddInteractive();
+         return this.addInteractivity();
       });
    }
 
