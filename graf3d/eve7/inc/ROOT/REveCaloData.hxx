@@ -326,12 +326,34 @@ public:
 
 /**************************************************************************/
 /**************************************************************************/
+class REveCaloDataSliceSelector
+{
+private:
+   int fSliceIdx{-1};
+
+public:
+   REveCaloDataSliceSelector(int s):fSliceIdx(s) {}
+   int GetSliceIndex() {return fSliceIdx;}
+
+   virtual ~REveCaloDataSliceSelector() = default;
+
+   virtual void ProcessSelection(REveCaloData::vCellId_t& sel_cells, UInt_t selectionId, bool multi) = 0;
+   virtual void GetCellsFromSecondaryIndices(const std::set<int>& idcs, REveCaloData::vCellId_t& out) = 0;
+};
 
 class REveCaloDataSelector
 {
+private:
+   int fActiveSlice{-1};
+   std::vector< std::unique_ptr<REveCaloDataSliceSelector> > fSliceSelectors;
+
 public:
-   virtual void ProcessSelection( REveCaloData::vCellId_t& sel_cells, UInt_t selectionId, Bool_t multi) = 0;
-   virtual void GetCellsFromSecondaryIndices(const std::set<int>&, REveCaloData::vCellId_t& out) = 0;
+   void ProcessSelection( REveCaloData::vCellId_t& sel_cells, UInt_t selectionId, Bool_t multi);
+   void GetCellsFromSecondaryIndices(const std::set<int>&, REveCaloData::vCellId_t& out);
+
+   void AddSliceSelector(std::unique_ptr<REveCaloDataSliceSelector> s) {fSliceSelectors.push_back(std::move(s));}
+   void SetActiveSlice(int s){ fActiveSlice = s;}
+
    virtual ~REveCaloDataSelector() = default;
 };
 

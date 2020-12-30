@@ -847,3 +847,33 @@ void REveCaloDataHist::GetPhiLimits(Double_t &min, Double_t &max) const
    min = fPhiAxis->GetXmin();
    max = fPhiAxis->GetXmax();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Process selection. Called from REveCaloViz object
+
+void REveCaloDataSelector::ProcessSelection(REveCaloData::vCellId_t& sel_cells, UInt_t selectionId, Bool_t multi)
+{
+   // only one slice can be user selected at once
+   fActiveSlice  = sel_cells.front().fSlice;
+   for (auto &si : fSliceSelectors)
+   {
+      if (si->GetSliceIndex() == fActiveSlice) {
+         si->ProcessSelection(sel_cells, selectionId, multi);
+         break;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// GetCellsFromSecondaryIndices used in implied selection
+
+void REveCaloDataSelector::GetCellsFromSecondaryIndices(const std::set<int>& idcs, REveCaloData::vCellId_t& out)
+{
+   for (auto &si : fSliceSelectors)
+   {
+      if (si->GetSliceIndex() == fActiveSlice) {
+         si->GetCellsFromSecondaryIndices(idcs, out);
+         break;
+      }
+   }
+}
