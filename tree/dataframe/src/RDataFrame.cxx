@@ -946,8 +946,7 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 /// The filename globbing supports the same type of expressions as TChain::Add().
 /// The default branches are looked at in case no branch is specified in the booking of actions or transformations.
 /// See RInterface for the documentation of the methods available.
-RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string> &fileglobs,
-                       const ColumnNames_t &defaultBranches)
+RDataFrame::RDataFrame(std::string_view treeName, const ColumnNames_t &fileglobs, const ColumnNames_t &defaultBranches)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
 {
    std::string treeNameInt(treeName);

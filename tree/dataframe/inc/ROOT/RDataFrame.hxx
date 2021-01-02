@@ -43,8 +43,7 @@ class RDataFrame : public ROOT::RDF::RInterface<RDFDetail::RLoopManager> {
 public:
    using ColumnNames_t = RDFDetail::ColumnNames_t;
    RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches = {});
-   RDataFrame(std::string_view treename, const std::vector<std::string> &filenames,
-              const ColumnNames_t &defaultBranches = {});
+   RDataFrame(std::string_view treename, const ColumnNames_t &filenames, const ColumnNames_t &defaultBranches = {});
    RDataFrame(std::string_view treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
    RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
    RDataFrame(ULong64_t numEntries);
