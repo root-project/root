@@ -6021,7 +6021,7 @@ TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
    }
    TIter nextl(GetListOfLeaves());
    while ((leaf = (TLeaf*)nextl())) {
-      if (strcmp(leaf->GetFullName(), leafname) && strcmp(leaf->GetName(), leafname))
+      if (strcmp(leaf->GetFullName(), leafname) != 0 && strcmp(leaf->GetName(), leafname) != 0)
          continue; // leafname does not match GetName() nor GetFullName(), this is not the right leaf
       if (branchname) {
          // check the branchname is also a match
