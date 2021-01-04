@@ -30,7 +30,7 @@
    JSROOT.draw("drawing", main_object, "").then(painter => {
       d3.select("#data").remove();
       if (kind != "draw")
-         painter.ProduceImage(true, kind).then(res => {
+         painter.produceImage(true, kind).then(res => {
             let elem = d3.select("#drawing").attr("style", null);
             if (kind == "svg")
                elem.html(res);
