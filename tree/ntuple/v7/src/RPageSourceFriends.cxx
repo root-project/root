@@ -174,7 +174,7 @@ ROOT::Experimental::Detail::RPageSourceFriends::PopulatePage(
    fPage2SourceIdx[page.GetBuffer()] = originColumnId.fSourceIdx;
    page.ChangeIds(virtualColumnId, clusterIndex.GetClusterId());
 
-   return RPage();
+   return page;
 }
 
 void ROOT::Experimental::Detail::RPageSourceFriends::ReleasePage(RPage &page)
