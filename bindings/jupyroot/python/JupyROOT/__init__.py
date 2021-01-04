@@ -21,5 +21,6 @@ except ImportError:
 _is_ipython = hasattr(builtins, '__IPYTHON__')
 
 if _is_ipython:
+    from IPython import get_ipython
     cppcompleter.load_ipython_extension(get_ipython())
     utils.iPythonize()
