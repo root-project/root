@@ -6024,8 +6024,10 @@ TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
       if (strcmp(leaf->GetFullName(), leafname) && strcmp(leaf->GetName(), leafname))
          continue;
       if (branchname) {
-         UInt_t nbch = strlen(branchname);
          TBranch *br = leaf->GetBranch();
+         if (!strcmp(br->GetFullName(), branchname))
+            return leaf;
+         UInt_t nbch = strlen(branchname);
          const char* brname = br->GetName();
          TBranch *mother = br->GetMother();
          if (strncmp(brname,branchname,nbch)) {
