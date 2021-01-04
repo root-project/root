@@ -51,7 +51,7 @@
          painter.batch_mode = is_batch;
 
          if (window) {
-            window.onbeforeunload = () => painter.WindowBeforeUnloadHanlder();
+            window.onbeforeunload = () => painter.closeWebsocket(true);
             if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
          }
 
@@ -77,7 +77,7 @@
 
             painter.setDom("CanvasDiv"); // just assign id, nothing else happens
 
-            painter.UseWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
+            painter.useWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
          }
 
       });

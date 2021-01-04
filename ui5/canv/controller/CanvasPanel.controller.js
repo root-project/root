@@ -89,7 +89,7 @@ sap.ui.define([
             }
 
             if (this.canvas_painter && this.canvas_painter._window_handle) {
-               this.canvas_painter.UseWebsocket(this.canvas_painter._window_handle, this.canvas_painter._window_handle_href);
+               this.canvas_painter.useWebsocket(this.canvas_painter._window_handle, this.canvas_painter._window_handle_href);
                delete this.canvas_painter._window_handle;
             }
          }
