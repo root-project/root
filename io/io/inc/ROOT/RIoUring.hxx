@@ -144,6 +144,7 @@ public:
                readEvents[i].fSize,
                readEvents[i].fOffset
             );
+            sqe->flags |= IOSQE_ASYNC; // maximize read event throughput
             sqe->user_data = i;
          }
 
