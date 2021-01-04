@@ -5,7 +5,48 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    "use strict";
 
-   /** @summary Base painter ]class for RHist objects
+   /** @summary assign methods for the RAxis objects
+     * @private */
+   function assignRAxisMethods(axis) {
+      if ((axis._typename == "ROOT::Experimental::RAxisEquidistant") || (axis._typename == "ROOT::Experimental::RAxisLabels")) {
+         if (axis.fInvBinWidth === 0) {
+            axis.$dummy = true;
+            axis.fInvBinWidth = 1;
+            axis.fNBinsNoOver = 0;
+            axis.fLow = 0;
+         }
+
+         axis.min = axis.fLow;
+         axis.max = axis.fLow + axis.fNBinsNoOver/axis.fInvBinWidth;
+         axis.GetNumBins = function() { return this.fNBinsNoOver; }
+         axis.GetBinCoord = function(bin) { return this.fLow + bin/this.fInvBinWidth; }
+         axis.FindBin = function(x,add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); }
+      } else if (axis._typename == "ROOT::Experimental::RAxisIrregular") {
+         axis.min = axis.fBinBorders[0];
+         axis.max = axis.fBinBorders[axis.fBinBorders.length - 1];
+         axis.GetNumBins = function() { return this.fBinBorders.length; }
+         axis.GetBinCoord = function(bin) {
+            let indx = Math.round(bin);
+            if (indx <= 0) return this.fBinBorders[0];
+            if (indx >= this.fBinBorders.length) return this.fBinBorders[this.fBinBorders.length - 1];
+            if (indx==bin) return this.fBinBorders[indx];
+            let indx2 = (bin < indx) ? indx - 1 : indx + 1;
+            return this.fBinBorders[indx] * Math.abs(bin-indx2) + this.fBinBorders[indx2] * Math.abs(bin-indx);
+         }
+         axis.FindBin = function(x,add) {
+            for (let k = 1; k < this.fBinBorders.length; ++k)
+               if (x < this.fBinBorders[k]) return Math.floor(k-1+add);
+            return this.fBinBorders.length - 1;
+         }
+      }
+
+      // to support some code from ROOT6 drawing
+
+      axis.GetBinCenter = function(bin) { return this.GetBinCoord(bin-0.5); }
+      axis.GetBinLowEdge = function(bin) { return this.GetBinCoord(bin-1); }
+   }
+
+   /** @summary Base painter class for RHist objects
     *
     * @class
     * @memberof JSROOT
@@ -47,9 +88,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       if (histo && (!histo.getBinContent || force)) {
          if (histo.fAxes._2) {
-            JSROOT.v7.AssignRAxisMethods(histo.fAxes._0);
-            JSROOT.v7.AssignRAxisMethods(histo.fAxes._1);
-            JSROOT.v7.AssignRAxisMethods(histo.fAxes._2);
+            assignRAxisMethods(histo.fAxes._0);
+            assignRAxisMethods(histo.fAxes._1);
+            assignRAxisMethods(histo.fAxes._2);
             histo.getBin = function(x, y, z) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1) + this.fAxes._0.GetNumBins()*this.fAxes._1.GetNumBins()*(z-1); }
             // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x, y, z) { return this.fStatistics.fBinContent[this.getBin(x, y, z)]; }
@@ -60,8 +101,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
             }
          } else if (histo.fAxes._1) {
-            JSROOT.v7.AssignRAxisMethods(histo.fAxes._0);
-            JSROOT.v7.AssignRAxisMethods(histo.fAxes._1);
+            assignRAxisMethods(histo.fAxes._0);
+            assignRAxisMethods(histo.fAxes._1);
             histo.getBin = function(x, y) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1); }
             // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; }
@@ -72,7 +113,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
             }
          } else {
-            JSROOT.v7.AssignRAxisMethods(histo.fAxes._0);
+            assignRAxisMethods(histo.fAxes._0);
             histo.getBin = function(x) { return x-1; }
             // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x) { return this.fStatistics.fBinContent[x-1]; }
@@ -89,9 +130,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
          if (!histo.getBinContent || force) {
             if (histo.fAxes.length == 3) {
-               JSROOT.v7.AssignRAxisMethods(histo.fAxes[0]);
-               JSROOT.v7.AssignRAxisMethods(histo.fAxes[1]);
-               JSROOT.v7.AssignRAxisMethods(histo.fAxes[2]);
+               assignRAxisMethods(histo.fAxes[0]);
+               assignRAxisMethods(histo.fAxes[1]);
+               assignRAxisMethods(histo.fAxes[2]);
 
                histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
                histo.dx = histo.fIndicies[0] + 1;
@@ -119,8 +160,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
 
             } else if (histo.fAxes.length == 2) {
-               JSROOT.v7.AssignRAxisMethods(histo.fAxes[0]);
-               JSROOT.v7.AssignRAxisMethods(histo.fAxes[1]);
+               assignRAxisMethods(histo.fAxes[0]);
+               assignRAxisMethods(histo.fAxes[1]);
 
                histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
                histo.dx = histo.fIndicies[0] + 1;
@@ -142,7 +183,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                histo.getBinContent = function(x, y) { return this.fBinContent[this.getBin0(x, y)]; }
                histo.getBinError = function(x, y) { return Math.sqrt(Math.abs(this.getBinContent(x, y))); }
             } else {
-               JSROOT.v7.AssignRAxisMethods(histo.fAxes[0]);
+               assignRAxisMethods(histo.fAxes[0]);
                histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
                histo.dx = histo.fIndicies[0] + 1;
                histo.stepx = histo.fIndicies[2];
@@ -214,7 +255,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       main.ymin = main.ymax = 0;
       main.zmin = main.zmax = 0;
       main.setAxesRanges(this.getAxis("x"), this.xmin, this.xmax, this.getAxis("y"), this.ymin, this.ymax, this.getAxis("z"), this.zmin, this.zmax);
-      return main.DrawAxes();
+      return main.drawAxes();
    }
 
    RHistPainter.prototype.CheckHistDrawAttributes = function() {
@@ -291,7 +332,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
 
       if (axis && !axis.GetBinCoord)
-         JSROOT.v7.AssignRAxisMethods(axis);
+         assignRAxisMethods(axis);
 
       return axis;
    }
@@ -429,12 +470,12 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return null;
    }
 
-   RHistPainter.prototype.ButtonClick = function(funcname) {
+   RHistPainter.prototype.clickButton = function(funcname) {
       // TODO: move to frame painter
       switch(funcname) {
          case "ToggleZoom":
             if ((this.zoom_xmin !== this.zoom_xmax) || (this.zoom_ymin !== this.zoom_ymax) || (this.zoom_zmin !== this.zoom_zmax)) {
-               this.Unzoom();
+               this.unzoom();
                this.getFramePainter().zoomChangedInteractive('reset');
                return true;
             }
@@ -455,14 +496,14 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       let pp = this.getPadPainter();
       if (!pp) return;
 
-      pp.AddButton("auto_zoom", 'Toggle between unzoom and autozoom-in', 'ToggleZoom', "Ctrl *");
-      pp.AddButton("arrow_right", "Toggle log x", "ToggleLogX", "PageDown");
-      pp.AddButton("arrow_up", "Toggle log y", "ToggleLogY", "PageUp");
+      pp.addPadButton("auto_zoom", 'Toggle between unzoom and autozoom-in', 'ToggleZoom', "Ctrl *");
+      pp.addPadButton("arrow_right", "Toggle log x", "ToggleLogX", "PageDown");
+      pp.addPadButton("arrow_up", "Toggle log y", "ToggleLogY", "PageUp");
       if (this.Dimension() > 1)
-         pp.AddButton("arrow_diag", "Toggle log z", "ToggleLogZ");
+         pp.addPadButton("arrow_diag", "Toggle log z", "ToggleLogZ");
       if (this.draw_content)
-         pp.AddButton("statbox", 'Toggle stat box', "ToggleStatBox");
-      if (!not_shown) pp.ShowButtons();
+         pp.addPadButton("statbox", 'Toggle stat box', "ToggleStatBox");
+      if (!not_shown) pp.showPadButtons();
    }
 
    RHistPainter.prototype.Get3DToolTip = function(indx) {
@@ -541,9 +582,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       res = res ? JSON.parse(res) : [];
 
       if (!res || (typeof res != "object") || (res.length!=2) || isNaN(res[0]) || isNaN(res[1]))
-         pmain.Unzoom(arg);
+         pmain.unzoom(arg);
       else
-         pmain.Zoom(arg, res[0], res[1]);
+         pmain.zoom(arg, res[0], res[1]);
    }
 
    /** @summary Fill histogram context menu
@@ -1497,8 +1538,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return tips;
    }
 
-   RH1Painter.prototype.ProcessTooltip = function(pnt) {
-      if ((pnt === null) || !this.draw_content || this.options.Mode3D || !this.draw_g) {
+   /** @summary Process tooltip event
+     * @private */
+   RH1Painter.prototype.processTooltipEvent = function(pnt) {
+      if (!pnt || !this.draw_content || this.options.Mode3D || !this.draw_g) {
          if (this.draw_g)
             this.draw_g.select(".tooltip_bin").remove();
          return null;
@@ -1773,7 +1816,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
 
       if ((right - left < dist) && (left < right))
-         this.getFramePainter().Zoom(xaxis.GetBinCoord(left), xaxis.GetBinCoord(right));
+         this.getFramePainter().zoom(xaxis.GetBinCoord(left), xaxis.GetBinCoord(right));
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
@@ -1884,7 +1927,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return 2;
    }
 
-   RH2Painter.prototype.ToggleProjection = function(kind, width) {
+   /** @summary Toggle projection */
+   RH2Painter.prototype.toggleProjection = function(kind, width) {
 
       if (kind=="Projections") kind = "";
 
@@ -1911,7 +1955,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.projection_width = width;
 
       let canp = this.getCanvPainter();
-      if (canp) canp.ToggleProjection(this.is_projection).then(() => this.RedrawProjection("toggling", new_proj));
+      if (canp) canp.toggleProjection(this.is_projection).then(() => this.RedrawProjection("toggling", new_proj));
    }
 
    RH2Painter.prototype.RedrawProjection = function(ii1, ii2 /*, jj1, jj2*/) {
@@ -1929,7 +1973,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       if (RHistPainter.prototype.executeMenuCommand.call(this,method, args)) return true;
 
       if ((method.fName == 'SetShowProjectionX') || (method.fName == 'SetShowProjectionY')) {
-         this.ToggleProjection(method.fName[17], args && parseInt(args) ? parseInt(args) : 1);
+         this.toggleProjection(method.fName[17], args && parseInt(args) ? parseInt(args) : 1);
          return true;
       }
 
@@ -1939,12 +1983,12 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    RH2Painter.prototype.FillHistContextMenu = function(menu) {
       // painter automatically bind to menu callbacks
 
-      menu.add("sub:Projections", this.ToggleProjection);
+      menu.add("sub:Projections", this.toggleProjection);
       let kind = this.is_projection || "";
       if (kind) kind += this.projection_width;
       let kinds = ["X1", "X2", "X3", "X5", "X10", "Y1", "Y2", "Y3", "Y5", "Y10"];
       for (let k=0;k<kinds.length;++k)
-         menu.addchk(kind==kinds[k], kinds[k], kinds[k], this.ToggleProjection);
+         menu.addchk(kind==kinds[k], kinds[k], kinds[k], this.toggleProjection);
       menu.add("endsub:");
 
       menu.add("Auto zoom-in", this.AutoZoom);
@@ -1962,8 +2006,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          this.FillPaletteMenu(menu);
    }
 
-   RH2Painter.prototype.ButtonClick = function(funcname) {
-      if (RHistPainter.prototype.ButtonClick.call(this, funcname)) return true;
+   RH2Painter.prototype.clickButton = function(funcname) {
+      if (RHistPainter.prototype.clickButton.call(this, funcname)) return true;
 
       switch(funcname) {
          case "ToggleColor": this.ToggleColor(); break;
@@ -1983,10 +2027,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       if (!pp) return;
 
       if (!this.IsTH2Poly())
-         pp.AddButton("th2color", "Toggle color", "ToggleColor");
-      pp.AddButton("th2colorz", "Toggle color palette", "ToggleColorZ");
-      pp.AddButton("th2draw3d", "Toggle 3D mode", "Toggle3D");
-      pp.ShowButtons();
+         pp.addPadButton("th2color", "Toggle color", "ToggleColor");
+      pp.addPadButton("th2colorz", "Toggle color palette", "ToggleColorZ");
+      pp.addPadButton("th2draw3d", "Toggle 3D mode", "Toggle3D");
+      pp.showPadButtons();
    }
 
    RH2Painter.prototype.ToggleColor = function() {
@@ -2049,7 +2093,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          isany = true;
       }
 
-      if (isany) this.getFramePainter().Zoom(xmin, xmax, ymin, ymax);
+      if (isany) this.getFramePainter().zoom(xmin, xmax, ymin, ymax);
    }
 
    /** @summary Scan content of 2-dim histogram */
@@ -3329,7 +3373,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return lines;
    }
 
-   RH2Painter.prototype.ProcessTooltip = function(pnt) {
+   /** @summary Process tooltip event
+     * @private */
+   RH2Painter.prototype.processTooltipEvent = function(pnt) {
       if (!pnt || !this.draw_content || !this.draw_g || !this.tt_handle || this.options.Proj) {
          if (this.draw_g)
             this.draw_g.select(".tooltip_bin").remove();

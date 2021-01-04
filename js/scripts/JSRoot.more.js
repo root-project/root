@@ -608,13 +608,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return histo;
    }
 
-   TF1Painter.prototype.ProcessTooltip = function(pnt) {
+   /** @summary Process tooltip event
+     * @private */
+   TF1Painter.prototype.processTooltipEvent = function(pnt) {
       let cleanup = false;
 
-      if ((pnt === null) || (this.bins === null)) {
+      if (!pnt || (this.bins === null)) {
          cleanup = true;
-      } else
-      if ((this.bins.length==0) || (pnt.x < this.bins[0].grx) || (pnt.x > this.bins[this.bins.length-1].grx)) {
+      } else if ((this.bins.length==0) || (pnt.x < this.bins[0].grx) || (pnt.x > this.bins[this.bins.length-1].grx)) {
          cleanup = true;
       }
 
@@ -1483,7 +1484,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
-   TGraphPainter.prototype.ShowTooltip = function(hint) {
+   TGraphPainter.prototype.showTooltip = function(hint) {
 
       if (!hint) {
          if (this.draw_g) this.draw_g.select(".tooltip_bin").remove();
@@ -1512,9 +1513,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                .property("current_bin", hint.d3bin);
    }
 
-   TGraphPainter.prototype.ProcessTooltip = function(pnt) {
+   /** @summary Process tooltip event
+     * @private */
+   TGraphPainter.prototype.processTooltipEvent = function(pnt) {
       let hint = this.ExtractTooltip(pnt);
-      if (!pnt || !pnt.disabled) this.ShowTooltip(hint);
+      if (!pnt || !pnt.disabled) this.showTooltip(hint);
       return hint;
    }
 
@@ -1810,7 +1813,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
             let main = this.getFramePainter(),
                 userx = main ? main.revertAxis("x", pnt.x) : 0,
                 usery = main ? main.revertAxis("y", pnt.y) : 0;
-            canp.ShowMessage('InsertPoint(' + userx.toFixed(3) + ',' + usery.toFixed(3) + ') not yet implemented');
+            canp.showMessage('InsertPoint(' + userx.toFixed(3) + ',' + usery.toFixed(3) + ') not yet implemented');
          } else if (this.args_menu_id && hint && (hint.binindx !== undefined)) {
             this.submitCanvExec("RemovePoint(" + hint.binindx + ")", this.args_menu_id);
          }
@@ -1861,7 +1864,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return false;
    }
 
-   TGraphPainter.prototype.ButtonClick = function(funcname) {
+   TGraphPainter.prototype.clickButton = function(funcname) {
 
       if (funcname !== "ToggleZoom") return false;
 
@@ -1870,7 +1873,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if ((this.xmin===this.xmax) && (this.ymin===this.ymax)) return false;
 
-      main.Zoom(this.xmin, this.xmax, this.ymin, this.ymax);
+      main.zoom(this.xmin, this.xmax, this.ymin, this.ymax);
 
       return true;
    }
@@ -2493,7 +2496,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
-   TGraphPolarPainter.prototype.ShowTooltip = function(hint) {
+   TGraphPolarPainter.prototype.showTooltip = function(hint) {
 
       if (!this.draw_g) return;
 
@@ -2521,9 +2524,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                .property("current_bin", hint.binindx);
    }
 
-   TGraphPolarPainter.prototype.ProcessTooltip = function(pnt) {
+   /** @summary Process tooltip event
+     * @private */
+   TGraphPolarPainter.prototype.processTooltipEvent = function(pnt) {
       let hint = this.ExtractTooltip(pnt);
-      if (!pnt || !pnt.disabled) this.ShowTooltip(hint);
+      if (!pnt || !pnt.disabled) this.showTooltip(hint);
       return hint;
    }
 
@@ -2657,7 +2662,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return histo;
    }
 
-   TSplinePainter.prototype.ProcessTooltip = function(pnt) {
+   /** @summary Process tooltip event
+     * @private */
+   TSplinePainter.prototype.processTooltipEvent = function(pnt) {
 
       let cleanup = false,
           spline = this.getObject(),
@@ -2902,8 +2909,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       this.storeDrawOpt(opt);
    }
 
-   /** @summary Return time painet primitives */
-   TGraphTimePainter.prototype.DrawPrimitives = function(indx) {
+   /** @summary Draw primitives
+     * @private */
+   TGraphTimePainter.prototype.drawPrimitives = function(indx) {
 
       if (!indx) {
          indx = 0;
@@ -2920,7 +2928,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return JSROOT.draw(this.getDom(), lst.arr[indx], lst.opt[indx]).then(ppainter => {
 
          if (ppainter) ppainter.$grtimeid = this.selfid; // indicator that painter created by ourself
-         return this.DrawPrimitives(indx+1);
+         return this.drawPrimitives(indx+1);
 
       });
    }
@@ -2948,10 +2956,10 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          }
 
          // clear primitives produced by the TGraphTime
-         pp.CleanPrimitives(p => (p.$grtimeid === this.selfid));
+         pp.cleanPrimitives(p => (p.$grtimeid === this.selfid));
 
          // draw ptrimitives again
-         this.DrawPrimitives().then(() => this.continueDrawing());
+         this.drawPrimitives().then(() => this.continueDrawing());
       } else if (this.running_timeout) {
          clearTimeout(this.running_timeout);
          delete this.running_timeout;
@@ -2982,7 +2990,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TGraphTimePainter.prototype.startDrawing = function() {
       this.step = 0;
 
-      return this.DrawPrimitives().then(() => {
+      return this.drawPrimitives().then(() => {
          this.continueDrawing();
          return this; // used in drawGraphTime promise
       });
@@ -3864,7 +3872,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
    }
 
-   TASImagePainter.prototype.ButtonClick = function(funcname) {
+   TASImagePainter.prototype.clickButton = function(funcname) {
       if (!this.isMainPainter()) return false;
 
       switch(funcname) {
@@ -3878,8 +3886,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TASImagePainter.prototype.FillToolbar = function() {
       let pp = this.getPadPainter(), obj = this.getObject();
       if (pp && obj && obj.fPalette) {
-         pp.AddButton("th2colorz", "Toggle color palette", "ToggleColorZ");
-         pp.ShowButtons();
+         pp.addPadButton("th2colorz", "Toggle color palette", "ToggleColorZ");
+         pp.showPadButtons();
       }
    }
 

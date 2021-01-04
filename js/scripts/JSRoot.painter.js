@@ -65,8 +65,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @namespace
      * @summary Collection of Painter-related methods and classes
-     * @alias JSROOT.Painter
-     * @private */
+     * @alias JSROOT.Painter */
    let jsrp = {
       Coord: {
          kCARTESIAN: 1,
@@ -1332,13 +1331,14 @@ JSROOT.define(['d3'], (d3) => {
     * @param {object|string} [dom] - dom element or id of dom element
     */
 
-   function BasePainter(divid) {
+   function BasePainter(dom) {
       this.divid = null; // either id of DOM element or element itself
-      if (divid) this.setDom(divid);
+      if (dom) this.setDom(dom);
    }
 
    /** @summary Assign painter to specified DOM element
      * @param {string|object} elem - element ID or DOM Element
+     * @desc Normally DOM element should be already assigned in constructor
      * @protected */
    BasePainter.prototype.setDom = function(elem) {
       if (elem !== undefined) {
@@ -1399,7 +1399,7 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Set painter, stored in first child element
-     * @desc Can only be done when first drawing is completed
+     * @desc Only make sense after first drawing is completed and any child element add to configured DOM
      * @protected */
    BasePainter.prototype.setTopPainter = function() {
       _accessTopPainter(this, true);
@@ -1436,6 +1436,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Checks if draw elements were resized and drawing should be updated
      * @returns {boolean} true if resize was detected
+     * @protected
      * @abstract */
    BasePainter.prototype.checkResize = function(/* arg */) {}
 
@@ -1496,11 +1497,11 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Try enlarge main drawing element to full HTML page.
      * @param {string|boolean} action  - defines that should be done
-     * @desc Possible values for parameter:
+     * @desc Possible values for action parameter:
      *    - true - try to enlarge
-     *    - false - cancel enlarge state
+     *    - false - revert enlarge state
      *    - 'toggle' - toggle enlarge state
-     *    - 'state' - return current state
+     *    - 'state' - only returns current enlarge state
      *    - 'verify' - check if element can be enlarged
      * if action not specified, just return possibility to enlarge main div
      * @protected */
@@ -1563,7 +1564,7 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Set item name, associated with the painter
-     * @desc Used by {@link JSROOT.HiearchyPainter}
+     * @desc Used by {@link JSROOT.HierarchyPainter}
      * @private */
    BasePainter.prototype.setItemName = function(name, opt, hpainter) {
       if (typeof name === 'string')
@@ -1577,11 +1578,11 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Returns assigned item name
-     * @desc Used with {@link JSROOT.HiearchyPainter} to identify drawn item name */
+     * @desc Used with {@link JSROOT.HierarchyPainter} to identify drawn item name */
    BasePainter.prototype.getItemName = function() { return ('_hitemname' in this) ? this._hitemname : null; }
 
    /** @summary Returns assigned item draw option
-     * @desc Used with {@link JSROOT.HiearchyPainter} to identify drawn item option */
+     * @desc Used with {@link JSROOT.HierarchyPainter} to identify drawn item option */
    BasePainter.prototype.getItemDrawOpt = function() { return this._hdrawopt || ""; }
 
    // ==============================================================================
@@ -1596,15 +1597,14 @@ JSROOT.define(['d3'], (d3) => {
     * @param {object|string} dom - identifier of dom element
     * @param {object} obj - object to draw
     * @param {string} [opt] - object draw options
-    * @private
     */
 
-   function ObjectPainter(divid, obj, opt) {
-      BasePainter.call(this, divid);
+   function ObjectPainter(dom, obj, opt) {
+      BasePainter.call(this, dom);
       // this.draw_g = undefined; // container for all drawn objects
       // this._main_painter = undefined;  // main painter in the correspondent pad
       if (obj !== undefined) {
-         this.pad_name = divid ? this.selectCurrentPad() : ""; // name of pad where object is drawn
+         this.pad_name = dom ? this.selectCurrentPad() : ""; // name of pad where object is drawn
          this.assignObject(obj);
          if (typeof opt == "string") this.options = { original: opt };
       }
@@ -1640,7 +1640,8 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.assignSnapId = function(id) { this.snapid = id; }
 
    /** @summary Generic method to cleanup painter.
-     * @desc Remove object drawing and (in case of main painter) also main HTML components */
+     * @desc Remove object drawing and (in case of main painter) also main HTML components
+     * @protected */
    ObjectPainter.prototype.cleanup = function() {
 
       this.removeG();
@@ -1739,10 +1740,11 @@ JSROOT.define(['d3'], (d3) => {
      * @param {object} obj - new version of object, values will be updated in original object
      * @param {string} [opt] - when specified, new draw options
      * @returns {boolean|Promise} for object redraw
-     * @desc Two actions typically done by redraw - update object content via {@link ObjectPainter.prototype.updateObject} and
-      * then redraw correspondent pad via {@link ObjectPainter.prototype.redrawPad}. If possible one should redefine
+     * @desc Two actions typically done by redraw - update object content via {@link JSROOT.ObjectPainter.updateObject} and
+      * then redraw correspondent pad via {@link JSROOT.ObjectPainter.redrawPad}. If possible one should redefine
       * only updateObject function and keep this function unchanged. But for some special painters this function is the
-      * only way to control how object can be update while requested from the server */
+      * only way to control how object can be update while requested from the server
+      * @protected */
    ObjectPainter.prototype.redrawObject = function(obj, opt) {
       if (!this.updateObject(obj,opt)) return false;
       let current = document.body.style.cursor;
@@ -1755,16 +1757,17 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Generic method to update object content.
      * @desc Default implementation just copies first-level members to current object
      * @param {object} obj - object with new data
-     * @param {string} [opt] - option which will be used for redrawing */
+     * @param {string} [opt] - option which will be used for redrawing
+     * @protected */
    ObjectPainter.prototype.updateObject = function(obj /*, opt */) {
       if (!this.matchObjectType(obj)) return false;
       JSROOT.extend(this.getObject(), obj);
       return true;
    }
 
-   /** @summary Returns string which object hint
+   /** @summary Returns string with object hint
      * @desc It is either item name or object name or class name.
-     * Such string can be used as tooltip.
+     * Such string typically used as object tooltip.
      * If result string larger than 20 symbols, it will be cutted. */
    ObjectPainter.prototype.getObjectHint = function() {
       let res = this.getItemName(), obj = this.getObject();
@@ -1846,13 +1849,14 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Returns created <g> element used for object drawing
-     * @desc Element should be created by {@link ObjectPainter.createG} function before */
+     * @desc Element should be created by {@link JSROOT.ObjectPainter.createG}
+     * @protected */
    ObjectPainter.prototype.getG = function() { return this.draw_g; }
 
    /** @summary (re)creates svg:g element for object drawings
      * @desc either one attach svg:g to pad list of primitives (default)
      * or svg:g element created in specified frame layer (default main_layer)
-     * @param {string} [frame_layer] - when specified, <g> element will be created inside frame layer, otherwise on the pad
+     * @param {boolean} [frame_layer] - when specified, <g> element will be created inside frame, otherwise in the pad
      * @protected */
    ObjectPainter.prototype.createG = function(frame_layer) {
       if (this.draw_g) {
@@ -1919,7 +1923,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Method selects immediate layer under canvas/pad main element
      * @param {string} name - layer name, exits "primitives_layer", "btns_layer", "info_layer"
-     * @param {string} [pad_name] - pad name or used current pad name  by default
+     * @param {string} [pad_name] - pad name; current pad name  used by default
      * @protected */
    ObjectPainter.prototype.getLayerSvg = function(name, pad_name) {
       let svg = this.getPadSvg(pad_name);
@@ -2031,7 +2035,7 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Converts pad SVG x or y coordinates into axis values.
-     * @desc Reverse transformation for {@link ObjectPainter.axisToSvg}
+     * @desc Reverse transformation for {@link JSROOT.ObjectPainter.axisToSvg}
      * @param {string} axis - name like "x" or "y"
      * @param {number} coord - graphics coordiante.
      * @param {boolean} ndc - kind of return value
@@ -2111,6 +2115,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Add painter to pad list of painters
      * @param {string} [pad_name] - optional pad name where painter should be add
+     * @desc Normally one should use {@link JSROOT.Painter.ensureTCanvas} to add painter to pad list of primitives
      * @protected */
    ObjectPainter.prototype.addToPadPrimitives = function(pad_name) {
       if (pad_name !== undefined) this.setPadName(pad_name);
@@ -2265,8 +2270,8 @@ JSROOT.define(['d3'], (d3) => {
          canp.producePadEvent("redraw", this.getPadPainter(), this, null, subelem);
 
       // inform server that drawopt changes
-      if (canp && (typeof canp.ProcessChanges == 'function'))
-         canp.ProcessChanges(info, this, subelem);
+      if (canp && (typeof canp.processChanges == 'function'))
+         canp.processChanges(info, this, subelem);
    }
 
    /** @summary Redraw all objects in the current pad
@@ -2360,9 +2365,9 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.showObjectStatus = function(name, title, info, info2) {
       let cp = this.getCanvPainter();
 
-      if (cp && (typeof cp.ShowCanvasStatus !== 'function')) cp = null;
+      if (cp && (typeof cp.showCanvasStatus !== 'function')) cp = null;
 
-      if (!cp && (typeof jsrp.ShowStatus !== 'function')) return false;
+      if (!cp && (typeof jsrp.showStatus !== 'function')) return false;
 
       if (this.enlargeMain('state') === 'on') return false;
 
@@ -2375,15 +2380,16 @@ JSROOT.define(['d3'], (d3) => {
       }
 
       if (cp)
-         cp.ShowCanvasStatus(name, title, info, info2);
+         cp.showCanvasStatus(name, title, info, info2);
       else
-         jsrp.ShowStatus(name, title, info, info2);
+         jsrp.showStatus(name, title, info, info2);
    }
 
    /** @summary Redraw object
      * @desc Basic method, should be reimplemented in all derived objects
      * for the case when drawing should be repeated
-     * @abstract */
+     * @abstract
+     * @protected */
    ObjectPainter.prototype.redraw = function(/* reason */) {}
 
    /** @summary Start text drawing
@@ -2741,8 +2747,8 @@ JSROOT.define(['d3'], (d3) => {
 
          // this is special entry, produced by TWebMenuItem, which recognizes editor entries itself
          if (item.fExec == "Show:Editor") {
-            if (cp && (typeof cp.ActivateGed == 'function'))
-               cp.ActivateGed(execp);
+            if (cp && (typeof cp.activateGed == 'function'))
+               cp.activateGed(execp);
             return;
          }
 
@@ -2905,8 +2911,8 @@ JSROOT.define(['d3'], (d3) => {
      * @private
      */
 
-   function AxisBasePainter(divid, obj) {
-      ObjectPainter.call(this, divid, obj);
+   function AxisBasePainter(dom, obj) {
+      ObjectPainter.call(this, dom, obj);
 
       this.name = "yaxis";
       this.kind = "normal";
@@ -3177,9 +3183,9 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Generic text drawing
      * @private */
-   jsrp.drawRawText = function(divid, txt /*, opt*/) {
+   jsrp.drawRawText = function(dom, txt /*, opt*/) {
 
-      let painter = new BasePainter(divid);
+      let painter = new BasePainter(dom);
       painter.txt = txt;
 
       painter.redrawObject = function(obj) {
@@ -3679,8 +3685,7 @@ JSROOT.define(['d3'], (d3) => {
       if (!obj || (typeof obj !== 'object'))
          return callback ? callback(null) : Promise.reject(Error('not an object in JSROOT.redraw'));
 
-      let dummy = new ObjectPainter(divid);
-      let can_painter = dummy.getCanvPainter(), handle, res_painter = null, redraw_res;
+      let can_painter = jsrp.getElementCanvPainter(divid), handle, res_painter = null, redraw_res;
       if (obj._typename)
          handle = getDrawHandle("ROOT." + obj._typename);
       if (handle && handle.draw_field && obj[handle.draw_field])
@@ -3703,7 +3708,8 @@ JSROOT.define(['d3'], (d3) => {
             }
          }
       } else {
-         let top = dummy.getTopPainter();
+         let dummy = new ObjectPainter(divid),
+             top = dummy.getTopPainter();
          // base painter do not have this method, if it there use it
          // it can be object painter here or can be specially introduce method to handling redraw!
          if (top && typeof top.redrawObject == 'function') {
@@ -3728,9 +3734,8 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string|object} dom - id of top div element or directly DOMElement
      * @returns {string} produced JSON string */
    JSROOT.drawingJSON = function(dom) {
-      let dummy = new ObjectPainter(dom);
-      let canp = dummy.getCanvPainter();
-      return canp ? canp.ProduceJSON() : "";
+      let canp = jsrp.getElementCanvPainter(dom);
+      return canp ? canp.produceJSON() : "";
    }
 
    /** @summary Compress SVG code, produced from JSROOT drawing
@@ -3838,11 +3843,19 @@ JSROOT.define(['d3'], (d3) => {
       return done;
    }
 
-   /** @summary Returns main painter object for specified HTML element - typically histogram painter
-     * @param {string|object} divid - id or DOM element
+   /** @summary Returns canvas painter (if any) for specified HTML element
+     * @param {string|object} dom - id or DOM element
      * @private */
-   jsrp.getElementMainPainter = function(divid) {
-      let dummy = new JSROOT.ObjectPainter(divid);
+   jsrp.getElementCanvPainter = function(dom) {
+      let dummy = new ObjectPainter(dom);
+      return dummy.getCanvPainter();
+   }
+
+   /** @summary Returns main painter (if any) for specified HTML element - typically histogram painter
+     * @param {string|object} dom - id or DOM element
+     * @private */
+   jsrp.getElementMainPainter = function(dom) {
+      let dummy = new ObjectPainter(dom);
       return dummy.getMainPainter(true);
    }
 
