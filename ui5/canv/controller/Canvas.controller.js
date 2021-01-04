@@ -38,20 +38,20 @@ sap.ui.define([
             cp.executeObjectMethod = this.executeObjectMethod.bind(this);
 
             // overwriting method of canvas with standalone handling of GED
-            cp.ActivateGed = this.openuiActivateGed.bind(this);
-            cp.RemoveGed = this.cleanupIfGed.bind(this);
-            cp.HasGed = this.isGedEditor.bind(this);
+            cp.activateGed = this.openuiActivateGed.bind(this);
+            cp.removeGed = this.cleanupIfGed.bind(this);
+            cp.hasGed = this.isGedEditor.bind(this);
 
-            cp.HasEventStatus = this.isStatusShown.bind(this);
-            cp.ActivateStatusBar = this.toggleShowStatus.bind(this);
-            cp.ShowCanvasStatus = this.showCanvasStatus.bind(this); // used only for UI5, otherwise global func
-            cp.ShowMessage = this.showMessage.bind(this);
-            cp.ShowSection = this.showSection.bind(this);
+            cp.hasEventStatus = this.isStatusShown.bind(this);
+            cp.activateStatusBar = this.toggleShowStatus.bind(this);
+            cp.showCanvasStatus = this.showCanvasStatus.bind(this); // used only for UI5, otherwise global func
+            cp.showMessage = this.showMessage.bind(this);
+            cp.showSection = this.showSection.bind(this);
 
-            cp.ShowUI5ProjectionArea = this.showProjectionArea.bind(this);
-            cp.DrawInUI5ProjectionArea = this.drawInProjectionArea.bind(this);
+            cp.showUI5ProjectionArea = this.showProjectionArea.bind(this);
+            cp.drawInUI5ProjectionArea = this.drawInProjectionArea.bind(this);
 
-            cp.ShowUI5Panel = this.showPanelInLeftArea.bind(this);
+            cp.showUI5Panel = this.showPanelInLeftArea.bind(this);
          }
 
          // this.toggleGedEditor();
@@ -89,10 +89,10 @@ sap.ui.define([
          let canvp = this.getCanvasPainter();
 
          return this.showGeEditor(true).then(() => {
-            canvp.SelectObjectPainter(painter);
+            canvp.selectObjectPainter(painter);
 
-            if (typeof canvp.ProcessChanges == 'function')
-               canvp.ProcessChanges("sbits", canvp);
+            if (typeof canvp.processChanges == 'function')
+               canvp.processChanges("sbits", canvp);
 
             return true;
          });
@@ -152,7 +152,7 @@ sap.ui.define([
             let canvp = this.getCanvasPainter();
 
             if (canvp)
-               canvp.SendWebsocket('OBJEXEC:' + menu_obj_id + ":" + exec);
+               canvp.sendWebsocket('OBJEXEC:' + menu_obj_id + ":" + exec);
          }
       },
 
@@ -214,19 +214,19 @@ sap.ui.define([
          let name = oEvent.getParameter("item").getText();
 
          switch (name) {
-            case "Close canvas": p.onWebsocketClosed(); p.CloseWebsocket(true); break;
-            case "Interrupt": p.SendWebsocket("INTERRUPT"); break;
-            case "Quit ROOT": p.SendWebsocket("QUIT"); break;
+            case "Close canvas": p.onWebsocketClosed(); p.closeWebsocket(true); break;
+            case "Interrupt": p.sendWebsocket("INTERRUPT"); break;
+            case "Quit ROOT": p.sendWebsocket("QUIT"); break;
             case "Canvas.png":
             case "Canvas.jpeg":
             case "Canvas.svg":
-               p.SaveCanvasAsFile(name);
+               p.saveCanvasAsFile(name);
                break;
             case "Canvas.root":
             case "Canvas.pdf":
             case "Canvas.ps":
             case "Canvas.C":
-               p.SendSaveCommand(name);
+               p.sendSaveCommand(name);
                break;
          }
 
@@ -237,23 +237,23 @@ sap.ui.define([
          let p = this.getCanvasPainter();
          if (p) {
             p.onWebsocketClosed();
-            p.CloseWebsocket(true);
+            p.closeWebsocket(true);
          }
       },
 
       onInterruptPress : function() {
          let p = this.getCanvasPainter();
-         if (p) p.SendWebsocket("INTERRUPT");
+         if (p) p.sendWebsocket("INTERRUPT");
       },
 
       onQuitRootPress : function() {
          let p = this.getCanvasPainter();
-         if (p) p.SendWebsocket("QUIT");
+         if (p) p.sendWebsocket("QUIT");
       },
 
       onReloadPress : function() {
          let p = this.getCanvasPainter();
-         if (p) p.SendWebsocket("RELOAD");
+         if (p) p.sendWebsocket("RELOAD");
       },
 
       isGedEditor : function() {
@@ -269,7 +269,7 @@ sap.ui.define([
              p = this.getCanvasPainter();
          if (p) p.registerForPadEvents(null);
          if (ged) ged.cleanupGed();
-         if (p && p.ProcessChanges) p.ProcessChanges("sbits", p);
+         if (p && p.processChanges) p.processChanges("sbits", p);
       },
 
       getLeftController: function(name) {
@@ -372,7 +372,7 @@ sap.ui.define([
                let ged = oView.getController();
                if (canvp && ged && (typeof canvp.registerForPadEvents == "function")) {
                   canvp.registerForPadEvents(ged.padEventsReceiver.bind(ged));
-                  canvp.SelectObjectPainter(canvp);
+                  canvp.selectObjectPainter(canvp);
                }
             }
 
@@ -482,7 +482,7 @@ sap.ui.define([
          this.getView().getModel().setProperty("/StatusIcon", new_state ? "sap-icon://accept" : "");
 
          let canvp = this.getCanvasPainter();
-         if (canvp) canvp.ProcessChanges("sbits", canvp);
+         if (canvp) canvp.processChanges("sbits", canvp);
       },
 
       toggleToolBar : function(new_state) {
