@@ -150,7 +150,6 @@ ROOT::Experimental::Detail::RPageSourceFriends::PopulatePage(
 
    auto page = fSources[originColumnId.fSourceIdx]->PopulatePage(columnHandle, globalIndex);
 
-   fPage2SourceIdx[page.GetBuffer()] = originColumnId.fSourceIdx;
    auto virtualClusterId = fIdBiMap.GetVirtualId({originColumnId.fSourceIdx, page.GetClusterInfo().GetId()});
    page.ChangeIds(virtualColumnId, virtualClusterId);
 
@@ -171,15 +170,16 @@ ROOT::Experimental::Detail::RPageSourceFriends::PopulatePage(
 
    auto page = fSources[originColumnId.fSourceIdx]->PopulatePage(columnHandle, originClusterIndex);
 
-   fPage2SourceIdx[page.GetBuffer()] = originColumnId.fSourceIdx;
    page.ChangeIds(virtualColumnId, clusterIndex.GetClusterId());
-
    return page;
 }
 
 void ROOT::Experimental::Detail::RPageSourceFriends::ReleasePage(RPage &page)
 {
-   fSources[fPage2SourceIdx[page.GetBuffer()]]->ReleasePage(page);
+   if (page.IsNull())
+      return;
+   auto sourceIdx = fIdBiMap.GetOriginId(page.GetClusterInfo().GetId()).fSourceIdx;
+   fSources[sourceIdx]->ReleasePage(page);
 }
 
 
