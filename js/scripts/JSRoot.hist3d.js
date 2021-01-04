@@ -518,7 +518,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
                                        { log: pad ? pad.fLogz : 0 });
       this.z_handle.assignFrameMembers(this,"z");
 
-      this.SetRootPadRange(pad, true); // set some coordinates typical for 3D projections in ROOT
+      this.setRootPadRange(pad, true); // set some coordinates typical for 3D projections in ROOT
 
       this.x_handle.debug = true;
 
@@ -2868,10 +2868,10 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       let pp = this.getPadPainter();
       if (!pp) return;
 
-      pp.AddButton("auto_zoom", 'Unzoom all axes', 'ToggleZoom', "Ctrl *");
+      pp.addPadButton("auto_zoom", 'Unzoom all axes', 'ToggleZoom', "Ctrl *");
       if (this.draw_content)
-         pp.AddButton("statbox", 'Toggle stat box', "ToggleStatBox");
-      pp.ShowButtons();
+         pp.addPadButton("statbox", 'Toggle stat box', "ToggleStatBox");
+      pp.showPadButtons();
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
@@ -2940,7 +2940,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          isany = true;
       }
 
-      if (isany) this.getFramePainter().Zoom(xmin, xmax, ymin, ymax, zmin, zmax);
+      if (isany) this.getFramePainter().zoom(xmin, xmax, ymin, ymax, zmin, zmax);
    }
 
    TH3Painter.prototype.FillHistContextMenu = function(menu) {

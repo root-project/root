@@ -898,7 +898,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                }).append("svg:title").text(levels[i].toFixed(2) + " - " + levels[i+1].toFixed(2));
 
             if (JSROOT.settings.Zooming)
-               r.on("dblclick", () => this.getFramePainter().Unzoom("z"));
+               r.on("dblclick", () => this.getFramePainter().unzoom("z"));
          }
 
 
@@ -952,7 +952,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
          let z = this.z_handle.gr, z1 = z.invert(sel1), z2 = z.invert(sel2);
 
-         this.getFramePainter().Zoom("z", Math.min(z1, z2), Math.max(z1, z2));
+         this.getFramePainter().zoom("z", Math.min(z1, z2), Math.max(z1, z2));
       }
 
       let startRectSel = evnt => {
@@ -983,7 +983,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (JSROOT.settings.Zooming)
          this.draw_g.selectAll(".axis_zoom")
                     .on("mousedown", startRectSel)
-                    .on("dblclick", () => this.getFramePainter().Unzoom("z"));
+                    .on("dblclick", () => this.getFramePainter().unzoom("z"));
 
       if (JSROOT.settings.ZoomWheel)
             this.draw_g.on("wheel", evnt => {
@@ -992,7 +992,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
                let item = this.z_handle.analyzeWheelEvent(evnt, coord);
                if (item.changed)
-                  this.getFramePainter().Zoom("z", item.min, item.max);
+                  this.getFramePainter().zoom("z", item.min, item.max);
             });
    }
 
@@ -2196,7 +2196,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
             // remove all function which are not found in new list of primitives
             if (pp && (painters.length > 0))
-               pp.CleanPrimitives(p => painters.indexOf(p) >= 0);
+               pp.cleanPrimitives(p => painters.indexOf(p) >= 0);
 
             // plot new objects on the same pad - will works only for simple drawings already loaded
             if (pp && (newfuncs.length > 0)) {
@@ -2284,7 +2284,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
     /** @summary Draw axes for histogram
       * @desc axes can be drawn only for main histogram */
-   THistPainter.prototype.DrawAxes = function() {
+   THistPainter.prototype.drawAxes = function() {
       if (!this.isMainPainter())
          return Promise.resolve(false);
 
@@ -2311,7 +2311,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (this.options.Same) return Promise.resolve(false);
 
-      return fp.DrawAxes(false, this.options.Axis < 0, this.options.AxisPos, this.options.Zscale);
+      return fp.drawAxes(false, this.options.Axis < 0, this.options.AxisPos, this.options.Zscale);
    }
 
    THistPainter.prototype.ToggleTitle = function(arg) {
@@ -2809,7 +2809,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return true;
    }
 
-   THistPainter.prototype.ButtonClick = function(funcname) {
+   THistPainter.prototype.clickButton = function(funcname) {
       // TODO: move to frame painter
 
       let fp = this.getFramePainter();
@@ -2819,7 +2819,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       switch(funcname) {
          case "ToggleZoom":
             if ((fp.zoom_xmin !== fp.zoom_xmax) || (fp.zoom_ymin !== fp.zoom_ymax) || (fp.zoom_zmin !== fp.zoom_zmax)) {
-               fp.Unzoom();
+               fp.unzoom();
                fp.zoomChangedInteractive('reset');
                return true;
             }
@@ -2840,14 +2840,14 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       let pp = this.getPadPainter();
       if (!pp) return;
 
-      pp.AddButton("auto_zoom", 'Toggle between unzoom and autozoom-in', 'ToggleZoom', "Ctrl *");
-      pp.AddButton("arrow_right", "Toggle log x", "ToggleLogX", "PageDown");
-      pp.AddButton("arrow_up", "Toggle log y", "ToggleLogY", "PageUp");
+      pp.addPadButton("auto_zoom", 'Toggle between unzoom and autozoom-in', 'ToggleZoom', "Ctrl *");
+      pp.addPadButton("arrow_right", "Toggle log x", "ToggleLogX", "PageDown");
+      pp.addPadButton("arrow_up", "Toggle log y", "ToggleLogY", "PageUp");
       if (this.Dimension() > 1)
-         pp.AddButton("arrow_diag", "Toggle log z", "ToggleLogZ");
+         pp.addPadButton("arrow_diag", "Toggle log z", "ToggleLogZ");
       if (this.draw_content)
-         pp.AddButton("statbox", 'Toggle stat box', "ToggleStatBox");
-      if (!not_shown) pp.ShowButtons();
+         pp.addPadButton("statbox", 'Toggle stat box', "ToggleStatBox");
+      if (!not_shown) pp.showPadButtons();
    }
 
    /** @summary Returns tooltip information for 3D drawings
@@ -4024,8 +4024,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
    /** @summary Process tooltip event
      * @private */
-   TH1Painter.prototype.ProcessTooltip = function(pnt) {
-      if ((pnt === null) || !this.draw_content || !this.draw_g || this.options.Mode3D) {
+   TH1Painter.prototype.processTooltipEvent = function(pnt) {
+      if (!pnt || !this.draw_content || !this.draw_g || this.options.Mode3D) {
          if (this.draw_g)
             this.draw_g.select(".tooltip_bin").remove();
          return null;
@@ -4297,7 +4297,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }
 
       if ((right - left < dist) && (left < right))
-         this.getFramePainter().Zoom(histo.fXaxis.GetBinLowEdge(left+1), histo.fXaxis.GetBinLowEdge(right+1));
+         this.getFramePainter().zoom(histo.fXaxis.GetBinLowEdge(left+1), histo.fXaxis.GetBinLowEdge(right+1));
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
@@ -4336,7 +4336,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (typeof this.drawColorPalette === 'function')
          this.drawColorPalette(false);
 
-      return this.DrawAxes().then(() => {
+      return this.drawAxes().then(() => {
          this.Draw1DBins();
          return this.drawHistTitle();
       }).then(() => {
@@ -4408,7 +4408,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       THistPainter.prototype.cleanup.call(this);
    }
 
-   TH2Painter.prototype.ToggleProjection = function(kind, width) {
+   /** @summary Toggle projection */
+   TH2Painter.prototype.toggleProjection = function(kind, width) {
 
       if ((kind=="Projections") || (kind=="Off")) kind = "";
 
@@ -4434,9 +4435,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.is_projection = ""; // disable projection redraw until callback
       this.projection_width = width;
 
-      this.getCanvPainter().ToggleProjection(new_proj).then(() => this.RedrawProjection("toggling", new_proj));
+      this.getCanvPainter().toggleProjection(new_proj).then(() => this.RedrawProjection("toggling", new_proj));
    }
 
+   /** @summary Redraw projection */
    TH2Painter.prototype.RedrawProjection = function(ii1, ii2, jj1, jj2) {
       if (ii1 === "toggling") {
          this.is_projection = ii2;
@@ -4459,7 +4461,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             exec += 'ProjectionX("_projx",' + (jj1+1) + ',' + jj2 + ',"")';
          else
             exec += 'ProjectionY("_projy",' + (ii1+1) + ',' + ii2 + ',"")';
-         canp.SendWebsocket(exec);
+         canp.sendWebsocket(exec);
          return;
       }
 
@@ -4491,14 +4493,14 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
       }
 
-      return canp.DrawProjection(this.is_projection, this.proj_hist);
+      return canp.drawProjection(this.is_projection, this.proj_hist);
    }
 
    TH2Painter.prototype.executeMenuCommand = function(method, args) {
       if (THistPainter.prototype.executeMenuCommand.call(this,method, args)) return true;
 
       if ((method.fName == 'SetShowProjectionX') || (method.fName == 'SetShowProjectionY')) {
-         this.ToggleProjection(method.fName[17], args && parseInt(args) ? parseInt(args) : 1);
+         this.toggleProjection(method.fName[17], args && parseInt(args) ? parseInt(args) : 1);
          return true;
       }
 
@@ -4509,13 +4511,13 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       // painter automatically bind to menu callbacks
 
       if (!this.IsTH2Poly()) {
-         menu.add("sub:Projections", this.ToggleProjection);
+         menu.add("sub:Projections", this.toggleProjection);
          let kind = this.is_projection || "";
          if (kind) kind += this.projection_width;
          let kinds = ["X1", "X2", "X3", "X5", "X10", "Y1", "Y2", "Y3", "Y5", "Y10"];
          if (this.is_projection) kinds.push("Off");
          for (let k = 0; k < kinds.length; ++k)
-            menu.addchk(kind==kinds[k], kinds[k], kinds[k], this.ToggleProjection);
+            menu.addchk(kind==kinds[k], kinds[k], kinds[k], this.toggleProjection);
          menu.add("endsub:");
 
          menu.add("Auto zoom-in", this.AutoZoom);
@@ -4534,8 +4536,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          this.FillPaletteMenu(menu);
    }
 
-   TH2Painter.prototype.ButtonClick = function(funcname) {
-      if (THistPainter.prototype.ButtonClick.call(this, funcname)) return true;
+   TH2Painter.prototype.clickButton = function(funcname) {
+      if (THistPainter.prototype.clickButton.call(this, funcname)) return true;
 
       if (this !== this.getMainPainter()) return false;
 
@@ -4557,10 +4559,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (!pp) return;
 
       if (!this.IsTH2Poly())
-         pp.AddButton("th2color", "Toggle color", "ToggleColor");
-      pp.AddButton("th2colorz", "Toggle color palette", "ToggleColorZ");
-      pp.AddButton("th2draw3d", "Toggle 3D mode", "Toggle3D");
-      pp.ShowButtons();
+         pp.addPadButton("th2color", "Toggle color", "ToggleColor");
+      pp.addPadButton("th2colorz", "Toggle color palette", "ToggleColorZ");
+      pp.addPadButton("th2draw3d", "Toggle 3D mode", "Toggle3D");
+      pp.showPadButtons();
    }
 
    TH2Painter.prototype.ToggleColor = function() {
@@ -4626,7 +4628,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }
 
       if (isany)
-         this.getFramePainter().Zoom(xmin, xmax, ymin, ymax);
+         this.getFramePainter().zoom(xmin, xmax, ymin, ymax);
    }
 
    TH2Painter.prototype.ScanContent = function(when_axis_changed) {
@@ -6065,7 +6067,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return lines;
    }
 
-   TH2Painter.prototype.ProcessTooltip = function(pnt) {
+   /** @summary Process tooltip event
+     * @private */
+   TH2Painter.prototype.processTooltipEvent = function(pnt) {
       if (!pnt || !this.draw_content || !this.draw_g || !this.tt_handle || this.options.Proj) {
          if (this.draw_g)
             this.draw_g.select(".tooltip_bin").remove();
@@ -6343,7 +6347,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       // draw new palette, resize frame if required
       return this.drawColorPalette(need_palette, true).then(pp => {
 
-         return this.DrawAxes().then(() => {
+         return this.drawAxes().then(() => {
 
             this.Draw2DBins();
 
@@ -6419,7 +6423,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
          painter.FillToolbar();
          if (painter.options.Project && !painter.mode3d)
-              painter.ToggleProjection(painter.options.Project);
+              painter.toggleProjection(painter.options.Project);
 
           return painter;
       });
@@ -6557,7 +6561,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
    THStackPainter.prototype.cleanup = function() {
       let pp = this.getPadPainter();
-      if (pp) pp.CleanPrimitives(objp => { return (objp === this.firstpainter) || (this.painters.indexOf(objp) >= 0); });
+      if (pp) pp.cleanPrimitives(objp => { return (objp === this.firstpainter) || (this.painters.indexOf(objp) >= 0); });
       delete this.firstpainter;
       delete this.painters;
       JSROOT.ObjectPainter.prototype.cleanup.call(this);
@@ -6830,7 +6834,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (nhists !== this.painters.length) {
          let pp = this.getPadPainter();
-         if (pp) pp.CleanPrimitives(objp => { return this.painters.indexOf(objp) >= 0; });
+         if (pp) pp.cleanPrimitives(objp => { return this.painters.indexOf(objp) >= 0; });
          this.painters = [];
          this.did_update = true;
       } else {

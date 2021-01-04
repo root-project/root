@@ -266,8 +266,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          if (this.status_layout !== "app")
             delete this.status_layout;
 
-         if (this.status_handler && (jsrp.ShowStatus === this.status_handler)) {
-            delete jsrp.ShowStatus;
+         if (this.status_handler && (jsrp.showStatus === this.status_handler)) {
+            delete jsrp.showStatus;
             delete this.status_handler;
          }
 
@@ -316,9 +316,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          d3.select(this.status_layout.getGridFrame(k)).attr('title', frame_titles[k]).style('overflow','hidden')
            .append("label").attr("class","jsroot_status_label");
 
-      this.status_handler = this.ShowStatus.bind(this);
+      this.status_handler = this.showStatus.bind(this);
 
-      jsrp.ShowStatus = this.status_handler;
+      jsrp.showStatus = this.status_handler;
 
       return Promise.resolve(id);
    }
@@ -368,7 +368,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       if (redraw) this.checkResize();
    }
 
-   BrowserLayout.prototype.ShowStatus = function(name, title, info, coordinates) {
+   /** @summary Show status information inside special fields of browser layout
+     * @private */
+   BrowserLayout.prototype.showStatus = function(name, title, info, coordinates) {
       if (!this.status_layout) return;
 
       $(this.status_layout.getGridFrame(0)).children('label').text(name || "");
@@ -1570,8 +1572,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             if (div.prop('state') == "minimal") return;
 
             div = div.find(".flex_draw").get(0);
-            let dummy = new JSROOT.ObjectPainter(div);
-            jsrp.selectActivePad({ pp: dummy.getCanvPainter(), active: true });
+            jsrp.selectActivePad({ pp: jsrp.getElementCanvPainter(div), active: true });
 
             JSROOT.resize(div);
          }
