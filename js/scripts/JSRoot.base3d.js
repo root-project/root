@@ -610,7 +610,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
             // try to zoom
             if (pos1 < pos2)
-              if (control.painter.Zoom(kind, pos1, pos2))
+              if (control.painter.zoom(kind, pos1, pos2))
                  control.mouse_zoom_mesh = null;
          }
 
@@ -757,7 +757,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       control.ProcessDblClick = function(evnt) {
          let intersect = this.DetectZoomMesh(evnt);
          if (intersect && this.painter) {
-            this.painter.Unzoom(intersect.object.use_y_for_z ? "y" : intersect.object.zoom);
+            this.painter.unzoom(intersect.object.use_y_for_z ? "y" : intersect.object.zoom);
          } else {
             this.reset();
          }
@@ -958,7 +958,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
             if ((kind==="z") && intersect.object.use_y_for_z) kind = "y";
 
-            control.painter.Zoom(kind, item.min, item.max);
+            control.painter.zoom(kind, item.min, item.max);
          }
       }
 
