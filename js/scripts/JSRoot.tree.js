@@ -37,14 +37,14 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
    /** @summary Add branch to the selector
     * @desc Either branch name or branch itself should be specified
     * Second parameter defines member name in the tgtobj
-    * If selector.AddBranch("px", "read_px") is called,
+    * If selector.addBranch("px", "read_px") is called,
     * branch will be read into selector.tgtobj.read_px member
     * If second parameter not specified, branch name (here "px") will be used
     * If branch object specified as first parameter and second parameter missing,
     * then member like "br0", "br1" and so on will be assigned
     * @param {string|Object} branch - name of branch (or branch object itself}
     * @param {string} [name] - member name in tgtobj where data will be read */
-   TSelector.prototype.AddBranch = function(branch, name, direct) {
+   TSelector.prototype.addBranch = function(branch, name, direct) {
       if (!name)
          name = (typeof branch === 'string') ? branch : ("br" + this.branches.length);
       this.branches.push(branch);
@@ -205,7 +205,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                      if (this.indx[cnt] < 0) this.indx[cnt] = obj.length - 1;
                   } else {
                      // this is compile variable as array index - can be any expression
-                     this.select[cnt].Produce(this.tgtobj);
+                     this.select[cnt].produce(this.tgtobj);
                      this.indx[cnt] = Math.round(this.select[cnt].get(0));
                   }
             }
@@ -263,8 +263,9 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       this.buf = []; // buffer accumulates temporary values
    }
 
-   TDrawVariable.prototype.Parse = function(tree, selector, code, only_branch, branch_mode) {
-      // when only_branch specified, its placed in the front of the expression
+   /** @summary Parse variable
+     * @desc when only_branch specified, its placed in the front of the expression */
+   TDrawVariable.prototype.parse = function(tree, selector, code, only_branch, branch_mode) {
 
       function is_start_symbol(symb) {
          if ((symb >= "A") && (symb <= "Z")) return true;
@@ -392,7 +393,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                   } else {
                      // try to compile code as draw variable
                      let subvar = new TDrawVariable(this.globals);
-                     if (!subvar.Parse(tree, selector, sub)) return false;
+                     if (!subvar.parse(tree, selector, sub)) return false;
                      arriter.push(subvar);
                   }
             }
@@ -403,7 +404,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
             if ((arriter.length === 1) && (arriter[0] === undefined)) arriter = true;
 
          let indx = selector.indexOfBranch(br);
-         if (indx < 0) indx = selector.AddBranch(br, undefined, branch_mode);
+         if (indx < 0) indx = selector.addBranch(br, undefined, branch_mode);
 
          branch_mode = undefined;
 
@@ -435,12 +436,14 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       return true;
    }
 
+   /** @summary Check if it is dummy variable */
    TDrawVariable.prototype.is_dummy = function() {
       return (this.branches.length === 0) && !this.func;
    }
 
-   TDrawVariable.prototype.Produce = function(obj) {
-      // after reading tree braches into the object, calculate variable value
+   /** @summary Produce variable
+     * @desc after reading tree braches into the object, calculate variable value */
+   TDrawVariable.prototype.produce = function(obj) {
 
       this.length = 1;
       this.isarray = false;
@@ -507,13 +510,13 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       if (!this.kind) this.kind = typeof this.value[0];
    }
 
+   /** @summary Get variable */
    TDrawVariable.prototype.get = function(indx) {
       return this.isarray ? this.value[indx] : this.value;
    }
 
-   TDrawVariable.prototype.AppendArray = function(tgtarr) {
-      // append array to the buffer
-
+   /** @summary Append array to the buffer */
+   TDrawVariable.prototype.appendArray = function(tgtarr) {
       this.buf = this.buf.concat(tgtarr[this.branches[0]]);
    }
 
@@ -550,12 +553,14 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
    TDrawSelector.prototype = Object.create(TSelector.prototype);
 
-   TDrawSelector.prototype.SetCallback = function(result_callback, progress_callback) {
+   /** @summary Set draw selector callbacks */
+   TDrawSelector.prototype.setCallback = function(result_callback, progress_callback) {
       this.result_callback = result_callback;
       this.progress_callback = progress_callback;
    }
 
-   TDrawSelector.prototype.ParseParameters = function(tree, args, expr) {
+   /** @summary Parse parameters */
+   TDrawSelector.prototype.parseParameters = function(tree, args, expr) {
 
       if (!expr || (typeof expr !== "string")) return "";
 
@@ -655,10 +660,11 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       return expr;
    }
 
-   TDrawSelector.prototype.ParseDrawExpression = function(tree, args) {
+   /** @summary Parse draw expression */
+   TDrawSelector.prototype.parseDrawExpression = function(tree, args) {
 
       // parse complete expression
-      let expr = this.ParseParameters(tree, args, args.expr), cut = "";
+      let expr = this.parseParameters(tree, args, args.expr), cut = "";
 
       // parse option for histogram creation
       this.hist_title = "drawing '" + expr + "' from " + tree.fName;
@@ -702,13 +708,13 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
       for (let n = 0; n < this.ndim; ++n) {
          this.vars[n] = new TDrawVariable(this.globals);
-         if (!this.vars[n].Parse(tree, this, names[n])) return false;
+         if (!this.vars[n].parse(tree, this, names[n])) return false;
          if (!this.vars[n].direct_branch) is_direct = false;
       }
 
       this.cut = new TDrawVariable(this.globals);
       if (cut)
-         if (!this.cut.Parse(tree, this, cut)) return false;
+         if (!this.cut.parse(tree, this, cut)) return false;
 
       if (!this.branches.length) {
          console.warn('no any branch is selected');
@@ -729,12 +735,13 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       return true;
    }
 
-   TDrawSelector.prototype.DrawOnlyBranch = function(tree, branch, expr, args) {
+   /** @summary Draw only specified branch */
+   TDrawSelector.prototype.drawOnlyBranch = function(tree, branch, expr, args) {
       this.ndim = 1;
 
       if (expr.indexOf("dump") == 0) expr = ";" + expr;
 
-      expr = this.ParseParameters(tree, args, expr);
+      expr = this.parseParameters(tree, args, expr);
 
       this.monitoring = args.monitoring;
 
@@ -753,7 +760,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          this.copy_fields = ((args.branch.fLeaves && (args.branch.fLeaves.arr.length > 1)) ||
             (args.branch.fBranches && (args.branch.fBranches.arr.length > 0))) && !args.leaf;
 
-         this.AddBranch(branch, "br0", args.direct_branch); // add branch
+         this.addBranch(branch, "br0", args.direct_branch); // add branch
 
          this.Process = this.ProcessDump;
 
@@ -761,7 +768,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       }
 
       this.vars[0] = new TDrawVariable(this.globals);
-      if (!this.vars[0].Parse(tree, this, expr, branch, args.direct_branch)) return false;
+      if (!this.vars[0].parse(tree, this, expr, branch, args.direct_branch)) return false;
       this.hist_title = "drawing branch '" + branch.fName + (expr ? "' expr:'" + expr : "") + "'  from " + tree.fName;
 
       this.cut = new TDrawVariable(this.globals);
@@ -771,6 +778,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       return true;
    }
 
+   /** @summary Begin processing */
    TDrawSelector.prototype.Begin = function(tree) {
       this.globals.entries = tree.fEntries;
 
@@ -778,9 +786,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          this.lasttm = new Date().getTime();
    }
 
+   /** @summary Show progress */
    TDrawSelector.prototype.ShowProgress = function(value) {
-      // this function should be defined not here
-
       if (typeof document == 'undefined' || !JSROOT.Painter) return;
 
       if ((value === undefined) || isNaN(value)) return JSROOT.Painter.showProgress();
@@ -817,7 +824,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       this.last_progress = value;
    }
 
-   TDrawSelector.prototype.GetBitsBins = function(nbits, res) {
+   /** @summary Get bins for bits histogram */
+   TDrawSelector.prototype.getBitsBins = function(nbits, res) {
       res.nbins = res.max = nbits;
       res.fLabels = JSROOT.create("THashList");
       for (let k = 0; k < nbits; ++k) {
@@ -829,7 +837,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       return res;
    }
 
-   TDrawSelector.prototype.GetMinMaxBins = function(axisid, nbins) {
+   /** @summary Get min.max bins */
+   TDrawSelector.prototype.getMinMaxBins = function(axisid, nbins) {
 
       let res = { min: 0, max: 0, nbins: nbins, k: 1., fLabels: null, title: "" };
 
@@ -851,13 +860,13 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
          if (typename && similar) {
             if ((typename === "TBits") && (axisid === 0)) {
-               this.Fill1DHistogram = this.FillTBitsHistogram;
+               this.fill1DHistogram = this.fillTBitsHistogram;
                if (maxbits % 8) maxbits = (maxbits & 0xfff0) + 8;
 
                if ((this.hist_name === "bits") && (this.hist_args.length == 1) && this.hist_args[0])
                   maxbits = this.hist_args[0];
 
-               return this.GetBitsBins(maxbits, res);
+               return this.getBitsBins(maxbits, res);
             }
          }
       }
@@ -881,8 +890,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
             res.fLabels.Add(s);
          }
       } else if ((axisid === 0) && (this.hist_name === "bits") && (this.hist_args.length <= 1)) {
-         this.Fill1DHistogram = this.FillBitsHistogram;
-         return this.GetBitsBins(this.hist_args[0] || 32, res);
+         this.fill1DHistogram = this.FillBitsHistogram;
+         return this.getBitsBins(this.hist_args[0] || 32, res);
       } else if (axisid * 3 + 2 < this.hist_args.length) {
          res.nbins = this.hist_args[axisid * 3];
          res.min = this.hist_args[axisid * 3 + 1];
@@ -931,6 +940,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       return res;
    }
 
+   /** @summary Create histogram */
    TDrawSelector.prototype.createHistogram = function() {
       if (this.hist || !this.vars[0].buf) return;
 
@@ -939,7 +949,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          this.hist = [];
 
          // reassign fill method
-         this.Fill1DHistogram = this.Fill2DHistogram = this.Fill3DHistogram = this.DumpValue;
+         this.fill1DHistogram = this.fill2DHistogram = this.fill3DHistogram = this.dumpValues;
       } else if (this.graph) {
          let N = this.vars[0].buf.length;
 
@@ -956,11 +966,11 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
       } else {
 
-         this.x = this.GetMinMaxBins(0, (this.ndim > 1) ? 50 : 200);
+         this.x = this.getMinMaxBins(0, (this.ndim > 1) ? 50 : 200);
 
-         this.y = this.GetMinMaxBins(1, 50);
+         this.y = this.getMinMaxBins(1, 50);
 
-         this.z = this.GetMinMaxBins(2, 50);
+         this.z = this.getMinMaxBins(2, 50);
 
          switch (this.ndim) {
             case 1: this.hist = JSROOT.createHistogram("TH1" + this.htype, this.x.nbins); break;
@@ -995,20 +1005,20 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          switch (this.ndim) {
             case 1: {
                for (let n = 0; n < len; ++n)
-                  this.Fill1DHistogram(var0[n], cut ? cut[n] : 1.);
+                  this.fill1DHistogram(var0[n], cut ? cut[n] : 1.);
                break;
             }
             case 2: {
                let var1 = this.vars[1].buf;
                for (let n = 0; n < len; ++n)
-                  this.Fill2DHistogram(var0[n], var1[n], cut ? cut[n] : 1.);
+                  this.fill2DHistogram(var0[n], var1[n], cut ? cut[n] : 1.);
                delete this.vars[1].buf;
                break;
             }
             case 3: {
                let var1 = this.vars[1].buf, var2 = this.vars[2].buf;
                for (let n = 0; n < len; ++n)
-                  this.Fill3DHistogram(var0[n], var1[n], var2[n], cut ? cut[n] : 1.);
+                  this.fill3DHistogram(var0[n], var1[n], var2[n], cut ? cut[n] : 1.);
                delete this.vars[1].buf;
                delete this.vars[2].buf;
                break;
@@ -1020,7 +1030,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       delete this.cut.buf;
    }
 
-   TDrawSelector.prototype.FillTBitsHistogram = function(xvalue, weight) {
+   /** @summary Fill TBits histogram */
+   TDrawSelector.prototype.fillTBitsHistogram = function(xvalue, weight) {
       if (!weight || !xvalue || !xvalue.fNbits || !xvalue.fAllBits) return;
 
       const sz = Math.min(xvalue.fNbits + 1, xvalue.fNbytes * 8);
@@ -1038,6 +1049,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       }
    }
 
+   /** @summary Fill bits histogram */
    TDrawSelector.prototype.FillBitsHistogram = function(xvalue, weight) {
       if (!weight) return;
 
@@ -1047,7 +1059,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       }
    }
 
-   TDrawSelector.prototype.Fill1DHistogram = function(xvalue, weight) {
+   /** @summary Fill 1D histogram */
+   TDrawSelector.prototype.fill1DHistogram = function(xvalue, weight) {
       let bin = this.x.GetBin(xvalue);
       this.hist.fArray[bin] += weight;
 
@@ -1058,7 +1071,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       }
    }
 
-   TDrawSelector.prototype.Fill2DHistogram = function(xvalue, yvalue, weight) {
+   /** @summary Fill 2D histogram */
+   TDrawSelector.prototype.fill2DHistogram = function(xvalue, yvalue, weight) {
       let xbin = this.x.GetBin(xvalue),
          ybin = this.y.GetBin(yvalue);
 
@@ -1073,7 +1087,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       }
    }
 
-   TDrawSelector.prototype.Fill3DHistogram = function(xvalue, yvalue, zvalue, weight) {
+   /** @summary Fill 3D histogram */
+   TDrawSelector.prototype.fill3DHistogram = function(xvalue, yvalue, zvalue, weight) {
       let xbin = this.x.GetBin(xvalue),
          ybin = this.y.GetBin(yvalue),
          zbin = this.z.GetBin(zvalue);
@@ -1093,7 +1108,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       }
    }
 
-   TDrawSelector.prototype.DumpValue = function(v1, v2, v3, v4) {
+   /** @summary Dump values */
+   TDrawSelector.prototype.dumpValues = function(v1, v2, v3, v4) {
       let obj;
       switch (this.ndim) {
          case 1: obj = { x: v1, weight: v2 }; break;
@@ -1108,9 +1124,9 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       this.hist.push(obj);
    }
 
+    /** @summary function used when all branches can be read as array
+      * @desc most typical usage - histogramming of single branch */
    TDrawSelector.prototype.ProcessArraysFunc = function(/*entry*/) {
-      // function used when all branches can be read as array
-      // most typical usage - histogramming of single branch
 
       if (this.arr_limit || this.graph) {
          let var0 = this.vars[0], len = this.tgtarr.br0.length,
@@ -1140,27 +1156,27 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          switch (this.ndim) {
             case 1: {
                for (let k = 0; k < len; ++k)
-                  this.Fill1DHistogram(br0[k], 1.);
+                  this.fill1DHistogram(br0[k], 1.);
                break;
             }
             case 2: {
                let br1 = this.tgtarr.br1;
                for (let k = 0; k < len; ++k)
-                  this.Fill2DHistogram(br0[k], br1[k], 1.);
+                  this.fill2DHistogram(br0[k], br1[k], 1.);
                break;
             }
             case 3: {
                let br1 = this.tgtarr.br1, br2 = this.tgtarr.br2;
                for (let k = 0; k < len; ++k)
-                  this.Fill3DHistogram(br0[k], br1[k], br2[k], 1.);
+                  this.fill3DHistogram(br0[k], br1[k], br2[k], 1.);
                break;
             }
          }
       }
    }
 
+   /** @summary simple dump of the branch - no need to analyze something */
    TDrawSelector.prototype.ProcessDump = function(/* entry */) {
-      // simple dump of the branch - no need to analyze something
 
       let res = this.leaf ? this.tgtobj.br0[this.leaf] : this.tgtobj.br0;
 
@@ -1175,15 +1191,16 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       }
    }
 
+   /** @summary Normal TSelector Process handler */
    TDrawSelector.prototype.Process = function(entry) {
 
       this.globals.entry = entry; // can be used in any expression
 
-      this.cut.Produce(this.tgtobj);
+      this.cut.produce(this.tgtobj);
       if (!this.dump_values && !this.cut.value) return;
 
       for (let n = 0; n < this.ndim; ++n)
-         this.vars[n].Produce(this.tgtobj);
+         this.vars[n].produce(this.tgtobj);
 
       let var0 = this.vars[0], var1 = this.vars[1], var2 = this.vars[2], cut = this.cut;
 
@@ -1222,18 +1239,18 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          switch (this.ndim) {
             case 1:
                for (let n0 = 0; n0 < var0.length; ++n0)
-                  this.Fill1DHistogram(var0.get(n0), cut.value);
+                  this.fill1DHistogram(var0.get(n0), cut.value);
                break;
             case 2:
                for (let n0 = 0; n0 < var0.length; ++n0)
                   for (let n1 = 0; n1 < var1.length; ++n1)
-                     this.Fill2DHistogram(var0.get(n0), var1.get(n1), cut.value);
+                     this.fill2DHistogram(var0.get(n0), var1.get(n1), cut.value);
                break;
             case 3:
                for (let n0 = 0; n0 < var0.length; ++n0)
                   for (let n1 = 0; n1 < var1.length; ++n1)
                      for (let n2 = 0; n2 < var2.length; ++n2)
-                        this.Fill3DHistogram(var0.get(n0), var1.get(n1), var2.get(n2), cut.value);
+                        this.fill3DHistogram(var0.get(n0), var1.get(n1), var2.get(n2), cut.value);
                break;
          }
       }
@@ -1248,6 +1265,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       }
    }
 
+   /** @summary Normal TSelector Terminate handler */
    TDrawSelector.prototype.Terminate = function(res) {
       if (res && !this.hist) this.createHistogram();
 
@@ -2524,8 +2542,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
    }
 
    /** @summary Get branch with specified id
-    * @desc All sub-branches checked as well
-    * @returns {Object} branch */
+     * @desc All sub-branches checked as well
+     * @returns {Object} branch */
    TTreeMethods.GetBranch = function(id) {
       if ((id === undefined) || isNaN(id)) return;
       let res, seq = 0;
@@ -2566,16 +2584,16 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       let selector = new TDrawSelector();
 
       if (args.branch) {
-         if (!selector.DrawOnlyBranch(this, args.branch, args.expr, args)) selector = null;
+         if (!selector.drawOnlyBranch(this, args.branch, args.expr, args)) selector = null;
       } else {
-         if (!selector.ParseDrawExpression(this, args)) selector = null;
+         if (!selector.parseDrawExpression(this, args)) selector = null;
       }
 
       if (!selector)
          return Promise.reject(Error("Fail to create selector for specified expression"));
 
       return new Promise(resolve => {
-         selector.SetCallback(resolve, args.progress);
+         selector.setCallback(resolve, args.progress);
          this.Process(selector, args);
       });
    }
@@ -2622,7 +2640,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
          let selector = new TSelector;
 
-         selector.AddBranch(args.branches[args.nbr], "br0");
+         selector.addBranch(args.branches[args.nbr], "br0");
 
          selector.Process = function() {
             if (this.tgtobj.br0 === undefined)
@@ -2693,7 +2711,9 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       });
    }
 
-   JSROOT.TreeHierarchy = function(node, obj) {
+   /** @summary Create hierarchy of TTree object
+     * @private */
+   JSROOT.treeHierarchy = function(node, obj) {
       if (obj._typename != 'TTree' && obj._typename != 'TNtuple' && obj._typename != 'TNtupleD' ) return false;
 
       function CreateBranchItem(node, branch, tree, parent_branch) {

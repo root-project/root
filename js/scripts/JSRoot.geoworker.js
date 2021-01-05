@@ -36,8 +36,8 @@ onmessage = function(e) {
       if (nodes) {
          // console.log('get clones ' + nodes.length);
          clones = new JSROOT.GEO.ClonedNodes(null, nodes);
-         clones.SetVisLevel(e.data.vislevel);
-         clones.SetMaxVisNodes(e.data.maxvisnodes);
+         clones.setVisLevel(e.data.vislevel);
+         clones.setMaxVisNodes(e.data.maxvisnodes);
          delete e.data.clones;
          clones.sortmap = e.data.sortmap;
       }
@@ -57,7 +57,7 @@ onmessage = function(e) {
 
       // build all shapes up to specified limit, also limit execution time
       for (let n=0;n<100;++n) {
-         let res = clones.BuildShapes(shapes, e.data.limit, 1000);
+         let res = clones.buildShapes(shapes, e.data.limit, 1000);
          if (res.done) break;
          postMessage({ progress: "Worker creating: " + res.shapes + " / " + shapes.length + " shapes,  "  + res.faces + " faces" });
       }
@@ -97,17 +97,17 @@ onmessage = function(e) {
       // this is task to collect visible nodes using camera position
 
       // first mark all visible flags
-      clones.SetVisibleFlags(e.data.flags);
+      clones.setVisibleFlags(e.data.flags);
       delete e.data.flags;
 
-      clones.ProduceIdShits();
+      clones.produceIdShifts();
 
       let matrix = null;
       if (e.data.matrix)
          matrix = new THREE.Matrix4().fromArray(e.data.matrix);
       delete e.data.matrix;
 
-      let res = clones.CollectVisibles(e.data.collect, JSROOT.GEO.createFrustum(matrix));
+      let res = clones.collectVisibles(e.data.collect, JSROOT.GEO.createFrustum(matrix));
 
       e.data.new_nodes = res.lst;
       e.data.complete = res.complete; // inform if all nodes are selected

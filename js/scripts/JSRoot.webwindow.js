@@ -23,6 +23,7 @@ JSROOT.define([], () => {
       this.nextRequest("", "connect");
    }
 
+   /** @summary Submit next request */
    LongPollSocket.prototype.nextRequest = function(data, kind) {
       let url = this.path, reqmode = "buf", post = null;
       if (kind === "connect") {
@@ -115,6 +116,7 @@ JSROOT.define([], () => {
       req.send(post);
    }
 
+   /** @summary Process request */
    LongPollSocket.prototype.processRequest = function(res, _offset) {
       if (res === null) {
          if (typeof this.onerror === 'function') this.onerror("receive data with connid " + (this.connid || "---"));
@@ -144,8 +146,10 @@ JSROOT.define([], () => {
       if (!this.req) this.nextRequest("", "dummy"); // send new poll request when necessary
    }
 
+   /** @summary Send data */
    LongPollSocket.prototype.send = function(str) { this.nextRequest(str); }
 
+   /** @summary Close connection */
    LongPollSocket.prototype.close = function() { this.nextRequest("", "close"); }
 
    // ========================================================================================
@@ -165,6 +169,7 @@ JSROOT.define([], () => {
       JSROOT.httpRequest("protocol.json", "text").then(res => this.getProtocol(res));
    }
 
+   /** @summary Get stored protocol */
    FileDumpSocket.prototype.getProtocol = function(res) {
       if (!res) return;
       this.protocol = JSON.parse(res);
@@ -172,6 +177,7 @@ JSROOT.define([], () => {
       this.nextOperation();
    }
 
+   /** @summary Emulate send - just cound operation */
    FileDumpSocket.prototype.send = function(/* str */) {
       if (this.protocol[this.cnt] == "send") {
          this.cnt++;
@@ -179,8 +185,10 @@ JSROOT.define([], () => {
       }
    }
 
+   /** @summary Emulate close */
    FileDumpSocket.prototype.close = function() {}
 
+   /** @summary Read data for next operation */
    FileDumpSocket.prototype.nextOperation = function() {
       // when file request running - just ignore
       if (this.wait_for_file) return;
@@ -586,19 +594,16 @@ JSROOT.define([], () => {
 
 
    /** @summary Method used to initialize connection to web window.
-    *
-    * @param {object} arg - arguments
-    * @param {string} [arg.prereq] - prerequicities, which should be loaded first
-    * @param {string} [arg.openui5src] - source of openui5, either URL like "https://openui5.hana.ondemand.com" or "jsroot" which provides its own reduced openui5 package
-    * @param {string} [arg.openui5libs] - list of openui5 libraries loaded, default is "sap.m, sap.ui.layout, sap.ui.unified"
-    * @param {string} [arg.socket_kind] - kind of connection longpoll|websocket, detected automatically from URL
-    * @param {number} [arg.credits = 10] - number of packets which can be send to server without acknowledge
-    * @param {object} arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
-    * @param {string} arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned in handle.first_msg
-    * @param {string} [arg.prereq2] - second part of prerequcities, which is loaded parallel to connecting with WebWindow
-    * @returns {Promise} ready-to-use WebWindowHandle instance
-    */
-
+     * @param {object} arg - arguments
+     * @param {string} [arg.prereq] - prerequicities, which should be loaded first
+     * @param {string} [arg.openui5src] - source of openui5, either URL like "https://openui5.hana.ondemand.com" or "jsroot" which provides its own reduced openui5 package
+     * @param {string} [arg.openui5libs] - list of openui5 libraries loaded, default is "sap.m, sap.ui.layout, sap.ui.unified"
+     * @param {string} [arg.socket_kind] - kind of connection longpoll|websocket, detected automatically from URL
+     * @param {number} [arg.credits = 10] - number of packets which can be send to server without acknowledge
+     * @param {object} arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
+     * @param {string} arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned in handle.first_msg
+     * @param {string} [arg.prereq2] - second part of prerequcities, which is loaded parallel to connecting with WebWindow
+     * @returns {Promise} ready-to-use WebWindowHandle instance  */
    JSROOT.connectWebWindow = function(arg) {
 
       if (typeof arg == 'function') arg = { callback: arg }; else

@@ -627,10 +627,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.browser_kind = null; // should be 'float' or 'fix'
    }
 
+   /** @summary Selects main element */
    BrowserLayout.prototype.main = function() {
       return d3.select("#" + this.gui_div);
    }
 
+   /** @summary Returns drawing divid */
    BrowserLayout.prototype.drawing_divid = function() {
       return this.gui_div + "_drawing";
    }
@@ -646,7 +648,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary method used to create basic elements
      * @desc should be called only once */
-   BrowserLayout.prototype.Create = function(with_browser) {
+   BrowserLayout.prototype.create = function(with_browser) {
       let main = this.main();
 
       main.append("div").attr("id", this.drawing_divid())
@@ -666,10 +668,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return btns;
    }
 
-   BrowserLayout.prototype.RemoveBrowserBtns = function() {
+   /** @summary Remove browser buttons */
+   BrowserLayout.prototype.removeBrowserBtns = function() {
       this.main().select(".jsroot_browser").select(".jsroot_browser_btns").remove();
    }
 
+   /** @summary Set browser content */
    BrowserLayout.prototype.setBrowserContent = function(guiCode) {
       let main = d3.select("#" + this.gui_div + " .jsroot_browser");
       if (main.empty()) return;
@@ -681,13 +685,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           .html("<p class='jsroot_browser_title'>title</p>" +  guiCode);
    }
 
-   BrowserLayout.prototype.HasContent = function() {
+   /** @summary Check if there is browser content */
+   BrowserLayout.prototype.hasContent = function() {
       let main = d3.select("#" + this.gui_div + " .jsroot_browser");
       if (main.empty()) return false;
       return !main.select(".jsroot_browser_area").empty();
    }
 
-   BrowserLayout.prototype.DeleteContent = function() {
+   /** @summary Delete browser content */
+   BrowserLayout.prototype.deleteContent = function() {
       let main = d3.select("#" + this.gui_div + " .jsroot_browser");
       if (main.empty()) return;
 
@@ -706,6 +712,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return !line.empty();
    }
 
+   /** @summary Create status line */
    BrowserLayout.prototype.createStatusLine = function(height, mode) {
       if (!this.gui_div) return Promise.resolve('');
       return JSROOT.require('jq2d').then(() => this.createStatusLine(height, mode));
@@ -1623,7 +1630,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!this.brlayout.browser_kind)
            return this.createBrowser('float', true).then(() => find_next());
          if (!this.brlayout.browser_visible)
-            this.brlayout.ToggleBrowserVisisbility();
+            this.brlayout.toggleBrowserVisisbility();
       }
 
       // use recursion
@@ -2576,21 +2583,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.brlayout = new BrowserLayout(this.gui_div, this);
 
-      this.brlayout.Create(!this.exclude_browser);
+      this.brlayout.create(!this.exclude_browser);
 
       if (!this.exclude_browser) {
          let btns = this.brlayout.createBrowserBtns();
 
          JSROOT.require(['interactive']).then(inter => {
-            inter.ToolbarIcons.CreateSVG(btns, inter.ToolbarIcons.diamand, 15, "toggle fix-pos browser")
+            inter.ToolbarIcons.createSVG(btns, inter.ToolbarIcons.diamand, 15, "toggle fix-pos browser")
                                .style("margin","3px").on("click", () => this.createBrowser("fix", true));
 
             if (!this.float_browser_disabled)
-               inter.ToolbarIcons.CreateSVG(btns, inter.ToolbarIcons.circle, 15, "toggle float browser")
+               inter.ToolbarIcons.createSVG(btns, inter.ToolbarIcons.circle, 15, "toggle float browser")
                                   .style("margin","3px").on("click", () => this.createBrowser("float", true));
 
             if (!this.status_disabled)
-               inter.ToolbarIcons.CreateSVG(btns, inter.ToolbarIcons.three_circles, 15, "toggle status line")
+               inter.ToolbarIcons.createSVG(btns, inter.ToolbarIcons.three_circles, 15, "toggle status line")
                                   .style("margin","3px").on("click", () => this.createStatusLine(0, "toggle"));
           });
       }

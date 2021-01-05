@@ -149,7 +149,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
       }
 
       /** @summary Add color selection menu entries  */
-      AddColorMenu(name, value, set_func, fill_kind) {
+      addColorMenu(name, value, set_func, fill_kind) {
          if (value === undefined) return;
          this.add("sub:" + name, function() {
             // todo - use jqury dialog here
@@ -177,7 +177,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
       }
 
       /** @summary Add size selection menu entries */
-      SizeMenu(name, min, max, step, value, set_func) {
+      addSizeMenu(name, min, max, step, value, set_func) {
          if (value === undefined) return;
 
          this.add("sub:" + name, function() {
@@ -200,16 +200,16 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.add("endsub:");
       }
 
-      /** @summary Add size selection menu entries */
-      SelectMenu(name, values, value, set_func) {
+      /** @summary Add selection menu entries */
+      addSelectMenu(name, values, value, set_func) {
          this.add("sub:" + name);
          for (let n = 0; n < values.length; ++n)
             this.addchk(values[n] == value, values[n], values[n], res => set_func(res));
          this.add("endsub:");
       }
 
-      /** @summary Add color selection menu entries  */
-      RColorMenu(name, value, set_func) {
+      /** @summary Add RColor selection menu entries  */
+      addRColorMenu(name, value, set_func) {
          // if (value === undefined) return;
          let colors = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
 
@@ -231,21 +231,20 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.add("endsub:");
       }
 
-
       /** @summary Add items to change RAttrText */
-      RAttrTextItems(fontHandler, opts, set_func) {
+      addRAttrTextItems(fontHandler, opts, set_func) {
          if (!opts) opts = {};
-         this.RColorMenu("color", fontHandler.color, sel => set_func({ name: "color_name", value: sel }));
+         this.addRColorMenu("color", fontHandler.color, sel => set_func({ name: "color_name", value: sel }));
          if (fontHandler.scaled)
-            this.SizeMenu("size", 0.01, 0.10, 0.01, fontHandler.size /fontHandler.scale, sz => set_func({ name: "size", value: sz }));
+            this.addSizeMenu("size", 0.01, 0.10, 0.01, fontHandler.size /fontHandler.scale, sz => set_func({ name: "size", value: sz }));
          else
-            this.SizeMenu("size", 6, 20, 2, fontHandler.size, sz => set_func({ name: "size", value: sz }));
+            this.addSizeMenu("size", 6, 20, 2, fontHandler.size, sz => set_func({ name: "size", value: sz }));
 
-         this.SelectMenu("family", ["Arial", "Times New Roman", "Courier New", "Symbol"], fontHandler.name, res => set_func( {name: "font_family", value: res }));
+         this.addSelectMenu("family", ["Arial", "Times New Roman", "Courier New", "Symbol"], fontHandler.name, res => set_func( {name: "font_family", value: res }));
 
-         this.SelectMenu("style", ["normal", "italic", "oblique"], fontHandler.style || "normal", res => set_func( {name: "font_style", value: res == "normal" ? null : res }));
+         this.addSelectMenu("style", ["normal", "italic", "oblique"], fontHandler.style || "normal", res => set_func( {name: "font_style", value: res == "normal" ? null : res }));
 
-         this.SelectMenu("weight", ["normal", "lighter", "bold", "bolder"], fontHandler.weight || "normal", res => set_func( {name: "font_weight", value: res == "normal" ? null : res }));
+         this.addSelectMenu("weight", ["normal", "lighter", "bold", "bolder"], fontHandler.weight || "normal", res => set_func( {name: "font_weight", value: res == "normal" ? null : res }));
 
          if (!opts.noalign)
             this.add("align");
@@ -255,14 +254,14 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
       /** @summary Fill context menu for text attributes
        * @private */
-      AddTextAttributesMenu(painter, prefix) {
+      addTextAttributesMenu(painter, prefix) {
          // for the moment, text attributes accessed directly from objects
 
          let obj = painter.getObject();
          if (!obj || !('fTextColor' in obj)) return;
 
          this.add("sub:" + (prefix ? prefix : "Text"));
-         this.AddColorMenu("color", obj.fTextColor,
+         this.addColorMenu("color", obj.fTextColor,
             arg => { obj.fTextColor = arg; painter.interactiveRedraw(true, getColorExec(arg, "SetTextColor")); });
 
          let align = [11, 12, 13, 21, 22, 23, 31, 32, 33];
@@ -288,7 +287,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
       /** @summary Fill context menu for graphical attributes in painter
        * @private */
-      AddAttributesMenu(painter, preffix) {
+      addAttributesMenu(painter, preffix) {
          // this method used to fill entries for different attributes of the object
          // like TAttFill, TAttLine, ....
          // all menu call-backs need to be rebind, while menu can be used from other painter
@@ -297,9 +296,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
          if (painter.lineatt && painter.lineatt.used) {
             this.add("sub:" + preffix + "Line att");
-            this.SizeMenu("width", 1, 10, 1, painter.lineatt.width,
+            this.addSizeMenu("width", 1, 10, 1, painter.lineatt.width,
                arg => { painter.lineatt.change(undefined, arg); painter.interactiveRedraw(true, "exec:SetLineWidth(" + arg + ")"); });
-            this.AddColorMenu("color", painter.lineatt.color,
+            this.addColorMenu("color", painter.lineatt.color,
                arg => { painter.lineatt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetLineColor")); });
             this.add("sub:style", function() {
                let id = prompt("Enter line style id (1-solid)", 1);
@@ -328,7 +327,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
                   }.bind(painter));
                this.add("endsub:");
 
-               this.SizeMenu("width", 10, 100, 10, painter.lineatt.excl_width,
+               this.addSizeMenu("width", 10, 100, 10, painter.lineatt.excl_width,
                   arg => { painter.lineatt.changeExcl(undefined, arg); painter.interactiveRedraw(); });
 
                this.add("endsub:");
@@ -337,7 +336,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
          if (painter.fillatt && painter.fillatt.used) {
             this.add("sub:" + preffix + "Fill att");
-            this.AddColorMenu("color", painter.fillatt.colorindx,
+            this.addColorMenu("color", painter.fillatt.colorindx,
                arg => { painter.fillatt.change(arg, undefined, painter.getCanvSvg()); painter.interactiveRedraw(true, getColorExec(arg, "SetFillColor")); }, painter.fillatt.kind);
             this.add("sub:style", function() {
                let id = prompt("Enter fill style id (1001-solid, 3000..3010)", this.fillatt.pattern);
@@ -364,9 +363,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
          if (painter.markeratt && painter.markeratt.used) {
             this.add("sub:" + preffix + "Marker att");
-            this.AddColorMenu("color", painter.markeratt.color,
+            this.addColorMenu("color", painter.markeratt.color,
                arg => { painter.markeratt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetMarkerColor"));});
-            this.SizeMenu("size", 0.5, 6, 0.5, painter.markeratt.size,
+            this.addSizeMenu("size", 0.5, 6, 0.5, painter.markeratt.size,
                arg => { painter.markeratt.change(undefined, undefined, arg); painter.interactiveRedraw(true, "exec:SetMarkerSize(" + parseInt(arg) + ")"); });
 
             this.add("sub:style");
@@ -387,17 +386,17 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
       /** @summary Fill context menu for axis
        * @private */
-      AddTAxisMenu(painter, faxis, kind) {
+      addTAxisMenu(painter, faxis, kind) {
          this.add("sub:Labels");
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kCenterLabels), "Center",
                arg => { faxis.InvertBit(JSROOT.EAxisBits.kCenterLabels); painter.interactiveRedraw("pad", `exec:CenterLabels(${arg})`, kind); });
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kLabelsVert), "Rotate",
                arg => { faxis.InvertBit(JSROOT.EAxisBits.kLabelsVert); painter.interactiveRedraw("pad", `exec:SetBit(TAxis::kLabelsVert,${arg})`, kind); });
-         this.AddColorMenu("Color", faxis.fLabelColor,
+         this.addColorMenu("Color", faxis.fLabelColor,
                arg => { faxis.fLabelColor = arg; painter.interactiveRedraw("pad", getColorExec(arg, "SetLabelColor"), kind); });
-         this.SizeMenu("Offset", 0, 0.1, 0.01, faxis.fLabelOffset,
+         this.addSizeMenu("Offset", 0, 0.1, 0.01, faxis.fLabelOffset,
                arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw("pad", `exec:SetLabelOffset(${arg})`, kind); } );
-         this.SizeMenu("Size", 0.02, 0.11, 0.01, faxis.fLabelSize,
+         this.addSizeMenu("Size", 0.02, 0.11, 0.01, faxis.fLabelSize,
                arg => { faxis.fLabelSize = arg; painter.interactiveRedraw("pad", `exec:SetLabelSize(${arg})`, kind); } );
          this.add("endsub:");
          this.add("sub:Title");
@@ -411,23 +410,23 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
                 () => { faxis.InvertBit(JSROOT.EAxisBits.kOppositeTitle); painter.redrawPad(); });
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kRotateTitle), "Rotate",
                arg => { faxis.InvertBit(JSROOT.EAxisBits.kRotateTitle); painter.interactiveRedraw("pad", `exec:RotateTitle(${arg})`, kind); });
-         this.AddColorMenu("Color", faxis.fTitleColor,
+         this.addColorMenu("Color", faxis.fTitleColor,
                arg => { faxis.fTitleColor = arg; painter.interactiveRedraw("pad", getColorExec(arg, "SetTitleColor"), kind); });
-         this.SizeMenu("Offset", 0, 3, 0.2, faxis.fTitleOffset,
+         this.addSizeMenu("Offset", 0, 3, 0.2, faxis.fTitleOffset,
                          arg => { faxis.fTitleOffset = arg; painter.interactiveRedraw("pad", `exec:SetTitleOffset(${arg})`, kind); });
-         this.SizeMenu("Size", 0.02, 0.11, 0.01, faxis.fTitleSize,
+         this.addSizeMenu("Size", 0.02, 0.11, 0.01, faxis.fTitleSize,
                          arg => { faxis.fTitleSize = arg; painter.interactiveRedraw("pad", `exec:SetTitleSize(${arg})`, kind); });
          this.add("endsub:");
          this.add("sub:Ticks");
          if (faxis._typename == "TGaxis") {
-            this.AddColorMenu("Color", faxis.fLineColor,
+            this.addColorMenu("Color", faxis.fLineColor,
                      arg => { faxis.fLineColor = arg; painter.interactiveRedraw("pad"); });
-            this.SizeMenu("Size", -0.05, 0.055, 0.01, faxis.fTickSize,
+            this.addSizeMenu("Size", -0.05, 0.055, 0.01, faxis.fTickSize,
                      arg => { faxis.fTickSize = arg; painter.interactiveRedraw("pad"); } );
          } else {
-            this.AddColorMenu("Color", faxis.fAxisColor,
+            this.addColorMenu("Color", faxis.fAxisColor,
                      arg => { faxis.fAxisColor = arg; painter.interactiveRedraw("pad", getColorExec(arg, "SetAxisColor"), kind); });
-            this.SizeMenu("Size", -0.05, 0.055, 0.01, faxis.fTickLength,
+            this.addSizeMenu("Size", -0.05, 0.055, 0.01, faxis.fTickLength,
                      arg => { faxis.fTickLength = arg; painter.interactiveRedraw("pad", `exec:SetTickLength(${arg})`, kind); });
          }
          this.add("endsub:");
