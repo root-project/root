@@ -1627,7 +1627,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       JSROOT.require(['interactive']).then(inter => {
          top_rect.attr("pointer-events", "visibleFill"); // let process mouse events inside frame
          inter.FrameInteractive.assign(this);
-         this.BasicInteractive();
+         this.addBasicInteractivity();
       });
    }
 
@@ -1687,10 +1687,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                () => { faxis.InvertBit(JSROOT.EAxisBits.kNoExponent); this.redrawPad(); });
 
          if ((kind === "z") && main && main.options && main.options.Zscale)
-            if (typeof main.FillPaletteMenu == 'function') main.FillPaletteMenu(menu);
+            if (typeof main.fillPaletteMenu == 'function') main.fillPaletteMenu(menu);
 
          if (faxis)
-            menu.AddTAxisMenu(main || this, faxis, kind);
+            menu.addTAxisMenu(main || this, faxis, kind);
          return true;
       }
 
@@ -1713,7 +1713,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.addchk(pad.fLogx, "SetLogx", () => this.toggleAxisLog("x"));
          menu.addchk(pad.fLogy, "SetLogy", () => this.toggleAxisLog("y"));
 
-         if (main && (typeof main.Dimension === 'function') && (main.Dimension() > 1))
+         if (main && (typeof main.getDimension === 'function') && (main.getDimension() > 1))
             menu.addchk(pad.fLogz, "SetLogz", () => this.toggleAxisLog("z"));
          menu.add("separator");
       }
@@ -1721,7 +1721,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       menu.addchk(this.isTooltipAllowed(), "Show tooltips", function() {
          this.setTooltipAllowed("toggle");
       });
-      menu.AddAttributesMenu(this, alone ? "" : "Frame ");
+      menu.addAttributesMenu(this, alone ? "" : "Frame ");
       menu.add("separator");
       menu.add("Save as frame.png", () => pp.saveAs("png", 'frame', 'frame.png'));
       menu.add("Save as frame.svg", () => pp.saveAs("svg", 'frame', 'frame.svg'));
@@ -1871,8 +1871,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             let pp = this.getPadPainter();
             if (pp && pp.painters)
                pp.painters.forEach(painter => {
-                  if (painter && (typeof painter.UnzoomUserRange == 'function'))
-                     if (painter.UnzoomUserRange(unzoom_x, unzoom_y, unzoom_z)) changed = true;
+                  if (painter && (typeof painter.unzoomUserRange == 'function'))
+                     if (painter.unzoomUserRange(unzoom_x, unzoom_y, unzoom_z)) changed = true;
             });
          }
       }
@@ -2623,7 +2623,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       else
          menu.add("header: Canvas");
 
-      menu.addchk(this.isTooltipAllowed(), "Show tooltips", this.setTooltipAllowed.bind(this, "toggle"));
+      menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
 
       if (!this._websocket) {
 
@@ -2645,7 +2645,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.addchk(this.pad.fTicky == 2, "labels on both sides", "2fTicky", SetPadField);
          menu.add("endsub:");
 
-         menu.AddAttributesMenu(this);
+         menu.addAttributesMenu(this);
       }
 
       menu.add("separator");
@@ -3013,7 +3013,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             let mainid = this.selectDom().attr("id");
             if (mainid && (typeof mainid == "string")) {
                this.brlayout = new JSROOT.BrowserLayout(mainid, null, this);
-               this.brlayout.Create(mainid, true);
+               this.brlayout.create(mainid, true);
                // this.brlayout.toggleBrowserKind("float");
                this.setDom(this.brlayout.drawing_divid()); // need to create canvas
                jsrp.registerForResize(this.brlayout);
@@ -3342,16 +3342,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          let main = pp.getFramePainter();
-         if (!main || (typeof main.Render3D !== 'function') || (typeof main.access_3d_kind !== 'function')) return;
+         if (!main || (typeof main.render3D !== 'function') || (typeof main.access3dKind !== 'function')) return;
 
-         let can3d = main.access_3d_kind();
+         let can3d = main.access3dKind();
 
          if ((can3d !== JSROOT.constants.Embed3D.Overlay) && (can3d !== JSROOT.constants.Embed3D.Embed)) return;
 
-         let sz2 = main.size_for_3d(JSROOT.constants.Embed3D.Embed); // get size and position of DOM element as it will be embed
+         let sz2 = main.getSizeFor3d(JSROOT.constants.Embed3D.Embed); // get size and position of DOM element as it will be embed
 
          let canvas = main.renderer.domElement;
-         main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
+         main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
          let dataUrl = canvas.toDataURL("image/png");
 
          // remove 3D drawings
@@ -3487,7 +3487,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (main) {
                menu.add("X axis", "xaxis", this.itemContextMenu);
                menu.add("Y axis", "yaxis", this.itemContextMenu);
-               if ((typeof main.Dimension === 'function') && (main.Dimension() > 1))
+               if ((typeof main.getDimension === 'function') && (main.getDimension() > 1))
                   menu.add("Z axis", "zaxis", this.itemContextMenu);
             }
 
@@ -4033,7 +4033,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Returns true if GED is present on the canvas */
    TCanvasPainter.prototype.hasGed = function() {
       if (this.testUI5()) return false;
-      return this.brlayout ? this.brlayout.HasContent() : false;
+      return this.brlayout ? this.brlayout.hasContent() : false;
    }
 
    /** @summary Function used to de-activate GED
@@ -4049,7 +4049,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          delete this.ged_view;
       }
       if (this.brlayout)
-         this.brlayout.DeleteContent();
+         this.brlayout.deleteContent();
 
       this.processChanges("sbits", this);
    }
@@ -4061,7 +4061,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (this.testUI5() || !this.brlayout)
          return Promise.resolve(false);
 
-      if (this.brlayout.HasContent()) {
+      if (this.brlayout.hasContent()) {
          if ((mode === "toggle") || (mode === false)) {
             this.removeGed();
          } else {
@@ -4079,13 +4079,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       JSROOT.require('interactive').then(inter => {
 
-         inter.ToolbarIcons.CreateSVG(btns, inter.ToolbarIcons.diamand, 15, "toggle fix-pos mode")
-                            .style("margin","3px").on("click", () => this.brlayout.Toggle('fix'));
+         inter.ToolbarIcons.createSVG(btns, inter.ToolbarIcons.diamand, 15, "toggle fix-pos mode")
+                            .style("margin","3px").on("click", () => this.brlayout.toggleKind('fix'));
 
-         inter.ToolbarIcons.CreateSVG(btns, inter.ToolbarIcons.circle, 15, "toggle float mode")
-                            .style("margin","3px").on("click", () => this.brlayout.Toggle('float'));
+         inter.ToolbarIcons.createSVG(btns, inter.ToolbarIcons.circle, 15, "toggle float mode")
+                            .style("margin","3px").on("click", () => this.brlayout.toggleKind('float'));
 
-         inter.ToolbarIcons.CreateSVG(btns, inter.ToolbarIcons.cross, 15, "delete GED")
+         inter.ToolbarIcons.createSVG(btns, inter.ToolbarIcons.cross, 15, "delete GED")
                             .style("margin","3px").on("click", () => this.removeGed());
       });
 

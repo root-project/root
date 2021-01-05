@@ -839,7 +839,7 @@
 3. Prompt for input of command arguments
 4. After command execution one could automatically reload hierarchy (_hreload property) or
    update view of displayed object (_update_item property)
-5. Use HiearchyPainter for implementing draw.htm. This let us handle
+5. Use HierarchyPainter for implementing draw.htm. This let us handle
    all different kinds of extra attributes in central place
 6. Fix problem in tabs layout - new tab should be add to direct child
 7. When drawing several tabs, activate frame before drawing - only then
@@ -933,7 +933,7 @@
 
 ## Changes in 3.1
 1. Correctly show tooltips in case of overlapped objects
-2. Implement JSROOT.Create() method to create supported
+2. Implement JSROOT.create() method to create supported
    in JavaScript ROOT classes like TH1 or TGraph
 3. Fix problem with JSROOT.draw in HTML element with zero width (display:none)
 4. Provide possibility to load user scripts with JSROOT.BuildSimpleGUI

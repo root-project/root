@@ -175,7 +175,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
       painter.DrawContent = drawLegendContent;
 
-     return jsrp.ensureRCanvas(painter, false).then(() => painter.DrawPave());
+     return jsrp.ensureRCanvas(painter, false).then(() => painter.drawPave());
    }
 
    // =================================================================================
@@ -210,7 +210,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
       painter.DrawContent = drawPaveTextContent;
 
-      return jsrp.ensureRCanvas(painter, false).then(() => painter.DrawPave());
+      return jsrp.ensureRCanvas(painter, false).then(() => painter.drawPave());
    }
 
 

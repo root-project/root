@@ -75,7 +75,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                   this.submitCanvExec("SetX(" + text.fX + ");;SetY(" + text.fY + ");;");
                }
 
-            inter.DragMoveHandler.AddMove(this);
+            inter.addMoveHandler(this);
 
             return this;
          });
@@ -470,7 +470,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                   this.submitCanvExec(exec + "Notify();;");
                }
 
-            inter.DragMoveHandler.AddMove(this);
+            inter.addMoveHandler(this);
          });
    }
 
@@ -509,11 +509,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    TF1Painter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
-   TF1Painter.prototype.Eval = function(x) {
-      return this.getObject().evalPar(x);
-   }
-
-   TF1Painter.prototype.CreateBins = function(ignore_zoom) {
+   /** @summary Create bins for TF1 drawing
+     * @private */
+   TF1Painter.prototype.createBins = function(ignore_zoom) {
       let main = this.getFramePainter(),
           gxmin = 0, gxmax = 0, tf1 = this.getObject();
 
@@ -564,19 +562,21 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          dx = (xmax - xmin) / (np - 1),
          res = [];
 
-      for (let n=0; n < np; n++) {
+      for (let n = 0; n < np; n++) {
          let xx = xmin + n*dx;
          if (logx) xx = Math.exp(xx);
-         let yy = this.Eval(xx);
+         let yy = tf1.evalPar(xx);
          if (!isNaN(yy)) res.push({ x: xx, y: yy });
       }
       return res;
    }
 
-   TF1Painter.prototype.CreateDummyHisto = function() {
+   /** @summary Create histogram for axes drawing
+     * @private */
+   TF1Painter.prototype.createDummyHisto = function() {
 
       let xmin = 0, xmax = 1, ymin = 0, ymax = 1,
-          bins = this.CreateBins(true);
+          bins = this.createBins(true);
 
       if (bins && (bins.length > 0)) {
 
@@ -674,6 +674,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
+   /** @summary Redraw function
+     * @private */
    TF1Painter.prototype.redraw = function() {
 
       let tf1 = this.getObject(),
@@ -684,7 +686,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       this.createG(true);
 
       // recalculate drawing bins when necessary
-      this.bins = this.CreateBins(false);
+      this.bins = this.createBins(false);
 
       this.createAttLine({ attr: tf1 });
       this.lineatt.used = false;
@@ -753,7 +755,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       return JSROOT.require("math").then(() => {
          if (!painter.getMainPainter())
-            return JSROOT.draw(divid, painter.CreateDummyHisto(), "AXIS");
+            return JSROOT.draw(divid, painter.createDummyHisto(), "AXIS");
       }).then(() => {
          painter.addToPadPrimitives();
          painter.redraw();
@@ -788,17 +790,21 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    TGraphPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
+   /** @summary Redraw graph
+     * @private */
    TGraphPainter.prototype.redraw = function() {
-      this.DrawGraph();
+      this.drawGraph();
    }
 
+   /** @summary Cleanup graph painter */
    TGraphPainter.prototype.cleanup = function() {
       delete this.interactive_bin; // break mouse handling
       delete this.bins;
       JSROOT.ObjectPainter.prototype.cleanup.call(this);
    }
 
-   TGraphPainter.prototype.DecodeOptions = function(opt) {
+   /** @summary Decode options  */
+   TGraphPainter.prototype.decodeOptions = function(opt) {
 
       if (!opt) opt = this.getMainPainter() ? "lp" : "alp";
 
@@ -883,7 +889,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       res.HOptions = res.Axis;
    }
 
-   TGraphPainter.prototype.CreateBins = function() {
+   /** @summary Create bins for TF1 drawing
+     * @private */
+   TGraphPainter.prototype.createBins = function() {
       let gr = this.getObject();
       if (!gr) return;
 
@@ -987,8 +995,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    }
 
    /** @summary Check if user range can be unzommed
-    * @desc Used when graph points covers larger range than provided histogram */
-   TGraphPainter.prototype.UnzoomUserRange = function(dox, doy /*, doz*/) {
+     * @desc Used when graph points covers larger range than provided histogram */
+   TGraphPainter.prototype.unzoomUserRange = function(dox, doy /*, doz*/) {
       let graph = this.getObject();
       if (this._own_histogram || !graph) return false;
 
@@ -1000,18 +1008,19 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       this.createHistogram(null, dox, doy);
       let hpainter = this.getMainPainter();
-      if (hpainter) hpainter.ExtractAxesProperties(1); // just to enforce ranges extraction
+      if (hpainter) hpainter.extractAxesProperties(1); // just to enforce ranges extraction
 
       return true;
    }
 
    /** @summary Returns true if graph drawing can be optimize */
-   TGraphPainter.prototype.CanOptimize = function() {
+   TGraphPainter.prototype.canOptimize = function() {
       return (JSROOT.settings.OptimizeDraw > 0) && !this.options.NoOpt;
    }
 
-   /** @summary Returns optimized bins - if optimization enabled */
-   TGraphPainter.prototype.OptimizeBins = function(maxpnt, filter_func) {
+   /** @summary Returns optimized bins - if optimization enabled
+     * @private */
+   TGraphPainter.prototype.optimizeBins = function(maxpnt, filter_func) {
       if ((this.bins.length < 30) && !filter_func) return this.bins;
 
       let selbins = null;
@@ -1028,7 +1037,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (!maxpnt) maxpnt = 500000;
 
-      if ((selbins.length < maxpnt) || !this.CanOptimize()) return selbins;
+      if ((selbins.length < maxpnt) || !this.canOptimize()) return selbins;
       let step = Math.floor(selbins.length / maxpnt);
       if (step < 2) step = 2;
       let optbins = [];
@@ -1038,7 +1047,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return optbins;
    }
 
-   TGraphPainter.prototype.TooltipText = function(d) {
+   /** @summary Returns tooltip for specified bin
+     * @private */
+   TGraphPainter.prototype.getTooltips = function(d) {
       let pmain = this.getFramePainter(), lines = [];
 
       lines.push(this.getObjectHint());
@@ -1094,7 +1105,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    }
 
    /** @summary draw TGraph as SVG */
-   TGraphPainter.prototype.DrawGraph = function() {
+   TGraphPainter.prototype.drawGraph = function() {
 
       let pmain = this.get_main();
       if (!pmain) return;
@@ -1134,7 +1145,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (this.options.EF) {
 
-         drawbins = this.OptimizeBins((this.options.EF > 1) ? 5000 : 0);
+         drawbins = this.optimizeBins((this.options.EF > 1) ? 5000 : 0);
 
          // build lower part
          for (let n=0;n<drawbins.length;++n) {
@@ -1172,7 +1183,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
             excl_width = 0;
          }
 
-         if (!drawbins) drawbins = this.OptimizeBins(this.options.Curve ? 5000 : 0);
+         if (!drawbins) drawbins = this.optimizeBins(this.options.Curve ? 5000 : 0);
 
          for (let n=0;n<drawbins.length;++n) {
             let bin = drawbins[n];
@@ -1227,7 +1238,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (this.options.Errors || this.options.Rect || this.options.Bar) {
 
-         drawbins = this.OptimizeBins(5000, (pnt,i) => {
+         drawbins = this.optimizeBins(5000, (pnt,i) => {
 
             let grx = pmain.grx(pnt.x);
 
@@ -1387,8 +1398,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          // let produce SVG at maximum 1MB
          let maxnummarker = 1000000 / (this.markeratt.getMarkerLength() + 7), step = 1;
 
-         if (!drawbins) drawbins = this.OptimizeBins(maxnummarker); else
-            if (this.CanOptimize() && (drawbins.length > 1.5*maxnummarker))
+         if (!drawbins) drawbins = this.optimizeBins(maxnummarker); else
+            if (this.canOptimize() && (drawbins.length > 1.5*maxnummarker))
                step = Math.min(2, Math.round(drawbins.length/maxnummarker));
 
          for (let n=0;n<drawbins.length;n+=step) {
@@ -1412,11 +1423,13 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
    }
 
-   TGraphPainter.prototype.ExtractTooltip = function(pnt) {
+   /** @summary Provide tooltip at specified point
+     * @private */
+   TGraphPainter.prototype.extractTooltip = function(pnt) {
       if (!pnt) return null;
 
       if ((this.draw_kind=="lines") || (this.draw_kind=="path") || (this.draw_kind=="mark"))
-         return this.ExtractTooltipForPath(pnt);
+         return this.extractTooltipForPath(pnt);
 
       if (this.draw_kind!="nodes") return null;
 
@@ -1470,7 +1483,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       let res = { name: this.getObject().fName, title: this.getObject().fTitle,
                   x: d.grx1, y: d.gry1,
                   color1: this.lineatt.color,
-                  lines: this.TooltipText(d),
+                  lines: this.getTooltips(d),
                   rect: best, d3bin: findbin  };
 
       if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.getFillColor();
@@ -1484,6 +1497,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
+   /** @summary Show tooltip
+     * @private */
    TGraphPainter.prototype.showTooltip = function(hint) {
 
       if (!hint) {
@@ -1491,7 +1506,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          return;
       }
 
-      if (hint.usepath) return this.ShowTooltipForPath(hint);
+      if (hint.usepath) return this.showTooltipForPath(hint);
 
       let d = d3.select(hint.d3bin).datum();
 
@@ -1516,12 +1531,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    /** @summary Process tooltip event
      * @private */
    TGraphPainter.prototype.processTooltipEvent = function(pnt) {
-      let hint = this.ExtractTooltip(pnt);
+      let hint = this.extractTooltip(pnt);
       if (!pnt || !pnt.disabled) this.showTooltip(hint);
       return hint;
    }
 
-   TGraphPainter.prototype.FindBestBin = function(pnt) {
+   /** @summary Find best bin index for specified point
+     * @private */
+   TGraphPainter.prototype.findBestBin = function(pnt) {
       if (!this.bins) return null;
 
       let islines = (this.draw_kind=="lines"),
@@ -1609,7 +1626,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
-   TGraphPainter.prototype.TestEditable = function(toggle) {
+   /** @summary Check editable flag for TGraph */
+   TGraphPainter.prototype.testEditable = function(toggle) {
       let obj = this.getObject(),
           kNotEditable = JSROOT.BIT(18);   // bit set if graph is non editable
 
@@ -1618,11 +1636,13 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return !obj.TestBit(kNotEditable);
    }
 
-   TGraphPainter.prototype.ExtractTooltipForPath = function(pnt) {
+   /** @summary Provide tooltip at specified point for path-based drawing
+     * @private */
+   TGraphPainter.prototype.extractTooltipForPath = function(pnt) {
 
       if (this.bins === null) return null;
 
-      let best = this.FindBestBin(pnt);
+      let best = this.findBestBin(pnt);
 
       if (!best || (!best.bin && !best.closeline)) return null;
 
@@ -1634,7 +1654,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                   x: best.bin ? pmain.grx(best.bin.x) : best.linex,
                   y: best.bin ? pmain.gry(best.bin.y) : best.liney,
                   color1: this.lineatt.color,
-                  lines: this.TooltipText(best.bin),
+                  lines: this.getTooltips(best.bin),
                   usepath: true };
 
       res.ismark = ismark;
@@ -1672,7 +1692,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
-   TGraphPainter.prototype.ShowTooltipForPath = function(hint) {
+   /** @summary Show tooltip for path drawing
+     * @private */
+   TGraphPainter.prototype.showTooltipForPath = function(hint) {
 
       let ttbin = this.draw_g.select(".tooltip_bin");
 
@@ -1725,10 +1747,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
    }
 
-   /** Start moving of TGraph */
+   /** @summary Start moving of TGraph
+     * @private */
    TGraphPainter.prototype.moveStart = function(x,y) {
       this.pos_dx = this.pos_dy = 0;
-      let hint = this.ExtractTooltip({x:x, y:y});
+      let hint = this.extractTooltip({x:x, y:y});
       if (hint && hint.exact && (hint.binindx !== undefined)) {
          this.move_binindx = hint.binindx;
          this.move_bin = hint.bin;
@@ -1752,7 +1775,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          if (main && this.move_bin) {
             this.move_bin.x = main.revertAxis("x", this.move_x0 + this.pos_dx);
             this.move_bin.y = main.revertAxis("y", this.move_y0 + this.pos_dy);
-            this.DrawGraph();
+            this.drawGraph();
          }
       }
    }
@@ -1775,7 +1798,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                if ((bin.indx == 0) && this.matchObjectType('TCutG'))
                   exec += "SetPoint(" + (this.getObject().fNpoints-1) + "," + bin.x + "," + bin.y + ");;";
             }
-            this.DrawGraph();
+            this.drawGraph();
          }
       } else {
          exec = "SetPoint(" + this.move_bin.indx + "," + this.move_bin.x + "," + this.move_bin.y + ")";
@@ -1788,15 +1811,19 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          this.submitCanvExec(exec);
    }
 
+   /** @summary Fill context menu
+     * @private */
    TGraphPainter.prototype.fillContextMenu = function(menu) {
       JSROOT.ObjectPainter.prototype.fillContextMenu.call(this, menu);
 
       if (!this.snapid)
-         menu.addchk(this.TestEditable(), "Editable", () => this.TestEditable(true));
+         menu.addchk(this.testEditable(), "Editable", () => this.testEditable(true));
 
       return menu.size() > 0;
    }
 
+   /** @summary Execute menu command
+     * @private */
    TGraphPainter.prototype.executeMenuCommand = function(method, args) {
       if (JSROOT.ObjectPainter.prototype.executeMenuCommand.call(this,method,args)) return true;
 
@@ -1807,7 +1834,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
          if (!canp || canp._readonly || !pnt) return true; // ignore function
 
-         let hint = this.ExtractTooltip(pnt);
+         let hint = this.extractTooltip(pnt);
 
          if (method.fName == 'InsertPoint') {
             let main = this.getFramePainter(),
@@ -1829,7 +1856,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       if (!this.matchObjectType(obj)) return false;
 
       if ((opt !== undefined) && (opt != this.options.original))
-         this.DecodeOptions(opt);
+         this.decodeOptions(opt);
 
       let graph = this.getObject();
       // TODO: make real update of TGraph object content
@@ -1838,7 +1865,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       graph.fX = obj.fX;
       graph.fY = obj.fY;
       graph.fNpoints = obj.fNpoints;
-      this.CreateBins();
+      this.createBins();
 
       // if our own histogram was used as axis drawing, we need update histogram as well
       if (this.axes_draw) {
@@ -1864,6 +1891,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return false;
    }
 
+   /** @summary Process click on graph-defined buttons
+     * @private */
    TGraphPainter.prototype.clickButton = function(funcname) {
 
       if (funcname !== "ToggleZoom") return false;
@@ -1878,7 +1907,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return true;
    }
 
-   TGraphPainter.prototype.FindFunc = function() {
+   /** @summary Find TF1/TF2 in TGraph list of functions
+     * @private */
+   TGraphPainter.prototype.findFunc = function() {
       let gr = this.getObject();
       if (gr && gr.fFunctions)
          for (let i = 0; i < gr.fFunctions.arr.length; ++i) {
@@ -1888,7 +1919,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return null;
    }
 
-   TGraphPainter.prototype.FindStat = function() {
+   /** @summary Find stat box in TGraph list of functions
+     * @private */
+   TGraphPainter.prototype.findStat = function() {
       let gr = this.getObject();
       if (gr && gr.fFunctions)
          for (let i = 0; i < gr.fFunctions.arr.length; ++i) {
@@ -1899,11 +1932,13 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return null;
    }
 
-   TGraphPainter.prototype.CreateStat = function() {
-      let func = this.FindFunc();
+   /** @summary Create stat box
+     * @private */
+   TGraphPainter.prototype.createStat = function() {
+      let func = this.findFunc();
       if (!func) return null;
 
-      let stats = this.FindStat();
+      let stats = this.findStat();
       if (stats) return stats;
 
       // do not create stats box when drawing canvas
@@ -1944,10 +1979,12 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return stats;
    }
 
-   TGraphPainter.prototype.FillStatistic = function(stat, dostat, dofit) {
+   /** @summary Fill statistic
+     * @private */
+   TGraphPainter.prototype.fillStatistic = function(stat, dostat, dofit) {
 
       // cannot fill stats without func
-      let func = this.FindFunc();
+      let func = this.findFunc();
 
       if (!func || !dofit || !this.create_stats) return false;
 
@@ -1979,9 +2016,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    function drawGraph(divid, graph, opt) {
 
       let painter = new TGraphPainter(divid, graph);
-      painter.DecodeOptions(opt);
-      painter.CreateBins();
-      painter.CreateStat();
+      painter.decodeOptions(opt);
+      painter.createBins();
+      painter.createStat();
 
       let promise = Promise.resolve();
 
@@ -1998,11 +2035,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       return promise.then(() => {
          painter.addToPadPrimitives();
-         painter.DrawGraph();
+         painter.drawGraph();
          // wait until interactive elements assigned
-         if (painter.TestEditable() && !JSROOT.BatchMode)
+         if (painter.testEditable() && !JSROOT.BatchMode)
             return JSROOT.require(['interactive'])
-                         .then(inter => inter.DragMoveHandler.AddMove(painter));
+                         .then(inter => inter.addMoveHandler(painter));
       }).then(() => painter.drawNextFunction(0));
    }
 
@@ -2100,7 +2137,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    }
 
    /** @summary Process mouse event */
-   TGraphPolargramPainter.prototype.MouseEvent = function(kind, evnt) {
+   TGraphPolargramPainter.prototype.mouseEvent = function(kind, evnt) {
       let layer = this.getLayerSvg("primitives_layer"),
           interactive = layer.select(".interactive_ellipse");
       if (interactive.empty()) return;
@@ -2112,15 +2149,15 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          pnt = { x: pos[0], y: pos[1], touch: false };
       }
 
-      this.ProcessTooltipEvent(pnt);
+      this.processFrameTooltipEvent(pnt);
    }
 
    /** @summary Process mouse wheel event */
-   TGraphPolargramPainter.prototype.MouseWheel = function(evnt) {
+   TGraphPolargramPainter.prototype.mouseWheel = function(evnt) {
       evnt.stopPropagation();
       evnt.preventDefault();
 
-      this.ProcessTooltipEvent(null); // remove all tooltips
+      this.processFrameTooltipEvent(null); // remove all tooltips
 
       let polar = this.getObject();
 
@@ -2291,16 +2328,16 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                                .attr("cy",0)
                                .style("fill", "none")
                                .style("pointer-events","visibleFill")
-                               .on('mouseenter', evnt => this.MouseEvent('enter', evnt))
-                               .on('mousemove', evnt => this.MouseEvent('move', evnt))
-                               .on('mouseleave', evnt => this.MouseEvent('leave', evnt));
+                               .on('mouseenter', evnt => this.mouseEvent('enter', evnt))
+                               .on('mousemove', evnt => this.mouseEvent('move', evnt))
+                               .on('mouseleave', evnt => this.mouseEvent('leave', evnt));
 
          interactive.attr("rx", this.szx).attr("ry", this.szy);
 
          d3.select(interactive.node().parentNode).attr("transform", this.draw_g.attr("transform"));
 
          if (JSROOT.settings.Zooming && JSROOT.settings.ZoomWheel)
-            interactive.on("wheel", evnt => this.MouseWheel(evnt));
+            interactive.on("wheel", evnt => this.mouseWheel(evnt));
       });
    }
 
@@ -2343,7 +2380,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       this.drawGraphPolar();
    }
 
-   TGraphPolarPainter.prototype.DecodeOptions = function(opt) {
+   TGraphPolarPainter.prototype.decodeOptions = function(opt) {
 
       let d = new JSROOT.DrawOptions(opt || "L");
 
@@ -2439,7 +2476,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    }
 
-   TGraphPolarPainter.prototype.CreatePolargram = function() {
+   /** @summary Create polargram object
+     * @private */
+   TGraphPolarPainter.prototype.createPolargram = function() {
       let polargram = JSROOT.create("TGraphPolargram"),
           gr = this.getObject();
 
@@ -2455,7 +2494,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return polargram;
    }
 
-   TGraphPolarPainter.prototype.ExtractTooltip = function(pnt) {
+   /** @summary Provide tooltip at specified point
+     * @private */
+   TGraphPolarPainter.prototype.extractTooltip = function(pnt) {
       if (!pnt) return null;
 
       let graph = this.getObject(),
@@ -2527,14 +2568,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    /** @summary Process tooltip event
      * @private */
    TGraphPolarPainter.prototype.processTooltipEvent = function(pnt) {
-      let hint = this.ExtractTooltip(pnt);
+      let hint = this.extractTooltip(pnt);
       if (!pnt || !pnt.disabled) this.showTooltip(hint);
       return hint;
    }
 
    function drawGraphPolar(divid, graph, opt) {
       let painter = new TGraphPolarPainter(divid, graph);
-      painter.DecodeOptions(opt);
+      painter.decodeOptions(opt);
 
       let main = painter.getMainPainter();
       if (main && !main.$polargram) {
@@ -2546,7 +2587,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (!main) {
          if (!graph.fPolargram)
-            graph.fPolargram = painter.CreatePolargram();
+            graph.fPolargram = painter.createPolargram();
          ppromise = JSROOT.draw(divid, graph.fPolargram, "");
       }
 
@@ -2584,12 +2625,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (spline !== obj) JSROOT.extend(spline, obj);
 
-      if (opt !== undefined) this.DecodeOptions(opt);
+      if (opt !== undefined) this.decodeOptions(opt);
 
       return true;
    }
 
-   TSplinePainter.prototype.Eval = function(knot, x) {
+   /** @summary Evaluate spline at given position
+     * @private */
+   TSplinePainter.prototype.eval = function(knot, x) {
       let dx = x - knot.fX;
 
       if (knot._typename == "TSplinePoly3")
@@ -2628,7 +2671,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return klow;
    }
 
-   TSplinePainter.prototype.CreateDummyHisto = function() {
+   /** @summary Create histogram for axes drawing
+     * @private */
+   TSplinePainter.prototype.createDummyHisto = function() {
 
       let xmin = 0, xmax = 1, ymin = 0, ymax = 1,
           spline = this.getObject();
@@ -2677,7 +2722,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          xx = main.revertAxis("x", pnt.x);
          indx = this.FindX(xx);
          knot = spline.fPoly[indx];
-         yy = this.Eval(knot, xx);
+         yy = this.eval(knot, xx);
 
          if ((indx < spline.fN-1) && (Math.abs(spline.fPoly[indx+1].fX-xx) < Math.abs(xx-knot.fX))) knot = spline.fPoly[++indx];
 
@@ -2774,7 +2819,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
             while ((indx < spline.fNp-1) && (xx > spline.fPoly[indx+1].fX)) ++indx;
 
-            let yy = this.Eval(spline.fPoly[indx], xx);
+            let yy = this.eval(spline.fPoly[indx], xx);
 
             bins.push({ x: xx, y: yy, grx: pmain.grx(xx), gry: pmain.gry(yy) });
          }
@@ -2835,7 +2880,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return true;
    }
 
-   TSplinePainter.prototype.DecodeOptions = function(opt) {
+   TSplinePainter.prototype.decodeOptions = function(opt) {
       let d = new JSROOT.DrawOptions(opt);
 
       if (!this.options) this.options = {};
@@ -2852,7 +2897,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    jsrp.drawSpline = function(divid, spline, opt) {
       let painter = new TSplinePainter(divid, spline);
-      painter.DecodeOptions(opt);
+      painter.decodeOptions(opt);
 
       let promise = Promise.resolve();
       if (!painter.getMainPainter()) {
@@ -2860,7 +2905,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
             console.warn('TSpline painter requires histogram to be drawn');
             return null;
          }
-         let histo = painter.CreateDummyHisto();
+         let histo = painter.createDummyHisto();
          promise = JSROOT.draw(divid, histo, "AXIS");
       }
 
@@ -2894,7 +2939,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       if (this.step === undefined) this.startDrawing();
    }
 
-   TGraphTimePainter.prototype.DecodeOptions = function(opt) {
+   TGraphTimePainter.prototype.decodeOptions = function(opt) {
 
       let d = new JSROOT.DrawOptions(opt || "REPEAT");
 
@@ -3010,7 +3055,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          return null;
       }
 
-      painter.DecodeOptions(opt);
+      painter.decodeOptions(opt);
 
       if (!gr.fFrame.fTitle && gr.fTitle) gr.fFrame.fTitle = gr.fTitle;
 
@@ -3042,7 +3087,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    TEfficiencyPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
-   TEfficiencyPainter.prototype.GetEfficiency = function(bin) {
+   /** @summary Caluclate efficiency */
+   TEfficiencyPainter.prototype.getEfficiency = function(bin) {
       let obj = this.getObject(),
           total = obj.fTotalHistogram.getBinContent(bin),
           passed = obj.fPassedHistogram.getBinContent(bin);
@@ -3061,13 +3107,15 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    }
 */
 
+   /** @summary Caluclate normal
+     * @private */
    TEfficiencyPainter.prototype.Normal = function(total,passed,level,bUpper) {
       if (total == 0) return bUpper ? 1 : 0;
 
       let alpha = (1.0 - level)/2,
           average = passed / total,
           sigma = Math.sqrt(average * (1 - average) / total),
-         delta = JSROOT.Math.normal_quantile(1 - alpha,sigma);
+          delta = JSROOT.Math.normal_quantile(1 - alpha,sigma);
 
       if(bUpper)
          return ((average + delta) > 1) ? 1.0 : (average + delta);
@@ -3075,44 +3123,44 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return ((average - delta) < 0) ? 0.0 : (average - delta);
    }
 
-   TEfficiencyPainter.prototype.GetEfficiencyErrorLow = function(bin) {
+   /** @summary Caluclate efficiency error low
+     * @private */
+   TEfficiencyPainter.prototype.getEfficiencyErrorLow = function(bin) {
       let obj = this.getObject(),
           total = obj.fTotalHistogram.getBinContent(bin),
           passed = obj.fPassedHistogram.getBinContent(bin),
-          eff = this.GetEfficiency(bin);
+          eff = this.getEfficiency(bin);
 
       return eff - this[this.fBoundary](total,passed, obj.fConfLevel, false);
    }
 
-   TEfficiencyPainter.prototype.GetEfficiencyErrorUp = function(bin) {
+   /** @summary Caluclate efficiency error low up
+     * @private */
+   TEfficiencyPainter.prototype.getEfficiencyErrorUp = function(bin) {
       let obj = this.getObject(),
           total = obj.fTotalHistogram.getBinContent(bin),
           passed = obj.fPassedHistogram.getBinContent(bin),
-          eff = this.GetEfficiency(bin);
+          eff = this.getEfficiency(bin);
 
-      return this[this.fBoundary]( total, passed, obj.fConfLevel, true) - eff;
+      return this[this.fBoundary](total, passed, obj.fConfLevel, true) - eff;
    }
 
-   TEfficiencyPainter.prototype.CreateGraph = function() {
-      let gr = JSROOT.create('TGraphAsymmErrors');
-      gr.fName = "eff_graph";
-      return gr;
-   }
-
-   TEfficiencyPainter.prototype.FillGraph = function(gr, opt) {
+   /** @summary Fill graph with points from efficiency object
+     * @private */
+   TEfficiencyPainter.prototype.fillGraph = function(gr, opt) {
       let eff = this.getObject(),
           npoints = eff.fTotalHistogram.fXaxis.fNbins,
           option = opt.toLowerCase(),
           plot0Bins = false, j = 0;
-      if (option.indexOf("e0")>=0) plot0Bins = true;
+      if (option.indexOf("e0") >= 0) plot0Bins = true;
       for (let n=0;n<npoints;++n) {
          if (!plot0Bins && eff.fTotalHistogram.getBinContent(n+1) === 0) continue;
          gr.fX[j] = eff.fTotalHistogram.fXaxis.GetBinCenter(n+1);
-         gr.fY[j] = this.GetEfficiency(n+1);
+         gr.fY[j] = this.getEfficiency(n+1);
          gr.fEXlow[j] = eff.fTotalHistogram.fXaxis.GetBinCenter(n+1) - eff.fTotalHistogram.fXaxis.GetBinLowEdge(n+1);
          gr.fEXhigh[j] = eff.fTotalHistogram.fXaxis.GetBinLowEdge(n+2) - eff.fTotalHistogram.fXaxis.GetBinCenter(n+1);
-         gr.fEYlow[j] = this.GetEfficiencyErrorLow(n+1);
-         gr.fEYhigh[j] = this.GetEfficiencyErrorUp(n+1);
+         gr.fEYlow[j] = this.getEfficiencyErrorLow(n+1);
+         gr.fEYhigh[j] = this.getEfficiencyErrorUp(n+1);
          ++j;
       }
       gr.fNpoints = j;
@@ -3125,8 +3173,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       let painter = new TEfficiencyPainter(divid, eff);
       painter.options = opt;
 
-      let gr = painter.CreateGraph();
-      painter.FillGraph(gr, opt);
+      let gr = JSROOT.create('TGraphAsymmErrors');
+      gr.fName = "eff_graph";
+      painter.fillGraph(gr, opt);
 
       return JSROOT.draw(divid, gr, opt)
                    .then(() => {
@@ -3157,11 +3206,13 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    TMultiGraphPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
+   /** @summary Cleanup multigraph painter */
    TMultiGraphPainter.prototype.cleanup = function() {
       this.painters = [];
       JSROOT.ObjectPainter.prototype.cleanup.call(this);
    }
 
+   /** @summary Update multigraph object */
    TMultiGraphPainter.prototype.updateObject = function(obj) {
       if (!this.matchObjectType(obj)) return false;
 
@@ -3175,7 +3226,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       if (this.firstpainter) {
          let histo = obj.fHistogram;
          if (this.autorange && !histo)
-            histo = this.ScanGraphsRange(graphs);
+            histo = this.scanGraphsRange(graphs);
 
          if (this.firstpainter.updateObject(histo)) isany = true;
       }
@@ -3196,35 +3247,36 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return isany;
    }
 
-   TMultiGraphPainter.prototype.ComputeGraphRange = function(res, gr) {
-      // Compute the x/y range of the points in this graph
-      if (gr.fNpoints == 0) return;
-      if (res.first) {
-         res.xmin = res.xmax = gr.fX[0];
-         res.ymin = res.ymax = gr.fY[0];
-         res.first = false;
-      }
-      for (let i=0; i < gr.fNpoints; ++i) {
-         res.xmin = Math.min(res.xmin, gr.fX[i]);
-         res.xmax = Math.max(res.xmax, gr.fX[i]);
-         res.ymin = Math.min(res.ymin, gr.fY[i]);
-         res.ymax = Math.max(res.ymax, gr.fY[i]);
-      }
-      return res;
-   }
-
-   TMultiGraphPainter.prototype.padtoX = function(pad, x) {
-      // Convert x from pad to X.
-      if (pad.fLogx && (x < 50))
-         return Math.exp(2.302585092994 * x);
-      return x;
-   }
-
-   TMultiGraphPainter.prototype.ScanGraphsRange = function(graphs, histo, pad) {
+   /** @summary Scan graphs range
+     * @returns {object} histogram for axes drawing
+     * @private */
+   TMultiGraphPainter.prototype.scanGraphsRange = function(graphs, histo, pad) {
       let mgraph = this.getObject(),
           maximum, minimum, dx, dy, uxmin = 0, uxmax = 0, logx = false, logy = false,
           time_display = false, time_format = "",
           rw = {  xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true };
+
+      function computeGraphRange(res, gr) {
+         if (gr.fNpoints == 0) return;
+         if (res.first) {
+            res.xmin = res.xmax = gr.fX[0];
+            res.ymin = res.ymax = gr.fY[0];
+            res.first = false;
+         }
+         for (let i=0; i < gr.fNpoints; ++i) {
+            res.xmin = Math.min(res.xmin, gr.fX[i]);
+            res.xmax = Math.max(res.xmax, gr.fX[i]);
+            res.ymin = Math.min(res.ymin, gr.fY[i]);
+            res.ymax = Math.max(res.ymax, gr.fY[i]);
+         }
+         return res;
+      }
+
+      function padtoX(x) {
+         if (pad.fLogx && (x < 50))
+            return Math.exp(2.302585092994 * x);
+         return x;
+      }
 
       if (pad) {
          logx = pad.fLogx;
@@ -3239,14 +3291,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          minimum = histo.fYaxis.fXmin;
          maximum = histo.fYaxis.fXmax;
          if (pad) {
-            uxmin = this.padtoX(pad, rw.xmin);
-            uxmax = this.padtoX(pad, rw.xmax);
+            uxmin = padtoX(rw.xmin);
+            uxmax = padtoX(rw.xmax);
          }
       } else {
          this.autorange = true;
 
          for (let i = 0; i < graphs.arr.length; ++i)
-            this.ComputeGraphRange(rw, graphs.arr[i]);
+            computeGraphRange(rw, graphs.arr[i]);
 
          if (graphs.arr[0] && graphs.arr[0].fHistogram && graphs.arr[0].fHistogram.fXaxis.fTimeDisplay) {
             time_display = true;
@@ -3312,7 +3364,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       let mgraph = this.getObject(),
           pp = this.getPadPainter(),
-          histo = this.ScanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, pp ? pp.getRootPad(true) : null);
+          histo = this.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, pp ? pp.getRootPad(true) : null);
 
       // histogram painter will be first in the pad, will define axis and
       // interactive actions
@@ -3574,13 +3626,16 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    TASImagePainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
+   /** @summary Decode options string  */
    TASImagePainter.prototype.decodeOptions = function(opt) {
       this.options = { Zscale: false };
 
       if (opt && (opt.indexOf("z") >= 0)) this.options.Zscale = true;
    }
 
-   TASImagePainter.prototype.CreateRGBA = function(nlevels) {
+   /** @summary Create RGBA buffers
+     * @private */
+   TASImagePainter.prototype.createRGBA = function(nlevels) {
       let obj = this.getObject();
 
       if (!obj || !obj.fPalette) return null;
@@ -3603,6 +3658,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return rgba;
    }
 
+   /** @summary Draw image
+     * @private */
    TASImagePainter.prototype.drawImage = function() {
       let obj = this.getObject(),
           is_buf = false,
@@ -3658,7 +3715,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          is_buf = true;
 
          let nlevels = 1000;
-         this.rgba = this.CreateRGBA(nlevels); // precaclucated colors
+         this.rgba = this.createRGBA(nlevels); // precaclucated colors
 
          let min = obj.fImgBuf[0], max = obj.fImgBuf[0];
          for (let k=1;k<obj.fImgBuf.length;++k) {
@@ -3793,7 +3850,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return false;
    }
 
-   /** @summary Draw color palette */
+   /** @summary Draw color palette
+     * @private */
    TASImagePainter.prototype.drawColorPalette = function(enabled, can_move) {
 
       if (!this.isMainPainter())
@@ -3847,11 +3905,13 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          });
       } else {
          pal_painter.Enabled = true;
-         return pal_painter.DrawPave("");
+         return pal_painter.drawPave("");
       }
    }
 
-   TASImagePainter.prototype.ToggleColz = function() {
+   /** @summary Toggle colz draw option
+     * @private */
+   TASImagePainter.prototype.toggleColz = function() {
       let obj = this.getObject(),
           can_toggle = obj && obj.fPalette;
 
@@ -3861,6 +3921,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Redraw image
+     * @private */
    TASImagePainter.prototype.redraw = function(reason) {
       let img = this.draw_g ? this.draw_g.select("image") : null,
           fp = this.getFramePainter();
@@ -3872,18 +3934,22 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Process click on TASImage-defined buttons
+     * @private */
    TASImagePainter.prototype.clickButton = function(funcname) {
       if (!this.isMainPainter()) return false;
 
       switch(funcname) {
-         case "ToggleColorZ": this.ToggleColz(); break;
+         case "ToggleColorZ": this.toggleColz(); break;
          default: return false;
       }
 
       return true;
    }
 
-   TASImagePainter.prototype.FillToolbar = function() {
+   /** @summary Fill pad toolbar for TASImage
+     * @private */
+   TASImagePainter.prototype.fillToolbar = function() {
       let pp = this.getPadPainter(), obj = this.getObject();
       if (pp && obj && obj.fPalette) {
          pp.addPadButton("th2colorz", "Toggle color palette", "ToggleColorZ");
@@ -3897,7 +3963,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return jsrp.ensureTCanvas(painter)
                  .then(() => painter.drawImage())
                  .then(() => {
-                     painter.FillToolbar();
+                     painter.fillToolbar();
                      return painter;
                  });
    }

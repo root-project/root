@@ -1275,7 +1275,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                     .attr("width", this.vertical ? 10 : len)
                     .attr("height", this.vertical ? len : 10);
 
-         inter.DragMoveHandler.AddDrag(this, { only_move: true, redraw: this.positionChanged.bind(this) });
+         inter.addDragHandler(this, { only_move: true, redraw: this.positionChanged.bind(this) });
 
          this.draw_g.on("dblclick", () => this.zoomStandalone());
 
@@ -1350,18 +1350,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       menu.add("endsub:");
 
       menu.add("sub:Ticks");
-      menu.RColorMenu("color", this.ticksColor, col => this.changeAxisAttr(1, "ticks_color_name", col));
-      menu.SizeMenu("size", 0, 0.05, 0.01, this.ticksSize/this.scaling_size, sz => this.changeAxisAttr(1, "ticks_size", sz));
-      menu.SelectMenu("side", ["normal", "invert", "both"], this.ticksSide, side => this.changeAxisAttr(1, "ticks_side", side));
+      menu.addRColorMenu("color", this.ticksColor, col => this.changeAxisAttr(1, "ticks_color_name", col));
+      menu.addSizeMenu("size", 0, 0.05, 0.01, this.ticksSize/this.scaling_size, sz => this.changeAxisAttr(1, "ticks_size", sz));
+      menu.addSelectMenu("side", ["normal", "invert", "both"], this.ticksSide, side => this.changeAxisAttr(1, "ticks_side", side));
 
       menu.add("endsub:");
 
       if (!this.optionUnlab && this.labelsFont) {
          menu.add("sub:Labels");
-         menu.SizeMenu("offset", -0.05, 0.05, 0.01, this.labelsOffset/this.scaling_size, offset => {
+         menu.addSizeMenu("offset", -0.05, 0.05, 0.01, this.labelsOffset/this.scaling_size, offset => {
             this.changeAxisAttr(1, "labels_offset", offset);
          });
-         menu.RAttrTextItems(this.labelsFont, { noangle: 1, noalign: 1 }, change => {
+         menu.addRAttrTextItems(this.labelsFont, { noangle: 1, noalign: 1 }, change => {
             this.changeAxisAttr(1, "labels_" + change.name, change.value);
          });
          menu.addchk(this.labelsFont.angle, "rotate", res => {
@@ -1376,11 +1376,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
 
       if (this.fTitle) {
-         menu.SizeMenu("offset", -0.05, 0.05, 0.01, this.titleOffset/this.scaling_size, offset => {
+         menu.addSizeMenu("offset", -0.05, 0.05, 0.01, this.titleOffset/this.scaling_size, offset => {
             this.changeAxisAttr(1, "title_offset", offset);
          });
 
-         menu.SelectMenu("position", ["left", "center", "right"], this.titlePos, pos => {
+         menu.addSelectMenu("position", ["left", "center", "right"], this.titlePos, pos => {
             this.changeAxisAttr(1, "title_position", pos);
          });
 
@@ -1388,7 +1388,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.changeAxisAttr(1, "title_angle", flag ? 180 : 0);
          });
 
-         menu.RAttrTextItems(this.titleFont, { noangle: 1, noalign: 1 }, change => {
+         menu.addRAttrTextItems(this.titleFont, { noangle: 1, noalign: 1 }, change => {
             this.changeAxisAttr(1, "title_" + change.name, change.value);
          });
       }
@@ -1995,7 +1995,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       JSROOT.require(['interactive']).then(inter => {
          top_rect.attr("pointer-events", "visibleFill");  // let process mouse events inside frame
          inter.FrameInteractive.assign(this);
-         this.BasicInteractive();
+         this.addBasicInteractivity();
       });
    }
 
@@ -2087,7 +2087,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (zoom_z) {
          let cnt = 0;
-         // if (this.logz && this.ymin_nz && this.Dimension()===2) main_zmin = 0.3*this.ymin_nz;
+         // if (this.logz && this.ymin_nz && this.getDimension()===2) main_zmin = 0.3*this.ymin_nz;
          if (zmin <= this.zmin) { zmin = this.zmin; cnt++; }
          if (zmax >= this.zmax) { zmax = this.zmax; cnt++; }
          if (cnt === 2) { zoom_z = false; unzoom_z = true; }
@@ -2265,7 +2265,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // menu.addchk(this.logx, "SetLogx", this.toggleAxisLog.bind(this,"x"));
       // menu.addchk(this.logy, "SetLogy", this.toggleAxisLog.bind(this,"y"));
-      // if (this.Dimension() == 2)
+      // if (this.getDimension() == 2)
       //   menu.addchk(pad.fLogz, "SetLogz", this.toggleAxisLog.bind(main,"z"));
       menu.add("separator");
 
@@ -2273,7 +2273,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       menu.addchk(this.isTooltipAllowed(), "Show tooltips", function() {
          this.setTooltipAllowed("toggle");
       });
-      menu.AddAttributesMenu(this, alone ? "" : "Frame ");
+      menu.addAttributesMenu(this, alone ? "" : "Frame ");
       menu.add("separator");
       menu.add("Save as frame.png", () => this.getPadPainter().saveAs("png", 'frame', 'frame.png'));
       menu.add("Save as frame.svg", () => this.getPadPainter().saveAs("svg", 'frame', 'frame.svg'));
@@ -2886,7 +2886,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       else
          menu.add("header: Canvas");
 
-      menu.addchk(this.isTooltipAllowed(), "Show tooltips", this.setTooltipAllowed.bind(this, "toggle"));
+      menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
 
       if (!this._websocket) {
 
@@ -2919,13 +2919,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          //menu.addchk(this.pad.fTickx, 'Tick x', 'fTickx', ToggleField);
          //menu.addchk(this.pad.fTicky, 'Tick y', 'fTicky', ToggleField);
 
-         menu.AddAttributesMenu(this);
+         menu.addAttributesMenu(this);
       }
 
       menu.add("separator");
 
-      if (this.ToggleEventStatus)
-         menu.addchk(this.hasEventStatus(), "Event status", () => this.ToggleEventStatus());
+      if (this.activateStatusBar)
+         menu.addchk(this.hasEventStatus(), "Event status", () => this.activateStatusBar('toggle'));
 
       if (this.enlargeMain() || (this.has_canvas && this.hasObjectsToDraw()))
          menu.addchk((this.enlargeMain('state')=='on'), "Enlarge " + (this.iscan ? "canvas" : "pad"), () => this.enlargePad());
@@ -3410,16 +3410,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          let main = pp.getFramePainter();
-         if (!main || (typeof main.Render3D !== 'function') || (typeof main.access_3d_kind != 'function')) return;
+         if (!main || (typeof main.render3D !== 'function') || (typeof main.access3dKind != 'function')) return;
 
-         let can3d = main.access_3d_kind();
+         let can3d = main.access3dKind();
 
          if ((can3d !== JSROOT.constants.Embed3D.Overlay) && (can3d !== JSROOT.constants.Embed3D.Embed)) return;
 
-         let sz2 = main.size_for_3d(JSROOT.constants.Embed3D.Embed); // get size and position of DOM element as it will be embed
+         let sz2 = main.getSizeFor3d(JSROOT.constants.Embed3D.Embed); // get size and position of DOM element as it will be embed
 
          let canvas = main.renderer.domElement;
-         main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
+         main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
          let dataUrl = canvas.toDataURL("image/png");
 
          // remove 3D drawings
@@ -3557,7 +3557,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (main) {
                menu.add("X axis", "xaxis", this.itemContextMenu);
                menu.add("Y axis", "yaxis", this.itemContextMenu);
-               if ((typeof main.Dimension === 'function') && (main.Dimension() > 1))
+               if ((typeof main.getDimension === 'function') && (main.getDimension() > 1))
                   menu.add("Z axis", "zaxis", this.itemContextMenu);
             }
 
@@ -4290,7 +4290,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return Promise.resolve(this);
    }
 
-   RPavePainter.prototype.DrawPave = function() {
+   RPavePainter.prototype.drawPave = function() {
 
       let rect = this.getPadPainter().getPadRect(),
           fp = this.getFramePainter(),
@@ -4358,10 +4358,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          return JSROOT.require(['interactive']).then(inter => {
             // TODO: provide pave context menu as in v6
-            if (JSROOT.settings.ContextMenu && this.PaveContextMenu)
-               this.draw_g.on("contextmenu", this.PaveContextMenu.bind(this));
+            if (JSROOT.settings.ContextMenu && this.paveContextMenu)
+               this.draw_g.on("contextmenu", evnt => this.paveContextMenu(evnt));
 
-            inter.DragMoveHandler.AddDrag(this, { minwidth: 20, minheight: 20, redraw: this.sizeChanged.bind(this) });
+            inter.addDragHandler(this, { minwidth: 20, minheight: 20, redraw: this.sizeChanged.bind(this) });
 
             return this;
          });
@@ -4408,13 +4408,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    RPavePainter.prototype.redraw = function(/*reason*/) {
-      this.DrawPave();
+      this.drawPave();
    }
 
    let drawPave = (divid, pave, opt) => {
       let painter = new RPavePainter(divid, pave, opt);
 
-      return jsrp.ensureRCanvas(painter, false).then(() => painter.DrawPave());
+      return jsrp.ensureRCanvas(painter, false).then(() => painter.drawPave());
    }
 
    // =======================================================================================
@@ -4465,7 +4465,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!JSROOT.BatchMode)
          JSROOT.require(['interactive'])
-               .then(inter => inter.DragMoveHandler.AddDrag(this, { minwidth: 20, minheight: 20, no_change_x: true, redraw: this.redraw.bind(this,'drag') }));
+               .then(inter => inter.addDragHandler(this, { minwidth: 20, minheight: 20, no_change_x: true, redraw: this.redraw.bind(this,'drag') }));
    }
 
    ////////////////////////////////////////////////////////////////////////////////////////////
@@ -4512,7 +4512,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return (zindx < 0) ? "" : this.getColor(zindx);
       },
 
-      GetContour: function() {
+      getContour: function() {
          return this.fContour && (this.fContour.length > 1) ? this.fContour : null;
       },
 
@@ -4555,7 +4555,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return arr;
       },
 
-      CreateContour: function(logz, nlevels, zmin, zmax, zminpositive) {
+      createContour: function(logz, nlevels, zmin, zmax, zminpositive) {
          this.fContour = [];
          delete this.fCustomContour;
          this.colzmin = zmin;
@@ -4627,7 +4627,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    RPalettePainter.prototype.DrawPalette = function(after_resize) {
 
       let palette = this.getHistPalette(),
-          contour = palette.GetContour(),
+          contour = palette.getContour(),
           framep = this.getFramePainter();
 
       if (!contour)
@@ -4736,7 +4736,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             });
 
          if (!after_resize)
-            inter.DragMoveHandler.AddDrag(this, { minwidth: 20, minheight: 20, no_change_y: true, redraw: this.DrawPalette.bind(this, true) });
+            inter.addDragHandler(this, { minwidth: 20, minheight: 20, no_change_y: true, redraw: this.DrawPalette.bind(this, true) });
 
          if (!JSROOT.settings.Zooming) return;
 

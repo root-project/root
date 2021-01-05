@@ -66,7 +66,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.mode3d = false;
 
       // initialize histogram methods
-      this.GetHisto(true);
+      this.getHisto(true);
    }
 
    RHistPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
@@ -83,7 +83,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return obj && obj.fAxes ? true : false;
    }
 
-   RHistPainter.prototype.GetHisto = function(force) {
+   RHistPainter.prototype.getHisto = function(force) {
       let obj = this.getObject(), histo = this.GetHImpl(obj);
 
       if (histo && (!histo.getBinContent || force)) {
@@ -205,15 +205,32 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return false;
    }
 
-   RHistPainter.prototype.IsTH2Poly = function() {
+   RHistPainter.prototype.isRH2Poly = function() {
       return false;
    }
 
-   RHistPainter.prototype.DecodeOptions = function(/*opt*/) {
+   RHistPainter.prototype.decodeOptions = function(/*opt*/) {
       if (!this.options) this.options = { Hist : 1 };
    }
 
-   RHistPainter.prototype.Clear3DScene = function() {
+   /** @summary Copy draw options from other painter */
+   RHistPainter.prototype.copyOptionsFrom = function(src) {
+      if (src === this) return;
+      let o = this.options, o0 = src.options;
+      o.Mode3D = o0.Mode3D;
+   }
+
+   /** @summary copy draw options to all other histograms in the pad
+     * @private */
+   RHistPainter.prototype.copyOptionsToOthers = function() {
+      this.forEachPainter(painter => {
+         if ((painter !== this) && (typeof painter.copyOptionsFrom == 'function'))
+            painter.copyOptionsFrom(this);
+      }, "objects");
+   }
+
+   /** @summary Clear 3d drawings - if any */
+   RHistPainter.prototype.clear3DScene = function() {
       let fp = this.getFramePainter();
       if (fp && typeof fp.create3DScene === 'function')
          fp.create3DScene(-1);
@@ -221,21 +238,21 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    RHistPainter.prototype.cleanup = function() {
-      // clear all 3D buffers
-      this.Clear3DScene();
+      this.clear3DScene();
 
       delete this.options;
 
       JSROOT.ObjectPainter.prototype.cleanup.call(this);
    }
 
-   RHistPainter.prototype.Dimension = function() {
+   /** @summary Returns number of histogram dimensions */
+   RHistPainter.prototype.getDimension = function() {
       return 1;
    }
 
    /** @summary Scan histogram content
      * @abstract */
-   RHistPainter.prototype.ScanContent = function(/*when_axis_changed*/) {
+   RHistPainter.prototype.scanContent = function(/*when_axis_changed*/) {
       // function will be called once new histogram or
       // new histogram content is assigned
       // one should find min,max,nbins, maxcontent values
@@ -258,7 +275,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return main.drawAxes();
    }
 
-   RHistPainter.prototype.CheckHistDrawAttributes = function() {
+   RHistPainter.prototype.createHistDrawAttributes = function() {
       this.createv7AttFill();
       this.createv7AttLine();
    }
@@ -274,7 +291,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       obj.fContMax = src.fContMax;
 
       // update histogram attributes
-      this.GetHisto(true);
+      this.getHisto(true);
 
       return true;
    }
@@ -305,7 +322,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          }
       }
 
-      this.ScanContent();
+      this.scanContent();
 
       this.histogram_updated = true; // indicate that object updated
 
@@ -313,7 +330,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    RHistPainter.prototype.getAxis = function(name) {
-      let histo = this.GetHisto(), obj = this.getObject(), axis = null;
+      let histo = this.getHisto(), obj = this.getObject(), axis = null;
 
       if (obj && obj.fAxes) {
          switch(name) {
@@ -339,9 +356,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    /** @summary Extract axes ranges and bins numbers
      * @desc Also here ensured that all axes objects got their necessary methods */
-   RHistPainter.prototype.ExtractAxesProperties = function(ndim) {
+   RHistPainter.prototype.extractAxesProperties = function(ndim) {
 
-      let histo = this.GetHisto();
+      let histo = this.getHisto();
       if (!histo) return;
 
       this.nbinsx = this.nbinsy = this.nbinsz = 0;
@@ -396,8 +413,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       let is_axes_zoomed = false;
       if (reason && (typeof reason == "string") && (reason.indexOf("zoom") == 0)) {
          if (reason.indexOf("0") > 0) is_axes_zoomed = true;
-         if ((this.Dimension() > 1) && (reason.indexOf("1") > 0)) is_axes_zoomed = true;
-         if ((this.Dimension() > 2) && (reason.indexOf("2") > 0)) is_axes_zoomed = true;
+         if ((this.getDimension() > 1) && (reason.indexOf("1") > 0)) is_axes_zoomed = true;
+         if ((this.getDimension() > 2) && (reason.indexOf("2") > 0)) is_axes_zoomed = true;
       }
 
       if (this.IsDisplayItem() && is_axes_zoomed && (this.v7CommMode() == JSROOT.v7.CommMode.kNormal)) {
@@ -423,20 +440,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return Promise.resolve(true);
    }
 
-   RHistPainter.prototype.ToggleTitle = function(/*arg*/) {
-      return false;
+   /** @summary Toggle stat box drawing
+     * @desc Not yet implemented
+     * @private */
+   RHistPainter.prototype.toggleStat = function(/*arg*/) {
    }
 
-   RHistPainter.prototype.drawHistTitle = function() {
-   }
-
-   RHistPainter.prototype.UpdateStatWebCanvas = function() {
-   }
-
-   RHistPainter.prototype.ToggleStat = function(/*arg*/) {
-   }
-
-   RHistPainter.prototype.GetSelectIndex = function(axis, size, add) {
+   RHistPainter.prototype.getSelectIndex = function(axis, size, add) {
       // be aware - here indexes starts from 0
       let indx = 0,
           main = this.getFramePainter(),
@@ -458,18 +468,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return indx;
    }
 
-   RHistPainter.prototype.FindStat = function() {
-      return null;
-   }
-
-   RHistPainter.prototype.IgnoreStatsFill = function() {
-      return true;
-   }
-
-   RHistPainter.prototype.CreateStat = function(/*force*/) {
-      return null;
-   }
-
+   /** @summary Process click on histogram-defined buttons
+     * @private */
    RHistPainter.prototype.clickButton = function(funcname) {
       // TODO: move to frame painter
       switch(funcname) {
@@ -479,49 +479,51 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                this.getFramePainter().zoomChangedInteractive('reset');
                return true;
             }
-            if (this.draw_content && (typeof this.AutoZoom === 'function')) {
-               this.AutoZoom();
+            if (this.draw_content && (typeof this.autoZoom === 'function')) {
+               this.autoZoom();
                return true;
             }
             break;
          case "ToggleLogX": this.getFramePainter().toggleAxisLog("x"); break;
          case "ToggleLogY": this.getFramePainter().toggleAxisLog("y"); break;
          case "ToggleLogZ": this.getFramePainter().toggleAxisLog("z"); break;
-         case "ToggleStatBox": this.ToggleStat(); return true;
+         case "ToggleStatBox": this.toggleStat(); return true;
       }
       return false;
    }
 
-   RHistPainter.prototype.FillToolbar = function(not_shown) {
+   /** @summary Fill pad toolbar with hist-related functions
+     * @private */
+   RHistPainter.prototype.fillToolbar = function(not_shown) {
       let pp = this.getPadPainter();
       if (!pp) return;
 
       pp.addPadButton("auto_zoom", 'Toggle between unzoom and autozoom-in', 'ToggleZoom', "Ctrl *");
       pp.addPadButton("arrow_right", "Toggle log x", "ToggleLogX", "PageDown");
       pp.addPadButton("arrow_up", "Toggle log y", "ToggleLogY", "PageUp");
-      if (this.Dimension() > 1)
+      if (this.getDimension() > 1)
          pp.addPadButton("arrow_diag", "Toggle log z", "ToggleLogZ");
       if (this.draw_content)
          pp.addPadButton("statbox", 'Toggle stat box', "ToggleStatBox");
       if (!not_shown) pp.showPadButtons();
    }
 
-   RHistPainter.prototype.Get3DToolTip = function(indx) {
-      let histo = this.GetHisto(),
+   RHistPainter.prototype.get3DToolTip = function(indx) {
+      let histo = this.getHisto(),
           tip = { bin: indx, name: histo.fName || "histo", title: histo.fTitle };
-      switch (this.Dimension()) {
+      switch (this.getDimension()) {
          case 1:
             tip.ix = indx + 1; tip.iy = 1;
             tip.value = histo.getBinContent(tip.ix);
             tip.error = histo.getBinError(tip.ix);
-            tip.lines = this.GetBinTips(indx-1);
+            tip.lines = this.getBinTooltips(indx-1);
             break;
          case 2:
             tip.ix = (indx % this.nbinsx) + 1;
             tip.iy = (indx - (tip.ix - 1)) / this.nbinsx + 1;
             tip.value = histo.getBinContent(tip.ix, tip.iy);
             tip.error = histo.getBinError(tip.ix, tip.iy);
-            tip.lines = this.GetBinTips(tip.ix-1, tip.iy-1);
+            tip.lines = this.getBinTooltips(tip.ix-1, tip.iy-1);
             break;
          case 3:
             tip.ix = indx % this.nbinsx + 1;
@@ -529,7 +531,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             tip.iz = (indx - (tip.ix - 1) - (tip.iy - 1) * this.nbinsx) / this.nbinsx / this.nbinsy + 1;
             tip.value = histo.getBinContent(tip.ix, tip.iy, tip.iz);
             tip.error = histo.getBinError(tip.ix, tip.iy, tip.iz);
-            tip.lines = this.GetBinTips(tip.ix-1, tip.iy-1, tip.iz-1);
+            tip.lines = this.getBinTooltips(tip.ix-1, tip.iy-1, tip.iz-1);
             break;
       }
 
@@ -538,7 +540,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    /** @summary Create contour levels for currently selected Z range
      * @private */
-   RHistPainter.prototype.CreateContour = function(main, palette, args) {
+   RHistPainter.prototype.createContour = function(main, palette, args) {
       if (!main || !palette) return;
 
       if (!args) args = {};
@@ -553,7 +555,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       if (zmin === zmax) { zmin = this.gminbin; zmax = this.gmaxbin; zminpos = this.gminposbin }
 
-      if (this.Dimension() < 3) {
+      if (this.getDimension() < 3) {
          if (main.zoom_zmin !== main.zoom_zmax) {
             zmin = main.zoom_zmin;
             zmax = main.zoom_zmax;
@@ -563,9 +565,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          }
       }
 
-      palette.CreateContour(main.logz, nlevels, zmin, zmax, zminpos);
+      palette.createContour(main.logz, nlevels, zmin, zmax, zminpos);
 
-      if (this.Dimension() < 3) {
+      if (this.getDimension() < 3) {
          main.scale_zmin = palette.colzmin;
          main.scale_zmax = palette.colzmax;
       }
@@ -573,7 +575,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    /** @summary Start dialog to modify range of axis where histogram values are displayed
      * @private */
-   RHistPainter.prototype.ChangeValuesRange = function(arg) {
+   RHistPainter.prototype.changeValuesRange = function(arg) {
       let pmain = this.getFramePainter();
       if (!pmain) return;
       let prefix = pmain.isAxisZoomed(arg) ? "zoom_" + arg : arg;
@@ -594,13 +596,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       menu.add("header:v7histo::anyname");
 
       if (this.draw_content) {
-         menu.addchk(this.ToggleStat('only-check'), "Show statbox", function() { this.ToggleStat(); });
+         menu.addchk(this.toggleStat('only-check'), "Show statbox", () => this.toggleStat());
 
-         if (this.Dimension() == 2)
-             menu.add("Values range", "z", this.ChangeValuesRange);
+         if (this.getDimension() == 2)
+             menu.add("Values range", () => this.changeValuesRange("z"));
 
-         if (typeof this.FillHistContextMenu == 'function')
-            this.FillHistContextMenu(menu);
+         if (typeof this.fillHistContextMenu == 'function')
+            this.fillHistContextMenu(menu);
       }
 
       let fp = this.getFramePainter();
@@ -613,66 +615,59 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
          let main = this.getMainPainter() || this;
 
-         menu.addchk(main.isTooltipAllowed(), 'Show tooltips', function() {
-            main.setTooltipAllowed("toggle");
-         });
+         menu.addchk(main.isTooltipAllowed(), 'Show tooltips', () => main.setTooltipAllowed("toggle"));
 
-         menu.addchk(fp.enable_highlight, 'Highlight bins', function() {
+         menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
-            if (!fp.enable_highlight && main.BinHighlight3D && main.mode3d) main.BinHighlight3D(null);
+            if (!fp.enable_highlight && main.highlightBin3D && main.mode3d) main.highlightBin3D(null);
          });
 
-         if (fp && fp.Render3D) {
-            menu.addchk(main.options.FrontBox, 'Front box', function() {
+         if (fp && fp.render3D) {
+            menu.addchk(main.options.FrontBox, 'Front box', () => {
                main.options.FrontBox = !main.options.FrontBox;
-               fp.Render3D();
+               fp.render3D();
             });
-            menu.addchk(main.options.BackBox, 'Back box', function() {
+            menu.addchk(main.options.BackBox, 'Back box', () => {
                main.options.BackBox = !main.options.BackBox;
-               fp.Render3D();
+               fp.render3D();
             });
          }
 
          if (this.draw_content) {
-            menu.addchk(!this.options.Zero, 'Suppress zeros', function() {
+            menu.addchk(!this.options.Zero, 'Suppress zeros', () => {
                this.options.Zero = !this.options.Zero;
                this.redrawPad();
             });
 
             if ((this.options.Lego==12) || (this.options.Lego==14)) {
-               menu.addchk(this.options.Zscale, "Z scale", function() {
-                  this.ToggleColz();
-               });
-               if (this.FillPaletteMenu) this.FillPaletteMenu(menu);
+               menu.addchk(this.options.Zscale, "Z scale", () => this.toggleColz());
+               if (this.fillPaletteMenu) this.fillPaletteMenu(menu);
             }
          }
 
          if (main.control && typeof main.control.reset === 'function')
-            menu.add('Reset camera', function() {
-               main.control.reset();
-            });
+            menu.add('Reset camera', () => main.control.reset());
       }
 
-      menu.AddAttributesMenu(this);
+      menu.addAttributesMenu(this);
 
       if (this.histogram_updated && fp.zoomChangedInteractive())
-         menu.add('Let update zoom', function() {
-            fp.zoomChangedInteractive('reset');
-         });
+         menu.add('Let update zoom', () => fp.zoomChangedInteractive('reset'));
 
       return true;
    }
 
    /** @summary Update palette drawing */
-   RHistPainter.prototype.UpdatePaletteDraw = function() {
+   RHistPainter.prototype.updatePaletteDraw = function() {
       if (this.isMainPainter()) {
          let pp = this.getPadPainter().findPainterFor(undefined, undefined, "ROOT::Experimental::RPaletteDrawable");
          if (pp) pp.DrawPalette();
       }
    }
 
-   /** @summary Fill palette menu */
-   RHistPainter.prototype.FillPaletteMenu = function(menu) {
+   /** @summary Fill menu entries for palette
+     * @private */
+   RHistPainter.prototype.fillPaletteMenu = function(menu) {
 
       // TODO: rewrite for RPalette functionality
       let curr = this.options.Palette, hpainter = this;
@@ -716,7 +711,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return null;
    }
 
-   RHistPainter.prototype.ToggleColz = function() {
+   RHistPainter.prototype.toggleColz = function() {
       let can_toggle = this.options.Mode3D ? (this.options.Lego === 12 || this.options.Lego === 14 || this.options.Surf === 11 || this.options.Surf === 12) :
          this.options.Color || this.options.Contour;
 
@@ -726,7 +721,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
    }
 
-   RHistPainter.prototype.ToggleMode3D = function() {
+   /** @summary Toggle 3D drawing mode */
+   RHistPainter.prototype.toggleMode3D = function() {
       this.options.Mode3D = !this.options.Mode3D;
 
       if (this.options.Mode3D) {
@@ -740,7 +736,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          }
       }
 
-      this.CopyOptionsToOthers();
+      this.copyOptionsToOthers();
       this.interactiveRedraw("pad", "drawopt");
    }
 
@@ -753,17 +749,17 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       if (args.right_extra === undefined) args.right_extra = args.extra;
       if (args.middle === undefined) args.middle = 0;
 
-      let histo = this.GetHisto(), xaxis = this.getAxis("x"), yaxis = this.getAxis("y"),
+      let histo = this.getHisto(), xaxis = this.getAxis("x"), yaxis = this.getAxis("y"),
           pmain = this.getFramePainter(),
-          hdim = this.Dimension(),
+          hdim = this.getDimension(),
           i, j, x, y, binz, binarea,
           res = {
-             i1: this.GetSelectIndex("x", "left", 0 - args.extra),
-             i2: this.GetSelectIndex("x", "right", 1 + args.right_extra),
-             j1: (hdim < 2) ? 0 : this.GetSelectIndex("y", "left", 0 - args.extra),
-             j2: (hdim < 2) ? 1 : this.GetSelectIndex("y", "right", 1 + args.right_extra),
-             k1: (hdim < 3) ? 0 : this.GetSelectIndex("z", "left", 0 - args.extra),
-             k2: (hdim < 3) ? 1 : this.GetSelectIndex("z", "right", 1 + args.right_extra),
+             i1: this.getSelectIndex("x", "left", 0 - args.extra),
+             i2: this.getSelectIndex("x", "right", 1 + args.right_extra),
+             j1: (hdim < 2) ? 0 : this.getSelectIndex("y", "left", 0 - args.extra),
+             j2: (hdim < 2) ? 1 : this.getSelectIndex("y", "right", 1 + args.right_extra),
+             k1: (hdim < 3) ? 0 : this.getSelectIndex("z", "left", 0 - args.extra),
+             k2: (hdim < 3) ? 1 : this.getSelectIndex("z", "right", 1 + args.right_extra),
              stepi: 1, stepj: 1, stepk: 1,
              min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1
           };
@@ -882,7 +878,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       res.palette = pmain.getHistPalette();
 
       if (res.palette)
-         this.CreateContour(pmain, res.palette, args);
+         this.createContour(pmain, res.palette, args);
 
       return res;
    }
@@ -896,16 +892,16 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    RH1Painter.prototype = Object.create(RHistPainter.prototype);
 
-   RH1Painter.prototype.ScanContent = function(when_axis_changed) {
+   RH1Painter.prototype.scanContent = function(when_axis_changed) {
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
 
-      let histo = this.GetHisto();
+      let histo = this.getHisto();
       if (!histo) return;
 
       if (!this.nbinsx && when_axis_changed) when_axis_changed = false;
 
       if (!when_axis_changed)
-         this.ExtractAxesProperties(1);
+         this.extractAxesProperties(1);
 
       let hmin = 0, hmin_nz = 0, hmax = 0, hsum = 0;
 
@@ -917,8 +913,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          hsum = hmax;
       } else {
 
-         let left = this.GetSelectIndex("x", "left"),
-             right = this.GetSelectIndex("x", "right");
+         let left = this.getSelectIndex("x", "left"),
+             right = this.getSelectIndex("x", "right");
 
          if (when_axis_changed) {
             if ((left === this.scan_xleft) && (right === this.scan_xright)) return;
@@ -976,11 +972,11 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
    }
 
-   RH1Painter.prototype.CountStat = function(cond) {
+   RH1Painter.prototype.countStat = function(cond) {
       let profile = this.IsRProfile(),
-          histo = this.GetHisto(), xaxis = this.getAxis("x"),
-          left = this.GetSelectIndex("x", "left"),
-          right = this.GetSelectIndex("x", "right"),
+          histo = this.getHisto(), xaxis = this.getAxis("x"),
+          left = this.getSelectIndex("x", "left"),
+          right = this.getSelectIndex("x", "right"),
           stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null,
           fp = this.getFramePainter(),
@@ -1030,12 +1026,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return res;
    }
 
-   RH1Painter.prototype.FillStatistic = function(stat, dostat/*, dofit*/) {
+   RH1Painter.prototype.fillStatistic = function(stat, dostat/*, dofit*/) {
 
-      // no need to refill statistic if histogram is dummy
-      if (this.IgnoreStatsFill()) return false;
-
-      let data = this.CountStat(),
+      let data = this.countStat(),
           print_name = dostat % 10,
           print_entries = Math.floor(dostat / 10) % 10,
           print_mean = Math.floor(dostat / 100) % 10,
@@ -1094,18 +1087,18 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             stat.AddText("Kurt = <not avail>");
       }
 
-      // if (dofit) stat.FillFunctionStat(this.FindFunction('TF1'), dofit);
-
       return true;
    }
 
-   RH1Painter.prototype.DrawBars = function(handle, width, height) {
+   /** @summary Draw histogram as bars
+     * @private */
+   RH1Painter.prototype.drawBars = function(handle, width, height) {
 
       this.createG(true);
 
       let left = handle.i1, right = handle.i2, di = handle.stepi,
           pmain = this.getFramePainter(),
-          histo = this.GetHisto(), xaxis = this.getAxis("x"),
+          histo = this.getHisto(), xaxis = this.getAxis("x"),
           i, x1, x2, grx1, grx2, y, gry1, gry2, w,
           bars = "", barsl = "", barsr = "";
 
@@ -1169,12 +1162,14 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                .style("fill", d3.rgb(this.fillatt.color).darker(0.5).toString());
    }
 
-   RH1Painter.prototype.DrawFilledErrors = function(handle /*, width, height*/) {
+   /** @summary Draw histogram as filled errors
+     * @private */
+   RH1Painter.prototype.drawFilledErrors = function(handle /*, width, height*/) {
       this.createG(true);
 
       let left = handle.i1, right = handle.i2, di = handle.stepi,
           pmain = this.getFramePainter(),
-          histo = this.GetHisto(), xaxis = this.getAxis("x"),
+          histo = this.getHisto(), xaxis = this.getAxis("x"),
           i, x, grx, y, yerr, gry1, gry2,
           bins1 = [], bins2 = [];
 
@@ -1207,27 +1202,29 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    /** @summary Draw 1D histogram as SVG */
-   RH1Painter.prototype.Draw1DBins = function() {
+   RH1Painter.prototype.draw1DBins = function() {
 
       let rect = this.getFramePainter().getFrameRect();
 
       if (!this.draw_content || (rect.width <= 0) || (rect.height <= 0))
          return this.removeG();
 
-      this.CheckHistDrawAttributes();
+      this.createHistDrawAttributes();
 
       let handle = this.PrepareDraw({ extra: 1, only_indexes: true });
 
       if (this.options.Bar)
-         return this.DrawBars(handle, rect.width, rect.height);
+         return this.drawBars(handle, rect.width, rect.height);
 
       if ((this.options.ErrorKind === 3) || (this.options.ErrorKind === 4))
-         return this.DrawFilledErrors(handle, rect.width, rect.height);
+         return this.drawFilledErrors(handle, rect.width, rect.height);
 
-      return this.DrawHistBins(handle, rect.width, rect.height);
+      return this.drawHistBins(handle, rect.width, rect.height);
    }
 
-   RH1Painter.prototype.DrawHistBins = function(handle, width, height) {
+   /** @summary Draw histogram bins
+     * @private */
+   RH1Painter.prototype.drawHistBins = function(handle, width, height) {
       this.createG(true);
 
       let options = this.options,
@@ -1235,7 +1232,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           right = handle.i2,
           di = handle.stepi,
           pmain = this.getFramePainter(),
-          histo = this.GetHisto(), xaxis = this.getAxis("x"),
+          histo = this.getHisto(), xaxis = this.getAxis("x"),
           res = "", lastbin = false,
           startx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
           exclude_zero = !options.Zero,
@@ -1483,8 +1480,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          this.finishTextDrawing();
    }
 
-   /** @summary Get tip text for axis bin */
-   RHistPainter.prototype.GetAxisBinTip = function(name, bin, step) {
+   /** @summary Get tip text for axis bin
+     * @protected */
+   RHistPainter.prototype.getAxisBinTip = function(name, bin, step) {
       let pmain = this.getFramePainter(),
           handle = pmain[name+"_handle"],
           axis = this.getAxis(name),
@@ -1503,17 +1501,19 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
 
-   RH1Painter.prototype.GetBinTips = function(bin) {
+   /** @summary Provide text information (tooltips) for histogram bin
+     * @private */
+   RH1Painter.prototype.getBinTooltips = function(bin) {
       let tips = [],
           name = this.getObjectHint(),
           pmain = this.getFramePainter(),
-          histo = this.GetHisto(),
+          histo = this.getHisto(),
           xaxis = this.getAxis("x"),
           di = this.IsDisplayItem() ? histo.stepx : 1,
           x1 = xaxis.GetBinCoord(bin),
           x2 = xaxis.GetBinCoord(bin+di),
           cont = histo.getBinContent(bin+1),
-          xlbl = this.GetAxisBinTip("x", bin, di);
+          xlbl = this.getAxisBinTip("x", bin, di);
 
       if (name.length>0) tips.push(name);
 
@@ -1550,11 +1550,11 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       let pmain = this.getFramePainter(),
           width = pmain.getFrameWidth(),
           height = pmain.getFrameHeight(),
-          histo = this.GetHisto(), xaxis = this.getAxis("x"),
+          histo = this.getHisto(), xaxis = this.getAxis("x"),
           findbin = null, show_rect = true,
           grx1, midx, grx2, gry1, midy, gry2, gapx = 2,
-          left = this.GetSelectIndex("x", "left", -1),
-          right = this.GetSelectIndex("x", "right", 2),
+          left = this.getSelectIndex("x", "left", -1),
+          right = this.getSelectIndex("x", "right", 2),
           l = left, r = right;
 
       function GetBinGrX(i) {
@@ -1711,7 +1711,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                   x: midx, y: midy, exact: true,
                   color1: this.lineatt ? this.lineatt.color : 'green',
                   color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : 'blue',
-                  lines: this.GetBinTips(findbin) };
+                  lines: this.getBinTooltips(findbin) };
 
       if (pnt.disabled) {
          // case when tooltip should not highlight bin
@@ -1773,18 +1773,19 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return res;
    }
 
+   /** @summary Fill histogram context menu
+     * @private */
+   RH1Painter.prototype.fillHistContextMenu = function(menu) {
 
-   RH1Painter.prototype.FillHistContextMenu = function(menu) {
-
-      menu.add("Auto zoom-in", this.AutoZoom);
+      menu.add("Auto zoom-in", () => this.autoZoom());
 
       let sett = jsrp.getDrawSettings("ROOT." + this.getObject()._typename, 'nosame');
 
-      menu.addDrawMenu("Draw with", sett.opts, function(arg) {
+      menu.addDrawMenu("Draw with", sett.opts, arg => {
          if (arg==='inspect')
             return this.showInspector();
 
-         this.DecodeOptions(arg); // obsolete, should be implemented differently
+         this.decodeOptions(arg); // obsolete, should be implemented differently
 
          if (this.options.need_fillcol && this.fillatt && this.fillatt.empty())
             this.fillatt.change(5,1001);
@@ -1794,10 +1795,12 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       });
    }
 
-   RH1Painter.prototype.AutoZoom = function() {
-      let left = this.GetSelectIndex("x", "left", -1),
-          right = this.GetSelectIndex("x", "right", 1),
-          dist = right - left, histo = this.GetHisto(), xaxis = this.getAxis("x");
+   /** @summary Perform automatic zoom inside non-zero region of histogram
+     * @private */
+   RH1Painter.prototype.autoZoom = function() {
+      let left = this.getSelectIndex("x", "left", -1),
+          right = this.getSelectIndex("x", "right", 1),
+          dist = right - left, histo = this.getHisto(), xaxis = this.getAxis("x");
 
       if (dist == 0) return;
 
@@ -1837,29 +1840,27 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       if (main && (main.mode3d !== this.options.Mode3D) && !this.isMainPainter())
          this.options.Mode3D = main.mode3d;
 
-      let funcname = this.options.Mode3D ? "Draw3D" : "Draw2D";
+      let funcname = this.options.Mode3D ? "draw3D" : "draw2D";
 
       return this[funcname](reason);
    }
 
-   RH1Painter.prototype.Draw2D = function(reason) {
-      this.Clear3DScene();
-      this.mode3d = false;
+   RH1Painter.prototype.draw2D = function(reason) {
+      this.clear3DScene();
 
       return this.drawFrameAxes()
                  .then(res1 => res1 ? this.DrawingBins(reason) : false)
                  .then(res2 => {
                      if (!res2) return false;
                      // called when bins received from server, must be reentrant
-                     this.Draw1DBins();
-                     this.UpdateStatWebCanvas();
+                     this.draw1DBins();
                      return this.addInteractivity();
                  }).then(res3 => res3 ? this : null);
    }
 
-   RH1Painter.prototype.Draw3D = function(reason) {
+   RH1Painter.prototype.draw3D = function(reason) {
       this.mode3d = true;
-      return JSROOT.require('v7hist3d').then(() => this.Draw3D(reason));
+      return JSROOT.require('v7hist3d').then(() => this.draw3D(reason));
    }
 
    RH1Painter.prototype.redraw = function(reason) {
@@ -1902,7 +1903,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             default: o.Hist = true;
          }
 
-         painter.ScanContent();
+         painter.scanContent();
 
          return painter.callDrawFunc();
       });
@@ -1923,7 +1924,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       RHistPainter.prototype.cleanup.call(this);
    }
 
-   RH2Painter.prototype.Dimension = function() {
+   RH2Painter.prototype.getDimension = function() {
       return 2;
    }
 
@@ -1955,10 +1956,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.projection_width = width;
 
       let canp = this.getCanvPainter();
-      if (canp) canp.toggleProjection(this.is_projection).then(() => this.RedrawProjection("toggling", new_proj));
+      if (canp) canp.toggleProjection(this.is_projection).then(() => this.redrawProjection("toggling", new_proj));
    }
 
-   RH2Painter.prototype.RedrawProjection = function(ii1, ii2 /*, jj1, jj2*/) {
+   RH2Painter.prototype.redrawProjection = function(ii1, ii2 /*, jj1, jj2*/) {
       // do nothing for the moment
 
       if (ii1 === "toggling") {
@@ -1980,39 +1981,41 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return false;
    }
 
-   RH2Painter.prototype.FillHistContextMenu = function(menu) {
-      // painter automatically bind to menu callbacks
-
-      menu.add("sub:Projections", this.toggleProjection);
+   /** @summary Fill histogram context menu
+     * @private */
+   RH2Painter.prototype.fillHistContextMenu = function(menu) {
+      menu.add("sub:Projections", () => this.toggleProjection());
       let kind = this.is_projection || "";
       if (kind) kind += this.projection_width;
       let kinds = ["X1", "X2", "X3", "X5", "X10", "Y1", "Y2", "Y3", "Y5", "Y10"];
       for (let k=0;k<kinds.length;++k)
-         menu.addchk(kind==kinds[k], kinds[k], kinds[k], this.toggleProjection);
+         menu.addchk(kind==kinds[k], kinds[k], kinds[k], arg => this.toggleProjection(arg));
       menu.add("endsub:");
 
-      menu.add("Auto zoom-in", this.AutoZoom);
+      menu.add("Auto zoom-in", () => this.autoZoom());
 
       let sett = jsrp.getDrawSettings("ROOT." + this.getObject()._typename, 'nosame');
 
-      menu.addDrawMenu("Draw with", sett.opts, function(arg) {
+      menu.addDrawMenu("Draw with", sett.opts, arg => {
          if (arg==='inspect')
             return this.showInspector();
-         this.DecodeOptions(arg);
+         this.decodeOptions(arg);
          this.interactiveRedraw("pad", "drawopt");
       });
 
       if (this.options.Color)
-         this.FillPaletteMenu(menu);
+         this.fillPaletteMenu(menu);
    }
 
+   /** @summary Process click on histogram-defined buttons
+     * @private */
    RH2Painter.prototype.clickButton = function(funcname) {
       if (RHistPainter.prototype.clickButton.call(this, funcname)) return true;
 
       switch(funcname) {
-         case "ToggleColor": this.ToggleColor(); break;
-         case "ToggleColorZ": this.ToggleColz(); break;
-         case "Toggle3D": this.ToggleMode3D(); break;
+         case "ToggleColor": this.toggleColor(); break;
+         case "ToggleColorZ": this.toggleColz(); break;
+         case "Toggle3D": this.toggleMode3D(); break;
          default: return false;
       }
 
@@ -2020,20 +2023,23 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return true;
    }
 
-   RH2Painter.prototype.FillToolbar = function() {
-      RHistPainter.prototype.FillToolbar.call(this, true);
+   /** @summary Fill pad toolbar with RH2-related functions
+     * @private */
+   RH2Painter.prototype.fillToolbar = function() {
+      RHistPainter.prototype.fillToolbar.call(this, true);
 
       let pp = this.getPadPainter();
       if (!pp) return;
 
-      if (!this.IsTH2Poly())
+      if (!this.isRH2Poly())
          pp.addPadButton("th2color", "Toggle color", "ToggleColor");
       pp.addPadButton("th2colorz", "Toggle color palette", "ToggleColorZ");
       pp.addPadButton("th2draw3d", "Toggle 3D mode", "Toggle3D");
       pp.showPadButtons();
    }
 
-   RH2Painter.prototype.ToggleColor = function() {
+   /** @summary Toggle color drawing mode */
+   RH2Painter.prototype.toggleColor = function() {
 
       if (this.options.Mode3D) {
          this.options.Mode3D = false;
@@ -2047,14 +2053,16 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.redraw();
    }
 
-   RH2Painter.prototype.AutoZoom = function() {
-      if (this.IsTH2Poly()) return; // not implemented
+   /** @summary Perform automatic zoom inside non-zero region of histogram
+     * @private */
+   RH2Painter.prototype.autoZoom = function() {
+      if (this.isRH2Poly()) return; // not implemented
 
-      let i1 = this.GetSelectIndex("x", "left", -1),
-          i2 = this.GetSelectIndex("x", "right", 1),
-          j1 = this.GetSelectIndex("y", "left", -1),
-          j2 = this.GetSelectIndex("y", "right", 1),
-          i,j, histo = this.GetHisto(), xaxis = this.getAxis("x"), yaxis = this.getAxis("y");
+      let i1 = this.getSelectIndex("x", "left", -1),
+          i2 = this.getSelectIndex("x", "right", 1),
+          j1 = this.getSelectIndex("y", "left", -1),
+          j2 = this.getSelectIndex("y", "right", 1),
+          i,j, histo = this.getHisto(), xaxis = this.getAxis("x"), yaxis = this.getAxis("y");
 
       if ((i1 == i2) || (j1 == j2)) return;
 
@@ -2097,16 +2105,16 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    /** @summary Scan content of 2-dim histogram */
-   RH2Painter.prototype.ScanContent = function(when_axis_changed) {
+   RH2Painter.prototype.scanContent = function(when_axis_changed) {
 
       // no need to rescan histogram while result does not depend from axis selection
       if (when_axis_changed && this.nbinsx && this.nbinsy) return;
 
-      let i, j, histo = this.GetHisto();
+      let i, j, histo = this.getHisto();
 
-      this.ExtractAxesProperties(2);
+      this.extractAxesProperties(2);
 
-      if (this.IsTH2Poly()) {
+      if (this.isRH2Poly()) {
          this.gminposbin = null;
          this.gminbin = this.gmaxbin = 0;
 
@@ -2150,24 +2158,24 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          this.draw_content = false;
       } else {
          this.draw_content = this.gmaxbin > 0;
-         if (!this.draw_content  && this.options.Zero && this.IsTH2Poly()) {
+         if (!this.draw_content  && this.options.Zero && this.isRH2Poly()) {
             this.draw_content = true;
             this.options.Line = 1;
          }
       }
    }
 
-   RH2Painter.prototype.CountStat = function(cond) {
-      let histo = this.GetHisto(),
+   RH2Painter.prototype.countStat = function(cond) {
+      let histo = this.getHisto(),
           stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumx2 = 0, stat_sumy2 = 0,
           xside, yside, xx, yy, zz,
           res = { name: "histo", entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0,0,0,0,0,0,0,0,0], xmax: 0, ymax:0, wmax: null };
 
-      let xleft = this.GetSelectIndex("x", "left"),
-          xright = this.GetSelectIndex("x", "right"),
-          yleft = this.GetSelectIndex("y", "left"),
-          yright = this.GetSelectIndex("y", "right"),
+      let xleft = this.getSelectIndex("x", "left"),
+          xright = this.getSelectIndex("x", "right"),
+          yleft = this.getSelectIndex("y", "left"),
+          yright = this.getSelectIndex("y", "right"),
           xi, yi, xaxis = this.getAxis("x"), yaxis = this.getAxis("y");
 
       // TODO: account underflow/overflow bins, now stored in different array and only by histogram itself
@@ -2214,12 +2222,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return res;
    }
 
-   RH2Painter.prototype.FillStatistic = function(stat, dostat /*, dofit*/) {
+   RH2Painter.prototype.fillStatistic = function(stat, dostat /*, dofit*/) {
 
-      // no need to refill statistic if histogram is dummy
-      // if (this.IgnoreStatsFill()) return false;
-
-      let data = this.CountStat(),
+      let data = this.countStat(),
           print_name = Math.floor(dostat % 10),
           print_entries = Math.floor(dostat / 10) % 10,
           print_mean = Math.floor(dostat / 100) % 10,
@@ -2267,14 +2272,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          stat.AddText("" + m[0].toFixed(0) + " | " + m[1].toFixed(0) + " | "  + m[2].toFixed(0));
       }
 
-      // if (dofit) stat.FillFunctionStat(this.FindFunction('TF1'), dofit);
-
       return true;
    }
 
-   /** @summary Draw histogram bins as color */
-   RH2Painter.prototype.DrawBinsColor = function() {
-      let histo = this.GetHisto(),
+   /** @summary Draw histogram bins as color
+     * @private */
+   RH2Painter.prototype.drawBinsColor = function() {
+      let histo = this.getHisto(),
           handle = this.PrepareDraw(),
           colPaths = [], currx = [], curry = [],
           colindx, cmd1, cmd2, i, j, binz, di = handle.stepi, dj = handle.stepj, dx, dy;
@@ -2316,13 +2320,15 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                .attr("fill", handle.palette.getColor(colindx))
                .attr("d", colPaths[colindx]);
 
-      this.UpdatePaletteDraw();
+      this.updatePaletteDraw();
 
       return handle;
    }
 
-   RH2Painter.prototype.BuildContour = function(handle, levels, palette, contour_func) {
-      let histo = this.GetHisto(),
+   /** @summary Build histogram contour lines
+     * @private */
+   RH2Painter.prototype.buildContour = function(handle, levels, palette, contour_func) {
+      let histo = this.getHisto(),
           kMAXCONTOUR = 2004,
           kMAXCOUNT = 2000,
           // arguments used in the PaintContourLine
@@ -2536,11 +2542,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
    }
 
-   RH2Painter.prototype.DrawBinsContour = function(frame_w,frame_h) {
+   /** @summary Draw histogram bins as contour
+     * @private */
+   RH2Painter.prototype.drawBinsContour = function(frame_w,frame_h) {
       let handle = this.PrepareDraw({ rounding: false, extra: 100, original: this.options.Proj != 0 }),
           main = this.getFramePainter(),
           palette = main.getHistPalette(),
-          levels = palette.GetContour(),
+          levels = palette.getContour(),
           func = main.getProjectionFunc();
 
       let BuildPath = (xp,yp,iminus,iplus,do_close) => {
@@ -2592,7 +2600,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
              .style("fill", palette.getColor(0));
       }
 
-      this.BuildContour(handle, levels, palette,
+      this.buildContour(handle, levels, palette,
          (colindx,xp,yp,iminus,iplus) => {
             let icol = palette.getColor(colindx),
                 fillcolor = icol, lineatt;
@@ -2626,7 +2634,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return handle;
    }
 
-   RH2Painter.prototype.CreatePolyBin = function(pmain, bin, text_pos) {
+   RH2Painter.prototype.createPolyBin = function(pmain, bin, text_pos) {
       let cmd = "", ngr, ngraphs = 1, gr = null;
 
       if (bin.fPoly._typename=='TMultiGraph')
@@ -2637,7 +2645,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       if (text_pos)
          bin._sumx = bin._sumy = bin._suml = 0;
 
-      function AddPoint(x1,y1,x2,y2) {
+      function addPoint(x1,y1,x2,y2) {
          let len = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
          bin._sumx += (x1+x2)*len/2;
          bin._sumy += (y1+y2)*len/2;
@@ -2660,16 +2668,19 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          for (n=1;n<npnts;++n) {
             nextx = Math.round(pmain.grx(x[n]));
             nexty = Math.round(pmain.gry(y[n]));
-            if (text_pos) AddPoint(grx,gry, nextx, nexty);
+            if (text_pos) addPoint(grx,gry, nextx, nexty);
             if ((grx!==nextx) || (gry!==nexty)) {
-               if (grx===nextx) cmd += "v" + (nexty - gry); else
-                  if (gry===nexty) cmd += "h" + (nextx - grx); else
-                     cmd += "l" + (nextx - grx) + "," + (nexty - gry);
+               if (grx===nextx)
+                  cmd += "v" + (nexty - gry);
+               else if (gry===nexty)
+                  cmd += "h" + (nextx - grx);
+               else
+                  cmd += "l" + (nextx - grx) + "," + (nexty - gry);
             }
             grx = nextx; gry = nexty;
          }
 
-         if (text_pos) AddPoint(grx, gry, Math.round(pmain.grx(x[0])), Math.round(pmain.gry(y[0])));
+         if (text_pos) addPoint(grx, gry, Math.round(pmain.grx(x[0])), Math.round(pmain.gry(y[0])));
          cmd += "z";
       }
 
@@ -2687,7 +2698,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    RH2Painter.prototype.DrawPolyBinsColor = function() {
-      let histo = this.GetHisto(),
+      let histo = this.getHisto(),
           pmain = this.getFramePainter(),
           colPaths = [], textbins = [],
           colindx, cmd, bin, item,
@@ -2700,7 +2711,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.minbin = this.gminbin;
       this.minposbin = this.gminposbin;
 
-      this.CreateContour(pmain, palette);
+      this.createContour(pmain, palette);
 
       for (i = 0; i < len; ++ i) {
          bin = histo.fBins.arr[i];
@@ -2715,7 +2726,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          if ((bin.fXmin > pmain.scale_xmax) || (bin.fXmax < pmain.scale_xmin) ||
              (bin.fYmin > pmain.scale_ymax) || (bin.fYmax < pmain.scale_ymin)) continue;
 
-         cmd = this.CreatePolyBin(pmain, bin, this.options.Text && bin.fContent);
+         cmd = this.createPolyBin(pmain, bin, this.options.Text && bin.fContent);
 
          if (colPaths[colindx] === undefined)
             colPaths[colindx] = cmd;
@@ -2765,8 +2776,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return { poly: true };
    }
 
-   RH2Painter.prototype.DrawBinsText = function(handle) {
-      let histo = this.GetHisto(),
+   /** @summary Draw RH2 bins as text
+     * @private */
+   RH2Painter.prototype.drawBinsText = function(handle) {
+      let histo = this.getHisto(),
           i,j,binz,binw,binh,lbl,posx,posy,sizex,sizey;
 
       if (handle===null) handle = this.PrepareDraw({ rounding: false });
@@ -2818,8 +2831,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return handle;
    }
 
-   RH2Painter.prototype.DrawBinsArrow = function() {
-      let histo = this.GetHisto(), cmd = "",
+   /** @summary Draw RH2 bins as arrows
+     * @private */
+   RH2Painter.prototype.drawBinsArrow = function() {
+      let histo = this.getHisto(), cmd = "",
           i,j, dn = 1e-30, dx, dy, xc,yc,
           dxn,dyn,x1,x2,y1,y2, anr,si,co,
           handle = this.PrepareDraw({ rounding: false }),
@@ -2884,10 +2899,11 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return handle;
    }
 
+   /** @summary Draw RH2 bins as boxes
+     * @private */
+   RH2Painter.prototype.drawBinsBox = function() {
 
-   RH2Painter.prototype.DrawBinsBox = function() {
-
-      let histo = this.GetHisto(),
+      let histo = this.getHisto(),
           handle = this.PrepareDraw({ rounding: false }),
           main = this.getFramePainter();
 
@@ -2998,8 +3014,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return handle;
    }
 
-   RH2Painter.prototype.DrawCandle = function(w) {
-      let histo = this.GetHisto(), yaxis = this.getAxis("y"),
+   /** @summary Draw histogram bins as candle plot
+     * @private */
+   RH2Painter.prototype.drawBinsCandle = function(w) {
+      let histo = this.getHisto(), yaxis = this.getAxis("y"),
           handle = this.PrepareDraw(),
           pmain = this.getFramePainter(), // used for axis values conversions
           i, j, y, sum1, cont, center, counter, integral, pnt,
@@ -3107,8 +3125,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return handle;
    }
 
-   RH2Painter.prototype.DrawBinsScatter = function() {
-      let histo = this.GetHisto(),
+   /** @summary Draw RH2 bins as scatter plot
+     * @private */
+   RH2Painter.prototype.drawBinsScatter = function() {
+      let histo = this.getHisto(),
           handle = this.PrepareDraw({ rounding: true, pixel_density: true, scatter_plot: true }),
           colPaths = [], currx = [], curry = [], cell_w = [], cell_h = [],
           colindx, cmd1, cmd2, i, j, binz, cw, ch, factor = 1.,
@@ -3193,7 +3213,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       this.createv7AttMarker();
 
-      let cntr = handle.palette.GetContour();
+      let cntr = handle.palette.getContour();
 
       for (colindx=0;colindx<colPaths.length;++colindx)
         if ((colPaths[colindx] !== undefined) && (colindx<cntr.length)) {
@@ -3247,12 +3267,12 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    /** @summary Draw RH2 bins in 2D mode */
-   RH2Painter.prototype.Draw2DBins = function() {
+   RH2Painter.prototype.draw2DBins = function() {
 
       if (!this.draw_content)
          return this.removeG();
 
-      this.CheckHistDrawAttributes();
+      this.createHistDrawAttributes();
 
       this.createG(true);
 
@@ -3260,35 +3280,37 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       // if (this.lineatt.color == 'none') this.lineatt.color = 'cyan';
 
-      if (this.IsTH2Poly()) {
+      if (this.isRH2Poly()) {
          handle = this.DrawPolyBinsColor();
       } else {
          if (this.options.Scat)
-            handle = this.DrawBinsScatter();
+            handle = this.drawBinsScatter();
          else if (this.options.Color)
-            handle = this.DrawBinsColor();
+            handle = this.drawBinsColor();
          else if (this.options.Box)
-            handle = this.DrawBinsBox();
+            handle = this.drawBinsBox();
          else if (this.options.Arrow)
-            handle = this.DrawBinsArrow();
+            handle = this.drawBinsArrow();
          else if (this.options.Contour > 0)
-            handle = this.DrawBinsContour(rect.width, rect.height);
+            handle = this.drawBinsContour(rect.width, rect.height);
          else if (this.options.Candle)
-            handle = this.DrawCandle(rect.width);
+            handle = this.drawBinsCandle(rect.width);
 
          if (this.options.Text)
-            handle = this.DrawBinsText(handle);
+            handle = this.drawBinsText(handle);
 
          if (!handle)
-            handle = this.DrawBinsColor();
+            handle = this.drawBinsColor();
       }
 
       this.tt_handle = handle;
    }
 
-   RH2Painter.prototype.GetBinTips = function (i, j) {
+   /** @summary Provide text information (tooltips) for histogram bin
+     * @private */
+   RH2Painter.prototype.getBinTooltips = function (i, j) {
       let lines = [],
-           histo = this.GetHisto(),
+           histo = this.getHisto(),
            binz = histo.getBinContent(i+1,j+1),
            di = 1, dj = 1;
 
@@ -3298,8 +3320,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
 
       lines.push(this.getObjectHint() || "histo<2>");
-      lines.push("x = " + this.GetAxisBinTip("x", i, di));
-      lines.push("y = " + this.GetAxisBinTip("y", j, dj));
+      lines.push("x = " + this.getAxisBinTip("x", i, di));
+      lines.push("y = " + this.getAxisBinTip("y", j, dj));
 
       lines.push("bin = " + i + ", " + j);
 
@@ -3315,7 +3337,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return lines;
    }
 
-   RH2Painter.prototype.GetCandleTips = function(p) {
+   /** @summary Provide text information (tooltips) for candle bin
+     * @private */
+   RH2Painter.prototype.getCandleTooltips = function(p) {
       let lines = [], main = this.getFramePainter(), xaxis = this.getAxis("y");
 
       lines.push(this.getObjectHint() || "histo");
@@ -3329,9 +3353,11 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return lines;
    }
 
-   RH2Painter.prototype.ProvidePolyBinHints = function(binindx, realx, realy) {
+   /** @summary Provide text information (tooltips) for poly bin
+     * @private */
+   RH2Painter.prototype.getPolyBinTooltips = function(binindx, realx, realy) {
 
-      let histo = this.GetHisto(),
+      let histo = this.getHisto(),
           bin = histo.fBins.arr[binindx],
           pmain = this.getFramePainter(),
           binname = bin.fPoly.fName,
@@ -3382,7 +3408,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          return null;
       }
 
-      let histo = this.GetHisto(),
+      let histo = this.getHisto(),
           h = this.tt_handle,
           ttrect = this.draw_g.select(".tooltip_bin");
 
@@ -3429,7 +3455,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                      color1: this.lineatt ? this.lineatt.color : 'green',
                      color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : 'blue',
                      exact: true, menu: true,
-                     lines: this.ProvidePolyBinHints(foundindx, realx, realy) };
+                     lines: this.getPolyBinTooltips(foundindx, realx, realy) };
 
          if (pnt.disabled) {
             ttrect.remove();
@@ -3444,7 +3470,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             res.changed = ttrect.property("current_bin") !== foundindx;
 
             if (res.changed)
-                  ttrect.attr("d", this.CreatePolyBin(pmain, bin))
+                  ttrect.attr("d", this.createPolyBin(pmain, bin))
                         .style("opacity", "0.7")
                         .property("current_bin", foundindx);
          }
@@ -3478,7 +3504,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                      x: pnt.x, y: pnt.y,
                      color1: this.lineatt ? this.lineatt.color : 'green',
                      color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : 'blue',
-                     lines: this.GetCandleTips(p), exact: true, menu: true };
+                     lines: this.getCandleTooltips(p), exact: true, menu: true };
 
          if (pnt.disabled) {
             ttrect.remove();
@@ -3539,7 +3565,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                   x: pnt.x, y: pnt.y,
                   color1: this.lineatt ? this.lineatt.color : 'green',
                   color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : 'blue',
-                  lines: this.GetBinTips(i, j), exact: true, menu: true };
+                  lines: this.getBinTooltips(i, j), exact: true, menu: true };
 
       if (this.options.Color) res.color2 = h.palette.getColor(colindx);
 
@@ -3589,7 +3615,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                   .property("current_bin", binid);
 
          if (this.is_projection && res.changed)
-            this.RedrawProjection(i1, i2, j1, j2);
+            this.redrawProjection(i1, i2, j1, j2);
       }
 
       if (res.changed)
@@ -3607,37 +3633,45 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
-   RH2Painter.prototype.Draw2D = function(reason) {
-      this.mode3d = false;
-      this.Clear3DScene();
+   /** @summary Performs 2D drawing of histogram
+     * @returns {Promise} when ready
+     * @private */
+   RH2Painter.prototype.draw2D = function(reason) {
+      this.clear3DScene();
 
       return this.drawFrameAxes()
                  .then(res => res ? this.DrawingBins(reason) : false)
                  .then(res2 => {
                     // called when bins received from server, must be reentrant
                     if (!res2) return false;
-                    this.Draw2DBins();
-                    this.UpdateStatWebCanvas();
+                    this.draw2DBins();
                     return this.addInteractivity();
                  }).then(res3 => res3 ? this : null);;
    }
 
-   RH2Painter.prototype.Draw3D = function(reason) {
+   /** @summary Performs 3D drawing of histogram
+     * @returns {Promise} when ready
+     * @private */
+   RH2Painter.prototype.draw3D = function(reason) {
       this.mode3d = true;
-      return JSROOT.require('v7hist3d').then(() => this.Draw3D(reason));
+      return JSROOT.require('v7hist3d').then(() => this.draw3D(reason));
    }
 
+   /** @summary Call drawing function depending from 3D mode
+     * @private */
    RH2Painter.prototype.callDrawFunc = function(reason) {
       let main = this.getFramePainter();
 
       if (main && (main.mode3d !== this.options.Mode3D) && !this.isMainPainter())
          this.options.Mode3D = main.mode3d;
 
-      let funcname = this.options.Mode3D ? "Draw3D" : "Draw2D";
+      let funcname = this.options.Mode3D ? "draw3D" : "draw2D";
 
       return this[funcname](reason);
    }
 
+   /** @summary Redraw histogram
+     * @private */
    RH2Painter.prototype.redraw = function(reason) {
       this.callDrawFunc(reason);
    }
@@ -3676,9 +3710,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          }
 
          // here we deciding how histogram will look like and how will be shown
-         // painter.DecodeOptions(opt);
+         // painter.decodeOptions(opt);
 
-         if (painter.IsTH2Poly()) {
+         if (painter.isRH2Poly()) {
             if (o.Mode3D) o.Lego = 12;
                      else o.Color = true;
          }
@@ -3687,7 +3721,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
          painter._can_move_colz = true;
 
-         painter.ScanContent();
+         painter.scanContent();
 
          return painter.callDrawFunc();
       });
@@ -3733,7 +3767,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.DrawStatistic(this.stats_lines);
    }
 
-   RHistStatsPainter.prototype.FillStatistic = function() {
+   RHistStatsPainter.prototype.fillStatistic = function() {
       let pp = this.getPadPainter();
       if (pp && pp._fast_drawing) return false;
 
@@ -3746,9 +3780,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       if (this.v7CommMode() == JSROOT.v7.CommMode.kOffline) {
          let main = this.getMainPainter();
-         if (!main || (typeof main.FillStatistic !== 'function')) return false;
+         if (!main || (typeof main.fillStatistic !== 'function')) return false;
          // we take statistic from main painter
-         return main.FillStatistic(this, JSROOT.gStyle.fOptStat, JSROOT.gStyle.fOptFit);
+         return main.fillStatistic(this, JSROOT.gStyle.fOptStat, JSROOT.gStyle.fOptFit);
       }
 
       // show lines which are exists, maybe server request will be recieved later
@@ -3773,7 +3807,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    RHistStatsPainter.prototype.DrawContent = function() {
-      if (this.FillStatistic())
+      if (this.fillStatistic())
          return this.DrawStatistic(this.stats_lines);
 
       return Promise.resolve(this);
@@ -3786,7 +3820,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       else
          obj.fShowMask = obj.fShowMask | mask;
 
-      if (this.FillStatistic())
+      if (this.fillStatistic())
          this.DrawStatistic(this.stats_lines);
    }
 
@@ -3908,13 +3942,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          this.v7SubmitRequest("stat", req, this.UpdateStatistic.bind(this));
       }
 
-      this.DrawPave();
+      this.drawPave();
    }
 
    function drawHistStats(divid, stats, opt) {
       let painter = new RHistStatsPainter(divid, stats, opt);
 
-      return jsrp.ensureRCanvas(painter, false).then(() => painter.DrawPave());
+      return jsrp.ensureRCanvas(painter, false).then(() => painter.drawPave());
    }
 
    JSROOT.v7.RHistPainter = RHistPainter;

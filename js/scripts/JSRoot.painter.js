@@ -2350,7 +2350,7 @@ JSROOT.define(['d3'], (d3) => {
 
       menu.add("header:" + title);
 
-      menu.AddAttributesMenu(this);
+      menu.addAttributesMenu(this);
 
       if (menu.size() > 0)
          menu.add('Inspect', this.showInspector);
@@ -3352,9 +3352,9 @@ JSROOT.define(['d3'], (d3) => {
       { name: "kind:Command", icon: "img_execute", execute: true },
       { name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true, prereq: "hierarchy", expand: ".folderHierarchy" },
       { name: "TTask", icon: "img_task", prereq: "hierarchy", expand: ".taskHierarchy", for_derived: true },
-      { name: "TTree", icon: "img_tree", prereq: "tree", expand: 'JSROOT.TreeHierarchy', func: 'JSROOT.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" },
-      { name: "TNtuple", icon: "img_tree", prereq: "tree", expand: 'JSROOT.TreeHierarchy', func: 'JSROOT.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" },
-      { name: "TNtupleD", icon: "img_tree", prereq: "tree", expand: 'JSROOT.TreeHierarchy', func: 'JSROOT.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" },
+      { name: "TTree", icon: "img_tree", prereq: "tree", expand: 'JSROOT.treeHierarchy', func: 'JSROOT.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" },
+      { name: "TNtuple", icon: "img_tree", prereq: "tree", expand: 'JSROOT.treeHierarchy', func: 'JSROOT.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" },
+      { name: "TNtupleD", icon: "img_tree", prereq: "tree", expand: 'JSROOT.treeHierarchy', func: 'JSROOT.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" },
       { name: "TBranchFunc", icon: "img_leaf_method", prereq: "tree", func: 'JSROOT.drawTree', opt: ";dump", noinspect: true },
       { name: /^TBranch/, icon: "img_branch", prereq: "tree", func: 'JSROOT.drawTree', dflt: "expand", opt: ";dump", ctrl: "dump", shift: "inspect", ignore_online: true },
       { name: /^TLeaf/, icon: "img_leaf", prereq: "tree", noexpand: true, func: 'JSROOT.drawTree', opt: ";dump", ctrl: "dump", ignore_online: true },
