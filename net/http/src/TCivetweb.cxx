@@ -577,6 +577,9 @@ Bool_t TCivetweb::Create(const char *args)
       options[op++] = auth_file.Data();
       options[op++] = "authentication_domain";
       options[op++] = auth_domain.Data();
+   } else {
+      options[op++] = "enable_auth_domain_check";
+      options[op++] = "no";
    }
 
    if (log_file.Length() > 0) {
