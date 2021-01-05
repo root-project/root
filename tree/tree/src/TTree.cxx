@@ -4013,10 +4013,10 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// a scatter plot is produced (with stars in that case) but the axis creation is
 /// delegated to TGraph and `htemp` is not created.
 ///
-/// ### Saving the result of Draw to an histogram
+/// ### Saving the result of Draw to a histogram
 ///
-/// If varexp0 contains >>hnew (following the variable(s) name(s),
-/// the new histogram created is called hnew and it is kept in the current
+/// If `varexp` contains `>>hnew` (following the variable(s) name(s)),
+/// the new histogram called `hnew` is created and it is kept in the current
 /// directory (and also the current pad). This works for all dimensions.
 ///
 /// Example:
