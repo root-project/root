@@ -623,6 +623,7 @@ void RLoopManager::CleanUpTask(unsigned int slot)
 /// This method also clears the contents of GetCodeToJit().
 void RLoopManager::Jit()
 {
+   // TODO this should be a read lock unless we find GetCodeToJit non-empty
    R__LOCKGUARD(gROOTMutex);
 
    const std::string code = std::move(GetCodeToJit());
