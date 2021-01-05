@@ -189,9 +189,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return str;
    }
 
-   let ltx = {}; // handle for latex processing
+   /** @summary handle for latex processing
+     * @alias Latex
+     * @memberof JSROOT
+     * @private */
+   let ltx = {};
 
-   /** Just add plain text to the SVG text elements */
+   /** @summary Just add plain text to the SVG text elements
+     * @private */
    ltx.producePlainText = function(painter, txt_node, arg) {
       arg.plain = true;
       if (arg.simple_latex)
@@ -200,10 +205,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @ummary draw TLatex inside element
-    *
-    * @desc attempt to implement subset of TLatex with plain SVG text and tspan elements
-    * @private
-    */
+     * @desc attempt to implement subset of TLatex with plain SVG text and tspan elements
+     * @private */
    ltx.produceLatex = function(painter, node, arg, label, curr) {
 
       if (!curr) {
@@ -788,7 +791,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return true;
    }
 
-   /** Load MathJax functionality, one need not only to load script but wait for initialization */
+   /** @summary Load MathJax functionality,
+     * @desc one need not only to load script but wait for initialization
+     * @private */
    ltx.LoadMathjax = function() {
       let loading = (JSROOT._.mj_loading !== undefined);
 
@@ -874,7 +879,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return promise;
    }
 
-
    let math_symbols_map = {
          '#LT': "\\langle",
          '#GT': "\\rangle",
@@ -945,7 +949,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          ' ': "\\;"
     };
 
-   /** @summary Function translates ROOT TLatex into MathJax format */
+   /** @summary Function translates ROOT TLatex into MathJax format
+     * @private */
    let translateMath = (str, kind, color, painter) => {
 
       if (kind != 2) {
@@ -1002,6 +1007,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return "\\color{" + color + '}{' + str + "}";
    }
 
+   /** @summary Workaround to fix size attributes in MathJax SVG
+     * @private */
    function repairMathJaxSvgSize(painter, mj_node, svg, arg) {
       let transform = value => {
          if (!value || (typeof value !== "string")) return null;
@@ -1036,6 +1043,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          painter.scaleTextDrawing(Math.max(width / arg.width, height / arg.height), arg.draw_g);
    }
 
+   /** @summary Apply attributes to mathjax drawing
+     * @private */
    function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_factor) {
       let mw = parseInt(svg.attr("width")),
           mh = parseInt(svg.attr("height"));
@@ -1077,6 +1086,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       mj_node.attr('transform', trans).attr('visibility', null);
    }
 
+   /** @summary Produce text with MathJax
+     * @private */
    ltx.produceMathjax = function(painter, mj_node, arg) {
       let mtext = translateMath(arg.text, arg.latex, arg.color, painter),
           options = { em: arg.font.size, ex: arg.font.size/2, family: arg.font.name, scale: 1, containerWidth: -1, lineWidth: 100000 };
@@ -1095,6 +1106,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               });
    }
 
+   /** @summary Just typeset HTML node with MathJax
+     * @private */
    ltx.typesetMathjax = function(node) {
       return ltx.LoadMathjax()
                 .then(() => MathJax.typesetPromise(node ? [node] : undefined));
