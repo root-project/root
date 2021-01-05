@@ -15,7 +15,7 @@ sap.ui.define(['sap/ui/core/Control',
       onBeforeRendering: function() {
          // remove Canvas and painter from DOM
          if (this.geom_painter) {
-            this.geom_painter.clear_3d_canvas();
+            this.geom_painter.clear3dCanvas();
             this.geom_painter.clearTopPainter();
          }
       },
@@ -43,14 +43,14 @@ sap.ui.define(['sap/ui/core/Control',
             // work with and without canvas
             this.geom_painter.setDom(this.getDomRef());
 
-            var size = this.geom_painter.size_for_3d();
+            var size = this.geom_painter.getSizeFor3d();
 
-            this.geom_painter.add_3d_canvas(size, this.geom_painter._renderer.domElement);
+            this.geom_painter.add3dCanvas(size, this.geom_painter._renderer.domElement);
 
             // set as main canvas painter or just top painter
             this.geom_painter.setAsMainPainter();
 
-            this.geom_painter.Render3D();
+            this.geom_painter.render3D();
          }
       },
 
