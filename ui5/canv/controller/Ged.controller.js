@@ -378,7 +378,7 @@ sap.ui.define([
             model.attachPropertyChange({ _kind: "TAxis" }, this.processAxisModelChange, this);
          }
 
-         if (typeof painter.GetHisto == 'function') {
+         if (typeof painter.getHisto == 'function') {
 
             painter.options.Mode3Dindx = painter.options.Mode3D ? 1 : 0;
 
