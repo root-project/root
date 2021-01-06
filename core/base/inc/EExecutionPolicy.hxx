@@ -2,7 +2,7 @@
 #define ROOT_Internal_ExecutionPolicy
 
 namespace ROOT {
-enum class ExecutionPolicy { kSequential, kMultiThread, kMultiProcess };
+enum class EExecutionPolicy { kSequential, kMultiThread, kMultiProcess };
 }
 
 #endif
