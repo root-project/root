@@ -280,4 +280,27 @@ TEST(RDFAndFriendsNoFixture, IndexedFriend)
    gSystem->Unlink(auxFile);
 }
 
+// Test for https://github.com/root-project/root/issues/6741
+TEST(RDFAndFriendsNoFixture, AutomaticFriendsLoad)
+{
+   const auto fname = "rdf_automaticfriendsloadtest.root";
+   {
+      // write a TTree and its friend to the same file
+      TFile f(fname, "recreate");
+      TTree t1("t1", "t1");
+      TTree t2("t2", "t2");
+      int x = 42;
+      t2.Branch("x", &x);
+      t1.Fill();
+      t2.Fill();
+      t1.AddFriend(&t2);
+      t1.Write();
+      t2.Write();
+      f.Close();
+   }
+   EXPECT_EQ(ROOT::RDataFrame("t1", fname).Max<int>("t2.x").GetValue(), 42);
+
+   gSystem->Unlink(fname);
+}
+
 #endif // R__USE_IMT
