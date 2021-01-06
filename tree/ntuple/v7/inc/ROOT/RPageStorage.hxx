@@ -39,6 +39,9 @@ namespace Detail {
 
 class RCluster;
 class RColumn;
+class RColumnElementBase;
+class RNTupleCompressor;
+class RNTupleDecompressor;
 class RPagePool;
 class RFieldBase;
 class RNTupleMetrics;
@@ -70,6 +73,20 @@ public:
       virtual void AddTask(const std::function<void(void)> &taskFunc) = 0;
       /// Blocks until all scheduled tasks finished
       virtual void Wait() = 0;
+   };
+
+   /// A sealed page contains the bytes of a page as written to storage (packed & compressed).  It is used
+   /// as an input to UnsealPages() as well as to transfer pages between different storage media.
+   struct RSealedPage {
+      const void *fBuffer = nullptr;
+      std::uint32_t fSize = 0;
+      std::uint32_t fNElements = 0;
+
+      RSealedPage() = default;
+      RSealedPage(const RSealedPage &other) = delete;
+      RSealedPage& operator =(const RSealedPage &other) = delete;
+      RSealedPage(RSealedPage &&other) = default;
+      RSealedPage& operator =(RSealedPage &&other) = default;
    };
 
 protected:
@@ -129,6 +146,11 @@ up to the given entry number are committed.
 class RPageSink : public RPageStorage {
 protected:
    RNTupleWriteOptions fOptions;
+
+   /// Helper to zip pages and header/footer; comprises a 16MB unzip buffer.
+   /// There could be concrete page sinks that don't need a compressor.  Therefore, and in order to stay consitent
+   /// with the page source, we leave it up to the derived class whether or not the compressor gets constructed.
+   std::unique_ptr<RNTupleCompressor> fCompressor;
 
    /// Building the ntuple descriptor while writing is done in the same way for all the storage sink implementations.
    /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
@@ -201,10 +223,20 @@ protected:
    /// The active columns are implicitly defined by the model fields or views
    ColumnSet_t fActiveColumns;
 
+   /// Helper to unzip pages and header/footer; comprises a 16MB unzip buffer.
+   /// Not all page sources need a decompressor (e.g. virtual ones for chains and friends don't), thus we
+   /// leave it up to the derived class whether or not the decompressor gets constructed.
+   std::unique_ptr<RNTupleDecompressor> fDecompressor;
+
    virtual RNTupleDescriptor AttachImpl() = 0;
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(RCluster * /* cluster */)
       { }
+
+   /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
+   /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
+   /// The optimization of directly mapping pages is left to the concrete page source implementations.
+   unsigned char *UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element);
 
 public:
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);

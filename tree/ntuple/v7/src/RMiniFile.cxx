@@ -1317,7 +1317,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int def
    streamerInfo.fStreamerInfo.fStreamers.fStreamerLenFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerReserved.fClassTag = 0x80000000 | classTagOffset;
    Detail::RNTupleCompressor compressor;
-   auto szStreamerInfo = compressor(&streamerInfo, streamerInfo.GetSize(), 1);
+   auto szStreamerInfo = compressor.Zip(&streamerInfo, streamerInfo.GetSize(), 1);
    fFileSimple.WriteKey(compressor.GetZipBuffer(), szStreamerInfo, streamerInfo.GetSize(),
                         fFileSimple.fControlBlock->fHeader.GetSeekInfo(), 100,
                         "TList", "StreamerInfo", "Doubly linked list");

@@ -45,7 +45,7 @@ private:
    /// The memory location of the bytes
    const void *fAddress = nullptr;
    /// The compressed and packed size of the page
-   std::size_t fSize = 0;
+   std::uint32_t fSize = 0;
 
 public:
    /// On-disk pages within a page source are identified by the column and page number. The key is used for
@@ -60,10 +60,10 @@ public:
    };
 
    ROnDiskPage() = default;
-   ROnDiskPage(void *address, std::size_t size) : fAddress(address), fSize(size) {}
+   ROnDiskPage(void *address, std::uint32_t size) : fAddress(address), fSize(size) {}
 
    const void *GetAddress() const { return fAddress; }
-   std::size_t GetSize() const { return fSize; }
+   std::uint32_t GetSize() const { return fSize; }
 
    bool IsNull() const { return fAddress == nullptr; }
 };

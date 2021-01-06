@@ -101,6 +101,33 @@ void ROOT::Experimental::Detail::RPageSource::UnzipCluster(RCluster *cluster)
 }
 
 
+unsigned char *ROOT::Experimental::Detail::RPageSource::UnsealPage(
+   const RSealedPage &sealedPage, const RColumnElementBase &element)
+{
+   const auto bytesPacked = (element.GetBitsOnStorage() * sealedPage.fNElements + 7) / 8;
+   const auto pageSize = element.GetSize() * sealedPage.fNElements;
+
+   auto pageBufferPacked = new unsigned char[bytesPacked];
+   if (sealedPage.fSize != bytesPacked) {
+      fDecompressor->Unzip(sealedPage.fBuffer, sealedPage.fSize, bytesPacked, pageBufferPacked);
+   } else {
+      // We cannot simply map the sealed page as we don't know its life time. Specialized page sources
+      // may decide to implement to not use UnsealPage but to custom mapping / decompression code.
+      // Note that usually pages are compressed.
+      memcpy(pageBufferPacked, sealedPage.fBuffer, bytesPacked);
+   }
+
+   auto pageBuffer = pageBufferPacked;
+   if (!element.IsMappable()) {
+      pageBuffer = new unsigned char[pageSize];
+      element.Unpack(pageBuffer, pageBufferPacked, sealedPage.fNElements);
+      delete[] pageBufferPacked;
+   }
+
+   return pageBuffer;
+}
+
+
 //------------------------------------------------------------------------------
 
 
