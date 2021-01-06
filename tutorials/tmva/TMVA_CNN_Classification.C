@@ -422,13 +422,13 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
       // create python script which can be executed
       // crceate 2 conv2d layer + maxpool + dense
       TMacro m;
-      m.AddLine("import keras");
-      m.AddLine("from keras.models import Sequential");
-      m.AddLine("from keras.optimizers import Adam");
+      m.AddLine("import tensorflow");
+      m.AddLine("from tensorflow.keras.models import Sequential");
+      m.AddLine("from tensorflow.keras.optimizers import Adam");
       m.AddLine(
-         "from keras.layers import Input, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape, BatchNormalization");
+         "from tensorflow.keras.layers import Input, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape, BatchNormalization");
       m.AddLine("");
-      m.AddLine("model = keras.models.Sequential() ");
+      m.AddLine("model = Sequential() ");
       m.AddLine("model.add(Reshape((16, 16, 1), input_shape = (256, )))");
       m.AddLine("model.add(Conv2D(10, kernel_size = (3, 3), kernel_initializer = 'glorot_normal',activation = "
                 "'relu', padding = 'same'))");
@@ -452,10 +452,10 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
          Warning("TMVA_CNN_Classification", "Error creating Keras model file - skip using Keras");
       } else {
          // book PyKeras method only if Keras model could be created
-         Info("TMVA_CNN_Classification", "Booking Keras CNN model");
+         Info("TMVA_CNN_Classification", "Booking tf.Keras CNN model");
          factory.BookMethod(
             loader, TMVA::Types::kPyKeras, "PyKeras",
-            "H:!V:VarTransform=None:FilenameModel=model_cnn.h5:"
+            "H:!V:VarTransform=None:FilenameModel=model_cnn.h5:tf.keras:"
             "FilenameTrainedModel=trained_model_cnn.h5:NumEpochs=20:BatchSize=100:"
             "GpuOptions=allow_growth=True"); // needed for RTX NVidia card and to avoid TF allocates all GPU memory
       }
