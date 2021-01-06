@@ -182,7 +182,10 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
       }
    }
 
-   auto friendTrees = t.GetListOfFriends();
+   // The list of friends needs to be accessed via GetTree()->GetListOfFriends()
+   // (and not via GetListOfFriends() directly), otherwise when `t` is a TChain we
+   // might not recover the list correctly (https://github.com/root-project/root/issues/6741).
+   auto friendTrees = t.GetTree()->GetListOfFriends();
 
    if (!friendTrees)
       return;
