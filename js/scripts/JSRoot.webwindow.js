@@ -584,7 +584,7 @@ JSROOT.define([], () => {
          }
 
          // only in interactive mode try to reconnect
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             setTimeout(retry_open, 3000); // after 3 seconds try again
 
       } // retry_open
@@ -641,7 +641,7 @@ JSROOT.define([], () => {
       if (arg.batch === undefined)
          arg.batch = d.has("batch_mode");
 
-      if (arg.batch) JSROOT.BatchMode = true;
+      if (arg.batch) JSROOT.batch_mode = true;
 
       if (!arg.socket_kind)
          arg.socket_kind = d.get("ws");

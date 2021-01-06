@@ -340,7 +340,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Add drag for interactive rectangular elements for painter */
    function addDragHandler(painter, callback) {
-      if (!JSROOT.settings.MoveResize || JSROOT.BatchMode) return;
+      if (!JSROOT.settings.MoveResize || JSROOT.batch_mode) return;
 
       let pthis = painter, drag_rect = null, pp = pthis.getPadPainter();
       if (pp && pp._fast_drawing) return;
@@ -584,7 +584,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    function addMoveHandler(painter) {
 
-      if (!JSROOT.settings.MoveResize || JSROOT.BatchMode ||
+      if (!JSROOT.settings.MoveResize || JSROOT.batch_mode ||
          !painter.draw_g || painter.draw_g.property("assigned_move")) return;
 
       function detectRightButton(event) {
@@ -743,7 +743,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       processKeyPress: function(evnt) {
          let main = this.selectDom();
-         if (!JSROOT.key_handling || main.empty() || (this.enabledKeys === false)) return;
+         if (!JSROOT.settings.HandleKeys || main.empty() || (this.enabledKeys === false)) return;
 
          let key = "";
          switch (evnt.keyCode) {
@@ -1307,7 +1307,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.clearInteractiveElements();
 
-         jsrp.createMenu(menu_painter, evnt).then(menu => {
+         jsrp.createMenu(evnt, menu_painter).then(menu => {
             let domenu = menu.painter.fillContextMenu(menu, kind, obj);
 
             // fill frame menu by default - or append frame elements when activated in the frame corner

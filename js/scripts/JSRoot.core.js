@@ -55,7 +55,7 @@
       // processing with Node.js
 
       //  mark JSROOT as used with Node.js
-      exports.BatchMode = exports.nodejs = (typeof global==='object') && global.process && (Object.prototype.toString.call(global.process) === '[object process]');
+      exports.batch_mode = exports.nodejs = (typeof global==='object') && global.process && (Object.prototype.toString.call(global.process) === '[object process]');
 
       factory(exports);
 
@@ -100,43 +100,29 @@
 
    /** @summary JSROOT version id
      * @desc For the JSROOT release the string in format "major.minor.patch" like "6.0.0"
-     *       For the ROOT release string is "ROOT major.minor.patch" like "ROOT 6.24.00" */
+     * For the ROOT release string is "ROOT major.minor.patch" like "ROOT 6.24.00" */
    JSROOT.version_id = "pre6";
 
    /** @summary JSROOT version date
-     * @desc Release date in format day/month/year */
-   JSROOT.version_date = "5/01/2021";
+     * @desc Release date in format day/month/year like "6/01/2021"*/
+   JSROOT.version_date = "6/01/2021";
 
    /** @summary JSROOT version id and date
-     * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date} */
+     * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
+     * Like "6.0.0 21/01/2021" */
    JSROOT.version = JSROOT.version_id + " " + JSROOT.version_date;
 
    /** @summary Location of JSROOT scripts
-     * @desc Used to load other JSROOT scripts when required
-     */
+     * @desc Automatically detected and used to load other JSROOT scripts when required */
    JSROOT.source_dir = "";
 
-   /** @summary Let tweak browser caching
-     * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each JSROOT script loaded
-     *       In such case browser will be forced to load JSROOT functionality disregards of cache settings
-     * @default false */
-   JSROOT.nocache = false;
+   if (JSROOT.batch_mode === undefined)
+      /** @summary Indicates if JSROOT runs in batch mode */
+      JSROOT.batch_mode = false;
 
-   /** @summary Let detect and solve problem when browser returns wrong content-length parameter
-     * @desc See [jsroot#189]{@link https://github.com/root-project/jsroot/issues/189} for more info
-     * Can be enabled by adding "wrong_http_response" parameter to URL when using JSROOT UI
-     * @default false */
-   JSROOT.wrong_http_response_handling = false;
-
-   if (JSROOT.BatchMode === undefined)
-      /** @summary Indicates if JSROOT runs in batch mode
-        * @default false */
-      JSROOT.BatchMode = false;
-
-   /** @summary Configures keybord key handling
-     * @desc Can be disabled to prevent keys heandling in complex HTML layouts
-     * @default true */
-   JSROOT.key_handling = true;  // enable/disable key press handling in JSROOT
+   if (JSROOT.nodejs === undefined)
+      /** @summary Indicates if JSROOT runs inside Node.js */
+      JSROOT.nodejs = false;
 
    //openuicfg // DO NOT DELETE, used to configure openui5 usage like JSROOT.openui5src = "nojsroot";
 
@@ -204,7 +190,7 @@
       if (_.amd) return dir + entry.src + ext;
       let res = dir + entry.src + ext + ".js";
 
-      if (fullyQualified && JSROOT.nocache) res += "?stamp=" + JSROOT.nocache;
+      if (fullyQualified && JSROOT.settings.NoCache) res += "?stamp=" + JSROOT.settings.NoCache;
       return res;
    }
 
@@ -337,7 +323,7 @@
       /** @summary Default color palette id  */
       Palette: 57,
       /** @summary Configures Latex usage, see {@link JSROOT.constants.Latex} for possible values */
-      Latex: 2,
+      Latex: JSROOT.constants.Latex.Normal,
       /** @summary Grads per segment in TGeo spherical shapes like tube */
       GeoGradPerSegm: 6,
       /** @summary Enables faces compression after creation of composite shape  */
@@ -352,6 +338,20 @@
       YValuesFormat : undefined,
       /** @summary custom format for all Z values, when not specified {@link JSROOT.gStyle.fStatFormat} is used */
       ZValuesFormat : undefined,
+      /** @summary Let detect and solve problem when browser returns wrong content-length parameter
+        * @desc See [jsroot#189]{@link https://github.com/root-project/jsroot/issues/189} for more info
+        * Can be enabled by adding "wrong_http_response" parameter to URL when using JSROOT UI
+        * @default false */
+      HandleWrongHttpResponse: false,
+      /** @summary Configures keybord key press handling
+        * @desc Can be disabled to prevent keys heandling in complex HTML layouts
+        * @default true */
+      HandleKeys: true,
+     /** @summary Let tweak browser caching
+       * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each JSROOT script loaded
+       * In such case browser will be forced to load JSROOT functionality disregards of server cache settings
+       * @default false */
+      NoCache: false
    };
 
    /** @namespace
@@ -726,14 +726,15 @@
      * Following components can be specified
      *    - 'io'     TFile functionality
      *    - 'tree'   TTree support
+     *    - 'painter' d3.js plus basic painting functions
      *    - 'gpad'   basic 2d graphic (TCanvas/TPad/TFrame)
      *    - 'hist'   histograms 2d drawing (SVG)
      *    - 'hist3d' histograms 3d drawing (WebGL)
      *    - 'more'   extra 2d graphic (TGraph, TF1)
-     *    - 'geom'    TGeo support
-     *    - 'v7gpad' ROOT RPad/RCanvas/RFrame
+     *    - 'geom'   TGeo support
+     *    - 'v7gpad' ROOT v7 RPad/RCanvas/RFrame
      *    - 'v7hist' ROOT v7 histograms 2d drawing (SVG)
-     *    - 'v7hist3d' v7 histograms 3d drawing (WebGL)
+     *    - 'v7hist3d' ROOT v7 histograms 3d drawing (WebGL)
      *    - 'v7more' ROOT v7 special classes
      *    - 'math'   some methods from TMath class
      *    - 'hierarchy' hierarchy browser
@@ -755,9 +756,9 @@
    }
 
    /** @summary Generate mask for given bit
-    * @param {number} n bit number
-    * @returns {Number} produced mask
-    * @private */
+     * @param {number} n bit number
+     * @returns {Number} produced mask
+     * @private */
    JSROOT.BIT = function(n) { return 1 << n; }
 
    /** @summary Seed simple random generator
@@ -784,7 +785,7 @@
       return result + 0.5;
    }
 
-   /** @summary Just copies (not clone) all fields from source to the target object
+   /** @summary Just copy (not clone) all fields from source to the target object
      * @desc Simple replacement of jQuery.extend method
      * @memberof JSROOT
      * @private */
@@ -810,8 +811,8 @@
 
    /** @summary Should be used to parse JSON string produced with TBufferJSON class
      * @desc Replace all references inside object like { "$ref": "1" }
-    * @param {object|string} json  object where references will be replaced
-    * @returns {object} parsed object */
+     * @param {object|string} json  object where references will be replaced
+     * @returns {object} parsed object */
    JSROOT.parse = function(json) {
 
       if (!json) return null;
@@ -1115,19 +1116,19 @@
    }
 
    /** @summary Find function with given name.
-    * @desc Function name may include several namespaces like 'JSROOT.Painter.drawFrame'
-    * If function starts with ., it should belong to JSROOT.Painter
-    * @private  */
+     * @desc Function name may include several namespaces like 'JSROOT.Painter.drawFrame'
+     * If function starts with ., it should belong to JSROOT.Painter
+     * @private */
    JSROOT.findFunction = function(name) {
       if (typeof name === 'function') return name;
       if (typeof name !== 'string') return null;
       let names, elem;
       if (name[0] == ".") { // special shortcut for JSROOT.Painter.
-         names = [ name.substr(1) ];
+         names = name.substr(1).split('.');
          elem = JSROOT.Painter;
       } else {
          names = name.split('.');
-         if (names[0]==='JSROOT') {
+         if (names[0] === 'JSROOT') {
             elem = JSROOT;
             names.shift();
          } else {
@@ -1135,7 +1136,7 @@
          }
       }
 
-      for (let n = 0;elem && (n < names.length); ++n)
+      for (let n = 0; elem && (n < names.length); ++n)
          elem = elem[names[n]];
 
       return (typeof elem == 'function') ? elem : null;
@@ -1153,13 +1154,13 @@
       if (!kind) kind = "buf";
 
       let method = "GET", async = true, p = kind.indexOf(";sync");
-      if (p>0) { kind = kind.substr(0,p); async = false; }
+      if (p > 0) { kind = kind.substr(0,p); async = false; }
       if (kind === "head") method = "HEAD"; else
       if ((kind === "post") || (kind === "multi") || (kind === "posttext")) method = "POST";
 
       xhr.kind = kind;
 
-      if (JSROOT.wrong_http_response_handling && (method == "GET") && (typeof xhr.addEventListener === 'function'))
+      if (JSROOT.settings.HandleWrongHttpResponse && (method == "GET") && (typeof xhr.addEventListener === 'function'))
          xhr.addEventListener("progress", function(oEvent) {
             if (oEvent.lengthComputable && this.expected_size && (oEvent.loaded > this.expected_size)) {
                this.did_abort = true;
@@ -1174,7 +1175,7 @@
 
          if ((this.readyState === 2) && this.expected_size) {
             let len = parseInt(this.getResponseHeader("Content-Length"));
-            if (!isNaN(len) && (len>this.expected_size) && !JSROOT.wrong_http_response_handling) {
+            if (!isNaN(len) && (len > this.expected_size) && !JSROOT.settings.HandleWrongHttpResponse) {
                this.did_abort = true;
                this.abort();
                return this.error_callback(Error('Server response size ' + len + ' larger than expected ' + this.expected_size + '. Abort I/O operation'));
@@ -1350,7 +1351,7 @@
    }
 
    // Dummy, when painter is not yet loaded, should happens nothing
-   JSROOT.cleanup = () => { return; }
+   JSROOT.cleanup = () => {}
 
    // Create SVG, defined in JSRoot.painter.js
    JSROOT.makeSVG = args => {
@@ -2163,20 +2164,12 @@
 
       let d = JSROOT.decodeUrl(source_fullpath);
 
-      if (d.has('nocache')) JSROOT.nocache = (new Date).getTime(); // use timestamp to overcome cache limitation
+      if (d.has('nocache')) JSROOT.settings.NoCache = (new Date).getTime(); // use timestamp to overcome cache limitation
       if (d.has('wrong_http_response') || JSROOT.decodeUrl().has('wrong_http_response'))
-         JSROOT.wrong_http_response_handling = true; // server may send wrong content length by partial requests, use other method to control this
+         JSROOT.settings.HandleWrongHttpResponse = true; // server may send wrong content length by partial requests, use other method to control this
       if (d.has('nosap')) _.sap = undefined; // let ignore sap loader even with openui5 loaded
 
       return this;
-   }
-
-   let _warned = {};
-   JSROOT.warnOnce = function(msg) {
-      if (!_warned[msg]) {
-         console.warn(msg);
-         _warned[msg] = true;
-      }
    }
 
    JSROOT._ = _;

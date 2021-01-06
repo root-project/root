@@ -368,7 +368,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (typeof this.paveDrawFunc == 'function')
          promise = this.paveDrawFunc(width, height, arg);
 
-      if (JSROOT.BatchMode || (pt._typename=="TPave"))
+      if (JSROOT.batch_mode || (pt._typename=="TPave"))
          return promise;
 
       return promise.then(() => JSROOT.require(['interactive'])).then(inter => {
@@ -391,7 +391,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
              this.draw_g.on("contextmenu", evnt => this.paveContextMenu(evnt));
 
          if (pt._typename == "TPaletteAxis")
-            this.InteractivePaletteAxis(width, height);
+            this.interactivePaletteAxis(width, height);
 
          return this;
       });
@@ -431,7 +431,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    /** @summary draw TPaveStats object */
    TPavePainter.prototype.drawPaveStats = function(width, height) {
 
-      if (this.IsStats()) this.fillStatistic();
+      if (this.isStats()) this.fillStatistic();
 
       let pt = this.getObject(), lines = [],
           tcolor = this.getColor(pt.fTextColor),
@@ -672,8 +672,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    }
 
    /** @summary Method used to convert value to string according specified format
-     * @desc format can be like 5.4g or 4.2e or 6.4f */
-   TPavePainter.prototype.Format = function(value, fmt) {
+     * @desc format can be like 5.4g or 4.2e or 6.4f or "stat" or "fit" or "entries"
+     * @strig n*/
+   TPavePainter.prototype.format = function(value, fmt) {
       if (!fmt) fmt = "stat";
 
       let pave = this.getObject();
@@ -924,8 +925,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       });
    }
 
-   /** @summary Add interactive methods for palette drawoing */
-   TPavePainter.prototype.InteractivePaletteAxis = function(s_width, s_height) {
+   /** @summary Add interactive methods for palette drawing */
+   TPavePainter.prototype.interactivePaletteAxis = function(s_width, s_height) {
       let doing_zoom = false, sel1 = 0, sel2 = 0, zoom_rect = null;
 
       let moveRectSel = evnt => {
@@ -1002,7 +1003,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       let pave = this.getObject();
 
       menu.add("header: " + pave._typename + "::" + pave.fName);
-      if (this.IsStats()) {
+      if (this.isStats()) {
          menu.add("Default position", function() {
             pave.fX2NDC = JSROOT.gStyle.fStatX;
             pave.fX1NDC = pave.fX2NDC - JSROOT.gStyle.fStatW;
@@ -1105,6 +1106,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return menu.size() > 0;
    }
 
+   /** @summary Show pave context menu */
    TPavePainter.prototype.paveContextMenu = function(evnt) {
       if (this.z_handle) {
          let fp = this.getFramePainter();
@@ -1116,25 +1118,29 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       evnt.stopPropagation(); // disable main context menu
       evnt.preventDefault();  // disable browser context menu
 
-      jsrp.createMenu(this, evnt).then(menu => {
+      jsrp.createMenu(evnt, this).then(menu => {
          this.fillContextMenu(menu);
          return this.fillObjectExecMenu(menu, "title");
        }).then(menu => menu.show());
    }
 
-   TPavePainter.prototype.IsStats = function() {
+   /** @summary Returns true when stat box is drawn */
+   TPavePainter.prototype.isStats = function() {
       return this.matchObjectType('TPaveStats');
    }
 
-   TPavePainter.prototype.ClearPave = function() {
+   /** @summary Clear text in the pave */
+   TPavePainter.prototype.clearPave = function() {
       this.getObject().Clear();
    }
 
-   TPavePainter.prototype.AddText = function(txt) {
+   /** @summary Add text to pave */
+   TPavePainter.prototype.addText = function(txt) {
       this.getObject().AddText(txt);
    }
 
-   TPavePainter.prototype.FillFunctionStat = function(f1, dofit) {
+   /** @summary Fill function parameters */
+   TPavePainter.prototype.fillFunctionStat = function(f1, dofit) {
       if (!dofit || !f1) return false;
 
       let print_fval    = dofit % 10,
@@ -1143,28 +1149,29 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           print_fprob   = Math.floor(dofit/1000) % 10;
 
       if (print_fchi2 > 0)
-         this.AddText("#chi^2 / ndf = " + this.Format(f1.fChisquare,"fit") + " / " + f1.fNDF);
+         this.addText("#chi^2 / ndf = " + this.format(f1.fChisquare,"fit") + " / " + f1.fNDF);
       if (print_fprob > 0)
-         this.AddText("Prob = "  + (('Math' in JSROOT) ? this.Format(JSROOT.Math.Prob(f1.fChisquare, f1.fNDF)) : "<not avail>"));
+         this.addText("Prob = "  + (('Math' in JSROOT) ? this.format(JSROOT.Math.Prob(f1.fChisquare, f1.fNDF)) : "<not avail>"));
       if (print_fval > 0)
          for(let n=0;n<f1.GetNumPars();++n) {
             let parname = f1.GetParName(n), parvalue = f1.GetParValue(n), parerr = f1.GetParError(n);
 
-            parvalue = (parvalue===undefined) ? "<not avail>" : this.Format(Number(parvalue),"fit");
+            parvalue = (parvalue===undefined) ? "<not avail>" : this.format(Number(parvalue),"fit");
             if (parerr !== undefined) {
-               parerr = this.Format(parerr,"last");
-               if ((Number(parerr)===0) && (f1.GetParError(n) != 0)) parerr = this.Format(f1.GetParError(n),"4.2g");
+               parerr = this.format(parerr,"last");
+               if ((Number(parerr)===0) && (f1.GetParError(n) != 0)) parerr = this.format(f1.GetParError(n),"4.2g");
             }
 
             if ((print_ferrors > 0) && parerr)
-               this.AddText(parname + " = " + parvalue + " #pm " + parerr);
+               this.addText(parname + " = " + parvalue + " #pm " + parerr);
             else
-               this.AddText(parname + " = " + parvalue);
+               this.addText(parname + " = " + parvalue);
          }
 
       return true;
    }
 
+   /** @summary Fill statistic */
    TPavePainter.prototype.fillStatistic = function() {
 
       let pp = this.getPadPainter();
@@ -1194,18 +1201,21 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return true;
    }
 
-   TPavePainter.prototype.IsDummyPos = function(p) {
+   /** @summary Is dummy pos of the pave painter
+     * @private */
+   TPavePainter.prototype.isDummyPos = function(p) {
       if (!p) return true;
 
       return !p.fInit && !p.fX1 && !p.fX2 && !p.fY1 && !p.fY2 && !p.fX1NDC && !p.fX2NDC && !p.fY1NDC && !p.fY2NDC;
    }
 
+   /** @summary Update TPave object  */
    TPavePainter.prototype.updateObject = function(obj) {
       if (!this.matchObjectType(obj)) return false;
 
       let pave = this.getObject();
 
-      if (!pave.modified_NDC && !this.IsDummyPos(obj)) {
+      if (!pave.modified_NDC && !this.isDummyPos(obj)) {
          // if position was not modified interactively, update from source object
 
          if (this.stored && !obj.fInit && (this.stored.fX1 == obj.fX1)
@@ -1292,7 +1302,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             if (tpainter && (tpainter !== painter)) {
                tpainter.removeFromPadPrimitives();
                tpainter.cleanup();
-            } else if ((opt == "postitle") || painter.IsDummyPos(pave)) {
+            } else if ((opt == "postitle") || painter.isDummyPos(pave)) {
                let st = JSROOT.gStyle, fp = painter.getFramePainter();
                if (st && fp) {
                   let midx = st.fTitleX, y2 = st.fTitleY, w = st.fTitleW, h = st.fTitleH;
@@ -2404,9 +2414,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (arg==="check")
          return (!this.isMainPainter() || this.options.Same) ? null : histo;
 
-      let pt = tpainter.getObject();
-      pt.Clear();
-      pt.AddText(histo.fTitle);
+      tpainter.clearPave();
+      tpainter.addText(histo.fTitle);
 
       tpainter.redraw();
 
@@ -2984,7 +2993,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (force) this.fPalette = null;
       if (!this.fPalette && !this.options.Palette) {
          let pp = this.getPadPainter();
-         if (pp) this.fPalette = pp.getCustomPalette();
+         if (pp && pp.getCustomPalette)
+            this.fPalette = pp.getCustomPalette();
       }
       if (!this.fPalette)
          this.fPalette = getColorPalette(this.options.Palette);
@@ -3312,12 +3322,13 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
     * @class
     * @memberof JSROOT
     * @extends JSROOT.THistPainter
+    * @param {object|string} dom - DOM element or id
     * @param {object} histo - histogram object
     * @private
     */
 
-   function TH1Painter(divid, histo) {
-      THistPainter.call(this, divid, histo);
+   function TH1Painter(dom, histo) {
+      THistPainter.call(this, dom, histo);
    }
 
    TH1Painter.prototype = Object.create(THistPainter.prototype);
@@ -3536,54 +3547,54 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           print_kurt = Math.floor(dostat / 100000000) % 10;
 
       // make empty at the beginning
-      stat.ClearPave();
+      stat.clearPave();
 
       if (print_name > 0)
-         stat.AddText(data.name);
+         stat.addText(data.name);
 
       if (this.isTProfile()) {
 
          if (print_entries > 0)
-            stat.AddText("Entries = " + stat.Format(data.entries,"entries"));
+            stat.addText("Entries = " + stat.format(data.entries,"entries"));
 
          if (print_mean > 0) {
-            stat.AddText("Mean = " + stat.Format(data.meanx));
-            stat.AddText("Mean y = " + stat.Format(data.meany));
+            stat.addText("Mean = " + stat.format(data.meanx));
+            stat.addText("Mean y = " + stat.format(data.meany));
          }
 
          if (print_rms > 0) {
-            stat.AddText("Std Dev = " + stat.Format(data.rmsx));
-            stat.AddText("Std Dev y = " + stat.Format(data.rmsy));
+            stat.addText("Std Dev = " + stat.format(data.rmsx));
+            stat.addText("Std Dev y = " + stat.format(data.rmsy));
          }
 
       } else {
 
          if (print_entries > 0)
-            stat.AddText("Entries = " + stat.Format(data.entries, "entries"));
+            stat.addText("Entries = " + stat.format(data.entries, "entries"));
 
          if (print_mean > 0)
-            stat.AddText("Mean = " + stat.Format(data.meanx));
+            stat.addText("Mean = " + stat.format(data.meanx));
 
          if (print_rms > 0)
-            stat.AddText("Std Dev = " + stat.Format(data.rmsx));
+            stat.addText("Std Dev = " + stat.format(data.rmsx));
 
          if (print_under > 0)
-            stat.AddText("Underflow = " + stat.Format((histo.fArray.length > 0) ? histo.fArray[0] : 0, "entries"));
+            stat.addText("Underflow = " + stat.format((histo.fArray.length > 0) ? histo.fArray[0] : 0, "entries"));
 
          if (print_over > 0)
-            stat.AddText("Overflow = " + stat.Format((histo.fArray.length > 0) ? histo.fArray[histo.fArray.length - 1] : 0, "entries"));
+            stat.addText("Overflow = " + stat.format((histo.fArray.length > 0) ? histo.fArray[histo.fArray.length - 1] : 0, "entries"));
 
          if (print_integral > 0)
-            stat.AddText("Integral = " + stat.Format(data.integral, "entries"));
+            stat.addText("Integral = " + stat.format(data.integral, "entries"));
 
          if (print_skew > 0)
-            stat.AddText("Skew = <not avail>");
+            stat.addText("Skew = <not avail>");
 
          if (print_kurt > 0)
-            stat.AddText("Kurt = <not avail>");
+            stat.addText("Kurt = <not avail>");
       }
 
-      if (dofit) stat.FillFunctionStat(this.findFunction('TF1'), dofit);
+      if (dofit) stat.fillFunctionStat(this.findFunction('TF1'), dofit);
 
       return true;
    }
@@ -3979,7 +3990,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
       }
 
-      let fill_for_interactive = !JSROOT.BatchMode && this.fillatt.empty() && draw_hist && JSROOT.settings.Tooltip && !draw_markers && !show_line,
+      let fill_for_interactive = !JSROOT.batch_mode && this.fillatt.empty() && draw_hist && JSROOT.settings.Tooltip && !draw_markers && !show_line,
           h0 = height + 3;
       if (!fill_for_interactive) {
          let gry0 = Math.round(pmain.gry(0));
@@ -4897,44 +4908,44 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           print_skew = Math.floor(dostat / 10000000) % 10,
           print_kurt = Math.floor(dostat / 100000000) % 10;
 
-      stat.ClearPave();
+      stat.clearPave();
 
       if (print_name > 0)
-         stat.AddText(data.name);
+         stat.addText(data.name);
 
       if (print_entries > 0)
-         stat.AddText("Entries = " + stat.Format(data.entries,"entries"));
+         stat.addText("Entries = " + stat.format(data.entries,"entries"));
 
       if (print_mean > 0) {
-         stat.AddText("Mean x = " + stat.Format(data.meanx));
-         stat.AddText("Mean y = " + stat.Format(data.meany));
+         stat.addText("Mean x = " + stat.format(data.meanx));
+         stat.addText("Mean y = " + stat.format(data.meany));
       }
 
       if (print_rms > 0) {
-         stat.AddText("Std Dev x = " + stat.Format(data.rmsx));
-         stat.AddText("Std Dev y = " + stat.Format(data.rmsy));
+         stat.addText("Std Dev x = " + stat.format(data.rmsx));
+         stat.addText("Std Dev y = " + stat.format(data.rmsy));
       }
 
       if (print_integral > 0)
-         stat.AddText("Integral = " + stat.Format(data.matrix[4],"entries"));
+         stat.addText("Integral = " + stat.format(data.matrix[4],"entries"));
 
       if (print_skew > 0) {
-         stat.AddText("Skewness x = <undef>");
-         stat.AddText("Skewness y = <undef>");
+         stat.addText("Skewness x = <undef>");
+         stat.addText("Skewness y = <undef>");
       }
 
       if (print_kurt > 0)
-         stat.AddText("Kurt = <undef>");
+         stat.addText("Kurt = <undef>");
 
       if ((print_under > 0) || (print_over > 0)) {
          let m = data.matrix;
 
-         stat.AddText("" + m[6].toFixed(0) + " | " + m[7].toFixed(0) + " | "  + m[7].toFixed(0));
-         stat.AddText("" + m[3].toFixed(0) + " | " + m[4].toFixed(0) + " | "  + m[5].toFixed(0));
-         stat.AddText("" + m[0].toFixed(0) + " | " + m[1].toFixed(0) + " | "  + m[2].toFixed(0));
+         stat.addText("" + m[6].toFixed(0) + " | " + m[7].toFixed(0) + " | "  + m[7].toFixed(0));
+         stat.addText("" + m[3].toFixed(0) + " | " + m[4].toFixed(0) + " | "  + m[5].toFixed(0));
+         stat.addText("" + m[0].toFixed(0) + " | " + m[1].toFixed(0) + " | "  + m[2].toFixed(0));
       }
 
-      if (dofit) stat.FillFunctionStat(this.findFunction('TF1'), dofit);
+      if (dofit) stat.fillFunctionStat(this.findFunction('TF2'), dofit);
 
       return true;
    }

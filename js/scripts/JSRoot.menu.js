@@ -61,6 +61,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.remove_bind = this.remove.bind(this);
       }
 
+      /** @summary Add menu item
+        * @param {string} name - item name
+        * @param {function} func - func called when item is selected */
       add(name, arg, func, title) {
          if (name == "separator") { this.code += "<li>-</li>"; this.separ = true; return; }
 
@@ -94,6 +97,10 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.cnt++;
       }
 
+      /** @summary Add checked menu item
+        * @param {boolean} flag - flag
+        * @param {string} name - item name
+        * @param {function} func - func called when item is selected */
       addchk(flag, name, arg, func) {
          let handler = func;
          if (typeof arg == 'function') {
@@ -104,8 +111,11 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          return this.add((flag ? "chk:" : "unk:") + name, arg, handler);
       }
 
+      /** @summary Returns menu size */
       size() { return this.cnt-1; }
 
+      /** @summary Add draw sub-menu with draw options
+        * @protected */
       addDrawMenu(top_name, opts, call_back) {
          if (!opts) opts = [];
          if (opts.length==0) opts.push("");
@@ -148,7 +158,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          if (!without_sub) this.add("endsub:");
       }
 
-      /** @summary Add color selection menu entries  */
+      /** @summary Add color selection menu entries
+        * @protected */
       addColorMenu(name, value, set_func, fill_kind) {
          if (value === undefined) return;
          this.add("sub:" + name, function() {
@@ -176,7 +187,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.add("endsub:");
       }
 
-      /** @summary Add size selection menu entries */
+      /** @summary Add size selection menu entries
+        * @protected */
       addSizeMenu(name, min, max, step, value, set_func) {
          if (value === undefined) return;
 
@@ -200,7 +212,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.add("endsub:");
       }
 
-      /** @summary Add selection menu entries */
+      /** @summary Add selection menu entries
+        * @protected */
       addSelectMenu(name, values, value, set_func) {
          this.add("sub:" + name);
          for (let n = 0; n < values.length; ++n)
@@ -208,7 +221,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.add("endsub:");
       }
 
-      /** @summary Add RColor selection menu entries  */
+      /** @summary Add RColor selection menu entries
+        * @protected */
       addRColorMenu(name, value, set_func) {
          // if (value === undefined) return;
          let colors = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
@@ -231,7 +245,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.add("endsub:");
       }
 
-      /** @summary Add items to change RAttrText */
+      /** @summary Add items to change RAttrText
+        * @protected */
       addRAttrTextItems(fontHandler, opts, set_func) {
          if (!opts) opts = {};
          this.addRColorMenu("color", fontHandler.color, sel => set_func({ name: "color_name", value: sel }));
@@ -253,7 +268,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
       }
 
       /** @summary Fill context menu for text attributes
-       * @private */
+        * @private */
       addTextAttributesMenu(painter, prefix) {
          // for the moment, text attributes accessed directly from objects
 
@@ -286,7 +301,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
       }
 
       /** @summary Fill context menu for graphical attributes in painter
-       * @private */
+        * @private */
       addAttributesMenu(painter, preffix) {
          // this method used to fill entries for different attributes of the object
          // like TAttFill, TAttLine, ....
@@ -385,7 +400,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
       }
 
       /** @summary Fill context menu for axis
-       * @private */
+        * @private */
       addTAxisMenu(painter, faxis, kind) {
          this.add("sub:Labels");
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kCenterLabels), "Center",
@@ -432,6 +447,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.add("endsub:");
       }
 
+      /** @summary Close and remove menu */
       remove() {
          if (this.element!==null) {
             this.element.remove();
@@ -444,6 +460,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.element = null;
       }
 
+      /** @summary Show menu */
       show(event) {
          this.remove();
 
@@ -500,22 +517,28 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
    /** @summary Create JSROOT menu
      * @desc See {@link JSROOT.Painter.jQueryMenu} class for detailed list of methods
      * @memberof JSROOT.Painter
+     * @param {object} [evnt] - event object like mouse context menu event
+     * @param {object} [handler] - object with handling function, in this case one not need to bind function
+     * @param {string} [menuname] - optional menu name
      * @example
-     * JSROOT.Painter.createMenu(painter, evnt).then(menu => {
-     *     menu.add("First", () => console.log("Click first"));
-     *     let flag = true;
-     *     menu.addchk(flag, "Checked", arg => console.log(`Now flag is ${arg}`));
-     *     menu.show();
-     * }); */
-   let createMenu = (painter, show_event) => {
-      let menu = new JQueryMenu(painter, 'root_ctx_menu', show_event);
+     * JSROOT.require("painter")
+     *       .then(jsrp => jsrp.createMenu())
+     *       .then(menu => {
+     *          menu.add("First", () => console.log("Click first"));
+     *          let flag = true;
+     *          menu.addchk(flag, "Checked", arg => console.log(`Now flag is ${arg}`));
+     *          menu.show();
+     *        }); */
+   function createMenu(evnt, handler, menuname) {
+      let menu = new JQueryMenu(handler, menuname || 'root_ctx_menu', evnt);
 
       return Promise.resolve(menu);
    }
 
    /** @summary Close previousely created and shown JSROOT menu
+     * @param {string} [menuname] - optional menu name
      * @memberof JSROOT.Painter */
-   let closeMenu = menuname => {
+   function closeMenu(menuname) {
       let x = document.getElementById(menuname || 'root_ctx_menu');
       if (x) { x.parentNode.removeChild(x); return true; }
       return false;

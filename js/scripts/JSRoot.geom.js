@@ -170,7 +170,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
    /** @summary Create toolbar */
    TGeoPainter.prototype.createToolbar = function() {
-      if (this._toolbar || !this._webgl || this.ctrl.notoolbar || JSROOT.BatchMode) return;
+      if (this._toolbar || !this._webgl || this.ctrl.notoolbar || JSROOT.batch_mode) return;
       let buttonList = [{
          name: 'toImage',
          title: 'Save as PNG',
@@ -211,7 +211,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
             if (jsrp.closeMenu && jsrp.closeMenu()) return;
 
-            jsrp.createMenu(this, evnt).then(menu => {
+            jsrp.createMenu(evnt, this).then(menu => {
                 menu.painter.fillContextMenu(menu);
                 menu.show();
             });
@@ -988,7 +988,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
      * @private */
    TGeoPainter.prototype.orbitContext = function(evnt, intersects) {
 
-      jsrp.createMenu(this, evnt).then(menu => {
+      jsrp.createMenu(evnt, this).then(menu => {
          let numitems = 0, numnodes = 0, cnt = 0;
          if (intersects)
             for (let n=0;n<intersects.length;++n) {
@@ -1309,7 +1309,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    /** @summary Add orbit control */
    TGeoPainter.prototype.addOrbitControls = function() {
 
-      if (this._controls || !this._webgl || JSROOT.BatchMode) return;
+      if (this._controls || !this._webgl || JSROOT.batch_mode) return;
 
       let painter = this;
 
@@ -1489,7 +1489,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          // here we decide if we need worker for the drawings
          // main reason - too large geometry and large time to scan all camera positions
-         let need_worker = !JSROOT.BatchMode && ((numvis > 10000) || (matrix && (this._clones.scanVisible() > 1e5)));
+         let need_worker = !JSROOT.batch_mode && ((numvis > 10000) || (matrix && (this._clones.scanVisible() > 1e5)));
 
          // worker does not work when starting from file system
          if (need_worker && JSROOT.source_dir.indexOf("file://")==0) {
@@ -2439,7 +2439,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    TGeoPainter.prototype.drawCount = function(unqievis, clonetm) {
 
       function makeTime(tm) {
-         return JSROOT.BatchMode ? "anytime ms" : tm.toString() + " ms";
+         return JSROOT.batch_mode ? "anytime ms" : tm.toString() + " ms";
       }
 
       let res = [ 'Unique nodes: ' + this._clones.nodes.length,
@@ -2488,7 +2488,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       let elem = this.selectDom().style('overflow', 'auto');
 
-      if (JSROOT.BatchMode)
+      if (JSROOT.batch_mode)
          elem.property("_json_object_", res);
       else
          res.forEach(str => elem.append("p").text(str));
@@ -2501,7 +2501,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             tm2 = new Date().getTime();
 
             let last_str = "Time to scan with matrix: " + makeTime(tm2-tm1);
-            if (JSROOT.BatchMode)
+            if (JSROOT.batch_mode)
                res.push(last_str);
             else
                elem.append("p").text(last_str);
@@ -3203,7 +3203,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
 
-      if ((tmout > 0) && this._webgl && !JSROOT.BatchMode) {
+      if ((tmout > 0) && this._webgl && !JSROOT.batch_mode) {
          // do not shoot timeout many times
          if (!this.render_tmout)
             this.render_tmout = setTimeout(() => this.render3D(0,measure), tmout);
@@ -3760,7 +3760,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          // if rotation was enabled, do it
          if (this._webgl && this.ctrl.rotate && !this.ctrl.project) this.autorotate(2.5);
-         if (this._webgl && this.ctrl.show_controls && !JSROOT.BatchMode) this.showControlOptions(true);
+         if (this._webgl && this.ctrl.show_controls && !JSROOT.batch_mode) this.showControlOptions(true);
       }
 
       this.setAsMainPainter();
