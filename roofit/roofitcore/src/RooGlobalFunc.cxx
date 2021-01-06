@@ -179,10 +179,11 @@ namespace RooFit {
   RooCmdArg BatchMode(std::string const& batchMode) {
       std::string lower = batchMode;
       std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c){ return std::tolower(c); });
-      bool mode;
-      if(lower == "off") mode = false;
-      else if(lower == "cpu") mode = true;
-      else throw std::runtime_error("Only supported string values for BatchMode() are `off` or `cpu`.");
+      int mode;
+      if(lower == "off") mode = 0;
+      else if(lower == "cpu") mode = 1;
+      else if(lower == "cuda") mode = -1;
+      else throw std::runtime_error("Only supported string values for BatchMode() are `off`, `cpu`, or `cuda`.");
       return RooCmdArg("BatchMode", static_cast<int>(mode));
   }
   /// Integrate the PDF over bins. Improves accuracy for binned fits. Switch off using `0.` as argument. \see RooAbsPdf::fitTo().
