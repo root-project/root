@@ -8,6 +8,7 @@
 #include "Utility.h"
 
 // Standard
+#include <set>
 #include <sstream>
 
 
@@ -108,7 +109,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
 
 // protected methods and data need their access changed in the C++ trampoline and then
 // exposed on the Python side; so, collect their names as we go along
-    std::vector<std::string> protected_names;
+    std::set<std::string> protected_names;
 
 // simple case: methods from current class
     bool has_default = false;
@@ -138,10 +139,25 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
         if (contains != 1) {
             Py_DECREF(key);
 
-        // if the method is protected, we expose it with a 'using'
+        // if the method is protected, we expose it through re-declaration and forwarding (using
+        // does not work here b/c there may be private overloads)
             if (Cppyy::IsProtectedMethod(method)) {
-                protected_names.push_back(mtCppName);
-                code << "  using " << baseName << "::" << mtCppName << ";\n";
+                protected_names.insert(mtCppName);
+
+                code << "  " << Cppyy::GetMethodResultType(method) << " " << mtCppName << "(";
+                Cppyy::TCppIndex_t nArgs = Cppyy::GetMethodNumArgs(method);
+                for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i) {
+                    if (i != 0) code << ", ";
+                    code << Cppyy::GetMethodArgType(method, i) << " arg" << i;
+                }
+                code << ") ";
+                if (Cppyy::IsConstMethod(method)) code << "const ";
+                code << "{\n    return " << baseName << "::" << mtCppName << "(";
+                for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i) {
+                    if (i != 0) code << ", ";
+                    code << "arg" << i;
+                }
+                code << ");\n  }\n";
             }
 
             continue;
@@ -200,8 +216,9 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
     if (nData) code << "public:\n";
     for (Cppyy::TCppIndex_t idata = 0; idata < nData; ++idata) {
         if (Cppyy::IsProtectedData(klass->fCppType, idata)) {
-            protected_names.push_back(Cppyy::GetDatamemberName(klass->fCppType, idata));
-            code << "  using " << baseName << "::" << protected_names.back() << ";\n";
+            const std::string& dname = Cppyy::GetDatamemberName(klass->fCppType, idata);
+            protected_names.insert(dname);
+            code << "  using " << baseName << "::" << dname << ";\n";
         }
     }
 
