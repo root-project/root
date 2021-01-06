@@ -1227,11 +1227,11 @@ namespace Internal {
       }
 
       // Now let's add the TTreeFriend (if any)
-      if (tree->GetListOfFriends()) {
+      if (tree->GetTree()->GetListOfFriends()) {
          TFriendElement *fe;
          Int_t count = 0;
 
-         TIter nextfriend(tree->GetListOfFriends());
+         TIter nextfriend(tree->GetTree()->GetListOfFriends());
          while ((fe = (TFriendElement*)nextfriend())) {
             TTree *t = fe->GetTree();
             TFriendProxyDescriptor *desc;
