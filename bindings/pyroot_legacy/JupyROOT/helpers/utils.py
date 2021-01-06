@@ -100,7 +100,7 @@ function display_{jsDivId}() {{
     require(['scripts/JSRoot.core'],
         function(Core) {{
             var obj = Core.parse({jsonContent});
-            Core.key_handling = false;
+            Core.settings.HandleKeys = false;
             Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
         }}
     );
