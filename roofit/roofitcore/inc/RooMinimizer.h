@@ -21,6 +21,8 @@
 
 #include "TObject.h"
 #include "TStopwatch.h"
+#include "Fit/Fitter.h"
+
 #include <fstream>
 #include <vector>
 #include <string>
@@ -45,6 +47,7 @@ class RooRealVar ;
 class RooArgSet ;
 class TH2F ;
 class RooPlot ;
+class RooFitDriver;
 
 class RooMinimizer : public TObject {
 public:

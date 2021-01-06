@@ -128,7 +128,7 @@ protected:
 
 
   Double_t evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
+  void computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const override;
 
 
   mutable RooAICRegistry _codeReg; //! Registry of component analytical integration codes

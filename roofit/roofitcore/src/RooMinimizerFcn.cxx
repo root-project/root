@@ -19,10 +19,10 @@
 ///
 
 #include "RooMinimizerFcn.h"
-
 #include "RooMsgService.h"
 #include "RooMinimizer.h"
 #include "RooNaNPacker.h"
+#include "RooFitDriver.h"
 
 #include "TClass.h"
 #include "TMatrixDSym.h"

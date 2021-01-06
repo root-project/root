@@ -24,6 +24,7 @@
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooRealVar.h"
+#include "RooFitDriver.h"
 
 #include <iostream>
 #include <functional>
@@ -56,6 +57,16 @@ public:
          , errorLevel{absReal.defaultErrorLevel()}
        {
           absReal.getParameters(nullptr, parameters);
+       }
+
+       Function(RooFitDriver & driver)
+         : getVal([&driver](){ return driver.getVal(); })
+         , constOptimizeTestStatistic([](RooAbsArg::ConstOpCode, bool){ })
+         , name{driver.name()}
+         , title{driver.title()}
+         , parameters{driver.parameters()}
+         , errorLevel{driver.errorLevel()}
+       {
        }
    };
 

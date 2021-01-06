@@ -15,6 +15,10 @@
 #ifndef ROO_MINIMIZER_FCN
 #define ROO_MINIMIZER_FCN
 
+#include "RooAbsReal.h"
+#include "RooArgList.h"
+#include "RooFitDriver.h"
+
 #include "Math/IFunction.h"
 #include "Fit/ParameterSettings.h"
 #include "Fit/FitResult.h"

@@ -39,20 +39,8 @@ automatic PDF optimization.
 **/
 
 
+#include "RooMinimizer.h"
 #include "RooFit.h"
-
-#include "TClass.h"
-
-#include <iostream>
-#include <fstream>
-
-#include "TH2.h"
-#include "TMarker.h"
-#include "TGraph.h"
-#include "Fit/FitConfig.h"
-#include "TStopwatch.h"
-#include "TMatrixDSym.h"
-
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooAbsReal.h"
@@ -66,11 +54,17 @@ automatic PDF optimization.
 #include "RooFitResult.h"
 #include "RooMinimizer.h"
 
+#include "TClass.h"
+#include "TH2.h"
+#include "TMarker.h"
+#include "TGraph.h"
+#include "Fit/FitConfig.h"
+#include "TStopwatch.h"
+#include "TMatrixDSym.h"
 #include "Math/Minimizer.h"
 
-#if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
-char* operator+( streampos&, char* );
-#endif
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 
