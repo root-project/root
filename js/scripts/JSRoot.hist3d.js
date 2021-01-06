@@ -195,7 +195,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       this.first_render_tm = 0;
       this.enable_highlight = false;
 
-      if (JSROOT.BatchMode || !this.webgl) return;
+      if (JSROOT.batch_mode || !this.webgl) return;
 
       this.control = jsrp.createOrbitControl(this, this.camera, this.scene, this.renderer, this.lookat);
 
@@ -298,7 +298,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
       if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
 
-      if ((tmout > 0) && !this.usesvg && !JSROOT.BatchMode) {
+      if ((tmout > 0) && !this.usesvg && !JSROOT.batch_mode) {
          if (!this.render_tmout)
             this.render_tmout = setTimeout(() => this.render3D(0), tmout);
          return;
@@ -2308,6 +2308,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       this.draw_content = this.gmaxbin > 0;
    }
 
+   /** @summary Count TH3 statistic
+     * @private */
    TH3Painter.prototype.countStat = function() {
       let histo = this.getHisto(), xaxis = histo.fXaxis, yaxis = histo.fYaxis, zaxis = histo.fZaxis,
           stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
@@ -2379,6 +2381,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       return res;
    }
 
+   /** @summary Fill TH3 statistic in stat box
+     * @private */
    TH3Painter.prototype.fillStatistic = function(stat, dostat, dofit) {
 
       // no need to refill statistic if histogram is dummy
@@ -2395,31 +2399,31 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       //var print_skew = Math.floor(dostat / 10000000) % 10;
       //var print_kurt = Math.floor(dostat / 100000000) % 10;
 
-      stat.ClearPave();
+      stat.clearPave();
 
       if (print_name > 0)
-         stat.AddText(data.name);
+         stat.addText(data.name);
 
       if (print_entries > 0)
-         stat.AddText("Entries = " + stat.Format(data.entries,"entries"));
+         stat.addText("Entries = " + stat.format(data.entries,"entries"));
 
       if (print_mean > 0) {
-         stat.AddText("Mean x = " + stat.Format(data.meanx));
-         stat.AddText("Mean y = " + stat.Format(data.meany));
-         stat.AddText("Mean z = " + stat.Format(data.meanz));
+         stat.addText("Mean x = " + stat.format(data.meanx));
+         stat.addText("Mean y = " + stat.format(data.meany));
+         stat.addText("Mean z = " + stat.format(data.meanz));
       }
 
       if (print_rms > 0) {
-         stat.AddText("Std Dev x = " + stat.Format(data.rmsx));
-         stat.AddText("Std Dev y = " + stat.Format(data.rmsy));
-         stat.AddText("Std Dev z = " + stat.Format(data.rmsz));
+         stat.addText("Std Dev x = " + stat.format(data.rmsx));
+         stat.addText("Std Dev y = " + stat.format(data.rmsy));
+         stat.addText("Std Dev z = " + stat.format(data.rmsz));
       }
 
       if (print_integral > 0) {
-         stat.AddText("Integral = " + stat.Format(data.integral,"entries"));
+         stat.addText("Integral = " + stat.format(data.integral,"entries"));
       }
 
-      if (dofit) stat.FillFunctionStat(this.findFunction('TF1'), dofit);
+      if (dofit) stat.fillFunctionStat(this.findFunction('TF3'), dofit);
 
       return true;
    }
