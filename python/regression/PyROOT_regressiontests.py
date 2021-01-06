@@ -771,6 +771,33 @@ class Regression24CppPythonInheritance(MyTestCase):
 
        window = pMainFrame(ROOT.gClient.GetRoot(), 200, 200)
 
+   def test9MultipleProtectedAndPrivateOverloads(self):
+       """Presence of multiple protected overloads of a method and both private and protected"""
+       # 6345
+
+       cppyy.gbl.gInterpreter.Declare('''
+       class MyClass6345 {
+       public:
+       virtual ~MyClass6345() {}
+       protected:
+          int foo(int)      { return 1; }
+          int foo(int, int) { return 2; }
+
+          int bar()    { return 3; }
+       private:
+          int bar(int) { return 4; }
+       };
+       ''')
+
+       class MyPyClass6345(cppyy.gbl.MyClass6345):
+          pass
+
+       a = MyPyClass6345()
+       self.assertEqual(a.foo(0), 1)
+       self.assertEqual(a.foo(0,0), 2)
+       self.assertEqual(a.bar(), 3)
+       self.assertRaises(TypeError, a.bar, 0)
+
 
 ## actual test run
 if __name__ == '__main__':
