@@ -36,6 +36,7 @@
 
 
 #include "RooFit.h"
+#include "RooFitDriver.h"
 #include "RooMsgService.h"
 
 #include "RooAbsReal.h"
