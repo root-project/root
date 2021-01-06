@@ -1,24 +1,24 @@
-#include "ExecutionPolicy.hxx"
+#include "EExecutionPolicy.hxx"
 #include "ROOT/RConfig.hxx"
 
 namespace ROOT {
 namespace Fit {
 namespace ExecutionPolicy {
 
-constexpr ROOT::ExecutionPolicy
+constexpr ROOT::EExecutionPolicy
    _R__DEPRECATED_626("ROOT::Fit::ExecutionPolicy is being deprecated."
-                      "Use ROOT::ExecutionPolicy::kMultiThread instead.")
-      kMultithread = ROOT::ExecutionPolicy::kMultiThread;
+                      "Use ROOT::EExecutionPolicy::kMultiThread instead.")
+      kMultithread = ROOT::EExecutionPolicy::kMultiThread;
 
-constexpr ROOT::ExecutionPolicy
+constexpr ROOT::EExecutionPolicy
    _R__DEPRECATED_626("ROOT::Fit::ExecutionPolicy is being deprecated."
-                      "Use ROOT::ExecutionPolicy::kMultiProcess instead.")
-      kMultiprocess = ROOT::ExecutionPolicy::kMultiProcess;
+                      "Use ROOT::EExecutionPolicy::kMultiProcess instead.")
+      kMultiprocess = ROOT::EExecutionPolicy::kMultiProcess;
 
-constexpr ROOT::ExecutionPolicy _R__DEPRECATED_626(
+constexpr ROOT::EExecutionPolicy _R__DEPRECATED_626(
    "ROOT::Fit::ExecutionPolicy is being deprecated."
-   "Use ROOT::ExecutionPolicy::kSequential instead.")
-      kSerial = ROOT::ExecutionPolicy::kSequential;
+   "Use ROOT::EExecutionPolicy::kSequential instead.")
+      kSerial = ROOT::EExecutionPolicy::kSequential;
 
 } // namespace ExecutionPolicy
 } // Fit ns
