@@ -11,7 +11,7 @@
 #ifndef ROOT_TSequentialExecutor
 #define ROOT_TSequentialExecutor
 
-#include "ExecutionPolicy.hxx"
+#include "EExecutionPolicy.hxx"
 #include "ROOT/TExecutorCRTP.hxx"
 #include "ROOT/TSeq.hxx"
 

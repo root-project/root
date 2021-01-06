@@ -2,7 +2,7 @@
 // Author: Alejandro García Montoro 07/2017
 
 #include "Fit/BinData.h"
-#include "ExecutionPolicy.hxx"
+#include "EExecutionPolicy.hxx"
 #include "Fit/FitUtil.h"
 #include "Fit/UnBinData.h"
 #include "Math/WrappedMultiTF1.h"
@@ -37,10 +37,10 @@ int printLevel = 0;
 //    "Scalar", "Vectorial")
 //    PolicyInfoStr points to a human-readable string describing
 //    ExecutionPolicyType (e.g., "Serial", "Multithread")
-template <typename U, ROOT::ExecutionPolicy V, int W, const char *dataInfoStr, const char *policyInfoStr>
+template <typename U, ROOT::EExecutionPolicy V, int W, const char *dataInfoStr, const char *policyInfoStr>
 struct GradientTestTraits {
    using DataType = U;
-   static constexpr ROOT::ExecutionPolicy ExecutionPolicyType() { return V; };
+   static constexpr ROOT::EExecutionPolicy ExecutionPolicyType() { return V; };
    static constexpr int Dimensions() { return W; };
 
    static void PrintTypeInfo(const std::string &fittingInfo)
@@ -64,25 +64,25 @@ char mthreadStr[] = "Multithread";
 
 // Typedefs of GradientTestTraits for scalar (serial and multithreaded)
 // scenarios
-using ScalarSerial1D = GradientTestTraits<Double_t, ROOT::ExecutionPolicy::kSequential, 1, scalarStr, serialStr>;
+using ScalarSerial1D = GradientTestTraits<Double_t, ROOT::EExecutionPolicy::kSequential, 1, scalarStr, serialStr>;
 using ScalarMultithread1D =
-   GradientTestTraits<Double_t, ROOT::ExecutionPolicy::kMultiThread, 1, scalarStr, mthreadStr>;
-using ScalarSerial2D = GradientTestTraits<Double_t, ROOT::ExecutionPolicy::kSequential, 2, scalarStr, serialStr>;
+   GradientTestTraits<Double_t, ROOT::EExecutionPolicy::kMultiThread, 1, scalarStr, mthreadStr>;
+using ScalarSerial2D = GradientTestTraits<Double_t, ROOT::EExecutionPolicy::kSequential, 2, scalarStr, serialStr>;
 using ScalarMultithread2D =
-   GradientTestTraits<Double_t, ROOT::ExecutionPolicy::kMultiThread, 2, scalarStr, mthreadStr>;
+   GradientTestTraits<Double_t, ROOT::EExecutionPolicy::kMultiThread, 2, scalarStr, mthreadStr>;
 
 #ifdef R__HAS_VECCORE
 
 // Typedefs of GradientTestTraits for vectorial (serial and multithreaded)
 // scenarios
 using VectorialSerial1D =
-   GradientTestTraits<ROOT::Double_v, ROOT::ExecutionPolicy::kSequential, 1, vectorStr, serialStr>;
+   GradientTestTraits<ROOT::Double_v, ROOT::EExecutionPolicy::kSequential, 1, vectorStr, serialStr>;
 using VectorialMultithread1D =
-   GradientTestTraits<ROOT::Double_v, ROOT::ExecutionPolicy::kMultiThread, 1, vectorStr, mthreadStr>;
+   GradientTestTraits<ROOT::Double_v, ROOT::EExecutionPolicy::kMultiThread, 1, vectorStr, mthreadStr>;
 using VectorialSerial2D =
-   GradientTestTraits<ROOT::Double_v, ROOT::ExecutionPolicy::kSequential, 2, vectorStr, serialStr>;
+   GradientTestTraits<ROOT::Double_v, ROOT::EExecutionPolicy::kSequential, 2, vectorStr, serialStr>;
 using VectorialMultithread2D =
-   GradientTestTraits<ROOT::Double_v, ROOT::ExecutionPolicy::kMultiThread, 2, vectorStr, mthreadStr>;
+   GradientTestTraits<ROOT::Double_v, ROOT::EExecutionPolicy::kMultiThread, 2, vectorStr, mthreadStr>;
 
 #endif
 
@@ -266,7 +266,7 @@ struct GradientTestEvaluation {
 
    // Basic type to compare against
    using ScalarSerial =
-      GradientTestTraits<double, ROOT::ExecutionPolicy::kSequential, T::Dimensions(), scalarStr, serialStr>;
+      GradientTestTraits<double, ROOT::EExecutionPolicy::kSequential, T::Dimensions(), scalarStr, serialStr>;
 
    GradientTestEvaluation()
    {
