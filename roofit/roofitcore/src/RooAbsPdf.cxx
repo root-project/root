@@ -170,9 +170,11 @@ called for each data event.
 #include "RooWorkspace.h"
 #include "RooNaNPacker.h"
 #include "RooHelpers.h"
-#include "RooBatchCompute.h"
 #include "RooFormulaVar.h"
 #include "RooDerivative.h"
+#include "RooFitDriver.h"
+#include "RooNLLVarNew.h"
+#include "RunContext.h"
 
 #include "ROOT/StringUtils.hxx"
 #include "TClass.h"
@@ -1576,7 +1578,7 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 
   // Instantiate RooMinimizer
 
-  RooMinimizer m(nll);
+  RooMinimizer m(nll, RooMinimizer::FcnMode::classic);
   m.setMinimizerType(cfg.minType.c_str());
   m.setEvalErrorWall(cfg.doEEWall);
   m.setRecoverFromNaNStrength(cfg.recoverFromNaN);
@@ -1642,7 +1644,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,"
       "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
       "CloneData,GlobalObservables,GlobalObservablesSource,GlobalObservablesTag,OffsetLikelihood,"
-      "BatchMode,IntegrateBins");
+      "IntegrateBins");
 
   // Default-initialized instance of MinimizerConfig to get the default
   // minimizer parameter values.
@@ -1660,6 +1662,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("initHesse","InitialHesse",0,minimizerDefaults.initHesse) ;
   pc.defineInt("hesse","Hesse",0,minimizerDefaults.hesse) ;
   pc.defineInt("minos","Minos",0,minimizerDefaults.minos) ;
+  pc.defineInt("BatchMode", "BatchMode", 0, 0);
   pc.defineInt("ext","Extended",0,2) ;
   pc.defineInt("numcpu","NumCPU",0,1) ;
   pc.defineInt("numee","PrintEvalErrors",0,minimizerDefaults.numee) ;
@@ -1741,7 +1744,14 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     }
   }
 
-  std::unique_ptr<RooAbsReal> nll{createNLL(data,nllCmdList)};
+  RooAbsReal* nll=nullptr;
+  std::unique_ptr<ROOT::Experimental::RooFitDriver> driver;
+  if (pc.getInt("BatchMode")==0) {
+    nll = createNLL(data,nllCmdList);
+  } else {
+    nll = new ROOT::Experimental::RooNLLVarNew("NewNLLVar","NewNLLVar",*this);
+    driver.reset(new ROOT::Experimental::RooFitDriver( data, static_cast<ROOT::Experimental::RooNLLVarNew&>(*nll), pc.getInt("BatchMode") ));
+  }
 
   MinimizerConfig cfg;
   cfg.recoverFromNaN = pc.getDouble("RecoverFromUndefinedRegions");
@@ -1764,7 +1774,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.minType = pc.getString("mintype","Minuit");
   cfg.minAlg = pc.getString("minalg","minuit");
 
-  return minimizeNLL(*nll, data, cfg).release();
+  auto out = minimizeNLL(driver ? *driver->makeAbsRealWrapper() : *nll, data, cfg);
+  delete nll;
+  return out.release();
 }
 
 

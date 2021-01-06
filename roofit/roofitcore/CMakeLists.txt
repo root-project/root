@@ -383,7 +383,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooMultiGenFunction.cxx
     src/RooMultiVarGaussian.cxx
     src/RooNameReg.cxx
+    src/RooFitDriver.cxx
     src/RooNLLVar.cxx
+    src/RooNLLVarNew.cxx
     src/RooNormSetCache.cxx
     src/RooNumber.cxx
     src/RooNumCdf.cxx
