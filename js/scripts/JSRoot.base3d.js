@@ -11,11 +11,11 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
     * @returns {value} - rendering kind, see JSROOT.constants.Render3D
     * @private */
    jsrp.getRender3DKind = function(render3d) {
-      if (!render3d) render3d = JSROOT.BatchMode ? JSROOT.settings.Render3DBatch : JSROOT.settings.Render3D;
+      if (!render3d) render3d = JSROOT.batch_mode ? JSROOT.settings.Render3DBatch : JSROOT.settings.Render3D;
       let rc = JSROOT.constants.Render3D;
 
-      if (render3d == rc.Default) render3d = JSROOT.BatchMode ? rc.WebGLImage : rc.WebGL;
-      if (JSROOT.BatchMode && (render3d == rc.WebGL)) render3d = rc.WebGLImage;
+      if (render3d == rc.Default) render3d = JSROOT.batch_mode ? rc.WebGLImage : rc.WebGL;
+      if (JSROOT.batch_mode && (render3d == rc.WebGL)) render3d = rc.WebGLImage;
 
       return render3d;
    }
@@ -290,7 +290,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          // SVG rendering
          renderer = THREE.CreateSVGRenderer(false, 0, doc);
 
-         if (JSROOT.BatchMode) {
+         if (JSROOT.batch_mode) {
             need_workaround = true;
          } else {
             renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -350,7 +350,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
       // apply size to dom element
       renderer.setJSROOTSize = function(width, height) {
-         if ((this.jsroot_render3d === JSROOT.constants.Render3D.WebGLImage) && !JSROOT.BatchMode && !JSROOT.nodejs)
+         if ((this.jsroot_render3d === JSROOT.constants.Render3D.WebGLImage) && !JSROOT.batch_mode && !JSROOT.nodejs)
             return d3.select(this.jsroot_dom).attr("width", width).attr("height", height);
       }
 
@@ -375,7 +375,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
       if (renderer.jsroot_render3d == rc.SVG) {
          // case of SVGRenderer
-         if (JSROOT.BatchMode) {
+         if (JSROOT.batch_mode) {
             JSROOT._.svg_3ds[renderer.workaround_id] = renderer.makeOuterHTML();
          } else {
             let parent = renderer.jsroot_dom.parentNode;
@@ -647,7 +647,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       control.enableDamping = false;
       control.dampingFactor = 1.0;
       control.enableZoom = true;
-      control.enableKeys = JSROOT.key_handling;
+      control.enableKeys = JSROOT.settings.HandleKeys;
 
       if (lookat) {
          control.target.copy(lookat);

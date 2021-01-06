@@ -54,7 +54,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       this.drawText(arg);
 
       return this.finishTextDrawing().then(() => {
-         if (JSROOT.BatchMode) return this;
+         if (JSROOT.batch_mode) return this;
 
          return JSROOT.require(['interactive']).then(inter => {
             this.pos_dx = this.pos_dy = 0;
@@ -439,7 +439,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          elem.style('fill','none');
       }
 
-      if (!JSROOT.BatchMode)
+      if (!JSROOT.batch_mode)
          JSROOT.require(['interactive']).then(inter => {
 
             if (!this.moveStart)
@@ -1366,7 +1366,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          lw = Math.floor((this.lineatt.width-1)/2); // one should take into account half of end-cup line width
 
          let visible = nodes.filter(function(d) { return (d.exlow > 0) || (d.exhigh > 0) || (d.eylow > 0) || (d.eyhigh > 0); });
-         if (!JSROOT.BatchMode && JSROOT.settings.Tooltip)
+         if (!JSROOT.batch_mode && JSROOT.settings.Tooltip)
             visible.append("svg:path")
                    .style("stroke", "none")
                    .style("fill", "none")
@@ -1988,9 +1988,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (!func || !dofit || !this.create_stats) return false;
 
-      stat.ClearPave();
+      stat.clearPave();
 
-      stat.FillFunctionStat(func, dofit);
+      stat.fillFunctionStat(func, dofit);
 
       return true;
    }
@@ -2037,7 +2037,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          painter.addToPadPrimitives();
          painter.drawGraph();
          // wait until interactive elements assigned
-         if (painter.testEditable() && !JSROOT.BatchMode)
+         if (painter.testEditable() && !JSROOT.batch_mode)
             return JSROOT.require(['interactive'])
                          .then(inter => inter.addMoveHandler(painter));
       }).then(() => painter.drawNextFunction(0));
@@ -2311,7 +2311,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                 .call(this.gridatt.func);
          }
 
-      if (JSROOT.BatchMode) return;
+      if (JSROOT.batch_mode) return;
 
       JSROOT.require(['interactive']).then(inter => {
          inter.TooltipHandler.assign(this);

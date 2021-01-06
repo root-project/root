@@ -802,14 +802,6 @@ JSROOT.define(['rawinflate'], () => {
    }
 
    /** @summary Read object from the directory
-     * @desc Only temporary here, will be deleted in v 6.2
-     * @deprecated */
-   TDirectory.prototype.ReadObject = function(obj_name, cycle) {
-      JSROOT.warnOnce("Using obolsete TDirectory.ReadObject function, change to TDirectory.readObject");
-      return this.fFile.readObject(this.dir_name + "/" + obj_name, cycle);
-   }
-
-   /** @summary Read object from the directory
      * @param {string} name - object name
      * @param {number} [cycle] - cycle number
      * @return {Promise} with read object */
@@ -1231,14 +1223,6 @@ JSROOT.define(['rawinflate'], () => {
       if (this.readTrees.indexOf(obj) < 0) this.readTrees.push(obj);
    }
 
-   /** @summary Read object from the file
-     * @desc Only temporary here, will be deleted in v 6.2
-     * @deprecated*/
-   TFile.prototype.ReadObject = function(obj_name, cycle, only_dir) {
-      JSROOT.warnOnce("Using obolsete TFile.ReadObject function, change to TFile.readObject");
-      return this.readObject(obj_name, cycle, only_dir);
-   }
-
    /** @summary Read any object from a root file
      * @desc One could specify cycle number in the object name or as separate argument
      * @param {string} obj_name - name of object, may include cycle number like "hpxpy;1"
@@ -1376,7 +1360,7 @@ JSROOT.define(['rawinflate'], () => {
 
             if (typname && typ && (this.fBasicTypes[typname] !== typ)) {
                this.fBasicTypes[typname] = typ;
-               if (!JSROOT.BatchMode) console.log('Extract basic data type', typ, typname);
+               if (!JSROOT.batch_mode) console.log('Extract basic data type', typ, typname);
             }
          }
       }

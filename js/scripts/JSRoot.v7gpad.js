@@ -688,7 +688,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Add interactive elements to draw axes title */
    RAxisPainter.prototype.addTitleDrag = function(title_g, side) {
-      if (!JSROOT.settings.MoveResize || JSROOT.BatchMode) return;
+      if (!JSROOT.settings.MoveResize || JSROOT.batch_mode) return;
 
       let drag_rect = null,
           acc_x, acc_y, new_x, new_y, alt_pos, curr_indx,
@@ -1022,7 +1022,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Add zomming rect to axis drawing */
    RAxisPainter.prototype.addZoomingRect = function(axis_g, side, lgaps) {
-      if (JSROOT.settings.Zooming && !this.disable_zooming && !JSROOT.BatchMode) {
+      if (JSROOT.settings.Zooming && !this.disable_zooming && !JSROOT.batch_mode) {
          let sz = Math.max(lgaps[side], 10);
 
          let d = this.vertical ? "v" + this.gr_range + "h"+(-side*sz) + "v" + (-this.gr_range)
@@ -1255,14 +1255,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let promise = this.drawAxis(this.draw_g, "translate(" + pos.x + "," + pos.y +")");
 
-      if (JSROOT.BatchMode) return promise;
+      if (JSROOT.batch_mode) return promise;
 
       return promise.then(() => JSROOT.require('interactive')).then(inter => {
          if (JSROOT.settings.ContextMenu)
             this.draw_g.on("contextmenu", evnt => {
                evnt.stopPropagation(); // disable main context menu
                evnt.preventDefault();  // disable browser context menu
-               jsrp.createMenu(this, evnt).then(menu => {
+               jsrp.createMenu(evnt, this).then(menu => {
                  menu.add("header:RAxisDrawable");
                  menu.add("Unzoom", () => this.zoomStandalone());
                  this.fillAxisContextMenu(menu, "");
@@ -1467,7 +1467,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Set active flag for frame - can block some events
     * @private */
    RFramePainter.prototype.setFrameActive = function(on) {
-      this.enabledKeys = on && JSROOT.key_handling ? true : false;
+      this.enabledKeys = on && JSROOT.settings.HandleKeys ? true : false;
       // used only in 3D mode
       if (this.control)
          this.control.enableKeys = this.enabledKeys;
@@ -1990,7 +1990,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               .attr("height", h)
               .attr("viewBox", "0 0 " + w + " " + h);
 
-      if (JSROOT.BatchMode) return;
+      if (JSROOT.batch_mode) return;
 
       JSROOT.require(['interactive']).then(inter => {
          top_rect.attr("pointer-events", "visibleFill");  // let process mouse events inside frame
@@ -2307,7 +2307,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Add interactive keys handlers
     * @private */
    RFramePainter.prototype.addKeysHandler = function() {
-      if (JSROOT.BatchMode) return;
+      if (JSROOT.batch_mode) return;
       JSROOT.require(['interactive']).then(inter => {
          inter.FrameInteractive.assign(this);
          this.addKeysHandler();
@@ -2318,7 +2318,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
     * @private */
    RFramePainter.prototype.addInteractivity = function() {
 
-      if (JSROOT.BatchMode || (!JSROOT.settings.Zooming && !JSROOT.settings.ContextMenu))
+      if (JSROOT.batch_mode || (!JSROOT.settings.Zooming && !JSROOT.settings.ContextMenu))
          return Promise.resolve(true);
 
       return JSROOT.require(['interactive']).then(inter => {
@@ -2557,7 +2557,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (!rect.changed) return false;
 
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             btns = this.getLayerSvg("btns_layer", this.this_pad_name);
 
       } else {
@@ -2578,7 +2578,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          svg.append("svg:title").text("ROOT canvas");
          let frect = svg.append("svg:rect").attr("class","canvas_fillrect")
                                .attr("x",0).attr("y",0);
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             frect.style("pointer-events", "visibleFill")
                  .on("dblclick", evnt => this.enlargePad(evnt))
                  .on("click", () => this.selectObjectPainter(this, null))
@@ -2586,13 +2586,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          svg.append("svg:g").attr("class","primitives_layer");
          svg.append("svg:g").attr("class","info_layer");
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             btns = svg.append("svg:g")
                       .attr("class","btns_layer")
                       .property('leftside', JSROOT.settings.ToolBarSide == 'left')
                       .property('vertical', JSROOT.settings.ToolBarVert);
 
-         if (JSROOT.settings.ContextMenu && !JSROOT.BatchMode)
+         if (JSROOT.settings.ContextMenu && !JSROOT.batch_mode)
             svg.select(".canvas_fillrect").on("contextmenu", evnt => this.padContextMenu(evnt));
 
          factor = 0.66;
@@ -2736,7 +2736,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (only_resize) {
          svg_pad = this.svg_this_pad();
          svg_rect = svg_pad.select(".root_pad_border");
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             btns = this.getLayerSvg("btns_layer", this.this_pad_name);
       } else {
          svg_pad = svg_parent.select(".primitives_layer")
@@ -2747,7 +2747,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          svg_rect = svg_pad.append("svg:rect").attr("class", "root_pad_border");
 
          svg_pad.append("svg:g").attr("class","primitives_layer");
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             btns = svg_pad.append("svg:g")
                           .attr("class","btns_layer")
                           .property('leftside', JSROOT.settings.ToolBarSide != 'left')
@@ -2756,7 +2756,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (JSROOT.settings.ContextMenu)
             svg_rect.on("contextmenu", evnt => this.padContextMenu(evnt));
 
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             svg_rect.attr("pointer-events", "visibleFill") // get events also for not visible rect
                     .on("dblclick", evnt => this.enlargePad(evnt))
                     .on("click", () => this.selectObjectPainter(this, null))
@@ -2955,7 +2955,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (fp) fp.setLastEventPos();
       }
 
-      jsrp.createMenu(this, evnt).then(menu => {
+      jsrp.createMenu(evnt, this).then(menu => {
          this.fillContextMenu(menu);
          return this.fillObjectExecMenu(menu);
       }).then(menu => menu.show());
@@ -3356,7 +3356,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
        if (!selp || (typeof selp.fillContextMenu !== 'function')) return;
 
-       jsrp.createMenu(selp, evnt).then(menu => {
+       jsrp.createMenu(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
              setTimeout(() => menu.show(), 50);
        });
@@ -3541,7 +3541,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (jsrp.closeMenu && jsrp.closeMenu()) return;
 
-         jsrp.createMenu(this, evnt).then(menu => {
+         jsrp.createMenu(evnt, this).then(menu => {
             menu.add("header:Menus");
 
             if (this.iscan)
@@ -3600,7 +3600,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Add button to the pad
      * @private */
    RPadPainter.prototype.addPadButton = function(_btn, _tooltip, _funcname, _keyname) {
-      if (!JSROOT.settings.ToolBar || JSROOT.BatchMode || this.batch_mode) return;
+      if (!JSROOT.settings.ToolBar || JSROOT.batch_mode || this.batch_mode) return;
 
       if (!this._buttons) this._buttons = [];
       // check if there are duplications
@@ -3977,7 +3977,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // console.log("get JSON ", msg.length-4, obj._typename);
          this.redrawObject(obj);
       } else if (msg.substr(0,9)=="REPL_REQ:") {
-         this.ProcessDrawableReply(msg.substr(9));
+         this.processDrawableReply(msg.substr(9));
       } else if (msg.substr(0,4)=='CMD:') {
          msg = msg.substr(4);
          let p1 = msg.indexOf(":"),
@@ -4131,7 +4131,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Process reply from request to RDrawable */
-   RCanvasPainter.prototype.ProcessDrawableReply = function(msg) {
+   RCanvasPainter.prototype.processDrawableReply = function(msg) {
       let reply = JSROOT.parse(msg);
       if (!reply || !reply.reqid || !this._submreq) return false;
 
@@ -4286,7 +4286,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    RPavePainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
-   RPavePainter.prototype.DrawContent = function() {
+   /** @summary Draw pave content
+     * @desc assigned depending on pave class */
+   RPavePainter.prototype.drawContent = function() {
       return Promise.resolve(this);
    }
 
@@ -4352,9 +4354,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // here should be fill and draw of text
 
-      return this.DrawContent().then(() => {
+      return this.drawContent().then(() => {
 
-         if (JSROOT.BatchMode) return this;
+         if (JSROOT.batch_mode) return this;
 
          return JSROOT.require(['interactive']).then(inter => {
             // TODO: provide pave context menu as in v6
@@ -4404,7 +4406,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                  .attr("width", this.pave_width)
                  .attr("height", this.pave_height);
 
-      this.DrawContent();
+      this.drawContent();
    }
 
    RPavePainter.prototype.redraw = function(/*reason*/) {
@@ -4463,7 +4465,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.finishTextDrawing();
 
-      if (!JSROOT.BatchMode)
+      if (!JSROOT.batch_mode)
          JSROOT.require(['interactive'])
                .then(inter => inter.addDragHandler(this, { minwidth: 20, minheight: 20, no_change_x: true, redraw: this.redraw.bind(this,'drag') }));
    }
@@ -4624,7 +4626,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Draw palette */
-   RPalettePainter.prototype.DrawPalette = function(after_resize) {
+   RPalettePainter.prototype.drawPalette = function(after_resize) {
 
       let palette = this.getHistPalette(),
           contour = palette.getContour(),
@@ -4720,7 +4722,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let promise = framep.z_handle.drawAxis(this.draw_g, "translate(" + palette_width + "," + palette_height + ")", -1);
 
-      if (JSROOT.BatchMode) return;
+      if (JSROOT.batch_mode) return;
 
       promise.then(() => JSROOT.require(['interactive'])).then(inter => {
 
@@ -4728,7 +4730,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.draw_g.on("contextmenu", evnt => {
                evnt.stopPropagation(); // disable main context menu
                evnt.preventDefault();  // disable browser context menu
-               jsrp.createMenu(this, evnt).then(menu => {
+               jsrp.createMenu(evnt, this).then(menu => {
                  menu.add("header:Palette");
                  framep.z_handle.fillAxisContextMenu(menu, "z");
                  menu.show();
@@ -4736,7 +4738,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             });
 
          if (!after_resize)
-            inter.addDragHandler(this, { minwidth: 20, minheight: 20, no_change_y: true, redraw: this.DrawPalette.bind(this, true) });
+            inter.addDragHandler(this, { minwidth: 20, minheight: 20, no_change_y: true, redraw: this.drawPalette.bind(this, true) });
 
          if (!JSROOT.settings.Zooming) return;
 

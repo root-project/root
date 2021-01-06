@@ -173,7 +173,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    function drawLegend(divid, legend, opt) {
       let painter = new JSROOT.v7.RPavePainter(divid, legend, opt, "legend");
 
-      painter.DrawContent = drawLegendContent;
+      painter.drawContent = drawLegendContent;
 
      return jsrp.ensureRCanvas(painter, false).then(() => painter.drawPave());
    }
@@ -208,7 +208,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    function drawPaveText(divid, pave, opt) {
       let painter = new JSROOT.v7.RPavePainter(divid, pave, opt, "pavetext");
 
-      painter.DrawContent = drawPaveTextContent;
+      painter.drawContent = drawPaveTextContent;
 
       return jsrp.ensureRCanvas(painter, false).then(() => painter.drawPave());
    }

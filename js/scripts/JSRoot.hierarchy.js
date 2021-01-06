@@ -389,15 +389,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                   item._expand = objectHierarchy;
                   item._obj = fld;
                }
-            } else
-            if (proto === "[object DataView]") {
+            } else if (proto === "[object DataView]") {
                item._title = 'DataView len=' + fld.byteLength;
                item._value = "[...]";
                item._more = true;
                item._expand = objectHierarchy;
                item._obj = fld;
-            }  else
-            if (proto === "[object Date]") {
+            } else if (proto === "[object Date]") {
                item._more = false;
                item._title = 'Date';
                item._value = fld.toString();
@@ -453,13 +451,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             else
                item._value = fld.toString();
             item._vclass = 'h_value_num';
-         } else
-         if (typeof fld === 'string') {
+         } else if (typeof fld === 'string') {
             simple = true;
             item._value = '&quot;' + fld.replace(/\&/g, '&amp;').replace(/\"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '&quot;';
             item._vclass = 'h_value_str';
-         } else
-         if (typeof fld === 'undefined') {
+         } else if (typeof fld === 'undefined') {
             simple = true;
             item._value = "undefined";
             item._vclass = 'h_value_num';
@@ -610,7 +606,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    // =================================================================================================
 
-
    /**
      * @summary special layout with three different areas for browser (left), status line (bottom) and central drawing
      * Main application is normal browser in JSROOT, but later one should be able to use it in ROOT6 canvas
@@ -740,17 +735,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    // ==============================================================
 
-   JSROOT.hpainter = null; // global pointer
+   /** @summary Current hierarchy painter
+     * @desc Instance of {@link JSROOT.HierarchyPainter} object
+     * @private */
+   JSROOT.hpainter = null;
 
    /**
      * @summary Painter of hierarchical structures
      *
      * @class
      * @memberof JSROOT
-     * @extends JSROOT.BasePainter
-     * @param {string} name - painter name
-     * @param {string} frameid - element id where painter is drawn
-     * @param {string} backgr - background color
+     * @param {string} name - symbolic name
+     * @param {string} frameid - element id where hierarchy is drawn
+     * @param {string} [backgr] - background color
      * @example
      *    // create hierarchy painter in "myTreeDiv"
      *    let h = new JSROOT.HierarchyPainter("example", "myTreeDiv");
@@ -777,9 +774,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    HierarchyPainter.prototype = Object.create(JSROOT.BasePainter.prototype);
 
-   /** @summary Cleanup hierarchy painter */
+   /** @summary Cleanup hierarchy painter
+     * @desc clear drawing and browser */
    HierarchyPainter.prototype.cleanup = function() {
-      // clear drawing and browser
       this.clearHierarchy(true);
 
       JSROOT.BasePainter.prototype.cleanup.call(this);
@@ -789,7 +786,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Create file hierarchy
-     * @protected */
+     * @private */
    HierarchyPainter.prototype.fileHierarchy = function(file) {
       let painter = this;
 
@@ -862,7 +859,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Iterate over all items in hierarchy
      * @param {function} func - function called for every item
      * @param {object} [top] - top item to start from
-     * @protected */
+     * @private */
    HierarchyPainter.prototype.forEachItem = function(func, top) {
       function each_item(item, prnt) {
          if (!item) return;
@@ -885,7 +882,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @param {boolean} [arg.check_keys] - check TFile keys with cycle suffix
      * @param {boolean} [arg.allow_index] - let use sub-item indexes instead of name
      * @param {object} [arg.top] - element to start search from
-     * @protected */
+     * @private */
    HierarchyPainter.prototype.findItem = function(arg) {
 
       function find_in_hierarchy(top, fullname) {
@@ -990,7 +987,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @param {Object} node - item element
      * @param {Object} [uptoparent] - up to which parent to continue
      * @param {boolean} [compact] - if specified, top parent is not included
-     * @returns {string} produced name */
+     * @returns {string} produced name
+     * @private */
    HierarchyPainter.prototype.itemFullName = function(node, uptoparent, compact) {
 
       if (node && node._kind ==='TopFolder') return "__top_folder__";
@@ -1011,7 +1009,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return res;
    }
 
-    /** @summary Eexecutes item marked as 'Command'
+    /** @summary Executes item marked as 'Command'
       * @desc If command requires additional arguments, they could be specified as extra arguments arg1, arg2, ...
       * @param {String} itemname - name of command item
       * @param {Object} [elem] - HTML element for command execution
@@ -1055,9 +1053,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Refresh HTML for hierachy painter
-     * @returns {Promise} when completed */
+     * @returns {Promise} when completed
+     * @private */
    HierarchyPainter.prototype.refreshHtml = function() {
-      if (!this.getDom() || JSROOT.BatchMode)
+      if (!this.getDom() || JSROOT.batch_mode)
          return Promise.resolve(this);
       return JSROOT.require('jq2d').then(() => this.refreshHtml());
    }
@@ -1068,7 +1067,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @param {string} arg.name - item name
      * @param {Object} arg.item - or item itself
      * @param {string} options - supposed draw options
-     * @returns {Promise} with object like { item, obj, itemname } */
+     * @returns {Promise} with object like { item, obj, itemname }
+     * @private */
    HierarchyPainter.prototype.getObject = function(arg, options) {
 
       let itemname, item, result = { item: null, obj: null };
@@ -1135,6 +1135,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Starts player for specified item
+     * @desc Same as "Player" context menu
+     * @param {string} itemname - item name for which player should be started
+     * @param {string} [option] - extra options for the player
      * @returns {Promise} when ready*/
    HierarchyPainter.prototype.player = function(itemname, option) {
       let item = this.findItem(itemname);
@@ -1153,7 +1156,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
-   /** @summary Checks if item can be displayed with given draw option */
+   /** @summary Checks if item can be displayed with given draw option
+     * @private */
    HierarchyPainter.prototype.canDisplay = function(item, drawopt) {
       if (!item) return false;
       if (item._player) return true;
@@ -1163,13 +1167,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return handle && (('func' in handle) || ('draw_field' in handle));
    }
 
-   /** @summary Returns true if given item displayed */
+   /** @summary Returns true if given item displayed
+     * @param {string} itemname - item name */
    HierarchyPainter.prototype.isItemDisplayed = function(itemname) {
       let mdi = this.getDisplay();
       return mdi ? mdi.findFrame(itemname) !== null : false;
    }
 
    /** @summary Display specified item
+     * @param {string} itemname - item name
+     * @param {string} [drawopt] - draw option for the item
      * @returns {Promise} with created painter object */
    HierarchyPainter.prototype.display = function(itemname, drawopt) {
       let h = this,
@@ -1286,7 +1293,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
   /** @summary Drop item on specified element for drawing
-    * @returns {Promise} when completed */
+    * @returns {Promise} when completed
+    * @private */
    HierarchyPainter.prototype.dropItem = function(itemname, divid, opt) {
 
       if (opt && typeof opt === 'function') { call_back = opt; opt = ""; }
@@ -1323,7 +1331,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Update specified items
      * @desc Method can be used to fetch new objects and update all existing drawings
-     * @param arg - either item name or array of items names to update or true if only only automatic items will be updated
+     * @param {string|array|boolean} arg - either item name or array of items names to update or true if only automatic items will be updated
      * @returns {Promise} when ready */
    HierarchyPainter.prototype.updateItems = function(arg) {
 
@@ -1376,7 +1384,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Display all provided elements
-     * @returns {Promise} when drawing finished */
+     * @returns {Promise} when drawing finished
+     * @private */
    HierarchyPainter.prototype.displayItems = function(items, options) {
 
       if (!items || (items.length == 0))
@@ -1555,7 +1564,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary activate (select) specified item
      * @param {Array} items - array of items names
-     * @param {boolean} [force] - if specified, all required sub-levels will be opened */
+     * @param {boolean} [force] - if specified, all required sub-levels will be opened
+     * @private */
    HierarchyPainter.prototype.activateItems = function(items, force) {
 
       if (typeof items == 'string') items = [ items ];
@@ -1638,7 +1648,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Check if item can be (potentially) expand
-     * @private*/
+     * @private */
    HierarchyPainter.prototype.canExpandItem = function(item) {
       if (!item) return false;
       if (item._expand) return true;
@@ -1739,7 +1749,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Return main online item
-     * @protected */
+     * @private */
    HierarchyPainter.prototype.getTopOnlineItem = function(item) {
       if (item) {
          while (item && (!('_online' in item))) item = item._parent;
@@ -1753,7 +1763,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Call function for each item which corresponds to JSON file
-     * @protected */
+     * @private */
    HierarchyPainter.prototype.forEachJsonFile = function(func) {
       if (!this.h) return;
       if ('_jsonfile' in this.h)
@@ -1767,6 +1777,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Open JSON file
+     * @param {string} filepath - URL to JSON file
      * @returns {Promise} when object ready */
    HierarchyPainter.prototype.openJsonFile = function(filepath) {
       let isfileopened = false;
@@ -1795,7 +1806,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
-   /** @summary Call function for each item which corresponds to ROOT file */
+   /** @summary Call function for each item which corresponds to ROOT file
+     * @private */
    HierarchyPainter.prototype.forEachRootFile = function(func) {
       if (!this.h) return;
       if ((this.h._kind == "ROOT.TFile") && this.h._file)
@@ -1810,13 +1822,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Open ROOT file
-     * @deprecated */
-   HierarchyPainter.prototype.OpenRootFile = function(filepath, cb) {
-      JSROOT.warnOnce("HierarchyPainter.OpenRootFile is obsolete, use openRootFile instead");
-      return this.openRootFile(filepath).then(cb);
-   }
-
-   /** @summary Open ROOT file */
+     * @param {string} filepath - URL to ROOT file
+     * @returns {Promise} when file is opened */
    HierarchyPainter.prototype.openRootFile = function(filepath) {
       // first check that file with such URL already opened
 
@@ -1850,7 +1857,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Apply loaded TStyle object
-     * @desc One also can specify item name of JSON file name where style is loaded */
+     * @desc One also can specify item name of JSON file name where style is loaded
+     * @param {object|string} style - either TStyle object of item name where object can be load */
    HierarchyPainter.prototype.applyStyle = function(style) {
       if (!style)
          return Promise.resolve();
@@ -1876,7 +1884,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return Promise.resolve();
    }
 
-   /** @summary Provides information abouf file item */
+   /** @summary Provides information abouf file item
+     * @private */
    HierarchyPainter.prototype.getFileProp = function(itemname) {
       let item = this.findItem(itemname);
       if (!item) return null;
@@ -1898,7 +1907,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Provides URL for online item
      * @desc Such URL can be used  to request data from the server
-     * @returns string or null if item is not online */
+     * @returns string or null if item is not online
+     * @private */
    HierarchyPainter.prototype.getOnlineItemUrl = function(item) {
       if (typeof item == "string") item = this.findItem(item);
       let prnt = item;
@@ -1906,13 +1916,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return prnt ? (prnt._online + this.itemFullName(item, prnt)) : null;
    }
 
-   /** @summary Returns true if item is online */
+   /** @summary Returns true if item is online
+     * @private */
    HierarchyPainter.prototype.isOnlineItem = function(item) {
       return this.getOnlineItemUrl(item) !== null;
    }
 
    /** @summary method used to request object from the http server
-     * @returns {Promise} with requested object */
+     * @returns {Promise} with requested object
+     * @private */
    HierarchyPainter.prototype.getOnlineItem = function(item, itemname, option) {
 
       let url = itemname, h_get = false, req = "", req_kind = "object", draw_handle = null;
@@ -1984,6 +1996,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Access THttpServer with provided address
+     * @param {string} server_address - URL to server like "http://localhost:8090/"
      * @returns {Promise} when ready */
    HierarchyPainter.prototype.openOnline = function(server_address) {
       let AdoptHierarchy = result => {
@@ -2116,8 +2129,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Configures monitoring interval
-    * @param interval - repetition interval in ms
-    * @param flag - initial monitoring state */
+     * @param {number} interval - repetition interval in ms
+     * @param {boolean} flag - initial monitoring state */
    HierarchyPainter.prototype.setMonitoring = function(interval, monitor_on) {
 
       this._runMonitoring("cleanup");
@@ -2174,7 +2187,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return this._monitoring_interval || 3000;
    }
 
-   /** @summary Enable/disable monitoring */
+   /** @summary Enable/disable monitoring
+     * @param {boolean} on - if monitoring enabled */
    HierarchyPainter.prototype.enableMonitoring = function(on) {
       this.setMonitoring(undefined, on);
    }
@@ -2184,14 +2198,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return this._monitoring_on;
    }
 
-   /** @summary Assign MDI object (old style)
-     * @deprecated */
-   HierarchyPainter.prototype.SetDisplay = function(layout, frameid) {
-      JSROOT.warnOnce("HierarchyPainter.SetDisplay is obsolete, use setDisplay instead");
-      return this.setDisplay(layout, frameid);
-   }
-
-   /** @summary Assign MDI object */
+   /** @summary Assign default layout and place where drawing will be performed
+     * @param {string} layout - layout like "simple" or "grid2x2"
+     * @param {string} frameid - DOM element id where object drawing will be performed */
    HierarchyPainter.prototype.setDisplay = function(layout, frameid) {
       if (!frameid && (typeof layout == 'object')) {
          this.disp = layout;
@@ -2213,7 +2222,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return this.disp_kind;
    }
 
-   /** @summary Remove painter reference from hierarhcy */
+   /** @summary Remove painter reference from hierarhcy
+     * @private */
    HierarchyPainter.prototype.removePainter = function(obj_painter) {
       this.forEachItem(item => {
          if (item._painter === obj_painter) {
@@ -2225,7 +2235,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
-   /** @summary Cleanup all items in hierarchy */
+   /** @summary Cleanup all items in hierarchy
+     * @private */
    HierarchyPainter.prototype.clearHierarchy = function(withbrowser) {
       if (this.disp) {
          this.disp.cleanup();
@@ -2251,13 +2262,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
-   /** @summary Returns actual MDI display object */
+   /** @summary Returns actual MDI display object
+     * @desc It should an instance of {@link JSROOT.MDIDsiplay} class */
    HierarchyPainter.prototype.getDisplay = function() {
       return this.disp;
    }
 
    /** @summary method called when MDI element is cleaned up
-     * @desc hook to perform extra actions when frame is cleaned */
+     * @desc hook to perform extra actions when frame is cleaned
+     * @private */
    HierarchyPainter.prototype.cleanupFrame = function(divid) {
 
       let lst = JSROOT.cleanup(divid);
@@ -2271,7 +2284,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Creates configured JSROOT.MDIDisplay object
-    * @returns {Promise} when ready */
+     * @returns {Promise} when ready
+     * @private */
    HierarchyPainter.prototype.createDisplay = function() {
 
       if ('disp' in this) {
@@ -2300,7 +2314,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary If possible, creates custom JSROOT.MDIDisplay for given item
      * @param itemname - name of item, for which drawing is created
      * @param custom_kind - display kind
-     * @returns {Promise} with mdi object created */
+     * @returns {Promise} with mdi object created
+     * @private */
    HierarchyPainter.prototype.createCustomDisplay = function(itemname, custom_kind) {
 
       if (this.disp_kind != "simple")
@@ -2320,7 +2335,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.createDisplay();
    }
 
-   /** @summary function updates object drawings for other painters */
+   /** @summary function updates object drawings for other painters
+     * @private */
    HierarchyPainter.prototype.updateOnOtherFrames = function(painter, obj) {
       let mdi = this.disp, handle = null, isany = false;
       if (!mdi) return false;
@@ -2338,13 +2354,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Process resize event
-     * @protected */
+     * @private */
    HierarchyPainter.prototype.checkResize = function(size) {
       if (this.disp) this.disp.checkMDIResize(null, size);
    }
 
    /** @summary Start GUI
-     * @returns {Promise} when ready */
+     * @returns {Promise} when ready
+     * @private */
    HierarchyPainter.prototype.startGUI = function(gui_div, url) {
 
       let d = JSROOT.decodeUrl(url);
@@ -2492,7 +2509,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (this.start_without_browser) browser_kind = "";
 
-      if ((status || browser_kind) && !JSROOT.BatchMode) prereq += "jq2d;";
+      if ((status || browser_kind) && !JSROOT.batch_mode) prereq += "jq2d;";
 
       this._topname = GetOption("topname");
 
@@ -2576,7 +2593,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return openAllFiles();
    }
 
-   /** @summary Prepare div element - create layout and buttons */
+   /** @summary Prepare div element - create layout and buttons
+     * @private */
    HierarchyPainter.prototype.prepareGuiDiv = function(myDiv, layout) {
 
       this.gui_div = myDiv.attr('id');
@@ -2615,7 +2633,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return this.brlayout.createStatusLine(height, mode);
    }
 
-   /** @summary Create browser layout */
+   /** @summary Create browser layout
+     * @private */
    HierarchyPainter.prototype.createBrowser = function(browser_kind, update_html) {
       if (!this.gui_div)
          return Promise.resolve(false);
@@ -2624,7 +2643,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Redraw hierarchy
-     * @desc works only when inspector or streamer info is displayed */
+     * @desc works only when inspector or streamer info is displayed
+     * @private */
    HierarchyPainter.prototype.redrawObject = function(obj) {
       if (!this._inspector && !this._streamer_info) return false;
       if (this._streamer_info)
@@ -2725,7 +2745,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let painter = new HierarchyPainter('inspector', divid, 'white');
 
       // in batch mode HTML drawing is not possible, just keep object reference for a minute
-      if (JSROOT.BatchMode) {
+      if (JSROOT.batch_mode) {
          painter.selectDom().property("_json_object_", obj);
          return Promise.resolve(painter);
       }
@@ -2771,6 +2791,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
     *
     * @class
     * @memberof JSROOT
+    * @extends JSROOT.BasePainter
     * @private
     */
 
@@ -2786,6 +2807,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.active_frame_title = ""; // keep title of active frame
       }
 
+      /** @summary method called before new frame is created */
       beforeCreateFrame(title) { this.active_frame_title = title; }
 
       /** @summary method dedicated to iterate over existing panels
@@ -2803,12 +2825,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }, only_visible);
       }
 
+      /** @summary Returns total number of drawings */
       numDraw() {
          let cnt = 0;
          this.forEachFrame(() => ++cnt);
          return cnt;
       }
 
+      /** @summary Serach for the frame using item name */
       findFrame(searchtitle, force) {
          let found_frame = null;
 
@@ -2823,11 +2847,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return found_frame;
       }
 
+      /** @summary Activate frame */
       activateFrame(frame) { this.active_frame_title = d3.select(frame).attr('frame_title'); }
 
+      /** @summary Return active frame */
       getActiveFrame() { return this.findFrame(this.active_frame_title); }
 
-      /** @summary perform resize for each frame */
+      /** @summary perform resize for each frame
+        * @protected */
       checkMDIResize(only_frame_id, size) {
 
          let resized_frame = null;
@@ -2845,6 +2872,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          });
       }
 
+      /** @summary Cleanup all drawings */
       cleanup() {
          this.active_frame_title = "";
 

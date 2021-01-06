@@ -353,7 +353,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Add interactive elements to draw axes title */
    TAxisPainter.prototype.addTitleDrag = function(title_g, vertical, offset_k, reverse, axis_length) {
-      if (!JSROOT.settings.MoveResize || JSROOT.BatchMode) return;
+      if (!JSROOT.settings.MoveResize || JSROOT.batch_mode) return;
 
       let drag_rect = null,
           acc_x, acc_y, new_x, new_y, sign_0, alt_pos, curr_indx,
@@ -732,7 +732,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          labelsPromise = Promise.resolve(labelSize0);
 
       return labelsPromise.then(labelSize => {
-         if (JSROOT.settings.Zooming && !this.disable_zooming && !JSROOT.BatchMode) {
+         if (JSROOT.settings.Zooming && !this.disable_zooming && !JSROOT.batch_mode) {
             let r = axis_g.append("svg:rect")
                           .attr("class", "axis_zoom")
                           .style("opacity", "0")
@@ -944,7 +944,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Set active flag for frame - can block some events
      * @private */
    TFramePainter.prototype.setFrameActive = function(on) {
-      this.enabledKeys = on && JSROOT.key_handling ? true : false;
+      this.enabledKeys = on && JSROOT.settings.HandleKeys ? true : false;
       // used only in 3D mode where control is used
       if (this.control)
          this.control.enableKeys = this.enabledKeys;
@@ -1622,7 +1622,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               .attr("height", h)
               .attr("viewBox", "0 0 " + w + " " + h);
 
-      if (JSROOT.BatchMode) return;
+      if (JSROOT.batch_mode) return;
 
       JSROOT.require(['interactive']).then(inter => {
          top_rect.attr("pointer-events", "visibleFill"); // let process mouse events inside frame
@@ -1955,7 +1955,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Add interactive keys handlers
     * @private */
    TFramePainter.prototype.addKeysHandler = function() {
-      if (JSROOT.BatchMode) return;
+      if (JSROOT.batch_mode) return;
       JSROOT.require(['interactive']).then(inter => {
          inter.FrameInteractive.assign(this);
          this.addKeysHandler();
@@ -1965,7 +1965,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Add interactive functionality to the frame
     * @private */
    TFramePainter.prototype.addInteractivity = function() {
-      if (JSROOT.BatchMode || (!JSROOT.settings.Zooming && !JSROOT.settings.ContextMenu))
+      if (JSROOT.batch_mode || (!JSROOT.settings.Zooming && !JSROOT.settings.ContextMenu))
          return Promise.resolve(false);
 
       return JSROOT.require(['interactive']).then(inter => {
@@ -2201,7 +2201,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (!rect.changed) return false;
 
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             btns = this.getLayerSvg("btns_layer", this.this_pad_name);
 
       } else {
@@ -2219,7 +2219,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.setTopPainter(); //assign canvas as top painter of that element
 
-         if (JSROOT.BatchMode) {
+         if (JSROOT.batch_mode) {
             svg.attr("xmlns", "http://www.w3.org/2000/svg");
             svg.attr("xmlns:xlink", "http://www.w3.org/1999/xlink");
          }
@@ -2227,7 +2227,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          svg.append("svg:title").text("ROOT canvas");
          let frect = svg.append("svg:rect").attr("class","canvas_fillrect")
                                .attr("x",0).attr("y",0);
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             frect.style("pointer-events", "visibleFill")
                  .on("dblclick", evnt => this.enlargePad(evnt))
                  .on("click", () => this.selectObjectPainter())
@@ -2235,13 +2235,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          svg.append("svg:g").attr("class","primitives_layer");
          svg.append("svg:g").attr("class","info_layer");
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             btns = svg.append("svg:g")
                       .attr("class","btns_layer")
                       .property('leftside', JSROOT.settings.ToolBarSide == 'left')
                       .property('vertical', JSROOT.settings.ToolBarVert);
 
-         if (JSROOT.settings.ContextMenu && !JSROOT.BatchMode)
+         if (JSROOT.settings.ContextMenu && !JSROOT.batch_mode)
             svg.select(".canvas_fillrect").on("contextmenu", evnt => this.padContextMenu(evnt));
 
          factor = 0.66;
@@ -2374,7 +2374,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (only_resize) {
          svg_pad = this.svg_this_pad();
          svg_rect = svg_pad.select(".root_pad_border");
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             btns = this.getLayerSvg("btns_layer", this.this_pad_name);
       } else {
          svg_pad = svg_can.select(".primitives_layer")
@@ -2385,7 +2385,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          svg_rect = svg_pad.append("svg:rect").attr("class", "root_pad_border");
 
          svg_pad.append("svg:g").attr("class","primitives_layer");
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             btns = svg_pad.append("svg:g")
                           .attr("class","btns_layer")
                           .property('leftside', JSROOT.settings.ToolBarSide != 'left')
@@ -2394,7 +2394,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (JSROOT.settings.ContextMenu)
             svg_rect.on("contextmenu", evnt => this.padContextMenu(evnt));
 
-         if (!JSROOT.BatchMode)
+         if (!JSROOT.batch_mode)
             svg_rect.attr("pointer-events", "visibleFill") // get events also for not visible rect
                     .on("dblclick", evnt => this.enlargePad(evnt))
                     .on("click", () => this.selectObjectPainter())
@@ -2683,7 +2683,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (fp) fp.setLastEventPos();
       }
 
-      jsrp.createMenu(this, evnt).then(menu => {
+      jsrp.createMenu(evnt, this).then(menu => {
          this.fillContextMenu(menu);
          return this.fillObjectExecMenu(menu, "");
       }).then(menu => menu.show());
@@ -3288,7 +3288,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
        if (!selp || (typeof selp.fillContextMenu !== 'function')) return;
 
-       jsrp.createMenu(selp, evnt).then(menu => {
+       jsrp.createMenu(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
              setTimeout(() => menu.show(), 50);
        });
@@ -3471,7 +3471,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (jsrp.closeMenu && jsrp.closeMenu()) return;
 
-         jsrp.createMenu(this, evnt).then(menu => {
+         jsrp.createMenu(evnt, this).then(menu => {
             menu.add("header:Menus");
 
             if (this.iscan)
@@ -3530,7 +3530,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Add button to the pad
      * @private */
    TPadPainter.prototype.addPadButton = function(_btn, _tooltip, _funcname, _keyname) {
-      if (!JSROOT.settings.ToolBar || JSROOT.BatchMode || this.batch_mode) return;
+      if (!JSROOT.settings.ToolBar || JSROOT.batch_mode || this.batch_mode) return;
 
       if (!this._buttons) this._buttons = [];
       // check if there are duplications
@@ -4294,7 +4294,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let painter = new TCanvasPainter(divid, can);
       painter.checkSpecialsInPrimitives(can);
 
-      if (!nocanvas && can.fCw && can.fCh && !JSROOT.BatchMode) {
+      if (!nocanvas && can.fCw && can.fCh && !JSROOT.batch_mode) {
          let rect0 = painter.selectDom().node().getBoundingClientRect();
          if (!rect0.height && (rect0.width > 0.1*can.fCw)) {
             painter.selectDom().style("width", can.fCw+"px").style("height", can.fCh+"px");

@@ -891,7 +891,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       if (!hitem) return;
 
       if (typeof this.fill_context == 'function')
-         jsrp.createMenu(this, evnt).then(menu => {
+         jsrp.createMenu(evnt, this).then(menu => {
             this.fill_context(menu, hitem);
             if (menu.size() > 0) {
                menu.tree_node = elem.parentNode;
@@ -924,7 +924,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          return el.firstChild.href;
       }
 
-      jsrp.createMenu(this, evnt).then(menu => {
+      jsrp.createMenu(evnt, this).then(menu => {
 
          if ((itemname == "") && !('_jsonfile' in hitem)) {
             let files = [], addr = "", cnt = 0,
