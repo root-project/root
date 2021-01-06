@@ -403,13 +403,13 @@ the option string
             // create python script which can be executed
             // create 2 conv2d layer + maxpool + dense
             TMacro m;
-            m.AddLine("import keras");
-            m.AddLine("from keras.models import Sequential");
-            m.AddLine("from keras.optimizers import Adam");
-            m.AddLine("from keras.layers import Input, Dense, Dropout, Flatten, SimpleRNN, GRU, LSTM, Reshape, "
+            m.AddLine("import tensorflow");
+            m.AddLine("from tensorflow.keras.models import Sequential");
+            m.AddLine("from tensorflow.keras.optimizers import Adam");
+            m.AddLine("from tensorflow.keras.layers import Input, Dense, Dropout, Flatten, SimpleRNN, GRU, LSTM, Reshape, "
                       "BatchNormalization");
             m.AddLine("");
-            m.AddLine("model = keras.models.Sequential() ");
+            m.AddLine("model = Sequential() ");
             m.AddLine("model.add(Reshape((10, 30), input_shape = (10*30, )))");
             // add recurrent neural network depending on type / Use option to return the full output
             if (rnn_types[i] == "LSTM")
@@ -441,7 +441,7 @@ the option string
                Info("TMVA_RNN_Classification", "Booking Keras %s model", rnn_types[i].c_str());
                factory->BookMethod(dataloader, TMVA::Types::kPyKeras,
                                    TString::Format("PyKeras_%s", rnn_types[i].c_str()),
-                                   TString::Format("!H:!V:VarTransform=None:FilenameModel=%s:"
+                                   TString::Format("!H:!V:VarTransform=None:FilenameModel=%s:tf.keras:"
                                                    "FilenameTrainedModel=%s:GpuOptions=allow_growth=True:"
                                                    "NumEpochs=%d:BatchSize=%d",
                                                    modelName.Data(), trainedModelName.Data(), maxepochs, batchSize));
