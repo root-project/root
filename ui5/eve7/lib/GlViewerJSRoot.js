@@ -198,13 +198,13 @@ sap.ui.define([
          this.render();
       },
 
-      /** Used together with the geo painter for processing context menu */
+      /** @summary Used together with the geo painter for processing context menu */
       jsrootOrbitContext: function(evnt, intersects) {
 
          var browseHandler = this.controller.invokeBrowseOf.bind(this.controller);
 
-         JSROOT.Painter.createMenu(this.geo_painter, evnt).then(menu => {
-            var numitems = 0, cnt = 0;
+         JSROOT.Painter.createMenu(evnt, this.geo_painter).then(menu => {
+            var numitems = 0;
             if (intersects)
                for (var n=0;n<intersects.length;++n)
                   if (intersects[n].object.geo_name) numitems++;
