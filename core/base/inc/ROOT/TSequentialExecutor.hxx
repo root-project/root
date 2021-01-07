@@ -117,8 +117,9 @@ namespace ROOT {
    /// \param args Vector of elements passed as an argument to `func`.
    template<class F, class T>
    void TSequentialExecutor::Foreach(F func, std::vector<T> &args) {
-      unsigned int nToProcess = args.size();
-      for(auto i: ROOT::TSeqI(nToProcess)) func(args[i]);
+      for(auto &&arg: args) {
+         func(arg);
+      }
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -128,8 +129,9 @@ namespace ROOT {
    /// \param args Immutable vector of elements passed as an argument to `func`.
    template<class F, class T>
    void TSequentialExecutor::Foreach(F func, const std::vector<T> &args) {
-      unsigned int nToProcess = args.size();
-      for(auto i: ROOT::TSeqI(nToProcess)) func(args[i]);
+      for(auto &&arg: args) {
+         func(arg);
+      }
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -142,10 +144,8 @@ namespace ROOT {
       using retType = decltype(func());
       std::vector<retType> reslist;
       reslist.reserve(nTimes);
-      unsigned i{0u};
-      while(i<nTimes){
+      while(reslist.size() < nTimes) {
          reslist.emplace_back(func());
-         i++;
       }
       return reslist;
    }
@@ -174,11 +174,11 @@ namespace ROOT {
    auto TSequentialExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
       // //check whether func is callable
       using retType = decltype(func(args.front()));
-      unsigned int nToProcess = args.size();
       std::vector<retType> reslist;
-      reslist.reserve(nToProcess);
-      for(auto i: ROOT::TSeqI(nToProcess))
-         reslist.emplace_back(func(args[i]));
+      reslist.reserve(args.size());
+      for(auto &&arg: args) {
+         reslist.emplace_back(func(arg));
+      }
       return reslist;
    }
 
@@ -191,11 +191,11 @@ namespace ROOT {
    auto TSequentialExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
       // //check whether func is callable
       using retType = decltype(func(args.front()));
-      unsigned int nToProcess = args.size();
       std::vector<retType> reslist;
-      reslist.reserve(nToProcess);
-      for(auto i: ROOT::TSeqI(nToProcess))
-         reslist.emplace_back(func(args[i]));
+      reslist.reserve(args.size());
+      for(auto &&arg: args) {
+         reslist.emplace_back(func(arg));
+      }
       return reslist;
    }
 
