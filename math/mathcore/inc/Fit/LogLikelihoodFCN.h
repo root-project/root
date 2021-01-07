@@ -13,7 +13,7 @@
 #ifndef ROOT_Fit_LogLikelihoodFCN
 #define ROOT_Fit_LogLikelihoodFCN
 
-#include "EExecutionPolicy.hxx"
+#include "ROOT/EExecutionPolicy.hxx"
 #include "Fit/BasicFCN.h"
 #include "Fit/FitUtil.h"
 #include "Fit/UnBinData.h"

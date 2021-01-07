@@ -25,7 +25,7 @@ Classes used for fitting (regression analysis) and estimation of parameter value
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/FitConfig.h"
-#include "EExecutionPolicy.hxx"
+#include "ROOT/EExecutionPolicy.hxx"
 #include "Fit/FitResult.h"
 #include "Math/IParamFunction.h"
 #include <memory>

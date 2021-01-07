@@ -19,7 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "EExecutionPolicy.hxx"
+#include "ROOT/EExecutionPolicy.hxx"
 
 struct Foption_t {
 //*-*      chopt may be the concatenation of the following options:
