@@ -23,7 +23,7 @@
 #include "ROOT/TProcessExecutor.hxx"
 #endif
 #include "TROOT.h"
-#include "EExecutionPolicy.hxx"
+#include "ROOT/EExecutionPolicy.hxx"
 
 #include <initializer_list>
 #include <memory>

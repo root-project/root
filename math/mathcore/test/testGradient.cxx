@@ -2,7 +2,7 @@
 // Author: Alejandro García Montoro 07/2017
 
 #include "Fit/BinData.h"
-#include "EExecutionPolicy.hxx"
+#include "ROOT/EExecutionPolicy.hxx"
 #include "Fit/FitUtil.h"
 #include "Fit/UnBinData.h"
 #include "Math/WrappedMultiTF1.h"
