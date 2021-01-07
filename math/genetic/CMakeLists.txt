@@ -8,13 +8,18 @@
 # CMakeLists.txt file for building ROOT math/genetic package
 # @author Pere Mato, CERN
 ############################################################################
-
+if(tmva-gpu)
+  # FIXME: We should inherit modules-specific include paths if we specify the
+  # dictionary dependency, in that case TMVA.
+  set(dictoptions -I${CUDA_TOOLKIT_INCLUDE})
+endif(tmva-gpu)
 ROOT_STANDARD_LIBRARY_PACKAGE(Genetic
   HEADERS
     Math/GeneticMinimizer.h
   SOURCES
     src/GeneticMinimizer.cxx
   DICTIONARY_OPTIONS
+    ${dictoptions}
     -writeEmptyRootPCM
   DEPENDENCIES
     Core
