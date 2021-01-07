@@ -1,4 +1,4 @@
-#include "EExecutionPolicy.hxx"
+#include "ROOT/EExecutionPolicy.hxx"
 #include "ROOT/RConfig.hxx"
 
 namespace ROOT {

@@ -13,7 +13,7 @@
 #ifndef ROOT_Fit_Chi2FCN
 #define ROOT_Fit_Chi2FCN
 
-#include "EExecutionPolicy.hxx"
+#include "ROOT/EExecutionPolicy.hxx"
 #include "Fit/BasicFCN.h"
 #include "Fit/BinData.h"
 #include "Fit/FitUtil.h"

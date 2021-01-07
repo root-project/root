@@ -23,7 +23,7 @@
 
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
-#include "EExecutionPolicy.hxx"
+#include "ROOT/EExecutionPolicy.hxx"
 
 #include "Math/Integrator.h"
 #include "Math/IntegratorMultiDim.h"
