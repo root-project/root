@@ -50,7 +50,7 @@ using namespace ROOT::TypeTraits;
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 template <typename FilterF, typename PrevDataFrame>
-class RFilter final : public RFilterBase {
+class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
    using ColumnTypes_t = typename CallableTraits<FilterF>::arg_types;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
