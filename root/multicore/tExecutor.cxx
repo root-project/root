@@ -1,7 +1,7 @@
 #include "executorTests.hxx"
-#include "TROOT.h"
+#include "ROOT/EExecutionPolicy.hxx"
 #include "ROOT/TExecutor.hxx"
-
+#include "TROOT.h"
 
 int main() {
 
