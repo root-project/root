@@ -77,6 +77,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
         this.nextElem = "";
 
         this._oSettingsModel = new JSONModel({
+            SortMethods: [
+               { name: "name", value: "name" },
+               { name: "size", value: "size" },
+               { name: "none", value: "" }
+            ],
+            SortMethod: "name",
+            ReverseOrder: false,
             ShowHiddenFiles: false,
             DBLCLKRun: false,
             TH1: [
@@ -602,6 +609,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onSettingPress: async function () {
          let menu = await this._getSettingsMenu();
+
+         this._oSettingsModel.setProperty("/ShowHiddenFiles", this.model.isShowHidden());
+         this._oSettingsModel.setProperty("/SortMethod", this.model.getSortMethod());
+         this._oSettingsModel.setProperty("/ReverseOrder", this.model.isReverseOrder());
+
          menu.open();
       },
 
@@ -611,12 +623,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       handleSeetingsConfirm: function() {
-         let was_hidden = this.model.isShowHidden(),
-             is_hidden = this._oSettingsModel.getProperty("/ShowHiddenFiles");
+         let hidden = this._oSettingsModel.getProperty("/ShowHiddenFiles"),
+             sort = this._oSettingsModel.getProperty("/SortMethod"),
+             reverse = this._oSettingsModel.getProperty("/ReverseOrder"),
+             changed = false;
 
-         if (was_hidden != is_hidden) {
-            console.log('RELOAD MODEL!!!');
-            this.model.setShowHidden(is_hidden);
+         if (hidden != this.model.isShowHidden()) {
+            changed = true;
+            this.model.setShowHidden(hiden);
+         }
+
+         if (reverse != this.model.isReverseOrder()) {
+            changed = true;
+            this.model.setReverseOrder(reverse);
+         }
+
+         if (sort != this.model.getSortMethod()) {
+            changed = true;
+            this.model.setSortMethod(sort);
+         }
+
+         if (changed) {
+            console.log('Settings changes - reload MODEL!!!');
             this.doReload(true);
          }
       },

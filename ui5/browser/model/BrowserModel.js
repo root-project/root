@@ -21,7 +21,8 @@ sap.ui.define([
 
             this.loadDataCounter = 0; // counter of number of nodes
 
-            this.sortOrder = "";
+            this.sortMethod = "name"; // "name", "size"
+            this.reverseOrder = false;
             this.itemsFilter = "";
             this.showHidden = false;
 
@@ -32,15 +33,23 @@ sap.ui.define([
            this.treeTable = t;
         },
 
+        /** @summary Set sort method */
+        setSortMethod: function(arg) { this.sortMethod = arg; },
+
+        /** @summary Get sort method */
+        getSortMethod: function() { return this.sortMethod; },
+
         /** @summary Set show hidden flag */
-        setShowHidden: function(flag) {
-           this.showHidden = flag;
-        },
+        setShowHidden: function(flag) { this.showHidden = flag; },
 
         /** @summary Is show hidden flag set */
-        isShowHidden: function() {
-           return this.showHidden;
-        },
+        isShowHidden: function() { return this.showHidden; },
+
+        /** @summary Set reverse order */
+        setReverseOrder: function(on) { this.reverseOrder = on; },
+
+        /** @summary Is reverse order */
+        isReverseOrder: function() { return this.reverseOrder; },
 
         /** @summary Set full model
           * @desc Method can be used when complete hierarchy is ready and can be used directly */
@@ -207,7 +216,8 @@ sap.ui.define([
               path: path,
               first: first || 0,
               number: number || this.threshold || 100,
-              sort: this.sortOrder || "",
+              sort: this.sortMethod || "",
+              reverse: this.reverseOrder || false,
               hidden: this.showHidden ? true : false,
               regex: this.itemsFilter ? "^(" + this.itemsFilter + ".*)$" : ""
            };
@@ -487,29 +497,6 @@ sap.ui.define([
 
               return true;
            }
-        },
-
-        // change sorting method, for now server supports default, "direct" and "reverse"
-        changeSortOrder: function(newValue) {
-           if (newValue === undefined)
-               newValue = this.getProperty("/sortOrder") || "";
-
-           if ((newValue !== "") && (newValue !=="direct") && (newValue !== "reverse")) {
-              console.error('WRONG sorting order ', newValue, 'use default');
-              newValue = "";
-           }
-
-           // ignore same value
-           if (newValue === this.sortOrder)
-              return;
-
-
-           this.sortOrder = newValue;
-
-           // now we should request values once again
-
-           this.submitRequest(this.h, "/");
-
         },
 
         changeItemsFilter: function(newValue) {
