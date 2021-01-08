@@ -41,6 +41,7 @@ public:
    const std::string &GetName() const { return name; }
    const std::string &GetIcon() const { return icon; }
    virtual bool IsFolder() const { return false; }
+   virtual bool IsHidden() const { return false; }
 
    void SetChecked(bool on = true) { checked = on; }
    void SetExpanded(bool on = true) { expanded = on; }

@@ -44,6 +44,13 @@ public:
 
    bool IsFolder() const override { return isdir; }
 
+   // return true for hidden files
+   bool IsHidden() const {
+      auto &n = GetName();
+      if ((n.length() == 0) || (n[0] != '.')) return false;
+      return (n != ".") && (n != "..");
+   }
+
    bool Compare(const RItem *b, const std::string &method) const override
    {
       if (IsFolder() != b->IsFolder())

@@ -29,6 +29,7 @@ public:
    int first{0};     ///< first child to request
    int number{0};    ///< number of childs to request, 0 - all childs
    std::string sort; ///< kind of sorting
+   bool hidden;      ///< show hidden files
    std::string regex; ///< applied regex
 };
 
