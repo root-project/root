@@ -140,7 +140,9 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
    }
 
    // create sorted array
-   if ((fLastSortedItems.size() != fLastItems.size()) || (fLastSortMethod != request.sort)) {
+   if ((fLastSortedItems.size() != fLastItems.size()) ||
+       (fLastSortMethod != request.sort) ||
+       (fLastSortReverse != request.reverse)) {
       fLastSortedItems.resize(fLastItems.size(), nullptr);
       int id = 0;
       if (request.sort.empty()) {
@@ -160,7 +162,12 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
             std::sort(fLastSortedItems.begin(), fLastSortedItems.end(),
                       [request](const Browsable::RItem *a, const Browsable::RItem *b) { return a->Compare(b, request.sort); });
       }
+
+      if (request.reverse)
+         std::reverse(fLastSortedItems.begin(), fLastSortedItems.end());
+
       fLastSortMethod = request.sort;
+      fLastSortReverse = request.reverse;
    }
 
    const std::regex expr(request.regex);
