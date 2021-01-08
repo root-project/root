@@ -23,6 +23,7 @@ sap.ui.define([
 
             this.sortOrder = "";
             this.itemsFilter = "";
+            this.showHidden = false;
 
             this.threshold = 100; // default threshold to prefetch items
         },
@@ -31,7 +32,18 @@ sap.ui.define([
            this.treeTable = t;
         },
 
-        /* Method can be used when complete hierarchy is ready and can be used directly */
+        /** @summary Set show hidden flag */
+        setShowHidden: function(flag) {
+           this.showHidden = flag;
+        },
+
+        /** @summary Is show hidden flag set */
+        isShowHidden: function() {
+           return this.showHidden;
+        },
+
+        /** @summary Set full model
+          * @desc Method can be used when complete hierarchy is ready and can be used directly */
         setFullModel: function(topnode) {
            this.fullModel = true;
            if (topnode.length) {
@@ -56,6 +68,7 @@ sap.ui.define([
               this.oBinding.checkUpdate(true);
         },
 
+        /** @summary Clear full model */
         clearFullModel: function() {
            if (!this.fullModel) return;
 
@@ -109,7 +122,8 @@ sap.ui.define([
            return curr;
         },
 
-        /** expand node by given path, when path not exists - try to send request */
+        /** @summary expand node by given path
+          * @desc When path not exists - try to send request */
         expandNodeByPath: function(path) {
            if (!path || (typeof path !== "string") || (path == "/")) return -1;
 
@@ -175,8 +189,8 @@ sap.ui.define([
 
         },
 
-        // submit next request to the server
-        // directly use web socket, later can be dedicated channel
+        /** @summary submit next request to the server
+          * @desc directly use web socket, later can be dedicated channel */
         submitRequest: function(elem, path, first, number) {
            if (first === "expanding") {
               first = 0;
@@ -184,17 +198,17 @@ sap.ui.define([
               delete this._expanding_path;
            }
 
-
            if (!this._websocket || elem._requested || this.fullModel) return;
            elem._requested = true;
 
            this.loadDataCounter++;
 
-           var request = {
+           let request = {
               path: path,
               first: first || 0,
               number: number || this.threshold || 100,
               sort: this.sortOrder || "",
+              hidden: this.showHidden ? true : false,
               regex: this.itemsFilter ? "^(" + this.itemsFilter + ".*)$" : ""
            };
            this._websocket.send("BRREQ:" + JSON.stringify(request));
