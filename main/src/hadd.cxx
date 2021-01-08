@@ -438,6 +438,10 @@ int main( int argc, char **argv )
 
    std::vector<std::string> partialFiles;
 
+#ifndef R__WIN32
+   // this is commented out only to try to prevent false positive detection
+   // from several anti-virus engines on Windows, and multiproc is not
+   // supported on Windows anyway
    if (multiproc) {
       auto uuid = TUUID();
       auto partialTail = uuid.AsString();
@@ -447,6 +451,7 @@ int main( int argc, char **argv )
          partialFiles.emplace_back(buffer.str());
       }
    }
+#endif
 
    auto mergeFiles = [&](TFileMerger &merger) {
       if (reoptimize) {
