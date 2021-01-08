@@ -1,5 +1,5 @@
 <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
-  <ViewSettingsDialog>
+  <ViewSettingsDialog confirm="handleSeetingsConfirm">
     <customTabs>
       <ViewSettingsCustomTab id="drawing-options" icon="sap-icon://signature" text="Drawing options" title="Drawing options" tooltip="Drawing options">
         <content>
@@ -59,7 +59,8 @@
       <ViewSettingsCustomTab icon="sap-icon://action-settings" >
         <content>
           <VBox>
-            <CheckBox text="Double click to run macro" select="settingsDBLCLKRun" />
+            <CheckBox text="Show hidden files" selected="{/ShowHiddenFiles}" />
+            <CheckBox text="Double click to run macro" selected="{/DBLCLKRun}" />
           </VBox>
         </content>
       </ViewSettingsCustomTab>
