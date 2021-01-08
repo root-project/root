@@ -75,9 +75,82 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
         this.globalId = 1;
         this.nextElem = "";
-        this.DBLCLKRun = false;
 
-         this.websocket = this.getView().getViewData().conn_handle;
+        this._oSettingsModel = new JSONModel({
+            ShowHiddenFiles: false,
+            DBLCLKRun: false,
+            TH1: [
+               {name: "hist"},
+               {name: "P"},
+               {name: "P0"},
+               {name: "E"},
+               {name: "E1"},
+               {name: "E2"},
+               {name: "E3"},
+               {name: "E4"},
+               {name: "E1X0"},
+               {name: "L"},
+               {name: "LF2"},
+               {name: "B"},
+               {name: "B1"},
+               {name: "A"},
+               {name: "TEXT"},
+               {name: "LEGO"},
+               {name: "same"}
+            ],
+            TH2: [
+               {name: "COL"},
+               {name: "COLZ"},
+               {name: "COL0"},
+               {name: "COL1"},
+               {name: "COL0Z"},
+               {name: "COL1Z"},
+               {name: "COLA"},
+               {name: "BOX"},
+               {name: "BOX1"},
+               {name: "PROJ"},
+               {name: "PROJX1"},
+               {name: "PROJX2"},
+               {name: "PROJX3"},
+               {name: "PROJY1"},
+               {name: "PROJY2"},
+               {name: "PROJY3"},
+               {name: "SCAT"},
+               {name: "TEXT"},
+               {name: "TEXTE"},
+               {name: "TEXTE0"},
+               {name: "CONT"},
+               {name: "CONT1"},
+               {name: "CONT2"},
+               {name: "CONT3"},
+               {name: "CONT4"},
+               {name: "ARR"},
+               {name: "SURF"},
+               {name: "SURF1"},
+               {name: "SURF2"},
+               {name: "SURF4"},
+               {name: "SURF6"},
+               {name: "E"},
+               {name: "A"},
+               {name: "LEGO"},
+               {name: "LEGO0"},
+               {name: "LEGO1"},
+               {name: "LEGO2"},
+               {name: "LEGO3"},
+               {name: "LEGO4"},
+               {name: "same"}
+            ],
+            TProfile: [
+               {name: "E0"},
+               {name: "E1"},
+               {name: "E2"},
+               {name: "p"},
+               {name: "AH"},
+               {name: "hist"}
+            ]
+         });
+
+        this.websocket = this.getView().getViewData().conn_handle;
 
          // this is code for the Components.js
          // this.websocket = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
@@ -355,7 +428,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      /** @brief Extract the file name and extension
+      /** @summary Extract the file name and extension
        * @desc Used to set the editor's model properties and display the file name on the tab element  */
       setFileNameType: function (oEditor, fullname) {
          let oModel = oEditor.getModel();
@@ -440,7 +513,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return true;
       },
 
-      /** @brief Handle the "Browse..." button press event */
+      /** @summary Handle the "Browse..." button press event */
       onChangeFile: function (oEvent) {
          let oEditor = this.getSelectedCodeEditor();
          if (!oEditor) return;
@@ -512,84 +585,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* ============================================= */
 
       _getSettingsMenu: async function () {
+
          if (!this._oSettingsMenu) {
             let fragment;
             await Fragment.load({name: "rootui5.browser.view.settingsmenu", controller: this}).then(function (oSettingsMenu) {
                fragment = oSettingsMenu;
             });
             if (fragment) {
-               let oModel = new JSONModel({
-                  "TH1": [
-                     {"name": "hist"},
-                     {"name": "P"},
-                     {"name": "P0"},
-                     {"name": "E"},
-                     {"name": "E1"},
-                     {"name": "E2"},
-                     {"name": "E3"},
-                     {"name": "E4"},
-                     {"name": "E1X0"},
-                     {"name": "L"},
-                     {"name": "LF2"},
-                     {"name": "B"},
-                     {"name": "B1"},
-                     {"name": "A"},
-                     {"name": "TEXT"},
-                     {"name": "LEGO"},
-                     {"name": "same"}
-                  ],
-                  "TH2": [
-                     {"name": "COL"},
-                     {"name": "COLZ"},
-                     {"name": "COL0"},
-                     {"name": "COL1"},
-                     {"name": "COL0Z"},
-                     {"name": "COL1Z"},
-                     {"name": "COLA"},
-                     {"name": "BOX"},
-                     {"name": "BOX1"},
-                     {"name": "PROJ"},
-                     {"name": "PROJX1"},
-                     {"name": "PROJX2"},
-                     {"name": "PROJX3"},
-                     {"name": "PROJY1"},
-                     {"name": "PROJY2"},
-                     {"name": "PROJY3"},
-                     {"name": "SCAT"},
-                     {"name": "TEXT"},
-                     {"name": "TEXTE"},
-                     {"name": "TEXTE0"},
-                     {"name": "CONT"},
-                     {"name": "CONT1"},
-                     {"name": "CONT2"},
-                     {"name": "CONT3"},
-                     {"name": "CONT4"},
-                     {"name": "ARR"},
-                     {"name": "SURF"},
-                     {"name": "SURF1"},
-                     {"name": "SURF2"},
-                     {"name": "SURF4"},
-                     {"name": "SURF6"},
-                     {"name": "E"},
-                     {"name": "A"},
-                     {"name": "LEGO"},
-                     {"name": "LEGO0"},
-                     {"name": "LEGO1"},
-                     {"name": "LEGO2"},
-                     {"name": "LEGO3"},
-                     {"name": "LEGO4"},
-                     {"name": "same"}
-                  ],
-                  "TProfile": [
-                     {"name": "E0"},
-                     {"name": "E1"},
-                     {"name": "E2"},
-                     {"name": "p"},
-                     {"name": "AH"},
-                     {"name": "hist"}
-                  ]
-               });
-               fragment.setModel(oModel);
+               fragment.setModel(this._oSettingsModel);
                this.getView().addDependent(fragment);
                this._oSettingsMenu = fragment;
             }
@@ -598,8 +601,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onSettingPress: async function () {
-         await this._getSettingsMenu();
-         this._oSettingsMenu.open();
+         let menu = await this._getSettingsMenu();
+         menu.open();
       },
 
       handleSettingsChange: function (oEvent) {
@@ -607,8 +610,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.drawingOptions[graphType] = oEvent.getSource().mProperties.value;
       },
 
-      settingsDBLCLKRun: function(oEvent) {
-         this.DBLCLKRun = oEvent.getSource().getSelected();
+      handleSeetingsConfirm: function() {
+         let was_hidden = this.model.isShowHidden(),
+             is_hidden = this._oSettingsModel.getProperty("/ShowHiddenFiles");
+
+         if (was_hidden != is_hidden) {
+            console.log('RELOAD MODEL!!!');
+            this.model.setShowHidden(is_hidden);
+            this.doReload(true);
+         }
       },
 
       /* ============================================= */
@@ -619,7 +629,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Tabs menu =============== */
       /* ========================================= */
 
-      /** @brief Add Tab event handler */
+      /** @summary Add Tab event handler */
       addNewButtonPressHandler: async function (oEvent) {
          //TODO: Change to some UI5 function (unknown for now)
          let oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
@@ -831,7 +841,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== ToolHeader =============== */
       /* ========================================== */
 
-      /** @brief Assign the "double click" event handler to each row */
+      /** @summary Assign the "double click" event handler to each row */
       assignRowHandlers: function () {
          var rows = this.byId("treeTable").getRows();
          for (var k = 0; k < rows.length; ++k) {
@@ -840,7 +850,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       sendDblClick: function (fullpath, opt) {
-         if(this.DBLCLKRun) {
+         if(this._oSettingsModel.getProperty("/DBLCLKRun")) {
             if(opt !== '$$$editor$$$') {
                opt = '$$$execute$$$';
                console.log(fullpath);
@@ -849,7 +859,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.websocket.send('DBLCLK: ["' + fullpath + '","' + (opt || "") + '"]');
       },
 
-      /** @brief Double-click event handler */
+      /** @summary Double-click event handler */
       onRowDblClick: function (row) {
          let ctxt = row.getBindingContext(),
             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
@@ -929,7 +939,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.isConnected = false;
       },
 
-     /** Entry point for all data from server */
+     /** @summary Entry point for all data from server */
      onWebsocketMsg: function(handle, msg, offset) {
 
          if (typeof msg != "string")
@@ -1009,13 +1019,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      /** Get the ID of the currently selected tab of given tab container */
+      /** @summary Get the ID of the currently selected tab of given tab container */
       getSelectedtabFromtabContainer: function(divid) {
-         var  tabContainer = this.getView().byId('myTabContainer').getSelectedItem();
+         let tabContainer = this.getView().byId('myTabContainer').getSelectedItem();
          return tabContainer.slice(6, tabContainer.length);
       },
 
-      /** Show special message instead of nodes hierarchy */
+      /** @summary Show special message instead of nodes hierarchy */
       showTextInBrowser: function(text) {
          var br = this.byId("treeTable");
          br.collapseAll();
@@ -1046,7 +1056,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // oSplitApp.getAggregation("_navMaster").$().css("width", "400px");
       },
 
-      /** Reload (refresh) file tree browser */
+      /** @summary Reload (refresh) file tree browser */
       onRealoadPress: function (oEvent) {
          this.doReload(true);
       },
@@ -1061,7 +1071,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      /** Quit ROOT session */
+      /** @summary Quit ROOT session */
       onQuitRootPress: function(oEvent) {
          this.websocket.send("QUIT_ROOT");
       },
@@ -1070,7 +1080,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.changeItemsFilter(oEvt.getSource().getValue());
       },
 
-      /** Submit node search query to server, ignore in offline case */
+      /** @summary Submit node search query to server, ignore in offline case */
       changeItemsFilter: function(query, from_handler) {
 
          if (!from_handler) {
