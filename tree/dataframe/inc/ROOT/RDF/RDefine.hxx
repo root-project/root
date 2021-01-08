@@ -42,7 +42,7 @@ struct SlotAndEntry{};
 // clang-format on
 
 template <typename F, typename ExtraArgsTag = CustomColExtraArgs::None>
-class RDefine final : public RDefineBase {
+class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    // shortcuts
    using NoneTag = CustomColExtraArgs::None;
    using SlotTag = CustomColExtraArgs::Slot;
