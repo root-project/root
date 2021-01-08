@@ -1,4 +1,4 @@
-// Tutorial that highlights ROOT 7 features, including: RNTuple, RDataframe, and visualizations.
+// Tutorial that highlights ROOT 7 features, including: RNTuple+RDataFrame, and visualizations.
 
 // The tutorial first uses RNTuple to ingest climate data and create a model with fields like
 // AverageTemperature. Then it uses RDataframe to process and filter the climate data for
