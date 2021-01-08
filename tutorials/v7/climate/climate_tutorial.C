@@ -145,7 +145,7 @@ void Analyze() {
    auto df = ROOT::Experimental::MakeNTupleDataFrame("GlobalTempData", kNTupleFileName);
    // Display the minimum and maximum temperature from the dataset
    auto minimum_value = df.Min("AverageTemperature");
-   cout << "\nThe Minimum temperature is: " << *minimum_value << std::endl;
+   std::cout << "\nThe Minimum temperature is: " << *minimum_value << std::endl;
    auto max_value = df.Max("AverageTemperature");
    cout << "The Maximum temperature is: " << *max_value << std::endl;
 
