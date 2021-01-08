@@ -25,7 +25,7 @@ namespace RDF {
 This pure virtual class provides a common base class for the different column reader types, e.g. RTreeColumnReader and
 RDSColumnReader.
 **/
-class RColumnReaderBase {
+class R__CLING_PTRCHECK(off) RColumnReaderBase {
 public:
    virtual ~RColumnReaderBase() = default;
 
