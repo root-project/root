@@ -143,9 +143,15 @@ public:
 
       delete br;
 
-      // no need to return object itself
-      // TODO: make more exact check
-      if (iter->NumElements() < 2) return nullptr;
+      if (iter->NumElements() == 0) return nullptr;
+
+      // check if it is object itself
+      if (iter->NumElements() == 1) {
+         iter->Reset(); iter->Next();
+         auto elem0 = std::dynamic_pointer_cast<TObjectElement>(iter->GetElement());
+         if (elem0 && elem0->IsSame(fObj)) return nullptr;
+         iter->Reset();
+      }
 
       return iter;
    }
@@ -161,6 +167,8 @@ public:
 
    std::string ClassName() const { return fObj ? fObj->ClassName() : ""; }
 
+   bool IsSame(TObject *obj) const { return obj == fObj; }
+
 };
 
 
@@ -169,8 +177,6 @@ public:
 
 void TMyBrowserImp::Add(TObject *obj, const char *name, Int_t)
 {
-   // printf("Adding object %p %s %s\n", obj, obj->GetName(), obj->ClassName());
-
    fIter.AddElement(std::make_shared<TObjectElement>(obj, name ? name : ""));
 }
 
@@ -186,7 +192,8 @@ std::unique_ptr<RItem> TObjectLevelIter::CreateItem()
    std::shared_ptr<TObjectElement> elem = std::dynamic_pointer_cast<TObjectElement>(fElements[fCounter]);
 
    std::string clname = elem->ClassName();
-   bool can_have_childs = (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) || (clname.find("TNtuple") == 0);
+   bool can_have_childs = (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) ||
+                          (clname.find("TNtuple") == 0) || (clname.find("TBranchElement") == 0);
 
    auto item = std::make_unique<TObjectItem>(elem->GetName(), can_have_childs ? 1 : 0);
 
