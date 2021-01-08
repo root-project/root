@@ -84,7 +84,11 @@ public:
    int CanHaveChilds() const override
    {
       std::string clname = fKey->GetClassName();
-      return (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) || (clname.find("TNtuple") == 0) ? 1 : 0;
+      // TODO: more advanced logic required here
+      return (clname.find("TDirectory") == 0) ||
+             (clname.find("TTree") == 0) ||
+             (clname.find("TNtuple") == 0) ||
+             (clname.find("TBranchElement") == 0) ? 1 : 0;
    }
 
    /** Create element for the browser */
@@ -136,9 +140,8 @@ public:
    std::string GetTitle() const override { return fKey->GetTitle(); }
 
    /** Create iterator for childs elements if any
-    * Means we should try to browse inside.
-    * Either it is directory or some complex object
-    * */
+     * Means we should try to browse inside.
+     * Either it is directory or some complex object */
    std::unique_ptr<RLevelIter> GetChildsIter() override
    {
       std::string clname = fKey->GetClassName();
@@ -168,24 +171,17 @@ public:
       if (!obj_class)
          return nullptr;
 
-      if (obj_class->InheritsFrom(TObject::Class())) {
+      void *obj = fDir->GetObjectChecked(fKey->GetName(), obj_class);
+      if (!obj)
+         return nullptr;
 
-         TObject *tobj = fDir->FindObject(fKey->GetName());
+      TObject *tobj = (TObject *) obj_class->DynamicCast(TObject::Class(), obj);
 
-         if (!tobj) {
-            tobj = fKey->ReadObj();
-
-            if (!tobj)
-               return nullptr;
-         }
-
+      if (tobj) {
          bool owned_by_dir = fDir->FindObject(tobj) == tobj;
 
          return std::make_unique<TObjectHolder>(tobj, !owned_by_dir);
       }
-
-      void *obj = fKey->ReadObjectAny(obj_class);
-      if (!obj) return nullptr;
 
       return std::make_unique<RAnyObjectHolder>(obj_class, obj, true);
    }
@@ -290,9 +286,9 @@ public:
    RTFileProvider()
    {
       RegisterFile("root", [] (const std::string &fullname) -> std::shared_ptr<RElement> {
-         auto f = TFile::Open(fullname.c_str());
+         auto f = dynamic_cast<TFile *> (gROOT->GetListOfFiles()->FindObject(fullname.c_str()));
+         if (!f) f = TFile::Open(fullname.c_str());
          if (!f) return nullptr;
-
          return std::make_shared<TDirectoryElement>(fullname, f);
       });
 

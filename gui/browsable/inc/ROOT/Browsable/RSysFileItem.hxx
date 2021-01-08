@@ -45,7 +45,7 @@ public:
    bool IsFolder() const override { return isdir; }
 
    // return true for hidden files
-   bool IsHidden() const {
+   bool IsHidden() const override {
       auto &n = GetName();
       if ((n.length() == 0) || (n[0] != '.')) return false;
       return (n != ".") && (n != "..");

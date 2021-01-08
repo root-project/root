@@ -6,8 +6,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_Browsable_TDirectory
-#define ROOT7_Browsable_TDirectory
+#ifndef ROOT7_Browsable_TKeyItem
+#define ROOT7_Browsable_TKeyItem
 
 #include <ROOT/Browsable/RItem.hxx>
 
