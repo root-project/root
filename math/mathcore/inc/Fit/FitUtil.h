@@ -16,10 +16,7 @@
 #include "Math/IParamFunctionfwd.h"
 #include "Math/IParamFunction.h"
 
-#ifdef R__USE_IMT
-#include "ROOT/TThreadExecutor.hxx"
-#endif
-#include "ROOT/TSequentialExecutor.hxx"
+#include "ROOT/TExecutor.hxx"
 
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
