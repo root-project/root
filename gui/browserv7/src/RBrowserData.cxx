@@ -168,6 +168,10 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
    int id = 0;
    for (auto &item : fLastSortedItems) {
 
+      // check if element is hidden
+      if (!request.hidden && item->IsHidden())
+         continue;
+
       if (!request.regex.empty() && !item->IsFolder() && !std::regex_match(item->GetName(), expr))
          continue;
 
