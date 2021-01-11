@@ -386,7 +386,7 @@ protected:
   RooPlot* plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, Double_t Z, const RooArgSet* params, const RooLinkedList& argList, Bool_t method1) const ;
 
   // Support interface for subclasses to advertise their analytic integration
-  // and generator capabilities in their analticalIntegral() and generateEvent()
+  // and generator capabilities in their analyticalIntegral() and generateEvent()
   // implementations.
   Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
 		   const RooArgProxy& a) const ;
