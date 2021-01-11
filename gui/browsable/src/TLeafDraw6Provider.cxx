@@ -30,6 +30,21 @@ public:
          return true;
       });
 
+      RegisterDraw6(TBranchElement::Class(), [](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
+
+         auto hist = TLeafProvider::DrawBranchElement(obj);
+
+         if (!hist)
+            return false;
+
+         pad->GetListOfPrimitives()->Clear();
+
+         pad->GetListOfPrimitives()->Add(hist, opt.c_str());
+
+         return true;
+      });
+
+
    }
 
 } newTLeafDraw6Provider;

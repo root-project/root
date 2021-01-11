@@ -35,6 +35,8 @@ protected:
 
    bool IsSame(TObject *obj) const { return obj == fObj; }
 
+   virtual int CanHaveSubSubChilds() const { return -1; }
+
 public:
    TObjectElement(TObject *obj, const std::string &name = "");
 

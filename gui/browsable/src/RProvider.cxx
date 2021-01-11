@@ -227,7 +227,7 @@ bool RProvider::Draw6(TVirtualPad *subpad, std::unique_ptr<RHolder> &object, con
    if (ScanProviderMap<Draw6Map_t, Draw6Map_t::iterator>(GetDraw6Map(), object->GetClass(), false, draw_func))
       return true;
 
-   if (object->GetClass()->InheritsFrom("TLeaf"))
+   if (object->GetClass()->InheritsFrom("TLeaf") || object->GetClass()->InheritsFrom("TBranchElement"))
       gSystem->Load("libROOTLeafDraw6Provider");
    else if (object->GetClass()->InheritsFrom(TObject::Class()))
       gSystem->Load("libROOTObjectDraw6Provider");
@@ -255,7 +255,7 @@ bool RProvider::Draw7(std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std
 
    // TODO: need factory methods for that
 
-   if (object->GetClass()->InheritsFrom("TLeaf"))
+   if (object->GetClass()->InheritsFrom("TLeaf") || object->GetClass()->InheritsFrom("TBranchElement"))
       gSystem->Load("libROOTLeafDraw7Provider");
    else if (object->GetClass()->InheritsFrom(TObject::Class()))
       gSystem->Load("libROOTObjectDraw7Provider");

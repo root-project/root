@@ -8,8 +8,10 @@
 
 #include <ROOT/Browsable/RProvider.hxx>
 
+#include "TString.h"
 #include "TLeaf.h"
 #include "TBranch.h"
+#include "TBranchElement.h"
 #include "TTree.h"
 #include "TH1.h"
 #include "TDirectory.h"
@@ -23,19 +25,14 @@ public:
 
    virtual ~TLeafProvider() = default;
 
-   static TH1 *DrawLeaf(std::unique_ptr<RHolder> &obj)
+   static TH1 *DrawTree(TTree *ttree, const std::string &expr, const std::string &hname)
    {
-      auto tleaf = obj->get_object<TLeaf>();
-      if (!tleaf)
-         return nullptr;
-
-      auto ttree = tleaf->GetBranch()->GetTree();
       if (!ttree)
          return nullptr;
 
-      std::string expr = std::string(tleaf->GetName()) + ">>htemp_tree_draw";
+      std::string expr2 = expr + ">>htemp_tree_draw";
 
-      ttree->Draw(expr.c_str(),"","goff");
+      ttree->Draw(expr2.c_str(),"","goff");
 
       if (!gDirectory)
          return nullptr;
@@ -46,9 +43,80 @@ public:
          return nullptr;
 
       htemp->SetDirectory(nullptr);
-      htemp->SetName(tleaf->GetName());
+      htemp->SetName(hname.c_str());
 
       return htemp;
+   }
+
+   static TH1 *DrawLeaf(std::unique_ptr<RHolder> &obj)
+   {
+      auto tleaf = obj->get_object<TLeaf>();
+      if (!tleaf)
+         return nullptr;
+
+      return DrawTree(tleaf->GetBranch()->GetTree(), tleaf->GetName(), tleaf->GetName());
+   }
+
+   static TH1 *DrawBranchElement(std::unique_ptr<RHolder> &obj)
+   {
+      auto tbranch = obj->get_object<TBranchElement>();
+      if (!tbranch)
+         return nullptr;
+
+      // there are sub-branches, plain TTree::Draw does not work
+      if (tbranch->GetListOfBranches()->GetEntriesFast() > 0)
+         return nullptr;
+
+      // just copy and paste code from TBranchElement::Browse
+      TString slash("/");
+      TString escapedSlash("\\/");
+      TString name = tbranch->GetName();
+      Int_t pos = name.First('[');
+      if (pos != kNPOS)
+         name.Remove(pos);
+      if (tbranch->GetMother()) {
+         TString mothername = tbranch->GetMother()->GetName();
+         pos = mothername.First('[');
+         if (pos != kNPOS) {
+            mothername.Remove(pos);
+         }
+         Int_t len = mothername.Length();
+         if (len) {
+            if (mothername(len-1) != '.') {
+               // We do not know for sure whether the mother's name is
+               // already preprended.  So we need to check:
+               //    a) it is prepended
+               //    b) it is NOT the name of a daugher (i.e. mothername.mothername exist)
+               TString doublename = mothername;
+               doublename.Append(".");
+               Int_t isthere = (name.Index(doublename) == 0);
+               if (!isthere) {
+                  name.Prepend(doublename);
+               } else {
+                  if (tbranch->GetMother()->FindBranch(mothername)) {
+                     doublename.Append(mothername);
+                     isthere = (name.Index(doublename) == 0);
+                     if (!isthere) {
+                        mothername.Append(".");
+                        name.Prepend(mothername);
+                     }
+                  } else {
+                     // Nothing to do because the mother's name is
+                     // already in the name.
+                  }
+               }
+            } else {
+               // If the mother's name end with a dot then
+               // the daughter probably already contains the mother's name
+               if (name.Index(mothername) == kNPOS) {
+                  name.Prepend(mothername);
+               }
+            }
+         }
+      }
+      name.ReplaceAll(slash, escapedSlash);
+
+      return DrawTree(tbranch->GetTree(), name.Data(), name.Data());
    }
 
 };

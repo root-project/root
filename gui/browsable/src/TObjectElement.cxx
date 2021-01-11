@@ -38,8 +38,10 @@ class TObjectLevelIter : public RLevelIter {
 
    int fCounter{-1};
 
+   int fCanHaveChilds{-1};
+
 public:
-   explicit TObjectLevelIter() = default;
+   explicit TObjectLevelIter(int canHaveChilds = -1) { fCanHaveChilds = canHaveChilds; }
 
    virtual ~TObjectLevelIter() = default;
 
@@ -61,7 +63,7 @@ public:
 
    std::string GetName() const override { return fElements[fCounter]->GetName(); }
 
-   int CanHaveChilds() const override { return -1; }
+   int CanHaveChilds() const override { return fCanHaveChilds; }
 
    /** Create element for the browser */
    std::unique_ptr<RItem> CreateItem() override;
@@ -115,8 +117,6 @@ std::string TObjectElement::GetName() const
    return fObj ? fObj->GetName() : "";
 }
 
-
-
 /** Title of TObject */
 std::string TObjectElement::GetTitle() const
 {
@@ -128,7 +128,7 @@ std::unique_ptr<RLevelIter> TObjectElement::GetChildsIter()
 {
    if (!fObj) return nullptr;
 
-   auto iter = std::make_unique<TObjectLevelIter>();
+   auto iter = std::make_unique<TObjectLevelIter>(CanHaveSubSubChilds());
 
    TMyBrowserImp *imp = new TMyBrowserImp(*(iter.get()));
 
@@ -197,9 +197,13 @@ std::unique_ptr<RItem> TObjectLevelIter::CreateItem()
    // should never happen
    if (!elem) return nullptr;
 
-   std::string clname = elem->ClassName();
-   bool can_have_childs = (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) ||
-                          (clname.find("TNtuple") == 0) || (clname.find("TBranchElement") == 0);
+   bool can_have_childs = false;
+   if (CanHaveChilds() != 0) {
+      // TODO: make via RProvider methods
+      std::string clname = elem->ClassName();
+      can_have_childs = (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) ||
+                        (clname.find("TNtuple") == 0) || (clname.find("TBranchElement") == 0);
+   }
 
    auto item = std::make_unique<TObjectItem>(elem->GetName(), can_have_childs ? 1 : 0);
 
@@ -254,7 +258,7 @@ public:
 
    std::string GetName() const override { return (*fIter)->GetName(); }
 
-   int CanHaveChilds() const override { return 1; }
+   int CanHaveChilds() const override { return -1; }
 
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override
