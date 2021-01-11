@@ -107,7 +107,7 @@ void MakeImagesTree(int n, int nh, int nw)
    f.Close();
 }
 
-void TMVA_CNN_Classification(std::vector<bool> opt = {0, 0, 0, 0, 1})
+void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
 {
 
    bool useTMVACNN = (opt.size() > 0) ? opt[0] : false;
