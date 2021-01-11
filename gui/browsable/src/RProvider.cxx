@@ -192,13 +192,21 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<RHolder> &object)
 {
    std::shared_ptr<RElement> res;
 
-   if (object)
-      ScanProviderMap<BrowseMap_t,BrowseMap_t::iterator>(GetBrowseMap(), object->GetClass(), true,
-            [&res, &object] (BrowseMap_t::iterator &iter) -> bool {
-              res = iter->second.func(object);
-              return (res || !object) ? true : false;
-            }
-      );
+   if (!object) return res;
+
+   auto test_func = [&res, &object] (BrowseMap_t::iterator &iter) -> bool {
+      res = iter->second.func(object);
+      return (res || !object) ? true : false;
+   };
+
+   if (ScanProviderMap<BrowseMap_t,BrowseMap_t::iterator>(GetBrowseMap(), object->GetClass(), false, test_func))
+      return res;
+
+   if (object && object->GetClass()->InheritsFrom("TBranchElement")) {
+      gSystem->Load("libROOTBranchBrowseProvider");
+   }
+
+   ScanProviderMap<BrowseMap_t,BrowseMap_t::iterator>(GetBrowseMap(), object->GetClass(), true, test_func);
 
    return res;
 }
