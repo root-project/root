@@ -114,7 +114,6 @@ private:
    REveCaloDataHist*   fCaloData{nullptr};
 
 public:
-   REveCaloTowerSliceSelector(){}
    REveCaloTowerSliceSelector(int s, REveDataCollection* c, REveCaloDataHist* h):REveCaloDataSliceSelector(s), fCollection(c), fCaloData(h) {}
 
    using REveCaloDataSliceSelector::ProcessSelection;
