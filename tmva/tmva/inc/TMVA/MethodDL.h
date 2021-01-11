@@ -47,10 +47,12 @@
 #include "TMVA/DNN/Architectures/Cpu.h"
 //#endif
 
+#if 0
 #ifdef R__HAS_TMVAGPU
 #include "TMVA/DNN/Architectures/Cuda.h"
 #ifdef R__HAS_CUDNN
 #include "TMVA/DNN/Architectures/TCudnn.h"
+#endif
 #endif
 #endif
 

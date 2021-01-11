@@ -53,6 +53,13 @@ Deep Neural Network Implementation.
 #include "TMVA/NeuralNet.h"
 #include "TMVA/Monitoring.h"
 
+#ifdef R__HAS_TMVACPU
+#include "TMVA/DNN/Architectures/Cpu.h"
+#endif
+#ifdef R__HAS_TMVAGPU
+#include "TMVA/DNN/Architectures/Cuda.h"
+#endif
+
 #include <algorithm>
 #include <iostream>
 #include <string>
