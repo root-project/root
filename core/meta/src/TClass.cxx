@@ -7061,7 +7061,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
          arr = it->second;
       }
 
-      if( arr && version > -1 && version < arr->GetSize() && arr->At( version ) )
+      if( arr && version >= -1 && version < arr->GetSize() && arr->At( version ) )
          return (TVirtualStreamerInfo*) arr->At( version );
    }
 
@@ -7090,6 +7090,11 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
 
    info = (TVirtualStreamerInfo*)info->Clone();
 
+   // When cloning the StreamerInfo we record (and thus restore)
+   // the absolute value of the version, let's keep the original.
+   if (version == -1)
+      info->SetClassVersion(-1);
+
    if( !info->BuildFor( this ) ) {
       delete info;
       return 0;
@@ -7112,6 +7117,11 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
          fConversionStreamerInfo = new std::map<std::string, TObjArray*>();
       }
       (*fConversionStreamerInfo)[cl->GetName()] = arr;
+   }
+   if (arr->At(info->GetClassVersion())) {
+      Error("GetConversionStreamerInfo", "Conversion StreamerInfo from %s to %s version %d has already been created",
+            this->GetName(), info->GetName(), info->GetClassVersion());
+      delete arr->At(info->GetClassVersion());
    }
    arr->AddAtAndExpand( info, info->GetClassVersion() );
    return info;
@@ -7183,7 +7193,14 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    // non artificial streamer elements and we should build it for current class
    /////////////////////////////////////////////////////////////////////////////
 
+   int version = info->GetClassVersion();
    info = (TVirtualStreamerInfo*)info->Clone();
+
+   // When cloning the StreamerInfo we record (and thus restore)
+   // the absolute value of the version, let's keep the original.
+   if (version == -1)
+      info->SetClassVersion(-1);
+
    if( !info->BuildFor( this ) ) {
       delete info;
       return 0;
