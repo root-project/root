@@ -23,6 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     ROOT/Browsable/RUnique.hxx
     ROOT/Browsable/RWrapper.hxx
     ROOT/Browsable/TKeyItem.hxx
+    ROOT/Browsable/TObjectElement.hxx
     ROOT/Browsable/TObjectHolder.hxx
     ROOT/Browsable/TObjectItem.hxx
   SOURCES
@@ -68,6 +69,14 @@ ROOT_LINKER_LIBRARY(ROOTObjectDraw7Provider
      ROOTGpadv7
 )
 
+# provider for browsing of TBranchElement
+
+ROOT_LINKER_LIBRARY(ROOTBranchBrowseProvider
+     src/TBranchBrowseProvider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     Tree
+)
 
 # provider for drawing of TLeaf on TCanvas
 
