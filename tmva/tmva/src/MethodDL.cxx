@@ -46,6 +46,13 @@
 #include "TMVA/DNN/Adadelta.h"
 #include "TMVA/Timer.h"
 
+#ifdef R__HAS_TMVAGPU
+#include "TMVA/DNN/Architectures/Cuda.h"
+#ifdef R__HAS_CUDNN
+#include "TMVA/DNN/Architectures/TCudnn.h"
+#endif
+#endif
+
 #include <chrono>
 
 REGISTER_METHOD(DL)

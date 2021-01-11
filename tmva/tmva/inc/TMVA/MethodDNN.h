@@ -60,7 +60,7 @@
 #define DNNCPU
 #endif
 #ifdef R__HAS_TMVAGPU
-#define DNNCUDA
+//#define DNNCUDA
 #endif
 
 #ifdef DNNCPU
