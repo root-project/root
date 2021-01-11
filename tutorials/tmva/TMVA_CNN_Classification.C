@@ -463,15 +463,19 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
    if (usePyTorchCNN) {
 
       Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model");
-      // execute
-      gSystem->Exec("python PyTorch_Generate_CNN_Model.py");
-
-      // book PyKeras method only if Keras model could be created
-      Info("TMVA_CNN_Classification", "Booking PyTorch CNN model");
-      factory.BookMethod(
-        loader, TMVA::Types::kPyTorch, "PyTorch",
-        "H:!V:VarTransform=None:FilenameModel=PyTorchModelCNN.pt:"
-        "FilenameTrainedModel=PyTorchTrainedModelCNN.pt:NumEpochs=20:BatchSize=100:UserCode=PyTorch_Generate_CNN_Model.py");
+      TString pyTorchFileName = gROOT->GetTutorialDir() + TString("/tmva/pytorch/PyTorch_Generate_CNN_Model.py");
+      // check that PyTorch file defining model and used later when booking the methos is existing
+      if (gSystem->AccessPathName(pyTorchFileName)) {
+         Warning("TMVA_CNN_Classification", "PyTorch model building file is not existing - skip using PyTorch");
+      }
+      else {
+         // book PyTorch method only if PyTorch model could be created
+         Info("TMVA_CNN_Classification", "Booking PyTorch CNN model");
+         TString methodOpt = "H:!V:VarTransform=None:FilenameModel=PyTorchModelCNN.pt:"
+                             "FilenameTrainedModel=PyTorchTrainedModelCNN.pt:NumEpochs=20:BatchSize=100";
+         methodOpt += TString(":UserCode=") + pyTorchFileName;
+         factory.BookMethod(loader, TMVA::Types::kPyTorch, "PyTorch", methodOpt);
+      }
    }
 
 
