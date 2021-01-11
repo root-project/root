@@ -5,6 +5,7 @@
 #include "Executors.h"
 #include "MemoryRegulator.h"
 #include "ProxyWrappers.h"
+#include "PyStrings.h"
 
 #include "CPyCppyy/DispatchPtr.h"
 
@@ -83,10 +84,9 @@ PyObject* CPyCppyy::CPPConstructor::Call(
         address = (ptrdiff_t)((CPPInstance*)pyobj)->GetObject();
         if (address) {
             ((CPPInstance*)pyobj)->CppOwns();
-            PyObject* pyoff = PyObject_CallMethod(dispproxy, (char*)"_dispatchptr_offset", nullptr);
-            size_t disp_offset = PyLong_AsSsize_t(pyoff);
-            Py_DECREF(pyoff);
-            new ((void*)(address + disp_offset)) DispatchPtr{(PyObject*)self};
+            PyObject* res = PyObject_CallMethodObjArgs(
+            dispproxy, PyStrings::gDispInit, pyobj, (PyObject*)self, nullptr);
+            Py_XDECREF(res);
         }
         Py_DECREF(pyobj);
         Py_DECREF(dispproxy);
