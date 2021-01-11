@@ -765,15 +765,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (count <= 1) {
                MessageToast.show("Sorry, you cannot close the Code Editor", {duration: 1500});
             } else {
-               this.saveCheck(function ()  {oTabContainer.removeItem(oItemToClose);});
+               this.saveCheck(() => oTabContainer.removeItem(oItemToClose));
             }
          } else {
-            let pthis = this;
             MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
-               onClose: function (oAction) {
+               onClose: oAction => {
                   if (oAction === MessageBox.Action.OK) {
                      if (oItemToClose.getName() === "ROOT Canvas")
-                        pthis.websocket.send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
+                        this.websocket.send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
 
                      oTabContainer.removeItem(oItemToClose);
 

@@ -365,13 +365,20 @@ std::shared_ptr<RCanvas> RBrowser::GetActiveRCanvas() const
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Close and delete specified canvas
+/// Check both list of TCanvas and list of RCanvas
 
 void RBrowser::CloseCanvas(const std::string &name)
 {
    auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::unique_ptr<TCanvas> &canv) { return name == canv->GetName(); });
-
-   if (iter != fCanvases.end())
+   if (iter != fCanvases.end()) {
       fCanvases.erase(iter);
+   } else {
+      auto iter2 = std::find_if(fRCanvases.begin(), fRCanvases.end(), [name](const std::shared_ptr<RCanvas> &canv) { return name == canv->GetTitle(); });
+      if (iter2 != fRCanvases.end()) {
+         (*iter2)->Remove();
+         fRCanvases.erase(iter2);
+      }
+   }
 
    if (fActiveCanvas == name)
       fActiveCanvas.clear();
