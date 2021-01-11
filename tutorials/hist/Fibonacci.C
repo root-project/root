@@ -11,6 +11,11 @@
 ///
 /// 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, ...
 ///
+/// The Fibonacci sequence is found everywhere in nature. If you count the petals
+/// of a flower, chances are that it's a Fibonacci number. This is exactly why a
+/// a four-leafed clover is extremely rare, it is not a Fibonacci number and therfore
+/// unnatural.
+///
 /// This tutorial computes Fibonacci numbers and uses them to build a TH2Poly
 /// producing the "Fibonacci spiral" created by drawing circular arcs connecting
 /// the opposite corners of squares in the Fibonacci tiling.
@@ -30,7 +35,7 @@ void Fibonacci(int N=7) {
    C->SetFrameLineWidth(0);
 
    TH2Poly *h2pf = new TH2Poly(); // TH2Poly containing Fibonacci bins.
-   h2pf->SetTitle(Form("The first %d Fibonacci numbers",N));
+   h2pf->SetTitle(Form("The first %i Fibonacci numbers",N));
    h2pf->SetMarkerColor(kRed-2);
    h2pf->SetStats(0);
 
