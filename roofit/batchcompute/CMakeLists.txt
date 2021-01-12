@@ -1,18 +1,7 @@
 # Library which powers fast batch computations in Roofit.
-ROOT_STANDARD_LIBRARY_PACKAGE(RooBatchCompute
-  HEADERS
-    RooBatchCompute.h
-    BracketAdapter.h
-    RooSpan.h
-    RooVDTHeaders.h
-    RunContext.h
-  SOURCES
+ROOT_LINKER_LIBRARY(RooBatchCompute
     src/Initialisation.cxx
     src/RunContext.cxx
-  DICTIONARY_OPTIONS
-    "-writeEmptyRootPCM"
-  #~  LINKDEF
-    #~  LinkDef1.h
   DEPENDENCIES
     Core
     MathCore
@@ -49,7 +38,7 @@ if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_
   # Flags -fno-signaling-nans, -fno-trapping-math and -O3 are necessary to enable autovectorization (especially for GCC).
   set(common-flags $<$<CXX_COMPILER_ID:GNU>:-fno-signaling-nans>)
   list(APPEND common-flags $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>: -fno-trapping-math -O3>)
-  
+
   target_compile_options(RooBatchCompute_SSE4.1  PRIVATE ${common-flags} -msse4    -DRF_ARCH=SSE4)
   target_compile_options(RooBatchCompute_AVX     PRIVATE ${common-flags} -mavx     -DRF_ARCH=AVX )
   target_compile_options(RooBatchCompute_AVX2    PRIVATE ${common-flags} -mavx2    -DRF_ARCH=AVX2)
@@ -63,3 +52,4 @@ if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_
 
 endif()
 
+ROOT_INSTALL_HEADERS()
