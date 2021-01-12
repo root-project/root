@@ -63,7 +63,11 @@ public:
 
    std::string GetName() const override { return fElements[fCounter]->GetName(); }
 
-   int CanHaveChilds() const override { return fCanHaveChilds; }
+   int CanHaveChilds() const override
+   {
+      std::shared_ptr<TObjectElement> telem = std::dynamic_pointer_cast<TObjectElement>(fElements[fCounter]);
+      return telem && telem->IsFolder() ? 1 : 0;
+   }
 
    /** Create element for the browser */
    std::unique_ptr<RItem> CreateItem() override;
@@ -123,12 +127,18 @@ std::string TObjectElement::GetTitle() const
    return fObj ? fObj->GetTitle() : "";
 }
 
+/** Returns IsFolder of contained object */
+bool TObjectElement::IsFolder()
+{
+   return fObj ? fObj->IsFolder() : false;
+}
+
 /** Create iterator for childs elements if any */
 std::unique_ptr<RLevelIter> TObjectElement::GetChildsIter()
 {
-   if (!fObj) return nullptr;
+   if (!IsFolder()) return nullptr;
 
-   auto iter = std::make_unique<TObjectLevelIter>(CanHaveSubSubChilds());
+   auto iter = std::make_unique<TObjectLevelIter>();
 
    TMyBrowserImp *imp = new TMyBrowserImp(*(iter.get()));
 
@@ -141,11 +151,12 @@ std::unique_ptr<RLevelIter> TObjectElement::GetChildsIter()
 
    if (iter->NumElements() == 0) return nullptr;
 
-   // check if it is object itself
+   // check if it is object itself - should not happen after IsFolder() false
    if (iter->NumElements() == 1) {
       iter->Reset(); iter->Next();
       auto elem0 = std::dynamic_pointer_cast<TObjectElement>(iter->GetElement());
-      if (elem0 && elem0->IsSame(fObj)) return nullptr;
+      if (elem0 && elem0->IsSame(fObj))
+         return nullptr;
       iter->Reset();
    }
 

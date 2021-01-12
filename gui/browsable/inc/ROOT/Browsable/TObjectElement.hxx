@@ -35,8 +35,6 @@ protected:
 
    bool IsSame(TObject *obj) const { return obj == fObj; }
 
-   virtual int CanHaveSubSubChilds() const { return -1; }
-
 public:
    TObjectElement(TObject *obj, const std::string &name = "");
 
@@ -51,6 +49,8 @@ public:
 
    /** Title of TObject */
    std::string GetTitle() const override;
+
+   bool IsFolder();
 
    /** Create iterator for childs elements if any */
    std::unique_ptr<RLevelIter> GetChildsIter() override;
