@@ -105,38 +105,17 @@ void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & 
 ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
-   unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
-   bool isAdoptedBuffer = true;
-   auto packedBytes = page.GetSize();
    auto element = columnHandle.fColumn->GetElement();
-   const auto isMappable = element->IsMappable();
+   auto sealedPage = SealPage(page, *element, fOptions.GetCompression());
 
-   if (!isMappable) {
-      packedBytes = (page.GetNElements() * element->GetBitsOnStorage() + 7) / 8;
-      buffer = new unsigned char[packedBytes];
-      isAdoptedBuffer = false;
-      element->Pack(buffer, page.GetBuffer(), page.GetNElements());
-   }
-   auto zippedBytes = packedBytes;
-
-   if (fOptions.GetCompression() != 0) {
-      zippedBytes = fCompressor->Zip(buffer, packedBytes, fOptions.GetCompression());
-      if (!isAdoptedBuffer)
-         delete[] buffer;
-      buffer = const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(fCompressor->GetZipBuffer()));
-      isAdoptedBuffer = true;
-   }
-
-   auto offsetData = fWriter->WriteBlob(buffer, zippedBytes, packedBytes);
+   auto offsetData = fWriter->WriteBlob(
+      sealedPage.fBuffer, sealedPage.fSize, element->GetPackedSize(page.GetNElements()));
    fClusterMinOffset = std::min(offsetData, fClusterMinOffset);
-   fClusterMaxOffset = std::max(offsetData + zippedBytes, fClusterMaxOffset);
-
-   if (!isAdoptedBuffer)
-      delete[] buffer;
+   fClusterMaxOffset = std::max(offsetData + sealedPage.fSize, fClusterMaxOffset);
 
    RClusterDescriptor::RLocator result;
    result.fPosition = offsetData;
-   result.fBytesOnStorage = zippedBytes;
+   result.fBytesOnStorage = sealedPage.fSize;
    fCounters->fNPageCommitted.Inc();
    return result;
 }

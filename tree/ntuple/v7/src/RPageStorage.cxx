@@ -104,7 +104,7 @@ void ROOT::Experimental::Detail::RPageSource::UnzipCluster(RCluster *cluster)
 unsigned char *ROOT::Experimental::Detail::RPageSource::UnsealPage(
    const RSealedPage &sealedPage, const RColumnElementBase &element)
 {
-   const auto bytesPacked = (element.GetBitsOnStorage() * sealedPage.fNElements + 7) / 8;
+   const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
    const auto pageSize = element.GetSize() * sealedPage.fNElements;
 
    auto pageBufferPacked = new unsigned char[bytesPacked];
@@ -232,4 +232,34 @@ void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NT
    }
    ++fLastClusterId;
    fPrevClusterNEntries = nEntries;
+}
+
+
+ROOT::Experimental::Detail::RPageStorage::RSealedPage
+ROOT::Experimental::Detail::RPageSink::SealPage(
+   const RPage &page, const RColumnElementBase &element, int compressionSetting)
+{
+   unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
+   bool isAdoptedBuffer = true;
+   auto packedBytes = page.GetSize();
+
+   if (!element.IsMappable()) {
+      packedBytes = element.GetPackedSize(page.GetNElements());
+      buffer = new unsigned char[packedBytes];
+      isAdoptedBuffer = false;
+      element.Pack(buffer, page.GetBuffer(), page.GetNElements());
+   }
+   auto zippedBytes = packedBytes;
+
+   if ((compressionSetting != 0) || !element.IsMappable()) {
+      zippedBytes = fCompressor->Zip(buffer, packedBytes, fOptions.GetCompression());
+      if (!isAdoptedBuffer)
+         delete[] buffer;
+      buffer = const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(fCompressor->GetZipBuffer()));
+      isAdoptedBuffer = true;
+   }
+
+   R__ASSERT(isAdoptedBuffer);
+
+   return RSealedPage{buffer, zippedBytes, page.GetNElements()};
 }
