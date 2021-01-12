@@ -11,8 +11,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
    let BrowserLayout = JSROOT.BrowserLayout;
 
-   /// set browser title text
-   /// Title also used for dragging of the float browser
+   /** @summary Set browser title text
+     * @desc Title also used for dragging of the float browser */
    BrowserLayout.prototype.setBrowserTitle = function(title) {
       let main = d3.select("#" + this.gui_div + " .jsroot_browser");
       if (!main.empty())
@@ -577,7 +577,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
    /** @summary Toggle open state of the item
      * @desc Used with "open all" / "close all" buttons in normal GUI
      * @param {boolean} isopen - if items should be expand or closed
-     * @returns {boolean} tru when any item was changed */
+     * @returns {boolean} true when any item was changed */
    HierarchyPainter.prototype.toggleOpenState = function(isopen, h) {
       let hitem = h || this.h;
 
@@ -2036,13 +2036,13 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       return player;
    }
 
-   /** function used with THttpServer when tree is not yet loaded
+   /** @summary function used with THttpServer when tree is not yet loaded
      * @private */
    JSROOT.drawTreePlayerKey = function(hpainter, itemname) {
       return JSROOT.drawTreePlayer(hpainter, itemname, true);
    }
 
-   /** function used with THttpServer when tree is not yet loaded
+   /** @summary function used with THttpServer when tree is not yet loaded
      * @private */
    JSROOT.drawLeafPlayer = function(hpainter, itemname) {
       return JSROOT.drawTreePlayer(hpainter, itemname, false, true);

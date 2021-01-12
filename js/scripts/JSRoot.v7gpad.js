@@ -1462,7 +1462,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    RFramePainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
+   /** @summary Returns frame painter - object itself */
    RFramePainter.prototype.getFramePainter = function() { return this; }
+
+   /** @summary Returns true if it is ROOT6 frame
+    * @private */
+   RFramePainter.prototype.is_root6 = function() { return false; }
 
    /** @summary Set active flag for frame - can block some events
     * @private */
@@ -1893,6 +1898,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       delete this._click_handler;
       delete this._dblclick_handler;
+
+      let pp = this.getPadPainter();
+      if (pp && (pp.frame_painter_ref === this))
+         delete pp.frame_painter_ref;
 
       JSROOT.ObjectPainter.prototype.cleanup.call(this);
    }
@@ -3262,8 +3271,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let sub = this.painters[k];
          if (sub.snapid===undefined) continue; // look only for painters with snapid
 
-         for (let i=0;i<snap.fPrimitives.length;++i)
-            if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
+         snap.fPrimitives.forEach(prim => {
+            if (sub && (prim.fObjectID === sub.snapid)) {
+               sub = null; isanyfound = true;
+            }
+         });
 
          if (sub) {
             // remove painter which does not found in the list of snaps
@@ -3279,14 +3291,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!isanyfound) {
          let fp = this.getFramePainter();
+         // cannot preserve ROOT6 frame - it must be recreated
+         if (fp && fp.is_root6()) fp = null;
          for (let k = 0; k < this.painters.length; ++k)
-            if (fp !== this.painters[k])
+             if (fp !== this.painters[k])
                this.painters[k].cleanup();
          this.painters = [];
          delete this.main_painter_ref;
          if (fp) {
             this.painters.push(fp);
             fp.cleanFrameDrawings();
+            fp.redraw(); // need to create all layers again
          }
          if (this.removePadButtons) this.removePadButtons();
          this.addPadButtons(true);
@@ -3953,13 +3968,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Hanler for websocket close event
      * @private */
    RCanvasPainter.prototype.onWebsocketClosed = function(/*handle*/) {
-      jsrp.closeCurrentWindow();
+      if (!this.embed_canvas)
+         jsrp.closeCurrentWindow();
    }
 
    /** @summary Hanler for websocket message
      * @private */
    RCanvasPainter.prototype.onWebsocketMsg = function(handle, msg) {
-      console.log("GET MSG " + msg.substr(0,30));
+      console.log("GET_MSG " + msg.substr(0,30));
 
       if (msg == "CLOSE") {
          this.onWebsocketClosed();

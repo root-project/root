@@ -934,6 +934,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Returns frame painter - object itself */
    TFramePainter.prototype.getFramePainter = function() { return this; }
 
+   /** @summary Returns true if it is ROOT6 frame
+     * @private */
+   TFramePainter.prototype.is_root6 = function() { return true; }
+
    /** @summary Returns frame or sub-objects, used in GED editor */
    TFramePainter.prototype.getObject = function(place) {
       if (place === "xaxis") return this.xaxis;
@@ -1538,6 +1542,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       delete this._click_handler;
       delete this._dblclick_handler;
       delete this.enabledKeys;
+
+      let pp = this.getPadPainter();
+      if (pp && (pp.frame_painter_ref === this))
+         delete pp.frame_painter_ref;
 
       JSROOT.ObjectPainter.prototype.cleanup.call(this);
    }
@@ -3106,6 +3114,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (!isanyfound) {
+         // TODO: maybe just remove frame painter?
          let fp = this.getFramePainter();
          for (let k=0;k<this.painters.length;++k)
             if (fp !== this.painters[k])
@@ -3115,6 +3124,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (fp) {
             this.painters.push(fp);
             fp.cleanFrameDrawings();
+            fp.redraw();
          }
          if (this.removePadButtons) this.removePadButtons();
          this.addPadButtons(true);
@@ -3945,7 +3955,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Hanler for websocket close event
      * @private */
    TCanvasPainter.prototype.onWebsocketClosed = function(/*handle*/) {
-      jsrp.closeCurrentWindow();
+      if (!this.embed_canvas)
+         jsrp.closeCurrentWindow();
    }
 
    /** @summary Handle websocket messages

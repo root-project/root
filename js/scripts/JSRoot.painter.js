@@ -2408,10 +2408,10 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.startTextDrawing = function(font_face, font_size, draw_g, max_font_size) {
 
       if (!draw_g) draw_g = this.draw_g;
+      if (!draw_g || draw_g.empty()) return;
 
-      let font = (font_size === 'font') ? font_face : new FontHandler(font_face, font_size);
-
-      let pp = this.getPadPainter();
+      let font = (font_size === 'font') ? font_face : new FontHandler(font_face, font_size),
+          pp = this.getPadPainter();
 
       draw_g.call(font.func);
 
@@ -2421,7 +2421,7 @@ JSROOT.define(['d3'], (d3) => {
             .property('text_factor', 0.)
             .property('max_text_width', 0) // keep maximal text width, use it later
             .property('max_font_size', max_font_size)
-            .property("_fast_drawing", pp && pp._fast_drawing);
+            .property("_fast_drawing", pp ? pp._fast_drawing : false);
 
       if (draw_g.property("_fast_drawing"))
          draw_g.property("_font_too_small", (max_font_size && (max_font_size < 5)) || (font.size < 4));
@@ -2434,6 +2434,7 @@ JSROOT.define(['d3'], (d3) => {
      * @protected */
    ObjectPainter.prototype.scaleTextDrawing = function(factor, draw_g) {
       if (!draw_g) draw_g = this.draw_g;
+      if (!draw_g || draw_g.empty()) return;
       if (factor && (factor > draw_g.property('text_factor')))
          draw_g.property('text_factor', factor);
    }
@@ -2594,6 +2595,7 @@ JSROOT.define(['d3'], (d3) => {
       if (!arg.text) arg.text = "";
 
       arg.draw_g = arg.draw_g || this.draw_g;
+      if (!arg.draw_g || arg.draw_g.empty()) return;
 
       let font = arg.draw_g.property('text_font');
       arg.font = font; // use in latex conversion
@@ -2711,6 +2713,9 @@ JSROOT.define(['d3'], (d3) => {
      * @protected */
    ObjectPainter.prototype.finishTextDrawing = function(draw_g) {
       if (!draw_g) draw_g = this.draw_g;
+      if (!draw_g || draw_g.empty())
+         return Promise.resolve(false);
+
       draw_g.property('draw_text_completed', true); // mark that text drawing is completed
 
       return new Promise(resolveFunc => {
