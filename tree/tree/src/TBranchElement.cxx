@@ -2155,7 +2155,7 @@ void TBranchElement::SetupInfo()
 
          TStreamerInfo* info;
          if( targetClass != cl )
-            info = (TStreamerInfo*)targetClass->GetConversionStreamerInfo( cl, fCheckSum );
+            info = (TStreamerInfo*)targetClass->FindConversionStreamerInfo( cl, fCheckSum );
          else {
             info = (TStreamerInfo*)cl->FindStreamerInfo( fCheckSum );
             if (info) {
