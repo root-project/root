@@ -832,6 +832,31 @@ class Regression24CppPythonInheritance(MyTestCase):
        self.assertEqual(b.fun2(), 111)
        self.assertEqual(c.fun2(), 11) # PyA's fun1 should be invoked
 
+   def test11MultiInheritancePyCpp(self):
+       """Multiple inheritance from Python and Cpp classes"""
+
+       class PurePy1:
+          def foo(self): return 1
+
+       class PurePy2:
+          def bar(self): return 2
+
+       cppyy.gbl.gInterpreter.Declare('''
+       class MyCppClass11 {
+       public:
+          int foo() { return 3; }
+          int bar() { return 4; }
+          virtual ~MyCppClass11() {}
+       };
+       ''')
+
+       # Multiple Python classes and just one C++ class are supported
+       class PyDerived11(PurePy1, cppyy.gbl.MyCppClass11, PurePy2): pass
+
+       x = PyDerived11()
+       self.assertEqual(x.foo(), 1) # PurePy1's foo
+       self.assertEqual(x.bar(), 4) # MyCppClass11's bar
+
 
 ## actual test run
 if __name__ == '__main__':
