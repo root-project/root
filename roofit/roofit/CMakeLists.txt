@@ -137,10 +137,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     "-writeEmptyRootPCM"
   LINKDEF
     LinkDef1.h
+  LIBRARIES
+    RooBatchCompute
   DEPENDENCIES
     Core
     RooFitCore
-    RooBatchCompute
     Tree
     RIO
     Matrix

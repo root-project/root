@@ -440,6 +440,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFitLegacy/RooMultiCatIter.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
+  LIBRARIES
+    RooBatchCompute
   DEPENDENCIES
     Core
     Hist
@@ -451,7 +453,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     MathCore
     Foam
     Smatrix
-    RooBatchCompute
   LINKDEF
     inc/LinkDef.h
 )
