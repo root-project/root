@@ -126,7 +126,8 @@ TString::TString(const std::string &s)
 TString::TString(const char *cs, Ssiz_t n)
 {
    if (n < 0) {
-      Error("TString::TString", "Negative length!");
+      char *data = Init(0, 0);
+      memcpy(data, "", 0);
       return;
    }
    char *data = Init(n, n);
