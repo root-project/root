@@ -36,6 +36,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     "-writeEmptyRootPCM"
   LINKDEF
     LinkDef.h
+  LIBRARIES
+    RooBatchCompute
   DEPENDENCIES
     ${ROOT_MATHMORE_LIBRARY}
     Core
