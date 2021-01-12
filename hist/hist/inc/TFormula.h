@@ -96,7 +96,7 @@ private:
    std::atomic<Bool_t>  fClingInitialized;  //!  transient to force re-initialization
    Bool_t            fAllParametersSetted;    // flag to control if all parameters are setted
    Bool_t            fLazyInitialization = kFALSE;  //! transient flag to control lazy initialization (needed for reading from files)
-   TMethodCall *fMethod; //! pointer to methodcall
+   std::unique_ptr<TMethodCall> fMethod; //! pointer to methodcall
    std::unique_ptr<TMethodCall> fGradMethod; //! pointer to a methodcall
    TString           fClingName;     //! unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
    std::string       fSavedInputFormula;  //! unique name used to defined the function and used in the global map (need to be saved in case of lazy initialization)
@@ -259,6 +259,6 @@ public:
    void           SetVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
    void SetVectorized(Bool_t vectorized);
 
-   ClassDef(TFormula,12)
+   ClassDef(TFormula,13)
 };
 #endif
