@@ -59,7 +59,6 @@ public:
    std::unique_ptr<RHolder> GetObject() override;
 
    std::string ClassName() const;
-
 };
 
 } // namespace Browsable

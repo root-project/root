@@ -185,16 +185,19 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
 
    if (drawingOptions == "$$$editor$$$") {
       auto code = elem->GetContent("text");
-      if (code.empty())
-         return ""s;
+      if (!code.empty()) {
+         auto fname = elem->GetContent("filename");
+         if (fname.empty())
+            fname = elem->GetName();
+         std::vector<std::string> args = { fname, code };
 
-      auto fname = elem->GetContent("filename");
-      if (fname.empty())
-         fname = elem->GetName();
+         return "FREAD:"s + TBufferJSON::ToJSON(&args).Data();
+      }
+      auto json = elem->GetContent("json");
+      if (!json.empty())
+         return "JSON:"s + elem->GetName() + "$$$"s + json;
 
-      std::vector<std::string> args = { fname, code };
-
-      return "FREAD:"s + TBufferJSON::ToJSON(&args).Data();
+      return ""s;
    }
 
    if (drawingOptions == "$$$execute$$$") {

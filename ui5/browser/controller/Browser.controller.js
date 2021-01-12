@@ -979,19 +979,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "INMSG":
             this.processInitMsg(msg);
             break;
-         case "FREAD":  // text file read
-            var oEditor = this.getSelectedCodeEditor();
+         case "FREAD": { // text file read
+            let oEditor = this.getSelectedCodeEditor();
 
             if (oEditor) {
-               var arr = JSON.parse(msg);
-
+               let arr = JSON.parse(msg);
                this.setFileNameType(oEditor, arr[0]);
-
                oEditor.getModel().setProperty("/code", arr[1]);
-
                this.getElementFromCurrentTab("Save").setEnabled(true);
             }
             break;
+         }
+         case "JSON": { // json file read
+            let oEditor = this.getSelectedCodeEditor();
+            if (oEditor) {
+               let p = msg.indexOf("$$$"); // name and json separated by $$$
+               this.setFileNameType(oEditor, msg.substr(0, p) + ".json");
+               oEditor.getModel().setProperty("/code", msg.substr(p+3));
+               this.getElementFromCurrentTab("Save").setEnabled(true);
+            }
+            break;
+         }
+
          case "FIMG":  // image file read
             const oViewer = this.getSelectedImageViewer(true);
             if(oViewer) {
@@ -1140,8 +1149,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          console.log("Create canvas ", url, name);
          if (!url || !name) return;
 
-         var oTabContainer = this.byId("myTabContainer");
-         var oTabContainerItem = new TabContainerItem({
+         let oTabContainer = this.byId("myTabContainer");
+         let oTabContainerItem = new TabContainerItem({
             name: "ROOT Canvas",
             icon: "sap-icon://column-chart-dual-axis"
          });
@@ -1152,13 +1161,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          // Change the selected tabs, only if it is new one, not the basic one
          if(name !== "rcanv1") {
-           oTabContainer.setSelectedItem(oTabContainerItem);
+            oTabContainer.setSelectedItem(oTabContainerItem);
          }
 
-         var conn = new JSROOT.WebWindowHandle(this.websocket.kind);
+         let conn = new JSROOT.WebWindowHandle(this.websocket.kind);
 
          // this is producing
-         var addr = this.websocket.href, relative_path = url;
+         let addr = this.websocket.href, relative_path = url;
          if (relative_path.indexOf("../")==0) {
             var ddd = addr.lastIndexOf("/",addr.length-2);
             addr = addr.substr(0,ddd) + relative_path.substr(2);
@@ -1174,7 +1183,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             painter = new JSROOT.TCanvasPainter(null, null);
          }
 
-         painter.online_canvas = true;
+         painter.online_canvas = true; // indicates that canvas gets data from running server
+         painter.embed_canvas = true;  // use to indicate that canvas ui should not close complete window when closing
          painter.use_openui = true;
          painter.batch_mode = false;
          painter._window_handle = conn;
