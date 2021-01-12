@@ -778,7 +778,7 @@ class Regression24CppPythonInheritance(MyTestCase):
        cppyy.gbl.gInterpreter.Declare('''
        class MyClass6345 {
        public:
-       virtual ~MyClass6345() {}
+          virtual ~MyClass6345() {}
        protected:
           int foo(int)      { return 1; }
           int foo(int, int) { return 2; }
