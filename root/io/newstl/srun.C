@@ -4,6 +4,18 @@
    int result = gSystem->CompileMacro("TestHelpers.C","k");
    if (result != 0 && result != 1) return;
 
+   if ( which & kRVec ) {
+
+      result = gSystem->CompileMacro("rvecHolder.C","k");
+      if (result != 0 && result != 1) return;
+      
+      result = gSystem->CompileMacro("rtest.C","k");
+      if (result != 0 && result != 1) return;
+
+      if (exec) gROOT->ProcessLine("rtest(exec-1)");
+
+   }
+
    if ( which & kVector ) {
 
       result = gSystem->CompileMacro("vectorHolder.C","k");

@@ -1,5 +1,6 @@
 
 Processing brun.C...
+Running test rvec
 Running test vector
 Running test deque
 Running test list

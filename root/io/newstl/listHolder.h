@@ -6,7 +6,7 @@
 #undef TEST_CONT_HOLDER 
 #endif
 
-#define TEST_CONT list
+#define TEST_CONT std::list
 #define TEST_CONT_HOLDER listHolder
 
 #include "contHolder.h"
