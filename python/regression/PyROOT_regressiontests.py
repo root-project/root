@@ -607,7 +607,7 @@ class Regression23TFractionFitter(MyTestCase):
 
 
 class Regression24CppPythonInheritance(MyTestCase):
-   def test1DeletedCopyConstructor(self):
+   def test01DeletedCopyConstructor(self):
       """Test that deleted base class copy constructor is not used"""
       # ROOT-10872
       cppyy.gbl.gInterpreter.Declare('''
@@ -623,7 +623,7 @@ class Regression24CppPythonInheritance(MyTestCase):
       class MyDerived1(cppyy.gbl.MyClass1):
          pass
 
-   def test2MoveConstructor(self):
+   def test02MoveConstructor(self):
       """Test that move constructor is not mistaken for copy constructor"""
       # ROOT-10872
       cppyy.gbl.gInterpreter.Declare('''
@@ -640,7 +640,7 @@ class Regression24CppPythonInheritance(MyTestCase):
       class MyDerived2(cppyy.gbl.MyClass2):
          pass
 
-   def test3ProtectedMethod(self):
+   def test03ProtectedMethod(self):
        """Test that protected method is injected in derived class without crash"""
        # ROOT-10872
        ROOT.gInterpreter.Declare("""
@@ -657,7 +657,7 @@ class Regression24CppPythonInheritance(MyTestCase):
        a = Alg()
        self.assertEqual(a.protectedMethod(), 1)
 
-   def test4DerivedObjectDeletion(self):
+   def test04DerivedObjectDeletion(self):
        """Test that derived object is deleted without a crash"""
        # ROOT-11010
        ROOT.gInterpreter.Declare("""
@@ -679,7 +679,7 @@ class Regression24CppPythonInheritance(MyTestCase):
        a = Alg2('MyAlg')
        del a   # should not crash
 
-   def test5BaseAndDerivedConstruction(self):
+   def test05BaseAndDerivedConstruction(self):
        """Test that creation of base class object does not interfere with creation of derived"""
        # ROOT-10789
        ROOT.gInterpreter.Declare("""
@@ -709,7 +709,7 @@ class Regression24CppPythonInheritance(MyTestCase):
        d2 = Alg3_2(test)
        self.assertEqual(test, d2.m_name)
 
-   def test6MultiInheritance(self):
+   def test06MultiInheritance(self):
        """Test for a Python derived class in presence of multiple inheritance in C++"""
        # 6376
        cppyy.gbl.gInterpreter.Declare("""
@@ -745,7 +745,7 @@ class Regression24CppPythonInheritance(MyTestCase):
        # Check there is no corruption in the invocation of i->do_2() inside my_func
        self.assertEqual(cppyy.gbl.my_func(i), 2)
 
-   def test7ConstructorDefaultArgs(self):
+   def test07ConstructorDefaultArgs(self):
        """Invocation of constructor with default arguments"""
        # 6467
        class MyTChain(ROOT.TChain):
@@ -762,7 +762,7 @@ class Regression24CppPythonInheritance(MyTestCase):
 
        self.assertEqual(a.GetName(), b.GetName())
 
-   def test8ConstructorAllDefaultPars(self):
+   def test08ConstructorAllDefaultPars(self):
        """Invocation of a constructor that has default values for all its parameters"""
        # 6578
        class pMainFrame(ROOT.TGMainFrame):
@@ -771,7 +771,7 @@ class Regression24CppPythonInheritance(MyTestCase):
 
        window = pMainFrame(ROOT.gClient.GetRoot(), 200, 200)
 
-   def test9MultipleProtectedAndPrivateOverloads(self):
+   def test09MultipleProtectedAndPrivateOverloads(self):
        """Presence of multiple protected overloads of a method and both private and protected"""
        # 6345
 
