@@ -77,8 +77,8 @@ namespace TMVA {
       // ---
       // the variable data
       // ---
-      VariableInfo&     AddVariable( const TString& expression, const TString& title = "", const TString& unit = "", 
-                                     Double_t min = 0, Double_t max = 0, char varType='F', 
+      VariableInfo&     AddVariable( const TString& expression, const TString& title = "", const TString& unit = "",
+                                     Double_t min = 0, Double_t max = 0, char varType='F',
                                      Bool_t normalized = kTRUE, void* external = 0 );
       VariableInfo&     AddVariable( const VariableInfo& varInfo );
 
@@ -87,11 +87,11 @@ namespace TMVA {
                              Double_t min = 0, Double_t max = 0, char type = 'F', Bool_t normalized = kTRUE,
                              void *external = 0 );
 
-      VariableInfo&     AddTarget  ( const TString& expression, const TString& title, const TString& unit, 
+      VariableInfo&     AddTarget  ( const TString& expression, const TString& title, const TString& unit,
                                      Double_t min, Double_t max, Bool_t normalized = kTRUE, void* external = 0 );
       VariableInfo&     AddTarget  ( const VariableInfo& varInfo );
 
-      VariableInfo&     AddSpectator ( const TString& expression, const TString& title, const TString& unit, 
+      VariableInfo&     AddSpectator ( const TString& expression, const TString& title, const TString& unit,
                                        Double_t min, Double_t max, char type = 'F', Bool_t normalized = kTRUE, void* external = 0 );
       VariableInfo&     AddSpectator ( const VariableInfo& varInfo );
 
@@ -105,7 +105,7 @@ namespace TMVA {
       VariableInfo&                    GetVariableInfo( Int_t i ) { return fVariables.at(i); }
       const VariableInfo&              GetVariableInfo( Int_t i ) const { return fVariables.at(i); }
 
-      Int_t GetVarArraySize(const TString &expression) const { 
+      Int_t GetVarArraySize(const TString &expression) const {
          auto element = fVarArrays.find(expression);
          return (element != fVarArrays.end()) ? element->second : -1;
        }
@@ -198,7 +198,8 @@ namespace TMVA {
       void                       SetDataSetManager( DataSetManager* dsm ) { fDataSetManager = dsm; } // DSMTEST
       friend class DataSetManager;  // DSMTEST (datasetmanager test)
 
-   DataSetInfo( const DataSetInfo& ) : TObject() {}
+      DataSetInfo(const DataSetInfo &) = delete;
+      DataSetInfo & operator= (const DataSetInfo &) = delete;
 
       void PrintCorrelationMatrix( TTree* theTree );
 
@@ -227,19 +228,19 @@ namespace TMVA {
       Double_t                   fTestingSumBackgrWeights ;
 
 
-      
+
       TDirectory*                fOwnRootDir;        // ROOT output dir
       Bool_t                     fVerbose;           // Verbosity
 
       UInt_t                     fSignalClass;       // index of the class with the name signal
 
       std::vector<Float_t>*      fTargetsForMulticlass;//-> all targets 0 except the one with index==classNumber
-      
+
       mutable MsgLogger*         fLogger;            //! message logger
       MsgLogger& Log() const { return *fLogger; }
 
    public:
-       
+
        ClassDef(DataSetInfo,1);
    };
 }
