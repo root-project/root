@@ -4213,7 +4213,6 @@ int RootClingMain(int argc,
          remove((moduleCachePath + llvm::sys::path::get_separator() + "libc.pcm").str().c_str());
 #endif
          remove((moduleCachePath + llvm::sys::path::get_separator() + "std.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "cuda.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "boost.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "tinyxml2.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Config.pcm").str().c_str());
