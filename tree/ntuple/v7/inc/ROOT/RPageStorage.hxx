@@ -169,6 +169,13 @@ protected:
    virtual RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) = 0;
    virtual void CommitDatasetImpl() = 0;
 
+   /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
+   /// compressionSetting is 0 (uncompressed) and the page is mappable, the returned sealed page will
+   /// point directly to the input page buffer.  Otherwise, the sealed page references an internal buffer
+   /// of fCompressor.  Thus, the buffer pointed to by sealed page should never be freed.
+   /// Usage of this method requires construction of fCompressor.
+   RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting);
+
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
@@ -236,6 +243,7 @@ protected:
    /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
    /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
    /// The optimization of directly mapping pages is left to the concrete page source implementations.
+   /// Usage of this method requires construction of fDecompressor.
    unsigned char *UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element);
 
 public:
