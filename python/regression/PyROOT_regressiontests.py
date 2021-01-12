@@ -798,6 +798,40 @@ class Regression24CppPythonInheritance(MyTestCase):
        self.assertEqual(a.bar(), 3)
        self.assertRaises(TypeError, a.bar, 0)
 
+   def test10DeepHierarchyVirtualCall(self):
+       """Virtual call resolution in deep hierarchy (C++->Py->Py)"""
+       # 6470
+
+       cppyy.gbl.gInterpreter.Declare('''
+       class CppBase6470 {
+       public:
+          virtual ~CppBase6470() {}
+          virtual int fun1() const { return 1; }
+          virtual int fun2() const { return fun1(); }
+       };
+       ''')
+
+       CppBase = cppyy.gbl.CppBase6470
+
+       class PyA(CppBase):
+          def fun1(self): return 11
+
+       class PyB(PyA):
+          def fun1(self): return 111
+
+       class PyC(PyA):
+          pass
+
+       base = CppBase()
+       a = PyA()
+       b = PyB()
+       c = PyC()
+
+       self.assertEqual(base.fun2(), 1)
+       self.assertEqual(a.fun2(), 11)
+       self.assertEqual(b.fun2(), 111)
+       self.assertEqual(c.fun2(), 11) # PyA's fun1 should be invoked
+
 
 ## actual test run
 if __name__ == '__main__':
