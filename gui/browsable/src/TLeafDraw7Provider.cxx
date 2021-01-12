@@ -35,6 +35,9 @@ public:
 
          subpad->Draw<ROOT::Experimental::TObjectDrawable>(shared, opt);
 
+         subpad->GetCanvas()->Update(true);
+
+
          return true;
       });
 
@@ -55,6 +58,8 @@ public:
          shared.reset(hist);
 
          subpad->Draw<ROOT::Experimental::TObjectDrawable>(shared, opt);
+
+         subpad->GetCanvas()->Update(true);
 
          return true;
       });

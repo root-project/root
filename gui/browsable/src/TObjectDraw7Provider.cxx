@@ -33,6 +33,7 @@ public:
          }
 
          subpad->Draw<ROOT::Experimental::TObjectDrawable>(tobj, opt);
+         subpad->GetCanvas()->Update(true);
          return true;
       });
 
