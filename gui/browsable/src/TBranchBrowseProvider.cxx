@@ -16,9 +16,6 @@ using namespace ROOT::Experimental::Browsable;
 
 class TBrElement : public TObjectElement {
 
-protected:
-   int CanHaveSubSubChilds() const override { return 0; }
-
 public:
    TBrElement(std::unique_ptr<RHolder> &br) : TObjectElement(br) {}
 
