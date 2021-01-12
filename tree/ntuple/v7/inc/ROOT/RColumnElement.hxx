@@ -100,6 +100,7 @@ public:
 
    void *GetRawContent() const { return fRawContent; }
    std::size_t GetSize() const { return fSize; }
+   std::size_t GetPackedSize(std::size_t nElements) const { return (nElements * GetBitsOnStorage() + 7) / 8; }
 };
 
 /**
