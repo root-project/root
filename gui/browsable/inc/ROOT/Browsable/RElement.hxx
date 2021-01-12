@@ -39,6 +39,7 @@ public:
       kImage,     ///< "image64" - base64 for supported image formats (png/gif/gpeg)
       kPng,       ///< "png" - plain png binary code, returned inside std::string
       kJpeg,      ///< "jpg" or "jpeg" - plain jpg binary code, returned inside std::string
+      kJson,      ///< "json" representation of object, can be used in code editor
       kFileName   ///< "filename" - file name if applicable
    };
 
@@ -58,8 +59,8 @@ public:
    /** Create iterator for childs elements if any */
    virtual std::unique_ptr<RLevelIter> GetChildsIter();
 
-   /** Returns element content, depends from kind. Can be "text" or "image64" */
-   virtual std::string GetContent(const std::string & = "text") { return ""; }
+   /** Returns element content, depends from kind. Can be "text" or "image64" or "json" */
+   virtual std::string GetContent(const std::string & = "text");
 
    /** Access object */
    virtual std::unique_ptr<RHolder> GetObject() { return nullptr; }

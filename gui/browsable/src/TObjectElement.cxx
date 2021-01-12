@@ -19,6 +19,7 @@
 #include "TFolder.h"
 #include "TList.h"
 #include "TDirectory.h"
+#include "TBufferJSON.h"
 
 #include <sstream>
 
@@ -176,7 +177,6 @@ std::string TObjectElement::ClassName() const
 {
    return fObj ? fObj->ClassName() : "";
 }
-
 
 // ==============================================================================================
 
