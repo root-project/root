@@ -934,6 +934,17 @@ std::vector<Double_t> TMVA::MethodBase::GetMvaValues(Long64_t firstEvt, Long64_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// get all the MVA values for the events of the given Data type
+// (this is used by Method Category and it does not need to be re-implmented by derived classes )
+std::vector<Double_t> TMVA::MethodBase::GetDataMvaValues(DataSet * data, Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+{
+   fTmpData = data;
+   auto result = GetMvaValues(firstEvt, lastEvt, logProgress);
+   fTmpData = nullptr;
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// prepare tree branch with the method's discriminating variable
 
 void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )

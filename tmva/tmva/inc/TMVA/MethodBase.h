@@ -206,7 +206,8 @@ namespace TMVA {
 
       // signal/background classification response for all current set of data
       virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
-
+      // same as above but using a provided data set (used by MethodCategory)
+      virtual std::vector<Double_t> GetDataMvaValues(DataSet *data = nullptr, Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
 
    public:
       // regression response
@@ -405,10 +406,9 @@ namespace TMVA {
 
       // returns reference to data set
       // NOTE: this DataSet is the "original" dataset, i.e. the one seen by ALL Classifiers WITHOUT transformation
-      DataSet* Data() const { return DataInfo().GetDataSet(); }
+      DataSet* Data() const { return (fTmpData) ? fTmpData : DataInfo().GetDataSet(); }
       DataSetInfo&     DataInfo() const { return fDataSetInfo; }
 
-      mutable const Event*   fTmpEvent; //! temporary event when testing on a different DataSet than the own one
 
       // event reference and update
       // NOTE: these Event accessors make sure that you get the events transformed according to the
@@ -442,10 +442,12 @@ namespace TMVA {
       void                  DisableWriting(Bool_t setter){ fModelPersistence = setter?kFALSE:kTRUE; }//DEPRECATED
 
     protected:
-      // helper variables for JsMVA
-      IPythonInteractive *fInteractive = nullptr;
-      bool fExitFromTraining = false;
-      UInt_t fIPyMaxIter = 0, fIPyCurrentIter = 0;
+      mutable const Event *fTmpEvent; //! temporary event when testing on a different DataSet than the own one
+      DataSet *fTmpData =  nullptr; //! temporary dataset used when evaluating on a different data (used by MethodCategory::GetMvaValues)
+       // helper variables for JsMVA
+       IPythonInteractive *fInteractive = nullptr;
+       bool fExitFromTraining = false;
+       UInt_t fIPyMaxIter = 0, fIPyCurrentIter = 0;
 
     public:
 
