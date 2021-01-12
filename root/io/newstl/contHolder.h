@@ -5,6 +5,7 @@
 #include "TROOT.h"
 #include "TMath.h"
 #endif
+#include "ROOT/RVec.hxx"
 
 #include <list>
 #include <vector>
@@ -45,101 +46,101 @@ public:
          Reset(entry);
       }
    
-   std::TEST_CONT<EHelper > fEnum;
+   TEST_CONT<EHelper > fEnum;
 
 
 #if defined(R__CANNOT_SPLIT_STL_CONTAINER)
-   std::TEST_CONT<std::pair<float,int> >         fPairFlInt;       //||
-   std::TEST_CONT<std::pair<std::string,double> > fPairStrDb;      //||
+   TEST_CONT<std::pair<float,int> >         fPairFlInt;       //||
+   TEST_CONT<std::pair<std::string,double> > fPairStrDb;      //||
 
-   std::TEST_CONT<GHelper<GHelper<GHelper<float> > > > fTemplates; //||
+   TEST_CONT<GHelper<GHelper<GHelper<float> > > > fTemplates; //||
 #else
-   std::TEST_CONT<std::pair<float,int> >         fPairFlInt;
-   std::TEST_CONT<std::pair<std::string,double> > fPairStrDb;
+   TEST_CONT<std::pair<float,int> >         fPairFlInt;
+   TEST_CONT<std::pair<std::string,double> > fPairStrDb;
 
-   std::TEST_CONT<GHelper<GHelper<GHelper<float> > > > fTemplates; 
+   TEST_CONT<GHelper<GHelper<GHelper<float> > > > fTemplates; 
 #endif
    
    UInt_t                   fScalarArrVarSize;
-   std::TEST_CONT<char >   *fScalarArrVar; //[fScalarArrVarSize]
+   TEST_CONT<char >   *fScalarArrVar; //[fScalarArrVarSize]
 
-   std::TEST_CONT<bool >    fBool;
+   TEST_CONT<bool >    fBool;
 
-   std::TEST_CONT<float >   fScalar;
-   std::TEST_CONT<short >   fScalarArr[2];
+   TEST_CONT<float >   fScalar;
+   TEST_CONT<short >   fScalarArr[2];
 
-   std::TEST_CONT<int >    *fScalarPtr;
-   std::TEST_CONT<double > *fScalarPtrArr[4];
+   TEST_CONT<int >    *fScalarPtr;
+   TEST_CONT<double > *fScalarPtrArr[4];
    UInt_t                   fScalarPtrArrVarSize;
-   std::TEST_CONT<int >    *fScalarPtrArrVar; //[fScalarPtrArrVarSize]
+   TEST_CONT<int >    *fScalarPtrArrVar; //[fScalarPtrArrVarSize]
    
 
 #if defined(R__CANNOT_SPLIT_STL_CONTAINER)
-   std::TEST_CONT<Helper >   fObject;  //||
+   TEST_CONT<Helper >   fObject;  //||
 #else
-   std::TEST_CONT<Helper >   fObject;  //
+   TEST_CONT<Helper >   fObject;  //
 #endif
-   std::TEST_CONT<Helper >  *fObjectPtr;
+   TEST_CONT<Helper >  *fObjectPtr;
 
-   std::TEST_CONT<Helper* >  fPtrObject;
-   std::TEST_CONT<Helper* > *fPtrObjectPtr;
+   TEST_CONT<Helper* >  fPtrObject;
+   TEST_CONT<Helper* > *fPtrObjectPtr;
 
 
 #if defined(R__CANNOT_SPLIT_STL_CONTAINER)
-   std::TEST_CONT<THelper >    fTObject;      //||
-   std::TEST_CONT<THelper >   *fTObjectPtr;   //||
+   TEST_CONT<THelper >    fTObject;      //||
+   TEST_CONT<THelper >   *fTObjectPtr;   //||
 
-   std::TEST_CONT<THelper* >   fPtrTObject;   //||
-   std::TEST_CONT<THelper* >  *fPtrTObjectPtr;//||
+   TEST_CONT<THelper* >   fPtrTObject;   //||
+   TEST_CONT<THelper* >  *fPtrTObjectPtr;//||
 #else
-   std::TEST_CONT<THelper >    fTObject;
-   std::TEST_CONT<THelper >   *fTObjectPtr;
+   TEST_CONT<THelper >    fTObject;
+   TEST_CONT<THelper >   *fTObjectPtr;
 
-   std::TEST_CONT<THelper* >   fPtrTObject;
-   std::TEST_CONT<THelper* >  *fPtrTObjectPtr;
+   TEST_CONT<THelper* >   fPtrTObject;
+   TEST_CONT<THelper* >  *fPtrTObjectPtr;
 #endif
 
-   std::TEST_CONT<std::string>         fString;
-   std::TEST_CONT<std::string*>        fPtrString;
+   TEST_CONT<std::string>         fString;
+   TEST_CONT<std::string*>        fPtrString;
 #if defined(R__NO_NESTED_CONST_STRING)
-   std::TEST_CONT<const std::string*>  fPtrConstString; //!  this version of ROOT does not support nested const string
+   TEST_CONT<const std::string*>  fPtrConstString; //!  this version of ROOT does not support nested const string
 #else
-   std::TEST_CONT<const std::string*>  fPtrConstString;
+   TEST_CONT<const std::string*>  fPtrConstString;
 #endif
 
-   std::TEST_CONT<TString>  fTString;
-   std::TEST_CONT<TString*> fPtrTString;
+   TEST_CONT<TString>  fTString;
+   TEST_CONT<TString*> fPtrTString;
 
 #if defined(R__CANNOT_SPLIT_STL_CONTAINER)
-   std::TEST_CONT<TNamed>   fTNamed;    //||
-   std::TEST_CONT<TNamed*>  fPtrTNamed; //||
-   std::TEST_CONT<const TNamed*>  fPtrConstTNamed; //||
+   TEST_CONT<TNamed>   fTNamed;    //||
+   TEST_CONT<TNamed*>  fPtrTNamed; //||
+   TEST_CONT<const TNamed*>  fPtrConstTNamed; //||
 #else
-   std::TEST_CONT<TNamed>   fTNamed;    //
-   std::TEST_CONT<TNamed*>  fPtrTNamed; //
-   std::TEST_CONT<const TNamed*>  fPtrConstTNamed; //
+   TEST_CONT<TNamed>   fTNamed;    //
+   TEST_CONT<TNamed*>  fPtrTNamed; //
+   TEST_CONT<const TNamed*>  fPtrConstTNamed; //
 #endif
 
 #if defined(R__NO_POLYMORPH_CLASSDEF_NONTOBJECT)
-   std::TEST_CONT<THelper*>         fPtrTHelperDerived; //!
-   std::TEST_CONT<HelperClassDef*>  fPtrHelperDerived;  //!
+   TEST_CONT<THelper*>         fPtrTHelperDerived; //!
+   TEST_CONT<HelperClassDef*>  fPtrHelperDerived;  //!
 #else
-   std::TEST_CONT<THelper*>         fPtrTHelperDerived;
-   std::TEST_CONT<HelperClassDef*>  fPtrHelperDerived; 
+   TEST_CONT<THelper*>         fPtrTHelperDerived;
+   TEST_CONT<HelperClassDef*>  fPtrHelperDerived; 
 #endif
 
 #if defined(R__NO_NESTED_CONTAINER)
-   std::TEST_CONT<std::TEST_CONT<Helper> > fNested;  //! this version of ROOT does not support nested container
-   std::TEST_CONT<std::vector<Helper> >    fNestedV; //!
-   std::TEST_CONT<std::list<Helper> >      fNestedL; //!
-   std::TEST_CONT<std::deque<Helper> >     fNestedD; //!
-   std::TEST_CONT<std::TEST_CONT<Helper> >*fNestedPtr;//!
+   TEST_CONT<TEST_CONT<Helper> > fNested;  //! this version of ROOT does not support nested container
+   TEST_CONT<std::vector<Helper> >    fNestedV; //!
+   TEST_CONT<std::list<Helper> >      fNestedL; //!
+   TEST_CONT<std::deque<Helper> >     fNestedD; //!
+   TEST_CONT<TEST_CONT<Helper> >*fNestedPtr;//!
 #else
-   std::TEST_CONT<std::TEST_CONT<Helper> > fNested;  //
-   std::TEST_CONT<std::vector<Helper> >    fNestedV; //
-   std::TEST_CONT<std::list<Helper> >      fNestedL; //
-   std::TEST_CONT<std::deque<Helper> >     fNestedD; //
-   std::TEST_CONT<std::TEST_CONT<Helper> >*fNestedPtr;//
+   TEST_CONT<TEST_CONT<Helper> > fNested;  //
+   TEST_CONT<std::vector<Helper> >    fNestedV; //
+   TEST_CONT<std::list<Helper> >      fNestedL; //
+   TEST_CONT<std::deque<Helper> >     fNestedD; //
+   TEST_CONT<TEST_CONT<Helper> >*fNestedPtr;//
 #endif
 
    bool SetOrVerifyEnum(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {

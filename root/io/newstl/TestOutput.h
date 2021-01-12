@@ -12,6 +12,7 @@
 #include <string>
 
 #include "TClass.h"
+#include "ROOT/RVec.hxx"
 
 namespace TestDebug {
    enum { kValues    = 1<<0, 
@@ -51,6 +52,12 @@ void TestError(const std::string &test, const std::string &msg) {
 
 template <class T> void TestError(const std::string &test, const T &orig, const T &copy);
 template <class T> void TestError(const std::string &test, T* orig, T* copy);
+
+template <class T> void TestError(const std::string &test, 
+                                  const ROOT::RVec<T> &/*orig*/, 
+                                  const ROOT::RVec<T> &/*copy*/) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
 
 template <class T> void TestError(const std::string &test, 
                                   const std::vector<T> &/*orig*/, 

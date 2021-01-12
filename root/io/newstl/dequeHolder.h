@@ -6,7 +6,7 @@
 #undef TEST_CONT_HOLDER 
 #endif
 
-#define TEST_CONT deque
+#define TEST_CONT std::deque
 #define TEST_CONT_HOLDER dequeHolder
 
 #include "contHolder.h"

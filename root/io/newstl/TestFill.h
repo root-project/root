@@ -1,6 +1,8 @@
 #ifndef TEST_FILL_H
 #define TEST_FILL_H
 
+#include "ROOT/RVec.hxx"
+
 template <class T> void fill(T& filled, UInt_t seed);
 template <class F, class S> void fill(std::pair<F, S> &filled, UInt_t seed);
 template <class F, class S> void fill(std::pair<F, S*> &filled, UInt_t seed);
@@ -188,6 +190,17 @@ void fillDerived(HelperClassDef& input, UInt_t seed) {
    fill(*val,seed);
 }
 
+template <class T> void fillDerived(ROOT::RVec<T*>& filled, UInt_t seed) {
+   UInt_t size = seed%10;
+
+   filled.clear();
+   for(UInt_t i=0; i<size; i++) {
+      T* val = createDerived( (T*)0 );
+      fillDerived(*val,seed*10+i);
+      filled.push_back(val);
+  }  
+}
+
 template <class T> void fillDerived(std::vector<T*>& filled, UInt_t seed) {
    UInt_t size = seed%10;
 
@@ -217,6 +230,17 @@ template <class T> void fillDerived(std::list<T*>& filled, UInt_t seed) {
    for(UInt_t i=0; i<size; i++) {
       T* val =  createDerived( (T*)0 );
       fillDerived(*val,seed*10+i);
+      filled.push_back(val);
+  }  
+}
+
+template <class T> void fill(ROOT::RVec<T*>& filled, UInt_t seed) {
+   UInt_t size = seed%10;
+
+   filled.clear();
+   for(UInt_t i=0; i<size; i++) {
+      T* val = new T;
+      fill(*val,seed*10+i);
       filled.push_back(val);
   }  
 }

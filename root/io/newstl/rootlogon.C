@@ -8,7 +8,8 @@ enum EWhich {
    kMultiSet = 16,
    kMap = 32,
    kMultiMap = 64,
-   kEnd = 128
+   kRVec = 128,
+   kEnd = 256
 };
 
 int which = kEnd - 1;
