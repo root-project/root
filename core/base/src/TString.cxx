@@ -126,8 +126,7 @@ TString::TString(const std::string &s)
 TString::TString(const char *cs, Ssiz_t n)
 {
    if (n < 0) {
-      char *data = Init(0, 0);
-      memcpy(data, "", 0);
+      Zero();
       return;
    }
    char *data = Init(n, n);
@@ -156,6 +155,11 @@ TString::TString(char c)
 
 TString::TString(char c, Ssiz_t n)
 {
+	if (n < 0)
+	{
+		Zero();
+		return;
+	}
    char *data = Init(n, n);
    while (n--) data[n] = c;
 }
@@ -210,11 +214,11 @@ TString::TString(const TSubString& substr)
 TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
 {
    if (n1 < 0) {
-      Error("TString::TString", "Negative first length!");
+      Zero();
       return;
    }
    if (n2 < 0) {
-      Error("TString::TString", "Negative second length!");
+      Zero();
       return;
    }
    if (!a1) n1=0;
@@ -239,6 +243,11 @@ TString::~TString()
 
 char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
 {
+	if (capacity < 0 || nchar < 0)
+	{
+		Zero();
+		return;
+	}
    if (capacity > MaxSize()) {
       Error("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
       capacity = MaxSize();
@@ -362,6 +371,11 @@ TString& TString::operator=(const TSubString &substr)
 
 TString& TString::Append(char c, Ssiz_t rep)
 {
+	if (rep < 0)
+	{
+		Zero();
+		return;
+	}
    if (!rep) return *this;
 
    Ssiz_t len = Length();
@@ -403,6 +417,11 @@ TString& TString::Append(char c, Ssiz_t rep)
 
 Ssiz_t TString::Capacity(Ssiz_t nc)
 {
+	if (nc < 0)
+	{
+		Zero();
+		return;
+	}
    if (nc > Length())
       Clone(nc);
 
