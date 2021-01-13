@@ -223,13 +223,13 @@ public:
       kNo
    };
 
-protected:
 
    struct TF1FunctorPointer {
       virtual  ~TF1FunctorPointer() {}
       virtual  TF1FunctorPointer * Clone() const = 0;
    };
 
+protected:
 
    enum EFType {
       kFormula = 0,      // formula functions which can be stored,
@@ -268,7 +268,7 @@ protected:
    std::unique_ptr<TFormula>   fFormula;        //Pointer to TFormula in case when user define formula
    std::unique_ptr<TF1Parameters> fParams;   //Pointer to Function parameters object (exists only for not-formula functions)
    std::unique_ptr<TF1AbsComposition> fComposition; //Pointer to composition (NSUM or CONV)
-   //TF1AbsComposition *fComposition_ptr{nullptr};   // saved pointer (unique_ptr is transient)
+   TF1AbsComposition *fComposition_ptr{nullptr};   //saved pointer (unique_ptr is transient)
 
    /// General constructor for TF1. Most of the other constructors delegate on it
    TF1(EFType functionType, const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList, TF1Parameters *params = nullptr, TF1FunctorPointer * functor = nullptr):

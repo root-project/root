@@ -3583,8 +3583,8 @@ void TF1::Streamer(TBuffer &b)
             R__LOCKGUARD(gROOTMutex);
             gROOT->GetListOfFunctions()->Add(this);
          }
-         if (v >= 10)
-            //fComposition = std::unique_ptr<TF1AbsComposition>(fComposition_ptr);
+         if (v >= 10 && v < 11)
+            fComposition = std::unique_ptr<TF1AbsComposition>(fComposition_ptr);
          return;
       } else {
          ROOT::v5::TF1Data fold;
