@@ -66,11 +66,11 @@
               </item>
             </layout>
           </widget>
-          <widget class="QWidget" name="TCanvasTab">
+          <widget class="QWidget" name="RCanvasTab">
             <attribute name="title" >
-              <string>TCanvas</string>
+              <string>RCanvas</string>
             </attribute>
-            <layout class="QGridLayout" name="canvasGridLayout">
+            <layout class="QGridLayout" name="rcanvasGridLayout">
               <property name="margin" >
                 <number>2</number>
               </property>
@@ -78,7 +78,38 @@
                 <number>2</number>
               </property>
               <item row="0" column="0" >
-                <widget class="TCanvasWidget" name="fxCanvasWidget" >
+                <widget class="RCanvasWidget" name="fxRCanvasWidget" >
+                  <property name="sizePolicy" >
+                    <sizepolicy>
+                      <hsizetype>7</hsizetype>
+                      <vsizetype>7</vsizetype>
+                      <horstretch>0</horstretch>
+                      <verstretch>1</verstretch>
+                    </sizepolicy>
+                  </property>
+                  <property name="minimumSize" >
+                    <size>
+                      <width>100</width>
+                      <height>100</height>
+                    </size>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+          <widget class="QWidget" name="TCanvasTab">
+            <attribute name="title" >
+              <string>TCanvas</string>
+            </attribute>
+            <layout class="QGridLayout" name="tcanvasGridLayout">
+              <property name="margin" >
+                <number>2</number>
+              </property>
+              <property name="spacing" >
+                <number>2</number>
+              </property>
+              <item row="0" column="0" >
+                <widget class="TCanvasWidget" name="fxTCanvasWidget" >
                   <property name="sizePolicy" >
                     <sizepolicy>
                       <hsizetype>7</hsizetype>
@@ -103,6 +134,7 @@
   </widget>
   <layoutdefault spacing="3" margin="3" />
   <includes>
+    <include location="local">RCanvasWidget.h</include>
     <include location="local">TCanvasWidget.h</include>
   </includes>
   <connections>
@@ -120,6 +152,9 @@
     </connection>
   </connections>
   <customwidgets>
+    <customwidget>
+      <class>RCanvasWidget</class>
+    </customwidget>
     <customwidget>
       <class>TCanvasWidget</class>
     </customwidget>
