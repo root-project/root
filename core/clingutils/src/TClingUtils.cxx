@@ -4484,7 +4484,13 @@ ROOT::ESTLType ROOT::TMetaUtils::IsSTLCont(const clang::RecordDecl &cl)
    //                           For example: vector<deque<int>> has answer -1
 
    if (!IsStdClass(cl)) {
-      return ROOT::kNotSTL;
+      auto *nsDecl = llvm::dyn_cast<clang::NamespaceDecl>(cl.getDeclContext());
+      if (cl.getName() != "RVec" || nsDecl == nullptr || nsDecl->getName() != "VecOps")
+         return ROOT::kNotSTL;
+
+      auto *parentNsDecl = llvm::dyn_cast<clang::NamespaceDecl>(cl.getDeclContext()->getParent());
+      if (parentNsDecl == nullptr || parentNsDecl->getName() != "ROOT")
+         return ROOT::kNotSTL;
    }
 
    return STLKind(cl.getName());
@@ -4837,7 +4843,7 @@ ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
 {
    static const char *stls[] =                  //container names
       {"any","vector","list", "deque","map","multimap","set","multiset","bitset",
-         "forward_list","unordered_set","unordered_multiset","unordered_map","unordered_multimap",0};
+         "forward_list","unordered_set","unordered_multiset","unordered_map","unordered_multimap", "RVec", 0};
    static const ROOT::ESTLType values[] =
       {ROOT::kNotSTL, ROOT::kSTLvector,
        ROOT::kSTLlist, ROOT::kSTLdeque,
@@ -4847,6 +4853,7 @@ ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
        ROOT::kSTLforwardlist,
        ROOT::kSTLunorderedset, ROOT::kSTLunorderedmultiset,
        ROOT::kSTLunorderedmap, ROOT::kSTLunorderedmultimap,
+       ROOT::kROOTRVec,
        ROOT::kNotSTL
       };
    //              kind of stl container
