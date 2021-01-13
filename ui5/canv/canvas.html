@@ -27,13 +27,18 @@
 
    <script type='text/javascript'>
 
-      let batch_mode = JSROOT.decodeUrl().has("batch_mode"),
+      let url = JSROOT.decodeUrl(),
+          is_batch = url.has("batch_mode"),
+          is_ui5 = !url.has("noopenui") && !is_batch,
           _prereq = "v7";
 
-      if (batch_mode)
-        JSROOT.batch_mode = true;
-      else
-        _prereq += ";openui5";
+      if (is_batch)
+         JSROOT.batch_mode = true;
+
+      if (is_ui5)
+         _prereq += ";openui5";
+      else if (!is_batch)
+         _prereq += ";jq2d";
 
       JSROOT.connectWebWindow({
          prereq: _prereq,
@@ -41,14 +46,16 @@
          // openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
       }).then(handle => {
          let painter = new JSROOT.v7.RCanvasPainter(null, null);
-         painter.batch_mode = batch_mode;
+         painter.online_canvas = true;
+         painter.use_openui = is_ui5;
+         painter.batch_mode = is_batch;
 
          if (window) {
             window.onbeforeunload = () => painter.closeWebsocket(true);
             if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
          }
 
-         if (!batch_mode) {
+         if (is_ui5) {
             painter.use_openui = true;
             painter._window_handle = handle;
 
@@ -71,8 +78,6 @@
             painter.setDom("CanvasDiv"); // just assign id, nothing else is happens
 
             painter.useWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
-
-            if (!batch_mode) JSROOT.Painter.registerForResize(painter);
          }
       });
 
