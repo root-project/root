@@ -4,7 +4,10 @@
 #include <QWidget>
 #include "ui_ExampleWidget.h"
 
+#include <memory>
+
 class TH1F;
+class TH2I;
 
 class ExampleWidget : public QWidget, public Ui::ExampleWidget
 {
@@ -12,7 +15,8 @@ class ExampleWidget : public QWidget, public Ui::ExampleWidget
 
    protected:
 
-      TH1F *fHisto{nullptr};
+      TH1F *fHisto{nullptr};  ///< histogram for display in TCanvas
+      std::shared_ptr<TH2I> fHisto2; ///< histogram for display in RCanvas
 
    public:
 

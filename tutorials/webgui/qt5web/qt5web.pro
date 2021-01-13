@@ -24,8 +24,10 @@ unix:QMAKE_CXXFLAGS += -fPIC
 FORMS += ExampleWidget.ui
 
 HEADERS += ExampleWidget.h \
-           TCanvasWidget.h
+           TCanvasWidget.h \
+           RCanvasWidget.h
 
 SOURCES += ExampleWidget.cpp \
            TCanvasWidget.cpp \
+           RCanvasWidget.cpp \
            ExampleMain.cpp
