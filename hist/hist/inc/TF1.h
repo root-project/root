@@ -798,7 +798,7 @@ inline T TF1::EvalParTempl(const T *data, const Double_t *params)
    assert(fType == EFType::kTemplScalar || fType == EFType::kTemplVec);
    if (!params) params = (Double_t *)fParams->GetParameters();
    if (fFunctor)
-      return ((TF1FunctorPointerImpl<T> *)fFunctor)->fImpl(data, params);
+      return ((TF1FunctorPointerImpl<T> *)fFunctor.get())->fImpl(data, params);
 
    // this should throw an error
    // we nned to implement a vectorized GetSave(x)
@@ -818,7 +818,7 @@ inline double TF1::EvalParVec(const Double_t *data, const Double_t *params)
    }
 
    if (fFunctor) {
-      res = ((TF1FunctorPointerImpl<ROOT::Double_v> *) fFunctor)->fImpl(d.data(), params);
+      res = ((TF1FunctorPointerImpl<ROOT::Double_v> *) fFunctor.get())->fImpl(d.data(), params);
    } else {
       //    res = GetSave(x);
       return TMath::SignalingNaN();
