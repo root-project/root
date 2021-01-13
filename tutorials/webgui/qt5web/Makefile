@@ -15,8 +15,8 @@ ifneq ($(findstring -std=c++17,$(ROOTCFLAGS)),)
     QMAKEOPTFLAGS := "CONFIG+=c++17"
 endif
 
-HDRS = ExampleWidget.h 
-SRCS = ExampleWidget.cpp ExampleMain.cpp  
+HDRS = ExampleWidget.h TCanvasWidget.h
+SRCS = ExampleWidget.cpp TCanvasWidget.cpp ExampleMain.cpp  
 UIS = ExampleWidget.ui
 
 Makefile.qt: qt5web.pro $(UIS)
