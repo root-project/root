@@ -38,6 +38,7 @@
 #pragma link C++ class TF1AbsComposition + ;
 #pragma link C++ class TF1Convolution + ;
 #pragma link C++ class TF1NormSum + ;
+#pragma link C++ class TF1::TF1FunctorPointer + ;
 #pragma link C++ class std::vector < std::unique_ptr < TF1 >> +;
 #pragma link C++ class std::vector < std::unique_ptr < TF1AbsComposition >> +;
 #pragma link C++ class TF2-;
