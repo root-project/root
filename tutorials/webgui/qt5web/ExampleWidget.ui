@@ -77,6 +77,24 @@
               <property name="spacing" >
                 <number>2</number>
               </property>
+              <item row="0" column="0" >
+                <widget class="TCanvasWidget" name="fxCanvasWidget" >
+                  <property name="sizePolicy" >
+                    <sizepolicy>
+                      <hsizetype>7</hsizetype>
+                      <vsizetype>7</vsizetype>
+                      <horstretch>0</horstretch>
+                      <verstretch>1</verstretch>
+                    </sizepolicy>
+                  </property>
+                  <property name="minimumSize" >
+                    <size>
+                      <width>100</width>
+                      <height>100</height>
+                    </size>
+                  </property>
+                </widget>
+              </item>
             </layout>
           </widget>
         </widget>
@@ -84,6 +102,9 @@
     </layout>
   </widget>
   <layoutdefault spacing="3" margin="3" />
+  <includes>
+    <include location="local">TCanvasWidget.h</include>
+  </includes>
   <connections>
     <connection>
       <sender>InfoBtn</sender>
@@ -98,5 +119,9 @@
       <slot>ExitButton_clicked()</slot>
     </connection>
   </connections>
-
+  <customwidgets>
+    <customwidget>
+      <class>TCanvasWidget</class>
+    </customwidget>
+  </customwidgets>
 </ui>
