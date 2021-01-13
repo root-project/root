@@ -965,7 +965,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
            while (!buf.empty()) {
               std::string sub = buf;
-              auto pos = buf.find(";;");
+              pos = buf.find(";;");
               if (pos == std::string::npos) {
                  sub = buf;
                  buf.clear();
