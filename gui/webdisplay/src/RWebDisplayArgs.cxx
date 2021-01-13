@@ -20,6 +20,7 @@
 #include <ROOT/RWebWindow.hxx>
 
 #include "TROOT.h"
+#include <string>
 
 ROOT::Experimental::RLogChannel &ROOT::Experimental::WebGUILog() {
    static RLogChannel sLog("ROOT.WebGUI");
@@ -155,6 +156,9 @@ ROOT::Experimental::RWebDisplayArgs &ROOT::Experimental::RWebDisplayArgs::SetBro
    if (pos == 0) {
       SetUrlOpt(kind.substr(1));
       kind.clear();
+   } else if (pos != std::string::npos) {
+      SetUrlOpt(kind.substr(pos+1));
+      kind.resize(pos);
    }
 
    pos = kind.find("size:");
@@ -171,6 +175,12 @@ ROOT::Experimental::RWebDisplayArgs &ROOT::Experimental::RWebDisplayArgs::SetBro
       if (epos == std::string::npos) epos = kind.length();
       SetPosAsStr(kind.substr(pos+4, epos-pos-4));
       kind.erase(pos, epos-pos);
+   }
+
+   // very special handling of qt5 which can specify pointer as a string
+   if (kind.find("qt5:") == 0) {
+      SetDriverData((void *) std::stoul(kind.substr(4)));
+      kind.resize(3);
    }
 
    // remove all trailing spaces
