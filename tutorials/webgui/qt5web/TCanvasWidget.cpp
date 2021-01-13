@@ -1,3 +1,13 @@
+// Author: Sergey Linev, GSI  13/01/2021
+
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TCanvasWidget.h"
 
 #include "TCanvas.h"
@@ -15,7 +25,6 @@
 #include <cstdio>
 
 #include "TWebCanvas.h"
-
 
 TCanvasWidget::TCanvasWidget(QWidget *parent) : QWidget(parent)
 {

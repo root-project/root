@@ -1,3 +1,13 @@
+// Author: Sergey Linev, GSI  13/01/2021
+
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ExampleWidget_h
 #define ExampleWidget_h
 
@@ -20,7 +30,7 @@ class ExampleWidget : public QWidget, public Ui::ExampleWidget
 
    public:
 
-      ExampleWidget(QWidget *parent = 0, const char* name = 0);
+      ExampleWidget(QWidget *parent = nullptr, const char* name = nullptr);
 
       virtual ~ExampleWidget();
 

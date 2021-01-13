@@ -1,3 +1,12 @@
+// Author: Sergey Linev, GSI  13/01/2021
+
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include <QTimer>
 #include <QApplication>
@@ -24,12 +33,11 @@ int main(int argc, char **argv)
    timer.setSingleShot(false);
    timer.start(20);
 
-   // create instance, which should be used everywhere
+   // top widget
    ExampleWidget* widget = new ExampleWidget();
 
    QObject::connect(&myapp, &QApplication::lastWindowClosed, &myapp, &QApplication::quit);
 
-   widget->ensurePolished();
    widget->show();
 
    int res = myapp.exec();

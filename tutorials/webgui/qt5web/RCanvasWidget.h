@@ -1,3 +1,13 @@
+// Author: Sergey Linev, GSI  13/01/2021
+
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef RCanvasWidget_H
 #define RCanvasWidget_H
 
