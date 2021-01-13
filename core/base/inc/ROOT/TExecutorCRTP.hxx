@@ -145,12 +145,6 @@ public:
    template<class T> T* Reduce(const std::vector<T*> &mergeObjs);
    template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
-   //////////////////////////////////////////////////////////////////////////
-   /// \brief Return the number of pooled workers.
-   ///
-   /// \return The number of workers in the pool.
-   unsigned GetPoolSize() const = delete; // must be implemented in derived class
-
 private:
 
    SubC &Derived()
