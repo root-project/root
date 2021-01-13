@@ -697,6 +697,7 @@ void TFormula::Copy(TObject &obj) const
    }
 
    // use copy-constructor of TMethodCall
+   // if c++-14 could use std::make_unique
    TMethodCall *m = (fMethod) ? new TMethodCall(*fMethod) : nullptr;
    fnew.fMethod.reset(m);
    TMethodCall *gm = (fGradMethod) ? new TMethodCall(*fGradMethod) : nullptr;
