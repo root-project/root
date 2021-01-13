@@ -103,5 +103,5 @@ TEST(TTabComTests, CompleteTObj)
    // FIXME: See ROOT-10989
    ASSERT_STREQ(expected.c_str(), GetCompletions("TObj",
                                                  /*ignore=*/{"TObjectDisplayItem", "TObjectDrawable", "TObjectHolder",
-                                                             "TObjectItem"}).c_str());
+                                                             "TObjectItem", "TObjectElement"}).c_str());
 }
