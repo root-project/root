@@ -25,10 +25,12 @@ int main() {
    }
 #endif
 
+#ifndef R__WIN32
    ROOT::Internal::TExecutor ex2{ROOT::EExecutionPolicy::kMultiProcess};
    if(ex2.Policy()!= ROOT::EExecutionPolicy::kMultiProcess) {
          return 3;
    }
+#endif
 
    ROOT::Internal::TExecutor ex3{ROOT::EExecutionPolicy::kSequential};
    if(ex3.Policy()!= ROOT::EExecutionPolicy::kSequential) {
@@ -43,8 +45,10 @@ int main() {
    res = ExecutorTest(ex1);
    if(res) return res+offset+4;
 #endif
+#ifndef R__WIN32
    res = ExecutorTest(ex2);
    if(res) return res+2*offset+4;
+#endif
    res = ExecutorTest(ex3);
    if(res) return res+3*offset+4;
    return res? res+4*offset: 0;
