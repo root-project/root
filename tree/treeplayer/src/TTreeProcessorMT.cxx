@@ -368,6 +368,12 @@ Internal::FriendInfo TTreeProcessorMT::GetFriendInfo(TTree &tree)
    std::vector<Internal::NameAlias> friendNames;
    std::vector<std::vector<std::string>> friendFileNames;
 
+   // Typically, the correct way to call GetListOfFriends would be `tree.GetTree()->GetListOfFriends()`
+   // (see e.g. the discussion at https://github.com/root-project/root/issues/6741).
+   // However, in this case, in case we are dealing with a TChain we really only care about the TChain's
+   // list of friends (which will need to be rebuilt in each processing task) while friends of the TChain's
+   // internal TTree, if any, will be automatically loaded in each task just like they would be automatically
+   // loaded here if we used tree.GetTree()->GetListOfFriends().
    const auto friends = tree.GetListOfFriends();
    if (!friends)
       return Internal::FriendInfo();
