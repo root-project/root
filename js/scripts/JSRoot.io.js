@@ -1645,16 +1645,18 @@ JSROOT.define(['rawinflate'], () => {
      * @param {binary} sinfo_rawdata - data of streamer info root.bin request
      * @returns {object} - created JavaScript object
      * @example
-     * JSROOT.httpRequest("http://localhost:8080/Files/job1.root/hpx/root.bin", "buf")
-     *       .then(obj_data => JSROOT.httpRequest("http://localhost:8080/StreamerInfo/root.bin", "buf")
-     *          .then(si_data => JSROOT.reconstructObject("TH1F", obj_data, si_data)))
-     *       .then(histo => console.log(`Get histogram with title = ${histo.fTitle}`))
-     *       .catch(err => console.error(err));
+     * async function read_binary_and_draw() {
+     *    await JSROOT.require("io");
+     *    let obj_data = await JSROOT.httpRequest("http://localhost:8080/Files/job1.root/hpx/root.bin", "buf");
+     *    let si_data = await JSROOT.httpRequest("http://localhost:8080/StreamerInfo/root.bin", "buf");
+     *    let histo = await JSROOT.reconstructObject("TH1F", obj_data, si_data);
+     *    console.log(`Get histogram with title = ${histo.fTitle}`);
+     * }
+     * read_binary_and_draw();
      *
-     * // same data via root.json request
+     * // request same data via root.json request
      * JSROOT.httpRequest("http://localhost:8080/Files/job1.root/hpx/root.json", "object")
-     *       .then(histo => console.log(`Get histogram with title = ${histo.fTitle}`))
-     *       .catch(err => console.error(err.message)); */
+     *       .then(histo => console.log(`Get histogram with title = ${histo.fTitle}`)); */
    JSROOT.reconstructObject = function(class_name, obj_rawdata, sinfo_rawdata) {
 
       let file = new TFile;
@@ -3083,11 +3085,10 @@ JSROOT.define(['rawinflate'], () => {
      *  - [File]{@link https://developer.mozilla.org/en-US/docs/Web/API/File} instance which let read local files from browser
      *  - [ArrayBuffer]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer} instance with complete file content
      * @param {string|object} arg - argument for file open like url, see details
-     * @returns {object} - Promise with TFile instance when file is opened
+     * @returns {object} - Promise with {@link JSROOT.TFile} instance when file is opened
      * @example
      * JSROOT.openFile("https://root.cern/js/files/hsimple.root")
      *        .then(f => console.log(`Open file ${f.getFileName()}`)); */
-
    JSROOT.openFile = function(arg) {
 
       let file;
