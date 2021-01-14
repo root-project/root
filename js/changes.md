@@ -1,40 +1,55 @@
 # JSROOT changelog
 
-## Changes in v6
+## Changes in 6.0.0
 
-0. Rename JSRootCore.js -> JSRoot.core.js, eliminate all URL parameters.
-   Loading of extra functionality should be done with JSROOT methods like
-   JSROOT.require, JSROOT.loadScript, ...
-0. Generic naming convention for classes and methods, class name always starts from
-   capital letter like "ObjectPainter", function names starts from normal
-   letter like "obj.getMainPainter()"
-1. Skip IE support
-2. Upgrade d3.js to v6.1.1, due to significant changes in API skip support of older versions
-3. Make heavy use of Promise class
-4. Provide JSROOT.httpRequest() function, which returns Promise instance
-5. JSROOT.draw/JSROOT.redraw also returns Promise, skip callback parameter
-6. JSROOT.openFile() returns Promise, if callback specified, old API will be working
-7. Upgrade three.js to r121:
-   - SoftwareRenderer was deprecated
-   - WebGL used both for browser and node.js (via headless-gl)
-   - Keep use of SVGRendered as backup solution
-   - support r3d_gl, r3d_img, r3d_svg rendering options for TGeo and histos
-8. Deprecate bower package manager
-9. Upgrade MathJax.js to version 3.1.1, reliably works in browser and node.js!
-10. Provide new code loader via JSROOT.require. It uses require.js when available or emulate behaviour
-    either with plain scripts loading or via node.js require(). Introducing clean dependencies in JSROOT code.
-    Deprecates old JSROOT.AssertPrerequisites function
-11. All latex/mathjax related methods moved to special JSRoot.latex.js script, only loaded when required
-12. Do not use classes - performance is not good enough compared to Object.prototype
-13. Improve TH2 col drawings for large number of bins - up to factor 5 faster
-14. Rename JSROOT scripts to follow common naming convention
-15. Support openui5 sap.ui.require loader if openui5 loaded before JSRootCore.js script
-16. Update jquery to 3.5.1, openui5 to 1.82.2
-17. Add support of log2 scale for axes drawing, v7 can have arbitrary log base
+1. Major release with:
+   - incompatible changes in API
+   - heavy use of Promise class
+   - upgrade all used packages
+2. Use generic naming convention - all class names always starts from
+   capital letter like "ObjectPainter", all function names starts from small
+   letter like "painter.getObjectHint()"
+3. Rename JSRootCore.js -> JSRoot.core.js, eliminate all URL parameters.
+   Loading of extra JSROOT functionality should be done via JSROOT.require() method
+   All other scripts uses similar naming convention.
+4. JSROOT.draw()/JSROOT.redraw() functions returns Promise, deprecate callback parameter
+5. Introduce JSROOT.httpRequest() function which returns Promise instance, deprecate
+   JSROOT.NewHttpRequest() function
+6. JSROOT.openFile() returns Promise with file instance, deprecate callback parameter
+7. Provide new code loader via JSROOT.require()
+   - introduces clean dependencies in JSROOT code
+   - by default uses plain script loading emulating require.js behavior
+   - can use require.js when available
+   - uses require() method when running inside node.js
+   - supports openui5 sap.ui.require loader if available before JSRoot.core.js
+   - deprecates old JSROOT.AssertPrerequisites() function
+8. Upgrade d3.js to v6.1.1, skip support of older versions
+9. Upgrade three.js to r121:
+   - SoftwareRenderer deprecated and removed
+   - let use WebGL for browser, batch and node.js (via headless-gl)
+   - support r3d_gl, r3d_img, r3d_svg rendering options for TGeo and histograms
+   - keep support of SVGRendered as backup solution
+10. Upgrade MathJax.js to version 3.1.1
+   - reliably works in browser and node.js!
+   - all latex/mathjax related methods moved to special JSRoot.latex.js script, loaded on demand
+11. Update jquery to 3.5.1, openui5 to 1.82.2
+12. Use JS classes only in few places - performance is not good enough compared to Object.prototype
+13. Deprecate IE support
+14. Deprecate bower package manager
+15. Add support of ZSTD compression - works only on https://root.cern/js/ website
+16. Add support of log2 scale for axes drawing, v7 can have arbitrary log base
+17. Improve TH2 col drawings for large number of bins - up to factor 5 faster
 18. Allow to move axis title to opposite position
 19. Fix zooming in color palette
-20. Add support of ZSTD compression
-21. Implement monitoring of object inspector
+20. Implement monitoring of object inspector
+
+
+## Changes in 5.9.1
+
+1. Fix zooming in color palette
+2. Fix interactive update of TGraph painting on time scale
+3. Fix I/O error in reading std::map (#204)
+4. Fix functionality of "open all" / "close all" GUI buttons
 
 
 ## Changes in 5.9.0

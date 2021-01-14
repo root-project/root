@@ -3668,7 +3668,7 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string|object} dom - id of div element to draw or directly DOMElement
      * @param {object} obj - object to draw, object type should be registered before in JSROOT
      * @param {string} opt - draw options separated by space, comma or semicolon
-     * @param {function} [callback] - deprecated, function called when drawing is completed, first argument is object painter instance
+     * @param {function} [callback] - deprecated, will be removed in 6.2.0, called with painter object
      * @returns {Promise} with painter object only if callback parameter is not specified
      * @requires painter
      * @desc An extensive list of support draw options can be found on [JSROOT examples page]{@link https://root.cern/js/latest/examples.htm}
@@ -3687,7 +3687,7 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string|object} dom - id of div element to draw or directly DOMElement
      * @param {object} obj - object to draw, object type should be registered before in JSROOT
      * @param {string} opt - draw options
-     * @param {function} [callback] - function called when redrawing is completed, first argument will be object painter instance
+     * @param {function} [callback] - deprecated, will be removed in 6.2.0, called with painter object
      * @returns {Promise} with painter used only when callback parameter is not specified
      * @requires painter
      * @desc If drawing was not done before, it will be performed with {@link JSROOT.draw}.
