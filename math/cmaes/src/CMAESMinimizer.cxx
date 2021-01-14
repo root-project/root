@@ -25,7 +25,7 @@
 #include "Math/Error.h"
 #include "Fit/ParameterSettings.h"
 
-#include "errstats.h" // libcmaes extras.
+#include "libcmaes/errstats.h" // libcmaes extras.
 
 #ifdef USE_ROOT_ERROR
 #include "TROOT.h"
@@ -64,7 +64,7 @@ namespace ROOT
       if (this == &rhs) return *this;
       return *this;
     }
-    
+
     TCMAESMinimizer::~TCMAESMinimizer()
     {
     }
@@ -102,7 +102,7 @@ namespace ROOT
       //fDim = fun.NDim();
       fWithGradient = true;
     }
-    
+
     bool TCMAESMinimizer::SetVariable(unsigned int ivar, const std::string & name, double val, double step)
     {
       if (ivar > fInitialX.size() ) {
@@ -110,8 +110,8 @@ namespace ROOT
 	return false;
       }
       if (ivar == fInitialX.size() ) {
-	fInitialX.push_back(val); 
-	fNames.push_back(name);	
+	fInitialX.push_back(val);
+	fNames.push_back(name);
 	fInitialSigma.push_back(step);
 	fLBounds.push_back(-std::numeric_limits<double>::max());
 	fUBounds.push_back(std::numeric_limits<double>::max());
@@ -126,7 +126,7 @@ namespace ROOT
       else {
 	if (step==0.) {
 	  if (fInitialSigma[ivar]!=0.) { //Constraining a free variable.
-	    fFreeDim--; 
+	    fFreeDim--;
 	    fVariablesType[ivar] = 1;
 	  }
 	}
@@ -139,7 +139,7 @@ namespace ROOT
 	fInitialX[ivar] = val;
 	fNames[ivar] = name;
 	fInitialSigma[ivar] = step;
-      } 
+      }
       return true;
     }
 
@@ -199,11 +199,11 @@ namespace ROOT
       fFixedVariables.insert(std::pair<int,double>(ivar,val));
       return true;
     }
-    
+
     bool TCMAESMinimizer::SetVariableValue(unsigned int ivar, double val )
     {
       if (ivar >= fInitialX.size() ) {
-	//TODO string that gives value of ivar and fInitialX.size() 
+	//TODO string that gives value of ivar and fInitialX.size()
 	MATH_ERROR_MSG("TCMAESMinimizer::SetVariableValue","ivar out of range");
 	return false;
       }
@@ -220,7 +220,7 @@ namespace ROOT
       fInitialX[ivar] = val;
       return true;
     }
-    
+
     bool TCMAESMinimizer::SetVariableValues(const double * x)
     {
       if (x == NULL)
@@ -242,7 +242,7 @@ namespace ROOT
       fInitialSigma[ivar] = step;
       return true;
     }
-    
+
     bool TCMAESMinimizer::SetVariableLowerLimit(unsigned int ivar, double lower)
     {
       if (ivar > fLBounds.size())
@@ -289,7 +289,7 @@ namespace ROOT
 	return true;
       return false;
     }
-    
+
     bool TCMAESMinimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings &varObj) const
     {
       if (ivar >= fInitialX.size())
@@ -356,15 +356,15 @@ namespace ROOT
       cmaparams.set_elitism(elitist);
       cmaparams.set_uh(uh);
     }
-    
+
     bool TCMAESMinimizer::Minimize()
     {
       if (!fObjFunc) {
-	MATH_ERROR_MSG("TCMAESMinimizer::Minimize","Objective function has not been set"); 
+	MATH_ERROR_MSG("TCMAESMinimizer::Minimize","Objective function has not been set");
 	return false;
       }
-      if (!fDim) { 
-	MATH_ERROR_MSG("TCMAESMinimizer::Minimize","Dimension has not been set"); 
+      if (!fDim) {
+	MATH_ERROR_MSG("TCMAESMinimizer::Minimize","Dimension has not been set");
 	return false;
       }
       if (fDim > fInitialX.size()) {
@@ -380,7 +380,7 @@ namespace ROOT
       //std::cerr << "cmaesOpt ptr: " << cmaesOpt << std::endl;
       if (cmaesOpt)
 	cmaesOpt->Print(std::cout);
-      
+
       FitFunc ffit = [this](const double *x, const int N)
 	{
 	  /*std::copy(x,x+N,std::ostream_iterator<double>(std::cout," "));
@@ -388,7 +388,7 @@ namespace ROOT
 	  (void)N;
 	  return (*fObjFunc)(x);
 	};
-      
+
       // gradient function.
       //std::cout << "fWithGradient=" << fWithGradient << std::endl;
       GradFunc gfit = nullptr;
@@ -436,7 +436,7 @@ namespace ROOT
       int seed = 0;
       int elitist = 0; // elitism: forces best solution in various manners
       int uh = 0; // uncertainty handling, for noisy functions
-      
+
       // set hyper-parameters according to IOptions object.
       if (cmaesOpt)
 	{
@@ -454,7 +454,7 @@ namespace ROOT
 	  cmaesOpt->GetValue("elitist",elitist);
 	  cmaesOpt->GetValue("uh",uh);
 	}
-      
+
       if (gDebug > 0)
 	{
 	  std::cout << "Running CMA-ES with dim=" << fDim << " / sigma0=" << sigma0scaled << " / lambda=" << lambda << " / fTol=" << Tolerance() << " / with_bounds=" << fWithBounds << " / with_gradient=" << fWithGradient << " / linear_scaling=" << fWithLinearScaling << " / maxiter=" << maxiter << " / maxfevals=" << maxfevals << " / mtfeval=" << mtfeval << std::endl;
@@ -550,7 +550,7 @@ namespace ROOT
       //      and stored within the solution object.
       return fCMAsols.edm();
     }
-    
+
     const double* TCMAESMinimizer::Errors() const
     {
       fErrors.clear();
@@ -571,7 +571,7 @@ namespace ROOT
 	fErrors.push_back(verrors(i));
       return &fErrors.front();
     }
-    
+
     unsigned int TCMAESMinimizer::NCalls() const
     {
       return fCMAsols.nevals();
@@ -619,7 +619,7 @@ namespace ROOT
 	  (void)N;
 	  return (*fObjFunc)(x);
 	};
-      
+
       // runopt is a flag which specifies if only lower or upper error needs to be run. TODO: support for one bound only in libcmaes ?
       int samplesize = 10;
       if (gDebug > 0)
@@ -651,24 +651,24 @@ namespace ROOT
       errUp = le.get_err_max();
       return true;
     }
-    
+
     bool TCMAESMinimizer::Scan(unsigned int i, unsigned int &nstep, double *x, double *y, double xmin, double xmax)
     {
       std::vector<std::pair<double,double>> result;
       std::vector<double> params = fValues;
       double amin = MinValue();
       result.push_back(std::pair<double,double>(params[i],amin));
-      
+
       double low=xmin, high=xmax;
       if (low <= high && nstep-1 >= 2)
 	{
 	  if (low == 0 && high == 0)
 	    {
 	      low = fValues[i] - 2.0*fErrors.at(i);
-	      high = fValues[i] + 2.0*fErrors.at(i); 
+	      high = fValues[i] + 2.0*fErrors.at(i);
 	    }
-	  
-	  if (low == 0 && high == 0 
+
+	  if (low == 0 && high == 0
 	      && (fLBounds[i] > -std::numeric_limits<double>::max()
 		  || fUBounds[i] < std::numeric_limits<double>::max()))
 	    {
@@ -677,7 +677,7 @@ namespace ROOT
 	      if (fUBounds[i] < std::numeric_limits<double>::max())
 		high = fUBounds[i];
 	    }
-	  
+
 	  if (fLBounds[i] > -std::numeric_limits<double>::max()
 	      || fUBounds[i] < std::numeric_limits<double>::max())
 	    {
@@ -686,7 +686,7 @@ namespace ROOT
 	      if (fUBounds[i] < std::numeric_limits<double>::max())
 		high = std::min(high,fUBounds[i]);
 	    }
-	  
+
 	  double x0 = low;
 	  double stp = (high-low) / static_cast<double>(nstep-2);
 	  for (unsigned int j=0;j<nstep-1;j++)
@@ -696,7 +696,7 @@ namespace ROOT
 	      result.push_back(std::pair<double,double>(params[i],fval));
 	    }
 	}
-      
+
       for (int s=0;s<(int)nstep;s++)
 	{
 	  x[s] = result[s].first;
@@ -712,7 +712,7 @@ namespace ROOT
 	  (void)N;
 	  return (*fObjFunc)(x);
 	};
-      
+
       contour ct;
       if (fWithLinearScaling)
 	{
@@ -763,9 +763,9 @@ namespace ROOT
 	    std::cout << "\t(fixed)";
 	  else if (fVariablesType.at(i) > 1)
 	    std::cout << "\t(limited)";
-	  std::cout << std::endl;	  
+	  std::cout << std::endl;
 	}
     }
-    
+
   }
 }
