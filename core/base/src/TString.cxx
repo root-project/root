@@ -155,10 +155,9 @@ TString::TString(char c)
 
 TString::TString(char c, Ssiz_t n)
 {
-   if (n < 0)
-   {
+   if (n < 0){
       Zero();
-	  return;
+      return;
    }
 	
    char *data = Init(n, n);
@@ -244,11 +243,14 @@ TString::~TString()
 
 char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
 {
-
-   if (capacity < 0 || nchar < 0)
-   {
-      char *data = 0; // sets pointer to zero 
-      return data;
+   if (capacity < 0){
+      capacity = 0;
+   }
+   if (nchar < 0){
+      nchar = 0;   
+   }
+   if (nchar > capacity){
+      nchar = capacity;   
    }
    if (capacity > MaxSize()) {
       Error("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
