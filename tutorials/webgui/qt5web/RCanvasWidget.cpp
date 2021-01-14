@@ -11,8 +11,7 @@
 #include "RCanvasWidget.h"
 
 #include <ROOT/RCanvas.hxx>
-
-#include <QGridLayout>
+#include <ROOT/RWebDisplayArgs.hxx>
 
 RCanvasWidget::RCanvasWidget(QWidget *parent) : QWidget(parent)
 {
@@ -29,17 +28,11 @@ RCanvasWidget::RCanvasWidget(QWidget *parent) : QWidget(parent)
 
    setAcceptDrops(true);
 
-   QGridLayout *gridLayout = new QGridLayout(this);
-   gridLayout->setSpacing(10);
-   gridLayout->setMargin(1);
-
    fCanvas = new ROOT::Experimental::RCanvas();
 
-   std::string arg = "qt5:";
-   arg += std::to_string((unsigned long) this);
-   arg += "?noopenui";
+   auto where = ROOT::Experimental::RWebDisplayArgs::GetQt5EmbedQualifier(this, "noopenui");
 
-   fCanvas->Show(arg);
+   fCanvas->Show(where);
 
    fView = findChild<QWebEngineView*>("RootWebView");
    if (!fView) {
@@ -47,9 +40,8 @@ RCanvasWidget::RCanvasWidget(QWidget *parent) : QWidget(parent)
       exit(11);
    }
 
-   gridLayout->addWidget(fView);
-
-   fCanvas->SetSize({fView->width(), fView->height()});
+   fView->resize(width(), height());
+   fCanvas->SetSize({width(), height()});
 }
 
 RCanvasWidget::~RCanvasWidget()
@@ -62,5 +54,6 @@ RCanvasWidget::~RCanvasWidget()
 
 void RCanvasWidget::resizeEvent(QResizeEvent *event)
 {
-   fCanvas->SetSize({fView->width(), fView->height()});
+   fView->resize(width(), height());
+   fCanvas->SetSize({width(), height()});
 }

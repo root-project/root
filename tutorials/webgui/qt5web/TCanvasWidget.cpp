@@ -14,21 +14,11 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TEnv.h"
-#include "THttpServer.h"
-
-#include <QGridLayout>
-#include <QApplication>
-#include <QTimer>
-#include <QDropEvent>
-
-#include <cstdlib>
-#include <cstdio>
 
 #include "TWebCanvas.h"
 
 TCanvasWidget::TCanvasWidget(QWidget *parent) : QWidget(parent)
 {
-
    setObjectName( "TCanvasWidget");
 
    setSizeIncrement( QSize( 100, 100 ) );
@@ -40,10 +30,6 @@ TCanvasWidget::TCanvasWidget(QWidget *parent) : QWidget(parent)
    setCursor( Qt::CrossCursor );
 
    setAcceptDrops(true);
-
-   QGridLayout *gridLayout = new QGridLayout(this);
-   gridLayout->setSpacing(10);
-   gridLayout->setMargin(1);
 
    static int wincnt = 1;
 
@@ -74,11 +60,9 @@ TCanvasWidget::TCanvasWidget(QWidget *parent) : QWidget(parent)
 
    web->SetPadDblClickedHandler([this](TPad *pad, int x, int y) { emit PadDblClicked(pad,x,y); });
 
-   ROOT::Experimental::RWebDisplayArgs args("qt5");
-   args.SetDriverData(this); // it is parent widget for created QWebEngineView element
-   args.SetUrlOpt("noopenui");
+   auto where = ROOT::Experimental::RWebDisplayArgs::GetQt5EmbedQualifier(this, "noopenui");
 
-   web->ShowWebWindow(args);
+   web->ShowWebWindow(where);
 
    fView = findChild<QWebEngineView*>("RootWebView");
    if (!fView) {
@@ -86,11 +70,8 @@ TCanvasWidget::TCanvasWidget(QWidget *parent) : QWidget(parent)
       exit(11);
    }
 
-   gridLayout->addWidget(fView);
-
-   // QObject::connect(fView, SIGNAL(drop(QDropEvent*)), this, SLOT(dropView(QDropEvent*)));
-
-   fCanvas->SetCanvasSize(fView->width(), fView->height());
+   fView->resize(width(), height());
+   fCanvas->SetCanvasSize(width(), height());
 }
 
 TCanvasWidget::~TCanvasWidget()
@@ -127,7 +108,8 @@ void TCanvasWidget::SetPrivateCanvasFields(bool on_init)
 
 void TCanvasWidget::resizeEvent(QResizeEvent *event)
 {
-   fCanvas->SetCanvasSize(fView->width(), fView->height());
+   fView->resize(width(), height());
+   fCanvas->SetCanvasSize(width(), height());
 }
 
 void TCanvasWidget::activateEditor(TPad *pad, TObject *obj)
