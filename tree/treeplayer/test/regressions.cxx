@@ -1,5 +1,6 @@
 #include "TFile.h"
 #include "TSystem.h"
+#include "TChain.h"
 #include "TTree.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
@@ -42,6 +43,38 @@ TEST(TTreeReaderRegressions, CompositeTypeWithNameClash)
    if (iv.GetSetupStatus() == 0) {
       EXPECT_EQ(*iv, -1);
    }
+
+   gSystem->Unlink(fname);
+}
+
+// Regression test for https://github.com/root-project/root/issues/6993
+TEST(TTreeReaderRegressions, AutoloadedFriends)
+{
+   const auto fname = "treereaderautoloadedfriends.root";
+   {
+      // write a TTree and its friend to the same file:
+      // when t1 is read back, it automatically also loads its friend
+      TFile f(fname, "recreate");
+      TTree t1("t1", "t1");
+      TTree t2("t2", "t2");
+      int x = 42;
+      t2.Branch("x", &x);
+      t1.Fill();
+      t2.Fill();
+      t1.AddFriend(&t2);
+      t1.Write();
+      t2.Write();
+   }
+
+   // reading t2.x via TTreeReader segfaults
+   TChain c("t1");
+   c.Add(fname);
+   c.LoadTree(0);
+   TTreeReader r(&c);
+   TTreeReaderValue<int> rv(r, "t2.x");
+   ASSERT_TRUE(r.Next());
+   EXPECT_EQ(*rv, 42);
+   EXPECT_FALSE(r.Next());
 
    gSystem->Unlink(fname);
 }
