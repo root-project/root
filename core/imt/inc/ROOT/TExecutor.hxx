@@ -188,17 +188,27 @@ private:
    auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
 
    ROOT::EExecutionPolicy fExecPolicy;
+
+   // When they are not available, we use a placeholder type instead of TThreadExecutor or TProcessExecutor.
+   // The corresponding data members will not be used.
+   using Unused_t = ROOT::TSequentialExecutor;
 #ifdef R__USE_IMT
-   std::unique_ptr<ROOT::TThreadExecutor> fThreadExecutor;
+# define R__EXECUTOR_THREAD ROOT::TThreadExecutor
 #else
-   #define fThreadExecutor fSequentialExecutor
+# define R__EXECUTOR_THREAD Unused_t
 #endif
 #ifndef R__WIN32
-   std::unique_ptr<ROOT::TProcessExecutor> fProcessExecutor;
+# define R__EXECUTOR_PROCESS ROOT::TProcessExecutor
 #else
-   #define fProcessExecutor fSequentialExecutor
+# define R__EXECUTOR_PROCESS Unused_t
 #endif
+
+   std::unique_ptr<R__EXECUTOR_THREAD> fThreadExecutor;
+   std::unique_ptr<R__EXECUTOR_PROCESS> fProcessExecutor;
    std::unique_ptr<ROOT::TSequentialExecutor> fSequentialExecutor;
+
+#undef R__EXECUTOR_THREAD
+#undef R__EXECUTOR_PROCESS
 
    /// \brief Helper class to get the correct return type from the Map function,
    /// necessary to infer the ResolveExecutorAndMap function type
