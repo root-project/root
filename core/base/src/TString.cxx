@@ -246,7 +246,7 @@ char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
 	if (capacity < 0 || nchar < 0)
 	{
 		Zero();
-		return;
+		return 0; // returns 0 as the char pointer
 	}
    if (capacity > MaxSize()) {
       Error("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
@@ -373,8 +373,7 @@ TString& TString::Append(char c, Ssiz_t rep)
 {
 	if (rep < 0)
 	{
-		Zero();
-		return;
+		return TString; //returns the string as it is, i.e. appends nothing
 	}
    if (!rep) return *this;
 
@@ -417,11 +416,6 @@ TString& TString::Append(char c, Ssiz_t rep)
 
 Ssiz_t TString::Capacity(Ssiz_t nc)
 {
-	if (nc < 0)
-	{
-		Zero();
-		return;
-	}
    if (nc > Length())
       Clone(nc);
 

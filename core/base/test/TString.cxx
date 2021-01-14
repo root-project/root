@@ -8,5 +8,5 @@ TEST(TString)
 	TString n("testNeg", -1);
 	TString p("testPos", 1);
 	EXPECT_STREQ("", n);
-	EXPECT_STREQ("te", p);
+	EXPECT_STREQ("t", p);
 }
