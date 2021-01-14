@@ -28,6 +28,10 @@ class ExampleWidget : public QWidget, public Ui::ExampleWidget
       TH1F *fHisto{nullptr};  ///< histogram for display in TCanvas
       std::shared_ptr<TH2I> fHisto2; ///< histogram for display in RCanvas
 
+      void ImportCmsGeometry();
+
+      void CreateDummyGeometry();
+
    public:
 
       ExampleWidget(QWidget *parent = nullptr, const char* name = nullptr);
@@ -37,6 +41,7 @@ class ExampleWidget : public QWidget, public Ui::ExampleWidget
    public slots:
 
       void InfoButton_clicked();
+      void CmsButton_clicked();
       void ExitButton_clicked();
 
 };

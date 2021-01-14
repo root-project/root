@@ -14,13 +14,13 @@ ifneq ($(findstring -std=c++17,$(ROOTCFLAGS)),)
     QMAKEOPTFLAGS := "CONFIG+=c++17"
 endif
 
-HDRS = ExampleWidget.h TCanvasWidget.h RCanvasWidget.h
-SRCS = ExampleWidget.cpp TCanvasWidget.cpp RCanvasWidget.cpp ExampleMain.cpp  
+HDRS = ExampleWidget.h TCanvasWidget.h RCanvasWidget.h RGeomViewerWidget.h
+SRCS = ExampleWidget.cpp TCanvasWidget.cpp RCanvasWidget.cpp RGeomViewerWidget.cpp ExampleMain.cpp  
 UIS = ExampleWidget.ui
 
 Makefile.qt: qt5web.pro $(UIS)
 	@echo "Generating Makefile.qt"
-	qmake-qt5 qt5web.pro -o Makefile.qt $(QMAKEOPTFLAGS) "LIBS+=$(ROOTLIBS) -lROOTWebDisplay -lGpad -lWebGui6 -lROOTGpadv7" "INCLUDEPATH+=$(ROOTINCPATH)" "DEPENDPATH+=$(ROOTINCPATH)" 
+	qmake-qt5 qt5web.pro -o Makefile.qt $(QMAKEOPTFLAGS) "LIBS+=$(ROOTLIBS) -lROOTWebDisplay -lGpad -lWebGui6 -lROOTGpadv7 -lGeom -lROOTEve" "INCLUDEPATH+=$(ROOTINCPATH)" "DEPENDPATH+=$(ROOTINCPATH)" 
 
 qt5web: Makefile.qt $(HDRS) $(SRCS)
 	@echo "Compiling qt5web..."
