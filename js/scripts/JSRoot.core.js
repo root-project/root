@@ -101,15 +101,15 @@
    /** @summary JSROOT version id
      * @desc For the JSROOT release the string in format "major.minor.patch" like "6.0.0"
      * For the ROOT release string is "ROOT major.minor.patch" like "ROOT 6.24.00" */
-   JSROOT.version_id = "pre6";
+   JSROOT.version_id = "6.0.0";
 
    /** @summary JSROOT version date
-     * @desc Release date in format day/month/year like "6/01/2021"*/
-   JSROOT.version_date = "13/01/2021";
+     * @desc Release date in format day/month/year like "14/01/2021"*/
+   JSROOT.version_date = "14/01/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
-     * Like "6.0.0 21/01/2021" */
+     * Like "6.0.0 14/01/2021" */
    JSROOT.version = JSROOT.version_id + " " + JSROOT.version_date;
 
    /** @summary Location of JSROOT scripts
@@ -1680,7 +1680,14 @@
      * @param {number} nbinsx - number of bins on X-axis
      * @param {number} [nbinsy] - number of bins on Y-axis (for 2D/3D histograms)
      * @param {number} [nbinsz] - number of bins on Z-axis (for 3D histograms)
-     * @returns {Object} created histogram object */
+     * @returns {Object} created histogram object
+     * @example
+     * let h1 = JSROOT.createHistogram("TH1I", 20);
+     * h1.fName = "Hist1";
+     * h1.fTitle = "Histogram title";
+     * h1.fXaxis.fTitle = "xaxis";
+     * h1.fYaxis.fTitle = "yaxis";
+     * h1.fXaxis.fLabelSize = 0.02; */
    JSROOT.createHistogram = (typename, nbinsx, nbinsy, nbinsz) => {
       let histo = create(typename);
       if (!histo.fXaxis || !histo.fYaxis || !histo.fZaxis) return null;

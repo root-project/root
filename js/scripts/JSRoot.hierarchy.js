@@ -443,8 +443,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                   }
                }
             }
-         } else
-         if ((typeof fld === 'number') || (typeof fld === 'boolean')) {
+         } else if ((typeof fld === 'number') || (typeof fld === 'boolean')) {
             simple = true;
             if (key == 'fBits')
                item._value = "0x" + fld.toString(16);
@@ -749,15 +748,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @param {string} frameid - element id where hierarchy is drawn
      * @param {string} [backgr] - background color
      * @example
-     *    // create hierarchy painter in "myTreeDiv"
-     *    let h = new JSROOT.HierarchyPainter("example", "myTreeDiv");
-     *    // configure 'simple' layout in "myMainDiv"
-     *    // one also can specify "grid2x2" or "flex" or "tabs"
-     *    h.setDisplay("simple", "myMainDiv");
-     *    // open file and display element
-     *    h.openRootFile("https://root.cern/js/files/hsimple.root").then(() => h.display("hpxpy;1","colz"));
-     */
-
+     * // create hierarchy painter in "myTreeDiv"
+     * let h = new JSROOT.HierarchyPainter("example", "myTreeDiv");
+     * // configure 'simple' layout in "myMainDiv"
+     * // one also can specify "grid2x2" or "flex" or "tabs"
+     * h.setDisplay("simple", "myMainDiv");
+     * // open file and display element
+     * h.openRootFile("https://root.cern/js/files/hsimple.root").then(() => h.display("hpxpy;1","colz")); */
    function HierarchyPainter(name, frameid, backgr) {
       JSROOT.BasePainter.call(this, frameid);
       this.name = name;
