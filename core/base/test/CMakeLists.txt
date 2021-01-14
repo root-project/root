@@ -16,6 +16,7 @@ ROOT_ADD_GTEST(CoreBaseTests
   TNamedTests.cxx
   TQObjectTests.cxx
   TExceptionHandlerTests.cxx
+  TStringTest.cxx
   LIBRARIES Core Cling RIO ${dllib})
 
 ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
