@@ -8,9 +8,15 @@
 # CMakeLists.txt file for building ROOT core/imt package
 ############################################################################
 
+if(NOT WIN32)
+  set(MULTIPROC_LIB "MultiProc")
+endif()
+
 ROOT_LINKER_LIBRARY(Imt
     src/base.cxx
     src/TTaskGroup.cxx
+  DEPENDENCIES
+    ${MULTIPROC_LIB}
   BUILTINS
     TBB
 )
