@@ -25,9 +25,11 @@ FORMS += ExampleWidget.ui
 
 HEADERS += ExampleWidget.h \
            TCanvasWidget.h \
-           RCanvasWidget.h
+           RCanvasWidget.h \
+           RGeomViewerWidget.h
 
 SOURCES += ExampleWidget.cpp \
            TCanvasWidget.cpp \
            RCanvasWidget.cpp \
+           RGeomViewerWidget.cpp \
            ExampleMain.cpp

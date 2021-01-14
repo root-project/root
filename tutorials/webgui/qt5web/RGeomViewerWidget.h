@@ -1,4 +1,4 @@
-// Author: Sergey Linev, GSI  13/01/2021
+// Author: Sergey Linev, GSI  14/01/2021
 
 /*************************************************************************
  * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef RCanvasWidget_H
-#define RCanvasWidget_H
+#ifndef RGeomViewerWidget_H
+#define RGeomViewerWidget_H
 
 #include <QWidget>
 #include <QWebEngineView>
@@ -18,11 +18,11 @@
 
 namespace ROOT {
 namespace Experimental {
-class RCanvas;
+class REveGeomViewer;
 }
 }
 
-class RCanvasWidget : public QWidget {
+class RGeomViewerWidget : public QWidget {
 
    Q_OBJECT
 
@@ -32,16 +32,14 @@ protected:
 
    QWebEngineView *fView{nullptr};  ///< qt webwidget to show
 
-   std::shared_ptr<ROOT::Experimental::RCanvas> fCanvas;
+   std::shared_ptr<ROOT::Experimental::REveGeomViewer> fGeomViewer;
 
 public:
-   RCanvasWidget(QWidget *parent = nullptr);
-   virtual ~RCanvasWidget();
+   RGeomViewerWidget(QWidget *parent = nullptr);
+   virtual ~RGeomViewerWidget();
 
-   /// returns canvas shown in the widget
-   auto getCanvas() { return fCanvas; }
-
-
+   /// returns geometry viewer
+   auto getGeomViewer() { return fGeomViewer; }
 };
 
 #endif
