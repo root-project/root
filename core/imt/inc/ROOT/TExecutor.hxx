@@ -443,30 +443,6 @@ auto TExecutor::MapReduce(F func, const std::vector<T> &args, R redfunc, unsigne
    return Reduce(Map(func, args, redfunc, nChunks), redfunc);
 }
 
-//////////////////////////////////////////////////////////////////////////
-/// \brief Return the number of pooled workers.
-///
-/// \return The number of workers in the pool in the executor used as a backend.
-
-unsigned TExecutor::GetPoolSize() const
-{
-   unsigned poolSize{0u};
-   switch(fExecPolicy){
-      case ROOT::EExecutionPolicy::kSequential:
-         poolSize = fSequentialExecutor->GetPoolSize();
-         break;
-      case ROOT::EExecutionPolicy::kMultiThread:
-         poolSize = fThreadExecutor->GetPoolSize();
-         break;
-      case ROOT::EExecutionPolicy::kMultiProcess:
-         poolSize = fProcessExecutor->GetPoolSize();
-         break;
-      default:
-         break;
-   }
-   return poolSize;
-}
-
 } // namespace Internal
 } // namespace ROOT
 

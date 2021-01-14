@@ -46,6 +46,7 @@ if(imt)
     src/RTaskArena.cxx
     src/TImplicitMT.cxx
     src/TThreadExecutor.cxx
+    src/TExecutor.cxx
   )
 
   target_include_directories(Imt SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
