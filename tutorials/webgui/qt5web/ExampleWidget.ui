@@ -27,7 +27,7 @@
         </widget>
       </item>
       <item row="1" column="0" >
-        <widget class="QTabWidget" name="TabWidget" >
+        <widget class="QTabWidget" name="fxTabWidget" >
           <widget class="QWidget" name="DefaultTab" >
             <attribute name="title" >
               <string>Default</string>
@@ -52,6 +52,13 @@
                     <widget class="QPushButton" name="InfoBtn" >
                       <property name="text" >
                         <string>Info</string>
+                      </property>
+                    </widget>
+                  </item>
+                  <item>
+                    <widget class="QPushButton" name="CmsBtn" >
+                      <property name="text" >
+                        <string>CMS geometry</string>
                       </property>
                     </widget>
                   </item>
@@ -128,6 +135,37 @@
               </item>
             </layout>
           </widget>
+          <widget class="QWidget" name="RGeomViewerTab">
+            <attribute name="title" >
+              <string>RGeomViewer</string>
+            </attribute>
+            <layout class="QGridLayout" name="geomviewerGridLayout">
+              <property name="margin" >
+                <number>2</number>
+              </property>
+              <property name="spacing" >
+                <number>2</number>
+              </property>
+              <item row="0" column="0" >
+                <widget class="RGeomViewerWidget" name="fxGeomViewerWidget" >
+                  <property name="sizePolicy" >
+                    <sizepolicy>
+                      <hsizetype>7</hsizetype>
+                      <vsizetype>7</vsizetype>
+                      <horstretch>0</horstretch>
+                      <verstretch>1</verstretch>
+                    </sizepolicy>
+                  </property>
+                  <property name="minimumSize" >
+                    <size>
+                      <width>100</width>
+                      <height>100</height>
+                    </size>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </widget>
         </widget>
       </item>
     </layout>
@@ -136,6 +174,7 @@
   <includes>
     <include location="local">RCanvasWidget.h</include>
     <include location="local">TCanvasWidget.h</include>
+    <include location="local">RGeomViewerWidget.h</include>
   </includes>
   <connections>
     <connection>
@@ -143,6 +182,12 @@
       <signal>clicked()</signal>
       <receiver>ExampleWidget</receiver>
       <slot>InfoButton_clicked()</slot>
+    </connection>
+    <connection>
+      <sender>CmsBtn</sender>
+      <signal>clicked()</signal>
+      <receiver>ExampleWidget</receiver>
+      <slot>CmsButton_clicked()</slot>
     </connection>
     <connection>
       <sender>ExitBtn</sender>
@@ -157,6 +202,9 @@
     </customwidget>
     <customwidget>
       <class>TCanvasWidget</class>
+    </customwidget>
+    <customwidget>
+      <class>RGeomViewerWidget</class>
     </customwidget>
   </customwidgets>
 </ui>

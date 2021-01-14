@@ -8,15 +8,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "RCanvasWidget.h"
-
-#include <ROOT/RCanvas.hxx>
+#include <ROOT/REveGeomViewer.hxx>
 #include <ROOT/RWebDisplayArgs.hxx>
+#include "RGeomViewerWidget.h"
 
-RCanvasWidget::RCanvasWidget(QWidget *parent) : QWidget(parent)
+RGeomViewerWidget::RGeomViewerWidget(QWidget *parent) : QWidget(parent)
 {
-
-   setObjectName( "RCanvasWidget");
+   setObjectName( "RGeomViewerWidget");
 
    setSizeIncrement( QSize( 100, 100 ) );
 
@@ -28,11 +26,13 @@ RCanvasWidget::RCanvasWidget(QWidget *parent) : QWidget(parent)
 
    setAcceptDrops(true);
 
-   fCanvas = ROOT::Experimental::RCanvas::Create("ExampleCanvas");
+   fGeomViewer = std::make_shared<ROOT::Experimental::REveGeomViewer>();
 
-   auto where = ROOT::Experimental::RWebDisplayArgs::GetQt5EmbedQualifier(this, "noopenui");
+   fGeomViewer->SetShowHierarchy(false);
 
-   fCanvas->Show(where);
+   auto where = ROOT::Experimental::RWebDisplayArgs::GetQt5EmbedQualifier(this);
+
+   fGeomViewer->Show(where);
 
    fView = findChild<QWebEngineView*>("RootWebView");
    if (!fView) {
@@ -41,17 +41,13 @@ RCanvasWidget::RCanvasWidget(QWidget *parent) : QWidget(parent)
    }
 
    fView->resize(width(), height());
-   fCanvas->SetSize({width(), height()});
 }
 
-RCanvasWidget::~RCanvasWidget()
+RGeomViewerWidget::~RGeomViewerWidget()
 {
-   // remove canvas from global lists
-   fCanvas->Remove();
 }
 
-void RCanvasWidget::resizeEvent(QResizeEvent *event)
+void RGeomViewerWidget::resizeEvent(QResizeEvent *event)
 {
    fView->resize(width(), height());
-   fCanvas->SetSize({width(), height()});
 }
