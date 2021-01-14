@@ -1766,6 +1766,7 @@ Double_t TF1::GetMinMaxNDim(Double_t *x , bool findmax, Double_t epsilon, Int_t 
          stepSize = (rmax[i] - rmin[i]) / 100;
       else if (std::abs(x[i]) > 1.)
          stepSize = 0.1 * x[i];
+
       // set variable names
       if (ndim <= 3) {
          if (i == 0) {

@@ -157,7 +157,7 @@ void FitConfig::SetParamsSettings(unsigned int npar, const double *params, const
          if (val ==  0) step  =  0.3;
       }
       else
-	  step = vstep[i];
+         step = vstep[i];
 
       if (createNew)
          fSettings.push_back( ParameterSettings("Par_" + ROOT::Math::Util::ToString(i), val, step ) );
