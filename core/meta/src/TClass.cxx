@@ -7091,7 +7091,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
    info = (TVirtualStreamerInfo*)info->Clone();
 
    // When cloning the StreamerInfo we record (and thus restore)
-   // the absolute value of the version, let's keep the original.
+   // the absolute value of the version, let's restore the sign.
    if (version == -1)
       info->SetClassVersion(-1);
 
@@ -7197,7 +7197,7 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    info = (TVirtualStreamerInfo*)info->Clone();
 
    // When cloning the StreamerInfo we record (and thus restore)
-   // the absolute value of the version, let's keep the original.
+   // the absolute value of the version, let's restore the sign.
    if (version == -1)
       info->SetClassVersion(-1);
 
