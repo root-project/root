@@ -306,3 +306,24 @@ std::string ROOT::Experimental::RWebDisplayArgs::GetCustomExec() const
 
    return fExec;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// returns string which can be used as argument in RWebWindow::Show() method
+/// to display web window in provided QWidget
+/// After RWebWindow is displayed created QWebEngineView can be found with the command:
+///     auto view = qparent->findChild<QWebEngineView*>("RootWebView");
+
+std::string ROOT::Experimental::RWebDisplayArgs::GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt)
+{
+   std::string where = "qt5";
+   if (qparent) {
+      where.append(":");
+      where.append(std::to_string((unsigned long) qparent));
+   }
+   if (!urlopt.empty()) {
+      where.append("?");
+      where.append(urlopt);
+   }
+   return where;
+}
+

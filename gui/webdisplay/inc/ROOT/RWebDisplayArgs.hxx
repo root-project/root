@@ -177,6 +177,8 @@ public:
    void SetDriverData(void *data) { fDriverData = data; }
    /// [internal] returns web-driver data, used to start window
    void *GetDriverData() const { return fDriverData; }
+
+   static std::string GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt = "");
 };
 
 }
