@@ -9,4 +9,7 @@ TEST(TString)
    EXPECT_STREQ("", n);
    TString p("Test", 1);
    EXPECT_STREQ("T", p);
+   TString a = "test";
+   a.Append("s", -5);
+   EXPECT_STREQ("test", a);
 }
