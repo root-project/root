@@ -32,7 +32,7 @@ int ExecutorTest(T &executor) {
       return 1;
 
    // TSeq and lambda
-   auto res2 = executor.Map([](int a) -> int { return 1; } , ROOT::TSeq<int>(0, 4));
+   auto res2 = executor.Map([](int) -> int { return 1; } , ROOT::TSeq<int>(0, 4));
    if(res2 != truth)
       return 2;
 
@@ -63,7 +63,7 @@ int ExecutorTest(T &executor) {
       return 6;
 
    // TSeq and lambda
-   auto redes2 = executor.MapReduce([](int a) -> int { return 1; } , ROOT::TSeq<int>(0, 4), redfunc);
+   auto redes2 = executor.MapReduce([](int) -> int { return 1; } , ROOT::TSeq<int>(0, 4), redfunc);
    if(redes2 != redtruth)
       return 7;
 
