@@ -35,6 +35,7 @@ class ImportLoadLibs(unittest.TestCase):
             'libNet',
             'libImt',
             'libMathCore',
+            'libMultiProc',
             'libssl',
             'libcrypt.*', # by libssl
             'libtbb',
