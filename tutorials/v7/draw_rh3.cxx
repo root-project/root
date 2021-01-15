@@ -21,6 +21,7 @@
 #include "ROOT/RHist.hxx"
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
+#include "ROOT/RPad.hxx"
 #include "ROOT/RFrameTitle.hxx"
 #include "TRandom.h"
 
