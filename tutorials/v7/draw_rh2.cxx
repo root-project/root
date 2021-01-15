@@ -21,6 +21,7 @@
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RFrameTitle.hxx"
 #include "ROOT/RCanvas.hxx"
+#include "ROOT/RPad.hxx"
 #include "TRandom.h"
 
 // macro must be here while cling is not capable to load
