@@ -126,6 +126,7 @@ TString::TString(const std::string &s)
 TString::TString(const char *cs, Ssiz_t n)
 {
    if (n < 0) {
+      Error("TString::TString", "Negative length!");
       Zero();
       return;
    }
@@ -155,7 +156,8 @@ TString::TString(char c)
 
 TString::TString(char c, Ssiz_t n)
 {
-   if (n < 0) {
+   if (n < 0){
+      Error("TString::TString", "Negative length!");
       Zero();
       return;
    }
@@ -214,10 +216,12 @@ TString::TString(const TSubString& substr)
 TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
 {
    if (n1 < 0) {
+      Error("TString::TString", "Negatice length!");
       Zero();
       return;
    }
    if (n2 < 0) {
+      Error("TString::TString", "Negatice length!");
       Zero();
       return;
    }
@@ -244,13 +248,16 @@ TString::~TString()
 char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
 {
    if (capacity < 0){
+      Error("*TString::Init", "Negative length!");
       capacity = 0;
    }
    if (nchar < 0){
-      nchar = 0;   
+      Error("*TString::Init", "Negative length!");
+      nchar = 0;
    }
    if (nchar > capacity){
-      nchar = capacity;   
+      Error("*TString::Init", "nchar too large!");
+      nchar = 0;
    }
    if (capacity > MaxSize()) {
       Error("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
@@ -375,7 +382,10 @@ TString& TString::operator=(const TSubString &substr)
 
 TString& TString::Append(char c, Ssiz_t rep)
 {
-   if (rep <= 0 ) return *this; // appends nothing
+   if (rep <= 0 ){
+      Error("TString& TString::Append", "Negative length!");
+      return *this; // appends nothing
+   }
    
 
    Ssiz_t len = Length();
