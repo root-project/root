@@ -155,7 +155,7 @@ TString::TString(char c)
 
 TString::TString(char c, Ssiz_t n)
 {
-   if (n < 0){
+   if (n < 0) {
       Zero();
       return;
    }
