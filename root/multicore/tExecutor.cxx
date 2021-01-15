@@ -6,7 +6,7 @@
 int main() {
 
    // Build tests
-   ROOT::Internal::TExecutor ex{};
+   ROOT::Internal::TExecutor ex{4u};
    if (!ROOT::IsImplicitMTEnabled()) {
       if(ex.Policy()!= ROOT::EExecutionPolicy::kSequential) {
          return 0;
@@ -19,14 +19,14 @@ int main() {
       }
    }
 
-   ROOT::Internal::TExecutor ex1{ROOT::EExecutionPolicy::kMultiThread};
+   ROOT::Internal::TExecutor ex1{ROOT::EExecutionPolicy::kMultiThread, 4u};
    if(ex1.Policy()!= ROOT::EExecutionPolicy::kMultiThread) {
          return 2;
    }
 #endif
 
 #ifndef _MSC_VER
-   ROOT::Internal::TExecutor ex2{ROOT::EExecutionPolicy::kMultiProcess};
+   ROOT::Internal::TExecutor ex2{ROOT::EExecutionPolicy::kMultiProcess, 4u};
    if(ex2.Policy()!= ROOT::EExecutionPolicy::kMultiProcess) {
          return 3;
    }
