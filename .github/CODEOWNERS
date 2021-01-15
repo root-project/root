@@ -36,12 +36,12 @@
 /tmva/ @lmoneta @ashlaban @stwunsch @sitongan
 /tree/ @pcanal
 /tutorials/ @couet
-/tree/dataframe @bluehood
+/tree/dataframe @eguiraud
 
 # Projects that span over several code modules:
 /bindings/r/ @omazapa
-/core/imt/ @bluehood
-/core/multiproc/ @bluehood
+/core/imt/ @eguiraud
+/core/multiproc/ @eguiraud
 /graf2d/cocoa/ @TimurP
 /graf3d/eve/ @osschar
 /graf3d/eve7/ @osschar @linev
