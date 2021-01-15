@@ -100,6 +100,7 @@ sap.ui.define(['sap/ui/core/Component',
             var app = this.byId("geomViewerApp");
             app.setMode(sap.m.SplitAppMode.HideMode);
             app.setInitialMaster(this.createId("geomControl"));
+            app.removeMasterPage(this.byId("geomHierarchy"));
             this.byId("geomControl").setShowNavButton(false);
          } else {
 
@@ -110,7 +111,7 @@ sap.ui.define(['sap/ui/core/Component',
 
             t.setModel(this.model);
 
-            var vis_selected_handler = this.visibilitySelected.bind(this);
+            // var vis_selected_handler = this.visibilitySelected.bind(this);
 
             this.model.assignTreeTable(t);
 
