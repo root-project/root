@@ -83,7 +83,7 @@ ROOTTEST_ADD_TEST(NameCyclesRootls
 
 ############################## ROORM TESTS ##############################
 ROOTTEST_ADD_TEST(SimpleRootrm1PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root victim1.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root victim1.root)
 
 ROOTTEST_ADD_TEST(SimpleRootrm1
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} victim1.root:hpx
@@ -101,7 +101,7 @@ ROOTTEST_ADD_TEST(SimpleRootrm1Clean
 
 
 ROOTTEST_ADD_TEST(SimpleRootrm2PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root victim2.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root victim2.root)
 
 ROOTTEST_ADD_TEST(SimpleRootrm2
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} victim2.root:hp*
@@ -119,7 +119,7 @@ ROOTTEST_ADD_TEST(SimpleRootrm2Clean
 
 
 ROOTTEST_ADD_TEST(SimpleRootrm3PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root victim3.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root victim3.root)
 
 ROOTTEST_ADD_TEST(SimpleRootrm3
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r victim3.root:tof/plane0
@@ -137,7 +137,7 @@ ROOTTEST_ADD_TEST(SimpleRootrm3Clean
 
 ############################# ROOMKDIR TESTS ############################
 ROOTTEST_ADD_TEST(SimpleRootmkdir1PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root target1.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root target1.root)
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir1
                   COMMAND ${TOOLS_PREFIX}/rootmkdir${pyext} target1.root:new_directory
@@ -155,7 +155,7 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir1Clean
 
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir2PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root target2.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root target2.root)
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir2
                   COMMAND ${TOOLS_PREFIX}/rootmkdir${pyext} target2.root:dir1 target2.root:dir2
@@ -173,7 +173,7 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir2Clean
 
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir3PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root target3.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root target3.root)
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir3
                   COMMAND ${TOOLS_PREFIX}/rootmkdir${pyext} -p target3.root:aa/bb/cc
@@ -191,7 +191,7 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir3Clean
 
 ############################# ROOCP TESTS ############################
 ROOTTEST_ADD_TEST(SimpleRootcp1PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root copy1.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root copy1.root)
 
 ROOTTEST_ADD_TEST(SimpleRootcp1
                   COMMAND ${TOOLS_PREFIX}/rootcp${pyext} copy1.root:hpx copy1.root:histo
@@ -209,7 +209,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp1Clean
 
 
 ROOTTEST_ADD_TEST(SimpleRootcp2PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root copy2.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root copy2.root)
 
 ROOTTEST_ADD_TEST(SimpleRootcp2
                   COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r copy2.root:tof copy2.root:fot
@@ -227,7 +227,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp2Clean
 
 
 ROOTTEST_ADD_TEST(SimpleRootcp3PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root copy3.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root copy3.root)
 
 ROOTTEST_ADD_TEST(SimpleRootcp3
                   COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --replace copy3.root:hpx copy3.root:hpxpy
@@ -243,7 +243,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp3Clean
                   DEPENDS SimpleRootcp3CheckOutput)
 
 ROOTTEST_ADD_TEST(SimpleRootcp4PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root copy4.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root copy4.root)
 
 ROOTTEST_ADD_TEST(SimpleRootcp4
                   COMMAND ${TOOLS_PREFIX}/rootcp${pyext} copy4.root:hpx copy4.root:dir
@@ -261,7 +261,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp4Clean
 
 
 ROOTTEST_ADD_TEST(SimpleRootcp5PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root copy5.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root copy5.root)
 
 ROOTTEST_ADD_TEST(SimpleRootcp5
                   COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r copy5.root:tof copy5.root:dir
@@ -279,7 +279,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp5Clean
 
 ############################# ROOMV TESTS ############################
 ROOTTEST_ADD_TEST(SimpleRootmv1PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root move1.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root move1.root)
 
 ROOTTEST_ADD_TEST(SimpleRootmv1
                   COMMAND ${TOOLS_PREFIX}/rootmv${pyext} move1.root:hpx move1.root:histo
@@ -297,7 +297,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv1Clean
 
 
 ROOTTEST_ADD_TEST(SimpleRootmv2PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root move2.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root move2.root)
 
 ROOTTEST_ADD_TEST(SimpleRootmv2
                   COMMAND ${TOOLS_PREFIX}/rootmv${pyext} move2.root:tof move2.root:fot
@@ -315,7 +315,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv2Clean
 
 
 ROOTTEST_ADD_TEST(SimpleRootmv3PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root move3.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root move3.root)
 
 ROOTTEST_ADD_TEST(SimpleRootmv3
                   COMMAND ${TOOLS_PREFIX}/rootmv${pyext} move3.root:hpx move3.root:hpxpy
@@ -331,7 +331,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv3Clean
                   DEPENDS SimpleRootmv3CheckOutput)
 
 ROOTTEST_ADD_TEST(SimpleRootmv4PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root move4.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root move4.root)
 
 ROOTTEST_ADD_TEST(SimpleRootmv4
                   COMMAND ${TOOLS_PREFIX}/rootmv${pyext} move4.root:hpx move4.root:dir
@@ -347,7 +347,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv4Clean
                   DEPENDS SimpleRootmv4CheckOutput)
 
 ROOTTEST_ADD_TEST(SimpleRootmv5PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} -r test.root move5.root)
+                  COMMAND ${TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root move5.root)
 
 ROOTTEST_ADD_TEST(SimpleRootmv5
                   COMMAND ${TOOLS_PREFIX}/rootmv${pyext} move5.root:tof move5.root:dir
