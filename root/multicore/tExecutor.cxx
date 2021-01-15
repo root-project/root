@@ -25,7 +25,7 @@ int main() {
    }
 #endif
 
-#ifndef R__WIN32
+#ifndef _MSC_VER
    ROOT::Internal::TExecutor ex2{ROOT::EExecutionPolicy::kMultiProcess};
    if(ex2.Policy()!= ROOT::EExecutionPolicy::kMultiProcess) {
          return 3;
@@ -45,7 +45,7 @@ int main() {
    res = ExecutorTest(ex1);
    if(res) return res+offset+4;
 #endif
-#ifndef R__WIN32
+#ifndef _MSC_VER
    res = ExecutorTest(ex2);
    if(res) return res+2*offset+4;
 #endif
