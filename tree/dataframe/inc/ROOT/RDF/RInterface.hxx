@@ -1854,12 +1854,19 @@ public:
    ///
    std::string GetColumnType(std::string_view column)
    {
-      const auto col = std::string(column);
+      auto col = std::string(column);
+
+      // if "col" is an alias, resolve it before doing anything else
+      const auto aliasMap = fLoopManager->GetAliasMap();
+      const auto it = aliasMap.find(col);
+      if (it != aliasMap.end())
+         col = it->second;
+
+      RDFDetail::RDefineBase *define = fDefines.HasName(col) ? fDefines.GetColumns().at(col).get() : nullptr;
+
       const bool convertVector2RVec = true;
-      RDFDetail::RDefineBase *define =
-         fDefines.HasName(column) ? fDefines.GetColumns().at(col).get() : nullptr;
-      return RDFInternal::ColumnName2ColumnTypeName(col, fLoopManager->GetTree(), fLoopManager->GetDataSource(),
-                                                    define, convertVector2RVec);
+      return RDFInternal::ColumnName2ColumnTypeName(col, fLoopManager->GetTree(), fLoopManager->GetDataSource(), define,
+                                                    convertVector2RVec);
    }
 
    /// \brief Returns the names of the filters created.
