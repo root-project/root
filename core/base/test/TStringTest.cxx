@@ -3,7 +3,7 @@
 
 #include "TString.h"
 
-TEST(TString)
+TEST(TString, Basics)
 {
    TString n("Test", -5);
    EXPECT_STREQ("", n);
