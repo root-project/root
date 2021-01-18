@@ -526,3 +526,24 @@ TEST(RDataFrameInterface, JittingAndNonJittedTypes)
 
    df.Foreach([](Product &p) { EXPECT_EQ(p.GetProduct(), 2); }, {"products"});
 }
+
+
+// GitHub issue #7058
+TEST(RDataFrameInterface, GetColumnTypeOfAlias)
+{
+   // from a Define
+   {
+      auto df = ROOT::RDataFrame(1).Define("x", [] { return 0; }).Alias("y", "x");
+      EXPECT_EQ(df.GetColumnType("y"), "int");
+   }
+
+   // from a branch
+   {
+      TTree t("t", "t");
+      int x = 42;
+      t.Branch("x", &x);
+      t.Fill();
+      auto df = ROOT::RDataFrame(t).Alias("y", "x");
+      EXPECT_EQ(df.GetColumnType("y"), "Int_t");
+   }
+}
