@@ -86,6 +86,9 @@ public:
       std::string clname = fKey->GetClassName();
       // TODO: more advanced logic required here
       return (clname.find("TDirectory") == 0) ||
+             (clname.find("TGeoManager") == 0) ||
+             (clname.find("TGeoNode") == 0) ||
+             (clname.find("TGeoVolume") == 0) ||
              (clname.find("TTree") == 0) ||
              (clname.find("TNtuple") == 0) ||
              (clname.find("TBranchElement") == 0) ? 1 : 0;
@@ -121,6 +124,7 @@ Element representing TKey from TDirectory
 class TKeyElement : public RElement {
    TDirectory *fDir{nullptr};
    TKey *fKey{nullptr};
+   std::shared_ptr<RElement> fElement; ///<! holder of read object
 
 public:
    TKeyElement(TDirectory *dir, TKey *key) : fDir(dir), fKey(key) {}
@@ -130,6 +134,8 @@ public:
    /** Name of TKeyElement, includes key cycle */
    std::string GetName() const override
    {
+      if (fElement)
+         return fElement->GetName();
       std::string name = fKey->GetName();
       name.append(";");
       name.append(std::to_string(fKey->GetCycle()));
@@ -137,13 +143,22 @@ public:
    }
 
    /** Title of TKeyElement (optional) */
-   std::string GetTitle() const override { return fKey->GetTitle(); }
+   std::string GetTitle() const override
+   {
+      if (fElement)
+         return fElement->GetTitle();
+
+      return fKey->GetTitle();
+   }
 
    /** Create iterator for childs elements if any
      * Means we should try to browse inside.
      * Either it is directory or some complex object */
    std::unique_ptr<RLevelIter> GetChildsIter() override
    {
+      if (fElement)
+         return fElement->GetChildsIter();
+
       std::string clname = fKey->GetClassName();
 
       if (clname.find("TDirectory") == 0) {
@@ -154,10 +169,11 @@ public:
 
       auto obj = GetObject();
 
-      if (obj) {
-         auto elem = RProvider::Browse(obj);
-         if (elem) return elem->GetChildsIter();
-      }
+      if (obj)
+         fElement = RProvider::Browse(obj);
+
+      if (fElement)
+         return fElement->GetChildsIter();
 
       return nullptr;
    }
@@ -165,6 +181,9 @@ public:
    /** Return object associated with TKey, if TDirectory has object of that name it will be returned */
    std::unique_ptr<RHolder> GetObject() override
    {
+      if (fElement)
+         return fElement->GetObject();
+
       std::string clname = fKey->GetClassName();
 
       auto obj_class = TClass::GetClass(clname.c_str());
@@ -178,7 +197,9 @@ public:
       TObject *tobj = (TObject *) obj_class->DynamicCast(TObject::Class(), obj);
 
       if (tobj) {
-         bool owned_by_dir = fDir->FindObject(tobj) == tobj;
+         bool owned_by_dir = (fDir->FindObject(tobj) == tobj) || (clname == "TGeoManager");
+
+         printf("owned_by_dir obj %p %s %d\n", tobj, clname.c_str(), owned_by_dir);
 
          return std::make_unique<TObjectHolder>(tobj, !owned_by_dir);
       }

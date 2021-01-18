@@ -67,7 +67,8 @@ public:
    int CanHaveChilds() const override
    {
       std::shared_ptr<TObjectElement> telem = std::dynamic_pointer_cast<TObjectElement>(fElements[fCounter]);
-      return telem && telem->IsFolder() ? 1 : 0;
+      if (!telem) return 0;
+      return telem->IsFolder() ? 1 : 0;
    }
 
    /** Create element for the browser */
@@ -84,11 +85,11 @@ public:
 // ===============================================================================================================
 
 class TMyBrowserImp : public TBrowserImp {
-   TObjectLevelIter &fIter;   ///<!  back-reference on iterator
+   TObjectLevelIter *fIter{nullptr};   ///<!  back-reference on iterator
 
 public:
 
-   TMyBrowserImp(TObjectLevelIter &iter) : TBrowserImp(nullptr), fIter(iter) {}
+   TMyBrowserImp(TObjectLevelIter *iter) : TBrowserImp(nullptr), fIter(iter) {}
    virtual ~TMyBrowserImp() = default;
 
    void Add(TObject* obj, const char* name, Int_t) override;
@@ -116,6 +117,10 @@ TObjectElement::TObjectElement(std::unique_ptr<RHolder> &obj, const std::string 
       fName = fObj->GetName();
 }
 
+TObjectElement::~TObjectElement()
+{
+}
+
 std::string TObjectElement::GetName() const
 {
    if (!fName.empty()) return fName;
@@ -141,7 +146,7 @@ std::unique_ptr<RLevelIter> TObjectElement::GetChildsIter()
 
    auto iter = std::make_unique<TObjectLevelIter>();
 
-   TMyBrowserImp *imp = new TMyBrowserImp(*(iter.get()));
+   TMyBrowserImp *imp = new TMyBrowserImp(iter.get());
 
    // must be new, otherwise TBrowser constructor ignores imp
    TBrowser *br = new TBrowser("name", "title", imp);
@@ -192,7 +197,7 @@ void TMyBrowserImp::Add(TObject *obj, const char *name, Int_t)
       if (telem) telem->SetName(name);
    }
 
-   fIter.AddElement(std::move(elem));
+   fIter->AddElement(std::move(elem));
 }
 
 
@@ -213,7 +218,8 @@ std::unique_ptr<RItem> TObjectLevelIter::CreateItem()
       // TODO: make via RProvider methods
       std::string clname = elem->ClassName();
       can_have_childs = (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) ||
-                        (clname.find("TNtuple") == 0) || (clname.find("TBranchElement") == 0);
+                        (clname.find("TNtuple") == 0) || (clname.find("TBranchElement") == 0) ||
+                        (clname.find("TGeoManager") == 0) || (clname.find("TGeoVolume") == 0) || (clname.find("TGeoNode") == 0);
    }
 
    auto item = std::make_unique<TObjectItem>(elem->GetName(), can_have_childs ? 1 : 0);

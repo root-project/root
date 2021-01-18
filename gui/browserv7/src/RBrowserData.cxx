@@ -41,7 +41,7 @@ void RBrowserData::SetTopElement(std::shared_ptr<Browsable::RElement> elem)
 
 void RBrowserData::SetWorkingDirectory(const std::string &strpath)
 {
-   auto path = DecomposePath(strpath);
+   auto path = DecomposePath(strpath, false);
 
    SetWorkingPath(path);
 }
@@ -52,7 +52,6 @@ void RBrowserData::SetWorkingDirectory(const std::string &strpath)
 void RBrowserData::SetWorkingPath(const Browsable::RElementPath_t &path)
 {
    fWorkingPath = path;
-   fWorkElement = Browsable::RElement::GetSubElement(fTopElement, path);
 
    ResetLastRequest();
 }
@@ -75,9 +74,10 @@ void RBrowserData::ResetLastRequest()
 /// Returns array of names for each element in the path, first element either "/" or "."
 /// If returned array empty - it is error
 
-Browsable::RElementPath_t RBrowserData::DecomposePath(const std::string &strpath)
+Browsable::RElementPath_t RBrowserData::DecomposePath(const std::string &strpath, bool relative_to_work_element)
 {
    Browsable::RElementPath_t arr;
+   if (relative_to_work_element) arr = fWorkingPath;
 
    if (strpath.empty())
       return arr;
@@ -109,22 +109,24 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
    if (gDebug > 0)
       printf("REQ: Do decompose path '%s'\n",request.path.c_str());
 
-   auto path = DecomposePath(request.path);
+   auto path = DecomposePath(request.path, true);
 
    if ((path != fLastPath) || !fLastElement) {
 
-      auto elem = Browsable::RElement::GetSubElement(fWorkElement, path);
+      auto elem = GetSubElement(path);
       if (!elem) return false;
 
       ResetLastRequest();
 
       fLastPath = path;
-      fLastElement = elem;
-   }
+      fLastElement = std::move(elem);
+}
 
    // when request childs, always try to make elements
    if (fLastItems.empty()) {
+
       auto iter = fLastElement->GetChildsIter();
+
       if (!iter) return false;
       int id = 0;
       fLastAllChilds = true;
@@ -215,9 +217,9 @@ std::string RBrowserData::ProcessRequest(const RBrowserRequest &request)
 
 std::shared_ptr<Browsable::RElement> RBrowserData::GetElement(const std::string &str)
 {
-   auto path = DecomposePath(str);
+   auto path = DecomposePath(str, true);
 
-   return Browsable::RElement::GetSubElement(fWorkElement, path);
+   return GetSubElement(path);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -225,6 +227,42 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetElement(const std::string 
 
 std::shared_ptr<Browsable::RElement> RBrowserData::GetElementFromTop(const Browsable::RElementPath_t &path)
 {
-   return Browsable::RElement::GetSubElement(fTopElement, path);
+   return GetSubElement(path);
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Returns sub-element starting from top, using cached data
+
+std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable::RElementPath_t &path)
+{
+   if (path.empty())
+      return fTopElement;
+
+   // find best possible entry in cache
+   int pos = 0;
+   auto elem = fTopElement;
+
+   for (auto &entry : fCache) {
+      auto comp = Browsable::RElement::ComparePaths(path, entry.first);
+      if (comp > pos) { pos = comp; elem = entry.second; }
+   }
+
+   while (pos < (int) path.size()) {
+      auto iter = elem->GetChildsIter();
+      if (!iter || !iter->Find(path[pos]))
+         return nullptr;
+      elem = iter->GetElement();
+
+      if (!elem)
+         return nullptr;
+
+      auto subpath = path;
+      subpath.resize(pos+1);
+      fCache[subpath] = elem;
+
+      pos++; // switch to next element
+   }
+
+   return elem;
 }
 
