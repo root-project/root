@@ -317,6 +317,9 @@ class RTObjectProvider : public RProvider {
 public:
    RTObjectProvider()
    {
+      RegisterClass("TTree", "sap-icon://tree");
+      RegisterClass("TNtuple", "sap-icon://tree");
+
       RegisterBrowse(TFolder::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TFolderElement>(object);
       });
