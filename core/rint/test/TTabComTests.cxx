@@ -92,16 +92,10 @@ TEST(TTabComTests, CompleteTProfile)
 
 TEST(TTabComTests, CompleteTObj)
 {
-#ifdef _MSC_VER
-   std::string expected = "TObjArray TObjArrayIter TObjLink TObjOptLink TObjString"
-      " TObject TObject::EDeprecatedStatusBits TObject::EStatusBits TObjectRefSpy"
-      " TObjectSpy TObjectTable";
-#else
    std::string expected = "TObjArray TObjArrayIter TObjLink TObjOptLink TObjString"
       " TObject TObjectRefSpy TObjectSpy TObjectTable";
-#endif
    // FIXME: See ROOT-10989
    ASSERT_STREQ(expected.c_str(), GetCompletions("TObj",
                                                  /*ignore=*/{"TObjectDisplayItem", "TObjectDrawable", "TObjectHolder",
-                                                             "TObjectItem", "TObjectElement"}).c_str());
+                                                             "TObjectItem", "TObjectElement", "TObject::EDeprecatedStatusBits", "TObject::EStatusBits"}).c_str());
 }
