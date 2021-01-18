@@ -70,18 +70,14 @@ public:
 
    virtual ~TDirectoryLevelIter() = default;
 
-   bool Reset() override { return CreateIter(); }
-
    bool Next() override { return NextDirEntry(); }
 
    // use default implementation for now
    // bool Find(const std::string &name) override { return FindDirEntry(name); }
 
-   bool HasItem() const override { return fKey && !fCurrentName.empty(); }
+   std::string GetItemName() const override { return fCurrentName; }
 
-   std::string GetName() const override { return fCurrentName; }
-
-   int CanHaveChilds() const override
+   int GetNumItemChilds() const override
    {
       std::string clname = fKey->GetClassName();
       // TODO: more advanced logic required here
@@ -91,13 +87,13 @@ public:
              (clname.find("TGeoVolume") == 0) ||
              (clname.find("TTree") == 0) ||
              (clname.find("TNtuple") == 0) ||
-             (clname.find("TBranchElement") == 0) ? 1 : 0;
+             (clname.find("TBranchElement") == 0) ? -1 : 0;
    }
 
    /** Create element for the browser */
    std::unique_ptr<RItem> CreateItem() override
    {
-      auto item = std::make_unique<TKeyItem>(GetName(), CanHaveChilds());
+      auto item = std::make_unique<TKeyItem>(GetItemName(), GetNumItemChilds());
 
       item->SetClassName(fKey->GetClassName());
 
