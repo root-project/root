@@ -199,8 +199,6 @@ public:
       if (tobj) {
          bool owned_by_dir = (fDir->FindObject(tobj) == tobj) || (clname == "TGeoManager");
 
-         printf("owned_by_dir obj %p %s %d\n", tobj, clname.c_str(), owned_by_dir);
-
          return std::make_unique<TObjectHolder>(tobj, !owned_by_dir);
       }
 

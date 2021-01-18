@@ -12,6 +12,7 @@
 
 #include "TBaseClass.h"
 #include "TList.h"
+#include "TClass.h"
 #include "TSystem.h"
 
 using namespace ROOT::Experimental::Browsable;
@@ -54,18 +55,28 @@ RProvider::Draw7Map_t &RProvider::GetDraw7Map()
 }
 
 //////////////////////////////////////////////////////////////////////////////////
+// Returns map of registered icons base on class pointer
+
+RProvider::ClassMap_t &RProvider::GetClassMap()
+{
+   static RProvider::ClassMap_t sMap;
+   return sMap;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// Returns map of registered icons base on class name
+
+//////////////////////////////////////////////////////////////////////////////////
 // Destructor
 /// Automatically unregister provider from all maps
 
 RProvider::~RProvider()
 {
    // here to remove all correspondent entries
+   CleanThis(GetClassMap());
    CleanThis(GetFileMap());
-
    CleanThis(GetBrowseMap());
-
    CleanThis(GetDraw6Map());
-
    CleanThis(GetDraw7Map());
 }
 
@@ -120,6 +131,61 @@ void RProvider::RegisterDraw7(const TClass *cl, Draw7Func_t func)
        R__LOG_ERROR(BrowsableLog()) << "Draw v7 handler for class " << cl->GetName() << " already exists";
 
     bmap.emplace(cl, StructDraw7{this, func});
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// Register class with supported libs (if any)
+
+void RProvider::RegisterClass(const std::string &clname, const std::string &iconname,
+                             const std::string &browselib, const std::string &draw6lib, const std::string &draw7lib)
+{
+   auto &bmap = GetClassMap();
+
+   if (!clname.empty() && (bmap.find(clname) != bmap.end()))
+      R__LOG_ERROR(BrowsableLog()) << "Entry for class " << clname << " already exists";
+
+   bmap.emplace(clname, StructClass{this, iconname,browselib, draw6lib, draw7lib});
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// Returns entry for the requested class
+const RProvider::StructClass &RProvider::GetClassEntry(const std::string &clname)
+{
+   auto &bmap = GetClassMap();
+   auto iter = bmap.find(clname);
+   if (iter != bmap.end())
+      return iter->second;
+
+   for (auto &elem : bmap)
+      if (elem.first.compare(0, clname.length(), clname) == 0)
+         return elem.second;
+
+   static StructClass dummy;
+   return dummy;
+}
+
+const RProvider::StructClass &RProvider::GetClassEntry(const TClass *cl, bool check_parent)
+{
+   auto &bmap = GetClassMap();
+   auto iter = bmap.find(cl->GetName());
+   if (iter != bmap.end())
+      return iter->second;
+
+   if (check_parent) {
+      TClass *c1 = const_cast<TClass *>(cl);
+      TList *bases = c1->GetListOfBases();
+      if (bases) {
+         for (auto base : *bases) {
+            auto basecl = dynamic_cast<TBaseClass *>(base);
+            if (!basecl || !basecl->GetClassPointer()) continue;
+            auto &entry = GetClassEntry(basecl->GetClassPointer(), check_parent);
+            if (!entry.dummy()) return entry;
+         }
+      }
+   }
+
+   static StructClass dummy;
+   return dummy;
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -202,9 +268,12 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<RHolder> &object)
    if (ScanProviderMap<BrowseMap_t,BrowseMap_t::iterator>(GetBrowseMap(), object->GetClass(), false, test_func))
       return res;
 
-   if (object && object->GetClass()->InheritsFrom("TBranchElement")) {
+   auto &entry = GetClassEntry(object->GetClass());
+
+   if (!entry.dummy() && !entry.browselib.empty())
+      gSystem->Load(entry.browselib.c_str());
+   else if (object && object->GetClass()->InheritsFrom("TBranchElement"))
       gSystem->Load("libROOTBranchBrowseProvider");
-   }
 
    ScanProviderMap<BrowseMap_t,BrowseMap_t::iterator>(GetBrowseMap(), object->GetClass(), true, test_func);
 
@@ -227,7 +296,11 @@ bool RProvider::Draw6(TVirtualPad *subpad, std::unique_ptr<RHolder> &object, con
    if (ScanProviderMap<Draw6Map_t, Draw6Map_t::iterator>(GetDraw6Map(), object->GetClass(), false, draw_func))
       return true;
 
-   if (object->GetClass()->InheritsFrom("TLeaf") || object->GetClass()->InheritsFrom("TBranchElement"))
+   auto &entry = GetClassEntry(object->GetClass());
+
+   if (!entry.dummy() && !entry.draw6lib.empty())
+      gSystem->Load(entry.draw6lib.c_str());
+   else if (object->GetClass()->InheritsFrom("TLeaf") || object->GetClass()->InheritsFrom("TBranchElement"))
       gSystem->Load("libROOTLeafDraw6Provider");
    else if (object->GetClass()->InheritsFrom(TObject::Class()))
       gSystem->Load("libROOTObjectDraw6Provider");
@@ -255,7 +328,11 @@ bool RProvider::Draw7(std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std
 
    // TODO: need factory methods for that
 
-   if (object->GetClass()->InheritsFrom("TLeaf") || object->GetClass()->InheritsFrom("TBranchElement"))
+   auto &entry = GetClassEntry(object->GetClass());
+
+   if (!entry.dummy() && !entry.draw7lib.empty())
+      gSystem->Load(entry.draw7lib.c_str());
+   else if (object->GetClass()->InheritsFrom("TLeaf") || object->GetClass()->InheritsFrom("TBranchElement"))
       gSystem->Load("libROOTLeafDraw7Provider");
    else if (object->GetClass()->InheritsFrom(TObject::Class()))
       gSystem->Load("libROOTObjectDraw7Provider");
@@ -275,12 +352,32 @@ bool RProvider::Draw7(std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std
 
 std::string RProvider::GetClassIcon(const std::string &classname)
 {
-   if (classname == "TTree" || classname == "TNtuple")
-      return "sap-icon://tree"s;
-   else if (classname == "TDirectory" || classname == "TDirectoryFile")
+   auto &entry = GetClassEntry(classname);
+   if (!entry.iconname.empty())
+      return entry.iconname;
+
+//   if (classname == "TTree" || classname == "TNtuple")
+//      return "sap-icon://tree"s;
+   if (classname == "TDirectory" || classname == "TDirectoryFile")
       return "sap-icon://folder-blank"s;
    else if (classname.find("TLeaf") == 0)
       return "sap-icon://e-care"s;
+   else if (classname.find("TH1") == 0)
+      return "sap-icon://vertical-bar-chart"s;
+   else if (classname.find("TH2") == 0)
+      return "sap-icon://pixelate"s;
+   else if (classname.find("TGraph") == 0)
+      return "sap-icon://line-chart"s;
 
    return "sap-icon://electronic-medical-record"s;
 }
+
+std::string RProvider::GetClassIcon(const TClass *cl)
+{
+   auto &entry = GetClassEntry(cl);
+   if (!entry.iconname.empty())
+      return entry.iconname;
+
+   return "sap-icon://electronic-medical-record"s;
+}
+
