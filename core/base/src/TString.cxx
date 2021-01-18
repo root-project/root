@@ -216,7 +216,7 @@ TString::TString(const TSubString& substr)
 TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
 {
    if (n1 < 0) {
-      Error("TString::TString", "Negatice length!");
+      Error("TString::TString", "Negative first length!");
       Zero();
       return;
    }
