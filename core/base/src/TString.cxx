@@ -256,7 +256,7 @@ char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
       nchar = 0;
    }
    if (nchar > capacity){
-      Error("*TString::Init", "nchar too large!");
+      Error("TString::Init", "nchar too large!");
       nchar = 0;
    }
    if (capacity > MaxSize()) {
