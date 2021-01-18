@@ -66,6 +66,10 @@ public:
    virtual std::unique_ptr<RHolder> GetObject() { return nullptr; }
 
    static std::shared_ptr<RElement> GetSubElement(std::shared_ptr<RElement> &elem, const RElementPath_t &path);
+
+   static int ComparePaths(const RElementPath_t &path1, const RElementPath_t &path2);
+
+   static std::string GetPathAsString(const RElementPath_t &path);
 };
 
 } // namespace Browsable

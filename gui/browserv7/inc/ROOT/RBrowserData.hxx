@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace ROOT {
 namespace Experimental {
@@ -39,7 +40,8 @@ class RBrowserData {
    std::shared_ptr<Browsable::RElement> fTopElement;    ///<! top element
 
    Browsable::RElementPath_t  fWorkingPath;             ///<! path showed in Breadcrumb
-   std::shared_ptr<Browsable::RElement> fWorkElement;   ///<! main element used for working in browser dialog
+
+   std::map<Browsable::RElementPath_t, std::shared_ptr<Browsable::RElement>> fCache; ///<! already requested elements
 
    Browsable::RElementPath_t fLastPath;                  ///<! path to last used element
    std::shared_ptr<Browsable::RElement> fLastElement;    ///<! last element used in request
@@ -49,11 +51,13 @@ class RBrowserData {
    std::string fLastSortMethod;                          ///<! last sort method
    bool fLastSortReverse{false};                         ///<! last request reverse order
 
-   Browsable::RElementPath_t DecomposePath(const std::string &path);
+   Browsable::RElementPath_t DecomposePath(const std::string &path, bool relative_to_work_element);
 
    void ResetLastRequest();
 
    bool ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply);
+
+   std::shared_ptr<Browsable::RElement> GetSubElement(const Browsable::RElementPath_t &path);
 
 public:
    RBrowserData() = default;

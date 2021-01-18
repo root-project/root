@@ -82,3 +82,33 @@ std::string RElement::GetContent(const std::string &kind)
    return ""s;
 }
 
+/////////////////////////////////////////////////////////////////////
+/// Compare two paths,
+/// Returns number of elements matches in both paths
+
+int RElement::ComparePaths(const RElementPath_t &path1, const RElementPath_t &path2)
+{
+   int sz = path1.size();
+   if (sz > (int) path2.size()) sz = path2.size();
+
+   for (int n = 0; n < sz; ++n)
+      if (path1[n] != path2[n])
+         return n;
+
+   return sz;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Converts element path back to string
+
+std::string RElement::GetPathAsString(const RElementPath_t &path)
+{
+   std::string res;
+   for (auto &elem : path) {
+      res.append("/");
+      res.append(elem);
+   }
+
+   return res;
+}
+
