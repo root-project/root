@@ -24,28 +24,20 @@ public:
    virtual ~RGroupIter() = default;
 
    /** Shift to next element */
-   bool Next() override { fIndx++; return HasItem(); }
-
-   /** Is there current element  */
-   bool HasItem() const override { return (fIndx >= 0) &&  (fIndx < (int) fComp.GetChilds().size()); }
+   bool Next() override { return ++fIndx < (int) fComp.GetChilds().size(); }
 
    /** Returns current element name  */
-   std::string GetName() const override { return fComp.GetChilds()[fIndx]->GetName(); }
+   std::string GetItemName() const override { return fComp.GetChilds()[fIndx]->GetName(); }
 
-   /** If element may have childs: 0 - no, >0 - yes, -1 - maybe */
-   int CanHaveChilds() const override { return fComp.GetChilds().size(); }
+   /** Number of child elements in current element - not know, most probably there */
+   int GetNumItemChilds() const override { return -1; }
 
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override { return fComp.GetChilds()[fIndx]; }
 
-   /** Reset iterator to the first element, returns false if not supported */
-   bool Reset() override { fIndx = -1; return true; }
-
    /** Find item with specified name, use item MatchName() functionality */
    bool Find(const std::string &name) override
    {
-      if (!Reset()) return false;
-
       while (Next()) {
          if (fComp.GetChilds()[fIndx]->MatchName(name))
             return true;

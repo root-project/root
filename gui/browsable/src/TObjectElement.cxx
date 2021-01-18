@@ -39,10 +39,8 @@ class TObjectLevelIter : public RLevelIter {
 
    int fCounter{-1};
 
-   int fCanHaveChilds{-1};
-
 public:
-   explicit TObjectLevelIter(int canHaveChilds = -1) { fCanHaveChilds = canHaveChilds; }
+   explicit TObjectLevelIter() {}
 
    virtual ~TObjectLevelIter() = default;
 
@@ -53,22 +51,18 @@ public:
 
    auto NumElements() const { return fElements.size(); }
 
-   bool Reset() override { fCounter = -1; return true; }
-
    bool Next() override { return ++fCounter < (int) fElements.size(); }
 
    // use default implementation for now
    // bool Find(const std::string &name) override { return FindDirEntry(name); }
 
-   bool HasItem() const override { return (fCounter >=0) && (fCounter < (int) fElements.size()); }
+   std::string GetItemName() const override { return fElements[fCounter]->GetName(); }
 
-   std::string GetName() const override { return fElements[fCounter]->GetName(); }
-
-   int CanHaveChilds() const override
+   int GetNumItemChilds() const override
    {
       std::shared_ptr<TObjectElement> telem = std::dynamic_pointer_cast<TObjectElement>(fElements[fCounter]);
       if (!telem) return 0;
-      return telem->IsFolder() ? 1 : 0;
+      return telem->IsFolder() ? -1 : 0;
    }
 
    /** Create element for the browser */
@@ -86,13 +80,17 @@ public:
 
 class TMyBrowserImp : public TBrowserImp {
    TObjectLevelIter *fIter{nullptr};   ///<!  back-reference on iterator
+   const TObject *fBrowseObj{nullptr}; ///<!  object which wil be browsed
+   bool fDuplicated{false};            ///<! is object was duplicated?
 
 public:
 
-   TMyBrowserImp(TObjectLevelIter *iter) : TBrowserImp(nullptr), fIter(iter) {}
+   TMyBrowserImp(TObjectLevelIter *iter, TObject *obj) : TBrowserImp(nullptr), fIter(iter), fBrowseObj(obj) {}
    virtual ~TMyBrowserImp() = default;
 
    void Add(TObject* obj, const char* name, Int_t) override;
+
+   bool IsDuplicated() const { return fDuplicated; }
 };
 
 // ===============================================================================================================
@@ -146,25 +144,18 @@ std::unique_ptr<RLevelIter> TObjectElement::GetChildsIter()
 
    auto iter = std::make_unique<TObjectLevelIter>();
 
-   TMyBrowserImp *imp = new TMyBrowserImp(iter.get());
+   TMyBrowserImp *imp = new TMyBrowserImp(iter.get(), fObj);
 
    // must be new, otherwise TBrowser constructor ignores imp
    TBrowser *br = new TBrowser("name", "title", imp);
 
    fObj->Browse(br);
 
-   delete br;
+   auto dupl = imp->IsDuplicated();
 
-   if (iter->NumElements() == 0) return nullptr;
+   delete br; // also will destroy implementaion
 
-   // check if it is object itself - should not happen after IsFolder() false
-   if (iter->NumElements() == 1) {
-      iter->Reset(); iter->Next();
-      auto elem0 = std::dynamic_pointer_cast<TObjectElement>(iter->GetElement());
-      if (elem0 && elem0->IsSame(fObj))
-         return nullptr;
-      iter->Reset();
-   }
+   if (dupl || (iter->NumElements() == 0)) return nullptr;
 
    return iter;
 }
@@ -188,6 +179,10 @@ std::string TObjectElement::ClassName() const
 
 void TMyBrowserImp::Add(TObject *obj, const char *name, Int_t)
 {
+   // prevent duplication of object itself - ignore such browsing
+   if (fBrowseObj == obj) fDuplicated = true;
+   if (fDuplicated) return;
+
    std::unique_ptr<RHolder> holder = std::make_unique<TObjectHolder>(obj);
 
    std::shared_ptr<RElement> elem = RProvider::Browse(holder);
@@ -214,7 +209,7 @@ std::unique_ptr<RItem> TObjectLevelIter::CreateItem()
    if (!elem) return nullptr;
 
    bool can_have_childs = false;
-   if (CanHaveChilds() != 0) {
+   if (GetNumItemChilds() != 0) {
       // TODO: make via RProvider methods
       std::string clname = elem->ClassName();
       can_have_childs = (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) ||
@@ -222,7 +217,7 @@ std::unique_ptr<RItem> TObjectLevelIter::CreateItem()
                         (clname.find("TGeoManager") == 0) || (clname.find("TGeoVolume") == 0) || (clname.find("TGeoNode") == 0);
    }
 
-   auto item = std::make_unique<TObjectItem>(elem->GetName(), can_have_childs ? 1 : 0);
+   auto item = std::make_unique<TObjectItem>(elem->GetName(), can_have_childs ? -1 : 0);
 
    item->SetClassName(elem->ClassName());
 
@@ -264,18 +259,18 @@ public:
 
    virtual ~TCollectionIter() = default;
 
-   bool Reset() override { fIter.Reset(); return true; }
-
    bool Next() override { return fIter.Next() != nullptr; }
 
    // use default implementation for now
    // bool Find(const std::string &name) override { return FindDirEntry(name); }
 
-   bool HasItem() const override { return *fIter != nullptr; }
+   std::string GetItemName() const override { return (*fIter)->GetName(); }
 
-   std::string GetName() const override { return (*fIter)->GetName(); }
-
-   int CanHaveChilds() const override { return -1; }
+   int GetNumItemChilds() const override
+   {
+      // TODO: add test based on class name
+      return -1;
+   }
 
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override
