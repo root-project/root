@@ -248,7 +248,7 @@ TString::~TString()
 char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
 {
    if (capacity < 0){
-      Error("*TString::Init", "Negative length!");
+      Error("TString::Init", "Negative length!");
       capacity = 0;
    }
    if (nchar < 0){
