@@ -382,7 +382,7 @@ TString& TString::operator=(const TSubString &substr)
 
 TString& TString::Append(char c, Ssiz_t rep)
 {
-   if (rep <= 0 ){
+   if (rep < 0 ){
       Error("TString& TString::Append", "Negative length!");
       return *this; // appends nothing
    }
