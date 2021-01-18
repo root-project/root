@@ -3603,10 +3603,6 @@ void TF1::Streamer(TBuffer &b)
          saved = 1;
          Save(fXmin, fXmax, 0, 0, 0, 0);
       }
-      // if (fType == EFType::kCompositionFcn)
-      //    fComposition_ptr = fComposition.get();
-      // else
-      //    fComposition_ptr = nullptr;
       b.WriteClassBuffer(TF1::Class(), this);
 
       // clear vector contents
