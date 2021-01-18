@@ -237,31 +237,27 @@ public:
 
    virtual ~RSysDirLevelIter() { CloseDir(); }
 
-   bool Reset() override { return OpenDir(); }
-
    bool Next() override { return NextDirEntry(); }
 
    bool Find(const std::string &name) override { return FindDirEntry(name); }
 
-   bool HasItem() const override { return !fItemName.empty(); }
+   std::string GetItemName() const override { return fItemName; }
 
-   std::string GetName() const override { return fItemName; }
-
-   /** Returns true if item can have childs and one should try to create iterator (optional) */
-   int CanHaveChilds() const override
+   /** Returns -1 if directory or file format supported */
+   int GetNumItemChilds() const override
    {
       if (R_ISDIR(fCurrentStat.fMode))
-         return 1;
+         return -1;
 
       if (RProvider::IsFileFormatSupported(GetFileExtension(fCurrentName)))
-         return 1;
+         return -1;
 
       return 0;
    }
 
    std::unique_ptr<RItem> CreateItem() override
    {
-      auto item = std::make_unique<RSysFileItem>(GetName(), CanHaveChilds());
+      auto item = std::make_unique<RSysFileItem>(GetItemName(), GetNumItemChilds());
 
       // this is construction of current item
       char tmp[256];
@@ -277,7 +273,7 @@ public:
       if (item->isdir)
          item->SetIcon("sap-icon://folder-blank"s);
       else
-         item->SetIcon(RSysFile::GetFileIcon(GetName()));
+         item->SetIcon(RSysFile::GetFileIcon(GetItemName()));
 
       // file size
       Long64_t _fsize = item->size, bsize = item->size;

@@ -31,25 +31,18 @@ class RLevelIter {
 public:
    virtual ~RLevelIter() = default;
 
-   /** Shift to next element */
+   /** Shift to next entry */
    virtual bool Next() = 0;
 
-   /** Is there current element  */
-   virtual bool HasItem() const = 0;
+   /** Returns current entry name  */
+   virtual std::string GetItemName() const = 0;
 
-   /** Returns current element name  */
-   virtual std::string GetName() const = 0;
+   virtual int GetNumItemChilds() const;
 
-   /** If element may have childs: 0 - no, >0 - yes, -1 - maybe */
-   virtual int CanHaveChilds() const { return 0; }
-
-   /** Returns full information for current element */
+   /** Create RElement for current entry - may take much time to load object or open file */
    virtual std::shared_ptr<RElement> GetElement() = 0;
 
    virtual std::unique_ptr<RItem> CreateItem();
-
-   /** Reset iterator to the first element, returns false if not supported */
-   virtual bool Reset() { return false; }
 
    virtual bool Find(const std::string &name);
 
