@@ -43,6 +43,7 @@
 #@has_found_attribute_always_inline@ R__HAS_ATTRIBUTE_ALWAYS_INLINE /**/
 #@has_found_attribute_noinline@ R__HAS_ATTRIBUTE_NOINLINE /**/
 #@useimt@ R__USE_IMT   /**/
+#@newtbb@ R__NEW_TBB   /**/
 #@memory_term@ R__COMPLETE_MEM_TERMINATION /**/
 #@hascefweb@ R__HAS_CEFWEB  /**/
 #@hasqt5webengine@ R__HAS_QT5WEB  /**/

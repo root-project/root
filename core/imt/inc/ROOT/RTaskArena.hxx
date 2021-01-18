@@ -36,9 +36,16 @@
 
 /// tbb::task_arena is an alias of tbb::interface7::task_arena, which doesn't allow
 /// to forward declare tbb::task_arena without forward declaring tbb::interface7
-namespace tbb{
+namespace tbb {
+#ifdef R__NEW_TBB
+namespace detail {
+namespace d1 {class task_arena;}
+}
+using task_arena = detail::d1::task_arena;
+#else
 namespace interface7{class task_arena;}
 using task_arena = interface7::task_arena;
+#endif
 }
 
 namespace ROOT {
