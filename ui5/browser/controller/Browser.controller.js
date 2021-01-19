@@ -264,8 +264,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             onAfterRendering: function() { this.assignRowHandlers(); }
          }, this);
 
-         this.newCodeEditor();
-
          this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
       },
 
@@ -286,21 +284,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Code Editor =============== */
       /* =========================================== */
 
-      newCodeEditor: async function () {
+      createCodeEditor: function(name, title) {
          const oTabContainer = this.getView().byId("myTabContainer");
 
-         const ID = "CodeEditor" + this.globalId;
-         this.globalId++;
-
-         const oTabContainerItem = new TabContainerItem(ID, {
+         let item = new TabContainerItem(name, {
             icon: "sap-icon://write-new-document",
             name: "Code Editor",
-            additionalText: "untitled",
-            content: this.newCodeEditorFragment(ID)
+            key: name,
+            additionalText: title,
+            content: this.newCodeEditorFragment(name)
          });
 
-         oTabContainer.addItem(oTabContainerItem);
-         oTabContainer.setSelectedItem(oTabContainerItem);
+         oTabContainer.addItem(item);
+         oTabContainer.setSelectedItem(item);
       },
 
       newCodeEditorFragment: function (ID) {
@@ -561,15 +557,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          const ID = "ImageViewer" + this.globalId;
          this.globalId++;
 
-         let tabContainerItem = new TabContainerItem(ID, {
+         let item = new TabContainerItem(ID, {
             icon: "sap-icon://background",
             name: "Image Viewer",
+            key: "",
             additionalText: "untitled",
             content: this.newImageViewerFragment(ID)
          });
 
-         oTabContainer.addItem(tabContainerItem);
-         oTabContainer.setSelectedItem(tabContainerItem);
+         oTabContainer.addItem(item);
+         oTabContainer.setSelectedItem(item);
 
          sap.ui.getCore().byId(ID + 'Image').addStyleClass("imageViewer");
       },
@@ -676,16 +673,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this._tabMenu.openBy(oButton);
       },
 
-      newRootXCanvas: function (oEvent) {
-         let msg;
-         if (oEvent.getSource().getText().indexOf("6") !== -1) {
+      /** @summary handle creation of new tab */
+      handleNewTab: function (oEvent) {
+         let msg, txt = oEvent.getSource().getText();
+
+         if (txt.indexOf("editor") >= 0)
+            msg = "NEWEDITOR";
+         else if (txt.indexOf("Root 6") >= 0)
             msg = "NEWTCANVAS";
-         } else {
+         else
             msg = "NEWRCANVAS";
-         }
-         if (this.isConnected) {
+
+         if (this.isConnected)
             this.websocket.send(msg);
-         }
       },
 
       /* ========================================= */
@@ -734,14 +734,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* ============================================ */
 
       tabSelectItem: function(oEvent) {
-         var oItemSelected = oEvent.getParameter('item');
-
-         if (oItemSelected.getName() !== "ROOT Canvas") return;
-
-         console.log("Canvas selected:", oItemSelected.getAdditionalText());
-
-         this.websocket.send("SELECT_CANVAS:" + oItemSelected.getAdditionalText());
-
+         let item = oEvent.getParameter('item');
+         if (item && item.getKey()) {
+            console.log("Tab selected:", item.getKey());
+            this.websocket.send("SELECT_TAB:" + item.getKey());
+         }
       },
 
       /** @brief Close Tab event handler */
@@ -752,12 +749,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let oTabContainer = this.byId("myTabContainer");
          let oItemToClose = oEvent.getParameter('item');
 
-
-         if (oItemToClose.getName() === "Code Editor") {
+         /*if (oItemToClose.getName() === "Code Editor") {
 
             let count = 0;
             const items = oTabContainer.getItems();
-            for (let i=0; i< items.length; i++) {
+            for (let i=0; i<items.length; i++) {
                if (items[i].getId().indexOf("CodeEditor") !== -1) {
                   count++
                }
@@ -767,21 +763,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             } else {
                this.saveCheck(() => oTabContainer.removeItem(oItemToClose));
             }
-         } else {
-            MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
-               onClose: oAction => {
-                  if (oAction === MessageBox.Action.OK) {
-                     if (oItemToClose.getName() === "ROOT Canvas")
-                        this.websocket.send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
+         } */
+         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
+            onClose: oAction => {
+               if (oAction === MessageBox.Action.OK) {
+                  if (oItemToClose.getKey())
+                     this.websocket.send("CLOSE_TAB:" + oItemToClose.getKey());
 
-                     oTabContainer.removeItem(oItemToClose);
+                  oTabContainer.removeItem(oItemToClose);
 
-                     MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
-                  }
+                  MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
                }
-            });
-
-         }
+            }
+         });
       },
 
       /* ============================================ */
@@ -1012,21 +1006,22 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                oViewer.setSrc(arr[1]);
             }
             break;
-         case "CANVS":  // canvas created by server, need to establish connection
-            var arr = JSON.parse(msg);
-            this.createCanvas(arr[0], arr[1], arr[2]);
+         case "NEWTAB": {  // canvas created by server, need to establish connection
+            let arr = JSON.parse(msg);
+            this.createElement(arr[0], arr[1], arr[2]);
             break;
+         }
          case "WORKPATH":
             this.updateBReadcrumbs(JSON.parse(msg));
             break;
-         case "SLCTCANV": // Selected the back selected canvas
+         case "SELECT_TAB": // Selected the back selected canvas
            let oTabContainer = this.byId("myTabContainer");
-           let oTabContainerItems = oTabContainer.getItems();
-           for(let i=0; i<oTabContainerItems.length; i++) {
-             if (oTabContainerItems[i].getAdditionalText() === msg) {
-               oTabContainer.setSelectedItem(oTabContainerItems[i]);
-               break;
-             }
+           let items = oTabContainer.getItems();
+           for(let i = 0; i< items.length; i++) {
+              if (items[i].getKey() === msg) {
+                 oTabContainer.setSelectedItem(items[i]);
+                 break;
+              }
            }
            break;
          case "BREPL":   // browser reply
@@ -1142,7 +1137,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.requestLogs();
 
          for (var k=1; k<arr.length; ++k)
-            this.createCanvas(arr[k][0], arr[k][1], arr[k][2]);
+            this.createElement(arr[k][0], arr[k][1], arr[k][2]);
+      },
+
+      createElement: function(kind, par1, par2) {
+         if (kind == "edit")
+            this.createCodeEditor(par1, par2);
+         else
+            this.createCanvas(kind, par1, par2);
       },
 
       createCanvas: function(kind, url, name) {
@@ -1150,18 +1152,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (!url || !name) return;
 
          let oTabContainer = this.byId("myTabContainer");
-         let oTabContainerItem = new TabContainerItem({
+         let item = new TabContainerItem({
             name: "ROOT Canvas",
+            key: name,
+            additionalText: name,
             icon: "sap-icon://column-chart-dual-axis"
          });
 
-         oTabContainerItem.setAdditionalText(name); // name can be used to set active canvas or close canvas
-
-         oTabContainer.addItem(oTabContainerItem);
+         oTabContainer.addItem(item);
 
          // Change the selected tabs, only if it is new one, not the basic one
          if(name !== "rcanv1") {
-            oTabContainer.setSelectedItem(oTabContainerItem);
+            oTabContainer.setSelectedItem(item);
          }
 
          let conn = new JSROOT.WebWindowHandle(this.websocket.kind);
@@ -1194,7 +1196,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             viewName: "rootui5.canv.view.Canvas",
             viewData: { canvas_painter: painter },
             height: "100%"
-         }).then(oView => oTabContainerItem.addContent(oView));
+         }).then(oView => item.addContent(oView));
       },
 
    });
