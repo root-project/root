@@ -1,6 +1,7 @@
 #include "TROOT.h"
 #include "ROOT/RTaskArena.hxx"
 #include "ROOT/TThreadExecutor.hxx"
+#include "../src/ROpaqueTaskArena.hxx"
 #include <fstream>
 #include <random>
 #include <thread>
@@ -8,7 +9,6 @@
 #include <condition_variable>
 #include <mutex>
 #include "gtest/gtest.h"
-#include "tbb/task_arena.h"
 
 #ifdef R__USE_IMT
 
