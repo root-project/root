@@ -310,10 +310,27 @@ std::unique_ptr<RLevelIter> TCollectionElement::GetChildsIter()
 class RTObjectProvider : public RProvider {
 
 public:
+   //////////////////////////////////////////////////////////////////////////////////
+   // Register TObject-based class with standard browsing/drawing libs
+
+   void RegisterTObject(const std::string &clname, const std::string &iconname, bool can_browse = false, bool can_draw = true)
+   {
+      RegisterClass(clname, iconname, can_browse ? "dflt"s : ""s,
+                                      can_draw ? "libROOTObjectDraw6Provider"s : ""s,
+                                      can_draw ? "libROOTObjectDraw7Provider"s : ""s);
+   }
+
    RTObjectProvider()
    {
-      RegisterClass("TTree", "sap-icon://tree");
-      RegisterClass("TNtuple", "sap-icon://tree");
+      RegisterTObject("TTree", "sap-icon://tree", true, false);
+      RegisterTObject("TNtuple", "sap-icon://tree", true, false);
+      RegisterClass("TBranchElement", "sap-icon://e-care", "libROOTBranchBrowseProvider", "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
+      RegisterClass("TLeaf", "sap-icon://e-care", ""s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
+
+      RegisterTObject("TDirectory", "sap-icon://folder-blank", true, false);
+      RegisterTObject("TH1", "sap-icon://vertical-bar-chart");
+      RegisterTObject("TH2", "sap-icon://pixelate");
+      RegisterTObject("TGraph", "sap-icon://line-chart");
 
       RegisterBrowse(TFolder::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TFolderElement>(object);

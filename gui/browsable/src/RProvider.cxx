@@ -137,14 +137,18 @@ void RProvider::RegisterDraw7(const TClass *cl, Draw7Func_t func)
 // Register class with supported libs (if any)
 
 void RProvider::RegisterClass(const std::string &clname, const std::string &iconname,
-                             const std::string &browselib, const std::string &draw6lib, const std::string &draw7lib)
+                              const std::string &browselib, const std::string &draw6lib, const std::string &draw7lib)
 {
    auto &bmap = GetClassMap();
 
    if (!clname.empty() && (bmap.find(clname) != bmap.end()))
       R__LOG_ERROR(BrowsableLog()) << "Entry for class " << clname << " already exists";
 
-   bmap.emplace(clname, StructClass{this, iconname,browselib, draw6lib, draw7lib});
+   std::string blib = browselib;
+   bool can_have_childs = !browselib.empty();
+   if ((blib == "dflt") || (blib == "TObject")) blib = ""; // just use as indicator that browsing is possible
+
+   bmap.emplace(clname, StructClass{this, can_have_childs, iconname, blib, draw6lib, draw7lib});
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -380,4 +384,21 @@ std::string RProvider::GetClassIcon(const TClass *cl)
 
    return "sap-icon://electronic-medical-record"s;
 }
+
+
+
+// ==============================================================================================
+
+class RDefaultProvider : public RProvider {
+
+public:
+   RDefaultProvider()
+   {
+      // TODO: let read from rootrc or any other files
+      RegisterClass("ROOT::Experimental::RH1D", "sap-icon://vertical-bar-chart", "", "", "libROOTHistDrawProvider");
+      RegisterClass("ROOT::Experimental::RH2D", "sap-icon://pixelate", "", "", "libROOTHistDrawProvider");
+      RegisterClass("ROOT::Experimental::RH3D", "sap-icon://vertical-bar-chart", "", "", "libROOTHistDrawProvider");
+   }
+
+} newRDefaultProvider;
 
