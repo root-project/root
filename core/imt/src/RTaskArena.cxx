@@ -1,4 +1,5 @@
 #include "ROOT/RTaskArena.hxx"
+#include "ROpaqueTaskArena.hxx"
 #include "TError.h"
 #include "TROOT.h"
 #include "TThread.h"
@@ -68,7 +69,7 @@ int LogicalCPUBandwithControl()
 /// * If no BC in place and maxConcurrency<1, defaults to the default tbb number of threads,
 /// which is CPU affinity aware
 ////////////////////////////////////////////////////////////////////////////////
-RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency) : fTBBArena(new tbb::task_arena{})
+RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency) : fTBBArena(new ROpaqueTaskArena{})
 {
    const unsigned tbbDefaultNumberThreads = fTBBArena->max_concurrency(); // not initialized, automatic state
    maxConcurrency = maxConcurrency > 0 ? std::min(maxConcurrency, tbbDefaultNumberThreads) : tbbDefaultNumberThreads;
@@ -100,7 +101,7 @@ unsigned RTaskArenaWrapper::TaskArenaSize()
 ////////////////////////////////////////////////////////////////////////////////
 /// Provides access to the wrapped tbb::task_arena.
 ////////////////////////////////////////////////////////////////////////////////
-tbb::task_arena &RTaskArenaWrapper::Access()
+ROOT::ROpaqueTaskArena &RTaskArenaWrapper::Access()
 {
    return *fTBBArena;
 }

@@ -36,12 +36,11 @@
 
 /// tbb::task_arena is an alias of tbb::interface7::task_arena, which doesn't allow
 /// to forward declare tbb::task_arena without forward declaring tbb::interface7
-namespace tbb{
-namespace interface7{class task_arena;}
-using task_arena = interface7::task_arena;
-}
 
 namespace ROOT {
+
+class ROpaqueTaskArena;
+
 namespace Internal {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,11 +64,11 @@ class RTaskArenaWrapper {
 public:
    ~RTaskArenaWrapper(); // necessary to set size back to zero
    static unsigned TaskArenaSize(); // A static getter lets us check for RTaskArenaWrapper's existence
-   tbb::task_arena &Access();
+   ROOT::ROpaqueTaskArena &Access();
 private:
    RTaskArenaWrapper(unsigned maxConcurrency = 0);
    friend std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency);
-   std::unique_ptr<tbb::task_arena> fTBBArena;
+   std::unique_ptr<ROOT::ROpaqueTaskArena> fTBBArena;
    static unsigned fNWorkers;
 };
 
