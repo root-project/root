@@ -59,6 +59,8 @@ public:
    /** Create iterator for childs elements if any */
    virtual std::unique_ptr<RLevelIter> GetChildsIter();
 
+   virtual int GetNumChilds();
+
    /** Returns element content, depends from kind. Can be "text" or "image64" or "json" */
    virtual std::string GetContent(const std::string & = "text");
 
