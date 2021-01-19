@@ -59,6 +59,11 @@ public:
    std::unique_ptr<RHolder> GetObject() override;
 
    const TClass *GetClass() const;
+
+   EActionKind GetDefaultAction() const override;
+
+   bool IsCapable(EActionKind) const override;
+
 };
 
 } // namespace Browsable

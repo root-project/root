@@ -45,6 +45,17 @@ public:
 
    static EContentKind GetContentKind(const std::string &kind);
 
+   /** Possible actions on double-click */
+   enum EActionKind {
+      kActNone,    ///< do nothing
+      kActBrowse,  ///< just browse (expand) item
+      kActEdit,    ///< can provide data for text editor
+      kActImage,   ///< can be shown in image viewer, can provide image
+      kActDraw6,   ///< can be drawn inside ROOT6 canvas
+      kActDraw7,   ///< can be drawn inside ROOT7 canvas
+      kActGeom     ///< can be shown in geometry viewer
+   };
+
    virtual ~RElement() = default;
 
    /** Name of browsable, must be provided in derived classes */
@@ -66,6 +77,12 @@ public:
 
    /** Access object */
    virtual std::unique_ptr<RHolder> GetObject() { return nullptr; }
+
+   /** Get default action */
+   virtual EActionKind GetDefaultAction() const { return kActNone; }
+
+   /** Check if want to perform action */
+   virtual bool IsCapable(EActionKind action) const { return action == GetDefaultAction(); }
 
    static std::shared_ptr<RElement> GetSubElement(std::shared_ptr<RElement> &elem, const RElementPath_t &path);
 

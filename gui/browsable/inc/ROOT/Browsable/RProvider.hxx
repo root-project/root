@@ -44,6 +44,8 @@ public:
 
    static bool CanHaveChilds(const std::string &classname);
    static bool CanHaveChilds(const TClass *cl);
+   static bool CanDraw6(const TClass *cl);
+   static bool CanDraw7(const TClass *cl);
 
    static bool IsFileFormatSupported(const std::string &extension);
    static std::shared_ptr<RElement> OpenFile(const std::string &extension, const std::string &fullname);

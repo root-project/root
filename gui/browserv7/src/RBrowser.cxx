@@ -160,14 +160,50 @@ long RBrowser::ProcessRunCommand(const std::string &file_path)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Send editor content to the client
+
+std::string RBrowser::SendEditorContent(EditorPage *editor)
+{
+   if (!editor) return ""s;
+
+   std::vector<std::string> args = { editor->fName, editor->fFileName, editor->fContent };
+   return "EDITOR:"s + TBufferJSON::ToJSON(&args).Data();
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Process dbl click on browser item
 
-std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions)
+std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions, const std::string &)
 {
    R__LOG_DEBUG(0, BrowserLog()) << "DoubleClick " << item_path;
 
    auto elem = fBrowsable.GetElement(item_path);
    if (!elem) return ""s;
+
+   auto editor = GetActiveEditor();
+
+   // check if element can be edit
+   if (editor && elem->IsCapable(Browsable::RElement::kActEdit)) {
+      auto code = elem->GetContent("text");
+      if (!code.empty()) {
+         editor->fContent = code;
+         editor->fFileName = elem->GetContent("filename");
+         if (editor->fFileName.empty())
+            editor->fFileName = elem->GetName();
+      } else {
+         auto json = elem->GetContent("json");
+         if (!json.empty()) {
+            editor->fContent = json;
+            editor->fFileName = elem->GetName() + ".json";
+         } else {
+            editor = nullptr;
+         }
+      }
+      if (editor)
+         return SendEditorContent(editor);
+   }
+
+   return ""s;
 
    // TODO: one can send id of editor or canvas to be sure when sending back reply
 
@@ -380,7 +416,19 @@ std::shared_ptr<RCanvas> RBrowser::GetActiveRCanvas() const
       return *iter;
 
    return nullptr;
+}
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns active text editor (if any)
+
+RBrowser::EditorPage *RBrowser::GetActiveEditor() const
+{
+   auto iter = std::find_if(fEditors.begin(), fEditors.end(), [this](const std::unique_ptr<EditorPage> &page) { return fActiveTab == page->fName; });
+
+   if (iter != fEditors.end())
+      return iter->get();
+
+   return nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -494,18 +542,18 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
       std::string reply;
 
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
-      if (arr && (arr->size() == 2))
-         reply = ProcessDblClick(arr->at(0), arr->at(1));
+      if (arr && (arr->size() == 3))
+         reply = ProcessDblClick(arr->at(0), arr->at(1), arr->at(2));
 
       if (!reply.empty())
          fWebWindow->Send(connid, reply);
 
    } else if (arg.compare(0,9, "RUNMACRO:") == 0) {
       ProcessRunCommand(arg.substr(9));
-   } else if (arg.compare(0,12, "SELECT_TAB:") == 0) {
-      fActiveTab = arg.substr(12);
-   } else if (arg.compare(0,11, "CLOSE_TAB:") == 0) {
-      CloseTab(arg.substr(11));
+   } else if (arg.compare(0,11, "SELECT_TAB:") == 0) {
+      fActiveTab = arg.substr(11);
+   } else if (arg.compare(0,10, "CLOSE_TAB:") == 0) {
+      CloseTab(arg.substr(10));
    } else if (arg == "GETWORKPATH") {
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 7, "CHPATH:") == 0) {

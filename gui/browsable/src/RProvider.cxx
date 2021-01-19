@@ -224,7 +224,7 @@ std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, cons
 // Template function to scan class entries, including parent object classes
 
 template<class Map_t, class Iterator_t>
-bool ScanProviderMap(Map_t &fmap, const TClass *cl, bool test_all, std::function<bool(Iterator_t &)> check_func)
+bool ScanProviderMap(Map_t &fmap, const TClass *cl, bool test_all = false, std::function<bool(Iterator_t &)> check_func = nullptr)
 {
    if (!cl)
       return false;
@@ -233,7 +233,7 @@ bool ScanProviderMap(Map_t &fmap, const TClass *cl, bool test_all, std::function
    while (testcl) {
       auto iter = fmap.find(testcl);
       if (iter != fmap.end())
-         if (check_func(iter))
+         if (!check_func || check_func(iter))
             return true;
 
       auto bases = testcl->GetListOfBases();
@@ -369,6 +369,29 @@ bool RProvider::CanHaveChilds(const TClass *cl)
 {
    return GetClassEntry(cl).can_have_childs;
 }
+
+bool RProvider::CanDraw6(const TClass *cl)
+{
+   if (ScanProviderMap<Draw6Map_t, Draw6Map_t::iterator>(GetDraw6Map(), cl))
+      return true;
+
+   if (!GetClassEntry(cl).draw6lib.empty())
+      return true;
+
+   return false;
+}
+
+bool RProvider::CanDraw7(const TClass *cl)
+{
+   if (ScanProviderMap<Draw7Map_t, Draw7Map_t::iterator>(GetDraw7Map(), cl))
+      return true;
+
+   if (!GetClassEntry(cl).draw7lib.empty())
+      return true;
+
+   return false;
+}
+
 
 // ==============================================================================================
 

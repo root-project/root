@@ -87,7 +87,7 @@
           <detailPages>
             <l:Splitter orientation="Vertical">
               <Page title="Javascript ROOT Browser" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
-                <TabContainer id="myTabContainer" showAddNewButton="true" addNewButtonPress="addNewButtonPressHandler" itemSelect="tabSelectItem" itemClose="tabCloseHandler" />
+                <TabContainer id="tabContainer" showAddNewButton="true" addNewButtonPress="addNewButtonPressHandler" itemSelect="tabSelectItem" itemClose="tabCloseHandler" />
               </Page>
               <Page showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
                 <layoutData><l:SplitterLayoutData size="20%" /></layoutData>
