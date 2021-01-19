@@ -378,9 +378,9 @@ public:
    RDefaultProvider()
    {
       // TODO: let read from rootrc or any other files
-      RegisterClass("ROOT::Experimental::RH1D", "sap-icon://vertical-bar-chart", "", "", "libROOTHistDrawProvider");
+      RegisterClass("ROOT::Experimental::RH1D", "sap-icon://bar-chart", "", "", "libROOTHistDrawProvider");
       RegisterClass("ROOT::Experimental::RH2D", "sap-icon://pixelate", "", "", "libROOTHistDrawProvider");
-      RegisterClass("ROOT::Experimental::RH3D", "sap-icon://vertical-bar-chart", "", "", "libROOTHistDrawProvider");
+      RegisterClass("ROOT::Experimental::RH3D", "sap-icon://product", "", "", "libROOTHistDrawProvider");
    }
 
 } newRDefaultProvider;
