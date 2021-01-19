@@ -463,10 +463,10 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
    if (usePyTorchCNN) {
 
       Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model");
-      TString pyTorchFileName = gROOT->GetTutorialDir() + TString("/tmva/pytorch/PyTorch_Generate_CNN_Model.py");
-      // check that PyTorch file defining model and used later when booking the methos is existing
-      if (gSystem->AccessPathName(pyTorchFileName)) {
-         Warning("TMVA_CNN_Classification", "PyTorch model building file is not existing - skip using PyTorch");
+      TString pyTorchFileName = gROOT->GetTutorialDir() + TString("/tmva/PyTorch_Generate_CNN_Model.py");
+      // check that pytorch can be imported and file defining the model and used later when booking the method is existing
+      if (gSystem->Exec("python -c 'import torch'")  || gSystem->AccessPathName(pyTorchFileName) ) {
+         Warning("TMVA_CNN_Classification", "PyTorch is not installed or model building file is not existing - skip using PyTorch");
       }
       else {
          // book PyTorch method only if PyTorch model could be created
