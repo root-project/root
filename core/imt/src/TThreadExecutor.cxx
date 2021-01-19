@@ -1,4 +1,5 @@
 #include "ROOT/TThreadExecutor.hxx"
+#include "ROpaqueTaskArena.hxx"
 #if !defined(_MSC_VER)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
