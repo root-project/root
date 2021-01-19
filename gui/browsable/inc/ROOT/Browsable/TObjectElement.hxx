@@ -58,7 +58,7 @@ public:
    /** Return copy of TObject holder - if possible */
    std::unique_ptr<RHolder> GetObject() override;
 
-   std::string ClassName() const;
+   const TClass *GetClass() const;
 };
 
 } // namespace Browsable
