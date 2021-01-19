@@ -349,12 +349,19 @@ public:
       RegisterClass("TLeaf", "sap-icon://e-care", ""s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
 
       RegisterTObject("TDirectory", "sap-icon://folder-blank", true, false);
-      RegisterTObject("TH1", "sap-icon://vertical-bar-chart");
+      RegisterTObject("TH1", "sap-icon://bar-chart");
       RegisterTObject("TH2", "sap-icon://pixelate");
+      RegisterTObject("TH3", "sap-icon://product");
       RegisterTObject("TProfile", "sap-icon://vertical-bar-chart");
       RegisterTObject("TGraph", "sap-icon://line-chart");
 
-      RegisterTObject("TGeoManager", "sap-icon://tree", true, false);
+      RegisterTObject("THStack", "sap-icon://multiple-bar-chart");
+      RegisterTObject("TMultiGraph", "sap-icon://multiple-line-chart");
+
+      RegisterTObject("TCollection", "sap-icon://list", true, false);
+      RegisterTObject("TGeoManager", "sap-icon://overview-chart", true, false);
+      RegisterTObject("TGeoVolume", "sap-icon://product", true, false);
+      RegisterTObject("TGeoNode", "sap-icon://product", true, false);
 
       RegisterBrowse(TFolder::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TFolderElement>(object);
