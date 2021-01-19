@@ -212,9 +212,9 @@ std::unique_ptr<RItem> TObjectLevelIter::CreateItem()
 
    auto cl = elem->GetClass();
 
-   bool can_have_childs = RProvider::CanHaveChilds(cl);
+   auto nchilds = elem->GetNumChilds();
 
-   auto item = std::make_unique<TObjectItem>(elem->GetName(), can_have_childs ? -1 : 0);
+   auto item = std::make_unique<TObjectItem>(elem->GetName(), nchilds);
 
    item->SetClassName(cl ? cl->GetName() : "");
 
@@ -233,6 +233,8 @@ public:
    TFolderElement(std::unique_ptr<RHolder> &obj) : TObjectElement(obj) {}
 
    std::unique_ptr<RLevelIter> GetChildsIter() override;
+
+   int GetNumChilds() override;
 };
 
 class TCollectionElement : public TObjectElement {
@@ -241,6 +243,8 @@ public:
    TCollectionElement(std::unique_ptr<RHolder> &obj) : TObjectElement(obj) {}
 
    std::unique_ptr<RLevelIter> GetChildsIter() override;
+
+   int GetNumChilds() override;
 };
 
 
@@ -265,8 +269,9 @@ public:
 
    int GetNumItemChilds() const override
    {
-      // TODO: add test based on class name
-      return -1;
+      TObject *obj = *fIter;
+      if (!obj) return 0;
+      return obj->IsFolder() ? -1 : 0;
    }
 
    /** Returns full information for current element */
@@ -291,15 +296,34 @@ std::unique_ptr<RLevelIter> TFolderElement::GetChildsIter()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
+/// Returns number of childs in the TFolder
+
+int TFolderElement::GetNumChilds()
+{
+   auto folder = fObject->Get<TFolder>();
+   return folder && folder->GetListOfFolders() ? folder->GetListOfFolders()->GetEntries() : 0;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////
 /// Provides iterator for generic TCollecion
 
 std::unique_ptr<RLevelIter> TCollectionElement::GetChildsIter()
 {
    auto coll = fObject->Get<TCollection>();
-   if (coll)
+   if (coll && (coll->GetSize() > 0))
       return std::make_unique<TCollectionIter>(coll);
 
    return TObjectElement::GetChildsIter();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+/// Returns number of childs in the TFolder
+
+int TCollectionElement::GetNumChilds()
+{
+   auto coll = fObject->Get<TCollection>();
+   return coll ? coll->GetSize() : 0;
 }
 
 // ==============================================================================================
@@ -327,6 +351,7 @@ public:
       RegisterTObject("TDirectory", "sap-icon://folder-blank", true, false);
       RegisterTObject("TH1", "sap-icon://vertical-bar-chart");
       RegisterTObject("TH2", "sap-icon://pixelate");
+      RegisterTObject("TProfile", "sap-icon://vertical-bar-chart");
       RegisterTObject("TGraph", "sap-icon://line-chart");
 
       RegisterTObject("TGeoManager", "sap-icon://tree", true, false);
