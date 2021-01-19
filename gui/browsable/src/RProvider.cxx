@@ -161,7 +161,7 @@ const RProvider::StructClass &RProvider::GetClassEntry(const std::string &clname
       return iter->second;
 
    for (auto &elem : bmap)
-      if (elem.first.compare(0, clname.length(), clname) == 0)
+      if (clname.compare(0, elem.first.length(), elem.first) == 0)
          return elem.second;
 
    static StructClass dummy;

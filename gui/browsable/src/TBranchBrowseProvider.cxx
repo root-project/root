@@ -14,6 +14,11 @@
 
 using namespace ROOT::Experimental::Browsable;
 
+
+////////////////////////////////////////////////////////////
+/// Representing TBranchElement in browsables
+/// Kept here only for a demo - default TObject-based API is enough for handling TBranchElement
+
 class TBrElement : public TObjectElement {
 
 public:
@@ -21,15 +26,18 @@ public:
 
    virtual ~TBrElement() = default;
 
+   int GetNumChilds() override
+   {
+      auto br = fObject->Get<TBranchElement>();
+      return br && br->IsFolder() ? TObjectElement::GetNumChilds() : 0;
+   }
+
    /** Create iterator for childs elements if any */
    std::unique_ptr<RLevelIter> GetChildsIter() override
    {
-      TBranchElement *br = const_cast<TBranchElement*> (fObject->Get<TBranchElement>()); // try to cast into TBranchElement
-      if (!br) return nullptr;
-
-      if (br->GetListOfBranches()->GetEntriesFast() > 0)
+      auto br = fObject->Get<TBranchElement>();
+      if (br && br->IsFolder())
          return TObjectElement::GetChildsIter();
-
       return nullptr;
    }
 };

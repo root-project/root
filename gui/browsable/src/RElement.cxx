@@ -30,6 +30,19 @@ std::unique_ptr<RLevelIter> RElement::GetChildsIter()
 }
 
 /////////////////////////////////////////////////////////////////////
+/// Returns number of childs
+/// By default creates iterator and iterates over all items
+
+int RElement::GetNumChilds()
+{
+   auto iter = GetChildsIter();
+   if (!iter) return 0;
+   int cnt = 0;
+   while (iter->Next()) cnt++;
+   return cnt;
+}
+
+/////////////////////////////////////////////////////////////////////
 /// Find item with specified name
 /// Default implementation, should work for all
 
