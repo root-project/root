@@ -68,17 +68,20 @@ protected:
    std::string GetRCanvasUrl(std::shared_ptr<RCanvas> &canv);
 
    EditorPage *AddEditor();
+   EditorPage *GetActiveEditor() const;
 
    void CloseTab(const std::string &name);
 
    std::string ProcessBrowserRequest(const std::string &msg);
-   std::string ProcessDblClick(const std::string &path, const std::string &drawingOptions);
+   std::string ProcessDblClick(const std::string &path, const std::string &drawingOptions, const std::string &);
    long ProcessRunCommand(const std::string &file_path);
    void ProcessSaveFile(const std::string &file_path);
    std::string GetCurrentWorkingDirectory();
 
    void SendInitMsg(unsigned connid);
    void ProcessMsg(unsigned connid, const std::string &arg);
+
+   std::string SendEditorContent(EditorPage *editor);
 
 public:
    RBrowser(bool use_rcanvas = true);

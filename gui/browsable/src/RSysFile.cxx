@@ -475,6 +475,19 @@ bool RSysFile::MatchName(const std::string &name) const
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Get default action for the file
+/// Either start text editor or image viewer or just do file browsing
+
+RElement::EActionKind RSysFile::GetDefaultAction() const
+{
+   auto icon = GetFileIcon(GetName());
+   if (icon == "sap-icon://document-text"s) return kActEdit;
+   if (icon == "sap-icon://picture"s) return kActImage;
+   if (icon == "sap-icon://org-chart"s) return kActBrowse;
+   return kActNone;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Returns full file name - including fully qualified path
 
 std::string RSysFile::GetFullName() const
