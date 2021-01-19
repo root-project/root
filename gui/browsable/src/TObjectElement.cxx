@@ -169,10 +169,12 @@ std::unique_ptr<RHolder> TObjectElement::GetObject()
    return fObject->Copy();
 }
 
-std::string TObjectElement::ClassName() const
+/** Return class for contained object */
+const TClass *TObjectElement::GetClass() const
 {
-   return fObj ? fObj->ClassName() : "";
+   return fObj ? fObj->IsA() : nullptr;
 }
+
 
 // ==============================================================================================
 
@@ -208,20 +210,15 @@ std::unique_ptr<RItem> TObjectLevelIter::CreateItem()
    // should never happen
    if (!elem) return nullptr;
 
-   bool can_have_childs = false;
-   if (GetNumItemChilds() != 0) {
-      // TODO: make via RProvider methods
-      std::string clname = elem->ClassName();
-      can_have_childs = (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) ||
-                        (clname.find("TNtuple") == 0) || (clname.find("TBranchElement") == 0) ||
-                        (clname.find("TGeoManager") == 0) || (clname.find("TGeoVolume") == 0) || (clname.find("TGeoNode") == 0);
-   }
+   auto cl = elem->GetClass();
+
+   bool can_have_childs = RProvider::CanHaveChilds(cl);
 
    auto item = std::make_unique<TObjectItem>(elem->GetName(), can_have_childs ? -1 : 0);
 
-   item->SetClassName(elem->ClassName());
+   item->SetClassName(cl ? cl->GetName() : "");
 
-   item->SetIcon(RProvider::GetClassIcon(elem->ClassName()));
+   item->SetIcon(RProvider::GetClassIcon(cl));
 
    return item;
 }
@@ -331,6 +328,8 @@ public:
       RegisterTObject("TH1", "sap-icon://vertical-bar-chart");
       RegisterTObject("TH2", "sap-icon://pixelate");
       RegisterTObject("TGraph", "sap-icon://line-chart");
+
+      RegisterTObject("TGeoManager", "sap-icon://tree", true, false);
 
       RegisterBrowse(TFolder::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TFolderElement>(object);

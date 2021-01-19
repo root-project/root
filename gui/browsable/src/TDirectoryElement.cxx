@@ -79,26 +79,15 @@ public:
 
    int GetNumItemChilds() const override
    {
-      std::string clname = fKey->GetClassName();
-      // TODO: more advanced logic required here
-      return (clname.find("TDirectory") == 0) ||
-             (clname.find("TGeoManager") == 0) ||
-             (clname.find("TGeoNode") == 0) ||
-             (clname.find("TGeoVolume") == 0) ||
-             (clname.find("TTree") == 0) ||
-             (clname.find("TNtuple") == 0) ||
-             (clname.find("TBranchElement") == 0) ? -1 : 0;
+      return RProvider::CanHaveChilds(fKey->GetClassName()) ? -1 : 0;
    }
 
    /** Create element for the browser */
    std::unique_ptr<RItem> CreateItem() override
    {
       auto item = std::make_unique<TKeyItem>(GetItemName(), GetNumItemChilds());
-
       item->SetClassName(fKey->GetClassName());
-
       item->SetIcon(RProvider::GetClassIcon(fKey->GetClassName()));
-
       return item;
    }
 
