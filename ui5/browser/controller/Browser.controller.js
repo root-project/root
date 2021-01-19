@@ -271,11 +271,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Generic factory functions =============== */
       /* ========================================================= */
 
-      getElementFromCurrentTab: function (element) {
-         const currentTabID = this.getView().byId("myTabContainer").getSelectedItem();
-         return sap.ui.getCore().byId(currentTabID + element);
-      },
-
       /* ========================================================= */
       /* =============== Generic factory functions =============== */
       /* ========================================================= */
@@ -285,7 +280,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =========================================== */
 
       createCodeEditor: function(name, title) {
-         const oTabContainer = this.getView().byId("myTabContainer");
+         const oTabContainer = this.getView().byId("tabContainer");
 
          let item = new TabContainerItem(name, {
             icon: "sap-icon://write-new-document",
@@ -294,6 +289,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             additionalText: title,
             content: this.newCodeEditorFragment(name)
          });
+
+         item.setModel(new JSONModel({
+            code: "",
+            ext: "",
+            filename: "",
+            fullpath: "",
+            modified: false,
+            runEnabled: false,
+            saveEnabled: false
+         }));
 
          oTabContainer.addItem(item);
          oTabContainer.setSelectedItem(item);
@@ -309,7 +314,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                         tooltip: "Run Current Macro",
                         icon: "sap-icon://play",
                         type: "Transparent",
-                        enabled: false,
+                        enabled: "{/runEnabled}",
                         press: [this.onRunMacro, this]
                      }),
                      new ToolbarSpacer({
@@ -328,6 +333,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                         text: "Save",
                         tooltip: "Save current file",
                         type: "Transparent",
+                        enabled: "{/saveEnabled}",
                         press: [this.onSaveFile, this]
                      })
                   ]
@@ -339,15 +345,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                   value: "{/code}",
                   height: "calc(100% - 40px)",
                   change: function () {
+                     console.log('Modified code editor')
                      this.getModel().setProperty("/modified", true);
                   }
-               }).setModel(new JSONModel({
+               })/* .setModel(new JSONModel({
                   code: "",
                   ext: "",
                   filename: "",
                   fullpath: "",
                   modified: false
-               }))
+               })) */
             ];
       },
 
@@ -363,7 +370,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             filter: "Any files",
             filters: ["Text files (*.txt)", "C++ files (*.cxx *.cpp *.c)", "Any files (*)"],
             onOk: function(fname) {
-               this.setFileNameType(oEditor, fname);
+               this.setEditorFileName(oEditor, fname);
                const sText = oEditor.getModel().getProperty("/code");
                oEditor.getModel().setProperty("/modified", false);
                this.websocket.send("SAVEFILE:" + JSON.stringify([fname, sText]));
@@ -421,8 +428,21 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
+      findTab: function(name) {
+         let oTabContainer = this.byId("tabContainer");
+         let items = oTabContainer.getItems();
+         for(let i = 0; i< items.length; i++)
+            if (items[i].getKey() === name)
+               return items[i];
+      },
+
+      getCodeEditor: function(name) {
+          let tab = this.findTab(name);
+          if (tab) return sap.ui.getCore().byId(name + "Editor");
+      },
+
       getSelectedCodeEditor: function (no_warning) {
-         let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
+         let oTabItemString = this.getView().byId("tabContainer").getSelectedItem();
 
          if (oTabItemString.indexOf("CodeEditor") !== -1) {
             return sap.ui.getCore().byId(oTabItemString + "Editor");
@@ -433,12 +453,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary Extract the file name and extension
        * @desc Used to set the editor's model properties and display the file name on the tab element  */
-      setFileNameType: function (oEditor, fullname) {
-         let oModel = oEditor.getModel();
+      setEditorFileName: function (oEditor, fullname) {
          let oTabElement = oEditor.getParent();
+         let oModel = oTabElement.getModel();
          let ext = "txt";
-         let runButton = this.getElementFromCurrentTab("Run");
-         runButton.setEnabled(false);
+
+         oModel.setProperty("/runEnabled", false);
+         oModel.setProperty("/saveEnabled", true);
 
          let filename = fullname;
          let p = Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"));
@@ -452,7 +473,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             case "cc":
             case "cpp":
             case "cxx":
-               runButton.setEnabled(true);
+               oModel.setProperty("/runEnabled", false);
+               // runButton.setEnabled(true);
                oEditor.setType('c_cpp');
                break;
             case "h":
@@ -526,7 +548,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             oEditor.getModel().setProperty("/code", oReader.result);
          };
          let file = oEvent.getParameter("files")[0];
-         if (this.setFileNameType(oEditor, file.name))
+         if (this.setEditorFileName(oEditor, file.name))
             oReader.readAsText(file);
       },
 
@@ -552,7 +574,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       newImageViewer: async function () {
-         let oTabContainer = this.getView().byId("myTabContainer");
+         let oTabContainer = this.getView().byId("tabContainer");
 
          const ID = "ImageViewer" + this.globalId;
          this.globalId++;
@@ -572,7 +594,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       getSelectedImageViewer: function (no_warning) {
-         let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
+         let oTabItemString = this.getView().byId("tabContainer").getSelectedItem();
 
          if (oTabItemString.indexOf("ImageViewer") !== -1)
             return sap.ui.getCore().byId(oTabItemString + "Image");
@@ -746,7 +768,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // prevent the tab being closed by default
          oEvent.preventDefault();
 
-         let oTabContainer = this.byId("myTabContainer");
+         let oTabContainer = this.byId("tabContainer");
          let oItemToClose = oEvent.getParameter('item');
 
          /*if (oItemToClose.getName() === "Code Editor") {
@@ -871,13 +893,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       sendDblClick: function (fullpath, opt) {
-         if(this._oSettingsModel.getProperty("/DBLCLKRun")) {
-            if(opt !== '$$$editor$$$') {
-               opt = '$$$execute$$$';
-               console.log(fullpath);
-            }
-         }
-         this.websocket.send('DBLCLK: ["' + fullpath + '","' + (opt || "") + '"]');
+         let exec = "";
+         if(this._oSettingsModel.getProperty("/DBLCLKRun")) exec = "exec";
+         let msg = 'DBLCLK: ["' + fullpath + '","' + (opt || "") + '","' + exec + '"]';
+         console.log('Sending ', msg);
+         this.websocket.send(msg);
       },
 
       /** @summary Double-click event handler */
@@ -913,23 +933,23 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
 
          // first try to activate editor
-         let codeEditor = this.getSelectedCodeEditor(true);
-         if (codeEditor) {
-            if (this.setFileNameType(codeEditor, fullpath))
-               return this.sendDblClick(fullpath, "$$$editor$$$");
-         }
+         //let codeEditor = this.getSelectedCodeEditor(true);
+         //if (codeEditor) {
+         //   if (this.setEditorFileName(codeEditor, fullpath))
+         //      return this.sendDblClick(fullpath, "$$$editor$$$");
+         //}
 
-         let viewerTab = this.getSelectedImageViewer(true);
-         if (viewerTab) {
-            return this.sendDblClick(fullpath, "$$$image$$$");
-         }
+         //let viewerTab = this.getSelectedImageViewer(true);
+         //if (viewerTab) {
+         //   return this.sendDblClick(fullpath, "$$$image$$$");
+         //}
 
-         let className = this.getBaseClass(prop ? prop.className : "");
-         let drawingOptions = "";
-         if (className && this.drawingOptions[className])
-            drawingOptions = this.drawingOptions[className];
+         let className = this.getBaseClass(prop ? prop.className : ""),
+             drawingOptions = className ? this.drawingOptions[className] : "";
 
-         return this.sendDblClick(fullpath, drawingOptions);
+         console.log('DBLCLICK', fullpath);
+
+         return this.sendDblClick(fullpath, drawingOptions || "");
       },
 
       getBaseClass: function(className) {
@@ -973,24 +993,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "INMSG":
             this.processInitMsg(msg);
             break;
-         case "FREAD": { // text file read
-            let oEditor = this.getSelectedCodeEditor();
+         case "EDITOR": { // update code editor
+            let arr = JSON.parse(msg);
+
+            let oEditor = this.getCodeEditor(arr[0]);
 
             if (oEditor) {
-               let arr = JSON.parse(msg);
-               this.setFileNameType(oEditor, arr[0]);
-               oEditor.getModel().setProperty("/code", arr[1]);
-               this.getElementFromCurrentTab("Save").setEnabled(true);
-            }
-            break;
-         }
-         case "JSON": { // json file read
-            let oEditor = this.getSelectedCodeEditor();
-            if (oEditor) {
-               let p = msg.indexOf("$$$"); // name and json separated by $$$
-               this.setFileNameType(oEditor, msg.substr(0, p) + ".json");
-               oEditor.getModel().setProperty("/code", msg.substr(p+3));
-               this.getElementFromCurrentTab("Save").setEnabled(true);
+               this.setEditorFileName(oEditor, arr[1]);
+               oEditor.getModel().setProperty("/code", arr[2]);
             }
             break;
          }
@@ -1015,7 +1025,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.updateBReadcrumbs(JSON.parse(msg));
             break;
          case "SELECT_TAB": // Selected the back selected canvas
-           let oTabContainer = this.byId("myTabContainer");
+           let oTabContainer = this.byId("tabContainer");
            let items = oTabContainer.getItems();
            for(let i = 0; i< items.length; i++) {
               if (items[i].getKey() === msg) {
@@ -1052,7 +1062,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary Get the ID of the currently selected tab of given tab container */
       getSelectedtabFromtabContainer: function(divid) {
-         let tabContainer = this.getView().byId('myTabContainer').getSelectedItem();
+         let tabContainer = this.getView().byId('tabContainer').getSelectedItem();
          return tabContainer.slice(6, tabContainer.length);
       },
 
@@ -1151,7 +1161,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          console.log("Create canvas ", url, name);
          if (!url || !name) return;
 
-         let oTabContainer = this.byId("myTabContainer");
+         let oTabContainer = this.byId("tabContainer");
          let item = new TabContainerItem({
             name: "ROOT Canvas",
             key: name,

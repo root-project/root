@@ -176,6 +176,39 @@ const TClass *TObjectElement::GetClass() const
 }
 
 
+RElement::EActionKind TObjectElement::GetDefaultAction() const
+{
+   auto cl = GetClass();
+   if (!cl) return kActNone;
+
+   if (RProvider::CanDraw6(cl)) return kActDraw6;
+
+   if (RProvider::CanDraw7(cl)) return kActDraw7;
+
+   if (RProvider::CanHaveChilds(cl)) return kActBrowse;
+
+   return kActNone;
+}
+
+bool TObjectElement::IsCapable(RElement::EActionKind action) const
+{
+   auto cl = GetClass();
+   if (!cl) return false;
+
+   switch(action) {
+      case kActBrowse: return RProvider::CanHaveChilds(cl);
+      case kActEdit: return true;
+      case kActImage:
+      case kActDraw6: return RProvider::CanDraw6(cl); // if can draw in TCanvas, can produce image
+      case kActDraw7: return RProvider::CanDraw7(cl);
+      case kActGeom: return false;  // TODO
+      default: return false;
+   }
+
+   return true;
+}
+
+
 // ==============================================================================================
 
 
