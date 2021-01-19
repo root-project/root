@@ -269,16 +269,15 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<RHolder> &object)
       return (res || !object) ? true : false;
    };
 
+   // check only class entries
    if (ScanProviderMap<BrowseMap_t,BrowseMap_t::iterator>(GetBrowseMap(), object->GetClass(), false, test_func))
       return res;
 
    auto &entry = GetClassEntry(object->GetClass());
-
    if (!entry.dummy() && !entry.browselib.empty())
       gSystem->Load(entry.browselib.c_str());
-   else if (object && object->GetClass()->InheritsFrom("TBranchElement"))
-      gSystem->Load("libROOTBranchBrowseProvider");
 
+   // let call also generic browse functions (multicast)
    ScanProviderMap<BrowseMap_t,BrowseMap_t::iterator>(GetBrowseMap(), object->GetClass(), true, test_func);
 
    return res;
@@ -301,15 +300,8 @@ bool RProvider::Draw6(TVirtualPad *subpad, std::unique_ptr<RHolder> &object, con
       return true;
 
    auto &entry = GetClassEntry(object->GetClass());
-
    if (!entry.dummy() && !entry.draw6lib.empty())
       gSystem->Load(entry.draw6lib.c_str());
-   else if (object->GetClass()->InheritsFrom("TLeaf") || object->GetClass()->InheritsFrom("TBranchElement"))
-      gSystem->Load("libROOTLeafDraw6Provider");
-   else if (object->GetClass()->InheritsFrom(TObject::Class()))
-      gSystem->Load("libROOTObjectDraw6Provider");
-   else
-      return false;
 
    return ScanProviderMap<Draw6Map_t, Draw6Map_t::iterator>(GetDraw6Map(), object->GetClass(), true, draw_func);
 }
@@ -330,29 +322,15 @@ bool RProvider::Draw7(std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std
    if (ScanProviderMap<Draw7Map_t, Draw7Map_t::iterator>(GetDraw7Map(), object->GetClass(), false, draw_func))
       return true;
 
-   // TODO: need factory methods for that
-
    auto &entry = GetClassEntry(object->GetClass());
-
    if (!entry.dummy() && !entry.draw7lib.empty())
       gSystem->Load(entry.draw7lib.c_str());
-   else if (object->GetClass()->InheritsFrom("TLeaf") || object->GetClass()->InheritsFrom("TBranchElement"))
-      gSystem->Load("libROOTLeafDraw7Provider");
-   else if (object->GetClass()->InheritsFrom(TObject::Class()))
-      gSystem->Load("libROOTObjectDraw7Provider");
-   else if (object->GetClass()->InheritsFrom("ROOT::Experimental::RH1D") ||
-            object->GetClass()->InheritsFrom("ROOT::Experimental::RH2D") ||
-            object->GetClass()->InheritsFrom("ROOT::Experimental::RH3D"))
-      gSystem->Load("libROOTHistDrawProvider");
-   else
-      return false;
 
    return ScanProviderMap<Draw7Map_t, Draw7Map_t::iterator>(GetDraw7Map(), object->GetClass(), true, draw_func);
 }
 
 /////////////////////////////////////////////////////////////////////
-/// Return icon name for the given class
-/// TODO: should be factorized out from here
+/// Return icon name for the given class name
 
 std::string RProvider::GetClassIcon(const std::string &classname)
 {
@@ -360,21 +338,11 @@ std::string RProvider::GetClassIcon(const std::string &classname)
    if (!entry.iconname.empty())
       return entry.iconname;
 
-//   if (classname == "TTree" || classname == "TNtuple")
-//      return "sap-icon://tree"s;
-   if (classname == "TDirectory" || classname == "TDirectoryFile")
-      return "sap-icon://folder-blank"s;
-   else if (classname.find("TLeaf") == 0)
-      return "sap-icon://e-care"s;
-   else if (classname.find("TH1") == 0)
-      return "sap-icon://vertical-bar-chart"s;
-   else if (classname.find("TH2") == 0)
-      return "sap-icon://pixelate"s;
-   else if (classname.find("TGraph") == 0)
-      return "sap-icon://line-chart"s;
-
    return "sap-icon://electronic-medical-record"s;
 }
+
+/////////////////////////////////////////////////////////////////////
+/// Return icon name for the given class
 
 std::string RProvider::GetClassIcon(const TClass *cl)
 {
@@ -386,6 +354,21 @@ std::string RProvider::GetClassIcon(const TClass *cl)
 }
 
 
+/////////////////////////////////////////////////////////////////////
+/// Return true if provided class can have childs
+
+bool RProvider::CanHaveChilds(const std::string &classname)
+{
+   return GetClassEntry(classname).can_have_childs;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Return true if provided class can have childs
+
+bool RProvider::CanHaveChilds(const TClass *cl)
+{
+   return GetClassEntry(cl).can_have_childs;
+}
 
 // ==============================================================================================
 
