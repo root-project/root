@@ -22,7 +22,6 @@
 
 #include <vector>
 #include <memory>
-#include <stdint.h>
 
 class TString;
 class TCanvas;
@@ -39,13 +38,22 @@ class RBrowser {
 
 protected:
 
+   struct EditorPage {
+      std::string fName;
+      std::string fTitle;
+      std::string fFileName;
+      std::string fContent;
+   };
+
    std::string fTitle;  ///<! title
    unsigned fConnId{0}; ///<! default connection id
 
    bool fUseRCanvas{false};             ///<!  which canvas should be used
    std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end
-   std::string fActiveCanvas;            ///<! name of active for RBrowser canvas, not a gPad!
+   std::string fActiveTab;            ///<! name of active for tab (RCanvas, TCanvas or EditorPage)
    std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> fRCanvases; ///<!  ROOT7 canvases
+   std::vector<std::unique_ptr<EditorPage>> fEditors;   ///<! list of text editors
+   int fEditorsCnt{0};                                  ///<! counter for created editors
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
@@ -54,11 +62,14 @@ protected:
    TCanvas *AddCanvas();
    TCanvas *GetActiveCanvas() const;
    std::string GetCanvasUrl(TCanvas *canv);
-   void CloseCanvas(const std::string &name);
 
    std::shared_ptr<RCanvas> AddRCanvas();
    std::shared_ptr<RCanvas> GetActiveRCanvas() const;
    std::string GetRCanvasUrl(std::shared_ptr<RCanvas> &canv);
+
+   EditorPage *AddEditor();
+
+   void CloseTab(const std::string &name);
 
    std::string ProcessBrowserRequest(const std::string &msg);
    std::string ProcessDblClick(const std::string &path, const std::string &drawingOptions);

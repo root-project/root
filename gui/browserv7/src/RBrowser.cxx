@@ -99,6 +99,8 @@ RBrowser::RBrowser(bool use_rcanvas)
       AddRCanvas();
    else
       AddCanvas();
+
+   AddEditor();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,7 +226,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       if (obj)
          if (Browsable::RProvider::Draw6(canv, obj, drawingOptions)) {
             canv->ForceUpdate(); // force update async - do not wait for confirmation
-            return "SLCTCANV:"s + canv->GetName();
+            return "SELECT_TAB:"s + canv->GetName();
          }
    }
 
@@ -238,7 +240,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
          if (Browsable::RProvider::Draw7(subpad, obj, drawingOptions)) {
             rcanv->Modified();
             rcanv->Update(true);
-            return "SLCTCANV:"s + rcanv->GetTitle();
+            return "SELECT_TAB:"s + rcanv->GetTitle();
          }
    }
 
@@ -273,6 +275,21 @@ void RBrowser::Hide()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Creates new editor, return name
+
+RBrowser::EditorPage *RBrowser::AddEditor()
+{
+   fEditors.emplace_back(std::make_unique<EditorPage>());
+
+   auto editor = fEditors.back().get();
+
+   editor->fName = "CodeEditor"s + std::to_string(fEditorsCnt++);
+   editor->fTitle = "untitled";
+
+   return editor;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Create new web canvas, invoked when new canvas created on client side
 
 TCanvas *RBrowser::AddCanvas()
@@ -288,7 +305,7 @@ TCanvas *RBrowser::AddCanvas()
    canv->SetCanvas(canv.get());
    canv->SetBatch(kTRUE); // mark canvas as batch
    canv->SetEditable(kTRUE); // ensure fPrimitives are created
-   fActiveCanvas = canv->GetName();
+   fActiveTab = canv->GetName();
 
    // create implementation
    TWebCanvas *web = new TWebCanvas(canv.get(), "title", 0, 0, 800, 600);
@@ -315,7 +332,7 @@ std::shared_ptr<RCanvas> RBrowser::AddRCanvas()
 
    canv->Show("embed");
 
-   fActiveCanvas = name;
+   fActiveTab = name;
 
    fRCanvases.emplace_back(canv);
 
@@ -344,7 +361,7 @@ std::string RBrowser::GetRCanvasUrl(std::shared_ptr<RCanvas> &canv)
 
 TCanvas *RBrowser::GetActiveCanvas() const
 {
-   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [this](const std::unique_ptr<TCanvas> &canv) { return fActiveCanvas == canv->GetName(); });
+   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [this](const std::unique_ptr<TCanvas> &canv) { return fActiveTab == canv->GetName(); });
 
    if (iter != fCanvases.end())
       return iter->get();
@@ -357,7 +374,7 @@ TCanvas *RBrowser::GetActiveCanvas() const
 
 std::shared_ptr<RCanvas> RBrowser::GetActiveRCanvas() const
 {
-   auto iter = std::find_if(fRCanvases.begin(), fRCanvases.end(), [this](const std::shared_ptr<RCanvas> &canv) { return fActiveCanvas == canv->GetTitle(); });
+   auto iter = std::find_if(fRCanvases.begin(), fRCanvases.end(), [this](const std::shared_ptr<RCanvas> &canv) { return fActiveTab == canv->GetTitle(); });
 
    if (iter != fRCanvases.end())
       return *iter;
@@ -370,21 +387,24 @@ std::shared_ptr<RCanvas> RBrowser::GetActiveRCanvas() const
 /// Close and delete specified canvas
 /// Check both list of TCanvas and list of RCanvas
 
-void RBrowser::CloseCanvas(const std::string &name)
+void RBrowser::CloseTab(const std::string &name)
 {
-   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::unique_ptr<TCanvas> &canv) { return name == canv->GetName(); });
-   if (iter != fCanvases.end()) {
-      fCanvases.erase(iter);
-   } else {
-      auto iter2 = std::find_if(fRCanvases.begin(), fRCanvases.end(), [name](const std::shared_ptr<RCanvas> &canv) { return name == canv->GetTitle(); });
-      if (iter2 != fRCanvases.end()) {
-         (*iter2)->Remove();
-         fRCanvases.erase(iter2);
-      }
+   auto iter1 = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::unique_ptr<TCanvas> &canv) { return name == canv->GetName(); });
+   if (iter1 != fCanvases.end())
+      fCanvases.erase(iter1);
+
+   auto iter2 = std::find_if(fRCanvases.begin(), fRCanvases.end(), [name](const std::shared_ptr<RCanvas> &canv) { return name == canv->GetTitle(); });
+   if (iter2 != fRCanvases.end()) {
+      (*iter2)->Remove();
+      fRCanvases.erase(iter2);
    }
 
-   if (fActiveCanvas == name)
-      fActiveCanvas.clear();
+   auto iter3 = std::find_if(fEditors.begin(), fEditors.end(), [name](std::unique_ptr<EditorPage> &page) { return name == page->fName; });
+   if (iter3 != fEditors.end())
+      fEditors.erase(iter3);
+
+   if (fActiveTab == name)
+      fActiveTab.clear();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -399,15 +419,19 @@ void RBrowser::SendInitMsg(unsigned connid)
    for (auto &canv : fCanvases) {
       auto url = GetCanvasUrl(canv.get());
       std::string name = canv->GetName();
-      std::vector<std::string> arr = {"root6", url, name};
+      std::vector<std::string> arr = { "root6", url, name };
       reply.emplace_back(arr);
    }
 
    for (auto &canv : fRCanvases) {
       auto url = GetRCanvasUrl(canv);
       std::string name = canv->GetTitle();
-      std::vector<std::string> arr = {"root7", url, name};
+      std::vector<std::string> arr = { "root7", url, name };
       reply.emplace_back(arr);
+   }
+
+   for (auto &edit : fEditors) {
+      reply.emplace_back(std::vector<std::string>({ "edit", edit->fName, edit->fTitle }));
    }
 
    std::string msg = "INMSG:";
@@ -445,7 +469,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
       auto url = GetRCanvasUrl(canv);
 
       std::vector<std::string> reply = {"root7"s, url, canv->GetTitle()};
-      std::string res = "CANVS:";
+      std::string res = "NEWTAB:";
       res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
       fWebWindow->Send(connid, res);
    } else if (arg.compare("NEWTCANVAS") == 0) {
@@ -454,7 +478,15 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
       auto url = GetCanvasUrl(canv);
 
       std::vector<std::string> reply = {"root6"s, url, std::string(canv->GetName())};
-      std::string res = "CANVS:";
+      std::string res = "NEWTAB:";
+      res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
+      fWebWindow->Send(connid, res);
+   } else if (arg.compare("NEWEDITOR") == 0) {
+
+      auto edit = AddEditor();
+
+      std::vector<std::string> reply = {"edit"s, edit->fName, edit->fTitle};
+      std::string res = "NEWTAB:";
       res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0,7, "DBLCLK:") == 0) {
@@ -470,10 +502,10 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
 
    } else if (arg.compare(0,9, "RUNMACRO:") == 0) {
       ProcessRunCommand(arg.substr(9));
-   } else if (arg.compare(0,14, "SELECT_CANVAS:") == 0) {
-      fActiveCanvas = arg.substr(14);
-   } else if (arg.compare(0,13, "CLOSE_CANVAS:") == 0) {
-      CloseCanvas(arg.substr(13));
+   } else if (arg.compare(0,12, "SELECT_TAB:") == 0) {
+      fActiveTab = arg.substr(12);
+   } else if (arg.compare(0,11, "CLOSE_TAB:") == 0) {
+      CloseTab(arg.substr(11));
    } else if (arg == "GETWORKPATH") {
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 7, "CHPATH:") == 0) {
