@@ -73,6 +73,7 @@ private:
    struct StructDraw7 { RProvider *provider{nullptr}; Draw7Func_t func; };
    struct StructClass {
       RProvider *provider{nullptr};
+      bool can_have_childs{false};
       std::string iconname, browselib, draw6lib, draw7lib;
       bool dummy() const { return !provider; }
    };
