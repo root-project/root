@@ -156,6 +156,10 @@ For details, see the RooFit tutorial [rf612_recoverFromInvalidParameters.C](http
 - a new cmake variable, `CMAKE_INSTALL_PYTHONDIR`, has been added: it allows customization of the installation directory of ROOT's python modules
 - The developer build option `asserts` is introduced to enable/disable asserts via the `NDEBUG` C/CXX flag. Asserts are always enabled for `CMAKE_BUILD_TYPE=Debug` and `dev=ON`. The previous behavior of the builds set via the `CMAKE_BUILD_TYPE` variable has not changed.
 
+The following builtins have been updated:
+
+- VecCore 0.7.0
+
 ## PyROOT
 
 - Deprecate `TTree.AsMatrix` in this release and mark for removal in v6.26. Please use instead `RDataFrame.AsNumpy`.
