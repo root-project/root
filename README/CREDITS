@@ -183,6 +183,10 @@ D: updates in PDG codes and eventgenerator interface classes
 D: TSpline, TComplex classes
 D: Support for gcc option -weffc++
 
+N: James Carroll
+E: eloquism@gmail.com
+D: Original maintainer of the ROOT Snap
+
 N: Gian Paolo Ciceri
 E: gp.ciceri@acm.org
 D: PostgreSQL interface
