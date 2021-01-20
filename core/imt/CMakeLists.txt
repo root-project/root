@@ -14,6 +14,7 @@ endif()
 
 ROOT_LINKER_LIBRARY(Imt
     src/base.cxx
+    src/TExecutor.cxx
     src/TTaskGroup.cxx
   DEPENDENCIES
     ${MULTIPROC_LIB}
