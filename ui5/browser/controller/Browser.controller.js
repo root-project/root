@@ -680,7 +680,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       tabSelectItem: function(oEvent) {
          let item = oEvent.getParameter('item');
          if (item && item.getKey())
-            this.websocket.send("SELECT_TAB:" + item.getKey());
+            this.websocket.send("TAB_SELECTED:" + item.getKey());
       },
 
       /** @brief Close Tab event handler */
@@ -932,15 +932,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "WORKPATH":
             this.updateBReadcrumbs(JSON.parse(msg));
             break;
-         case "SELECT_TAB": // Selected the back selected canvas
-           let oTabContainer = this.byId("tabContainer");
-           let items = oTabContainer.getItems();
-           for(let i = 0; i< items.length; i++) {
-              if (items[i].getKey() === msg) {
-                 oTabContainer.setSelectedItem(items[i]);
-                 break;
-              }
-           }
+         case "SELECT_TAB":
+           let tab = this.findTab(msg);
+           if (tab) this.byId("tabContainer").setSelectedItem(item);
            break;
          case "BREPL":   // browser reply
             if (this.model) {
