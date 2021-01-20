@@ -39,13 +39,23 @@ public:
 
    virtual ~RProvider();
 
-   static std::string GetClassIcon(const std::string &classname);
-   static std::string GetClassIcon(const TClass *cl);
+   class ClassArg {
+      friend class RProvider;
+      const TClass *cl{nullptr};
+      std::string name;
+      ClassArg() = delete;
+   public:
+      ClassArg(const TClass *_cl) : cl(_cl) {}
+      ClassArg(const std::string &_name) : name(_name) {}
+      ClassArg(const char *_name) : name(_name) {}
 
-   static bool CanHaveChilds(const std::string &classname);
-   static bool CanHaveChilds(const TClass *cl);
-   static bool CanDraw6(const TClass *cl);
-   static bool CanDraw7(const TClass *cl);
+      bool empty() const { return !cl && name.empty(); }
+   };
+
+   static std::string GetClassIcon(const ClassArg &);
+   static bool CanHaveChilds(const ClassArg &);
+   static bool CanDraw6(const ClassArg &);
+   static bool CanDraw7(const ClassArg &);
 
    static bool IsFileFormatSupported(const std::string &extension);
    static std::shared_ptr<RElement> OpenFile(const std::string &extension, const std::string &fullname);
@@ -95,8 +105,7 @@ private:
    static Draw6Map_t &GetDraw6Map();
    static Draw7Map_t &GetDraw7Map();
 
-   static const StructClass &GetClassEntry(const std::string &clname);
-   static const StructClass &GetClassEntry(const TClass *cl, bool check_parent = true);
+   static const StructClass &GetClassEntry(const ClassArg &);
 
    template<class Map_t>
    void CleanThis(Map_t &fmap)

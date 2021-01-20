@@ -153,38 +153,22 @@ void RProvider::RegisterClass(const std::string &clname, const std::string &icon
 
 //////////////////////////////////////////////////////////////////////////////////
 // Returns entry for the requested class
-const RProvider::StructClass &RProvider::GetClassEntry(const std::string &clname)
+const RProvider::StructClass &RProvider::GetClassEntry(const ClassArg &cl)
 {
-   auto &bmap = GetClassMap();
-   auto iter = bmap.find(clname);
-   if (iter != bmap.end())
-      return iter->second;
+   if (!cl.empty()) {
+      auto &bmap = GetClassMap();
+      auto iter = bmap.find(cl.cl ? cl.cl->GetName() : cl.name.c_str());
+      if (iter != bmap.end())
+         return iter->second;
 
-   for (auto &elem : bmap)
-      if (clname.compare(0, elem.first.length(), elem.first) == 0)
-         return elem.second;
-
-   static StructClass dummy;
-   return dummy;
-}
-
-const RProvider::StructClass &RProvider::GetClassEntry(const TClass *cl, bool check_parent)
-{
-   auto &bmap = GetClassMap();
-   auto iter = bmap.find(cl->GetName());
-   if (iter != bmap.end())
-      return iter->second;
-
-   if (check_parent) {
-      TClass *c1 = const_cast<TClass *>(cl);
-      TList *bases = c1->GetListOfBases();
-      if (bases) {
-         for (auto base : *bases) {
-            auto basecl = dynamic_cast<TBaseClass *>(base);
-            if (!basecl || !basecl->GetClassPointer()) continue;
-            auto &entry = GetClassEntry(basecl->GetClassPointer(), check_parent);
-            if (!entry.dummy()) return entry;
-         }
+      if (!cl.name.empty()) {
+         for (auto &elem : bmap)
+            if (cl.name.compare(0, elem.first.length(), elem.first) == 0)
+               return elem.second;
+      } else {
+         auto bases = const_cast<TClass *>(cl.cl)->GetListOfBases();
+         const TClass *basecl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
+         if (basecl) return RProvider::GetClassEntry(basecl);
       }
    }
 
@@ -330,23 +314,11 @@ bool RProvider::Draw7(std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std
 }
 
 /////////////////////////////////////////////////////////////////////
-/// Return icon name for the given class name
+/// Return icon name for the given class - either class name or TClass *
 
-std::string RProvider::GetClassIcon(const std::string &classname)
+std::string RProvider::GetClassIcon(const ClassArg &arg)
 {
-   auto &entry = GetClassEntry(classname);
-   if (!entry.iconname.empty())
-      return entry.iconname;
-
-   return "sap-icon://electronic-medical-record"s;
-}
-
-/////////////////////////////////////////////////////////////////////
-/// Return icon name for the given class
-
-std::string RProvider::GetClassIcon(const TClass *cl)
-{
-   auto &entry = GetClassEntry(cl);
+   auto &entry = GetClassEntry(arg);
    if (!entry.iconname.empty())
       return entry.iconname;
 
@@ -357,36 +329,34 @@ std::string RProvider::GetClassIcon(const TClass *cl)
 /////////////////////////////////////////////////////////////////////
 /// Return true if provided class can have childs
 
-bool RProvider::CanHaveChilds(const std::string &classname)
+bool RProvider::CanHaveChilds(const ClassArg &arg)
 {
-   return GetClassEntry(classname).can_have_childs;
+   return GetClassEntry(arg).can_have_childs;
 }
 
 /////////////////////////////////////////////////////////////////////
-/// Return true if provided class can have childs
+/// Return true if provided class can be drawn on the TCanvas
 
-bool RProvider::CanHaveChilds(const TClass *cl)
+bool RProvider::CanDraw6(const ClassArg &arg)
 {
-   return GetClassEntry(cl).can_have_childs;
-}
-
-bool RProvider::CanDraw6(const TClass *cl)
-{
-   if (ScanProviderMap<Draw6Map_t, Draw6Map_t::iterator>(GetDraw6Map(), cl))
+   if (arg.cl && ScanProviderMap<Draw6Map_t, Draw6Map_t::iterator>(GetDraw6Map(), arg.cl))
       return true;
 
-   if (!GetClassEntry(cl).draw6lib.empty())
+   if (!GetClassEntry(arg).draw6lib.empty())
       return true;
 
    return false;
 }
 
-bool RProvider::CanDraw7(const TClass *cl)
+/////////////////////////////////////////////////////////////////////
+/// Return true if provided class can be drawn on the RCanvas
+
+bool RProvider::CanDraw7(const ClassArg &arg)
 {
-   if (ScanProviderMap<Draw7Map_t, Draw7Map_t::iterator>(GetDraw7Map(), cl))
+   if (arg.cl && ScanProviderMap<Draw7Map_t, Draw7Map_t::iterator>(GetDraw7Map(), arg.cl))
       return true;
 
-   if (!GetClassEntry(cl).draw7lib.empty())
+   if (!GetClassEntry(arg).draw7lib.empty())
       return true;
 
    return false;
