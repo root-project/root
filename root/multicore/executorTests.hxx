@@ -105,7 +105,7 @@ int ExecutorTest(T &executor) {
    }
    auto hred = executor.Reduce(vhist);
 
-   for(auto i = 0; i<52; i++){
+   for (auto i = 0; i < 12; i++) {
       if(htot->GetBinContent(i) != hred->GetBinContent(i))
          return 12;
    }
