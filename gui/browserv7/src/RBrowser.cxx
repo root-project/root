@@ -199,8 +199,10 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
             editor = nullptr;
          }
       }
-      if (editor)
+      if (editor) {
+         editor->fItemPath = item_path;
          return SendEditorContent(editor);
+      }
    }
 
    // check if element can provide image for the viewer
@@ -210,6 +212,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
          editor->fContent = img;
          editor->fTitle = elem->GetName();
          editor->fFileName = elem->GetContent("filename");
+         editor->fItemPath = item_path;
 
          return SendEditorContent(editor);
       }
@@ -238,6 +241,28 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
          canv->ForceUpdate(); // force update async - do not wait for confirmation
          return ""s;
          // return "SELECT_TAB:"s + canv->GetName();
+      }
+   }
+
+   auto dflt_action = elem->GetDefaultAction();
+
+   if (dflt_action == Browsable::RElement::kActImage) {
+      auto viewer = FindEditorFor(item_path, false);
+      if (viewer) return "SELECT_TAB:"s + viewer->fName;
+
+      auto img = elem->GetContent("image64");
+      if (!img.empty()) {
+         viewer = AddEditor(false);
+
+         viewer->fContent = img;
+         viewer->fTitle = elem->GetName();
+         viewer->fFileName = elem->GetContent("filename");
+         viewer->fItemPath = item_path;
+
+         std::vector<std::string> reply = { viewer->GetKind(), viewer->fName, viewer->fTitle };
+         return "NEWTAB:"s + TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data();
+      } else {
+         return ""s;
       }
    }
 
@@ -379,7 +404,7 @@ std::shared_ptr<RCanvas> RBrowser::GetActiveRCanvas() const
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Returns text editor with provided name
+/// Returns editor/image page with provided name
 
 RBrowser::EditorPage *RBrowser::GetEditor(const std::string &name) const
 {
@@ -388,6 +413,20 @@ RBrowser::EditorPage *RBrowser::GetEditor(const std::string &name) const
    auto iter = std::find_if(fEditors.begin(), fEditors.end(), [this,name](const std::unique_ptr<EditorPage> &page) { return name == page->fName; });
 
    return (iter != fEditors.end()) ? iter->get() : nullptr;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Find editor for specified item path
+
+RBrowser::EditorPage *RBrowser::FindEditorFor(const std::string &item_path, bool is_editor)
+{
+   auto iter = std::find_if(fEditors.begin(), fEditors.end(),
+            [this,item_path,is_editor](const std::unique_ptr<EditorPage> &page) {
+              return (item_path == page->fItemPath) && (is_editor == page->fIsEditor);
+            });
+
+   return (iter != fEditors.end()) ? iter->get() : nullptr;
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -460,6 +499,32 @@ std::string RBrowser::GetCurrentWorkingDirectory()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Create requested tab, return message which should be send to client
+
+std::string RBrowser::ProcessNewTab(const std::string &kind)
+{
+   std::vector<std::string> reply;
+
+   if (kind == "NEWRCANVAS") {
+      auto canv = AddRCanvas();
+      auto url = GetRCanvasUrl(canv);
+      reply = {"root7"s, url, canv->GetTitle()};
+   } else if (kind == "NEWTCANVAS") {
+      auto canv = AddCanvas();
+      auto url = GetCanvasUrl(canv);
+      reply = {"root6"s, url, std::string(canv->GetName())};
+   } else if ((kind == "NEWEDITOR") || (kind == "NEWVIEWER")) {
+      auto edit = AddEditor(kind == "NEWEDITOR");
+      reply = {edit->GetKind(), edit->fName, edit->fTitle};
+   } else {
+      return ""s;
+   }
+
+   return "NEWTAB:"s + TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data();
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Process received message from the client
 
 void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
@@ -483,31 +548,6 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       // central place for processing browser requests
       auto json = ProcessBrowserRequest(msg);
       if (!json.empty()) fWebWindow->Send(connid, json);
-   } else if (kind == "NEWRCANVAS") {
-
-      auto canv = AddRCanvas();
-      auto url = GetRCanvasUrl(canv);
-
-      std::vector<std::string> reply = {"root7"s, url, canv->GetTitle()};
-      std::string res = "NEWTAB:";
-      res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
-      fWebWindow->Send(connid, res);
-   } else if (kind == "NEWTCANVAS") {
-
-      auto canv = AddCanvas();
-      auto url = GetCanvasUrl(canv);
-
-      std::vector<std::string> reply = {"root6"s, url, std::string(canv->GetName())};
-      std::string res = "NEWTAB:";
-      res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
-      fWebWindow->Send(connid, res);
-   } else if ((kind == "NEWEDITOR") || (kind == "NEWVIEWER")) {
-
-      auto edit = AddEditor(kind == "NEWEDITOR");
-      std::vector<std::string> reply = { edit->GetKind(), edit->fName, edit->fTitle};
-      std::string res = "NEWTAB:";
-      res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
-      fWebWindow->Send(connid, res);
 
    } else if (kind == "DBLCLK") {
 
@@ -520,7 +560,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       if (!reply.empty())
          fWebWindow->Send(connid, reply);
 
-   } else if (kind == "SELECT_TAB") {
+   } else if (kind == "TAB_SELECTED") {
       fActiveTab = msg;
       std::string reply;
       auto editor = GetActiveEditor();
@@ -597,5 +637,8 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
 
          }
       }
+   } else {
+      auto reply = ProcessNewTab(kind);
+      if (!reply.empty()) fWebWindow->Send(connid, reply);
    }
 }
