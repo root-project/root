@@ -587,6 +587,8 @@ if(ROOT_pyroot_FOUND)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/pytorch/*.py)
     list(APPEND pyveto ${tmva_veto_py})
   endif()
+  # disable PyTorch model file used by TMVA_CNN_Classification.C
+  list(APPEND pyveto tmva/PyTorch_Generate_CNN_Model.py)
 
   # Now glob all vetos for pyroot
   file(GLOB pyveto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${pyveto})
