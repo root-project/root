@@ -3,6 +3,6 @@
     <Button text="Code editor"   id="NewTabCE" icon="sap-icon://write-new-document"     press="handleNewTab"  />
     <Button text="Root 6 canvas" id="NewTabR6" icon="sap-icon://column-chart-dual-axis" press="handleNewTab" />
     <Button text="Root 7 canvas" id="NewTabR7" icon="sap-icon://column-chart-dual-axis" press="handleNewTab" />
-    <Button text="Image viewer"  id="NewTabIV" icon="sap-icon://background"             press="newImageViewer" />
+    <Button text="Image viewer"  id="NewTabIV" icon="sap-icon://background"             press="handleNewTab" />
   </ActionSheet>
 </core:FragmentDefinition>

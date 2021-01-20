@@ -100,7 +100,7 @@ RBrowser::RBrowser(bool use_rcanvas)
    else
       AddCanvas();
 
-   AddEditor();
+   AddEditor(true);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +168,10 @@ std::string RBrowser::SendEditorContent(EditorPage *editor)
 
    editor->fFirstSend = true;
    std::vector<std::string> args = { editor->fName, editor->fFileName, editor->fContent };
-   return "EDITOR:"s + TBufferJSON::ToJSON(&args).Data();
+
+   std::string msg = editor->fIsEditor ? "EDITOR:"s : "IMAGE:"s;
+   msg += TBufferJSON::ToJSON(&args).Data();
+   return msg;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -183,8 +186,8 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
 
    auto editor = GetActiveEditor();
 
-   // check if element can be edit
-   if (editor && elem->IsCapable(Browsable::RElement::kActEdit)) {
+   // check if element can provide text for text editor
+   if (editor && editor->fIsEditor && elem->IsCapable(Browsable::RElement::kActEdit)) {
       auto code = elem->GetContent("text");
       if (!code.empty()) {
          editor->fContent = code;
@@ -202,6 +205,19 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       }
       if (editor)
          return SendEditorContent(editor);
+   }
+
+   // check if element can provide image for the viewer
+   if (editor && !editor->fIsEditor && elem->IsCapable(Browsable::RElement::kActImage)) {
+      auto img = elem->GetContent("image64");
+      if (!img.empty()) {
+         editor->fContent = img;
+         editor->fFileName = elem->GetContent("filename");
+         if (editor->fFileName.empty())
+            editor->fFileName = elem->GetName();
+
+         return SendEditorContent(editor);
+      }
    }
 
    auto rcanv = GetActiveRCanvas();
@@ -296,13 +312,14 @@ void RBrowser::Hide()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates new editor, return name
 
-RBrowser::EditorPage *RBrowser::AddEditor()
+RBrowser::EditorPage *RBrowser::AddEditor(bool is_editor)
 {
-   fEditors.emplace_back(std::make_unique<EditorPage>());
+   fEditors.emplace_back(std::make_unique<EditorPage>(is_editor));
 
    auto editor = fEditors.back().get();
 
-   editor->fName = "CodeEditor"s + std::to_string(fEditorsCnt++);
+   editor->fName = is_editor ? "CodeEditor"s : "ImageViewer"s;
+   editor->fName += std::to_string(fEditorsCnt++);
    editor->fTitle = "untitled";
 
    return editor;
@@ -463,7 +480,7 @@ void RBrowser::SendInitMsg(unsigned connid)
 
    for (auto &edit : fEditors) {
       edit->fFirstSend = false; // mark that content was not provided
-      reply.emplace_back(std::vector<std::string>({ "edit", edit->fName, edit->fTitle }));
+      reply.emplace_back(std::vector<std::string>({ edit->GetKind(), edit->fName, edit->fTitle }));
    }
 
    if (!fActiveTab.empty())
@@ -525,14 +542,14 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       std::string res = "NEWTAB:";
       res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
       fWebWindow->Send(connid, res);
-   } else if (kind == "NEWEDITOR") {
+   } else if ((kind == "NEWEDITOR") || (kind == "NEWVIEWER")) {
 
-      auto edit = AddEditor();
-
-      std::vector<std::string> reply = {"edit"s, edit->fName, edit->fTitle};
+      auto edit = AddEditor(kind == "NEWEDITOR");
+      std::vector<std::string> reply = { edit->GetKind(), edit->fName, edit->fTitle};
       std::string res = "NEWTAB:";
       res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
       fWebWindow->Send(connid, res);
+
    } else if (kind == "DBLCLK") {
 
       std::string reply;
