@@ -44,7 +44,8 @@ protected:
       std::string fTitle;
       std::string fFileName;
       std::string fContent;
-      bool fFirstSend{false};    ///<! if editor content was send at least one
+      bool fFirstSend{false};  ///<! if editor content was send at least one
+      std::string fItemPath;   ///<! item path in the browser
       EditorPage(bool is_edit) : fIsEditor(is_edit) {}
       std::string GetKind() const { return fIsEditor ? "edit" : "image"; }
    };
@@ -74,11 +75,13 @@ protected:
    EditorPage *AddEditor(bool is_editor);
    EditorPage *GetEditor(const std::string &name) const;
    EditorPage *GetActiveEditor() const { return GetEditor(fActiveTab); }
+   EditorPage *FindEditorFor(const std::string &item_path, bool is_editor = true);
 
    void CloseTab(const std::string &name);
 
    std::string ProcessBrowserRequest(const std::string &msg);
    std::string ProcessDblClick(const std::string &path, const std::string &drawingOptions, const std::string &);
+   std::string ProcessNewTab(const std::string &msg);
    long ProcessRunMacro(const std::string &file_path);
    void ProcessSaveFile(const std::string &fname, const std::string &content);
    std::string GetCurrentWorkingDirectory();
