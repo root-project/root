@@ -38,7 +38,7 @@ class RBrowser {
 
 protected:
 
-   struct EditorPage {
+   struct BrowserPage {
       bool fIsEditor{true};   ///<! either editor or image viewer
       std::string fName;
       std::string fTitle;
@@ -46,7 +46,7 @@ protected:
       std::string fContent;
       bool fFirstSend{false};  ///<! if editor content was send at least one
       std::string fItemPath;   ///<! item path in the browser
-      EditorPage(bool is_edit) : fIsEditor(is_edit) {}
+      BrowserPage(bool is_edit) : fIsEditor(is_edit) {}
       std::string GetKind() const { return fIsEditor ? "edit" : "image"; }
    };
 
@@ -55,10 +55,10 @@ protected:
 
    bool fUseRCanvas{false};             ///<!  which canvas should be used
    std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end
-   std::string fActiveTab;            ///<! name of active for tab (RCanvas, TCanvas or EditorPage)
+   std::string fActiveTab;            ///<! name of active for tab (RCanvas, TCanvas or BrowserPage)
    std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> fRCanvases; ///<!  ROOT7 canvases
-   std::vector<std::unique_ptr<EditorPage>> fEditors;   ///<! list of text editors
-   int fEditorsCnt{0};                                  ///<! counter for created editors
+   std::vector<std::unique_ptr<BrowserPage>> fPages;   ///<! list of text editors
+   int fPagesCnt{0};                                  ///<! counter for created editors
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
@@ -72,10 +72,10 @@ protected:
    std::shared_ptr<RCanvas> GetActiveRCanvas() const;
    std::string GetRCanvasUrl(std::shared_ptr<RCanvas> &canv);
 
-   EditorPage *AddEditor(bool is_editor);
-   EditorPage *GetEditor(const std::string &name) const;
-   EditorPage *GetActiveEditor() const { return GetEditor(fActiveTab); }
-   EditorPage *FindEditorFor(const std::string &item_path, bool is_editor = true);
+   BrowserPage *AddPage(bool is_editor);
+   BrowserPage *GetPage(const std::string &name) const;
+   BrowserPage *GetActivePage() const { return GetPage(fActiveTab); }
+   BrowserPage *FindPageFor(const std::string &item_path, bool is_editor = true);
 
    void CloseTab(const std::string &name);
 
@@ -89,7 +89,7 @@ protected:
    void SendInitMsg(unsigned connid);
    void ProcessMsg(unsigned connid, const std::string &arg);
 
-   std::string SendEditorContent(EditorPage *editor);
+   std::string SendPageContent(BrowserPage *editor);
 
 public:
    RBrowser(bool use_rcanvas = true);
