@@ -267,13 +267,29 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
       },
 
-      /* ========================================================= */
-      /* =============== Generic factory functions =============== */
-      /* ========================================================= */
+      createImageViewer: function (name, title) {
+         let oTabContainer = this.getView().byId("tabContainer");
 
-      /* ========================================================= */
-      /* =============== Generic factory functions =============== */
-      /* ========================================================= */
+         let image = new Image(name+ "Image", { src: "", densityAware: false });
+         image.addStyleClass("imageViewer");
+
+         let item = new TabContainerItem(name, {
+            icon: "sap-icon://background",
+            name: "Image Viewer",
+            key: name,
+            additionalText: title,
+            content: new sap.m.Page({
+               showNavButton: false,
+               showFooter: false,
+               showSubHeader: false,
+               showHeader: false,
+               content: image
+            })
+         });
+
+         oTabContainer.addItem(item);
+         oTabContainer.setSelectedItem(item);
+      },
 
       /* =========================================== */
       /* =============== Code Editor =============== */
@@ -537,60 +553,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return true;
       },
 
-      /* =========================================== */
-      /* =============== Code Editor =============== */
-      /* =========================================== */
-
-      /* ============================================ */
-      /* =============== Image viewer =============== */
-      /* ============================================ */
-
-      newImageViewerFragment: function (ID) {
-         return new sap.m.Page({
-            showNavButton: false,
-            showFooter: false,
-            showSubHeader: false,
-            showHeader: false,
-            content: new Image(ID + "Image", {
-               src: "",
-               densityAware: false
-            })
-         });
-      },
-
-      newImageViewer: async function () {
-         let oTabContainer = this.getView().byId("tabContainer");
-
-         const ID = "ImageViewer" + this.globalId;
-         this.globalId++;
-
-         let item = new TabContainerItem(ID, {
-            icon: "sap-icon://background",
-            name: "Image Viewer",
-            key: "",
-            additionalText: "untitled",
-            content: this.newImageViewerFragment(ID)
-         });
-
-         oTabContainer.addItem(item);
-         oTabContainer.setSelectedItem(item);
-
-         sap.ui.getCore().byId(ID + 'Image').addStyleClass("imageViewer");
-      },
-
-      getSelectedImageViewer: function (no_warning) {
-         let oTabItemString = this.getView().byId("tabContainer").getSelectedItem();
-
-         if (oTabItemString.indexOf("ImageViewer") !== -1)
-            return sap.ui.getCore().byId(oTabItemString + "Image");
-
-         if (!no_warning) MessageToast.show("Sorry, you need to select an image viewer tab", {duration: 1500});
-      },
-
-      /* ============================================ */
-      /* =============== Image viewer =============== */
-      /* ============================================ */
-
       /* ============================================= */
       /* =============== Settings menu =============== */
       /* ============================================= */
@@ -686,12 +648,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (txt.indexOf("editor") >= 0)
             msg = "NEWEDITOR";
+         else if (txt.indexOf("viewer") >= 0)
+            msg = "NEWVIEWER";
          else if (txt.indexOf("Root 6") >= 0)
             msg = "NEWTCANVAS";
-         else
+         else if (txt.indexOf("Root 7") >= 0)
             msg = "NEWRCANVAS";
 
-         if (this.isConnected)
+         console.log("Sending", msg)
+
+         if (this.isConnected && msg)
             this.websocket.send(msg);
       },
 
@@ -915,22 +881,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
          }
 
-         // first try to activate editor
-         //let codeEditor = this.getSelectedCodeEditor(true);
-         //if (codeEditor) {
-         //   if (this.setEditorFileName(codeEditor, fullpath))
-         //      return this.sendDblClick(fullpath, "$$$editor$$$");
-         //}
-
-         //let viewerTab = this.getSelectedImageViewer(true);
-         //if (viewerTab) {
-         //   return this.sendDblClick(fullpath, "$$$image$$$");
-         //}
-
          let className = this.getBaseClass(prop ? prop.className : ""),
              drawingOptions = className ? this.drawingOptions[className] : "";
-
-         console.log('DBLCLICK', fullpath);
 
          return this.sendDblClick(fullpath, drawingOptions || "");
       },
@@ -984,21 +936,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (tab) {
                this.setEditorFileName(tab, arr[1]);
                tab.getModel().setProperty("/code", arr[2]);
+               tab.getModel().setProperty("/modified", false);
             }
             break;
          }
+         case "IMAGE": { // update image viewer
+            let arr = JSON.parse(msg);
+            let tab = this.findTab(arr[0]);
 
-         case "FIMG":  // image file read
-            const oViewer = this.getSelectedImageViewer(true);
-            if(oViewer) {
-               var arr = JSON.parse(msg);
-               var filename = arr[0];
+            if (tab) {
+               let filename = arr[1];
                let p = Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"));
-               if (p>0) filename = filename.substr(p+1);
-               oViewer.getParent().getParent().setAdditionalText(filename);
-               oViewer.setSrc(arr[1]);
+               if (p > 0) filename = filename.substr(p+1);
+               tab.setAdditionalText(filename);
+               let oViewer = tab.getContent()[0].getContent()[0];
+               oViewer.setSrc(arr[2]);
             }
             break;
+         }
          case "NEWTAB": {  // canvas created by server, need to establish connection
             let arr = JSON.parse(msg);
             this.createElement(arr[0], arr[1], arr[2]);
@@ -1131,15 +1086,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (kind == "active") {
             const tabItem = this.findTab(par1);
             if (tabItem) this.byId("tabContainer").setSelectedItem(tabItem);
-         } else if (kind == "edit")
+         } else if (kind == "edit") {
             this.createCodeEditor(par1, par2);
-         else
+         } else if (kind == "image") {
+            this.createImageViewer(par1, par2);
+         } else
             this.createCanvas(kind, par1, par2);
       },
 
       createCanvas: function(kind, url, name) {
-         console.log("Create canvas ", url, name);
-         if (!url || !name) return;
+         console.log("Create canvas ", kind, url, name);
+         if (!url || !name || (kind != "root6" && kind != "root7")) return;
 
          let oTabContainer = this.byId("tabContainer");
          let item = new TabContainerItem({

@@ -39,11 +39,14 @@ class RBrowser {
 protected:
 
    struct EditorPage {
+      bool fIsEditor{true};   ///<! either editor or image viewer
       std::string fName;
       std::string fTitle;
       std::string fFileName;
       std::string fContent;
       bool fFirstSend{false};    ///<! if editor content was send at least one
+      EditorPage(bool is_edit) : fIsEditor(is_edit) {}
+      std::string GetKind() const { return fIsEditor ? "edit" : "image"; }
    };
 
    std::string fTitle;  ///<! title
@@ -68,7 +71,7 @@ protected:
    std::shared_ptr<RCanvas> GetActiveRCanvas() const;
    std::string GetRCanvasUrl(std::shared_ptr<RCanvas> &canv);
 
-   EditorPage *AddEditor();
+   EditorPage *AddEditor(bool is_editor);
    EditorPage *GetActiveEditor() const;
 
    void CloseTab(const std::string &name);
