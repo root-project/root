@@ -26,6 +26,7 @@ A TTreeCache which exploits parallelized decompression of its own content.
 #include "TFile.h"
 #include "TMath.h"
 #include "TMutex.h"
+#include "TROOT.h"
 #include "ROOT/RMakeUnique.hxx"
 
 #ifdef R__USE_IMT
