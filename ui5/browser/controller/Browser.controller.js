@@ -934,7 +934,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "SELECT_TAB":
            let tab = this.findTab(msg);
-           if (tab) this.byId("tabContainer").setSelectedItem(item);
+           if (tab) this.byId("tabContainer").setSelectedItem(tab);
            break;
          case "BREPL":   // browser reply
             if (this.model) {
