@@ -139,22 +139,18 @@ std::string RBrowser::ProcessBrowserRequest(const std::string &msg)
 /////////////////////////////////////////////////////////////////////////////////
 /// Process file save command in the editor
 
-void RBrowser::ProcessSaveFile(const std::string &arg)
+void RBrowser::ProcessSaveFile(const std::string &fname, const std::string &content)
 {
-   auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg);
-   if (!arr || (arr->size()!=2)) {
-      R__LOG_ERROR(BrowserLog()) << "SaveFile failure, json array should have two items " << arg;
-   } else {
-      R__LOG_DEBUG(0, BrowserLog()) << "SaveFile " << arr->at(0) << "  content length " << arr->at(1).length();
-      std::ofstream f(arr->at(0));
-      f << arr->at(1);
-   }
+   if (fname.empty()) return;
+   R__LOG_DEBUG(0, BrowserLog()) << "SaveFile " << fname << "  content length " << content.length();
+   std::ofstream f(fname);
+   f << content;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Process file save command in the editor
 
-long RBrowser::ProcessRunCommand(const std::string &file_path)
+long RBrowser::ProcessRunMacro(const std::string &file_path)
 {
    return gInterpreter->ExecuteMacro(file_path.c_str());
 }
@@ -167,7 +163,7 @@ std::string RBrowser::SendEditorContent(EditorPage *editor)
    if (!editor) return ""s;
 
    editor->fFirstSend = true;
-   std::vector<std::string> args = { editor->fName, editor->fFileName, editor->fContent };
+   std::vector<std::string> args = { editor->fName, editor->fTitle, editor->fFileName, editor->fContent };
 
    std::string msg = editor->fIsEditor ? "EDITOR:"s : "IMAGE:"s;
    msg += TBufferJSON::ToJSON(&args).Data();
@@ -191,14 +187,14 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       auto code = elem->GetContent("text");
       if (!code.empty()) {
          editor->fContent = code;
+         editor->fTitle = elem->GetName();
          editor->fFileName = elem->GetContent("filename");
-         if (editor->fFileName.empty())
-            editor->fFileName = elem->GetName();
       } else {
          auto json = elem->GetContent("json");
          if (!json.empty()) {
             editor->fContent = json;
-            editor->fFileName = elem->GetName() + ".json";
+            editor->fTitle = elem->GetName() + ".json";
+            editor->fFileName = "";
          } else {
             editor = nullptr;
          }
@@ -212,9 +208,8 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       auto img = elem->GetContent("image64");
       if (!img.empty()) {
          editor->fContent = img;
+         editor->fTitle = elem->GetName();
          editor->fFileName = elem->GetContent("filename");
-         if (editor->fFileName.empty())
-            editor->fFileName = elem->GetName();
 
          return SendEditorContent(editor);
       }
@@ -247,41 +242,6 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
    }
 
    return ""s;
-
-   // TODO: one can send id of editor or canvas to be sure when sending back reply
-
-   if (drawingOptions == "$$$image$$$") {
-      auto img = elem->GetContent("image64");
-      if (img.empty())
-         return ""s;
-
-      auto fname = elem->GetContent("filename");
-      if (fname.empty())
-         fname = elem->GetName();
-
-      std::vector<std::string> args = { fname, img };
-
-      return "FIMG:"s + TBufferJSON::ToJSON(&args).Data();
-   }
-
-   if (drawingOptions == "$$$execute$$$") {
-
-      std::string ext = item_path.substr(item_path.find_last_of(".") + 1);
-
-      //lower the char
-      std::for_each(ext.begin(), ext.end(), [](char & c) {
-         c = ::tolower(c);
-      });
-
-      if(ext == "c" || ext == "cpp" || ext == "cxx") {
-         ProcessRunCommand(elem->GetContent("filename"));
-         return "";
-      }
-   }
-
-   R__LOG_DEBUG(0, BrowserLog()) << "No active canvas to process dbl click";
-
-   return "";
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -419,16 +379,15 @@ std::shared_ptr<RCanvas> RBrowser::GetActiveRCanvas() const
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Returns active text editor (if any)
+/// Returns text editor with provided name
 
-RBrowser::EditorPage *RBrowser::GetActiveEditor() const
+RBrowser::EditorPage *RBrowser::GetEditor(const std::string &name) const
 {
-   auto iter = std::find_if(fEditors.begin(), fEditors.end(), [this](const std::unique_ptr<EditorPage> &page) { return fActiveTab == page->fName; });
+   if (name.empty()) return nullptr;
 
-   if (iter != fEditors.end())
-      return iter->get();
+   auto iter = std::find_if(fEditors.begin(), fEditors.end(), [this,name](const std::unique_ptr<EditorPage> &page) { return name == page->fName; });
 
-   return nullptr;
+   return (iter != fEditors.end()) ? iter->get() : nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -561,8 +520,6 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       if (!reply.empty())
          fWebWindow->Send(connid, reply);
 
-   } else if (kind == "RUNMACRO") {
-      ProcessRunCommand(msg);
    } else if (kind == "SELECT_TAB") {
       fActiveTab = msg;
       std::string reply;
@@ -622,7 +579,23 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       fWebWindow->Send(connid, "LOGS:"s + result.Data());
    } else if (kind == "FILEDIALOG") {
       RFileDialog::Embedded(fWebWindow, arg0);
-   } else if (kind == "SAVEFILE") {
-      ProcessSaveFile(msg);
+   } else if (kind == "SYNCEDITOR") {
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
+      if (arr && (arr->size() > 4)) {
+         auto editor = GetEditor(arr->at(0));
+         if (editor) {
+            editor->fFirstSend = true;
+            editor->fTitle = arr->at(1);
+            editor->fFileName = arr->at(2);
+            if (!arr->at(3).empty()) editor->fContent = arr->at(4);
+            if ((arr->size() == 6) && (arr->at(5) == "SAVE"))
+               ProcessSaveFile(editor->fFileName, editor->fContent);
+            if ((arr->size() == 6) && (arr->at(5) == "RUN")) {
+               ProcessSaveFile(editor->fFileName, editor->fContent);
+               ProcessRunMacro(editor->fFileName);
+            }
+
+         }
+      }
    }
 }

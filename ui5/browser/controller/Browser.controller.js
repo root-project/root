@@ -9,6 +9,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/m/MessageToast',
                'sap/m/MessageBox',
                'sap/m/Text',
+               'sap/m/Page',
                'sap/ui/core/mvc/XMLView',
                'sap/ui/core/Icon',
                'sap/m/Button',
@@ -29,6 +30,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            MessageToast,
            MessageBox,
            mText,
+           mPage,
            XMLView,
            CoreIcon,
            Button,
@@ -278,7 +280,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             name: "Image Viewer",
             key: name,
             additionalText: title,
-            content: new sap.m.Page({
+            content: new mPage({
                showNavButton: false,
                showFooter: false,
                showSubHeader: false,
@@ -295,22 +297,71 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Code Editor =============== */
       /* =========================================== */
 
-      createCodeEditor: function(name, title) {
+      createCodeEditor: function(name, editor_title) {
          const oTabContainer = this.getView().byId("tabContainer");
 
          let item = new TabContainerItem(name, {
             icon: "sap-icon://write-new-document",
             name: "Code Editor",
             key: name,
-            additionalText: title,
-            content: this.newCodeEditorFragment(name)
+            additionalText: "{/title}"
          });
+
+         item.addContent(new ToolHeader({
+            height: "40px",
+            content: [
+               new Button({
+                  text: "Run",
+                  tooltip: "Run Current Macro",
+                  icon: "sap-icon://play",
+                  type: "Transparent",
+                  enabled: "{/runEnabled}",
+                  press: () => this.onRunMacro(item)
+               }),
+               new ToolbarSpacer({
+                  layoutData: new OverflowToolbarLayoutData({
+                     priority:"NeverOverflow",
+                     minWidth: "16px"
+                  })
+               }),
+               new Button({
+                  text: "Sync",
+                  tooltip: "Sync editor content on server side",
+                  type: "Transparent",
+                  enabled: "{/modified}",
+                  press: () => this.syncEditor(item)
+               }),
+               new Button({
+                  text: "Save as...",
+                  tooltip: "Save current file as...",
+                  type: "Transparent",
+                  press: () => this.onSaveAsFile(item)
+               }),
+               new Button({
+                  text: "Save",
+                  tooltip: "Save current file",
+                  type: "Transparent",
+                  enabled: "{/saveEnabled}",
+                  press: () => this.onSaveFile(item)
+               })
+            ]
+         }));
+         item.addContent( new CodeEditor({
+            // height: 'auto',
+            colorTheme: "default",
+            type: "c_cpp",
+            value: "{/code}",
+            height: "calc(100% - 40px)",
+            liveChange: function() {
+               this.getModel().setProperty("/modified", true);
+            }
+         }));
 
          item.setModel(new JSONModel({
             code: "",
             ext: "",
-            filename: "",
-            fullpath: "",
+            title: editor_title,
+            filename: "",  // only set when really exists
             modified: false,
             runEnabled: false,
             saveEnabled: false
@@ -320,123 +371,56 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oTabContainer.setSelectedItem(item);
       },
 
-      newCodeEditorFragment: function (ID) {
-         console.log("Create edtitor with id", ID + "Editor");
-         return [
-               new ToolHeader({
-                  height: "40px",
-                  content: [
-                     new Button(ID + "Run", {
-                        text: "Run",
-                        tooltip: "Run Current Macro",
-                        icon: "sap-icon://play",
-                        type: "Transparent",
-                        enabled: "{/runEnabled}",
-                        press: [this.onRunMacro, this]
-                     }),
-                     new ToolbarSpacer({
-                        layoutData: new OverflowToolbarLayoutData({
-                           priority:"NeverOverflow",
-                           minWidth: "16px"
-                        })
-                     }),
-                     new Button(ID + "SaveAs", {
-                        text: "Save as...",
-                        tooltip: "Save current file as...",
-                        type: "Transparent",
-                        press: [this.onSaveAs, this]
-                     }),
-                     new Button(ID + "Save", {
-                        text: "Save",
-                        tooltip: "Save current file",
-                        type: "Transparent",
-                        enabled: "{/saveEnabled}",
-                        press: [this.onSaveFile, this]
-                     })
-                  ]
-               }),
-               new CodeEditor(ID + "Editor", {
-                  // height: 'auto',
-                  colorTheme: "default",
-                  type: "c_cpp",
-                  value: "{/code}",
-                  height: "calc(100% - 40px)",
-                  change: function () {
-                     console.log('Modified code editor')
-                     this.getModel().setProperty("/modified", true);
-                  }
-               })
-            ];
-      },
-
       /** @brief Invoke dialog with server side code */
-      onSaveAs: function() {
+      onSaveAsFile: function(tab) {
 
-         const oTabItem = this.getSelectedTab();
-
+         const oModel = tab.getModel();
          FileDialogController.SaveAs({
             websocket: this.websocket,
-            filename: oTabItem.getModel().getProperty("/fullpath"),
+            filename: oModel.getProperty("/filename") || oModel.getProperty("/title"),
             title: "Select file name to save",
             filter: "Any files",
             filters: ["Text files (*.txt)", "C++ files (*.cxx *.cpp *.c)", "Any files (*)"],
             onOk: fname => {
-               this.setEditorFileName(oTabItem, fname);
-               const sText = oTabItem.getModel().getProperty("/code");
-               oTabItem.getModel().setProperty("/modified", false);
-               this.websocket.send("SAVEFILE:" + JSON.stringify([fname, sText]));
+               let p = Math.max(fname.lastIndexOf("/"), fname.lastIndexOf("\\"));
+               let title = (p > 0) ? fname.substr(p+1) : fname;
+               this.setEditorFileKind(tab, title);
+               oModel.setProperty("/title", title);
+               oModel.setProperty("/filename", fname);
+               this.syncEditor(tab, "SAVE");
             },
             onCancel: function() { },
             onFailure: function() { }
          });
       },
 
-      /** @brief Handle the "Save" button press event */
-      onSaveFile: function () {
-         const oTabItem = this.getSelectedTab();
-         const oModel = oTabItem.getModel();
-         const sText = oModel.getProperty("/code");
-         const fullpath = oModel.getProperty("/fullpath");
-         if (!fullpath)
-            return onSaveAs();
+      /** @summary send editor content to server (if was changed) */
+      syncEditor: function(tab, cmd) {
+         const oModel = tab.getModel();
+         let modified = oModel.getProperty("/modified");
+         if ((modified === false) && !cmd) return;
+         let data = [ tab.getKey(),
+                      oModel.getProperty("/title") || "",
+                      oModel.getProperty("/filename") || "",
+                      modified ? "changed" : "",
+                      modified ? oModel.getProperty("/code") : ""];
+         if (cmd) data.push(cmd);
          oModel.setProperty("/modified", false);
-         return this.websocket.send("SAVEFILE:" + JSON.stringify([fullpath, sText]));
+         return this.websocket.send("SYNCEDITOR:" + JSON.stringify(data));
       },
 
-      reallyRunMacro: function () {
-         const oTabItem = this.getSelectedTab();
-         const oModel = oTabItem.getModel();
-         const fullpath = oModel.getProperty("/fullpath");
-         if (fullpath === undefined)
-            return this.onSaveAs();
-         return this.websocket.send("RUNMACRO:" + fullpath);
+      /** @brief Handle the "Save" button press event */
+      onSaveFile: function (tab) {
+         if (!tab.getModel().getProperty("/filename"))
+            return this.onSaveAsFile(tab);
+         this.syncEditor(tab, "SAVE");
       },
 
       /** @brief Handle the "Run" button press event */
-      onRunMacro: function () {
-         this.saveCheck(this.reallyRunMacro.bind(this));
-      },
-
-      saveCheck: function(functionToRunAfter) {
-         const oTabItem = this.getSelectedTab();
-         const oModel = oTabItem.getModel();
-         if (oModel.getProperty("/modified") === true) {
-            MessageBox.confirm('The text has been modified! Do you want to save it?', {
-               title: 'Unsaved file',
-               icon: sap.m.MessageBox.Icon.QUESTION,
-               onClose: oAction => {
-                  if (oAction === MessageBox.Action.YES) {
-                     this.onSaveFile();
-                  } else if (oAction === MessageBox.Action.CANCEL) {
-                     return;
-                  }
-                  return functionToRunAfter();
-               },
-               actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL]
-            });
-         } else {
-            return functionToRunAfter();
-         }
+      onRunMacro: function (tab) {
+         if (!tab.getModel().getProperty("/filename"))
+            return this.onSaveAsFile(tab);
+         this.syncEditor(tab, "RUN");
       },
 
       /** @summary Search TabContainerItem by key value */
@@ -466,8 +450,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Extract the file name and extension
-       * @desc Used to set the editor's model properties and display the file name on the tab element  */
-      setEditorFileName: function (oTabElement, fullname) {
+        * @desc Used to set the editor's model properties and display the file name on the tab element */
+      setEditorFileKind: function (oTabElement, title) {
          let oEditor = this.getCodeEditor(oTabElement);
          if (!oEditor) return;
          let oModel = oTabElement.getModel();
@@ -476,19 +460,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oModel.setProperty("/runEnabled", false);
          oModel.setProperty("/saveEnabled", true);
 
-         let filename = fullname;
-         let p = Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"));
-         if (p>0) filename = filename.substr(p+1);
-
-         if (filename.lastIndexOf('.') > 0)
-            ext = filename.substr(filename.lastIndexOf('.') + 1);
+         if (title.lastIndexOf('.') > 0)
+            ext = title.substr(title.lastIndexOf('.') + 1);
 
          switch (ext.toLowerCase()) {
             case "c":
             case "cc":
             case "cpp":
             case "cxx":
-               oModel.setProperty("/runEnabled", false);
+               oModel.setProperty("/runEnabled", true);
                // runButton.setEnabled(true);
                oEditor.setType('c_cpp');
                break;
@@ -535,20 +515,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                oEditor.setType('xml');
                break;
             default: // unsupported type
-               if (filename.lastIndexOf('README') >= 0)
+               if (title.indexOf('README') >= 0)
                   oEditor.setType('plain_text');
                else
                   return false;
                break;
 
          }
-         oTabElement.setAdditionalText(filename);
-
-         if (filename.lastIndexOf('.') > 0)
-            filename = filename.substr(0, filename.lastIndexOf('.'));
-
-         oModel.setProperty("/fullpath", fullname);
-         oModel.setProperty("/filename", filename);
          oModel.setProperty("/ext", ext);
          return true;
       },
@@ -654,8 +627,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             msg = "NEWTCANVAS";
          else if (txt.indexOf("Root 7") >= 0)
             msg = "NEWRCANVAS";
-
-         console.log("Sending", msg)
 
          if (this.isConnected && msg)
             this.websocket.send(msg);
@@ -930,12 +901,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "EDITOR": { // update code editor
             let arr = JSON.parse(msg);
-
             let tab = this.findTab(arr[0]);
 
             if (tab) {
-               this.setEditorFileName(tab, arr[1]);
-               tab.getModel().setProperty("/code", arr[2]);
+               this.setEditorFileKind(tab, arr[1]);
+               tab.getModel().setProperty("/title", arr[1]);
+               tab.getModel().setProperty("/filename", arr[2]);
+               tab.getModel().setProperty("/code", arr[3]);
                tab.getModel().setProperty("/modified", false);
             }
             break;
@@ -945,12 +917,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             let tab = this.findTab(arr[0]);
 
             if (tab) {
-               let filename = arr[1];
-               let p = Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"));
-               if (p > 0) filename = filename.substr(p+1);
-               tab.setAdditionalText(filename);
+               tab.setAdditionalText(arr[1]);
+               // let filename = arr[2];
                let oViewer = tab.getContent()[0].getContent()[0];
-               oViewer.setSrc(arr[2]);
+               oViewer.setSrc(arr[3]);
             }
             break;
          }
