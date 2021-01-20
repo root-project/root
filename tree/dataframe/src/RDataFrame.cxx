@@ -451,7 +451,7 @@ a full tutorial [here](df026__AsNumpyArrays_8py.html).
 
 ~~~{.python}
 df = ROOT.RDataFrame("myTree", "myFile.root")
-cols = df.Filter("x > 10").Sum("y").AsNumpy(["x", "y"])
+cols = df.Filter("x > 10").AsNumpy(["x", "y"])
 print(cols["x"], cols["y"])
 ~~~
 
