@@ -166,6 +166,7 @@ std::string RBrowser::SendEditorContent(EditorPage *editor)
 {
    if (!editor) return ""s;
 
+   editor->fFirstSend = true;
    std::vector<std::string> args = { editor->fName, editor->fFileName, editor->fContent };
    return "EDITOR:"s + TBufferJSON::ToJSON(&args).Data();
 }
@@ -479,8 +480,12 @@ void RBrowser::SendInitMsg(unsigned connid)
    }
 
    for (auto &edit : fEditors) {
+      edit->fFirstSend = false; // mark that content was not provided
       reply.emplace_back(std::vector<std::string>({ "edit", edit->fName, edit->fTitle }));
    }
+
+   if (!fActiveTab.empty())
+      reply.emplace_back(std::vector<std::string>({ "active", fActiveTab }));
 
    std::string msg = "INMSG:";
    msg.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
@@ -499,19 +504,28 @@ std::string RBrowser::GetCurrentWorkingDirectory()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Process received message from the client
 
-void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
+void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
 {
-   R__LOG_DEBUG(0, BrowserLog()) << "ProcessMsg  len " << arg.length() << " substr(30) " << arg.substr(0, 30);
+   R__LOG_DEBUG(0, BrowserLog()) << "ProcessMsg  len " << arg0.length() << " substr(30) " << arg0.substr(0, 30);
 
-   if (arg == "QUIT_ROOT") {
+   std::string kind, msg;
+   auto pos = arg0.find(":");
+   if (pos == std::string::npos) {
+      kind = arg0;
+   } else {
+      kind = arg0.substr(0, pos);
+      msg = arg0.substr(pos+1);
+   }
+
+   if (kind == "QUIT_ROOT") {
 
       fWebWindow->TerminateROOT();
 
-   } else if (arg.compare(0,6, "BRREQ:") == 0) {
+   } else if (kind == "BRREQ") {
       // central place for processing browser requests
-      auto json = ProcessBrowserRequest(arg.substr(6));
-      if (json.length() > 0) fWebWindow->Send(connid, json);
-   } else if (arg.compare("NEWRCANVAS") == 0) {
+      auto json = ProcessBrowserRequest(msg);
+      if (!json.empty()) fWebWindow->Send(connid, json);
+   } else if (kind == "NEWRCANVAS") {
 
       auto canv = AddRCanvas();
       auto url = GetRCanvasUrl(canv);
@@ -520,7 +534,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
       std::string res = "NEWTAB:";
       res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
       fWebWindow->Send(connid, res);
-   } else if (arg.compare("NEWTCANVAS") == 0) {
+   } else if (kind == "NEWTCANVAS") {
 
       auto canv = AddCanvas();
       auto url = GetCanvasUrl(canv);
@@ -529,7 +543,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
       std::string res = "NEWTAB:";
       res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
       fWebWindow->Send(connid, res);
-   } else if (arg.compare("NEWEDITOR") == 0) {
+   } else if (kind == "NEWEDITOR") {
 
       auto edit = AddEditor();
 
@@ -537,50 +551,55 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
       std::string res = "NEWTAB:";
       res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
       fWebWindow->Send(connid, res);
-   } else if (arg.compare(0,7, "DBLCLK:") == 0) {
+   } else if (kind == "DBLCLK") {
 
       std::string reply;
 
-      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
       if (arr && (arr->size() == 3))
          reply = ProcessDblClick(arr->at(0), arr->at(1), arr->at(2));
 
       if (!reply.empty())
          fWebWindow->Send(connid, reply);
 
-   } else if (arg.compare(0,9, "RUNMACRO:") == 0) {
-      ProcessRunCommand(arg.substr(9));
-   } else if (arg.compare(0,11, "SELECT_TAB:") == 0) {
-      fActiveTab = arg.substr(11);
-   } else if (arg.compare(0,10, "CLOSE_TAB:") == 0) {
-      CloseTab(arg.substr(10));
-   } else if (arg == "GETWORKPATH") {
+   } else if (kind == "RUNMACRO") {
+      ProcessRunCommand(msg);
+   } else if (kind == "SELECT_TAB") {
+      fActiveTab = msg;
+      std::string reply;
+      auto editor = GetActiveEditor();
+      if (editor && !editor->fFirstSend)
+         reply = SendEditorContent(editor);
+      if (!reply.empty()) fWebWindow->Send(connid, reply);
+   } else if (kind == "CLOSE_TAB") {
+      CloseTab(msg);
+   } else if (kind == "GETWORKPATH") {
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
-   } else if (arg.compare(0, 7, "CHPATH:") == 0) {
-      auto path = TBufferJSON::FromJSON<Browsable::RElementPath_t>(arg.substr(7));
+   } else if (kind == "CHPATH") {
+      auto path = TBufferJSON::FromJSON<Browsable::RElementPath_t>(msg);
       if (path) fBrowsable.SetWorkingPath(*path);
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
-   } else if (arg.compare(0, 6, "CHDIR:") == 0) {
-      fBrowsable.SetWorkingDirectory(arg.substr(6));
+   } else if (kind == "CHDIR") {
+      fBrowsable.SetWorkingDirectory(msg);
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
-   } else if (arg.compare(0, 4, "CMD:") == 0) {
+   } else if (kind == "CMD") {
       std::string sPrompt = "root []";
       std::ostringstream pathtmp;
       pathtmp << gSystem->TempDirectory() << "/command." << gSystem->GetPid() << ".log";
       TApplication *app = gROOT->GetApplication();
       if (app->InheritsFrom("TRint")) {
          sPrompt = ((TRint*)gROOT->GetApplication())->GetPrompt();
-         Gl_histadd((char *)arg.substr(4).c_str());
+         Gl_histadd((char *)msg.c_str());
       }
 
       std::ofstream ofs(pathtmp.str(), std::ofstream::out | std::ofstream::app);
-      ofs << sPrompt << arg.substr(4);
+      ofs << sPrompt << msg;
       ofs.close();
 
       gSystem->RedirectOutput(pathtmp.str().c_str(), "a");
-      gROOT->ProcessLine(arg.substr(4).c_str());
+      gROOT->ProcessLine(msg.c_str());
       gSystem->RedirectOutput(0);
-   } else if (arg.compare(0, 9, "ROOTHIST:") == 0) {
+   } else if (kind == "ROOTHIST") {
       std::ostringstream path;
       path << gSystem->UnixPathName(gSystem->HomeDirectory()) << "/.root_hist" ;
       std::ifstream infile(path.str());
@@ -595,16 +614,16 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
       std::string result;
       for (const auto &piece : unique_vector) result += piece + ",";
       fWebWindow->Send(connid, "HIST:"s + result);
-   } else if (arg.compare(0, 5, "LOGS:") == 0) {
+   } else if (kind == "LOGS") {
       std::ostringstream pathtmp;
       pathtmp << gSystem->TempDirectory() << "/command." << gSystem->GetPid() << ".log";
       TString result;
       std::ifstream instr(pathtmp.str().c_str());
       result.ReadFile(instr);
       fWebWindow->Send(connid, "LOGS:"s + result.Data());
-   } else if (arg.compare(0, 11, "FILEDIALOG:") == 0) {
-      RFileDialog::Embedded(fWebWindow, arg);
-   } else if (arg.compare(0, 9, "SAVEFILE:") == 0) {
-      ProcessSaveFile(arg.substr(9));
+   } else if (kind == "FILEDIALOG") {
+      RFileDialog::Embedded(fWebWindow, arg0);
+   } else if (kind == "SAVEFILE") {
+      ProcessSaveFile(msg);
    }
 }

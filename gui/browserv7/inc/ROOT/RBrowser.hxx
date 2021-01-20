@@ -43,6 +43,7 @@ protected:
       std::string fTitle;
       std::string fFileName;
       std::string fContent;
+      bool fFirstSend{false};    ///<! if editor content was send at least one
    };
 
    std::string fTitle;  ///<! title

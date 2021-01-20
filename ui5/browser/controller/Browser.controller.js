@@ -305,6 +305,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       newCodeEditorFragment: function (ID) {
+         console.log("Create edtitor with id", ID + "Editor");
          return [
                new ToolHeader({
                   height: "40px",
@@ -348,33 +349,27 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                      console.log('Modified code editor')
                      this.getModel().setProperty("/modified", true);
                   }
-               })/* .setModel(new JSONModel({
-                  code: "",
-                  ext: "",
-                  filename: "",
-                  fullpath: "",
-                  modified: false
-               })) */
+               })
             ];
       },
 
       /** @brief Invoke dialog with server side code */
       onSaveAs: function() {
 
-         const oEditor = this.getSelectedCodeEditor();
+         const oTabItem = this.getSelectedTab();
 
          FileDialogController.SaveAs({
             websocket: this.websocket,
-            filename: oEditor.getModel().getProperty("/fullpath"),
+            filename: oTabItem.getModel().getProperty("/fullpath"),
             title: "Select file name to save",
             filter: "Any files",
             filters: ["Text files (*.txt)", "C++ files (*.cxx *.cpp *.c)", "Any files (*)"],
-            onOk: function(fname) {
-               this.setEditorFileName(oEditor, fname);
-               const sText = oEditor.getModel().getProperty("/code");
-               oEditor.getModel().setProperty("/modified", false);
+            onOk: fname => {
+               this.setEditorFileName(oTabItem, fname);
+               const sText = oTabItem.getModel().getProperty("/code");
+               oTabItem.getModel().setProperty("/modified", false);
                this.websocket.send("SAVEFILE:" + JSON.stringify([fname, sText]));
-            }.bind(this),
+            },
             onCancel: function() { },
             onFailure: function() { }
          });
@@ -382,8 +377,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @brief Handle the "Save" button press event */
       onSaveFile: function () {
-         const oEditor = this.getSelectedCodeEditor();
-         const oModel = oEditor.getModel();
+         const oTabItem = this.getSelectedTab();
+         const oModel = oTabItem.getModel();
          const sText = oModel.getProperty("/code");
          const fullpath = oModel.getProperty("/fullpath");
          if (!fullpath)
@@ -393,8 +388,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       reallyRunMacro: function () {
-         const oEditor = this.getSelectedCodeEditor();
-         const oModel = oEditor.getModel();
+         const oTabItem = this.getSelectedTab();
+         const oModel = oTabItem.getModel();
          const fullpath = oModel.getProperty("/fullpath");
          if (fullpath === undefined)
             return this.onSaveAs();
@@ -407,13 +402,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       saveCheck: function(functionToRunAfter) {
-         const oEditor = this.getSelectedCodeEditor();
-         const oModel = oEditor.getModel();
+         const oTabItem = this.getSelectedTab();
+         const oModel = oTabItem.getModel();
          if (oModel.getProperty("/modified") === true) {
             MessageBox.confirm('The text has been modified! Do you want to save it?', {
                title: 'Unsaved file',
                icon: sap.m.MessageBox.Icon.QUESTION,
-               onClose: (oAction) => {
+               onClose: oAction => {
                   if (oAction === MessageBox.Action.YES) {
                      this.onSaveFile();
                   } else if (oAction === MessageBox.Action.CANCEL) {
@@ -428,6 +423,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
+      /** @summary Search TabContainerItem by key value */
       findTab: function(name) {
          let oTabContainer = this.byId("tabContainer");
          let items = oTabContainer.getItems();
@@ -436,25 +432,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                return items[i];
       },
 
-      getCodeEditor: function(name) {
-          let tab = this.findTab(name);
-          if (tab) return sap.ui.getCore().byId(name + "Editor");
+      /** @summary Retuns current selected tab, instance of TabContainerItem */
+      getSelectedTab: function() {
+         let oTabContainer = this.byId("tabContainer");
+         let items = oTabContainer.getItems();
+         for(let i = 0; i< items.length; i++)
+            if (items[i].getId() === oTabContainer.getSelectedItem())
+               return items[i];
       },
 
-      getSelectedCodeEditor: function (no_warning) {
-         let oTabItemString = this.getView().byId("tabContainer").getSelectedItem();
-
-         if (oTabItemString.indexOf("CodeEditor") !== -1) {
-            return sap.ui.getCore().byId(oTabItemString + "Editor");
-         } else {
-            if (!no_warning) MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
-         }
+      /** @summary Retuns code editor from the tab */
+      getCodeEditor: function(tab) {
+         let items = tab ? tab.getContent() : [];
+         for (let n = 0; n < items.length; ++n)
+            if (items[n].isA("sap.ui.codeeditor.CodeEditor"))
+               return items[n];
       },
 
       /** @summary Extract the file name and extension
        * @desc Used to set the editor's model properties and display the file name on the tab element  */
-      setEditorFileName: function (oEditor, fullname) {
-         let oTabElement = oEditor.getParent();
+      setEditorFileName: function (oTabElement, fullname) {
+         let oEditor = this.getCodeEditor(oTabElement);
+         if (!oEditor) return;
          let oModel = oTabElement.getModel();
          let ext = "txt";
 
@@ -536,20 +535,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oModel.setProperty("/filename", filename);
          oModel.setProperty("/ext", ext);
          return true;
-      },
-
-      /** @summary Handle the "Browse..." button press event */
-      onChangeFile: function (oEvent) {
-         let oEditor = this.getSelectedCodeEditor();
-         if (!oEditor) return;
-
-         let oReader = new FileReader();
-         oReader.onload = function () {
-            oEditor.getModel().setProperty("/code", oReader.result);
-         };
-         let file = oEvent.getParameter("files")[0];
-         if (this.setEditorFileName(oEditor, file.name))
-            oReader.readAsText(file);
       },
 
       /* =========================================== */
@@ -757,10 +742,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       tabSelectItem: function(oEvent) {
          let item = oEvent.getParameter('item');
-         if (item && item.getKey()) {
-            console.log("Tab selected:", item.getKey());
+         if (item && item.getKey())
             this.websocket.send("SELECT_TAB:" + item.getKey());
-         }
       },
 
       /** @brief Close Tab event handler */
@@ -996,11 +979,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "EDITOR": { // update code editor
             let arr = JSON.parse(msg);
 
-            let oEditor = this.getCodeEditor(arr[0]);
+            let tab = this.findTab(arr[0]);
 
-            if (oEditor) {
-               this.setEditorFileName(oEditor, arr[1]);
-               oEditor.getModel().setProperty("/code", arr[2]);
+            if (tab) {
+               this.setEditorFileName(tab, arr[1]);
+               tab.getModel().setProperty("/code", arr[2]);
             }
             break;
          }
@@ -1058,12 +1041,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
          }
-      },
-
-      /** @summary Get the ID of the currently selected tab of given tab container */
-      getSelectedtabFromtabContainer: function(divid) {
-         let tabContainer = this.getView().byId('tabContainer').getSelectedItem();
-         return tabContainer.slice(6, tabContainer.length);
       },
 
       /** @summary Show special message instead of nodes hierarchy */
@@ -1151,7 +1128,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       createElement: function(kind, par1, par2) {
-         if (kind == "edit")
+         if (kind == "active") {
+            const tabItem = this.findTab(par1);
+            if (tabItem) this.byId("tabContainer").setSelectedItem(tabItem);
+         } else if (kind == "edit")
             this.createCodeEditor(par1, par2);
          else
             this.createCanvas(kind, par1, par2);
