@@ -180,13 +180,9 @@ RElement::EActionKind TObjectElement::GetDefaultAction() const
 {
    auto cl = GetClass();
    if (!cl) return kActNone;
-
    if (RProvider::CanDraw6(cl)) return kActDraw6;
-
    if (RProvider::CanDraw7(cl)) return kActDraw7;
-
    if (RProvider::CanHaveChilds(cl)) return kActBrowse;
-
    return kActNone;
 }
 
@@ -205,7 +201,7 @@ bool TObjectElement::IsCapable(RElement::EActionKind action) const
       default: return false;
    }
 
-   return true;
+   return false;
 }
 
 
@@ -367,34 +363,35 @@ public:
    //////////////////////////////////////////////////////////////////////////////////
    // Register TObject-based class with standard browsing/drawing libs
 
-   void RegisterTObject(const std::string &clname, const std::string &iconname, bool can_browse = false, bool can_draw = true)
+   void RegisterTObject(const std::string &clname, const std::string &iconname, bool can_browse = false, int can_draw = 3)
    {
       RegisterClass(clname, iconname, can_browse ? "dflt"s : ""s,
-                                      can_draw ? "libROOTObjectDraw6Provider"s : ""s,
-                                      can_draw ? "libROOTObjectDraw7Provider"s : ""s);
+                                      can_draw & 1 ? "libROOTObjectDraw6Provider"s : ""s,
+                                      can_draw & 2 ? "libROOTObjectDraw7Provider"s : ""s);
    }
 
    RTObjectProvider()
    {
-      RegisterTObject("TTree", "sap-icon://tree", true, false);
-      RegisterTObject("TNtuple", "sap-icon://tree", true, false);
+      RegisterTObject("TTree", "sap-icon://tree", true, 0);
+      RegisterTObject("TNtuple", "sap-icon://tree", true, 0);
       RegisterClass("TBranchElement", "sap-icon://e-care", "libROOTBranchBrowseProvider", "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
       RegisterClass("TLeaf", "sap-icon://e-care", ""s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
 
-      RegisterTObject("TDirectory", "sap-icon://folder-blank", true, false);
+      RegisterTObject("TDirectory", "sap-icon://folder-blank", true, 0);
       RegisterTObject("TH1", "sap-icon://bar-chart");
       RegisterTObject("TH2", "sap-icon://pixelate");
       RegisterTObject("TH3", "sap-icon://product");
       RegisterTObject("TProfile", "sap-icon://vertical-bar-chart");
       RegisterTObject("TGraph", "sap-icon://line-chart");
+      RegisterTObject("TCanvas", "sap-icon://business-objects-experience", false, 1); // only can use TWebCanvas
 
       RegisterTObject("THStack", "sap-icon://multiple-bar-chart");
       RegisterTObject("TMultiGraph", "sap-icon://multiple-line-chart");
 
-      RegisterTObject("TCollection", "sap-icon://list", true, false);
-      RegisterTObject("TGeoManager", "sap-icon://overview-chart", true, false);
-      RegisterTObject("TGeoVolume", "sap-icon://product", true, false);
-      RegisterTObject("TGeoNode", "sap-icon://product", true, false);
+      RegisterTObject("TCollection", "sap-icon://list", true, 0);
+      RegisterTObject("TGeoManager", "sap-icon://overview-chart", true, 0);
+      RegisterTObject("TGeoVolume", "sap-icon://product", true, 0);
+      RegisterTObject("TGeoNode", "sap-icon://product", true, 0);
 
       RegisterBrowse(TFolder::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TFolderElement>(object);

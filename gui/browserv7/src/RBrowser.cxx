@@ -204,6 +204,32 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
          return SendEditorContent(editor);
    }
 
+   auto rcanv = GetActiveRCanvas();
+   if (rcanv && elem->IsCapable(Browsable::RElement::kActDraw7)) {
+
+      std::shared_ptr<RPadBase> subpad = rcanv;
+
+      auto obj = elem->GetObject();
+      if (obj && Browsable::RProvider::Draw7(subpad, obj, drawingOptions)) {
+         rcanv->Modified();
+         rcanv->Update(true);
+         return ""s;
+         // return "SELECT_TAB:"s + rcanv->GetTitle();
+      }
+   }
+
+   auto canv = GetActiveCanvas();
+   if (canv && elem->IsCapable(Browsable::RElement::kActDraw6)) {
+
+      auto obj = elem->GetObject();
+
+      if (obj && Browsable::RProvider::Draw6(canv, obj, drawingOptions)) {
+         canv->ForceUpdate(); // force update async - do not wait for confirmation
+         return ""s;
+         // return "SELECT_TAB:"s + canv->GetName();
+      }
+   }
+
    return ""s;
 
    // TODO: one can send id of editor or canvas to be sure when sending back reply
@@ -222,23 +248,6 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       return "FIMG:"s + TBufferJSON::ToJSON(&args).Data();
    }
 
-   if (drawingOptions == "$$$editor$$$") {
-      auto code = elem->GetContent("text");
-      if (!code.empty()) {
-         auto fname = elem->GetContent("filename");
-         if (fname.empty())
-            fname = elem->GetName();
-         std::vector<std::string> args = { fname, code };
-
-         return "FREAD:"s + TBufferJSON::ToJSON(&args).Data();
-      }
-      auto json = elem->GetContent("json");
-      if (!json.empty())
-         return "JSON:"s + elem->GetName() + "$$$"s + json;
-
-      return ""s;
-   }
-
    if (drawingOptions == "$$$execute$$$") {
 
       std::string ext = item_path.substr(item_path.find_last_of(".") + 1);
@@ -252,33 +261,6 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
          ProcessRunCommand(elem->GetContent("filename"));
          return "";
       }
-
-   }
-
-   auto canv = GetActiveCanvas();
-   if (canv) {
-
-      auto obj = elem->GetObject();
-
-      if (obj)
-         if (Browsable::RProvider::Draw6(canv, obj, drawingOptions)) {
-            canv->ForceUpdate(); // force update async - do not wait for confirmation
-            return "SELECT_TAB:"s + canv->GetName();
-         }
-   }
-
-   auto rcanv = GetActiveRCanvas();
-   if (rcanv) {
-
-      std::shared_ptr<RPadBase> subpad = rcanv;
-
-      auto obj = elem->GetObject();
-      if (obj)
-         if (Browsable::RProvider::Draw7(subpad, obj, drawingOptions)) {
-            rcanv->Modified();
-            rcanv->Update(true);
-            return "SELECT_TAB:"s + rcanv->GetTitle();
-         }
    }
 
    R__LOG_DEBUG(0, BrowserLog()) << "No active canvas to process dbl click";

@@ -190,6 +190,42 @@ public:
       return std::make_unique<RAnyObjectHolder>(obj_class, obj, true);
    }
 
+
+   EActionKind GetDefaultAction() const override
+   {
+      if (fElement)
+         return fElement->GetDefaultAction();
+
+      std::string clname = fKey->GetClassName();
+      if (clname.empty()) return kActNone;
+      if (RProvider::CanDraw6(clname)) return kActDraw6;
+      if (RProvider::CanDraw7(clname)) return kActDraw7;
+      if (RProvider::CanHaveChilds(clname)) return kActBrowse;
+      return kActNone;
+
+   }
+
+   bool IsCapable(EActionKind action) const override
+   {
+      if (fElement)
+         return fElement->IsCapable(action);
+
+      std::string clname = fKey->GetClassName();
+      if (clname.empty()) return false;
+
+      switch(action) {
+         case kActBrowse: return RProvider::CanHaveChilds(clname);
+         case kActEdit: return true;
+         case kActImage:
+         case kActDraw6: return RProvider::CanDraw6(clname); // if can draw in TCanvas, can produce image
+         case kActDraw7: return RProvider::CanDraw7(clname);
+         case kActGeom: return false;  // TODO
+         default: return false;
+      }
+
+      return false;
+   }
+
 };
 
 // ==============================================================================================
