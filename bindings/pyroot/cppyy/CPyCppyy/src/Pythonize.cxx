@@ -841,6 +841,16 @@ PyObject* name##StringCompare(PyObject* self, PyObject* obj)                 \
 CPPYY_IMPL_STRING_PYTHONIZATION_CMP(std::string, Stl)
 CPPYY_IMPL_STRING_PYTHONIZATION_CMP(std::wstring, StlW)
 
+Py_hash_t StlStringHash(PyObject* self)
+{
+// std::string objects hash to the same values as Python strings to allow
+// matches in dictionaries etc.
+    PyObject* data = StlStringGetData(self);
+    Py_hash_t h = CPyCppyy_PyText_Type.tp_hash(data);
+    Py_DECREF(data);
+    return h;
+}
+
 
 //- STL iterator behavior ----------------------------------------------------
 PyObject* StlIterNext(PyObject* self)
@@ -1157,6 +1167,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__cmp__",  (PyCFunction)StlStringCompare, METH_O);
         Utility::AddToClass(pyclass, "__eq__",   (PyCFunction)StlStringIsEqual, METH_O);
         Utility::AddToClass(pyclass, "__ne__",   (PyCFunction)StlStringIsNotEqual, METH_O);
+        ((PyTypeObject*)pyclass)->tp_hash = (hashfunc)StlStringHash;
     }
 
     else if (name == "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >" || \
