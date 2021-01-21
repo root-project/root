@@ -744,14 +744,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onFullScreen: function() {
          let splitApp = this.getView().byId("SplitAppBrowser");
-         let btn = this.getView().byId('expandMaster');
          if (uiDevice.orientation.landscape) {
             if(splitApp.getMode() === "ShowHideMode") {
                splitApp.setMode("HideMode");
-               btn.setVisible(false);
             } else {
                splitApp.setMode("ShowHideMode");
-               btn.setVisible(true);
             }
          } else {
             if(splitApp.isMasterShown()) {
@@ -765,7 +762,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       handleChangeOrientation: function(is_landscape) {
          let btn = this.getView().byId('expandMaster');
          btn.setVisible(is_landscape);
-         btn.setIcon("sap-icon://full-screen");
+         btn.setIcon("sap-icon://open-command-field");
          this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
       },
 
@@ -774,7 +771,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          master.toggleStyleClass('masterExpanded');
          let expanded = master.hasStyleClass('masterExpanded');
          const btn = this.getView().byId('expandMaster');
-         btn.setIcon(expanded ? "sap-icon://exit-full-screen" : "sap-icon://full-screen");
+         btn.setIcon(expanded ? "sap-icon://close-command-field" : "sap-icon://open-command-field");
       },
 
       /* ========================================== */
