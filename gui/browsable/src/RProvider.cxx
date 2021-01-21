@@ -207,31 +207,43 @@ std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, cons
 //////////////////////////////////////////////////////////////////////////////////
 // Template function to scan class entries, including parent object classes
 
-template<class Map_t, class Iterator_t>
-bool ScanProviderMap(Map_t &fmap, const TClass *cl, bool test_all = false, std::function<bool(Iterator_t &)> check_func = nullptr)
+template<class Map_t, class Func_t>
+bool ScanProviderMap(Map_t &fmap, const RProvider::ClassArg &cl, bool test_all = false, std::function<bool(Func_t &)> check_func = nullptr)
 {
-   if (!cl)
+   if (cl.empty())
       return false;
 
-   TClass *testcl = const_cast<TClass *>(cl);
-   while (testcl) {
-      auto iter = fmap.find(testcl);
-      if (iter != fmap.end())
-         if (!check_func || check_func(iter))
-            return true;
+   if (cl.GetClass()) {
+      TClass *testcl = const_cast<TClass *>(cl.GetClass());
+      while (testcl) {
+         auto iter = fmap.find(testcl);
+         if (iter != fmap.end())
+            if (!check_func || check_func(iter->second.func))
+               return true;
 
-      auto bases = testcl->GetListOfBases();
+         auto bases = testcl->GetListOfBases();
 
-      testcl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
+         testcl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
+      }
+   } else {
+      for (auto &entry : fmap) {
+         if (!entry.first) continue;
+         std::string name = entry.first->GetName();
+         if (!check_func) {
+            // when check_func not specified, just try to guess if class can match
+            if ((cl.GetName() == name) || (cl.GetName().compare(0, name.length(), name) == 0))
+               return true;
+         } else if (cl.GetName() == name) {
+            if (check_func(entry.second.func))
+               return true;
+         }
+      }
    }
 
-   if (test_all) {
-      auto iter = fmap.begin();
-      while (iter != fmap.end()) {
-         if (!iter->first && check_func(iter))
+   if (test_all && check_func) {
+      for (auto &entry : fmap)
+         if (!entry.first && check_func(entry.second.func))
             return true;
-         iter++;
-      }
    }
 
    return false;
@@ -248,13 +260,13 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<RHolder> &object)
 
    if (!object) return res;
 
-   auto test_func = [&res, &object] (BrowseMap_t::iterator &iter) -> bool {
-      res = iter->second.func(object);
+   auto browse_func = [&res, &object] (BrowseFunc_t &func) -> bool {
+      res = func(object);
       return (res || !object) ? true : false;
    };
 
    // check only class entries
-   if (ScanProviderMap<BrowseMap_t,BrowseMap_t::iterator>(GetBrowseMap(), object->GetClass(), false, test_func))
+   if (ScanProviderMap<BrowseMap_t,BrowseFunc_t>(GetBrowseMap(), object->GetClass(), false, browse_func))
       return res;
 
    auto &entry = GetClassEntry(object->GetClass());
@@ -262,7 +274,7 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<RHolder> &object)
       gSystem->Load(entry.browselib.c_str());
 
    // let call also generic browse functions (multicast)
-   ScanProviderMap<BrowseMap_t,BrowseMap_t::iterator>(GetBrowseMap(), object->GetClass(), true, test_func);
+   ScanProviderMap<BrowseMap_t,BrowseFunc_t>(GetBrowseMap(), object->GetClass(), true, browse_func);
 
    return res;
 }
@@ -276,18 +288,18 @@ bool RProvider::Draw6(TVirtualPad *subpad, std::unique_ptr<RHolder> &object, con
    if (!object || !object->GetClass())
       return false;
 
-   auto draw_func = [subpad, &object, &opt](Draw6Map_t::iterator &iter) -> bool {
-      return iter->second.func(subpad, object, opt);
+   auto draw_func = [subpad, &object, &opt](Draw6Func_t &func) -> bool {
+      return func(subpad, object, opt);
    };
 
-   if (ScanProviderMap<Draw6Map_t, Draw6Map_t::iterator>(GetDraw6Map(), object->GetClass(), false, draw_func))
+   if (ScanProviderMap<Draw6Map_t,Draw6Func_t>(GetDraw6Map(), object->GetClass(), false, draw_func))
       return true;
 
    auto &entry = GetClassEntry(object->GetClass());
    if (!entry.dummy() && !entry.draw6lib.empty())
       gSystem->Load(entry.draw6lib.c_str());
 
-   return ScanProviderMap<Draw6Map_t, Draw6Map_t::iterator>(GetDraw6Map(), object->GetClass(), true, draw_func);
+   return ScanProviderMap<Draw6Map_t,Draw6Func_t>(GetDraw6Map(), object->GetClass(), true, draw_func);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -299,18 +311,18 @@ bool RProvider::Draw7(std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std
    if (!object || !object->GetClass())
       return false;
 
-   auto draw_func = [&subpad, &object, &opt](Draw7Map_t::iterator &iter) -> bool {
-      return iter->second.func(subpad, object, opt);
+   auto draw_func = [&subpad, &object, &opt](Draw7Func_t &func) -> bool {
+      return func(subpad, object, opt);
    };
 
-   if (ScanProviderMap<Draw7Map_t, Draw7Map_t::iterator>(GetDraw7Map(), object->GetClass(), false, draw_func))
+   if (ScanProviderMap<Draw7Map_t,Draw7Func_t>(GetDraw7Map(), object->GetClass(), false, draw_func))
       return true;
 
    auto &entry = GetClassEntry(object->GetClass());
    if (!entry.dummy() && !entry.draw7lib.empty())
       gSystem->Load(entry.draw7lib.c_str());
 
-   return ScanProviderMap<Draw7Map_t, Draw7Map_t::iterator>(GetDraw7Map(), object->GetClass(), true, draw_func);
+   return ScanProviderMap<Draw7Map_t,Draw7Func_t>(GetDraw7Map(), object->GetClass(), true, draw_func);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -339,7 +351,7 @@ bool RProvider::CanHaveChilds(const ClassArg &arg)
 
 bool RProvider::CanDraw6(const ClassArg &arg)
 {
-   if (arg.cl && ScanProviderMap<Draw6Map_t, Draw6Map_t::iterator>(GetDraw6Map(), arg.cl))
+   if (ScanProviderMap<Draw6Map_t,Draw6Func_t>(GetDraw6Map(), arg))
       return true;
 
    if (!GetClassEntry(arg).draw6lib.empty())
@@ -353,7 +365,7 @@ bool RProvider::CanDraw6(const ClassArg &arg)
 
 bool RProvider::CanDraw7(const ClassArg &arg)
 {
-   if (arg.cl && ScanProviderMap<Draw7Map_t, Draw7Map_t::iterator>(GetDraw7Map(), arg.cl))
+   if (ScanProviderMap<Draw7Map_t,Draw7Func_t>(GetDraw7Map(), arg))
       return true;
 
    if (!GetClassEntry(arg).draw7lib.empty())

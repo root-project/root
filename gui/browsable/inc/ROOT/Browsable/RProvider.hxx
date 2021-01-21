@@ -50,6 +50,8 @@ public:
       ClassArg(const char *_name) : name(_name) {}
 
       bool empty() const { return !cl && name.empty(); }
+      const TClass *GetClass() const { return cl; }
+      const std::string &GetName() const { return name; }
    };
 
    static std::string GetClassIcon(const ClassArg &);
