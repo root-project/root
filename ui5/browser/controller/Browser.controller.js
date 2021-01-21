@@ -802,31 +802,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (!fullpath) return;
 
-         // do not use row._bHasChildren while it is not documented member of m.Row object
-         if (!prop.isLeaf) {
-            if (!prop.fullpath.endsWith(".root/")) {
-
-               let oBreadcrumbs = this.getView().byId("breadcrumbs");
-               let links = oBreadcrumbs.getLinks();
-               let currentText = oBreadcrumbs.getCurrentLocationText();
-
-               let path = "";
-               if ((currentText == "/") || (links.length < 1)) {
-                  path = prop.fullpath;
-               } else {
-                  path = "/";
-                  for (let i = 1; i < links.length; i++)
-                     path += links[i].getText() + "/";
-                  path += currentText + prop.fullpath;
-               }
-
-               // TODO: use plain array also here to avoid any possible confusion
-               this.websocket.send('CHDIR:' + path);
-               return this.doReload(true);
-            }
-         }
-
-         let className = this.getBaseClass(prop ? prop.className : ""),
+         let className = this.getBaseClass(prop.className),
              drawingOptions = className ? this.drawingOptions[className] : "";
 
          return this.sendDblClick(fullpath, drawingOptions || "");
@@ -907,6 +883,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
          case "WORKPATH":
             this.updateBReadcrumbs(JSON.parse(msg));
+            this.doReload(true);
             break;
          case "SELECT_TAB":
            let tab = this.findTab(msg);

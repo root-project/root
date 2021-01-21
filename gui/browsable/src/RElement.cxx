@@ -96,6 +96,35 @@ std::string RElement::GetContent(const std::string &kind)
 }
 
 /////////////////////////////////////////////////////////////////////
+/// Parse string path to produce RElementPath_t
+/// One should avoid to use string pathes as much as possible
+
+RElementPath_t RElement::ParsePath(const std::string &strpath)
+{
+   RElementPath_t arr;
+   if (strpath.empty())
+      return arr;
+
+   std::string slash = "/";
+
+   std::string::size_type previous = 0;
+   if (strpath[0] == slash[0]) previous++;
+
+   auto current = strpath.find(slash, previous);
+   while (current != std::string::npos) {
+      if (current > previous)
+         arr.emplace_back(strpath.substr(previous, current - previous));
+      previous = current + 1;
+      current = strpath.find(slash, previous);
+   }
+
+   if (previous < strpath.length())
+      arr.emplace_back(strpath.substr(previous));
+
+   return arr;
+}
+
+/////////////////////////////////////////////////////////////////////
 /// Compare two paths,
 /// Returns number of elements matches in both paths
 
