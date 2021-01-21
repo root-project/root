@@ -86,6 +86,9 @@ protected:
    void ProcessSaveFile(const std::string &fname, const std::string &content);
    std::string GetCurrentWorkingDirectory();
 
+   std::vector<std::string> GetRootHistory();
+   std::vector<std::string> GetRootLogs();
+
    void SendInitMsg(unsigned connid);
    void ProcessMsg(unsigned connid, const std::string &arg);
 

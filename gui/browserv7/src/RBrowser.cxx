@@ -481,6 +481,53 @@ void RBrowser::CloseTab(const std::string &name)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Get content of history file
+
+std::vector<std::string> RBrowser::GetRootHistory()
+{
+   std::vector<std::string> arr;
+
+   std::string path = gSystem->UnixPathName(gSystem->HomeDirectory());
+   path += "/.root_hist" ;
+   std::ifstream infile(path);
+
+   if (infile) {
+      std::string line;
+      while (std::getline(infile, line) && (arr.size() < 1000)) {
+         if(!(std::find(arr.begin(), arr.end(), line) != arr.end())) {
+            arr.emplace_back(line);
+         }
+      }
+   }
+
+   return arr;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Get content of log file
+
+std::vector<std::string> RBrowser::GetRootLogs()
+{
+   std::vector<std::string> arr;
+
+   std::ostringstream pathtmp;
+   pathtmp << gSystem->TempDirectory() << "/command." << gSystem->GetPid() << ".log";
+
+   std::ifstream infile(pathtmp.str());
+   if (infile) {
+      std::string line;
+      while (std::getline(infile, line) && (arr.size() < 10000)) {
+         arr.emplace_back(line);
+      }
+   }
+
+   return arr;
+
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Process client connect
 
 void RBrowser::SendInitMsg(unsigned connid)
@@ -510,6 +557,18 @@ void RBrowser::SendInitMsg(unsigned connid)
 
    if (!fActiveTab.empty())
       reply.emplace_back(std::vector<std::string>({ "active", fActiveTab }));
+
+   auto history = GetRootHistory();
+   if (history.size() > 0) {
+      history.insert(history.begin(), "history");
+      reply.emplace_back(history);
+   }
+
+   auto logs = GetRootLogs();
+   if (logs.size() > 0) {
+      logs.insert(logs.begin(), "logs");
+      reply.emplace_back(logs);
+   }
 
    std::string msg = "INMSG:";
    msg.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
@@ -622,28 +681,16 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       gSystem->RedirectOutput(pathtmp.str().c_str(), "a");
       gROOT->ProcessLine(msg.c_str());
       gSystem->RedirectOutput(0);
-   } else if (kind == "ROOTHIST") {
-      std::ostringstream path;
-      path << gSystem->UnixPathName(gSystem->HomeDirectory()) << "/.root_hist" ;
-      std::ifstream infile(path.str());
+   } else if (kind == "GETHISTORY") {
 
-      std::vector<std::string> unique_vector;
-      std::string line;
-      while (std::getline(infile, line)) {
-         if(!(std::find(unique_vector.begin(), unique_vector.end(), line) != unique_vector.end())) {
-            unique_vector.push_back(line);
-         }
-      }
-      std::string result;
-      for (const auto &piece : unique_vector) result += piece + ",";
-      fWebWindow->Send(connid, "HIST:"s + result);
-   } else if (kind == "LOGS") {
-      std::ostringstream pathtmp;
-      pathtmp << gSystem->TempDirectory() << "/command." << gSystem->GetPid() << ".log";
-      TString result;
-      std::ifstream instr(pathtmp.str().c_str());
-      result.ReadFile(instr);
-      fWebWindow->Send(connid, "LOGS:"s + result.Data());
+      auto history = GetRootHistory();
+
+      fWebWindow->Send(connid, "HISTORY:"s + TBufferJSON::ToJSON(&history, TBufferJSON::kNoSpaces).Data());
+   } else if (kind == "GETLOGS") {
+
+      auto logs = GetRootLogs();
+      fWebWindow->Send(connid, "LOGS:"s + TBufferJSON::ToJSON(&logs, TBufferJSON::kNoSpaces).Data());
+
    } else if (kind == "FILEDIALOG") {
       RFileDialog::Embedded(fWebWindow, arg0);
    } else if (kind == "SYNCEDITOR") {
