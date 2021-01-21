@@ -2,6 +2,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/m/Link',
                'sap/ui/core/Fragment',
                'rootui5/browser/model/BrowserModel',
+               'sap/ui/Device',
                'sap/ui/model/json/JSONModel',
                'sap/ui/table/Column',
                'sap/ui/layout/HorizontalLayout',
@@ -23,6 +24,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            Link,
            Fragment,
            BrowserModel,
+           uiDevice,
            JSONModel,
            tableColumn,
            HorizontalLayout,
@@ -43,40 +45,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
    "use strict";
 
-   /** Central ROOT RBrowser controller
-    * All Browser functionality is loaded after main ui5 rendering is performed */
+   /** @summary Central ROOT RBrowser controller
+     * @desc All Browser functionality is loaded after main ui5 rendering is performed */
 
    return Controller.extend("rootui5.browser.controller.Browser", {
       onInit: async function () {
 
-         let pthis = this;
-         let burgerMenu = pthis.getView().byId("burgerMenu");
+        uiDevice.orientation.attachHandler(mParams => this.handleChangeOrientation(mParams.landscape));
 
-         sap.ui.Device.orientation.attachHandler((mParams) => {
-            burgerMenu.detachPress(pthis.onFullScreenPressLandscape, pthis);
-            burgerMenu.detachPress(pthis.onFullScreenPressPortrait, pthis);
-
-            if (mParams.landscape) {
-               burgerMenu.attachPress(pthis.onFullScreenPressLandscape, pthis);
-               this.getView().byId('expandMaster').setVisible(true);
-            } else {
-               burgerMenu.attachPress(pthis.onFullScreenPressPortrait, pthis);
-
-               this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
-               this.getView().byId('expandMaster').setVisible(false);
-               this.getView().byId('shrinkMaster').setVisible(false);
-            }
-         });
-
-         if(sap.ui.Device.orientation.landscape) {
-            burgerMenu.attachPress(pthis.onFullScreenPressLandscape, pthis);
-         } else {
-            burgerMenu.attachPress(pthis.onFullScreenPressPortrait, pthis);
-            this.getView().byId('expandMaster').setVisible(false);
-         }
-
-        this.globalId = 1;
-        this.nextElem = "";
+        this.handleChangeOrientation(uiDevice.orientation.landscape);
 
         this._oSettingsModel = new JSONModel({
             SortMethods: [
@@ -289,6 +266,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             })
          });
 
+         item.setModel(new JSONModel({
+            can_close: true  // always can close image viewer
+         }));
+
+
          oTabContainer.addItem(item);
          oTabContainer.setSelectedItem(item);
       },
@@ -353,7 +335,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             value: "{/code}",
             height: "calc(100% - 40px)",
             liveChange: function() {
-               this.getModel().setProperty("/modified", true);
+               const model = this.getModel();
+               if (model.getProperty("/first_change")) {
+                  model.setProperty("/first_change", false);
+               } else {
+                  model.setProperty("/modified", true);
+                  model.setProperty("/can_close", false);
+               }
             }
          }));
 
@@ -362,7 +350,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             ext: "",
             title: editor_title,
             filename: "",  // only set when really exists
-            modified: false,
+            modified: false, // if content modified compared to server side
+            can_close: true,  // if file is stored, one can close without confirmation
             runEnabled: false,
             saveEnabled: false
          }));
@@ -406,6 +395,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                       modified ? oModel.getProperty("/code") : ""];
          if (cmd) data.push(cmd);
          oModel.setProperty("/modified", false);
+         if (cmd) oModel.setProperty("/can_close", true); // any command means file will be stored
          return this.websocket.send("SYNCEDITOR:" + JSON.stringify(data));
       },
 
@@ -597,20 +587,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* ========================================= */
 
       /** @summary Add Tab event handler */
-      addNewButtonPressHandler: async function (oEvent) {
-         //TODO: Change to some UI5 function (unknown for now)
+      handlePressAddTab: async function (oEvent) {
+         //TODO: Change to some UI5 function (unknown for now), not know how to get
          let oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
 
          // create action sheet only once
          if (!this._tabMenu) {
-            let fragment;
-            await Fragment.load({name: "rootui5.browser.view.tabsmenu", controller: this}).then(function (oFragment) {
-               fragment = oFragment;
+            this._tabMenu = await Fragment.load({
+               name: "rootui5.browser.view.tabsmenu",
+               controller: this
             });
-            if (fragment) {
-               this.getView().addDependent(fragment);
-               this._tabMenu = fragment;
-            }
+            this.getView().addDependent(this._tabMenu);
          }
          this._tabMenu.openBy(oButton);
       },
@@ -684,38 +671,29 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @brief Close Tab event handler */
-      tabCloseHandler: function(oEvent) {
+      handleTabClose: function(oEvent) {
          // prevent the tab being closed by default
          oEvent.preventDefault();
 
          let oTabContainer = this.byId("tabContainer");
          let oItemToClose = oEvent.getParameter('item');
+         let oModel = oItemToClose.getModel();
 
-         /*if (oItemToClose.getName() === "Code Editor") {
+         let closeItem = () => {
+            if (oItemToClose.getKey())
+               this.websocket.send("CLOSE_TAB:" + oItemToClose.getKey());
+            oTabContainer.removeItem(oItemToClose);
+         }
 
-            let count = 0;
-            const items = oTabContainer.getItems();
-            for (let i=0; i<items.length; i++) {
-               if (items[i].getId().indexOf("CodeEditor") !== -1) {
-                  count++
-               }
-            }
-            if (count <= 1) {
-               MessageToast.show("Sorry, you cannot close the Code Editor", {duration: 1500});
-            } else {
-               this.saveCheck(() => oTabContainer.removeItem(oItemToClose));
-            }
-         } */
+         if (oModel && oModel.getProperty("/can_close"))
+            return closeItem();
+
          MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
             onClose: oAction => {
                if (oAction === MessageBox.Action.OK) {
-                  if (oItemToClose.getKey())
-                     this.websocket.send("CLOSE_TAB:" + oItemToClose.getKey());
-
-                  oTabContainer.removeItem(oItemToClose);
-
-                  MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
-               }
+                   closeItem();
+                   MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
+                }
             }
          });
       },
@@ -769,35 +747,39 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== ToolHeader =============== */
       /* ========================================== */
 
-      onFullScreenPressLandscape: function () {
+      onFullScreen: function() {
          let splitApp = this.getView().byId("SplitAppBrowser");
-         let mode = splitApp.getMode();
-         if(mode === "ShowHideMode") {
-            splitApp.setMode("HideMode");
+         let btn = this.getView().byId('expandMaster');
+         if (uiDevice.orientation.landscape) {
+            if(splitApp.getMode() === "ShowHideMode") {
+               splitApp.setMode("HideMode");
+               btn.setVisible(false);
+            } else {
+               splitApp.setMode("ShowHideMode");
+               btn.setVisible(true);
+            }
          } else {
-            splitApp.setMode("ShowHideMode");
+            if(splitApp.isMasterShown()) {
+               splitApp.hideMaster();
+            } else {
+               splitApp.showMaster();
+            }
          }
       },
 
-      onFullScreenPressPortrait: function () {
-         let splitApp = this.getView().byId("SplitAppBrowser");
-         if(splitApp.isMasterShown()) {
-            splitApp.hideMaster();
-         } else {
-            splitApp.showMaster();
-         }
+      handleChangeOrientation: function(is_landscape) {
+         let btn = this.getView().byId('expandMaster');
+         btn.setVisible(is_landscape);
+         btn.setIcon("sap-icon://full-screen");
+         this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
       },
 
       onExpandMaster: function () {
-         this.getView().byId('expandMaster').setVisible(false);
-         this.getView().byId('shrinkMaster').setVisible(true);
-         this.getView().byId('masterPage').getParent().addStyleClass('masterExpanded');
-      },
-
-      onShrinkMaster: function () {
-         this.getView().byId('expandMaster').setVisible(true);
-         this.getView().byId('shrinkMaster').setVisible(false);
-         this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
+         const master = this.getView().byId('masterPage').getParent();
+         master.toggleStyleClass('masterExpanded');
+         let expanded = master.hasStyleClass('masterExpanded');
+         const btn = this.getView().byId('expandMaster');
+         btn.setIcon(expanded ? "sap-icon://exit-full-screen" : "sap-icon://full-screen");
       },
 
       /* ========================================== */
@@ -909,6 +891,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                tab.getModel().setProperty("/filename", arr[2]);
                tab.getModel().setProperty("/code", arr[3]);
                tab.getModel().setProperty("/modified", false);
+               tab.getModel().setProperty("/can_close", true);
+               tab.getModel().setProperty("/first_change", true);
             }
             break;
          }
@@ -1059,7 +1043,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       createCanvas: function(kind, url, name) {
-         console.log("Create canvas ", kind, url, name);
          if (!url || !name || (kind != "root6" && kind != "root7")) return;
 
          let oTabContainer = this.byId("tabContainer");

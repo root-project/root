@@ -6,21 +6,15 @@
           xmlns:core="sap.ui.core"
           xmlns:l="sap.ui.layout"
           xmlns:tnt="sap.tnt">
-
   <Page showSubHeader="false" showHeader="false" showFooter="false">
     <content>
       <tnt:ToolHeader asyncMode="true" height="40px" >
-        <Button id="burgerMenu" icon="sap-icon://menu2" type="Transparent">
+        <Button id="burgerMenu" icon="sap-icon://menu2" type="Transparent" tooltip="Hide/show browser" press="onFullScreen">
           <layoutData>
             <OverflowToolbarLayoutData priority="NeverOverflow" />
           </layoutData>
         </Button>
-        <Button id="expandMaster" icon="sap-icon://full-screen" type="Transparent" press="onExpandMaster">
-          <layoutData>
-            <OverflowToolbarLayoutData priority="NeverOverflow" />
-          </layoutData>
-        </Button>
-        <Button id="shrinkMaster" icon="sap-icon://exit-full-screen" type="Transparent" press="onShrinkMaster" visible="false">
+        <Button id="expandMaster" icon="sap-icon://full-screen" type="Transparent" tooltip="Expand/shrink browser" press="onExpandMaster">
           <layoutData>
             <OverflowToolbarLayoutData priority="NeverOverflow" />
           </layoutData>
@@ -87,7 +81,7 @@
           <detailPages>
             <l:Splitter orientation="Vertical">
               <Page title="Javascript ROOT Browser" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
-                <TabContainer id="tabContainer" showAddNewButton="true" addNewButtonPress="addNewButtonPressHandler" itemSelect="tabSelectItem" itemClose="tabCloseHandler" />
+                <TabContainer id="tabContainer" showAddNewButton="true" addNewButtonPress="handlePressAddTab" itemSelect="tabSelectItem" itemClose="handleTabClose"/>
               </Page>
               <Page showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
                 <layoutData><l:SplitterLayoutData size="20%" /></layoutData>
