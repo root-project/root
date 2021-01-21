@@ -64,7 +64,11 @@ void TMPWorker::Run()
       MPCodeBufPair msg = MPRecv(fS.get());
       if (msg.first == MPCode::kRecvError) {
          Error("TMPWorker::Run", "Lost connection to client\n");
-         gSystem->Exit(0);
+         // Do not call gSystem->Exit(0), not even with mode = kFALSE, to avoid
+         // any cleanup that could involve locks that were taken during fork().
+         // Use _exit(0) instead of exit(0) to not invoke handlers registered
+         // via atexit.
+         _exit(0);
       }
 
       if (msg.first < 1000)
@@ -99,7 +103,11 @@ void TMPWorker::HandleInput(MPCodeBufPair &msg)
    } else if (code == MPCode::kShutdownOrder || code == MPCode::kFatalError) {
       //client is asking the server to shutdown or client is dying
       MPSend(fS.get(), MPCode::kShutdownNotice, reply.c_str());
-      gSystem->Exit(0);
+      // Do not call gSystem->Exit(0), not even with mode = kFALSE, to avoid
+      // any cleanup that could involve locks that were taken during fork().
+      // Use _exit(0) instead of exit(0) to not invoke handlers registered
+      // via atexit.
+      _exit(0);
    } else {
       reply += ": unknown code received. code=" + std::to_string(code);
       MPSend(fS.get(), MPCode::kError, reply.c_str());
