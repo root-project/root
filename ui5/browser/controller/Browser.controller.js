@@ -715,28 +715,23 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       requestRootHist: function() {
-         return this.websocket.send("ROOTHIST:");
+         return this.websocket.send("GETHISTORY:");
       },
 
-      updateRootHist: function (hist) {
-         let pos = hist.lastIndexOf(',');
-         hist = hist.substring(0,pos) + "" + hist.substring(pos+1);
-         hist = hist.split(",");
-         let json = {hist:[]};
-
-         for(let i=0; i<hist.length; i++) {
-            json.hist.push({name: hist[i] });
-
-         }
+      updateRootHist: function(entries) {
+         let json = { hist:[] };
+         entries.forEach(entry => json.hist.push({ name: entry }));
          this.getView().byId("terminal-input").setModel(new JSONModel(json));
       },
 
       requestLogs: function() {
-         return this.websocket.send("LOGS:");
+         return this.websocket.send("GETLOGS:");
       },
 
       updateLogs: function(logs) {
-         this.getView().byId("output_log").setValue(logs);
+         let str = "";
+         logs.forEach(line => str += line+"\n");
+         this.getView().byId("output_log").setValue(str);
       },
 
       /* ======================================== */
@@ -935,12 +930,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                }
             }
             break;
-            case "HIST":
-               this.updateRootHist(msg);
-               break;
-            case "LOGS":
-               this.updateLogs(msg);
-               break;
+         case "HISTORY":
+            this.updateRootHist(JSON.parse(msg));
+            break;
+         case "LOGS":
+            this.updateLogs(JSON.parse(msg));
+            break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
          }
@@ -1023,18 +1018,26 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (!arr) return;
 
          this.updateBReadcrumbs(arr[0]);
-         this.requestRootHist();
-         this.requestLogs();
 
-         for (var k=1; k<arr.length; ++k)
-            this.createElement(arr[k][0], arr[k][1], arr[k][2]);
+         for (var k=1; k<arr.length; ++k) {
+            let kind = arr[k][0];
+            if (kind == "active") {
+               const tabItem = this.findTab(arr[k][1]);
+               if (tabItem) this.byId("tabContainer").setSelectedItem(tabItem);
+            } else if (kind == "history") {
+               arr[k].shift();
+               this.updateRootHist(arr[k]);
+            } else if (kind == "logs") {
+               arr[k].shift();
+               this.updateLogs(arr[k]);
+            } else {
+               this.createElement(kind, arr[k][1], arr[k][2]);
+            }
+         }
       },
 
       createElement: function(kind, par1, par2) {
-         if (kind == "active") {
-            const tabItem = this.findTab(par1);
-            if (tabItem) this.byId("tabContainer").setSelectedItem(tabItem);
-         } else if (kind == "edit") {
+         if (kind == "edit") {
             this.createCodeEditor(par1, par2);
          } else if (kind == "image") {
             this.createImageViewer(par1, par2);
