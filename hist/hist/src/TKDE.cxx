@@ -19,8 +19,8 @@
  3. "Hardle W, Muller M, Sperlich S, Werwatz A, Nonparametric and Semiparametric Models. Springer."
  4. "Cranmer KS, Kernel Estimation in High-Energy
  Physics. Computer Physics Communications 136:198-207,2001" - e-Print Archive: hep ex/0011057.
- 
- The algorithm is briefly described in (4). A binned version is also implemented to address the 
+
+ The algorithm is briefly described in (4). A binned version is also implemented to address the
  performance issue due to its data size dependance.
  */
 
@@ -110,7 +110,7 @@ void TKDE::Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_
    fGraph = 0;
    fNewData = false;
    fUseMirroring = false; fMirrorLeft = false; fMirrorRight = false;
-   fAsymLeft = false; fAsymRight = false; 
+   fAsymLeft = false; fAsymRight = false;
    fNBins = events < 10000 ? 100 : events / 10;
    fNEvents = events;
    fUseBinsNEvents = 10000;
@@ -361,9 +361,9 @@ void TKDE::SetNBins(UInt_t nbins) {
 
    SetUseBins();
    if (!fUseBins) {
-      if (fBinning == kUnbinned) 
+      if (fBinning == kUnbinned)
          Warning("SetNBins", "Bin type using SetBinning must be set for using a binned evaluation");
-      else 
+      else
          Warning("SetNBins", "Bin type using SetBinning or with SetUseBinsNEvents must be set for using a binned evaluation");
    }
 }
@@ -416,8 +416,9 @@ void TKDE::SetUseBins() {
          fUseBins = kFALSE;
    }
 
-   // set the binning
-   if (fUseBins &&  !fEvents.empty() ) {
+   // set the binning (if KDE already initialized)
+   if (fUseBins &&  fKernel && !fEvents.empty() ) {
+      fWeightSize = fNBins / (fXMax - fXMin);
       SetBinCentreData(fXMin, fXMax);
       SetBinCountData();
       SetKernel();
@@ -441,7 +442,7 @@ void TKDE::SetData(const Double_t* data, const Double_t* wgts) {
    }
    fEvents.assign(data, data + fNEvents);
    if (wgts) fEventWeights.assign(wgts, wgts + fNEvents);
-   
+
    if (fUseMinMaxFromData) {
       fXMin = *std::min_element(fEvents.begin(), fEvents.end());
       fXMax = *std::max_element(fEvents.begin(), fEvents.end());
@@ -461,7 +462,7 @@ void TKDE::SetData(const Double_t* data, const Double_t* wgts) {
    SetBinCountData();
 
 
-   ComputeDataStats(); 
+   ComputeDataStats();
    if (fUseMirroring) {
       SetMirroredEvents();
    }
@@ -485,7 +486,7 @@ void TKDE::ReInit() {
       Error("ReInit","TKDE does not contain any data !");
       return;
    }
-       
+
    SetKernelFunction(0);
 
    SetKernel();
@@ -506,7 +507,7 @@ void TKDE::InitFromNewData() {
       fXMin = *std::min_element(fEvents.begin(), fEvents.end());
       fXMax = *std::max_element(fEvents.begin(), fEvents.end());
    }
-   ComputeDataStats(); 
+   ComputeDataStats();
    //    if (fUseBins) {
    // } // bin usage is not supported in this case
    //
@@ -518,7 +519,7 @@ void TKDE::InitFromNewData() {
 }
 
 void TKDE::SetMirroredEvents() {
-   // Mirrors the data 
+   // Mirrors the data
    std::vector<Double_t> originalEvents = fEvents;
    std::vector<Double_t> originalWeights = fEventWeights;
   if (fMirrorLeft) {
@@ -533,7 +534,7 @@ void TKDE::SetMirroredEvents() {
    }
    if (!fEventWeights.empty() && (fMirrorLeft || fMirrorRight)) {
       // copy weights too
-      fEventWeights.insert(fEventWeights.end(), fEventWeights.begin(), fEventWeights.end() ); 
+      fEventWeights.insert(fEventWeights.end(), fEventWeights.begin(), fEventWeights.end() );
    }
 
    if(fUseBins) {
@@ -545,9 +546,9 @@ void TKDE::SetMirroredEvents() {
       fData = fEvents;
    }
    SetBinCountData();
-   
+
    fEvents = originalEvents;
-   fEventWeights = originalWeights; 
+   fEventWeights = originalWeights;
 }
 
 void TKDE::SetMean() {
@@ -600,10 +601,10 @@ void TKDE::SetKernelFunction(KernelFunction_Ptr kernfunc) {
       default:
          /// for user defined kernels
          fKernelFunction = kernfunc;
-         fKernelType = kUserDefined; 
+         fKernelType = kUserDefined;
    }
 
-   if (fKernelType == kUserDefined) { 
+   if (fKernelType == kUserDefined) {
       if (fKernelFunction) {
          CheckKernelValidity();
          SetUserCanonicalBandwidth();
@@ -614,7 +615,7 @@ void TKDE::SetKernelFunction(KernelFunction_Ptr kernfunc) {
          return;
       }
    }
-   assert(fKernelFunction); 
+   assert(fKernelFunction);
    SetKernelSigmas2();
    SetCanonicalBandwidths();
    SetKernel();
@@ -626,7 +627,7 @@ void TKDE::SetCanonicalBandwidths() {
    fCanonicalBandwidths[kEpanechnikov] = 1.7188; // Checked in Mathematica
    fCanonicalBandwidths[kBiweight] = 2.03617;    // Checked in Mathematica
    fCanonicalBandwidths[kCosineArch] = 1.7663;   // Checked in Mathematica
-   fCanonicalBandwidths[kUserDefined] = 1.0;     // To be Checked 
+   fCanonicalBandwidths[kUserDefined] = 1.0;     // To be Checked
 }
 
 void TKDE::SetKernelSigmas2() {
@@ -730,9 +731,9 @@ void TKDE::TKernel::ComputeAdaptiveWeights() {
    Double_t minWeight = weights[0] * 0.05;
    unsigned int n = fKDE->fData.size();
    assert( n == weights.size() );
-   bool useDataWeights = (fKDE->fBinCount.size() == n); 
+   bool useDataWeights = (fKDE->fBinCount.size() == n);
    Double_t f = 0.0;
-   for (unsigned int i = 0; i < n; ++i) { 
+   for (unsigned int i = 0; i < n; ++i) {
 //   for (; weight != weights.end(); ++weight, ++data, ++dataW) {
       if (useDataWeights && fKDE->fBinCount[i] <= 0) continue;  // skip negative or null weights
       f = (*fKDE->fKernel)(fKDE->fData[i]);
@@ -767,11 +768,11 @@ void TKDE::SetBinCentreData(Double_t xmin, Double_t xmax) {
 void TKDE::SetBinCountData() {
    // Returns the bins' count from the data for using with the binned option
    // or set the bin count to the weights in case of weighted data
-   if (fUseBins) { 
+   if (fUseBins) {
       fBinCount.resize(fNBins);
       fSumOfCounts = 0;
-      // case of weighted events 
-      if (!fEventWeights.empty() ) { 
+      // case of weighted events
+      if (!fEventWeights.empty() ) {
          for (UInt_t i = 0; i < fNEvents; ++i) {
             if (fEvents[i] >= fXMin && fEvents[i] < fXMax) {
                fBinCount[Index(fEvents[i])] += fEventWeights[i];
@@ -780,7 +781,7 @@ void TKDE::SetBinCountData() {
             }
          }
       }
-      // case of unweighted data 
+      // case of unweighted data
       else {
          for (UInt_t i = 0; i < fNEvents; ++i) {
             if (fEvents[i] >= fXMin && fEvents[i] < fXMax) {
@@ -793,12 +794,12 @@ void TKDE::SetBinCountData() {
    else if (!fEventWeights.empty() ) {
       fBinCount = fEventWeights;
       fSumOfCounts = 0;
-      for (UInt_t i = 0; i < fNEvents; ++i) 
+      for (UInt_t i = 0; i < fNEvents; ++i)
          fSumOfCounts += fEventWeights[i];
    }
    else {
       fSumOfCounts = fNEvents;
-      fBinCount.clear(); 
+      fBinCount.clear();
    }
 }
 
@@ -934,11 +935,11 @@ Double_t TKDE::TKernel::operator()(Double_t x) const {
    // The internal class's unary function: returns the kernel density estimate
    Double_t result(0.0);
    UInt_t n = fKDE->fData.size();
-   // case of bins or weighted data 
+   // case of bins or weighted data
    Bool_t useBins = (fKDE->fBinCount.size() == n);
    Double_t nSum = (useBins) ? fKDE->fSumOfCounts : fKDE->fNEvents;
    // double dmin = 1.E10;
-   // double xmin,bmin,wmin; 
+   // double xmin,bmin,wmin;
    for (UInt_t i = 0; i < n; ++i) {
       Double_t binCount = (useBins) ? fKDE->fBinCount[i] : 1.0;
       result += binCount / fWeights[i] * (*fKDE->fKernelFunction)((x - fKDE->fData[i]) / fWeights[i]);
