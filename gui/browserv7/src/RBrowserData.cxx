@@ -33,17 +33,7 @@ void RBrowserData::SetTopElement(std::shared_ptr<Browsable::RElement> elem)
 {
    fTopElement = elem;
 
-   SetWorkingDirectory("");
-}
-
-/////////////////////////////////////////////////////////////////////
-/// set working directory relative to top element
-
-void RBrowserData::SetWorkingDirectory(const std::string &strpath)
-{
-   auto path = DecomposePath(strpath, false);
-
-   SetWorkingPath(path);
+   SetWorkingPath({});
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -82,22 +72,8 @@ Browsable::RElementPath_t RBrowserData::DecomposePath(const std::string &strpath
    if (strpath.empty())
       return arr;
 
-   std::string slash = "/";
-
-   std::string::size_type previous = 0;
-   if (strpath[0] == slash[0]) previous++;
-
-   auto current = strpath.find(slash, previous);
-   while (current != std::string::npos) {
-      if (current > previous)
-         arr.emplace_back(strpath.substr(previous, current - previous));
-      previous = current + 1;
-      current = strpath.find(slash, previous);
-   }
-
-   if (previous < strpath.length())
-      arr.emplace_back(strpath.substr(previous));
-
+   auto arr2 = Browsable::RElement::ParsePath(strpath);
+   arr.insert(arr.end(), arr2.begin(), arr2.end());
    return arr;
 }
 

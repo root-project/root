@@ -86,6 +86,8 @@ public:
 
    static std::shared_ptr<RElement> GetSubElement(std::shared_ptr<RElement> &elem, const RElementPath_t &path);
 
+   static RElementPath_t ParsePath(const std::string &str);
+
    static int ComparePaths(const RElementPath_t &path1, const RElementPath_t &path2);
 
    static std::string GetPathAsString(const RElementPath_t &path);

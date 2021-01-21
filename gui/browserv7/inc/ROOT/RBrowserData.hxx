@@ -51,13 +51,9 @@ class RBrowserData {
    std::string fLastSortMethod;                          ///<! last sort method
    bool fLastSortReverse{false};                         ///<! last request reverse order
 
-   Browsable::RElementPath_t DecomposePath(const std::string &path, bool relative_to_work_element);
-
    void ResetLastRequest();
 
    bool ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply);
-
-   std::shared_ptr<Browsable::RElement> GetSubElement(const Browsable::RElementPath_t &path);
 
 public:
    RBrowserData() = default;
@@ -68,7 +64,6 @@ public:
 
    void SetTopElement(std::shared_ptr<Browsable::RElement> elem);
 
-   void SetWorkingDirectory(const std::string &strpath);
    void SetWorkingPath(const Browsable::RElementPath_t &path);
 
    const Browsable::RElementPath_t &GetWorkingPath() const { return fWorkingPath; }
@@ -77,6 +72,11 @@ public:
 
    std::shared_ptr<Browsable::RElement> GetElement(const std::string &str);
    std::shared_ptr<Browsable::RElement> GetElementFromTop(const Browsable::RElementPath_t &path);
+
+   Browsable::RElementPath_t DecomposePath(const std::string &path, bool relative_to_work_element);
+   std::shared_ptr<Browsable::RElement> GetSubElement(const Browsable::RElementPath_t &path);
+
+
 };
 
 
