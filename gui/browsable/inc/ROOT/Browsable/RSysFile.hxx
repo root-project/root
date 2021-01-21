@@ -55,7 +55,7 @@ public:
 
    static std::string GetFileIcon(const std::string &fname);
 
-   static std::string ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std::string &workdir = "");
+   static RElementPath_t ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std::string &workdir = "");
 
 };
 

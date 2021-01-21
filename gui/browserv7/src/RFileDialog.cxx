@@ -69,9 +69,9 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
    }
 
    auto comp = std::make_shared<Browsable::RGroup>("top", "Top file dialog element");
-   workdir = Browsable::RSysFile::ProvideTopEntries(comp, workdir);
+   auto workpath = Browsable::RSysFile::ProvideTopEntries(comp, workdir);
    fBrowsable.SetTopElement(comp);
-   fBrowsable.SetWorkingDirectory(workdir);
+   fBrowsable.SetWorkingPath(workpath);
 
    fWebWindow = RWebWindow::Create();
 

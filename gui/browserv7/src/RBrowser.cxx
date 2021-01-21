@@ -79,7 +79,7 @@ RBrowser::RBrowser(bool use_rcanvas)
 
    fBrowsable.SetTopElement(comp);
 
-   fBrowsable.SetWorkingDirectory(seldir);
+   fBrowsable.SetWorkingPath(seldir);
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -177,7 +177,8 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
 {
    R__LOG_DEBUG(0, BrowserLog()) << "DoubleClick " << item_path;
 
-   auto elem = fBrowsable.GetElement(item_path);
+   auto path = fBrowsable.DecomposePath(item_path, true);
+   auto elem = fBrowsable.GetSubElement(path);
    if (!elem) return ""s;
 
    auto page = GetActivePage();
@@ -291,6 +292,12 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
          std::vector<std::string> reply = { editor->GetKind(), editor->fName, editor->fTitle };
          return "NEWTAB:"s + TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data();
       }
+   }
+
+   if (elem->IsCapable(Browsable::RElement::kActBrowse) && (elem->GetNumChilds() > 0)) {
+      printf("Could CHDIR to %s full: %s\n", item_path.c_str(), Browsable::RElement::GetPathAsString(path).c_str());
+      fBrowsable.SetWorkingPath(path);
+      return GetCurrentWorkingDirectory();
    }
 
    return ""s;
@@ -657,9 +664,6 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
    } else if (kind == "CHPATH") {
       auto path = TBufferJSON::FromJSON<Browsable::RElementPath_t>(msg);
       if (path) fBrowsable.SetWorkingPath(*path);
-      fWebWindow->Send(connid, GetCurrentWorkingDirectory());
-   } else if (kind == "CHDIR") {
-      fBrowsable.SetWorkingDirectory(msg);
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (kind == "CMD") {
       std::string sPrompt = "root []";
