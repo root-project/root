@@ -65,8 +65,8 @@ public:
       kForcedBinning
    };
 
-   
-   TKDE();                    // defaul constructor used only by I/O 
+
+   TKDE();                    // defaul constructor used only by I/O
 
    TKDE(UInt_t events, const Double_t* data, Double_t xMin = 0.0, Double_t xMax = 0.0, const Option_t* option =
                  "KernelType:Gaussian;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0) {
@@ -154,7 +154,7 @@ private:
    TF1* fApproximateBias; //! Output Kernel Density Estimation approximate bias
    TGraphErrors* fGraph;  //! Graph with the errors
 
-   EKernelType fKernelType;    
+   EKernelType fKernelType;
    EIteration fIteration;
    EMirror fMirror;
    EBinning fBinning;
@@ -190,7 +190,7 @@ private:
    struct KernelIntegrand;
    friend struct KernelIntegrand;
 
-   void Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_t* data, const Double_t* weight, 
+   void Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_t* data, const Double_t* weight,
                     Double_t xMin, Double_t xMax, const Option_t* option, Double_t rho);
 
    inline Double_t GaussianKernel(Double_t x) const {
