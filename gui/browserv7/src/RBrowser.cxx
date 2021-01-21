@@ -437,18 +437,18 @@ RBrowser::BrowserPage *RBrowser::GetPage(const std::string &name) const
 {
    if (name.empty()) return nullptr;
 
-   auto iter = std::find_if(fPages.begin(), fPages.end(), [this,name](const std::unique_ptr<BrowserPage> &page) { return name == page->fName; });
+   auto iter = std::find_if(fPages.begin(), fPages.end(), [name](const std::unique_ptr<BrowserPage> &page) { return name == page->fName; });
 
    return (iter != fPages.end()) ? iter->get() : nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Find editor for specified item path
+/// Find editor/image viewer page for specified item path
 
 RBrowser::BrowserPage *RBrowser::FindPageFor(const std::string &item_path, bool is_editor)
 {
    auto iter = std::find_if(fPages.begin(), fPages.end(),
-            [this,item_path,is_editor](const std::unique_ptr<BrowserPage> &page) {
+            [item_path,is_editor](const std::unique_ptr<BrowserPage> &page) {
               return (item_path == page->fItemPath) && (is_editor == page->fIsEditor);
             });
 
@@ -522,10 +522,7 @@ std::vector<std::string> RBrowser::GetRootLogs()
    }
 
    return arr;
-
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Process client connect
