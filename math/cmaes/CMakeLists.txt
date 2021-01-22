@@ -1,0 +1,25 @@
+############################################################################
+# CMakeLists.txt file for building ROOT math/cmaes package
+############################################################################
+
+add_definitions(-DWARNINGMSG -DUSE_ROOT_ERROR)
+
+include_directories(${LIBCMAES_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR})
+link_directories(${LIBCMAES_LIBRARIES})
+
+#ROOT_GENERATE_DICTIONARY(G__cmaes *.h MODULE cmaes LINKDEF LinkDef.h)
+
+#ROOT_LINKER_LIBRARY(cmaes_root *.cxx G__cmaes.cxx DEPENDENCIES MathCore Hist LIBRARIES cmaes)
+#ROOT_INSTALL_HEADERS()
+
+ROOT_STANDARD_LIBRARY_PACKAGE(Cmaes
+  HEADERS
+    CMAESMinimizer.h
+  SOURCES
+    src/CMAESMinimizer.cxx
+  DEPENDENCIES
+    MathCore
+    Hist
+  LIBRARIES
+    cmaes
+)

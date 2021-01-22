@@ -317,6 +317,7 @@ set(gslflags)
 
 set(shadowpw ${value${shadowpw}})
 set(buildmathmore ${value${mathmore}})
+set(buildcmaes ${value${libcmaes}})
 set(buildroofit ${value${roofit}})
 set(buildminuit2 ${value${minuit2}})
 set(buildunuran ${value${unuran}})
