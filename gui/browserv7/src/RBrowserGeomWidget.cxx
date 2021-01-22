@@ -79,9 +79,8 @@ public:
 
    bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &) override
    {
-      // TODO: implement kActGeom capability
-      // if (!elem->IsCapable(Browsable::RElement::kActGeom))
-      //   return false;
+      if (!elem->IsCapable(Browsable::RElement::kActGeom))
+         return false;
 
       fObject = elem->GetObject();
       if (!fObject)
