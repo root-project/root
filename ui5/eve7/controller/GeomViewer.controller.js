@@ -74,13 +74,15 @@ sap.ui.define(['sap/ui/core/Component',
    return Controller.extend("rootui5.geom.controller.GeomViewer", {
       onInit: function () {
 
-         this.websocket = this.getView().getViewData().conn_handle;
+         let viewData = this.getView().getViewData();
+
+         this.websocket = viewData.conn_handle;
 
          // this is code for the Components.js
          // this.websocket = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
 
          this.websocket.setReceiver(this);
-         this.websocket.connect();
+         this.websocket.connect(viewData.conn_href);
 
          this.queue = []; // received draw messages
 

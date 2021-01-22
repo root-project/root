@@ -97,6 +97,15 @@ void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool 
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Return URL address of web window used for geometry viewer
+
+std::string ROOT::Experimental::REveGeomViewer::GetWindowAddr() const
+{
+   if (!fWebWindow) return "";
+   return fWebWindow->GetAddr();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Update geometry drawings in all web displays
 
 void ROOT::Experimental::REveGeomViewer::Update()
