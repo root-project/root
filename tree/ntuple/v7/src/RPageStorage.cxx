@@ -107,6 +107,8 @@ unsigned char *ROOT::Experimental::Detail::RPageSource::UnsealPage(
    const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
    const auto pageSize = element.GetSize() * sealedPage.fNElements;
 
+   // TODO(jblomer): We might be able to do better memory handling for unsealing pages than a new malloc for every
+   // new page.
    auto pageBufferPacked = new unsigned char[bytesPacked];
    if (sealedPage.fSize != bytesPacked) {
       fDecompressor->Unzip(sealedPage.fBuffer, sealedPage.fSize, bytesPacked, pageBufferPacked);
