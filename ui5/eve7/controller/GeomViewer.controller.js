@@ -77,6 +77,7 @@ sap.ui.define(['sap/ui/core/Component',
          let viewData = this.getView().getViewData();
 
          this.websocket = viewData.conn_handle;
+         this._embeded = viewData.embeded;
 
          // this is code for the Components.js
          // this.websocket = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
@@ -305,7 +306,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (this.geo_painter) {
             this.geo_painter.clearDrawings();
          } else {
-            var geomDrawing = this.byId("geomDrawing");
+            let geomDrawing = this.byId("geomDrawing");
             this.geo_painter = JSROOT.Painter.createGeoPainter(geomDrawing.getDomRef(), null, drawopt);
             this.geo_painter.setMouseTmout(0);
             // this.geo_painter.setDepthMethod("dflt");
@@ -442,6 +443,7 @@ sap.ui.define(['sap/ui/core/Component',
        * if not all scripts are loaded, messages are quied and processed later */
 
       checkDrawMsg: function(kind, msg) {
+         console.log('Get message kind ', kind);
          if (kind) {
             if (!msg)
                return console.error("No message is provided for " + kind);
@@ -451,6 +453,7 @@ sap.ui.define(['sap/ui/core/Component',
             this.queue.push(msg);
          }
 
+
          if (!this.creator ||            // complete JSROOT/EVE7 TGeo functionality is loaded
             !this.queue.length ||        // drawing messages are created
             !this.renderingDone) return; // UI5 rendering is performed
@@ -458,6 +461,8 @@ sap.ui.define(['sap/ui/core/Component',
          // only from here we can start to analyze messages and create TGeo painter, clones objects and so on
 
          msg = this.queue.shift();
+
+         console.log('Process message kind ', msg.kind);
 
          switch (msg.kind) {
             case "draw":
@@ -477,6 +482,8 @@ sap.ui.define(['sap/ui/core/Component',
                   this.geo_painter.ctrl.show_config = true;
                   this.geom_model.refresh();
                }
+
+               console.log('start drawing');
 
                this.geo_painter.prepareObjectDraw(msg.visibles, "__geom_viewer_selection__");
 
@@ -517,7 +524,7 @@ sap.ui.define(['sap/ui/core/Component',
          // when connection closed, close panel as well
          console.log('CLOSE WINDOW WHEN CONNECTION CLOSED');
 
-         if (window) window.close();
+         if (window && !this._embeded) window.close();
 
          this.isConnected = false;
       },
