@@ -102,7 +102,7 @@ RBrowser::RBrowser(bool use_rcanvas)
    else
       AddCanvas();
 
-   AddWidget("geom");
+   // AddWidget("geom");  // add geometry viewer at the beginning
 
    // AddPage(true); // one can add empty editor if necessary
 }
@@ -254,8 +254,17 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
    if (widget && widget->DrawElement(elem, drawingOptions))
       return widget->ReplyAfterDraw();
 
-
    auto dflt_action = elem->GetDefaultAction();
+
+   if (dflt_action == Browsable::RElement::kActGeom) {
+      auto gwidget = AddWidget("geom");
+      if (gwidget) {
+         // draw geometry calls Update(), but it is not a problem
+         // while connection is not yet established by the client
+         gwidget->DrawElement(elem, drawingOptions);
+         return NewWidgetMsg(gwidget);
+      }
+   }
 
    if (dflt_action == Browsable::RElement::kActImage) {
       auto viewer = FindPageFor(item_path, false);
@@ -666,6 +675,14 @@ std::string RBrowser::ProcessNewTab(const std::string &kind)
    return "NEWTAB:"s + TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Create message which send to client to create new widget
+
+std::string RBrowser::NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget)
+{
+   std::vector<std::string> arr = { widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle() };
+   return "NEWTAB:"s + TBufferJSON::ToJSON(&arr, TBufferJSON::kNoSpaces).Data();
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Process received message from the client
@@ -767,11 +784,8 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       }
    } else if (kind == "NEWWIDGET") {
       auto widget = AddWidget(msg);
-      if (widget) {
-         std::vector<std::string> arr = { widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle() };
-         std::string reply = "NEWTAB:"s + TBufferJSON::ToJSON(&arr, TBufferJSON::kNoSpaces).Data();
-         fWebWindow->Send(connid, reply);
-      }
+      if (widget)
+         fWebWindow->Send(connid, NewWidgetMsg(widget));
    } else {
       auto reply = ProcessNewTab(kind);
       if (!reply.empty()) fWebWindow->Send(connid, reply);

@@ -198,6 +198,7 @@ public:
 
       std::string clname = fKey->GetClassName();
       if (clname.empty()) return kActNone;
+      if (clname == "TGeoManager") return kActGeom;
       if (RProvider::CanDraw6(clname)) return kActDraw6;
       if (RProvider::CanDraw7(clname)) return kActDraw7;
       if (RProvider::CanHaveChilds(clname)) return kActBrowse;
@@ -219,7 +220,7 @@ public:
          case kActImage:
          case kActDraw6: return RProvider::CanDraw6(clname); // if can draw in TCanvas, can produce image
          case kActDraw7: return RProvider::CanDraw7(clname);
-         case kActGeom: return false;  // TODO
+         case kActGeom: return (clname == "TGeoManager");
          default: return false;
       }
 
