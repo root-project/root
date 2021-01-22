@@ -25,13 +25,14 @@ namespace Experimental {
 /** Request send from client to get content of path element */
 class RBrowserRequest {
 public:
-   std::string path; ///< requested path
-   int first{0};     ///< first child to request
-   int number{0};    ///< number of childs to request, 0 - all childs
-   std::string sort; ///< kind of sorting
-   bool reverse;     ///< reverse item order
-   bool hidden;      ///< show hidden files
-   std::string regex; ///< applied regex
+   std::string path;      ///< requested path
+   int first{0};          ///< first child to request
+   int number{0};         ///< number of childs to request, 0 - all childs
+   std::string sort;      ///< kind of sorting
+   bool reverse{false};   ///< reverse item order
+   bool hidden{false};    ///< show hidden files
+   bool reload{false};    ///< force items reload
+   std::string regex;     ///< applied regex
 };
 
 } // namespace Experimental

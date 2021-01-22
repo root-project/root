@@ -149,7 +149,7 @@ sap.ui.define([
                     curr.expanded = true;
                     this.reset_nodes = true;
                     this._expanding_path = path;
-                    this.submitRequest(curr, currpath, "expanding");
+                    this.submitRequest(false, curr, currpath, "expanding");
                     break;
                  }
                  return -1;
@@ -176,31 +176,33 @@ sap.ui.define([
         sendFirstRequest: function(websocket) {
            this._websocket = websocket;
            // submit top-level request already when construct model
-           this.submitRequest(this.h, "/");
+           this.submitRequest(false, this.h, "/");
         },
 
-        reloadMainModel: function(force, path = "/") {
-           if (this.mainModel && !force) {
+        /** @summary Reload main model
+          * One can force to submit new request while settings were changed
+          * One also can force to reload items on the server side if they can be potentially changed */
+        reloadMainModel: function(force_request, force_reload, path = "/") {
+           if (this.mainModel && !force_request && !force_reload) {
               this.h.nchilds = this.mainModel.length;
               this.h.childs = this.mainModel;
               this.h.expanded = true;
               this.reset_nodes = true;
               this.fullModel = this.mainFullModel;
-              console.log('assign this.fullModel = ' + this.fullModel);
               delete this.noData;
               this.scanShifts();
               if (this.oBinding)
                  this.oBinding.checkUpdate(true);
            } else if (!this.fullModel) {
               // send request, content will be reassigned
-              this.submitRequest(this.h, path);
+              this.submitRequest(force_reload, this.h, path);
            }
 
         },
 
         /** @summary submit next request to the server
           * @desc directly use web socket, later can be dedicated channel */
-        submitRequest: function(elem, path, first, number) {
+        submitRequest: function(force_reload, elem, path, first, number) {
            if (first === "expanding") {
               first = 0;
            } else {
@@ -219,6 +221,7 @@ sap.ui.define([
               sort: this.sortMethod || "",
               reverse: this.reverseOrder || false,
               hidden: this.showHidden ? true : false,
+              reload: force_reload ? true : false,  // rescan items by server even when path was not changed
               regex: this.itemsFilter ? "^(" + this.itemsFilter + ".*)$" : ""
            };
            this._websocket.send("BRREQ:" + JSON.stringify(request));
@@ -393,7 +396,7 @@ sap.ui.define([
 
                  // TODO: probably one could guess more precise request
                  if ((elem.nchilds === undefined) || (elem.nchilds !== 0))
-                   pthis.submitRequest(elem, path);
+                   pthis.submitRequest(false, elem, path);
 
                  return;
               }
@@ -413,7 +416,7 @@ sap.ui.define([
                     var first = Math.max(args.begin - id - threshold2, 0),
                         number = Math.min(elem.first - first, threshold);
 
-                    pthis.submitRequest(elem, path, first, number);
+                    pthis.submitRequest(false, elem, path, first, number);
                  }
 
                  id += elem.first;
@@ -440,9 +443,7 @@ sap.ui.define([
                           number = threshold;
                        }
 
-                       console.log('submit request for last', path, first,number)
-
-                       pthis.submitRequest(elem, path, first, number);
+                       pthis.submitRequest(false, elem, path, first, number);
                     }
 
                     id += _remains;
@@ -510,9 +511,7 @@ sap.ui.define([
            this.itemsFilter = newValue;
 
            // now we should request values once again
-
-           this.submitRequest(this.h, "/");
-
+           this.submitRequest(false, this.h, "/");
         }
 
     });
