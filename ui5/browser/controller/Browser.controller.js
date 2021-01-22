@@ -1005,18 +1005,44 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                arr[k].shift();
                this.updateLogs(arr[k]);
             } else {
-               this.createElement(kind, arr[k][1], arr[k][2]);
+               this.createElement(kind, arr[k][1], arr[k][2], arr[k][3]);
             }
          }
       },
 
-      createElement: function(kind, par1, par2) {
+      createElement: function(kind, par1, par2, par3) {
          if (kind == "edit") {
             this.createCodeEditor(par1, par2);
          } else if (kind == "image") {
             this.createImageViewer(par1, par2);
+         } else if (kind == "geom") {
+            this.createGeomViewer(par1, par2, par3);
          } else
             this.createCanvas(kind, par1, par2);
+      },
+
+      createGeomViewer: function(url, name, title) {
+         let oTabContainer = this.byId("tabContainer");
+         let item = new TabContainerItem({
+            name: "Geom viewer",
+            key: name,
+            additionalText: name,
+            icon: "sap-icon://column-chart-dual-axis"
+         });
+
+         oTabContainer.addItem(item);
+         oTabContainer.setSelectedItem(item);
+
+         console.log('Try to connect geom viewer at url', this.websocket.getHRef(url));
+
+         JSROOT.connectWebWindow({
+            kind: this.websocket.kind,
+            href: this.websocket.getHRef(url),
+            user_args: { nobrowser: true }
+         }).then(handle => XMLView.create({
+            viewName: "rootui5.eve7.view.GeomViewer",
+            viewData: { conn_handle: handle }
+         })).then(oView => item.addContent(oView));
       },
 
       createCanvas: function(kind, url, name) {
@@ -1038,17 +1064,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
 
          let conn = new JSROOT.WebWindowHandle(this.websocket.kind);
+         conn.setHRef(this.websocket.getHRef(url)); // argument for connect, makes relative path
 
-         // this is producing
-         let addr = this.websocket.href, relative_path = url;
-         if (relative_path.indexOf("../")==0) {
-            var ddd = addr.lastIndexOf("/",addr.length-2);
-            addr = addr.substr(0,ddd) + relative_path.substr(2);
-         } else {
-            addr += relative_path;
-         }
-
-         var painter = null;
+         let painter = null;
 
          if (kind == "root7") {
             painter = new JSROOT.v7.RCanvasPainter(null, null);
@@ -1061,7 +1079,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          painter.use_openui = true;
          painter.batch_mode = false;
          painter._window_handle = conn;
-         painter._window_handle_href = addr; // argument for connect
 
          XMLView.create({
             viewName: "rootui5.canv.view.Canvas",

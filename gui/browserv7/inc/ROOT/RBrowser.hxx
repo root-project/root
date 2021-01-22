@@ -7,7 +7,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -31,6 +31,7 @@ namespace ROOT {
 namespace Experimental {
 
 class RCanvas;
+class RBrowserWidget;
 
 /** Web-based ROOT file browser */
 
@@ -57,8 +58,9 @@ protected:
    std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end
    std::string fActiveTab;            ///<! name of active for tab (RCanvas, TCanvas or BrowserPage)
    std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> fRCanvases; ///<!  ROOT7 canvases
-   std::vector<std::unique_ptr<BrowserPage>> fPages;   ///<! list of text editors
-   int fPagesCnt{0};                                  ///<! counter for created editors
+   std::vector<std::shared_ptr<RBrowserWidget>> fWidgets; ///<!  all browser widgets
+   std::vector<std::unique_ptr<BrowserPage>> fPages;      ///<! list of text editors
+   int fPagesCnt{0};                                     ///<! counter for created editors
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
@@ -66,11 +68,14 @@ protected:
 
    TCanvas *AddCanvas();
    TCanvas *GetActiveCanvas() const;
-   std::string GetCanvasUrl(TCanvas *canv);
+   std::string GetCanvasUrl(TCanvas *);
 
    std::shared_ptr<RCanvas> AddRCanvas();
    std::shared_ptr<RCanvas> GetActiveRCanvas() const;
-   std::string GetRCanvasUrl(std::shared_ptr<RCanvas> &canv);
+   std::string GetRCanvasUrl(std::shared_ptr<RCanvas> &);
+
+   std::shared_ptr<RBrowserWidget> AddWidget(const std::string &kind);
+   std::shared_ptr<RBrowserWidget> GetActiveWidget() const;
 
    BrowserPage *AddPage(bool is_editor);
    BrowserPage *GetPage(const std::string &name) const;
