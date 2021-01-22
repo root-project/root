@@ -7,7 +7,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -26,6 +26,8 @@
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RFileDialog.hxx>
 #include <ROOT/RCanvas.hxx>
+
+#include "RBrowserWidget.hxx"
 
 #include "TString.h"
 #include "TSystem.h"
@@ -99,6 +101,8 @@ RBrowser::RBrowser(bool use_rcanvas)
       AddRCanvas();
    else
       AddCanvas();
+
+   AddWidget("geom");
 
    // AddPage(true); // one can add empty editor if necessary
 }
@@ -395,6 +399,41 @@ std::shared_ptr<RCanvas> RBrowser::AddRCanvas()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Creates new widget
+
+std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
+{
+   std::string name = kind + std::to_string(fPagesCnt++);
+
+   auto widget = RBrowserWidgetProvider::CreateWidget(kind, name);
+   if (!widget) {
+      R__LOG_ERROR(BrowserLog()) << "Fail to create widget of kind " << kind;
+      return nullptr;
+   }
+
+   widget->Show("embed");
+   fWidgets.emplace_back(widget);
+
+   fActiveTab = name;
+
+   return widget;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns active geometry viewer (if any)
+
+std::shared_ptr<RBrowserWidget> RBrowser::GetActiveWidget() const
+{
+   auto iter = std::find_if(fWidgets.begin(), fWidgets.end(),
+         [this](const std::shared_ptr<RBrowserWidget> &widget) { return fActiveTab == widget->GetName(); });
+
+   if (iter != fWidgets.end())
+      return *iter;
+
+   return nullptr;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns relative URL for canvas - required for client to establish connection
 
 std::string RBrowser::GetCanvasUrl(TCanvas *canv)
@@ -552,6 +591,10 @@ void RBrowser::SendInitMsg(unsigned connid)
       std::string name = canv->GetTitle();
       std::vector<std::string> arr = { "root7", url, name };
       reply.emplace_back(arr);
+   }
+
+   for (auto &widget : fWidgets) {
+      reply.emplace_back(std::vector<std::string>({ widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle() }));
    }
 
    for (auto &edit : fPages) {
