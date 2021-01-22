@@ -196,7 +196,7 @@ auto TExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<typen
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function `nTimes` (Map) and accumulate the results into a single value (Reduce).
 /// Benefits from partial reduction into `nChunks` intermediate results if the execution policy is multithreaded.
-/// Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
+/// Otherwise, <b>it ignores the nChunks argument</b> and performs a normal MapReduce operation.
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed as second argument as a parameter.
 /// \param nTimes Number of times function should be called.
@@ -215,7 +215,7 @@ auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) 
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over a sequence of indexes (Map) and accumulate the results into a single value (Reduce).
 /// Benefits from partial reduction into `nChunks` intermediate results if the execution policy is multithreaded.
-/// Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
+/// Otherwise, <b>it ignores the nChunks argument</b> and performs a normal MapReduce operation.
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Sequence of indexes to execute `func` on.
@@ -234,7 +234,7 @@ auto TExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned 
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over the elements of an initializer_list (Map) and accumulate the results into a single value (Reduce).
 /// Benefits from partial reduction into `nChunks` intermediate results if the execution policy is multithreaded.
-/// Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
+/// Otherwise, <b>it ignores the nChunks argument</b> and performs a normal MapReduce operation.
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args initializer_list for a vector to apply `func` on.
@@ -253,7 +253,7 @@ auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsi
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over the elements of a vector (Map) and accumulate the results into a single value (Reduce).
 /// Benefits from partial reduction into `nChunks` intermediate results if the execution policy is multithreaded.
-/// Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
+/// Otherwise, <b>it ignores the nChunks argument</b> and performs a normal MapReduce operation.
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Vector of elements passed as an argument to `func`.
@@ -272,7 +272,7 @@ auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChu
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over the elements of an immutable vector (Map) and accumulate the results into a single value (Reduce).
 /// Benefits from partial reduction into `nChunks` intermediate results if the execution policy is multithreaded.
-/// Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
+/// Otherwise, <b>it ignores the nChunks argument</b> and performs a normal MapReduce operation.
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Immutable vector, whose elements are passed as an argument to `func`.
