@@ -1993,7 +1993,6 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                            new THREE.Plane(new THREE.Vector3(0, this.ctrl._yup ? -1 : 1, 0), 0),
                            new THREE.Plane(new THREE.Vector3(0, 0, this.ctrl._yup ? 1 : -1), 0) ];
 
-
       // Light - add default point light, adjust later
 
       let light = new THREE.PointLight(0xefefef, 1);
@@ -3150,7 +3149,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                this.render3D(-1);
                this._last_render_meshes = this.ctrl.info.num_meshes;
             }
-            if (res !== 2) setTimeout(this.continueDraw.bind(this), (res === 1) ? 100 : 1);
+            if (res !== 2) setTimeout(() => this.continueDraw(), (res === 1) ? 100 : 1);
 
             return;
          }
@@ -3158,7 +3157,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       let take_time = now - this._startm;
 
-      if (this._first_drawing)
+      if (this._first_drawing || this._full_redrawing)
          console.log(`Create tm = ${take_time} meshes ${this.ctrl.info.num_meshes} faces ${this.ctrl.info.num_faces}`);
 
       if (take_time > 300) {
@@ -3699,6 +3698,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       }
 
       if (this._full_redrawing) {
+         this.adjustCameraPosition(true);
          this._full_redrawing = false;
          full_redraw = true;
          this.changedDepthMethod("norender");
@@ -4024,6 +4024,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       delete this._extraObjects;
       delete this._clipCfg;
 
+      // only remove all childs from top level object
       jsrp.disposeThreejsObject(this._toplevel, true);
 
       this._full_redrawing = true;
