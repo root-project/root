@@ -3967,13 +3967,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Use provided connection for the web canvas
      * @private */
-   RCanvasPainter.prototype.useWebsocket = function(handle, href) {
+   RCanvasPainter.prototype.useWebsocket = function(handle) {
       this.closeWebsocket();
 
       this._websocket = handle;
-      console.log('Use websocket', this._websocket.key);
       this._websocket.setReceiver(this);
-      this._websocket.connect(href);
+      this._websocket.connect();
    }
 
    /** @summary Hanler for websocket open event
