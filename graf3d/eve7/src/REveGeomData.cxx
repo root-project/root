@@ -74,6 +74,9 @@ public:
          return true;
       }
 
+      if (fNodeId >= (int) fDesc.fDesc.size())
+         return false;
+
       auto &node = fDesc.fDesc[fNodeId];
       if (node.chlds.size() == 0) return false;
       fStackParents.emplace_back(fParentId);
@@ -449,6 +452,8 @@ void ROOT::Experimental::REveGeomDescription::ProduceIdShifts()
 
 int ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, int maxlvl, REveGeomScanFunc_t func)
 {
+   if (fDesc.empty()) return 0;
+
    std::vector<int> stack;
    stack.reserve(25); // reserve enough space for most use-cases
    int counter{0};
