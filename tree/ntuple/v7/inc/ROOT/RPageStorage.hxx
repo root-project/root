@@ -77,6 +77,8 @@ public:
 
    /// A sealed page contains the bytes of a page as written to storage (packed & compressed).  It is used
    /// as an input to UnsealPages() as well as to transfer pages between different storage media.
+   /// RSealedPage does _not_ own the buffer it is pointing to in order to not interfere with the memory management
+   /// of concrete page sink and page source implementations.
    struct RSealedPage {
       const void *fBuffer = nullptr;
       std::uint32_t fSize = 0;
