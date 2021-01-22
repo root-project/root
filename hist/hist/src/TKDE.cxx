@@ -722,30 +722,36 @@ TKDE::TKernel::TKernel(Double_t weight, TKDE* kde) :
 // Internal class constructor
 fKDE(kde),
 fNWeights(kde->fData.size()),
-fWeights(fNWeights, weight)
+fWeights(1, weight)
 {}
 
 void TKDE::TKernel::ComputeAdaptiveWeights() {
    // Gets the adaptive weights (bandwidths) for TKernel internal computation
-   std::vector<Double_t> weights = fWeights;
-   Double_t minWeight = weights[0] * 0.05;
    unsigned int n = fKDE->fData.size();
-   assert( n == weights.size() );
+   Double_t minWeight = fWeights[0] * 0.05;
+   // we will store computed adaptive weights in weights
+   std::vector<Double_t> weights(n, fWeights[0]);
    bool useDataWeights = (fKDE->fBinCount.size() == n);
    Double_t f = 0.0;
    for (unsigned int i = 0; i < n; ++i) {
-//   for (; weight != weights.end(); ++weight, ++data, ++dataW) {
-      if (useDataWeights && fKDE->fBinCount[i] <= 0) continue;  // skip negative or null weights
+      // for negative or null bin contents use the fixed weight value (fWeights[0])
+      if (useDataWeights && fKDE->fBinCount[i] <= 0) {
+         weights[i] = fWeights[0];
+         continue; // skip negative or null weights
+      }
       f = (*fKDE->fKernel)(fKDE->fData[i]);
       if (f <= 0)
          fKDE->Warning("ComputeAdativeWeights","function value is zero or negative for x = %f w = %f",
                        fKDE->fData[i],(useDataWeights) ? fKDE->fBinCount[i] : 1.);
+      // use weight if it is larger
       weights[i] = std::max(weights[i] /= std::sqrt(f), minWeight);
       fKDE->fAdaptiveBandwidthFactor += std::log(f);
       //printf("(f = %f w = %f af = %f ),",f,*weight,fKDE->fAdaptiveBandwidthFactor);
    }
    Double_t kAPPROX_GEO_MEAN = 0.241970724519143365; // 1 / TMath::Power(2 * TMath::Pi(), .5) * TMath::Exp(-.5). Approximated geometric mean over pointwise data (the KDE function is substituted by the "real Gaussian" pdf) and proportional to sigma. Used directly when the mirroring is enabled, otherwise computed from the data
    fKDE->fAdaptiveBandwidthFactor = fKDE->fUseMirroring ? kAPPROX_GEO_MEAN / fKDE->fSigmaRob : std::sqrt(std::exp(fKDE->fAdaptiveBandwidthFactor / fKDE->fData.size()));
+   // set adaptive weights in fWeights matrix
+   fWeights.resize(n);
    transform(weights.begin(), weights.end(), fWeights.begin(),
              std::bind(std::multiplies<Double_t>(), std::placeholders::_1, fKDE->fAdaptiveBandwidthFactor));
    //printf("adaptive bandwidth factor % f weight 0 %f , %f \n",fKDE->fAdaptiveBandwidthFactor, weights[0],fWeights[0] );
@@ -927,7 +933,7 @@ Double_t TKDE::TKernel::GetFixedWeight() const {
 }
 
 const std::vector<Double_t> & TKDE::TKernel::GetAdaptiveWeights() const {
-   // Returns the bandwidth for the non adaptive KDE
+   // Returns the bandwidth for the adaptive KDE
    return fWeights;
 }
 
@@ -938,35 +944,27 @@ Double_t TKDE::TKernel::operator()(Double_t x) const {
    // case of bins or weighted data
    Bool_t useBins = (fKDE->fBinCount.size() == n);
    Double_t nSum = (useBins) ? fKDE->fSumOfCounts : fKDE->fNEvents;
-   // double dmin = 1.E10;
-   // double xmin,bmin,wmin;
+   // in case of non-adaptive fWeights is a vector of size 1
+   Bool_t hasAdaptiveWeights = (fWeights.size() == n);
+   Double_t invWeight = (!hasAdaptiveWeights) ? 1. / fWeights[0] : 0;
    for (UInt_t i = 0; i < n; ++i) {
       Double_t binCount = (useBins) ? fKDE->fBinCount[i] : 1.0;
-      result += binCount / fWeights[i] * (*fKDE->fKernelFunction)((x - fKDE->fData[i]) / fWeights[i]);
+      // uncommenting following line slows down so keep computation for
+      // zero bincounts
+      //if (binCount <= 0) continue;
+      if (hasAdaptiveWeights)
+         invWeight = 1. / fWeights[i];
+      result += binCount * invWeight * (*fKDE->fKernelFunction)((x - fKDE->fData[i]) * invWeight );
       if (fKDE->fAsymLeft) {
-         result -= binCount / fWeights[i] * (*fKDE->fKernelFunction)((x - (2. * fKDE->fXMin - fKDE->fData[i])) / fWeights[i]);
+         result -= binCount * invWeight * (*fKDE->fKernelFunction)((x - (2. * fKDE->fXMin - fKDE->fData[i])) * invWeight);
       }
       if (fKDE->fAsymRight) {
-         result -= binCount / fWeights[i] * (*fKDE->fKernelFunction)((x - (2. * fKDE->fXMax - fKDE->fData[i])) / fWeights[i]);
+         result -= binCount * invWeight * (*fKDE->fKernelFunction)((x - (2. * fKDE->fXMax - fKDE->fData[i])) * invWeight);
       }
-      // if ( TMath::IsNaN(result) ) {
-      //    printf("event %i count %f  weight %f  data % f x %f \n",i,binCount,fWeights[i],fKDE->fData[i],x );
-      // }
-      // if ( result <= 0 ) {
-      //    printf("event %i count %f  weight %f  data % f x %f \n",i,binCount,fWeights[i],fKDE->fData[i],x );
-      // }
-      // if (std::abs(x -  fKDE->fData[i]) < dmin ) {
-      //    xmin = x;
-      //    bmin = binCount;
-      //    wmin = fWeights[i];
-      //    dmin = std::abs(x -  fKDE->fData[i]);
-      // }
-      // if (i < fKDE->fEvents.size() )
       // printf("data point %i  %f  %f  count %f weight % f result % f\n",i,fKDE->fData[i],fKDE->fEvents[i],binCount,fWeights[i], result);
    }
    if ( TMath::IsNaN(result) ) {
       fKDE->Warning("operator()","Result is NaN for  x %f \n",x);
-    //xmin % f , %f, %f \n",result,x,xmin,bmin,wmin );
    }
    return result / nSum;
 }
