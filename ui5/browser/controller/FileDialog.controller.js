@@ -46,6 +46,8 @@ sap.ui.define(['rootui5/panel/Controller',
                                       // fileExtList: [{ id: "AllFiles", text: "All files (*.*)" }, { id: "png", text: "png files (*.png)"}, { id: "cxx", text: "CXX files (*.cxx)"}] });
          this.getView().setModel(this.oModel);
 
+         this.own_window = true;
+
          Fragment.load({
             name: "rootui5.browser.view.filedialog",
             controller: this,
@@ -62,7 +64,6 @@ sap.ui.define(['rootui5/panel/Controller',
             }
          });
 
-         this.own_window = true;
       },
 
       /** @summary Set path to the Breadcrumb element */
@@ -164,6 +165,9 @@ sap.ui.define(['rootui5/panel/Controller',
             this.oModel.setProperty("/canEditName", (this.kind == "SaveAs") || (this.kind == "NewFile"));
          }
 
+         if (this.own_window && document)
+             document.title = cfg.title || this.kind + " dialog";
+
          this.updateBReadcrumbs(cfg.path);
 
          this.oModel.setProperty("/fileName", cfg.fname);
@@ -193,7 +197,7 @@ sap.ui.define(['rootui5/panel/Controller',
          this.oModel.setProperty("/filesList", cfg.brepl.nodes);
       },
 
-      /** Close file dialog */
+      /** @summary Close file dialog */
       closeFileDialog: function(fname) {
          // add more logic when FileDialog embed into main window
          if (this.did_close) return;
@@ -228,13 +232,10 @@ sap.ui.define(['rootui5/panel/Controller',
          this.closeFileDialog();
       },
 
-      /** Entry point for all data from server */
+      /** @summary Entry point for all data from server */
       onWebsocketMsg: function(handle, msg) {
-
          if (typeof msg != "string")
             return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
-
-         console.log('GET DLG MGS: ', msg.substr(0,50));
 
          let mhdr = msg.split(":")[0];
          msg = msg.substr(mhdr.length+1);
@@ -289,7 +290,7 @@ sap.ui.define(['rootui5/panel/Controller',
          oWarnDlg.open();
       },
 
-      /** method used to complete dialog */
+      /** @summary method used to complete dialog */
       _completeDialog: function(funcname, arg) {
          if (!this.dialog_args)
             return;
@@ -302,8 +303,8 @@ sap.ui.define(['rootui5/panel/Controller',
          delete this.dialog_args;
       },
 
-      /** @brief Start SaveAs dialog @private */
-
+      /** @summary Start SaveAs dialog
+        * @private */
       _initDialog: async function(kind, args) {
 
          if (!args || typeof args != "object")
