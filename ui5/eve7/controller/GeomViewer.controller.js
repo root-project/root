@@ -1026,7 +1026,6 @@ sap.ui.define(['sap/ui/core/Component',
 
             if (this.model) {
                this.model.clearFullModel();
-               console.log('Calling reload model');
                this.model.reloadMainModel(force);
             }
          }

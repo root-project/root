@@ -43,20 +43,22 @@ void RBrowserData::SetWorkingPath(const Browsable::RElementPath_t &path)
 {
    fWorkingPath = path;
 
-   ResetLastRequest();
+   ResetLastRequestData(true);
 }
 
 /////////////////////////////////////////////////////////////////////
 /// Reset all data correspondent to last request
 
-void RBrowserData::ResetLastRequest()
+void RBrowserData::ResetLastRequestData(bool with_element)
 {
    fLastAllChilds = false;
    fLastSortedItems.clear();
    fLastSortMethod.clear();
    fLastItems.clear();
-   fLastPath.clear();
-   fLastElement.reset();
+   if (with_element) {
+      fLastPath.clear();
+      fLastElement.reset();
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -92,11 +94,14 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
       auto elem = GetSubElement(path);
       if (!elem) return false;
 
-      ResetLastRequest();
+      ResetLastRequestData(true);
 
       fLastPath = path;
       fLastElement = std::move(elem);
-}
+   } else if (request.reload) {
+      // only reload items from element, not need to reset element itself
+      ResetLastRequestData(false);
+   }
 
    // when request childs, always try to make elements
    if (fLastItems.empty()) {
