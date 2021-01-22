@@ -20,6 +20,8 @@
 #include <map>
 #include <string>
 
+#include <ROOT/Browsable/RElement.hxx>
+
 namespace ROOT {
 namespace Experimental {
 
@@ -29,6 +31,7 @@ namespace Experimental {
 class RBrowserWidget {
 
    std::string fName;
+
 public:
 
    explicit RBrowserWidget(const std::string &name) : fName(name) {};
@@ -40,6 +43,9 @@ public:
    virtual std::string GetKind() const = 0;
    virtual std::string GetUrl() = 0;
    virtual std::string GetTitle() { return ""; }
+
+   virtual bool DrawElement(std::shared_ptr<Browsable::RElement> &, const std::string &) { return false; }
+   virtual std::string ReplyAfterDraw() { return ""; }
 };
 
 class RBrowserWidgetProvider {

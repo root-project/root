@@ -608,8 +608,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (txt.indexOf("editor") >= 0)
             msg = "NEWEDITOR";
-         else if (txt.indexOf("viewer") >= 0)
+         else if (txt.indexOf("Image") >= 0)
             msg = "NEWVIEWER";
+         else if (txt.indexOf("Geometry") >= 0)
+            msg = "NEWWIDGET:geom";
          else if (txt.indexOf("Root 6") >= 0)
             msg = "NEWTCANVAS";
          else if (txt.indexOf("Root 7") >= 0)
@@ -878,7 +880,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
          case "NEWTAB": {  // canvas created by server, need to establish connection
             let arr = JSON.parse(msg);
-            this.createElement(arr[0], arr[1], arr[2]);
+            this.createElement(arr[0], arr[1], arr[2], arr[3]);
             break;
          }
          case "WORKPATH":
@@ -1033,15 +1035,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oTabContainer.addItem(item);
          oTabContainer.setSelectedItem(item);
 
-         console.log('Try to connect geom viewer at url', this.websocket.getHRef(url));
-
          JSROOT.connectWebWindow({
             kind: this.websocket.kind,
             href: this.websocket.getHRef(url),
             user_args: { nobrowser: true }
          }).then(handle => XMLView.create({
             viewName: "rootui5.eve7.view.GeomViewer",
-            viewData: { conn_handle: handle }
+            viewData: { conn_handle: handle, embeded: true }
          })).then(oView => item.addContent(oView));
       },
 

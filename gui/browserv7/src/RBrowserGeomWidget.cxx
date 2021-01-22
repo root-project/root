@@ -17,6 +17,11 @@
 
 #include <ROOT/REveGeomViewer.hxx>
 
+#include "TGeoManager.h"
+#include "TGeoVolume.h"
+#include "TGeoMaterial.h"
+#include "TGeoMedium.h"
+
 using namespace ROOT::Experimental;
 
 using namespace std::string_literals;
@@ -25,12 +30,37 @@ using namespace std::string_literals;
 class RBrowserGeomWidget : public RBrowserWidget {
    REveGeomViewer fViewer;
 
+   std::unique_ptr<Browsable::RHolder> fObject; // geometry object
+
+   /** Create dummy geometry - when nothiing else is there */
+   TGeoManager *MakeDummy()
+   {
+      auto prev = gGeoManager;
+      gGeoManager = nullptr;
+
+      auto mgr = new TGeoManager("box", "poza1");
+      TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+      TGeoMedium *med = new TGeoMedium("MED",1,mat);
+      TGeoVolume *top = mgr->MakeBox("TOP",med,100,100,100);
+      mgr->SetTopVolume(top);
+      TGeoVolume *vol = mgr->MakeBox("BOX",med, 20,30,40);
+      vol->SetLineColor(kRed);
+      vol->SetLineWidth(2);
+      top->AddNode(vol,1);
+      mgr->CloseGeometry();
+
+      gGeoManager = prev;
+      return mgr;
+   }
+
 public:
 
    RBrowserGeomWidget(const std::string &name) : RBrowserWidget(name), fViewer()
    {
       fViewer.SetTitle(name);
       fViewer.SetShowHierarchy(false);
+
+      // fViewer.SetGeometry(MakeDummy());
    }
 
    virtual ~RBrowserGeomWidget() = default;
@@ -45,6 +75,33 @@ public:
    std::string GetUrl() override
    {
       return "../"s + fViewer.GetWindowAddr() + "/"s;
+   }
+
+   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &) override
+   {
+      // TODO: implement kActGeom capability
+      // if (!elem->IsCapable(Browsable::RElement::kActGeom))
+      //   return false;
+
+      fObject = elem->GetObject();
+      if (!fObject)
+         return false;
+
+      // only handle TGeoManager now
+      auto mgr = fObject->Get<TGeoManager>();
+      if (!mgr) {
+         fObject.release();
+         return false;
+      }
+
+      fViewer.SetGeometry(const_cast<TGeoManager *>(mgr));
+
+      return true;
+   }
+
+   std::string ReplyAfterDraw() override
+   {
+      return ""s;
    }
 
 };

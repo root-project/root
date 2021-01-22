@@ -75,7 +75,8 @@ protected:
    std::string GetRCanvasUrl(std::shared_ptr<RCanvas> &);
 
    std::shared_ptr<RBrowserWidget> AddWidget(const std::string &kind);
-   std::shared_ptr<RBrowserWidget> GetActiveWidget() const;
+   std::shared_ptr<RBrowserWidget> FindWidget(const std::string &name) const;
+   std::shared_ptr<RBrowserWidget> GetActiveWidget() const { return FindWidget(fActiveTab); }
 
    BrowserPage *AddPage(bool is_editor);
    BrowserPage *GetPage(const std::string &name) const;
