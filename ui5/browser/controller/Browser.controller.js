@@ -377,6 +377,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                oModel.setProperty("/title", title);
                oModel.setProperty("/filename", fname);
                this.syncEditor(tab, "SAVE");
+               this.doReload(true); // while new file appears, one should reload items on server
             },
             onCancel: function() { },
             onFailure: function() { }
@@ -573,8 +574,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
 
          if (changed) {
-            console.log('Settings changes - reload MODEL!!!');
-            this.doReload(true);
+            this.doReload();
          }
       },
 
@@ -652,8 +652,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (i>0) path.push(oLinks[i].getText());
             if (oLinks[i].getId() === sId ) break;
          }
+         // after CHPATH will be replied, client also start reload
          this.websocket.send('CHPATH:' + JSON.stringify(path));
-         this.doReload(true);
       },
 
       /* =========================================== */
@@ -883,7 +883,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
          case "WORKPATH":
             this.updateBReadcrumbs(JSON.parse(msg));
-            this.doReload(true);
+            this.doReload();
             break;
          case "SELECT_TAB":
            let tab = this.findTab(msg);
@@ -947,22 +947,22 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Reload (refresh) file tree browser */
-      onRealoadPress: function (oEvent) {
-         this.doReload(true);
+      onRealoadPress: function() {
+         this.doReload(true); // force also update of items on server
       },
 
-      doReload: function(force) {
+      doReload: function(force_reload) {
          if (this.standalone) {
             this.showTextInBrowser();
             this.paintFoundNodes(null);
             this.model.setFullModel(this.fullModel);
          } else {
-            this.model.reloadMainModel(force);
+            this.model.reloadMainModel(true, force_reload);
          }
       },
 
       /** @summary Quit ROOT session */
-      onQuitRootPress: function(oEvent) {
+      onQuitRootPress: function() {
          this.websocket.send("QUIT_ROOT");
       },
 

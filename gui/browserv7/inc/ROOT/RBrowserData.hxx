@@ -51,7 +51,7 @@ class RBrowserData {
    std::string fLastSortMethod;                          ///<! last sort method
    bool fLastSortReverse{false};                         ///<! last request reverse order
 
-   void ResetLastRequest();
+   void ResetLastRequestData(bool with_element);
 
    bool ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply);
 
