@@ -616,7 +616,7 @@ namespace FitUtil {
              executionPolicy == ::ROOT::EExecutionPolicy::kSequential) {
             ROOT::Internal::TExecutor executor(executionPolicy);
             auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
-            res = executor.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
+            resArray = executor.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
          } else {
             Error("FitUtil::EvaluateLogL", "Execution policy not supported for the Fit. Avalaible choices:\n "
                                            "::ROOT::EExecutionPolicy::kSequential (default)\n "
