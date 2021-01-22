@@ -15,3 +15,8 @@ file(COPY ${PyRDFDir} DESTINATION ${localruntimedir})
 install(DIRECTORY ${PyRDFDir}
         DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
         COMPONENT libraries)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test/integration/local)
+ROOT_ADD_TEST_SUBDIRECTORY(test/integration/spark)
+ROOT_ADD_TEST_SUBDIRECTORY(test/unit)
+ROOT_ADD_TEST_SUBDIRECTORY(test/unit/backend)
