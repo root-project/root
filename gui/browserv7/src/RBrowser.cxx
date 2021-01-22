@@ -249,6 +249,12 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       }
    }
 
+
+   auto widget = GetActiveWidget();
+   if (widget && widget->DrawElement(elem, drawingOptions))
+      return widget->ReplyAfterDraw();
+
+
    auto dflt_action = elem->GetDefaultAction();
 
    if (dflt_action == Browsable::RElement::kActImage) {
@@ -422,10 +428,10 @@ std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns active geometry viewer (if any)
 
-std::shared_ptr<RBrowserWidget> RBrowser::GetActiveWidget() const
+std::shared_ptr<RBrowserWidget> RBrowser::FindWidget(const std::string &name) const
 {
    auto iter = std::find_if(fWidgets.begin(), fWidgets.end(),
-         [this](const std::shared_ptr<RBrowserWidget> &widget) { return fActiveTab == widget->GetName(); });
+         [name](const std::shared_ptr<RBrowserWidget> &widget) { return name == widget->GetName(); });
 
    if (iter != fWidgets.end())
       return *iter;
@@ -508,6 +514,10 @@ RBrowser::BrowserPage *RBrowser::FindPageFor(const std::string &item_path, bool 
 
 void RBrowser::CloseTab(const std::string &name)
 {
+   auto iter0 = std::find_if(fWidgets.begin(), fWidgets.end(), [name](std::shared_ptr<RBrowserWidget> &widget) { return name == widget->GetName(); });
+   if (iter0 != fWidgets.end())
+      fWidgets.erase(iter0);
+
    auto iter1 = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::unique_ptr<TCanvas> &canv) { return name == canv->GetName(); });
    if (iter1 != fCanvases.end())
       fCanvases.erase(iter1);
@@ -754,6 +764,13 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
             }
 
          }
+      }
+   } else if (kind == "NEWWIDGET") {
+      auto widget = AddWidget(msg);
+      if (widget) {
+         std::vector<std::string> arr = { widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle() };
+         std::string reply = "NEWTAB:"s + TBufferJSON::ToJSON(&arr, TBufferJSON::kNoSpaces).Data();
+         fWebWindow->Send(connid, reply);
       }
    } else {
       auto reply = ProcessNewTab(kind);
