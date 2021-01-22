@@ -365,7 +365,9 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    const auto bytesPacked = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
    const auto pageSize = elementSize * pageInfo.fNElements;
 
+   // Allocate the buffer only after checking the page pool in the following else branch
    unsigned char *pageBuffer = nullptr;
+
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       pageBuffer = new unsigned char[bytesPacked];
       fReader.ReadBuffer(pageBuffer, bytesOnStorage, pageInfo.fLocator.fPosition);
