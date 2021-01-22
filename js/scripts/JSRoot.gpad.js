@@ -3938,12 +3938,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Use provided connection for the web canvas
      * @private */
-   TCanvasPainter.prototype.useWebsocket = function(handle, href) {
+   TCanvasPainter.prototype.useWebsocket = function(handle) {
       this.closeWebsocket();
 
       this._websocket = handle;
       this._websocket.setReceiver(this);
-      this._websocket.connect(href);
+      this._websocket.connect();
    }
 
    /** @summary Hanler for websocket open event
