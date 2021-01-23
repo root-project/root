@@ -138,6 +138,9 @@ TEST(TFormulaGradientPar, GetGradFormula)
    f.SetParameters(p);
    ASSERT_TRUE(f.GenerateGradientPar());
    std::string s = f.GetGradientFormula().Data();
+   // Windows does not support posix regex which are necessary here.
+#ifndef R__WIN32
    ASSERT_THAT(s, testing::ContainsRegex("void TFormula____id[0-9]*_grad"));
+#endif // R__WIN32
 }
 
