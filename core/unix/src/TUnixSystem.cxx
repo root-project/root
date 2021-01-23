@@ -3936,12 +3936,12 @@ const char *TUnixSystem::UnixHomedirectory(const char *name, char *path, char *m
       if (mydir[0])
          return mydir;
       pw = getpwuid(getuid());
-      if (pw && pw->pw_dir) {
-         strncpy(mydir, pw->pw_dir, kMAXPATHLEN-1);
+      if (gSystem->Getenv("HOME")) {
+         strncpy(mydir, gSystem->Getenv("HOME"), kMAXPATHLEN-1);
          mydir[kMAXPATHLEN-1] = '\0';
          return mydir;
-      } else if (gSystem->Getenv("HOME")) {
-         strncpy(mydir, gSystem->Getenv("HOME"), kMAXPATHLEN-1);
+      } else if (pw && pw->pw_dir) {
+         strncpy(mydir, pw->pw_dir, kMAXPATHLEN-1);
          mydir[kMAXPATHLEN-1] = '\0';
          return mydir;
       }
