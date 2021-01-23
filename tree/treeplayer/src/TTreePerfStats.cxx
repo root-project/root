@@ -125,6 +125,8 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
    fCpuTime       = 0;
    fDiskTime      = 0;
    fUnzipTime     = 0;
+   fUnzipInputSize= 0;
+   fUnzipObjSize  = 0;
    fCompress      = 0;
    fRealTimeAxis  = 0;
    fHostInfoText  = 0;
@@ -161,6 +163,8 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fCpuTime       = 0;
    fDiskTime      = 0;
    fUnzipTime     = 0;
+   fUnzipInputSize= 0;
+   fUnzipObjSize  = 0;
    fRealTimeAxis  = 0;
    fCompress      = (T->GetTotBytes()+0.00001)/T->GetZipBytes();
 
@@ -281,7 +285,7 @@ void TTreePerfStats::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 
 void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 {
-   if (file == this->fFile){
+   if (file == this->fFile) {
       Long64_t offset = file->GetRelOffset();
       Int_t np = fGraphIO->GetN();
       Int_t entry = fTree->GetReadEntry();
@@ -305,12 +309,14 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 /// -  complen is the length of the compressed buffer
 /// -  objlen is the length of the de-compressed buffer
 
-void TTreePerfStats::UnzipEvent(TObject * tree, Long64_t /* pos */, Double_t start, Int_t /* complen */, Int_t /* objlen */)
+void TTreePerfStats::UnzipEvent(TObject * tree, Long64_t /* pos */, Double_t start, Int_t complen, Int_t objlen)
 {
-   if (tree == this->fTree){
+   if (tree == this->fTree || tree == this->fTree->GetTree()){
       Double_t tnow = TTimeStamp();
       Double_t dtime = tnow-start;
       fUnzipTime += dtime;
+      fUnzipInputSize += complen;
+      fUnzipObjSize += objlen;
    }
 }
 
@@ -324,11 +330,17 @@ void TTreePerfStats::Finish()
    if (fRealNorm)   return;  //has already been called
    if (!fFile)      return;
    if (!fTree)      return;
+
    fTreeCacheSize = fTree->GetCacheSize();
    fReadaheadSize = TFile::GetReadaheadSize();
-   fBytesReadExtra= fFile->GetBytesReadExtra();
+   if (fTree->IsA()->InheritsFrom("TChain"))
+      fBytesReadExtra = fTree->GetDirectory()->GetFile()->GetBytesReadExtra();
+   else if (fFile)
+      fBytesReadExtra = fFile->GetBytesReadExtra();
    fRealTime      = fWatch->RealTime();
    fCpuTime       = fWatch->CpuTime();
+   if (fUnzipInputSize)
+      fCompress = ((double)fUnzipObjSize) / fUnzipInputSize;
    Int_t npoints  = fGraphIO->GetN();
    if (!npoints) return;
    Double_t iomax = TMath::MaxElement(npoints,fGraphIO->GetY());
