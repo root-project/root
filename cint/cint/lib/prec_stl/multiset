@@ -105,7 +105,7 @@ class multiset {
     iterator operator++(int a);
     iterator& operator--();
     iterator operator--(int a);
-#if defined (G__VISUAL) || (defined(G__GNUC) && G__GNUC_VER>=3004)
+#if defined (G__VISUAL) || (defined(G__GNUC) && G__GNUC_VER>=3004 && G__GNUC_VER<9000)
 #if !defined(G__APPLE_LIBCXX)
     bool operator==(const iterator& x) ;
     bool operator!=(const iterator& x) ;
@@ -115,7 +115,7 @@ class multiset {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if ((defined(G__GNUC) && !defined (G__KCC) && !defined(G__INTEL_COMPILER)) && !(G__GNUC_VER>=3004)) || defined(G__APPLE_LIBCXX)
+#if ((defined(G__GNUC) && !defined (G__KCC) && !defined(G__INTEL_COMPILER)) && !(G__GNUC_VER>=3004 && G__GNUC_VER<9000)) || defined(G__APPLE_LIBCXX)
   friend bool operator==(const multiset::iterator& x ,const multiset::iterator& y) const;
   friend bool operator!=(const multiset::iterator& x ,const multiset::iterator& y) const;
 #endif

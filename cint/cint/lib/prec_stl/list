@@ -96,10 +96,10 @@ class list {
     iterator operator++(int a);
     iterator& operator--();
     iterator operator--(int a);
-#ifndef G__APPLE_LIBCXX
+#if !defined(G__APPLE_LIBCXX) && (!defined(G__GNUC) || (G__GNUC_VER>=3004 && G__GNUC_VER<9000))
     bool operator==(const iterator& x) ;
 #endif
-#if !defined(G__HPUX) && !defined(G__APPLE_LIBCXX)
+#if !defined(G__HPUX) && !defined(G__APPLE_LIBCXX) && (!defined(G__GNUC) || (G__GNUC_VER>=3004 && G__GNUC_VER<9000))
     bool operator!=(const iterator& x) ;
 #endif
 #if defined(G__VISUAL) && (G__MSC_VER>=1600)
@@ -107,7 +107,7 @@ class list {
 	void* _Ptr;
 #endif
   };
-#ifdef G__APPLE_LIBCXX
+#if defined(G__APPLE_LIBCXX) || (defined(G__GNUC) && !(G__GNUC_VER>=3004 && G__GNUC_VER<9000))
    friend bool operator==(const list::iterator& x,const list::iterator& y)const;
    friend bool operator!=(const list::iterator& x,const list::iterator& y)const;
 #endif
