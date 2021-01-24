@@ -154,9 +154,7 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, c
    if (maxfcn == 0)
       maxfcn = 200 + 100 * npar + 5 * npar * npar;
 
-   // use numerical gradient to compute initial derivatives for SeedGenerator
-   Numerical2PGradientCalculator numgc(mfcn, st.Trafo(), strategy);
-   MinimumSeed mnseeds = SeedGenerator()(mfcn, numgc, st, strategy);
+   MinimumSeed mnseeds = SeedGenerator()(mfcn, gc, st, strategy);
 
    return Minimize(mfcn, gc, mnseeds, strategy, maxfcn, toler);
 }
