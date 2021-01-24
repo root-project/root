@@ -115,7 +115,7 @@ class map {
     iterator operator++(int a);
     iterator& operator--();
     iterator operator--(int a);
-#if defined (G__VISUAL) || (defined(G__GNUC_VER) && G__GNUC_VER>=3004) || defined(G__INTEL_COMPILER)
+#if defined (G__VISUAL) || (defined(G__GNUC_VER) && G__GNUC_VER>=3004 && G__GNUC_VER<9000) || defined(G__INTEL_COMPILER)
 #if !defined(G__APPLE_LIBCXX)
     bool operator==(const iterator& x) ;
     bool operator!=(const iterator& x) ;
@@ -125,7 +125,7 @@ class map {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if (defined(G__GNUC) && !defined(G__KCC) && !defined(G__INTEL_COMPILER)  && !(G__GNUC_VER>=3004)) || defined(G__APPLE_LIBCXX)
+#if (defined(G__GNUC) && !defined(G__KCC) && !defined(G__INTEL_COMPILER)  && !(G__GNUC_VER>=3004 && G__GNUC_VER<9000)) || defined(G__APPLE_LIBCXX)
   friend bool operator==(const map::iterator& x ,const map::iterator& y) const;
   friend bool operator!=(const map::iterator& x ,const map::iterator& y) const;
 #endif
