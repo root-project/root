@@ -99,8 +99,10 @@ class deque {
 #else
     bool operator!=(const iterator& x) ;
 #endif
+#if (!defined(G__GNUC) || (defined(G__GNUC) && G__GNUC_VER>=3004 && G__GNUC_VER<10000))
     iterator operator+(long n);
     iterator operator-(long n);
+#endif
     iterator& operator+=(long n);
     iterator& operator-=(long n);
     T& operator[](long n) ;
@@ -148,8 +150,10 @@ class deque {
     reverse_iterator operator++(int a);
     reverse_iterator& operator--();
     reverse_iterator operator--(int a);
+#if (!defined(G__GNUC) || (defined(G__GNUC) && G__GNUC_VER>=3004 && G__GNUC_VER<10000))
     reverse_iterator operator+(long n);
     reverse_iterator operator-(long n);
+#endif
     reverse_iterator& operator+=(long n);
     reverse_iterator& operator-=(long n);
     T& operator[](long n) ;
