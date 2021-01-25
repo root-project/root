@@ -100,7 +100,7 @@ RBrowser::RBrowser(bool use_rcanvas)
    if (GetUseRCanvas())
       AddRCanvas();
    else
-      AddCanvas();
+      AddWidget("tcanvas");
 
    // AddWidget("geom");  // add geometry viewer at the beginning
 
@@ -237,7 +237,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       }
    }
 
-   auto canv = GetActiveCanvas();
+/*   auto canv = GetActiveCanvas();
    if (canv && elem->IsCapable(Browsable::RElement::kActDraw6)) {
 
       auto obj = elem->GetObject();
@@ -248,7 +248,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
          // return "SELECT_TAB:"s + canv->GetName();
       }
    }
-
+*/
 
    auto widget = GetActiveWidget();
    if (widget && widget->DrawElement(elem, drawingOptions))
@@ -256,13 +256,19 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
 
    auto dflt_action = elem->GetDefaultAction();
 
-   if (dflt_action == Browsable::RElement::kActGeom) {
-      auto gwidget = AddWidget("geom");
-      if (gwidget) {
-         // draw geometry calls Update(), but it is not a problem
-         // while connection is not yet established by the client
-         gwidget->DrawElement(elem, drawingOptions);
-         return NewWidgetMsg(gwidget);
+   std::string widget_kind;
+   if (dflt_action == Browsable::RElement::kActGeom)
+      widget_kind = "geom";
+   else if (dflt_action == Browsable::RElement::kActDraw6)
+      widget_kind = "tcanvas";
+
+   if (!widget_kind.empty()) {
+      auto new_widget = AddWidget(widget_kind);
+      if (new_widget) {
+         // draw object before client side is created - should not be a problem
+         // after widget add in browser, connection will be established and data provided
+         new_widget->DrawElement(elem, drawingOptions);
+         return NewWidgetMsg(new_widget);
       }
    }
 
@@ -598,12 +604,12 @@ void RBrowser::SendInitMsg(unsigned connid)
 
    reply.emplace_back(fBrowsable.GetWorkingPath()); // first element is current path
 
-   for (auto &canv : fCanvases) {
-      auto url = GetCanvasUrl(canv.get());
-      std::string name = canv->GetName();
-      std::vector<std::string> arr = { "root6", url, name };
-      reply.emplace_back(arr);
-   }
+//   for (auto &canv : fCanvases) {
+//      auto url = GetCanvasUrl(canv.get());
+//      std::string name = canv->GetName();
+//      std::vector<std::string> arr = { "root6", url, name };
+//      reply.emplace_back(arr);
+//   }
 
    for (auto &canv : fRCanvases) {
       auto url = GetRCanvasUrl(canv);
@@ -661,10 +667,10 @@ std::string RBrowser::ProcessNewTab(const std::string &kind)
       auto canv = AddRCanvas();
       auto url = GetRCanvasUrl(canv);
       reply = {"root7"s, url, canv->GetTitle()};
-   } else if (kind == "NEWTCANVAS") {
-      auto canv = AddCanvas();
-      auto url = GetCanvasUrl(canv);
-      reply = {"root6"s, url, std::string(canv->GetName())};
+//   } else if (kind == "NEWTCANVAS") {
+//      auto canv = AddCanvas();
+//      auto url = GetCanvasUrl(canv);
+//      reply = {"root6"s, url, std::string(canv->GetName())};
    } else if ((kind == "NEWEDITOR") || (kind == "NEWVIEWER")) {
       auto edit = AddPage(kind == "NEWEDITOR");
       reply = {edit->GetKind(), edit->fName, edit->fTitle};

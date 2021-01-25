@@ -14,12 +14,21 @@ ROOT_LINKER_LIBRARY(ROOTBrowserWidgets
      ROOTBrowsable
 )
 
+ROOT_LINKER_LIBRARY(ROOTBrowserTCanvasWidget
+     src/RBrowserTCanvasWidget.cxx
+  DEPENDENCIES
+     ROOTBrowserWidgets
+     Gpad
+     WebGui6
+)
+
 ROOT_LINKER_LIBRARY(ROOTBrowserGeomWidget
      src/RBrowserGeomWidget.cxx
   DEPENDENCIES
      ROOTBrowserWidgets
      ROOTEve
 )
+
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   HEADERS
