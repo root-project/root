@@ -55,6 +55,8 @@ std::shared_ptr<RBrowserWidget> RBrowserWidgetProvider::CreateWidget(const std::
       // try to load necessary libraries
       if (kind == "geom")
          gSystem->Load("libROOTBrowserGeomWidget");
+      else if (kind == "tcanvas")
+         gSystem->Load("libROOTBrowserTCanvasWidget");
       iter = map.find(kind);
       if (iter == map.end())
          return nullptr;
