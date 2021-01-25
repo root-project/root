@@ -25,15 +25,12 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RFileDialog.hxx>
-#include <ROOT/RCanvas.hxx>
 
 #include "RBrowserWidget.hxx"
 
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "TWebCanvas.h"
-#include "TCanvas.h"
 #include "TFolder.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
@@ -112,7 +109,6 @@ RBrowser::RBrowser(bool use_rcanvas)
 
 RBrowser::~RBrowser()
 {
-   fCanvases.clear();
 }
 
 
@@ -222,34 +218,6 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
          return SendPageContent(page);
       }
    }
-
-   /*
-   auto rcanv = GetActiveRCanvas();
-   if (rcanv && elem->IsCapable(Browsable::RElement::kActDraw7)) {
-
-      std::shared_ptr<RPadBase> subpad = rcanv;
-
-      auto obj = elem->GetObject();
-      if (obj && Browsable::RProvider::Draw7(subpad, obj, drawingOptions)) {
-         rcanv->Modified();
-         rcanv->Update(true);
-         return ""s;
-         // return "SELECT_TAB:"s + rcanv->GetTitle();
-      }
-   }
-
-   auto canv = GetActiveCanvas();
-   if (canv && elem->IsCapable(Browsable::RElement::kActDraw6)) {
-
-      auto obj = elem->GetObject();
-
-      if (obj && Browsable::RProvider::Draw6(canv, obj, drawingOptions)) {
-         canv->ForceUpdate(); // force update async - do not wait for confirmation
-         return ""s;
-         // return "SELECT_TAB:"s + canv->GetName();
-      }
-   }
-*/
 
    auto widget = GetActiveWidget();
    if (widget && widget->DrawElement(elem, drawingOptions))
@@ -373,56 +341,6 @@ RBrowser::BrowserPage *RBrowser::AddPage(bool is_editor)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Create new web canvas, invoked when new canvas created on client side
-
-TCanvas *RBrowser::AddCanvas()
-{
-   TString canv_name;
-   canv_name.Form("webcanv%d", (int)(fCanvases.size()+1));
-
-   auto canv = std::make_unique<TCanvas>(kFALSE);
-   canv->SetName(canv_name.Data());
-   canv->SetTitle(canv_name.Data());
-   canv->ResetBit(TCanvas::kShowEditor);
-   canv->ResetBit(TCanvas::kShowToolBar);
-   canv->SetCanvas(canv.get());
-   canv->SetBatch(kTRUE); // mark canvas as batch
-   canv->SetEditable(kTRUE); // ensure fPrimitives are created
-   fActiveTab = canv->GetName();
-
-   // create implementation
-   TWebCanvas *web = new TWebCanvas(canv.get(), "title", 0, 0, 800, 600);
-
-   // assign implementation
-   canv->SetCanvasImp(web);
-
-   // initialize web window, but not start new web browser
-   web->ShowWebWindow("embed");
-
-   fCanvases.emplace_back(std::move(canv));
-
-   return fCanvases.back().get();
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-/// Creates RCanvas for the output
-
-std::shared_ptr<RCanvas> RBrowser::AddRCanvas()
-{
-   std::string name = "rcanv"s + std::to_string(fRCanvases.size()+1);
-
-   auto canv = RCanvas::Create(name);
-
-   canv->Show("embed");
-
-   fActiveTab = name;
-
-   fRCanvases.emplace_back(canv);
-
-   return canv;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates new widget
 
 std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
@@ -458,49 +376,6 @@ std::shared_ptr<RBrowserWidget> RBrowser::FindWidget(const std::string &name) co
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Returns relative URL for canvas - required for client to establish connection
-
-std::string RBrowser::GetCanvasUrl(TCanvas *canv)
-{
-   TWebCanvas *web = dynamic_cast<TWebCanvas *>(canv->GetCanvasImp());
-   return fWebWindow->GetRelativeAddr(web->GetWebWindow());
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-/// Returns relative URL for canvas - required for client to establish connection
-
-std::string RBrowser::GetRCanvasUrl(std::shared_ptr<RCanvas> &canv)
-{
-   return "../"s + canv->GetWindowAddr() + "/"s;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-/// Returns active web canvas (if any)
-
-TCanvas *RBrowser::GetActiveCanvas() const
-{
-   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [this](const std::unique_ptr<TCanvas> &canv) { return fActiveTab == canv->GetName(); });
-
-   if (iter != fCanvases.end())
-      return iter->get();
-
-   return nullptr;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-/// Returns active RCanvas (if any)
-
-std::shared_ptr<RCanvas> RBrowser::GetActiveRCanvas() const
-{
-   auto iter = std::find_if(fRCanvases.begin(), fRCanvases.end(), [this](const std::shared_ptr<RCanvas> &canv) { return fActiveTab == canv->GetTitle(); });
-
-   if (iter != fRCanvases.end())
-      return *iter;
-
-   return nullptr;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns editor/image page with provided name
 
 RBrowser::BrowserPage *RBrowser::GetPage(const std::string &name) const
@@ -527,24 +402,13 @@ RBrowser::BrowserPage *RBrowser::FindPageFor(const std::string &item_path, bool 
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Close and delete specified canvas
-/// Check both list of TCanvas and list of RCanvas
+/// Close and delete specified widget
 
 void RBrowser::CloseTab(const std::string &name)
 {
    auto iter0 = std::find_if(fWidgets.begin(), fWidgets.end(), [name](std::shared_ptr<RBrowserWidget> &widget) { return name == widget->GetName(); });
    if (iter0 != fWidgets.end())
       fWidgets.erase(iter0);
-
-//   auto iter1 = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::unique_ptr<TCanvas> &canv) { return name == canv->GetName(); });
-//   if (iter1 != fCanvases.end())
-//      fCanvases.erase(iter1);
-
-//   auto iter2 = std::find_if(fRCanvases.begin(), fRCanvases.end(), [name](const std::shared_ptr<RCanvas> &canv) { return name == canv->GetTitle(); });
-//   if (iter2 != fRCanvases.end()) {
-//      (*iter2)->Remove();
-//      fRCanvases.erase(iter2);
-//   }
 
    auto iter3 = std::find_if(fPages.begin(), fPages.end(), [name](std::unique_ptr<BrowserPage> &page) { return name == page->fName; });
    if (iter3 != fPages.end())
@@ -607,20 +471,6 @@ void RBrowser::SendInitMsg(unsigned connid)
 
    reply.emplace_back(fBrowsable.GetWorkingPath()); // first element is current path
 
-//   for (auto &canv : fCanvases) {
-//      auto url = GetCanvasUrl(canv.get());
-//      std::string name = canv->GetName();
-//      std::vector<std::string> arr = { "root6", url, name };
-//      reply.emplace_back(arr);
-//   }
-
-//   for (auto &canv : fRCanvases) {
-//      auto url = GetRCanvasUrl(canv);
-//      std::string name = canv->GetTitle();
-//      std::vector<std::string> arr = { "root7", url, name };
-//      reply.emplace_back(arr);
-//   }
-
    for (auto &widget : fWidgets) {
       reply.emplace_back(std::vector<std::string>({ widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle() }));
    }
@@ -666,14 +516,6 @@ std::string RBrowser::ProcessNewTab(const std::string &kind)
 {
    std::vector<std::string> reply;
 
-//   if (kind == "NEWRCANVAS") {
-//      auto canv = AddRCanvas();
-//      auto url = GetRCanvasUrl(canv);
-//      reply = {"root7"s, url, canv->GetTitle()};
-//   } else if (kind == "NEWTCANVAS") {
-//      auto canv = AddCanvas();
-//      auto url = GetCanvasUrl(canv);
-//      reply = {"root6"s, url, std::string(canv->GetName())};
    if ((kind == "NEWEDITOR") || (kind == "NEWVIEWER")) {
       auto edit = AddPage(kind == "NEWEDITOR");
       reply = {edit->GetKind(), edit->fName, edit->fTitle};
