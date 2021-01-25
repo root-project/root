@@ -615,7 +615,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          else if (txt.indexOf("Root 6") >= 0)
             msg = "NEWWIDGET:tcanvas";
          else if (txt.indexOf("Root 7") >= 0)
-            msg = "NEWRCANVAS";
+            msg = "NEWWIDGET:rcanvas";
 
          if (this.isConnected && msg)
             this.websocket.send(msg);
@@ -1019,10 +1019,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.createImageViewer(par1, par2);
          } else if (kind == "geom") {
             this.createGeomViewer(par1, par2, par3);
-         } else if (kind == "tcanvas") {
-            this.createCanvas("root6", par1, par2);
          } else
-            this.createCanvas(kind, par1, par2);
+            this.createCanvas(kind, par1, par2, par3);
       },
 
       createGeomViewer: function(url, name, title) {
@@ -1048,7 +1046,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       createCanvas: function(kind, url, name) {
-         if (!url || !name || (kind != "root6" && kind != "root7")) return;
+         if (!url || !name || (kind != "tcanvas" && kind != "rcanvas")) return;
 
          let oTabContainer = this.byId("tabContainer");
          let item = new TabContainerItem({
@@ -1061,16 +1059,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oTabContainer.addItem(item);
 
          // Change the selected tabs, only if it is new one, not the basic one
-         if(name !== "rcanv1") {
-            oTabContainer.setSelectedItem(item);
-         }
+         //if(name !== "rcanv1") {
+         //   oTabContainer.setSelectedItem(item);
+         // }
 
          let conn = new JSROOT.WebWindowHandle(this.websocket.kind);
          conn.setHRef(this.websocket.getHRef(url)); // argument for connect, makes relative path
 
          let painter = null;
 
-         if (kind == "root7") {
+         if (kind == "rcanvas") {
             painter = new JSROOT.v7.RCanvasPainter(null, null);
          } else {
             painter = new JSROOT.TCanvasPainter(null, null);

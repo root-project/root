@@ -22,13 +22,19 @@ ROOT_LINKER_LIBRARY(ROOTBrowserTCanvasWidget
      WebGui6
 )
 
+ROOT_LINKER_LIBRARY(ROOTBrowserRCanvasWidget
+     src/RBrowserRCanvasWidget.cxx
+  DEPENDENCIES
+     ROOTBrowserWidgets
+     ROOTGpadv7
+)
+
 ROOT_LINKER_LIBRARY(ROOTBrowserGeomWidget
      src/RBrowserGeomWidget.cxx
   DEPENDENCIES
      ROOTBrowserWidgets
      ROOTEve
 )
-
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   HEADERS

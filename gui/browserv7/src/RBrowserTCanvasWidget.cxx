@@ -1,7 +1,7 @@
 /// \file RBrowserTCanvasWidget.cxx
 /// \ingroup rbrowser
 /// \author Sergey Linev <S.Linev@gsi.de>
-/// \date 2021-01-22
+/// \date 2021-01-25
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
