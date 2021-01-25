@@ -246,8 +246,17 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
    if (!elem) return ""s;
 
    auto widget = GetActiveWidget();
-   if (widget && widget->DrawElement(elem, drawingOptions))
+   if (widget && widget->DrawElement(elem, drawingOptions)) {
+      widget->SetPath(path);
       return widget->SendWidgetContent();
+   }
+
+   // check if element was drawn in other widget and just activate that widget
+   auto iter = std::find_if(fWidgets.begin(), fWidgets.end(),
+         [path](const std::shared_ptr<RBrowserWidget> &wg) { return path == wg->GetPath(); });
+
+   if (iter != fWidgets.end())
+      return "SELECT_WIDGET:"s + (*iter)->GetName();
 
    auto dflt_action = elem->GetDefaultAction();
 
@@ -266,7 +275,8 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       if (new_widget) {
          // draw object before client side is created - should not be a problem
          // after widget add in browser, connection will be established and data provided
-         new_widget->DrawElement(elem, drawingOptions);
+         if (new_widget->DrawElement(elem, drawingOptions))
+            new_widget->SetPath(path);
          return NewWidgetMsg(new_widget);
       }
    }
