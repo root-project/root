@@ -506,6 +506,7 @@ TEST(VecOps, inputOutput)
    const ROOT::VecOps::RVec<Long64_t>::Impl_t llref {1ULL, 2ULL, 3ULL};
    const ROOT::VecOps::RVec<Short_t>::Impl_t sref {1, 2, 3};
    const ROOT::VecOps::RVec<Char_t>::Impl_t cref {1, 2, 3};
+   const ROOT::VecOps::RVec<bool>::Impl_t bref {true, false, true};
 
    {
       auto d = dref;
@@ -520,6 +521,7 @@ TEST(VecOps, inputOutput)
       auto ll = llref;
       auto s = sref;
       auto c = cref;
+      auto b = bref;
       TFile file(filename, "RECREATE");
       TTree t(treename, treename);
       t.Branch("d", &d);
@@ -534,6 +536,7 @@ TEST(VecOps, inputOutput)
       t.Branch("ll", &ll);
       t.Branch("s", &s);
       t.Branch("c", &c);
+      t.Branch("b", &b);
       t.Fill();
       t.Write();
    }
@@ -550,6 +553,7 @@ TEST(VecOps, inputOutput)
    auto ll = new ROOT::VecOps::RVec<Long64_t>::Impl_t();
    auto s = new ROOT::VecOps::RVec<Short_t>::Impl_t();
    auto c = new ROOT::VecOps::RVec<Char_t>::Impl_t();
+   auto b = new ROOT::VecOps::RVec<bool>::Impl_t();
 
    TFile file(filename);
    TTree *tp;
@@ -568,6 +572,7 @@ TEST(VecOps, inputOutput)
    t.SetBranchAddress("ll", &ll);
    t.SetBranchAddress("s", &s);
    t.SetBranchAddress("c", &c);
+   t.SetBranchAddress("b", &b);
 
    t.GetEntry(0);
    CheckEq(*d, dref);
@@ -580,6 +585,7 @@ TEST(VecOps, inputOutput)
    CheckEq(*f, fref);
    CheckEq(*d, dref);
    CheckEq(*f, fref);
+   CheckEq(*b, bref);
 
    gSystem->Unlink(filename);
 
