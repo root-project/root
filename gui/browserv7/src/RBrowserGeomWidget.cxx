@@ -32,7 +32,7 @@ class RBrowserGeomWidget : public RBrowserWidget {
 
    std::unique_ptr<Browsable::RHolder> fObject; // geometry object
 
-   /** Create dummy geometry - when nothiing else is there */
+   /** Create dummy geometry - when nothing else is there */
    TGeoManager *MakeDummy()
    {
       auto prev = gGeoManager;

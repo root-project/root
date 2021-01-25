@@ -613,7 +613,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          else if (txt.indexOf("Geometry") >= 0)
             msg = "NEWWIDGET:geom";
          else if (txt.indexOf("Root 6") >= 0)
-            msg = "NEWTCANVAS";
+            msg = "NEWWIDGET:tcanvas";
          else if (txt.indexOf("Root 7") >= 0)
             msg = "NEWRCANVAS";
 
@@ -1019,6 +1019,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.createImageViewer(par1, par2);
          } else if (kind == "geom") {
             this.createGeomViewer(par1, par2, par3);
+         } else if (kind == "tcanvas") {
+            this.createCanvas("root6", par1, par2);
          } else
             this.createCanvas(kind, par1, par2);
       },
