@@ -394,6 +394,15 @@ class TestClasSTLSTRINGHANDLING:
         v.push_back('a'); v.push_back('b'); v.push_back('c')
         assert set(v) == set('abc')
 
+    def test05_string_concat(self):
+        """Test concatenation of std::string and Python str"""
+        # ROOT-10830
+
+        import cppyy
+        s1 = cppyy.gbl.std.string("ying")
+        s2 = "yang"
+        assert s1 + s2 == "yingyang"
+
 
 ### Iterator comparison ======================================================
 class TestClasSTLITERATORCOMPARISON:
