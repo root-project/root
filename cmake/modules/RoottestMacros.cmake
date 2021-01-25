@@ -238,7 +238,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY FAIL_REGULAR_EXPRESSION "Warning in")
   endif()
   set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja)
+  if(MSVC OR CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY RUN_SERIAL true)
   endif()
 
@@ -328,7 +328,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
                                     -- ${always-make})
 
   set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja)
+  if(MSVC OR CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY RUN_SERIAL true)
   endif()
 
@@ -418,7 +418,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
                                     -- ${always-make})
 
   set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja)
+  if(MSVC OR CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY RUN_SERIAL true)
   endif()
 
@@ -486,7 +486,7 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
                                     --target ${executable}${fast}
                                     -- ${always-make})
   set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja)
+  if(MSVC OR CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY RUN_SERIAL true)
   endif()
 
