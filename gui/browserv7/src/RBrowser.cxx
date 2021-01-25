@@ -98,7 +98,7 @@ RBrowser::RBrowser(bool use_rcanvas)
    // add first canvas by default
 
    if (GetUseRCanvas())
-      AddRCanvas();
+      AddWidget("rcanvas");
    else
       AddWidget("tcanvas");
 
@@ -223,6 +223,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       }
    }
 
+   /*
    auto rcanv = GetActiveRCanvas();
    if (rcanv && elem->IsCapable(Browsable::RElement::kActDraw7)) {
 
@@ -237,7 +238,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       }
    }
 
-/*   auto canv = GetActiveCanvas();
+   auto canv = GetActiveCanvas();
    if (canv && elem->IsCapable(Browsable::RElement::kActDraw6)) {
 
       auto obj = elem->GetObject();
@@ -257,10 +258,12 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
    auto dflt_action = elem->GetDefaultAction();
 
    std::string widget_kind;
-   if (dflt_action == Browsable::RElement::kActGeom)
-      widget_kind = "geom";
-   else if (dflt_action == Browsable::RElement::kActDraw6)
-      widget_kind = "tcanvas";
+   switch(dflt_action) {
+      case Browsable::RElement::kActGeom: widget_kind = "geom"; break;
+      case Browsable::RElement::kActDraw6: widget_kind = "tcanvas"; break;
+      case Browsable::RElement::kActDraw7: widget_kind = "rcanvas"; break;
+      default: widget_kind.clear();
+   }
 
    if (!widget_kind.empty()) {
       auto new_widget = AddWidget(widget_kind);
@@ -533,15 +536,15 @@ void RBrowser::CloseTab(const std::string &name)
    if (iter0 != fWidgets.end())
       fWidgets.erase(iter0);
 
-   auto iter1 = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::unique_ptr<TCanvas> &canv) { return name == canv->GetName(); });
-   if (iter1 != fCanvases.end())
-      fCanvases.erase(iter1);
+//   auto iter1 = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::unique_ptr<TCanvas> &canv) { return name == canv->GetName(); });
+//   if (iter1 != fCanvases.end())
+//      fCanvases.erase(iter1);
 
-   auto iter2 = std::find_if(fRCanvases.begin(), fRCanvases.end(), [name](const std::shared_ptr<RCanvas> &canv) { return name == canv->GetTitle(); });
-   if (iter2 != fRCanvases.end()) {
-      (*iter2)->Remove();
-      fRCanvases.erase(iter2);
-   }
+//   auto iter2 = std::find_if(fRCanvases.begin(), fRCanvases.end(), [name](const std::shared_ptr<RCanvas> &canv) { return name == canv->GetTitle(); });
+//   if (iter2 != fRCanvases.end()) {
+//      (*iter2)->Remove();
+//      fRCanvases.erase(iter2);
+//   }
 
    auto iter3 = std::find_if(fPages.begin(), fPages.end(), [name](std::unique_ptr<BrowserPage> &page) { return name == page->fName; });
    if (iter3 != fPages.end())
@@ -611,12 +614,12 @@ void RBrowser::SendInitMsg(unsigned connid)
 //      reply.emplace_back(arr);
 //   }
 
-   for (auto &canv : fRCanvases) {
-      auto url = GetRCanvasUrl(canv);
-      std::string name = canv->GetTitle();
-      std::vector<std::string> arr = { "root7", url, name };
-      reply.emplace_back(arr);
-   }
+//   for (auto &canv : fRCanvases) {
+//      auto url = GetRCanvasUrl(canv);
+//      std::string name = canv->GetTitle();
+//      std::vector<std::string> arr = { "root7", url, name };
+//      reply.emplace_back(arr);
+//   }
 
    for (auto &widget : fWidgets) {
       reply.emplace_back(std::vector<std::string>({ widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle() }));
@@ -663,15 +666,15 @@ std::string RBrowser::ProcessNewTab(const std::string &kind)
 {
    std::vector<std::string> reply;
 
-   if (kind == "NEWRCANVAS") {
-      auto canv = AddRCanvas();
-      auto url = GetRCanvasUrl(canv);
-      reply = {"root7"s, url, canv->GetTitle()};
+//   if (kind == "NEWRCANVAS") {
+//      auto canv = AddRCanvas();
+//      auto url = GetRCanvasUrl(canv);
+//      reply = {"root7"s, url, canv->GetTitle()};
 //   } else if (kind == "NEWTCANVAS") {
 //      auto canv = AddCanvas();
 //      auto url = GetCanvasUrl(canv);
 //      reply = {"root6"s, url, std::string(canv->GetName())};
-   } else if ((kind == "NEWEDITOR") || (kind == "NEWVIEWER")) {
+   if ((kind == "NEWEDITOR") || (kind == "NEWVIEWER")) {
       auto edit = AddPage(kind == "NEWEDITOR");
       reply = {edit->GetKind(), edit->fName, edit->fTitle};
    } else {
