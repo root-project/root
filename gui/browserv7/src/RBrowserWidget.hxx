@@ -39,13 +39,15 @@ public:
 
    virtual void Show(const std::string &) = 0;
 
+   virtual void ResetConn() {}
+
    const std::string &GetName() const { return fName; }
    virtual std::string GetKind() const = 0;
    virtual std::string GetUrl() = 0;
    virtual std::string GetTitle() { return ""; }
 
    virtual bool DrawElement(std::shared_ptr<Browsable::RElement> &, const std::string &) { return false; }
-   virtual std::string ReplyAfterDraw() { return ""; }
+   virtual std::string SendWidgetContent() { return ""; }
 };
 
 class RBrowserWidgetProvider {

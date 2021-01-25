@@ -69,11 +69,6 @@ public:
       return false;
    }
 
-   std::string ReplyAfterDraw() override
-   {
-      return ""s;
-   }
-
 };
 
 // ======================================================================
