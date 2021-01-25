@@ -246,7 +246,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
       },
 
-      createImageViewer: function (name, title) {
+      createImageViewer: function (dummy_url, name, title) {
          let oTabContainer = this.getView().byId("tabContainer");
 
          let image = new Image(name+ "Image", { src: "", densityAware: false });
@@ -270,16 +270,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             can_close: true  // always can close image viewer
          }));
 
-
          oTabContainer.addItem(item);
-         oTabContainer.setSelectedItem(item);
+         // oTabContainer.setSelectedItem(item);
       },
 
       /* =========================================== */
       /* =============== Code Editor =============== */
       /* =========================================== */
 
-      createCodeEditor: function(name, editor_title) {
+      createCodeEditor: function(dummy_url, name, editor_title) {
          const oTabContainer = this.getView().byId("tabContainer");
 
          let item = new TabContainerItem(name, {
@@ -357,7 +356,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }));
 
          oTabContainer.addItem(item);
-         oTabContainer.setSelectedItem(item);
+         // oTabContainer.setSelectedItem(item);
       },
 
       /** @brief Invoke dialog with server side code */
@@ -607,9 +606,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let msg, txt = oEvent.getSource().getText();
 
          if (txt.indexOf("editor") >= 0)
-            msg = "NEWEDITOR";
+            msg = "NEWWIDGET:editor";
          else if (txt.indexOf("Image") >= 0)
-            msg = "NEWVIEWER";
+            msg = "NEWWIDGET:image";
          else if (txt.indexOf("Geometry") >= 0)
             msg = "NEWWIDGET:geom";
          else if (txt.indexOf("Root 6") >= 0)
@@ -669,7 +668,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       tabSelectItem: function(oEvent) {
          let item = oEvent.getParameter('item');
          if (item && item.getKey())
-            this.websocket.send("TAB_SELECTED:" + item.getKey());
+            this.websocket.send("WIDGET_SELECTED:" + item.getKey());
       },
 
       /** @brief Close Tab event handler */
@@ -855,7 +854,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             let arr = JSON.parse(msg);
             let tab = this.findTab(arr[0]);
 
+            console.log('Get edtior code', arr[0], arr[3].length, msg);
             if (tab) {
+               console.log('Get edtior title', arr[1]);
                this.setEditorFileKind(tab, arr[1]);
                tab.getModel().setProperty("/title", arr[1]);
                tab.getModel().setProperty("/filename", arr[2]);
@@ -878,9 +879,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
             break;
          }
-         case "NEWTAB": {  // canvas created by server, need to establish connection
+         case "NEWWIDGET": {  // widget created by server, need to establish connection
             let arr = JSON.parse(msg);
             this.createElement(arr[0], arr[1], arr[2], arr[3]);
+            const tabItem = this.findTab(arr[2]);
+            console.log('Select tab item', arr[2], !!tabItem);
+            if (tabItem) this.byId("tabContainer").setSelectedItem(tabItem);
             break;
          }
          case "WORKPATH":
@@ -988,7 +992,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.model.changeItemsFilter(query);
       },
 
-      /** process initial message, now it is list of existing canvases */
+      /** @summary process initial message, now it is list of existing canvases */
       processInitMsg: function(msg) {
          var arr = JSROOT.parse(msg);
          if (!arr) return;
@@ -1013,14 +1017,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       createElement: function(kind, par1, par2, par3) {
-         if (kind == "edit") {
-            this.createCodeEditor(par1, par2);
-         } else if (kind == "image") {
-            this.createImageViewer(par1, par2);
-         } else if (kind == "geom") {
-            this.createGeomViewer(par1, par2, par3);
-         } else
-            this.createCanvas(kind, par1, par2, par3);
+         switch(kind) {
+            case "editor": this.createCodeEditor(par1, par2, par3); break;
+            case "image": this.createImageViewer(par1, par2, par3); break;
+            case "geom": this.createGeomViewer(par1, par2, par3); break;
+            default: this.createCanvas(kind, par1, par2, par3);
+         }
       },
 
       createGeomViewer: function(url, name, title) {
@@ -1033,7 +1035,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          });
 
          oTabContainer.addItem(item);
-         oTabContainer.setSelectedItem(item);
+         // oTabContainer.setSelectedItem(item);
 
          JSROOT.connectWebWindow({
             kind: this.websocket.kind,
@@ -1057,11 +1059,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          });
 
          oTabContainer.addItem(item);
-
-         // Change the selected tabs, only if it is new one, not the basic one
-         //if(name !== "rcanv1") {
-         //   oTabContainer.setSelectedItem(item);
-         // }
 
          let conn = new JSROOT.WebWindowHandle(this.websocket.kind);
          conn.setHRef(this.websocket.getHRef(url)); // argument for connect, makes relative path

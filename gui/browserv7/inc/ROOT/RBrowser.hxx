@@ -34,26 +34,13 @@ class RBrowser {
 
 protected:
 
-   struct BrowserPage {
-      bool fIsEditor{true};   ///<! either editor or image viewer
-      std::string fName;
-      std::string fTitle;
-      std::string fFileName;
-      std::string fContent;
-      bool fFirstSend{false};  ///<! if editor content was send at least one
-      std::string fItemPath;   ///<! item path in the browser
-      BrowserPage(bool is_edit) : fIsEditor(is_edit) {}
-      std::string GetKind() const { return fIsEditor ? "edit" : "image"; }
-   };
-
    std::string fTitle;  ///<! title
    unsigned fConnId{0}; ///<! default connection id
 
    bool fUseRCanvas{false};             ///<!  which canvas should be used
-   std::string fActiveTab;              ///<! name of active widget
+   std::string fActiveWidgetName;        ///<! name of active widget
    std::vector<std::shared_ptr<RBrowserWidget>> fWidgets; ///<!  all browser widgets
-   std::vector<std::unique_ptr<BrowserPage>> fPages;      ///<! list of text editors
-   int fPagesCnt{0};                                     ///<! counter for created editors
+   int fWidgetCnt{0};                                     ///<! counter for created widgets
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
@@ -61,18 +48,12 @@ protected:
 
    std::shared_ptr<RBrowserWidget> AddWidget(const std::string &kind);
    std::shared_ptr<RBrowserWidget> FindWidget(const std::string &name) const;
-   std::shared_ptr<RBrowserWidget> GetActiveWidget() const { return FindWidget(fActiveTab); }
-
-   BrowserPage *AddPage(bool is_editor);
-   BrowserPage *GetPage(const std::string &name) const;
-   BrowserPage *GetActivePage() const { return GetPage(fActiveTab); }
-   BrowserPage *FindPageFor(const std::string &item_path, bool is_editor = true);
+   std::shared_ptr<RBrowserWidget> GetActiveWidget() const { return FindWidget(fActiveWidgetName); }
 
    void CloseTab(const std::string &name);
 
    std::string ProcessBrowserRequest(const std::string &msg);
    std::string ProcessDblClick(const std::string &path, const std::string &drawingOptions, const std::string &);
-   std::string ProcessNewTab(const std::string &msg);
    std::string NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget);
    long ProcessRunMacro(const std::string &file_path);
    void ProcessSaveFile(const std::string &fname, const std::string &content);
@@ -83,8 +64,6 @@ protected:
 
    void SendInitMsg(unsigned connid);
    void ProcessMsg(unsigned connid, const std::string &arg);
-
-   std::string SendPageContent(BrowserPage *editor);
 
 public:
    RBrowser(bool use_rcanvas = true);

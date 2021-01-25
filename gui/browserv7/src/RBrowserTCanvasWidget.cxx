@@ -15,6 +15,8 @@
 
 #include "RBrowserWidget.hxx"
 
+#include <ROOT/Browsable/RProvider.hxx>
+
 #include "TCanvas.h"
 #include "TWebCanvas.h"
 
@@ -70,32 +72,13 @@ public:
          return false;
 
       fObject = elem->GetObject();
-      if (!fObject)
-         return false;
 
-      // first take object without ownership
-      auto tobj = fObject->get_object<TObject>();
-      if (!tobj) {
-         // and now with ownership
-         auto utobj = fObject->get_unique<TObject>();
-         if (!utobj)
-            return false;
-         tobj = utobj.release();
-         tobj->SetBit(TObject::kMustCleanup); // TCanvas should care about cleanup
+      if (fObject && Browsable::RProvider::Draw6(fCanvas.get(), fObject, opt)) {
+         fCanvas->ForceUpdate();
+         return true;
       }
 
-      fCanvas->GetListOfPrimitives()->Clear();
-
-      fCanvas->GetListOfPrimitives()->Add(tobj, opt.c_str());
-
-      fCanvas->ForceUpdate(); // force update async - do not wait for confirmation
-
-      return true;
-   }
-
-   std::string ReplyAfterDraw() override
-   {
-      return ""s;
+      return false;
    }
 
 };
@@ -112,3 +95,4 @@ public:
    RBrowserTCanvasProvider() : RBrowserWidgetProvider("tcanvas") {}
    ~RBrowserTCanvasProvider() = default;
 } sRBrowserTCanvasProvider;
+
