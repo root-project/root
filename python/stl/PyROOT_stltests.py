@@ -381,6 +381,19 @@ class TestClasSTLSTRINGHANDLING:
         assert t0 == c.GetString1()
         assert s == c.GetString1()
 
+    def test04_string_hash(self):
+        """Test that std::string has the same hash as the equivalent Python str"""
+        # ROOT-10830
+
+        from cppyy.gbl import std
+
+        assert hash(std.string("test")) == hash("test")
+
+        # Somehow redundant, but for completeness
+        v = std.vector(std.string)()
+        v.push_back('a'); v.push_back('b'); v.push_back('c')
+        assert set(v) == set('abc')
+
 
 ### Iterator comparison ======================================================
 class TestClasSTLITERATORCOMPARISON:
