@@ -6028,6 +6028,9 @@ Int_t TCling::DeepAutoLoadImpl(const char *cls)
 
 Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
 {
+   // Prevent update to IsClassAutoloading between our check and our actions.
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
    // TClass::GetClass explicitly calls gInterpreter->AutoLoad. When called from
    // rootcling (in *_rdict.pcm file generation) it is a no op.
    // FIXME: We should avoid calling autoload when we know we are not supposed
@@ -6042,7 +6045,7 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
 
    assert(IsClassAutoLoadingEnabled() && "Calling when AutoLoading is off!");
 
-   R__LOCKGUARD(gInterpreterMutex);
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    if (!knowDictNotLoaded && gClassTable->GetDictNorm(cls)) {
       // The library is already loaded as the class's dictionary is known.
