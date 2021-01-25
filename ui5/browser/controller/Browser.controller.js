@@ -414,12 +414,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Search TabContainerItem by key value */
-      findTab: function(name) {
-         let oTabContainer = this.byId("tabContainer");
-         let items = oTabContainer.getItems();
+      findTab: function(name, set_active) {
+         let oTabContainer = this.byId("tabContainer"),
+             items = oTabContainer.getItems();
          for(let i = 0; i< items.length; i++)
-            if (items[i].getKey() === name)
+            if (items[i].getKey() === name) {
+               if (set_active) oTabContainer.setSelectedItem(items[i]);
                return items[i];
+            }
       },
 
       /** @summary Retuns current selected tab, instance of TabContainerItem */
@@ -854,9 +856,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             let arr = JSON.parse(msg);
             let tab = this.findTab(arr[0]);
 
-            console.log('Get edtior code', arr[0], arr[3].length, msg);
             if (tab) {
-               console.log('Get edtior title', arr[1]);
                this.setEditorFileKind(tab, arr[1]);
                tab.getModel().setProperty("/title", arr[1]);
                tab.getModel().setProperty("/filename", arr[2]);
@@ -882,18 +882,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "NEWWIDGET": {  // widget created by server, need to establish connection
             let arr = JSON.parse(msg);
             this.createElement(arr[0], arr[1], arr[2], arr[3]);
-            const tabItem = this.findTab(arr[2]);
-            console.log('Select tab item', arr[2], !!tabItem);
-            if (tabItem) this.byId("tabContainer").setSelectedItem(tabItem);
+            this.findTab(arr[2], true); // set active
             break;
          }
          case "WORKPATH":
             this.updateBReadcrumbs(JSON.parse(msg));
             this.doReload();
             break;
-         case "SELECT_TAB":
-           let tab = this.findTab(msg);
-           if (tab) this.byId("tabContainer").setSelectedItem(tab);
+         case "SELECT_WIDGET":
+           this.findTab(msg, true); // set active
            break;
          case "BREPL":   // browser reply
             if (this.model) {
@@ -1002,8 +999,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          for (var k=1; k<arr.length; ++k) {
             let kind = arr[k][0];
             if (kind == "active") {
-               const tabItem = this.findTab(arr[k][1]);
-               if (tabItem) this.byId("tabContainer").setSelectedItem(tabItem);
+               this.findTab(arr[k][1], true); // set active
             } else if (kind == "history") {
                arr[k].shift();
                this.updateRootHist(arr[k]);

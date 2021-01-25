@@ -30,7 +30,9 @@ namespace Experimental {
 
 class RBrowserWidget {
 
-   std::string fName;
+   std::string fName;   ///<!  widget name
+
+   Browsable::RElementPath_t  fPath;  ///<! path of drawn element
 
 public:
 
@@ -40,6 +42,9 @@ public:
    virtual void Show(const std::string &) = 0;
 
    virtual void ResetConn() {}
+
+   void SetPath(const Browsable::RElementPath_t &path) { fPath = path; }
+   const Browsable::RElementPath_t &GetPath() const { return fPath; }
 
    const std::string &GetName() const { return fName; }
    virtual std::string GetKind() const = 0;
