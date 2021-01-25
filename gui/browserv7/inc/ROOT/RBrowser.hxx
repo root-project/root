@@ -23,14 +23,9 @@
 #include <vector>
 #include <memory>
 
-class TString;
-class TCanvas;
-class TFile;
-
 namespace ROOT {
 namespace Experimental {
 
-class RCanvas;
 class RBrowserWidget;
 
 /** Web-based ROOT file browser */
@@ -55,9 +50,7 @@ protected:
    unsigned fConnId{0}; ///<! default connection id
 
    bool fUseRCanvas{false};             ///<!  which canvas should be used
-   std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end
-   std::string fActiveTab;            ///<! name of active for tab (RCanvas, TCanvas or BrowserPage)
-   std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> fRCanvases; ///<!  ROOT7 canvases
+   std::string fActiveTab;              ///<! name of active widget
    std::vector<std::shared_ptr<RBrowserWidget>> fWidgets; ///<!  all browser widgets
    std::vector<std::unique_ptr<BrowserPage>> fPages;      ///<! list of text editors
    int fPagesCnt{0};                                     ///<! counter for created editors
@@ -65,14 +58,6 @@ protected:
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
    RBrowserData  fBrowsable;                   ///<! central browsing element
-
-   TCanvas *AddCanvas();
-   TCanvas *GetActiveCanvas() const;
-   std::string GetCanvasUrl(TCanvas *);
-
-   std::shared_ptr<RCanvas> AddRCanvas();
-   std::shared_ptr<RCanvas> GetActiveRCanvas() const;
-   std::string GetRCanvasUrl(std::shared_ptr<RCanvas> &);
 
    std::shared_ptr<RBrowserWidget> AddWidget(const std::string &kind);
    std::shared_ptr<RBrowserWidget> FindWidget(const std::string &name) const;
