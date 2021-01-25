@@ -51,8 +51,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     ROOTBrowserWidgets
   DEPENDENCIES
     ROOTBrowsable
-    WebGui6
-    ROOTGpadv7
+    ROOTWebDisplay
 )
 
 
