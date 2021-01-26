@@ -32,6 +32,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathMore
     Math/MCParameters.h
     Math/PdfFuncMathMore.h
     Math/Polynomial.h
+    Math/ParamFunction.h
     Math/QuasiRandom.h
     Math/RootFinderAlgorithms.h
     Math/SpecFuncMathMore.h
