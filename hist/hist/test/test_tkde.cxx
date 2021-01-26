@@ -16,10 +16,13 @@ struct  TestKDE  {
    bool useSetters = false;
    bool binned = false;
    bool adaptive = false;
+   bool mirroring = false;
    bool makePlot = true;
    bool debug = false;
+   bool dataInRange = true;
    int nbins = 100;
    int seed = 1111;
+   const char *mirror = "mirrorBoth";
 
    std::vector<double> data;  // kde data
 
@@ -35,14 +38,28 @@ struct  TestKDE  {
    TKDE * Create() {
       TRandom3 r(seed);
       data.resize(n);
-      for(int i=0;i<n;++i) data[i] = (i < 0.2*n) ? r.Gaus(10,1) : r.Gaus(10,4);
+      if (!dataInRange) {
+        for( int i=0; i < n; ++i)
+           data[i] = (i < 0.2*n) ? r.Gaus(10,1) : r.Gaus(10,4);
+      }
+      else {
+         int i = 0;
+         while (i < n) {
+            double x = (i < 0.2 * n) ? r.Gaus(10, 1) : r.Gaus(10, 4);
+            if (x >= 0 && x < 20.) {
+               data[i] = x;
+               i++;
+            }
+         }
+      }
       const char *iterationType = (adaptive) ? "Adaptive" : "Fixed";
       const char *binningType = (binned) ? "ForcedBinning" : "Unbinned";
+      const char *mirrorType = (mirroring) ? mirror : "noMirror";
       TString opt;
       if (useSetters)
          opt = "KernelType:Gaussian;Iteration:Fixed;Mirror:noMirror;Binning:Unbinned";
       else
-         opt = TString::Format("KernelType:Gaussian;Iteration:%s;Mirror:noMirror;Binning:%s",iterationType, binningType);
+         opt = TString::Format("KernelType:Gaussian;Iteration:%s;Mirror:%s;Binning:%s",iterationType, mirrorType, binningType);
 
       assert((int)data.size() == n);
       TKDE *kde = new TKDE(n, data.data(), 0., 20., opt, 1);
@@ -54,7 +71,10 @@ struct  TestKDE  {
             // use relaxed binned mode
             kde->SetBinning(TKDE::kRelaxedBinning);
             kde->SetUseBinsNEvents(100);
-            kde->SetNBins(nbins);  // when nbins=100 (using setters or not should give same results)
+            kde->SetNBins(nbins);  // when nbins=100 (using setters or not should give same results)->
+         }
+         if (mirroring) {
+            kde->SetMirror(TKDE::kMirrorBoth);
          }
       }
       xtest.resize(20);
@@ -216,6 +236,22 @@ TEST(TKDE, tkde_hist_adaptive_binned)
    EXPECT_PRED1(TestKDE::IsPValid, t.pval);
 }
 
+TEST(TKDE, tkde_hist_mirror)
+{
+   TestKDE t;
+   t.mirroring = true;
+   t.CompareWithHist("tkde_mirror");
+   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.useSetters = true;
+   t.CompareWithHist("tkde_mirror_2");
+   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   // check other mirrors types:
+   t.useSetters = false;
+   t.mirror = "mirrorLeft";
+   t.CompareWithHist("tkde_mirror_3");
+   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+}
+
 /// IO tests
 /// In this test we compare the value before writing and after reading of the TKDE
 TEST(TKDE, tkde_io)
@@ -224,12 +260,10 @@ TEST(TKDE, tkde_io)
    t.Write();
    t.Read();
 
-   // double delta = 1.E-15;
-   // EXPECT_NEAR(t.values1[0], t.values2[0], delta);
-
-
    for (size_t i = 0; i < t.xtest.size(); ++i) {
       EXPECT_DOUBLE_EQ(t.values1[i], t.values2[i]);
+      // double delta = 1.E-15;
+      // EXPECT_NEAR(t.values1[0], t.values2[0], delta);
    }
 }
 
@@ -251,7 +285,6 @@ TEST(TKDE, tkde_io_adaptive)
 TEST(TKDE, tkde_io_binned)
 {
    TestKDE t;
-   t.adaptive = true;
    t.binned = true;
    TString name = "tkde_binned";
    t.Write(name);
@@ -259,6 +292,18 @@ TEST(TKDE, tkde_io_binned)
    double delta = 1.E-3;
    for (size_t i = 0; i < t.xtest.size(); ++i) {
       EXPECT_NEAR(t.values1[i], t.values2[i], delta);
-      //EXPECT_DOUBLE_EQ(t.values1[i], t.values2[i]);
+   }
+}
+
+TEST(TKDE, tkde_io_mirror)
+{
+   TestKDE t;
+   t.mirroring = true;
+   TString name = "tkde_mirror";
+   t.Write(name);
+   t.Read(name);
+   double delta = 1.E-3;
+   for (size_t i = 0; i < t.xtest.size(); ++i) {
+      EXPECT_NEAR(t.values1[i], t.values2[i], delta);
    }
 }
