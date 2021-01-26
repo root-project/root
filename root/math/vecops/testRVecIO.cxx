@@ -1,6 +1,7 @@
 #include <ROOT/RVec.hxx>
 #include <TFile.h>
 #include <TInterpreter.h>
+#include <TKey.h>
 #include <TSystem.h>
 #include <TTree.h>
 #include <TTreeReader.h>
@@ -111,4 +112,27 @@ TEST_F(RVecIO, AdoptReaderArrayMemory)
    std::swap(rveci, rveci2);
    EXPECT_EQ(rveci.size(), RVecIO::intVals[1].size());
    EXPECT_TRUE(std::equal(rveci.begin(), rveci.end(), RVecIO::intVals[1].begin()));
+}
+
+TEST(RVecWriteObject, WriteAndReadObjectAny)
+{
+   const auto fname = "rvecio_writeobject.root";
+   {
+      TFile f(fname, "recreate");
+      ROOT::RVec<int> vi{1, 2, 3};
+      ROOT::RVec<bool> vb{true, false, true};
+
+      f.WriteObjectAny(&vi, "ROOT::RVec<int>", "vi");
+      f.WriteObjectAny(&vb, "ROOT::RVec<bool>", "vb");
+      f.Close();
+   }
+
+   TFile f(fname);
+   auto *vi = static_cast<ROOT::RVec<int>*>(f.GetKey("vi")->ReadObjectAny(TClass::GetClass("ROOT::RVec<int>")));
+   auto *vb = static_cast<ROOT::RVec<bool>*>(f.GetKey("vb")->ReadObjectAny(TClass::GetClass("ROOT::RVec<bool>")));
+
+   EXPECT_TRUE(All(*vi == ROOT::RVec<int>({1, 2, 3})));
+   EXPECT_TRUE(All(*vb == ROOT::RVec<bool>({true, false, true})));
+
+   gSystem->Unlink(fname);
 }
