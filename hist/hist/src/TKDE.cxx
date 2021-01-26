@@ -46,18 +46,6 @@
 
 ClassImp(TKDE);
 
-class TKDE::TKernel {
-   TKDE* fKDE;
-   UInt_t fNWeights; // Number of kernel weights (bandwidth as vectorized for binning)
-   std::vector<Double_t> fWeights; // Kernel weights (bandwidth)
-public:
-   TKernel(Double_t weight, TKDE* kde);
-   void ComputeAdaptiveWeights();
-   Double_t operator()(Double_t x) const;
-   Double_t GetWeight(Double_t x) const;
-   Double_t GetFixedWeight() const;
-   const std::vector<Double_t> & GetAdaptiveWeights() const;
-};
 
 struct TKDE::KernelIntegrand {
    enum EIntegralResult{kNorm, kMu, kSigma2, kUnitIntegration};
@@ -92,17 +80,15 @@ TKDE::~TKDE() {
    if (fLowerPDF)         delete fLowerPDF;
    if (fGraph)         delete fGraph;
    if (fApproximateBias)  delete fApproximateBias;
-   if (fKernelFunction && fKernelType != kUserDefined) delete fKernelFunction;
-   if (fKernel) delete fKernel;
+   // delete fKernelFunction if it is not user defined
+   if (fKernelFunction && fKernelType != kUserDefined)
+      delete fKernelFunction;
 }
 
 void TKDE::Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_t* data, const Double_t* dataWeights, Double_t xMin, Double_t xMax, const Option_t* option, Double_t rho) {
    // Template's constructor surrogate
 
-   fData = std::vector<Double_t>(events, 0.0);
-   fEvents = std::vector<Double_t>(events, 0.0);
    fPDF = 0;
-   fKernel = 0;
    fKernelFunction = 0;
    fUpperPDF = 0;
    fLowerPDF = 0;
@@ -188,8 +174,10 @@ void TKDE::SetDrawOptions(const Option_t* option, TString& plotOpt, TString& dra
          foundPlotOPt = kTRUE;
          if (optionInstance.Contains("estimate") || optionInstance.Contains("errors") || optionInstance.Contains("confidenceinterval"))
             plotOpt = optionInstance;
-         else
-            this->Warning("SetDrawOptions", "Unknown plotting option: setting to KDE estimate plot.");
+         else {
+            this->Warning("SetDrawOptions", "Unknown plotting option %s: setting to KDE estimate plot.",optionInstance.Data());
+            this->Info("SetDrawOptions", "Possible plotting options are: Estimate,Errors,ConfidenceInterval");
+         }
       } else if (optionType.Contains("drawoptions")) {
          foundDrawOPt = kTRUE;
          drawOpt = optionInstance;
@@ -220,7 +208,8 @@ void TKDE::GetOptions(std::string optionType, std::string option) {
       } else if (option.compare("userdefined") == 0) {
          fKernelType = kUserDefined;
       } else {
-         this->Warning("GetOptions", "Unknown kernel type option: setting to Gaussian");
+         this->Warning("GetOptions", "Unknown kernel type option %s: setting to Gaussian",option.c_str());
+         this->Info("GetOptions", "Possible kernel type options are: Gaussian, Epanechnikov, Biweight, Cosinearch, Userdefined");
          fKernelType = kGaussian;
       }
    } else if (optionType.compare("iteration") == 0) {
@@ -230,7 +219,8 @@ void TKDE::GetOptions(std::string optionType, std::string option) {
       } else if (option.compare("fixed") == 0) {
          fIteration = kFixed;
       } else {
-         this->Warning("GetOptions", "Unknown iteration option: setting to Adaptive");
+         this->Warning("GetOptions", "Unknown iteration option %s: setting to Adaptive",option.c_str());
+         this->Info("GetOptions","Possible iteration type options are: Adaptive, Fixed");
          fIteration = kAdaptive;
       }
    } else if (optionType.compare("mirror") == 0) {
@@ -254,7 +244,9 @@ void TKDE::GetOptions(std::string optionType, std::string option) {
       } else if (option.compare("mirrorasymboth") == 0) {
          fMirror = kMirrorAsymBoth;
       } else {
-         this->Warning("GetOptions", "Unknown mirror option: setting to NoMirror");
+         this->Warning("GetOptions", "Unknown mirror option %s: setting to NoMirror",option.c_str());
+         this->Info("GetOptions", "Possible mirror type options are: NoMirror, MirrorLeft, MirrorRight, MirrorAsymLeft,"
+                                  "MirrorAsymRight, MirrorAsymLeftRight, MirrorLeftAsymRight, MirrorAsymBoth");
          fMirror = kNoMirror;
       }
    } else if (optionType.compare("binning") == 0) {
@@ -266,7 +258,8 @@ void TKDE::GetOptions(std::string optionType, std::string option) {
       } else if (option.compare("forcedbinning") == 0) {
          fBinning = kForcedBinning;
       } else {
-         this->Warning("GetOptions", "Unknown binning option: setting to RelaxedBinning");
+         this->Warning("GetOptions", "Unknown binning option %s: setting to RelaxedBinning", option.c_str());
+         this->Info("GetOptions", "Possible binning type options are: Unbinned, ForcedBinning, RelaxedBinning");
          fBinning = kRelaxedBinning;
       }
    }
@@ -315,20 +308,20 @@ void TKDE::SetKernelType(EKernelType kern) {
    // Sets User option for the choice of kernel estimator
    if (fKernelFunction && fKernelType != kUserDefined) {
       delete fKernelFunction;
-      fKernelFunction = 0;
+      fKernelFunction = nullptr;
    }
    fKernelType = kern;
    CheckOptions();
-   SetKernelFunction(0);
+   // resetting fKernel automatically calls ReInit when needed
+   fKernel.reset();
 }
 
 void TKDE::SetIteration(EIteration iter) {
    // Sets User option for fixed or adaptive iteration
    fIteration = iter;
    CheckOptions();
-   SetKernel();
+   fKernel.reset();
 }
-
 
 void TKDE::SetMirror(EMirror mir) {
    // Sets User option for mirroring the data
@@ -338,9 +331,8 @@ void TKDE::SetMirror(EMirror mir) {
    if (fUseMirroring) {
       SetMirroredEvents();
    }
-   SetKernel();
+   fKernel.reset();
 }
-
 
 void TKDE::SetBinning(EBinning bin) {
    // Sets User option for binning the weights
@@ -357,7 +349,6 @@ void TKDE::SetNBins(UInt_t nbins) {
    }
 
    fNBins = nbins;
-   fWeightSize = fNBins / (fXMax - fXMin);
 
    SetUseBins();
    if (!fUseBins) {
@@ -381,7 +372,7 @@ void TKDE::SetTuneFactor(Double_t rho) {
    // while a factor > 1 will overestimate the tail
    fRho = rho;
    CheckOptions();
-   SetKernel();
+   fKernel.reset();
 }
 
 void TKDE::SetRange(Double_t xMin, Double_t xMax) {
@@ -393,7 +384,7 @@ void TKDE::SetRange(Double_t xMin, Double_t xMax) {
    fXMin = xMin;
    fXMax = xMax;
    fUseMinMaxFromData = false;
-   SetKernel();
+   fKernel.reset();
 }
 
 // private methods
@@ -416,13 +407,25 @@ void TKDE::SetUseBins() {
          fUseBins = kFALSE;
    }
 
-   // set the binning (if KDE already initialized)
-   if (fUseBins &&  fKernel && !fEvents.empty() ) {
+   // during initialization we don't need to recompute the bins
+   // it is done within TKDE::SetData
+   // in this case fEvents is empty
+   if (fEvents.empty()) return;
+
+   // in case we need to recompute bins structure
+   // needed when called from the TKDE setters method
+   if (fUseBins) {
       fWeightSize = fNBins / (fXMax - fXMin);
       SetBinCentreData(fXMin, fXMax);
       SetBinCountData();
-      SetKernel();
    }
+   else {
+      // unbinned case
+      fWeightSize = 0.;
+      fBinCount.clear();
+      fData = fEvents;
+   }
+   fKernel.reset();
 }
 
 void TKDE::SetMirror() {
@@ -455,7 +458,7 @@ void TKDE::SetData(const Double_t* data, const Double_t* wgts) {
       fWeightSize = fNBins / (fXMax - fXMin);
       SetBinCentreData(fXMin, fXMax);
    } else {
-      fWeightSize = fNEvents / (fXMax - fXMin);
+      fWeightSize = 0;  //fNEvents / (fXMax - fXMin);
       fData = fEvents;
    }
    // to set fBinCount and fSumOfCounts
@@ -476,18 +479,16 @@ void TKDE::ReInit() {
       InitFromNewData();
       return;
    }
-   // case of reading from a file.
-   // we need to recreate Kernel class (with adaptive weights if needed) and
-   // recreate kernel function pointer
-
-   if (fKernelFunction) Error("ReInit","Kernel function pointer should be a nullptr when re-initializing after reading from a file");
 
    if (fEvents.size() == 0) {
       Error("ReInit","TKDE does not contain any data !");
       return;
    }
 
-   SetKernelFunction(0);
+   //  when of reading from a file fKernelFunction is a nullptr
+   // we need to recreate Kernel class (with adaptive weights if needed) and
+   // recreate kernel function pointer
+   if (!fKernelFunction) SetKernelFunction(nullptr);
 
    SetKernel();
 }
@@ -569,8 +570,8 @@ void TKDE::SetKernel() {
    // Optimal bandwidth (Silverman's rule of thumb with assumed Gaussian density)
    Double_t weight = fCanonicalBandwidths[kGaussian] * fSigmaRob * std::pow(3. / (8. * std::sqrt(M_PI)) * n, -0.2);
    weight *= fRho * fCanonicalBandwidths[fKernelType] / fCanonicalBandwidths[kGaussian];
-   if (fKernel) delete fKernel;
-   fKernel = new TKernel(weight, this);
+
+   fKernel.reset( new TKernel(weight, this) );
    if (fIteration == kAdaptive) {
       fKernel->ComputeAdaptiveWeights();
    }
@@ -578,8 +579,11 @@ void TKDE::SetKernel() {
 }
 
 void TKDE::SetKernelFunction(KernelFunction_Ptr kernfunc) {
-
-   assert(fKernelFunction == 0);  // to avoid memory leaks
+   // sets the kernel function pointer. It creates and manages the pointer for internal classes
+   if (fKernelFunction) {
+      // kernel function pointer must be set to null before calling SetKernelFunction to avoid memory leaks
+      Fatal("SetKernelFunction", "Kernel function pointer is not null");
+   }
    switch (fKernelType) {
       case kGaussian :
          fKernelFunction = new ROOT::Math::WrappedMemFunction<TKDE, Double_t (TKDE::*)(Double_t) const>(*this, &TKDE::GaussianKernel);
@@ -775,7 +779,7 @@ void TKDE::SetBinCountData() {
    // Returns the bins' count from the data for using with the binned option
    // or set the bin count to the weights in case of weighted data
    if (fUseBins) {
-      fBinCount.resize(fNBins);
+      fBinCount.assign(fNBins, 0.0);
       fSumOfCounts = 0;
       // case of weighted events
       if (!fEventWeights.empty() ) {
