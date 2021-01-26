@@ -78,6 +78,20 @@ void REveScene::RemoveSubscriber(unsigned id)
    fSubscribers.erase(std::remove_if(fSubscribers.begin(), fSubscribers.end(), pred), fSubscribers.end());
 }
 
+// Add Button in client gui with this command
+void REveScene::AddCommand(const std::string &name, const std::string &icon, const REveElement *element, const std::string &action)
+{
+   static const REveException eh("REveScene::AddCommand ");
+   if (element->GetElementId() && element->IsA())
+   {
+      fCommands.emplace_back(name, icon, element, action);
+   }
+   else
+   {
+      throw eh + "Element id and dictionary has to be defined";
+   }
+}
+
 void REveScene::BeginAcceptingChanges()
 {
    if (fAcceptingChanges) return;
