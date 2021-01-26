@@ -1171,7 +1171,14 @@ template <typename T>
 void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &outputTree, const std::string &inName,
                        const std::string &outName, TBranch *&branch, void *&branchAddress, RVec<T> *ab)
 {
-   auto *const inputBranch = inputTree ? inputTree->GetBranch(inName.c_str()) : nullptr;
+   TBranch *inputBranch = nullptr;
+   if (inputTree) {
+      inputBranch = inputTree->GetBranch(inName.c_str());
+      if (!inputBranch) {
+         // try harder
+         inputBranch = inputTree->FindBranch(inName.c_str());
+      }
+   }
    const bool isTClonesArray = inputBranch != nullptr && std::string(inputBranch->GetClassName()) == "TClonesArray";
    const auto mustWriteStdVec = !inputBranch || isTClonesArray ||
                                 ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
