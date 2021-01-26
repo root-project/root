@@ -235,7 +235,7 @@ void TKDE::GetOptions(std::string optionType, std::string option) {
          fMirror = kMirrorBoth;
       } else if (option.compare("mirrorasymleft") == 0) {
          fMirror = kMirrorAsymLeft;
-      } else if (option.compare("mirrorasymleftright") == 0) {
+      } else if (option.compare("mirrorrightasymleft") == 0) {
          fMirror = kMirrorAsymLeftRight;
       } else if (option.compare("mirrorasymright") == 0) {
          fMirror = kMirrorAsymRight;
@@ -246,7 +246,7 @@ void TKDE::GetOptions(std::string optionType, std::string option) {
       } else {
          this->Warning("GetOptions", "Unknown mirror option %s: setting to NoMirror",option.c_str());
          this->Info("GetOptions", "Possible mirror type options are: NoMirror, MirrorLeft, MirrorRight, MirrorAsymLeft,"
-                                  "MirrorAsymRight, MirrorAsymLeftRight, MirrorLeftAsymRight, MirrorAsymBoth");
+                                  "MirrorAsymRight, MirrorRightAsymLeft, MirrorLeftAsymRight, MirrorAsymBoth");
          fMirror = kNoMirror;
       }
    } else if (optionType.compare("binning") == 0) {
@@ -461,13 +461,15 @@ void TKDE::SetData(const Double_t* data, const Double_t* wgts) {
       fWeightSize = 0;  //fNEvents / (fXMax - fXMin);
       fData = fEvents;
    }
-   // to set fBinCount and fSumOfCounts
-   SetBinCountData();
-
 
    ComputeDataStats();
    if (fUseMirroring) {
+      // set mirror events called automatically SetBinCount
       SetMirroredEvents();
+   }
+   else {
+      // to set fBinCount and fSumOfCounts
+      SetBinCountData();
    }
 }
 
@@ -535,7 +537,9 @@ void TKDE::SetMirroredEvents() {
    }
    if (!fEventWeights.empty() && (fMirrorLeft || fMirrorRight)) {
       // copy weights too
-      fEventWeights.insert(fEventWeights.end(), fEventWeights.begin(), fEventWeights.end() );
+      fEventWeights.insert(fEventWeights.end(), fEventWeights.begin(), fEventWeights.begin()+fNEvents );
+      if (fMirrorLeft && fMirrorRight)
+         fEventWeights.insert(fEventWeights.end(), fEventWeights.begin(), fEventWeights.begin()+fNEvents );
    }
 
    if(fUseBins) {
@@ -781,9 +785,12 @@ void TKDE::SetBinCountData() {
    if (fUseBins) {
       fBinCount.assign(fNBins, 0.0);
       fSumOfCounts = 0;
+      // when mirrorir nevents is 2 or 3 times fNEvents
+      UInt_t nevents = fEvents.size();
       // case of weighted events
       if (!fEventWeights.empty() ) {
-         for (UInt_t i = 0; i < fNEvents; ++i) {
+         assert(nevents == fEventWeights.size());
+         for (UInt_t i = 0; i < nevents; ++i) {
             if (fEvents[i] >= fXMin && fEvents[i] < fXMax) {
                fBinCount[Index(fEvents[i])] += fEventWeights[i];
                fSumOfCounts += fEventWeights[i];
@@ -793,7 +800,7 @@ void TKDE::SetBinCountData() {
       }
       // case of unweighted data
       else {
-         for (UInt_t i = 0; i < fNEvents; ++i) {
+         for (UInt_t i = 0; i < nevents; ++i) {
             if (fEvents[i] >= fXMin && fEvents[i] < fXMax) {
                fBinCount[Index(fEvents[i])] += 1;
                fSumOfCounts += 1;
@@ -813,25 +820,22 @@ void TKDE::SetBinCountData() {
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///  Draws either the KDE functions or its errors
+//    @param opt  : Drawing options:
+//                  -  ""  (default) - draw just the kde
+//                  - "same" draw on top of existing pad
+//                  - "Errors" draw a TGraphErrors with the point and errors
+//                  -"confidenceinterval" draw KDE + conf interval functions (default is 95%)
+//                  -"confidenceinterval@0.90" draw KDE + conf interval functions at 90%
+//                  - Extra options can be passed in opt for the drawing of the corresponding TF1 or TGraph
+//
+// NOTE:  The functions GetDrawnFunction(), GetDrawnUpperFunction(), GetDrawnLowerFunction()
+//  and GetGraphWithErrors() return the corresponding drawn objects (which are maneged by the TKDE)
+// They can be used to changes style, color, etc..
+////
 void TKDE::Draw(const Option_t* opt) {
-   // Draws either the KDE functions or its errors
-   // Possible options:
-   //                    ""  (default) - draw just the kde
-   //                    "same" draw on top of existing pad
-   //                    "Errors" draw a TGraphErrors with the point and errors
-   //                    "confidenceinterval" draw KDE + conf interval functions (default is 95%)
-   //                    "confidenceinterval@0.90" draw KDE + conf interval functions at 90%
-   //                      Extra options can be passed in opt for drawing the TF1 or the TGraph
-   //
-   //NOTE:  The functions GetDrawnFunction(), GetDrawnUpperFunction(), GetDrawnLowerFunction()
-   //  and GetGraphWithErrors() return the corresponding drawn objects (which are maneged by the TKDE)
-   // They can be used to changes style, color, etc...
 
-   // TString plotOpt = "";
-   // TString drawOpt = "";
-   // LM : this is too complicates - skip it - not needed for just
-   // three options
-   // SetDrawOptions(opt, plotOpt, drawOpt);
    TString plotOpt = opt;
    plotOpt.ToLower();
    TString drawOpt = plotOpt;
@@ -864,16 +868,19 @@ void TKDE::Draw(const Option_t* opt) {
    }
 }
 
-void TKDE::DrawErrors(TString& drawOpt) {
-   // Draws a TGraphErrors for the KDE errors
+///////////////////////////////////////////////////////////////////////
+///  Draws a TGraphErrors wih KDE values and errors
+void TKDE::DrawErrors(TString& drawOpt)
+{
    if (fGraph) delete fGraph;
    fGraph = GetGraphWithErrors();
    fGraph->Draw(drawOpt.Data());
 }
-
+///////////////////////////////////////////////////////////////////////
+/// return a TGraphErrors with the KDE values and errors
+/// The return object is managed by the user
 TGraphErrors* TKDE::GetGraphWithErrors(UInt_t npx, double xmin, double xmax) {
    if (xmin>= xmax) { xmin = fXMin; xmax = fXMax; }
-   // return a TGraphErrors for the KDE errors
    UInt_t n = npx;
    Double_t* x = new Double_t[n + 1];
    Double_t* ex = new Double_t[n + 1];
@@ -895,8 +902,9 @@ TGraphErrors* TKDE::GetGraphWithErrors(UInt_t npx, double xmin, double xmax) {
    return ge;
 }
 
+//////////////////////////////////////////////////////////////
+/// // Draws the KDE and its confidence interval
 void TKDE::DrawConfidenceInterval(TString& drawOpt,double cl) {
-   // Draws the KDE and its confidence interval
    GetKDEFunction()->Draw(drawOpt.Data());
    TF1* upper = GetPDFUpperConfidenceInterval(cl);
    upper->SetLineColor(kBlue);
