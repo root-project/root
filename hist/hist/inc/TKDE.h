@@ -19,6 +19,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 class TGraphErrors;
 class TF1;
@@ -131,18 +132,33 @@ public:
    const Double_t * GetAdaptiveWeights() const;
 
 
+public:
+
+   class TKernel {
+      TKDE *fKDE;
+      UInt_t fNWeights;               // Number of kernel weights (bandwidth as vectorized for binning)
+      std::vector<Double_t> fWeights; // Kernel weights (bandwidth)
+   public:
+      TKernel(Double_t weight, TKDE *kde);
+      void ComputeAdaptiveWeights();
+      Double_t operator()(Double_t x) const;
+      Double_t GetWeight(Double_t x) const;
+      Double_t GetFixedWeight() const;
+      const std::vector<Double_t> &GetAdaptiveWeights() const;
+   };
+
+   friend class TKernel;
+
 private:
 
    TKDE(TKDE& kde);           // Disallowed copy constructor
    TKDE operator=(TKDE& kde); // Disallowed assign operator
 
+   // Kernel funciton pointer. It is managed by class for internal kernels or exernally for user defined kernels
    typedef ROOT::Math::IBaseFunctionOneDim* KernelFunction_Ptr;
-   KernelFunction_Ptr fKernelFunction;  //! pointer to kernel function
+   KernelFunction_Ptr fKernelFunction;  ///<! pointer to kernel function
 
-   class TKernel;
-   friend class TKernel;
-
-   TKernel* fKernel;             //! internal kernel class. Transient because it is recreated after reading from a file
+   std::unique_ptr<TKernel> fKernel;             ///<! internal kernel class. Transient because it is recreated after reading from a file
 
    std::vector<Double_t> fData;   // Data events
    std::vector<Double_t> fEvents; // Original data storage
@@ -253,7 +269,7 @@ private:
    TF1* GetPDFUpperConfidenceInterval(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
    TF1* GetPDFLowerConfidenceInterval(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
 
-   ClassDef(TKDE, 2) // One dimensional semi-parametric Kernel Density Estimation
+   ClassDef(TKDE, 3) // One dimensional semi-parametric Kernel Density Estimation
 
 };
 

@@ -1565,6 +1565,11 @@ TF1 *TF1::GetCurrent()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to the histogram used to visualise the function
+/// Note that this histogram is managed by the function and
+/// in same case it is automatically deleted when some TF1 functions are called
+///  such as TF1::SetParameters, TF1::SetNpx, TF1::SetRange
+/// It is then reccomended either to clone the return object or calling again teh GetHistogram
+/// function whenever is needed
 
 TH1 *TF1::GetHistogram() const
 {
