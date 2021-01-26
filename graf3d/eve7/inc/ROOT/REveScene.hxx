@@ -118,8 +118,7 @@ public:
    void AddSubscriber(std::unique_ptr<REveClient> &&sub);
    void RemoveSubscriber(unsigned int);
 
-   void AddCommand(const std::string &name, const std::string &icon, const REveElement *element, const std::string &action)
-   { fCommands.emplace_back(name, icon, element, action); }
+   void AddCommand(const std::string &name, const std::string &icon, const REveElement *element, const std::string &action);
 };
 
 /******************************************************************************/
