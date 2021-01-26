@@ -54,7 +54,7 @@ public:
       kMirrorRight,
       kMirrorBoth,
       kMirrorAsymLeft,
-      kMirrorAsymLeftRight,
+      kMirrorRightAsymLeft,
       kMirrorAsymRight,
       kMirrorLeftAsymRight,
       kMirrorAsymBoth

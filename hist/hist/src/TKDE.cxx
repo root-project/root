@@ -236,7 +236,7 @@ void TKDE::GetOptions(std::string optionType, std::string option) {
       } else if (option.compare("mirrorasymleft") == 0) {
          fMirror = kMirrorAsymLeft;
       } else if (option.compare("mirrorrightasymleft") == 0) {
-         fMirror = kMirrorAsymLeftRight;
+         fMirror = kMirrorRightAsymLeft;
       } else if (option.compare("mirrorasymright") == 0) {
          fMirror = kMirrorAsymRight;
       } else if (option.compare("mirrorleftasymright") == 0) {
@@ -431,8 +431,8 @@ void TKDE::SetUseBins() {
 void TKDE::SetMirror() {
    // Sets the mirroring
    fMirrorLeft   = fMirror == kMirrorLeft      || fMirror == kMirrorBoth          || fMirror == kMirrorLeftAsymRight;
-   fMirrorRight  = fMirror == kMirrorRight     || fMirror == kMirrorBoth          || fMirror == kMirrorAsymLeftRight;
-   fAsymLeft     = fMirror == kMirrorAsymLeft  || fMirror == kMirrorAsymLeftRight || fMirror == kMirrorAsymBoth;
+   fMirrorRight  = fMirror == kMirrorRight     || fMirror == kMirrorBoth          || fMirror == kMirrorRightAsymLeft;
+   fAsymLeft     = fMirror == kMirrorAsymLeft  || fMirror == kMirrorRightAsymLeft || fMirror == kMirrorAsymBoth;
    fAsymRight    = fMirror == kMirrorAsymRight || fMirror == kMirrorLeftAsymRight || fMirror == kMirrorAsymBoth;
    fUseMirroring = fMirrorLeft                 || fMirrorRight ;
 }

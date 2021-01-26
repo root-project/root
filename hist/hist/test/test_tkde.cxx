@@ -248,7 +248,25 @@ TEST(TKDE, tkde_hist_mirror)
    // check other mirrors types:
    t.useSetters = false;
    t.mirror = "mirrorLeft";
-   t.CompareWithHist("tkde_mirror_3");
+   t.CompareWithHist("tkde_mirrorL");
+   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.mirror = "mirrorRight";
+   t.CompareWithHist("tkde_mirrorR");
+   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.mirror = "mirrorAsymBoth";
+   t.CompareWithHist("tkde_mirrorAsym");
+   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.mirror = "mirrorAsymLeft";
+   t.CompareWithHist("tkde_mirrorAL");
+   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.mirror = "mirrorAsymRight";
+   t.CompareWithHist("tkde_mirrorAR");
+   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.mirror = "mirrorRightAsymLeft";
+   t.CompareWithHist("tkde_mirrorRAL");
+   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.mirror = "mirrorLeftAsymRight";
+   t.CompareWithHist("tkde_mirrorLAR");
    EXPECT_PRED1(TestKDE::IsPValid, t.pval);
 }
 
