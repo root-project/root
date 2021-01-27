@@ -188,10 +188,10 @@ Bool_t THttpLongPollEngine::PreProcess(std::shared_ptr<THttpCallArg> &arg)
    }
 
    if (arg == poll)
-      Fatal("PreviewData", "Submit same THttpCallArg object once again");
+      Fatal("PreProcess", "Submit same THttpCallArg object once again");
 
    if (poll) {
-      Error("PreviewData", "Get next dummy request when previous not completed");
+      Error("PreProcess", "Get next dummy request when previous not completed");
       // if there are pending request, reply it immediately
       // normally should never happen
       if (fRaw) poll->SetBinaryContent(std::string("txt:") + gLongPollNope);
