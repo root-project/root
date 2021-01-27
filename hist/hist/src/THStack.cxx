@@ -42,17 +42,37 @@ to the drawing option.
 THStack::Add() allows to add a new histogram to the list.
 The THStack does not own the objects in the list.
 
-By default (if no option drawing option is specified), histograms will be paint
-stacked on top of each other. TH2 are stacked as lego plots.
+### <a name="HS00"></a> Stack painting
 
-If option "nostack" is specified the histograms are not drawn on top
-of each other but as they would if drawn using the option "same".
+By default, histograms are shown stacked.
+  - the first histogram is paint
+  - then the sum of the first and second, etc
 
-If option "nostackb" is specified the histograms are drawn next to
-each other as bar charts.
-
-In all cases The axis range is computed automatically along the X and Y axis in
+The axis ranges are computed automatically along the X and Y axis in
 order to show the complete histogram collection.
+
+### <a name="HS01"></a> Stack's drawing options
+
+The specific stack's drawing options are:
+
+  - **NOSTACK** If option "nostack" is specified, histograms are all painted in the same pad
+    as if the option "same" had been specified.
+
+  - **NOSTACKB** If the option "nostackb" is specified histograms are all painted in the same pad
+    next to each other as bar plots.
+
+  - **PADS** if option "pads" is specified, the current pad/canvas is subdivided into
+    a number of pads equal to the number of histograms and each histogram
+    is painted into a separate pad.
+
+  - **NOCLEAR** By default the background of the histograms is erased before drawing the
+    histograms. The option "noclear" avoid this behaviour. This is useful
+    when drawing a THStack on top of an other plot. If the patterns used to
+    draw the histograms in the stack are transparents, then the plot behind
+    will be visible.
+
+See the THistPainter class for the list of valid histograms' painting options.
+
 
 Example;
 
@@ -673,28 +693,7 @@ void THStack::Modified()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint the list of histograms.
-/// By default, histograms are shown stacked.
-///    - the first histogram is paint
-///    - then the sum of the first and second, etc
-///
-/// If option "nostack" is specified, histograms are all paint in the same pad
-/// as if the option "same" had been specified.
-///
-/// If the option nostackb is specified histograms are all paint in the same pad
-/// next to each other as bar plots.
-///
-/// if option "pads" is specified, the current pad/canvas is subdivided into
-/// a number of pads equal to the number of histograms and each histogram
-/// is paint into a separate pad.
-///
-/// By default the background of the histograms is erased before drawing the
-/// histograms. The option "noclear" avoid this behaviour. This is useful
-/// when drawing a THStack on top of an other plot. If the patterns used to
-/// draw the histograms in the stack are transparents, then the plot behind
-/// will be visible.
-///
-/// See THistPainter::Paint for a list of valid options.
+/// [Paint the list of histograms.](#HS00)
 
 void THStack::Paint(Option_t *choptin)
 {
