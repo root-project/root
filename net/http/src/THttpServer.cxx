@@ -713,14 +713,6 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       return;
    }
 
-   // this is just to support old Process(THttpCallArg*), should be deprecated after 6.20
-   fOldProcessSignature = kTRUE;
-   ProcessRequest(arg.get());
-   if (fOldProcessSignature) {
-      Error("ProcessRequest", "Deprecated signature is used, please used std::shared_ptr<THttpCallArg>");
-      return;
-   }
-
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm") || (arg->fFileName == "default.htm")) {
 
       if (arg->fFileName == "default.htm") {
@@ -962,14 +954,6 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
    // potentially add cors header
    if (IsCors())
       arg->AddHeader("Access-Control-Allow-Origin", GetCors());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \deprecated  One should use signature with std::shared_ptr
-
-void THttpServer::ProcessRequest(THttpCallArg *)
-{
-   fOldProcessSignature = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
