@@ -136,6 +136,16 @@ ROOT::Experimental::RWebWindowsManager::~RWebWindowsManager()
 /// Following parameter controls browser max-age caching parameter for files (default 3600)
 ///
 ///      WebGui.HttpMaxAge: 3600
+///
+/// One also can configure usage of FastCGI server for web windows:
+///
+///      WebGui.FastCgiPort: 4000
+///
+/// To be able start web browser for such windows, one can provide real URL of the
+/// web server which will connect with that FastCGI instance:
+///
+///      WebGui.FastCgiServer: https://your_apache_server.com/root_cgi_path
+///
 
 bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
 {
@@ -186,7 +196,7 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
       fServer->AddLocation("rootui5sys/", ui5dir.Data());
    }
 
-   if (!with_http || !fAddr.empty())
+   if (!with_http || fServer->IsAnyEngine())
       return true;
 
    int http_port = gEnv->GetValue("WebGui.HttpPort", 0);
@@ -194,6 +204,8 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
    int http_wstmout = gEnv->GetValue("WebGui.HttpWSTmout", 10000);
    int http_maxage = gEnv->GetValue("WebGui.HttpMaxAge", -1);
+   int fcgi_port = gEnv->GetValue("WebGui.FastCgiPort", 0);
+   const char *fcgi_serv = gEnv->GetValue("WebGui.FastCgiServer", "");
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
    const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
@@ -204,19 +216,27 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
    bool use_secure = http_ssl && strstr(http_ssl, "yes");
    int ntry = 100;
 
-   if (http_port < 0) {
-      R__LOG_ERROR(WebGUILog()) << "Not allowed to create real HTTP server, check WebGui.HttpPort variable";
+   if ((http_port < 0) && (fcgi_port <= 0)) {
+      R__LOG_ERROR(WebGUILog()) << "Not allowed to create HTTP server, check WebGui.HttpPort variable";
       return false;
    }
 
-   if (!http_port)
-      gRandom->SetSeed(0);
+   if (http_port < 0) {
+      ntry = 0;
+   } else {
 
-   if (http_max - http_min < ntry)
-      ntry = http_max - http_min;
+      if (http_port == 0)
+         gRandom->SetSeed(0);
+
+      if (http_max - http_min < ntry)
+         ntry = http_max - http_min;
+   }
+
+   if (fcgi_port > 0)
+      ntry++;
 
    while (ntry-- >= 0) {
-      if (!http_port) {
+      if ((http_port == 0) && (fcgi_port <= 0)) {
          if ((http_min <= 0) || (http_max <= http_min)) {
             R__LOG_ERROR(WebGUILog()) << "Wrong HTTP range configuration, check WebGui.HttpPortMin/Max variables";
             return false;
@@ -225,35 +245,44 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
          http_port = (int)(http_min + (http_max - http_min) * gRandom->Rndm(1));
       }
 
-      TString engine, url(use_secure ? "https://" : "http://");
-      engine.Form("%s:%d?websocket_timeout=%d", (use_secure ? "https" : "http"), http_port, http_wstmout);
-      if (assign_loopback) {
-         engine.Append("&loopback");
-         url.Append("localhost");
-      } else if (http_bind && (strlen(http_bind) > 0)) {
-         engine.Append("&bind=");
-         engine.Append(http_bind);
-         url.Append(http_bind);
-      } else {
-         url.Append("localhost");
+      TString engine, url;
+
+      if (fcgi_port > 0) {
+         engine.Form("fastcgi:%d", fcgi_port);
+         if (!fServer->CreateEngine(engine)) return false;
+         if (fcgi_serv && (strlen(fcgi_serv) > 0)) fAddr = fcgi_serv;
+         if (http_port < 0) return true;
+         fcgi_port = 0;
+      } else if (http_port > 0) {
+         url = use_secure ? "https://" : "http://";
+         engine.Form("%s:%d?websocket_timeout=%d", (use_secure ? "https" : "http"), http_port, http_wstmout);
+         if (assign_loopback) {
+            engine.Append("&loopback");
+            url.Append("localhost");
+         } else if (http_bind && (strlen(http_bind) > 0)) {
+            engine.Append("&bind=");
+            engine.Append(http_bind);
+            url.Append(http_bind);
+         } else {
+            url.Append("localhost");
+         }
+
+         if (http_maxage >= 0)
+            engine.Append(TString::Format("&max_age=%d", http_maxage));
+
+         if (use_secure) {
+            engine.Append("&ssl_cert=");
+            engine.Append(ssl_cert);
+         }
+
+         if (fServer->CreateEngine(engine)) {
+            fAddr = url.Data();
+            fAddr.append(":");
+            fAddr.append(std::to_string(http_port));
+            return true;
+         }
+         http_port = 0;
       }
-
-      if (http_maxage >= 0)
-         engine.Append(TString::Format("&max_age=%d", http_maxage));
-
-      if (use_secure) {
-         engine.Append("&ssl_cert=");
-         engine.Append(ssl_cert);
-      }
-
-      if (fServer->CreateEngine(engine)) {
-         fAddr = url.Data();
-         fAddr.append(":");
-         fAddr.append(std::to_string(http_port));
-         return true;
-      }
-
-      http_port = 0;
    }
 
    return false;
@@ -422,6 +451,10 @@ unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(RWebWindow &win, boo
    std::string url = GetUrl(win, normal_http);
    if (url.empty()) {
       R__LOG_ERROR(WebGUILog()) << "Cannot create URL for the window";
+      return 0;
+   }
+   if (normal_http && fAddr.empty()) {
+      R__LOG_WARNING(WebGUILog()) << "Full URL cannot be produced for window " << url << " to start web browser";
       return 0;
    }
 
