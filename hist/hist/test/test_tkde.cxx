@@ -8,23 +8,35 @@
 #include "TVirtualPad.h"
 #include "TF1.h"
 #include "TH1.h"
+#include "Math/DistFuncMathCore.h"
 
-struct  TestKDE  {
+
+struct TestKDE {
 
    // using n < 10000 use a default nbins=100 for KDE
    int n = 10000;
+   bool makePlot = true;
    bool useSetters = false;
    bool binned = false;
    bool adaptive = false;
    bool mirroring = false;
-   bool makePlot = true;
    bool debug = false;
-   bool dataInRange = true;
+   bool dataInRange = false;
+   bool independentData = true;
    int nbins = 100;
    int seed = 1111;
    const char *mirror = "mirrorBoth";
 
+   // sigma of the two gaussian used for generating the data
+   double sigma1 = 1;
+   double sigma2 = 7;
+
+   double pcut = 0.01; // cut on minimum of Chi2 and KS p values
+   double pcut1 = 1.E-4; // cut on min p value
+   double pcut2 = 0.05;  // cut on second p value
+
    std::vector<double> data;  // kde data
+   std::vector<double> data2;  // second data set for histogram
 
    std::vector<double> xtest;
 
@@ -38,16 +50,21 @@ struct  TestKDE  {
    TKDE * Create() {
       TRandom3 r(seed);
       data.resize(n);
+      data2.resize(n);
       if (!dataInRange) {
-        for( int i=0; i < n; ++i)
-           data[i] = (i < 0.2*n) ? r.Gaus(10,1) : r.Gaus(10,4);
-      }
-      else {
+         for (int i = 0; i < n; ++i) {
+            data[i] =  (r.Rndm() < 0.2) ? r.Gaus(10, sigma1) : r.Gaus(10, sigma2);
+            data2[i] = (r.Rndm() < 0.2 ) ? r.Gaus(10, sigma1) : r.Gaus(10, sigma2);
+         }
+      } else {
          int i = 0;
-         while (i < n) {
-            double x = (i < 0.2 * n) ? r.Gaus(10, 1) : r.Gaus(10, 4);
+         while (i < 2*n) {
+            double x = (r.Rndm() < 0.2) ? r.Gaus(10, sigma1) : r.Gaus(10, sigma2);
             if (x >= 0 && x < 20.) {
-               data[i] = x;
+               if (i < n)
+                  data[i] = x;
+               else
+                  data2[i-n] = x;
                i++;
             }
          }
@@ -70,7 +87,7 @@ struct  TestKDE  {
          if (binned) {
             // use relaxed binned mode
             kde->SetBinning(TKDE::kRelaxedBinning);
-            kde->SetUseBinsNEvents(100);
+            kde->SetUseBinsNEvents(10); // this is like using forced binning
             kde->SetNBins(nbins);  // when nbins=100 (using setters or not should give same results)->
          }
          if (mirroring) {
@@ -104,12 +121,45 @@ struct  TestKDE  {
       auto kde = Create();
       int nhistbins = 100;
       auto h1 = new TH1D("h1", "h1", nhistbins, 0., 20.);
-      for(int i=0;i<n;++i) h1->Fill( data[i] );
+      // neglect correction for sigma=1 gaussian
+      double corrNorm = 2.* ROOT::Math::normal_cdf(0, sigma2, 10);
+      double a1 = 0.2;
+      double a2 = 0.8;
+      if (dataInRange) {
+         // correction will increase a1 since events of a2 will be outside range
+         a1 = 0.2 / (0.2 + 0.8 * (1.-corrNorm));
+         a2 = 1. - a1;
+      }
+      auto pdf = new TF1("pdf", "[a1]*ROOT::Math::normal_pdf(x,[s1],10)+[a2]*ROOT::Math::normal_pdf(x,[s2],10)", 0, 20);
+      pdf->SetParameters(a1, a2, sigma1,sigma2);
+
+      if (independentData) {
+         // should use half of data for histogram since
+         // we do not count statistical error from TKDE?
+         //for (int i = 0; i < 0.5*n; ++i)
+         //   h1->Fill(data2[i]);
+         for (int i = 1; i < h1->GetNbinsX(); ++i) {
+            h1->SetBinContent(i, pdf->Eval(h1->GetBinCenter(i))*h1->GetBinWidth(i)*n);
+         }
+      } else {
+         for (int i = 0; i < n; ++i)
+            h1->Fill(data[i]);
+      }
 
       h1->Sumw2();
-      h1->Scale(1./h1->Integral(), "width");
+      // scale to n - if data not in range scale will be also correct
+      if (debug)
+         std::cout << dataInRange << " ..." << n << " true integral - " << h1->Integral() << std::endl;
+      double nhist = h1->Integral();
+       //(dataInRange || binned) ? h1->Integral() : n;
+      h1->Scale(1. / nhist, "width");
 
       auto fkde = kde->GetFunction(nhistbins);
+      if (debug) {
+         auto fkde1000 = kde->GetFunction(1000);
+         std::cout << "KDE integral is " << fkde->GetHistogram()->Integral() * fkde->GetHistogram()->GetBinWidth(1)
+                   << " with more bins " << fkde1000->GetHistogram()->Integral() * fkde1000->GetHistogram()->GetBinWidth(1) << std::endl;
+      }
 
       if (makePlot) {
          //auto c1 = new TCanvas();
@@ -135,7 +185,7 @@ struct  TestKDE  {
 
       // compute KS test
       double pvalKS = h1->KolmogorovTest(h2);
-      std::cout << "CompareWithHist:   Chi2 test = " << chi2 << "/" << nhistbins << " pvalue = " << pvalChi2 <<
+      std::cout << "CompareWithHist: " << name << " - Chi2 test = " << chi2 << "/" << nhistbins << " pvalue = " << pvalChi2 <<
                    "  KS test p value = " << pvalKS << std::endl;
       pval = std::min(pvalKS, pvalChi2);
       pval2 = std::max(pvalKS, pvalChi2);
@@ -144,11 +194,21 @@ struct  TestKDE  {
       delete h1;
    }
 
-   static bool IsPValid(double pval) {
-      return pval > 0.01;
+   bool IsPValid() {
+      bool valid = pval > pcut;
+      if (!valid)
+         std::cerr << "Error : pvalue " << pval << " is smaller than " << pcut << std::endl;
+      return valid;
    }
-   static bool IsPValid2(double pval1, double pval2){
-      return pval1 > 1.E-4 && pval2 > 0.05;
+   bool ArePsValid(){
+      bool valid = pval > pcut1 && pval2 > pcut2;
+      if (!valid) {
+         if (pval < pcut1)
+            std::cerr << "Error : pvalue " << pval << " is smaller than " << pcut << std::endl;
+         if (pval2 < pcut2)
+            std::cerr << "Error : pvalue " << pval2 << " is smaller than " << pcut2 << std::endl;
+      }
+      return valid;
    }
 
    void Write(TString name = "tkde") {
@@ -183,7 +243,6 @@ struct  TestKDE  {
       //f->Close();
       delete f;
    }
-
 };
 
 /// Hstogram comparison tests
@@ -193,8 +252,14 @@ struct  TestKDE  {
 TEST(TKDE, tkde_hist)
 {
    TestKDE t;
-   t.CompareWithHist();
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.n = 20000;
+   t.CompareWithHist("tkde");
+   EXPECT_TRUE(t.IsPValid());
+   t.dataInRange = true;
+   t.CompareWithHist("tkde_in");
+   // increase p -value because without mirroring this is expected to fail
+   t.pcut = 1.E-5;
+   EXPECT_TRUE(t.IsPValid());
 }
 TEST(TKDE, tkde_hist_adaptive)
 {
@@ -203,71 +268,178 @@ TEST(TKDE, tkde_hist_adaptive)
    t.n = 2000;
    t.adaptive = true;
    t.CompareWithHist("tkde_adaptive");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   EXPECT_TRUE(t.IsPValid());
    // test also default constructors + usage of setters functions
    t.useSetters = true;
-   t.CompareWithHist("tkde_adaptive_2");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.dataInRange = true;
+   t.CompareWithHist("tkde_adaptive_in");
+   // this is
+   EXPECT_TRUE(t.IsPValid());
 }
 TEST(TKDE, tkde_hist_binned)
 {
    TestKDE t;
+   t.dataInRange = false;
    t.adaptive = false;
    t.binned = true;
-   t.nbins = 3000;
+   // this test will fail miserably if sigma2 is large since
+   // binning does not use events outside range
+   // data.InRange=false is not doing since the bin data will
+   // consider only data in the range !!!
+   t.sigma2 = 3;
+   t.n = 100000;
+   t.nbins = 5000;
    // with binned not adaptive it is good for high statistics
    t.CompareWithHist("tkde_binned");
-   EXPECT_PRED2(TestKDE::IsPValid2, t.pval, t.pval2);
+   EXPECT_TRUE(t.ArePsValid());
    t.useSetters = true;
-   t.CompareWithHist("tkde_binned_2");
-   EXPECT_PRED2(TestKDE::IsPValid2, t.pval, t.pval2);
+   t.dataInRange = true;
+   t.CompareWithHist("tkde_binned_in");
+   EXPECT_TRUE(t.ArePsValid());
 }
 TEST(TKDE, tkde_hist_adaptive_binned)
 {
    TestKDE t;
+   t.dataInRange = true;
    t.nbins = t.n/10;
    //t.nbins = 3000;
    t.adaptive = true;
    t.binned = true;
    t.CompareWithHist("tkde_adaptive_binned");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   EXPECT_TRUE(t.IsPValid());
    t.useSetters = true;
-   t.CompareWithHist("tkde_adaptive_binned_2");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.dataInRange = false;
+   t.CompareWithHist("tkde_adaptive_binned_all");
+   EXPECT_TRUE(t.IsPValid());
 }
 
 TEST(TKDE, tkde_hist_mirror)
 {
    TestKDE t;
    t.mirroring = true;
-   t.CompareWithHist("tkde_mirror");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
-   t.useSetters = true;
-   t.CompareWithHist("tkde_mirror_2");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.n = 10000;
+   // you need data in range for mirroring !!!
+   t.dataInRange = true;
+   t.CompareWithHist("tkde_mirrorLR");
+   // for mirror case KS test is not so good but Chi2 is better
+   // test both p-values
+   EXPECT_TRUE(t.ArePsValid());
+   // t.useSetters = true;
+   // t.CompareWithHist("tkde_mirrorLR_2");
+   // EXPECT_TRUE(t.IsPValid());
    // check other mirrors types:
    t.useSetters = false;
    t.mirror = "mirrorLeft";
    t.CompareWithHist("tkde_mirrorL");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   EXPECT_TRUE(t.ArePsValid());
+   //EXPECT_TRUE(t.IsPValid());
    t.mirror = "mirrorRight";
    t.CompareWithHist("tkde_mirrorR");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   EXPECT_TRUE(t.ArePsValid());
+   //EXPECT_TRUE(t.IsPValid());
+   // for asym case also data should be in range
+   // asym does not work very well
+   // increase p value cut
+   t.pcut = 1.E-4;
    t.mirror = "mirrorAsymBoth";
-   t.CompareWithHist("tkde_mirrorAsym");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   t.CompareWithHist("tkde_mirrorALR");
+   EXPECT_TRUE(t.IsPValid());
    t.mirror = "mirrorAsymLeft";
    t.CompareWithHist("tkde_mirrorAL");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   EXPECT_TRUE(t.IsPValid());
    t.mirror = "mirrorAsymRight";
    t.CompareWithHist("tkde_mirrorAR");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   EXPECT_TRUE(t.IsPValid());
    t.mirror = "mirrorRightAsymLeft";
    t.CompareWithHist("tkde_mirrorRAL");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   EXPECT_TRUE(t.IsPValid());
    t.mirror = "mirrorLeftAsymRight";
    t.CompareWithHist("tkde_mirrorLAR");
-   EXPECT_PRED1(TestKDE::IsPValid, t.pval);
+   EXPECT_TRUE(t.IsPValid());
+}
+
+TEST(TKDE, tkde_hist_adaptive_mirror)
+{
+   // when using adaptive mirror a much
+   // smaller bandwidth is used. Not sure this is correct
+   // seee line TKDE.cxx:770
+   TestKDE t;
+   t.n = 2000;
+   t.adaptive = true;
+   t.mirroring = true;
+   // you need data in range for mirroring !!!
+   t.dataInRange = true;
+   t.CompareWithHist("tkde_adaptive_mirrorLR");
+   EXPECT_TRUE(t.IsPValid());
+   // t.useSetters = true;
+   // t.CompareWithHist("tkde_adaptive_mirrorLR_2");
+   // EXPECT_TRUE(t.IsPValid());
+   // check other mirrors types:
+   t.useSetters = false;
+   t.mirror = "mirrorLeft";
+   t.CompareWithHist("tkde_adaptive_mirrorL");
+   EXPECT_TRUE(t.IsPValid());
+   t.mirror = "mirrorRight";
+   t.CompareWithHist("tkde_adaptive_mirrorR");
+   EXPECT_TRUE(t.IsPValid());
+   // for asym case data can be outside range
+   t.mirror = "mirrorAsymBoth";
+   t.CompareWithHist("tkde_adaptive_mirrorALR");
+   EXPECT_TRUE(t.IsPValid());
+   t.mirror = "mirrorAsymLeft";
+   t.CompareWithHist("tkde_adaptive_mirrorAL");
+   EXPECT_TRUE(t.IsPValid());
+   t.mirror = "mirrorAsymRight";
+   t.CompareWithHist("tkde_adaptive_mirrorAR");
+   EXPECT_TRUE(t.IsPValid());
+   t.mirror = "mirrorRightAsymLeft";
+   t.CompareWithHist("tkde_adaptive_mirrorRAL");
+   EXPECT_TRUE(t.IsPValid());
+   t.mirror = "mirrorLeftAsymRight";
+   t.CompareWithHist("tkde_adaptive_mirrorLAR");
+   EXPECT_TRUE(t.IsPValid());
+}
+
+TEST(TKDE, tkde_hist_binned_mirror)
+{
+   TestKDE t;
+   t.n = 9000;
+   t.nbins = 100;
+   t.binned = true;
+   t.mirroring = true;
+   t.adaptive = true;
+   // you need data in range for mirroring !!!
+   t.dataInRange = true;
+   t.CompareWithHist("tkde_binned_mirrorLR");
+   EXPECT_TRUE(t.IsPValid());
+   t.useSetters = true;
+   //note using setters use nbins bins instead of 1000
+   t.CompareWithHist("tkde_binned_mirrorLR_2");
+   EXPECT_TRUE(t.IsPValid());
+   // check other mirrors types:
+   t.useSetters = false;
+   t.mirror = "mirrorLeft";
+   t.CompareWithHist("tkde_binned_mirrorL");
+   EXPECT_TRUE(t.IsPValid());
+   t.mirror = "mirrorRight";
+   t.CompareWithHist("tkde_binned_mirrorR");
+   EXPECT_TRUE(t.IsPValid());
+   // for asym case data can be outside range
+   t.mirror = "mirrorAsymBoth";
+   t.CompareWithHist("tkde_binned_mirrorALR");
+   EXPECT_TRUE(t.IsPValid());
+   t.mirror = "mirrorAsymLeft";
+   t.CompareWithHist("tkde_binned_mirrorAL");
+   EXPECT_TRUE(t.IsPValid());
+   t.mirror = "mirrorAsymRight";
+   t.CompareWithHist("tkde_binned_mirrorAR");
+   EXPECT_TRUE(t.IsPValid());
+   t.mirror = "mirrorRightAsymLeft";
+   t.CompareWithHist("tkde_binned_mirrorRAL");
+   EXPECT_TRUE(t.IsPValid());
+   t.mirror = "mirrorLeftAsymRight";
+   t.CompareWithHist("tkde_binned_mirrorLAR");
+   EXPECT_TRUE(t.IsPValid());
 }
 
 /// IO tests
