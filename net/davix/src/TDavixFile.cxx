@@ -538,7 +538,7 @@ void TDavixFileInternal::parseConfig()
    if (token.c_str()) {
       // header: "Authorization: Bearer mytoken"
       davixParam->addHeader("Authorization", prefix + token);
-    }
+   }
 
    // S3 Auth
    if (((env_var = gEnv->GetValue("Davix.S3.SecretKey", getenv("S3_SECRET_KEY"))) != NULL)
