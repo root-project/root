@@ -175,6 +175,16 @@ Bool_t TFastCgi::Create(const char *args)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class TFastCgiCallArg : public THttpCallArg {
+public:
+   TFastCgiCallArg() = default;
+
+   /** All FastCGI requests should be immediately replied to get slot for next */
+   Bool_t CanPostpone() const override { return kFALSE; }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 void *TFastCgi::run_func(void *args)
 {
 #ifndef HTTP_WITHOUT_FASTCGI
@@ -202,7 +212,7 @@ void *TFastCgi::run_func(void *args)
       const char *inp_method = FCGX_GetParam("REQUEST_METHOD", request.envp);
       const char *inp_length = FCGX_GetParam("CONTENT_LENGTH", request.envp);
 
-      auto arg = std::make_shared<THttpCallArg>();
+      auto arg = std::make_shared<TFastCgiCallArg>();
       if (inp_path)
          arg->SetPathAndFileName(inp_path);
       if (inp_query)
