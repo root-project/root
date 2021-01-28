@@ -75,6 +75,10 @@ void REveDataProxyBuilderBase::Build()
          auto itemSize = m_collection->GetNItems(); //cashed
 
          Clean();
+
+         if (!m_collection->GetRnrSelf())
+         return;
+
          for (auto &pp: m_products)
          {
             // printf("build() %s \n", m_collection->GetCName());
