@@ -96,15 +96,15 @@ public:
    ClassDef(RecHit, 1);
 };
 
-class CaloTower : public TObject
+class RCaloTower : public TObject
 {
 public:
    float fEta{0};
    float fPhi{0};
    float fEt{0};
 
-   CaloTower(float eta, float phi, float et): fEta(eta), fPhi(phi), fEt(et) {}
-   ClassDef(CaloTower, 1);
+   RCaloTower(float eta, float phi, float et): fEta(eta), fPhi(phi), fEt(et) {}
+   ClassDef(RCaloTower, 1);
 };
 
 class REveCaloTowerSliceSelector : public REveCaloDataSliceSelector
@@ -128,7 +128,7 @@ public:
          // loop over enire collection and check its eta/phi range
          for (int t = 0; t < fCollection->GetNItems(); ++t)
          {
-            CaloTower* tower = (CaloTower*) fCollection->GetDataPtr(t);
+            RCaloTower* tower = (RCaloTower*) fCollection->GetDataPtr(t);
             if (tower->fEta > cd.fEtaMin && tower->fEta < cd.fEtaMax &&
                 tower->fPhi > cd.fPhiMin && tower->fPhi < cd.fPhiMax)
                item_set.insert(t);
@@ -145,7 +145,7 @@ public:
       std::set<int> cbins;
       float total = 0;
       for( auto &i : idcs ) {
-         CaloTower* tower = (CaloTower*)fCollection->GetDataPtr(i);
+         RCaloTower* tower = (RCaloTower*)fCollection->GetDataPtr(i);
          int bin = hist->FindBin(tower->fEta, tower->fPhi);
          float frac =  tower->fEt/hist->GetBinContent(bin);
          bool ex = false;
@@ -291,9 +291,9 @@ public:
             x = gRandom->Uniform(-j->GetEtaSize(), j->GetEtaSize());
             y = gRandom->Uniform(-j->GetPhiSize(),j->GetPhiSize());
             v = j->Pt();
-            auto etower = new CaloTower(offX + x, offY + y, v + gRandom->Uniform(2,3));
+            auto etower = new RCaloTower(offX + x, offY + y, v + gRandom->Uniform(2,3));
             elist->Add(etower);
-            auto htower = new CaloTower(offX + x, offY + y, v + gRandom->Uniform(1,2));
+            auto htower = new RCaloTower(offX + x, offY + y, v + gRandom->Uniform(1,2));
             hlist->Add(htower);
          }
       }
