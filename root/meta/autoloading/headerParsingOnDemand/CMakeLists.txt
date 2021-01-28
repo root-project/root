@@ -6,18 +6,22 @@
 # system will complain at startup, making the test fail. Clearly for backwards
 # compatibility reasons the current behaviour should be preserved :)
 
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(FullheaderParsingOnDemand
-                                    FullheaderParsingOnDemand.h
-                                    SELECTION FullheaderParsingOnDemand_selection.xml
-                                    LIBNAME libFullheaderParsingOnDemand_dictrflx
-                                    NO_ROOTMAP)
+# disable tests which are failing on Windows because of their PATH being too long
+# (>260 characters) when run in the CI (Jenkins)
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_GENERATE_REFLEX_DICTIONARY(FullheaderParsingOnDemand
+                                      FullheaderParsingOnDemand.h
+                                      SELECTION FullheaderParsingOnDemand_selection.xml
+                                      LIBNAME libFullheaderParsingOnDemand_dictrflx
+                                      NO_ROOTMAP)
 
-ROOTTEST_ADD_TEST(runFullheaderParsingOnDemand
-                  COPY_TO_BUILDDIR headerParsingOnDemand.rootmap
-                  MACRO runFullheaderParsingOnDemand.C
-                  OUTREF headerParsingOnDemand.ref
-                  OUTCNV FullheaderParsingOnDemand_convert.sh
-                  DEPENDS ${GENERATE_REFLEX_TEST})
+  ROOTTEST_ADD_TEST(runFullheaderParsingOnDemand
+                    COPY_TO_BUILDDIR headerParsingOnDemand.rootmap
+                    MACRO runFullheaderParsingOnDemand.C
+                    OUTREF headerParsingOnDemand.ref
+                    OUTCNV FullheaderParsingOnDemand_convert.sh
+                    DEPENDS ${GENERATE_REFLEX_TEST})
+endif()
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(complexTypedefs
                                     complexTypedefs.h
