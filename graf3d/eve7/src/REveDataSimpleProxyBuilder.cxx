@@ -149,7 +149,7 @@ REveDataSimpleProxyBuilder::ModelChanges(const REveDataCollection::Ids_t& iIds, 
       auto itElement = elms->RefChildren().begin();
       std::advance(itElement, itemIdx);
       REveElement* comp = *itElement;
-      bool visible = (!item->GetFiltered()) && item->GetRnrSelf();
+      bool visible = ((!item->GetFiltered()) && item->GetRnrSelf()) && Collection()->GetRnrSelf();
       comp->SetRnrSelf(visible);
       comp->SetRnrChildren(visible);
 
