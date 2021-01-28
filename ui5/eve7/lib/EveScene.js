@@ -420,12 +420,16 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       }
 
       if (!res.sec_sel) opass.id2obj_map[element_id] = [];
-      let ctrl = obj3d.get_ctrl();
-      ctrl.DrawForSelection(sec_idcs, res, extra);
-      opass.id2obj_map[element_id][selection_obj.fElementId] = res;
 
-      if (stype == "highlight" && selection_obj.sel_list) {
-         this.glctrl.viewer.remoteToolTip(selection_obj.sel_list[0].tooltip);
+      if (obj3d.get_ctrl)
+      {
+         let ctrl = obj3d.get_ctrl();
+         ctrl.DrawForSelection(sec_idcs, res, extra);
+         opass.id2obj_map[element_id][selection_obj.fElementId] = res;
+
+         if (stype == "highlight" && selection_obj.sel_list) {
+            this.glctrl.viewer.remoteToolTip(selection_obj.sel_list[0].tooltip);
+         }
       }
    }
 
