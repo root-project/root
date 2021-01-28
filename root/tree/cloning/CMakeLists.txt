@@ -59,7 +59,7 @@ if(NOT TARGET eventexe)
 
 else()
    if(MSVC)
-      set(RootExeOptions -e "gSystem->Load(\"${ROOTSYS}/test/Release/libEvent\")")
+      set(RootExeOptions -e "gSystem->Load(\"${ROOTSYS}/test/$<CONFIG>/libEvent\")")
    else()
       set(RootExeOptions -e "gSystem->Load(\"../test/libEvent\")")
 
