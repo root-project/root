@@ -503,7 +503,7 @@ public:
 
          for (int h = 0; h < collection->GetNItems(); ++h)
          {
-            CaloTower* tower = (CaloTower*)collection->GetDataPtr(h);
+            RCaloTower* tower = (RCaloTower*)collection->GetDataPtr(h);
             const REveDataItem* item = Collection()->GetDataItem(h);
 
             if (!item->GetVisible())
@@ -581,7 +581,7 @@ public:
       tableInfo->table("RecHit").
          column("pt",     1, "i.fPt");
 
-      tableInfo->table("CaloTower").
+      tableInfo->table("RCaloTower").
          column("eta",  3, "i.fEta").
          column("phi",  3, "i.fPhi").
          column("Et",   3, "i.fEt");
@@ -843,12 +843,12 @@ void collection_proxies(bool proj=true)
    REveCalo2D* calo2d = (REveCalo2D*) g_projMng->ImportElements(calo3d, rhoZEventScene);
 
    REveDataCollection* ecalCollection = new REveDataCollection("ECAL");
-   ecalCollection->SetItemClass(CaloTower::Class());
+   ecalCollection->SetItemClass(RCaloTower::Class());
    ecalCollection->SetMainColor(kRed);
    collectionMng->addCollection(ecalCollection, new CaloTowerProxyBuilder(event->fCaloData));
 
    REveDataCollection* hcalCollection = new REveDataCollection("HCAL");
-   hcalCollection->SetItemClass(CaloTower::Class());
+   hcalCollection->SetItemClass(RCaloTower::Class());
    hcalCollection->SetMainColor(kBlue);
    collectionMng->addCollection(hcalCollection, new CaloTowerProxyBuilder(event->fCaloData));
 
