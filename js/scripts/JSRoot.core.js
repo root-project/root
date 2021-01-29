@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "22/01/2021";
+   JSROOT.version_date = "29/01/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -1155,8 +1155,13 @@
 
       let method = "GET", async = true, p = kind.indexOf(";sync");
       if (p > 0) { kind = kind.substr(0,p); async = false; }
-      if (kind === "head") method = "HEAD"; else
-      if ((kind === "post") || (kind === "multi") || (kind === "posttext")) method = "POST";
+      switch (kind) {
+         case "head": method = "HEAD"; break;
+         case "posttext": method = "POST"; kind = "text"; break;
+         case "postbuf":  method = "POST"; kind = "buf"; break;
+         case "post":
+         case "multi":  method = "POST"; kind = buf; break;
+      }
 
       xhr.kind = kind;
 
@@ -1200,7 +1205,6 @@
 
          switch(this.kind) {
             case "xml": return this.http_callback(this.responseXML);
-            case "posttext":
             case "text": return this.http_callback(this.responseText);
             case "object": return this.http_callback(JSROOT.parse(this.responseText));
             case "multi": return this.http_callback(JSROOT.parseMulti(this.responseText));
@@ -1246,6 +1250,7 @@
      *    - "xml" - returns req.responseXML
      *    - "head" - returns request itself, uses "HEAD" request method
      *    - "post" - creates post request, submits req.send(post_data)
+     *    - "postbuf" - creates post request, expectes binary data as response
      * @param {string} url - URL for the request
      * @param {string} kind - kind of requested data
      * @param {string} [post_data] - data submitted with post kind of request

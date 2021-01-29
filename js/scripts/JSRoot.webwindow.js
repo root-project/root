@@ -50,7 +50,7 @@ JSROOT.define([], () => {
             url += "&post=" + btoa(data);
          } else {
             // send data with post request - most efficient way
-            reqmode = "post";
+            reqmode = "postbuf";
             post = data;
          }
       }
@@ -88,8 +88,10 @@ JSROOT.define([], () => {
             while (i < offset) str += String.fromCharCode(u8Arr[i++]);
 
             if (str) {
-               if (str == "<<nope>>") str = "";
-               this.handle.processRequest(str);
+               if (str == "<<nope>>")
+                  this.handle.processRequest(-1111);
+               else
+                   this.handle.processRequest(str);
             }
             if (offset < u8Arr.length)
                this.handle.processRequest(res, offset);
@@ -106,8 +108,10 @@ JSROOT.define([], () => {
                   str += String.fromCharCode(u8Arr[i]);
                res = str;
             }
-            if (res == "<<nope>>") res = "";
-            this.handle.processRequest(res);
+            if (res == "<<nope>>")
+               this.handle.processRequest(-1111);
+            else
+               this.handle.processRequest(res);
          }
       });
 
@@ -123,6 +127,11 @@ JSROOT.define([], () => {
          // if (typeof this.onclose === 'function') this.onclose();
          this.connid = null;
          return;
+      } else if (res === -1111) {
+         this.nope_cnt = (this.nope_cnt || 0) + 1;
+         res = "";
+      } else {
+         delete this.nope_cnt;
       }
 
       if (this.connid === "connect") {
@@ -143,7 +152,12 @@ JSROOT.define([], () => {
             this.onmessage({ data: res, offset: _offset });
       }
 
-      if (!this.req) this.nextRequest("", "dummy"); // send new poll request when necessary
+      if (!this.req) {
+         if (this.nope_cnt && (this.nope_cnt > 10))
+            setTimeout(() => { if (!this.req) this.nextRequest("", "dummy"); }, 50); // minimal timeout to reduce load
+         else
+            this.nextRequest("", "dummy"); // send new poll request when necessary
+      }
    }
 
    /** @summary Send data */
