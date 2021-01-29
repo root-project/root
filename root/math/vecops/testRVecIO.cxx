@@ -130,6 +130,8 @@ TEST(RVecWriteObject, WriteAndReadObjectAny)
    TFile f(fname);
    auto *vi = static_cast<ROOT::RVec<int>*>(f.GetKey("vi")->ReadObjectAny(TClass::GetClass("ROOT::RVec<int>")));
    auto *vb = static_cast<ROOT::RVec<bool>*>(f.GetKey("vb")->ReadObjectAny(TClass::GetClass("ROOT::RVec<bool>")));
+   ASSERT_TRUE(vi != nullptr);
+   ASSERT_TRUE(vb != nullptr);
 
    EXPECT_TRUE(All(*vi == ROOT::RVec<int>({1, 2, 3})));
    EXPECT_TRUE(All(*vb == ROOT::RVec<bool>({true, false, true})));
