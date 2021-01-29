@@ -53,6 +53,36 @@ void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 
 #endif
 
+
+// simple run function to process all requests in same thread
+
+void run_single_thread(TFastCgi *engine)
+{
+#ifndef HTTP_WITHOUT_FASTCGI
+
+   FCGX_Request request;
+
+   FCGX_InitRequest(&request, engine->GetSocket(), 0);
+
+   while (!engine->IsTerminating()) {
+
+      int rc = FCGX_Accept_r(&request);
+
+      if (rc != 0)
+         continue;
+
+      engine->ProcessRequest(&request);
+
+      FCGX_Finish_r(&request);
+   }
+
+#else
+   (void) engine;
+#endif
+}
+
+
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TFastCgi                                                             //
@@ -94,8 +124,7 @@ void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 /// normal constructor
 
 TFastCgi::TFastCgi()
-   : THttpEngine("fastcgi", "fastcgi interface to webserver"), fSocket(0), fDebugMode(kFALSE), fTopName(),
-     fThrd(nullptr), fTerminating(kFALSE)
+   : THttpEngine("fastcgi", "fastcgi interface to webserver")
 {
 }
 
@@ -106,12 +135,9 @@ TFastCgi::~TFastCgi()
 {
    fTerminating = kTRUE;
 
-   if (fThrd) {
-      // running thread will be killed
-      fThrd->Kill();
-      delete fThrd;
-      fThrd = nullptr;
-   }
+   // running thread will be killed
+   if (fThrd)
+      fThrd->join();
 
    if (fSocket > 0) {
       // close opened socket
@@ -162,12 +188,13 @@ Bool_t TFastCgi::Create(const char *args)
    Info("Create", "Starting FastCGI server on port %s", sport.Data() + 1);
 
    fSocket = FCGX_OpenSocket(sport.Data(), 10);
-   fThrd = new TThread("FastCgiThrd", TFastCgi::run_func, this);
-   fThrd->Run();
+   if (!fSocket) return kFALSE;
+
+   fThrd = std::make_unique<std::thread>(run_single_thread, this);
 
    return kTRUE;
 #else
-   (void)args;
+   (void) args;
    Error("Create", "ROOT compiled without fastcgi support");
    return kFALSE;
 #endif
@@ -193,129 +220,107 @@ public:
    Bool_t CanPostpone() const override { return kFALSE; }
 };
 
-////////////////////////////////////////////////////////////////////////////////
 
-void *TFastCgi::run_func(void *args)
+void TFastCgi::ProcessRequest(void *req)
 {
-#ifndef HTTP_WITHOUT_FASTCGI
-
-   TFastCgi *engine = (TFastCgi *)args;
-
-   FCGX_Request request;
-
-   FCGX_InitRequest(&request, engine->GetSocket(), 0);
-
-   int count = 0;
-
-   while (!engine->fTerminating) {
-
-      int rc = FCGX_Accept_r(&request);
-
-      if (rc != 0)
-         continue;
-
-      count++;
-
-      const char *inp_path = FCGX_GetParam("PATH_INFO", request.envp);
-      if (!inp_path) inp_path = FCGX_GetParam("SCRIPT_FILENAME", request.envp);
-      const char *inp_query = FCGX_GetParam("QUERY_STRING", request.envp);
-      const char *inp_method = FCGX_GetParam("REQUEST_METHOD", request.envp);
-      const char *inp_length = FCGX_GetParam("CONTENT_LENGTH", request.envp);
-
-      auto arg = std::make_shared<TFastCgiCallArg>();
-      if (inp_path)
-         arg->SetPathAndFileName(inp_path);
-      if (inp_query)
-         arg->SetQuery(inp_query);
-      if (inp_method)
-         arg->SetMethod(inp_method);
-      if (engine->fTopName.Length() > 0)
-         arg->SetTopName(engine->fTopName.Data());
-      int len = 0;
-      if (inp_length)
-         len = strtol(inp_length, NULL, 10);
-      if (len > 0) {
-         std::string buf;
-         buf.resize(len);
-         int nread = FCGX_GetStr((char *)buf.data(), len, request.in);
-         if (nread == len)
-            arg->SetPostData(std::move(buf));
-      }
-
-      TString header;
-      for (char **envp = request.envp; *envp != NULL; envp++) {
-         TString entry = *envp;
-         for (Int_t n = 0; n < entry.Length(); n++)
-            if (entry[n] == '=') {
-               entry[n] = ':';
-               break;
-            }
-         header.Append(entry);
-         header.Append("\r\n");
-      }
-      arg->SetRequestHeader(header);
-
-      TString username = arg->GetRequestHeader("REMOTE_USER");
-      if ((username.Length() > 0) && (arg->GetRequestHeader("AUTH_TYPE").Length() > 0))
-         arg->SetUserName(username);
-
-      if (engine->fDebugMode) {
-         FCGX_FPrintF(request.out, "Status: 200 OK\r\n"
-                                   "Content-type: text/html\r\n"
-                                   "\r\n"
-                                   "<title>FastCGI echo</title>"
-                                   "<h1>FastCGI echo</h1>\n");
-
-         FCGX_FPrintF(request.out, "Request %d:<br/>\n<pre>\n", count);
-         FCGX_FPrintF(request.out, "  Method   : %s\n", arg->GetMethod());
-         FCGX_FPrintF(request.out, "  PathName : %s\n", arg->GetPathName());
-         FCGX_FPrintF(request.out, "  FileName : %s\n", arg->GetFileName());
-         FCGX_FPrintF(request.out, "  Query    : %s\n", arg->GetQuery());
-         FCGX_FPrintF(request.out, "  PostData : %ld\n", arg->GetPostDataLength());
-         FCGX_FPrintF(request.out, "</pre><p>\n");
-
-         FCGX_FPrintF(request.out, "Environment:<br/>\n<pre>\n");
-         for (char **envp = request.envp; *envp != NULL; envp++) {
-            FCGX_FPrintF(request.out, "  %s\n", *envp);
-         }
-         FCGX_FPrintF(request.out, "</pre><p>\n");
-
-         FCGX_Finish_r(&request);
-         continue;
-      }
-
-      TString fname;
-
-      if (engine->GetServer()->IsFileRequested(inp_path, fname)) {
-         FCGX_ROOT_send_file(&request, fname.Data());
-         FCGX_Finish_r(&request);
-         continue;
-      }
-
-      if (!engine->GetServer()->ExecuteHttp(arg) || arg->Is404()) {
-         std::string hdr = arg->FillHttpHeader("Status:");
-         FCGX_FPrintF(request.out, hdr.c_str());
-      } else if (arg->IsFile()) {
-         FCGX_ROOT_send_file(&request, (const char *)arg->GetContent());
-      } else {
-
-         // TODO: check in request header that gzip encoding is supported
-         if (arg->GetZipping() != THttpCallArg::kNoZip)
-            arg->CompressWithGzip();
-
-         std::string hdr = arg->FillHttpHeader("Status:");
-         FCGX_FPrintF(request.out, hdr.c_str());
-
-         FCGX_PutStr((const char *)arg->GetContent(), (int)arg->GetContentLength(), request.out);
-      }
-
-      FCGX_Finish_r(&request);
-
-   } /* while */
-
-   return nullptr;
-
+#ifdef HTTP_WITHOUT_FASTCGI
+   (void) req;
 #else
-   return args;
+   int count = 0;
+   count++;  // simple static request counter
+
+   FCGX_Request *request = (FCGX_Request *) req;
+
+   const char *inp_path = FCGX_GetParam("PATH_INFO", request->envp);
+   if (!inp_path) inp_path = FCGX_GetParam("SCRIPT_FILENAME", request->envp);
+   const char *inp_query = FCGX_GetParam("QUERY_STRING", request->envp);
+   const char *inp_method = FCGX_GetParam("REQUEST_METHOD", request->envp);
+   const char *inp_length = FCGX_GetParam("CONTENT_LENGTH", request->envp);
+
+   auto arg = std::make_shared<TFastCgiCallArg>();
+   if (inp_path)
+      arg->SetPathAndFileName(inp_path);
+   if (inp_query)
+      arg->SetQuery(inp_query);
+   if (inp_method)
+      arg->SetMethod(inp_method);
+   if (fTopName.Length() > 0)
+      arg->SetTopName(fTopName.Data());
+   int len = 0;
+   if (inp_length)
+      len = strtol(inp_length, nullptr, 10);
+   if (len > 0) {
+      std::string buf;
+      buf.resize(len);
+      int nread = FCGX_GetStr((char *)buf.data(), len, request->in);
+      if (nread == len)
+         arg->SetPostData(std::move(buf));
+   }
+
+   TString header;
+   for (char **envp = request->envp; *envp != nullptr; envp++) {
+      TString entry = *envp;
+      for (Int_t n = 0; n < entry.Length(); n++)
+         if (entry[n] == '=') {
+            entry[n] = ':';
+            break;
+         }
+      header.Append(entry);
+      header.Append("\r\n");
+   }
+   arg->SetRequestHeader(header);
+
+   TString username = arg->GetRequestHeader("REMOTE_USER");
+   if ((username.Length() > 0) && (arg->GetRequestHeader("AUTH_TYPE").Length() > 0))
+      arg->SetUserName(username);
+
+   if (fDebugMode) {
+      FCGX_FPrintF(request->out, "Status: 200 OK\r\n"
+                                "Content-type: text/html\r\n"
+                                "\r\n"
+                                "<title>FastCGI echo</title>"
+                                "<h1>FastCGI echo</h1>\n");
+
+      FCGX_FPrintF(request->out, "Request %d:<br/>\n<pre>\n", count);
+      FCGX_FPrintF(request->out, "  Method   : %s\n", arg->GetMethod());
+      FCGX_FPrintF(request->out, "  PathName : %s\n", arg->GetPathName());
+      FCGX_FPrintF(request->out, "  FileName : %s\n", arg->GetFileName());
+      FCGX_FPrintF(request->out, "  Query    : %s\n", arg->GetQuery());
+      FCGX_FPrintF(request->out, "  PostData : %ld\n", arg->GetPostDataLength());
+      FCGX_FPrintF(request->out, "</pre><p>\n");
+
+      FCGX_FPrintF(request->out, "Environment:<br/>\n<pre>\n");
+      for (char **envp = request->envp; *envp != nullptr; envp++)
+         FCGX_FPrintF(request->out, "  %s\n", *envp);
+      FCGX_FPrintF(request->out, "</pre><p>\n");
+
+      return;
+   }
+
+   TString fname;
+
+   if (GetServer()->IsFileRequested(inp_path, fname)) {
+      FCGX_ROOT_send_file(request, fname.Data());
+      return;
+   }
+
+   if (!GetServer()->ExecuteHttp(arg) || arg->Is404()) {
+      std::string hdr = arg->FillHttpHeader("Status:");
+      FCGX_FPrintF(request->out, hdr.c_str());
+   } else if (arg->IsFile()) {
+      FCGX_ROOT_send_file(request, (const char *)arg->GetContent());
+   } else {
+
+      // TODO: check in request header that gzip encoding is supported
+      if (arg->GetZipping() != THttpCallArg::kNoZip)
+         arg->CompressWithGzip();
+
+      std::string hdr = arg->FillHttpHeader("Status:");
+      FCGX_FPrintF(request->out, hdr.c_str());
+
+      FCGX_PutStr((const char *)arg->GetContent(), (int)arg->GetContentLength(), request->out);
+   }
 #endif
+
 }
+
