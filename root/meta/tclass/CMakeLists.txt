@@ -18,8 +18,7 @@ ROOTTEST_ADD_TEST(runtempParse
 ROOTTEST_ADD_TEST(runpairs
                   COPY_TO_BUILDDIR  pairs_v5.root
                   MACRO runpairs.C+
-                  OUTREF pairs.ref
-                  ${WILLFAIL_ON_WIN32})
+                  OUTREF pairs.ref)
 
 ROOTTEST_ADD_TEST(execInterpClassNew
                   MACRO execInterpClassNew.C
