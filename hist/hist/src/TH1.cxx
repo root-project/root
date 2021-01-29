@@ -6545,12 +6545,12 @@ void TH1::RecursiveRemove(TObject *obj)
 ///
 /// `this = c1*this`
 ///
-/// Note that both contents and errors(if any) are scaled.
+/// Note that both contents and errors (if any) are scaled.
 /// This function uses the services of TH1::Add
 ///
-/// IMPORTANT NOTE: Sumw2() is called automatically when scaling
+/// IMPORTANT NOTE: Sumw2() is called automatically when scaling.
 /// If you are not interested in the histogram statistics you can call
-/// Sumw2(off) or use the option "nosw2"
+/// Sumw2(kFALSE) or use the option "nosw2"
 ///
 /// One can scale an histogram such that the bins integral is equal to
 /// the normalization parameter via TH1::Scale(Double_t norm), where norm
