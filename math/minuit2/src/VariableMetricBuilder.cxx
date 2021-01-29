@@ -106,10 +106,12 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
    int maxfcn_eff = maxfcn;
    int ipass = 0;
    bool iterate = false;
+   bool runHessian = false;
 
    do {
 
       iterate = false;
+      runHessian = false;
 
       print.Debug(ipass > 0 ? "Continue" : "Start", "iterating...");
 
@@ -131,13 +133,15 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
 
       // resulting edm of minimization
       edm = result.back().Edm();
-      // need to re-coorect for Dcovar ?
+      // need to correct again for Dcovar: edm *= (1. + 3. * e.Dcovar()) ???
 
       if ((strategy.Strategy() == 2) || (strategy.Strategy() == 1 && min.Error().Dcovar() > 0.05)) {
 
          print.Debug("MnMigrad will verify convergence and Error matrix; dcov =", min.Error().Dcovar());
 
          MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(), maxfcn);
+
+         runHessian = true;
 
          print.Info("After Hessian");
 
@@ -190,7 +194,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
       if (min.IsAboveMaxEdm()) {
          print.Info("Edm has been re-computed after Hesse; Edm", edm, "is now within tolerance");
       }
-      min.Add(result.back());
+      if (runHessian) min.Add(result.back());
    }
 
    print.Debug("Minimum found", min);
@@ -317,8 +321,9 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
       }
       MinimumError e = ErrorUpdator().Update(s0, p, g);
 
+      // avoid print Hessian that will invert the matrix
       print.Debug("Updated new point:", "\n  Parameter:", p.Vec(), "\n  Gradient:", g.Vec(),
-                  "\n  InvHessian:", e.Matrix(), "\n  Hessian:", e.Hessian(), "\n  Edm:", edm);
+                  "\n  InvHessian:", e.Matrix(), "\n  Edm:", edm);
 
       // update the state
       s0 = MinimumState(p, e, g, edm, fcn.NumOfCalls());
@@ -336,6 +341,9 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
    } while (edm > edmval && fcn.NumOfCalls() < maxfcn); // end of iteration loop
 
    // save last result in case of no complete final states
+   // when the result is filled above (reduced storage) the resulting state will not be valid
+   // since they will not have parameter values and error
+   // the line above will fill as last element a valid state
    if (!result.back().IsValid())
       result.back() = s0;
 
