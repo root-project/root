@@ -34,6 +34,7 @@
 #include <thread>
 #include <chrono>
 
+using namespace ROOT::Experimental;
 
 /** \class ROOT::Experimental::RWebWindowsManager
 \ingroup webdisplay
@@ -50,9 +51,9 @@ Method RWebWindowsManager::Show() used to show window in specified location.
 /// Returns default window manager
 /// Used to display all standard ROOT elements like TCanvas or TFitPanel
 
-std::shared_ptr<ROOT::Experimental::RWebWindowsManager> &ROOT::Experimental::RWebWindowsManager::Instance()
+std::shared_ptr<RWebWindowsManager> &RWebWindowsManager::Instance()
 {
-   static std::shared_ptr<RWebWindowsManager> sInstance = std::make_shared<ROOT::Experimental::RWebWindowsManager>();
+   static std::shared_ptr<RWebWindowsManager> sInstance = std::make_shared<RWebWindowsManager>();
    return sInstance;
 }
 
@@ -70,7 +71,7 @@ static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
 /// Returns true when called from main process
 /// Main process recognized at the moment when library is loaded
 
-bool ROOT::Experimental::RWebWindowsManager::IsMainThrd()
+bool RWebWindowsManager::IsMainThrd()
 {
    return std::this_thread::get_id() == gWebWinMainThrd;
 }
@@ -79,13 +80,13 @@ bool ROOT::Experimental::RWebWindowsManager::IsMainThrd()
 /// window manager constructor
 /// Required here for correct usage of unique_ptr<THttpServer>
 
-ROOT::Experimental::RWebWindowsManager::RWebWindowsManager() = default;
+RWebWindowsManager::RWebWindowsManager() = default;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager destructor
 /// Required here for correct usage of unique_ptr<THttpServer>
 
-ROOT::Experimental::RWebWindowsManager::~RWebWindowsManager()
+RWebWindowsManager::~RWebWindowsManager()
 {
    if (gApplication && fServer && !fServer->IsTerminated()) {
       gApplication->Disconnect("Terminate(Int_t)", fServer.get(), "SetTerminate()");
@@ -147,7 +148,7 @@ ROOT::Experimental::RWebWindowsManager::~RWebWindowsManager()
 ///      WebGui.FastCgiServer: https://your_apache_server.com/root_cgi_path
 ///
 
-bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
+bool RWebWindowsManager::CreateServer(bool with_http)
 {
    // explicitly protect server creation
    std::lock_guard<std::recursive_mutex> grd(fMutex);
@@ -292,7 +293,7 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
 /// Creates new window
 /// To show window, RWebWindow::Show() have to be called
 
-std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindowsManager::CreateWindow()
+std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
 {
 
    // we book manager mutex for a longer operation, locked again in server creation
@@ -303,7 +304,7 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindowsM
       return nullptr;
    }
 
-   std::shared_ptr<ROOT::Experimental::RWebWindow> win = std::make_shared<ROOT::Experimental::RWebWindow>();
+   std::shared_ptr<RWebWindow> win = std::make_shared<RWebWindow>();
 
    if (!win) {
       R__LOG_ERROR(WebGUILog()) << "Fail to create RWebWindow instance";
@@ -334,7 +335,7 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindowsM
 /// Release all references to specified window
 /// Called from RWebWindow destructor
 
-void ROOT::Experimental::RWebWindowsManager::Unregister(ROOT::Experimental::RWebWindow &win)
+void RWebWindowsManager::Unregister(RWebWindow &win)
 {
    if (win.fWSHandler)
       fServer->UnregisterWS(win.fWSHandler);
@@ -343,7 +344,7 @@ void ROOT::Experimental::RWebWindowsManager::Unregister(ROOT::Experimental::RWeb
 //////////////////////////////////////////////////////////////////////////
 /// Provide URL address to access specified window from inside or from remote
 
-std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimental::RWebWindow &win, bool remote)
+std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 {
    if (!fServer) {
       R__LOG_ERROR(WebGUILog()) << "Server instance not exists when requesting window URL";
@@ -404,7 +405,7 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 ///
 ///   HTTP-server related parameters documented in RWebWindowsManager::CreateServer() method
 
-unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const RWebDisplayArgs &user_args)
+unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const RWebDisplayArgs &user_args)
 {
    // silently ignore regular Show() calls in batch mode
    if (!batch_mode && gROOT->IsWebDisplayBatch())
@@ -491,7 +492,7 @@ unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(RWebWindow &win, boo
 /// First non-zero value breaks waiting loop and result is returned (or 0 if time is expired).
 /// If parameter timed is true, timelimit (in seconds) defines how long to wait
 
-int ROOT::Experimental::RWebWindowsManager::WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed, double timelimit)
+int RWebWindowsManager::WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed, double timelimit)
 {
    int res = 0;
    int cnt = 0;
@@ -526,7 +527,7 @@ int ROOT::Experimental::RWebWindowsManager::WaitFor(RWebWindow &win, WebWindowWa
 //////////////////////////////////////////////////////////////////////////
 /// Terminate http server and ROOT application
 
-void ROOT::Experimental::RWebWindowsManager::Terminate()
+void RWebWindowsManager::Terminate()
 {
    if (fServer)
       fServer->SetTerminate();
