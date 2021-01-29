@@ -414,6 +414,9 @@ unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(RWebWindow &win, boo
    if (user_args.GetBrowserKind() == RWebDisplayArgs::kEmbedded)
       return 0;
 
+   // place here while involves conn mutex
+   auto token = win.GetConnToken();
+
    // we book manager mutex for a longer operation,
    std::lock_guard<std::recursive_mutex> grd(fMutex);
 
@@ -462,6 +465,8 @@ unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(RWebWindow &win, boo
 
    args.AppendUrlOpt(std::string("key=") + key);
    if (batch_mode) args.AppendUrlOpt("batch_mode");
+   if (!token.empty())
+      args.AppendUrlOpt(std::string("token=") + token);
 
    if (!normal_http)
       args.SetHttpServer(GetServer());

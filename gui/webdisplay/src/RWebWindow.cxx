@@ -518,6 +518,50 @@ void ROOT::Experimental::RWebWindow::CheckInactiveConnections()
 
 }
 
+/////////////////////////////////////////////////////////////////////////
+/// Configure maximal number of allowed connections - 0 is unlimited
+/// Will not affect already existing connections
+/// Default is 1 - the only client is allowed
+
+void ROOT::Experimental::RWebWindow::SetConnLimit(unsigned lmt)
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   fConnLimit = lmt;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// returns configured connections limit (0 - default)
+
+unsigned ROOT::Experimental::RWebWindow::GetConnLimit() const
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   return fConnLimit;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Configures connection token (default none)
+/// When specified, in URL of webpage such token should be provided as &token=value parameter,
+/// otherwise web window will refuse connection
+
+void ROOT::Experimental::RWebWindow::SetConnToken(const std::string &token)
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   fConnToken = token;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Returns configured connection token
+
+std::string ROOT::Experimental::RWebWindow::GetConnToken() const
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   return fConnToken;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Processing of websockets call-backs, invoked from RWebWindowWSHandler
 /// Method invoked from http server thread, therefore appropriate mutex must be used on all relevant data
@@ -531,6 +575,16 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
 
       std::lock_guard<std::mutex> grd(fConnMutex);
 
+      if (!fConnToken.empty()) {
+         TUrl url;
+         url.SetOptions(arg.GetQuery());
+         // refuse connection which does not provide proper token
+         if (!url.HasOption("token") || (fConnToken != url.GetValueFromOptions("token"))) {
+            R__LOG_DEBUG(0, WebGUILog()) << "Refuse connection without proper token";
+            return false;
+         }
+      }
+
       // refuse connection when number of connections exceed limit
       if (fConnLimit && (fConn.size() >= fConnLimit))
          return false;
@@ -539,7 +593,6 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
    }
 
    if (arg.IsMethod("WS_READY")) {
-
       auto conn = FindOrCreateConnection(arg.GetWSId(), true, arg.GetQuery());
 
       if (conn) {

@@ -487,7 +487,12 @@ JSROOT.define([], () => {
       this.close();
       if (!href && this.href) href = this.href;
 
-      let pthis = this, ntry = 0, args = (this.key ? ("key=" + this.key) : "");
+      let pthis = this, ntry = 0,
+          args = (this.key ? ("key=" + this.key) : "");
+      if (this.token) {
+         if (args) args += "&";
+         args += "token=" + this.token;
+      }
 
       function retry_open(first_time) {
 
@@ -704,6 +709,7 @@ JSROOT.define([], () => {
          }
 
          handle.key = d.get("key");
+         handle.token = d.get("token");
 
          if (arg.first_recv) {
             arg.receiver = {
