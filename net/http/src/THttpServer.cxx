@@ -754,7 +754,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
 
       if (arg->fContent.empty()) {
          arg->Set404();
-      } else {
+      } else if (!arg->Is404()) {
          // replace all references on JSROOT
          if (fJSROOT.Length() > 0) {
             std::string repl("=\"");
