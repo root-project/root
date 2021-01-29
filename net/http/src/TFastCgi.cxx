@@ -176,6 +176,16 @@ Bool_t TFastCgi::Create(const char *args)
 ////////////////////////////////////////////////////////////////////////////////
 
 class TFastCgiCallArg : public THttpCallArg {
+
+protected:
+
+   void CheckWSPageContent(THttpWSHandler *) override
+   {
+      std::string search = "JSROOT.connectWebWindow({";
+      std::string replace = search + "socket_kind:\"longpoll\",";
+      ReplaceAllinContent(search, replace, true);
+   }
+
 public:
    TFastCgiCallArg() = default;
 
