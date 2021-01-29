@@ -571,7 +571,7 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
   for (i=0 ; i<np ; i++) {   
 
     // Retrieve histogram contents
-    ((RooHist&)hist).GetPoint(i,x,y) ;
+    hist.GetPoint(i,x,y) ;
 
     // Check if point is in range of curve
     if (x<xstart || x>xstop) continue ;
@@ -618,8 +618,8 @@ Double_t RooCurve::average(Double_t xFirst, Double_t xLast) const
   Int_t ifirst = findPoint(xFirst,1e10) ;
   Int_t ilast  = findPoint(xLast,1e10) ;
   Double_t xFirstPt,yFirstPt,xLastPt,yLastPt ;
-  const_cast<RooCurve&>(*this).GetPoint(ifirst,xFirstPt,yFirstPt) ;
-  const_cast<RooCurve&>(*this).GetPoint(ilast,xLastPt,yLastPt) ;
+  GetPoint(ifirst,xFirstPt,yFirstPt) ;
+  GetPoint(ilast,xLastPt,yLastPt) ;
 
   Double_t tolerance=1e-3*(xLast-xFirst) ;
 
