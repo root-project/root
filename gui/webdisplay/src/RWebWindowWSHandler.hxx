@@ -18,6 +18,7 @@
 
 #include "THttpWSHandler.h"
 #include "TEnv.h"
+#include "TUrl.h"
 
 #include <ROOT/RWebWindow.hxx>
 
@@ -40,6 +41,19 @@ protected:
 
    void VerifyDefaultPageContent(std::shared_ptr<THttpCallArg> &arg) override
    {
+      auto token = fWindow.GetConnToken();
+      if (!token.empty()) {
+         TUrl url;
+         url.SetOptions(arg->GetQuery());
+         // refuse connection which does not provide proper token
+         if (!url.HasOption("token") || (token != url.GetValueFromOptions("token"))) {
+            // refuce loading of default web page without token
+            arg->SetContent("refused");
+            arg->Set404();
+            return;
+         }
+      }
+
       auto version = fWindow.GetClientVersion();
       if (!version.empty()) {
          std::string search = "jsrootsys/scripts/JSRoot.core."s;
