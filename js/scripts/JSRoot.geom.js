@@ -601,7 +601,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
                let m1 = mesh.matrixWorld, flip;
 
-               if (m1.equals(m2)) return true
+               if (m1.equals(m2)) return true;
                if ((m1.determinant()>0) && (m2.determinant()<-0.9)) {
                   flip = THREE.Vector3(1,1,-1);
                   m2 = m2.clone().scale(flip);
@@ -1085,17 +1085,14 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                if (!this._geom_viewer)
                menu.add("Hide", n, function(indx) {
                   let resolve = menu.painter._clones.resolveStack(intersects[indx].object.stack);
-
-                  if (resolve.obj && (resolve.node.kind === 0) && resolve.obj.fVolume) {
+                  const kindGeo = 0, kindEve = 1;
+                  if (resolve.obj && (resolve.node.kind === kindGeo) && resolve.obj.fVolume) {
                      geo.SetBit(resolve.obj.fVolume, geo.BITS.kVisThis, false);
                      geo.updateBrowserIcons(resolve.obj.fVolume, this._hpainter);
-                  } else
-                  if (resolve.obj && (resolve.node.kind === 1)) {
+                  } else if (resolve.obj && (resolve.node.kind === kindEve)) {
                      resolve.obj.fRnrSelf = false;
                      geo.updateBrowserIcons(resolve.obj, this._hpainter);
                   }
-                  // intersects[arg].object.visible = false;
-                  // this.render3D();
 
                   this.testGeomChanges();// while many volumes may disappear, recheck all of them
                });
@@ -1721,21 +1718,28 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          if (entry.stack[0]===1) entry.custom_color = "blue";
       }
 
-      let mesh,
-          prop = this._clones.getDrawEntryProperties(entry),
+      let mesh, prop = this._clones.getDrawEntryProperties(entry),
           obj3d = this._clones.createObject3D(entry.stack, toplevel, this.ctrl);
 
       prop.material.wireframe = this.ctrl.wireframe;
 
       prop.material.side = this.ctrl.bothSides ? THREE.DoubleSide : THREE.FrontSide;
 
-      if (obj3d.matrixWorld.determinant() > -0.9) {
+      let matrix = obj3d.absMatrix || obj3d.matrixWorld;
+
+      if (matrix.determinant() > -0.9) {
          mesh = new THREE.Mesh( shape.geom, prop.material );
       } else {
          mesh = geo.createFlippedMesh(shape, prop.material);
       }
 
       obj3d.add(mesh);
+
+      if (obj3d.absMatrix) {
+         mesh.matrix.copy(obj3d.absMatrix);
+         mesh.matrix.decompose( mesh.position, mesh.quaternion, mesh.scale );
+         mesh.updateMatrixWorld();
+      }
 
       // keep full stack of nodes
       mesh.stack = entry.stack;
@@ -1846,6 +1850,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    }
 
 
+   /** @summary Create geometry projection */
    TGeoPainter.prototype.doProjection = function() {
       let toplevel = this.getProjectionSource();
 
@@ -1869,7 +1874,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       toplevel.traverse(mesh => {
          if (!(mesh instanceof THREE.Mesh) || !mesh.stack) return;
 
-         let geom2 = geo.projectGeometry(mesh.geometry, mesh.parent.matrixWorld, this.ctrl.project, this.ctrl.projectPos, mesh._flippedMesh);
+         let geom2 = geo.projectGeometry(mesh.geometry, mesh.parent.absMatrix || mesh.parent.matrixWorld, this.ctrl.project, this.ctrl.projectPos, mesh._flippedMesh);
 
          if (!geom2) return;
 

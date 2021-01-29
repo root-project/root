@@ -2329,7 +2329,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          delete this.disp;
       }
 
-      this.createDisplay();
+      return this.createDisplay();
    }
 
    /** @summary function updates object drawings for other painters
