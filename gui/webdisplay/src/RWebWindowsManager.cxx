@@ -326,6 +326,10 @@ std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
       win->RecordData(fname, prefix);
    }
 
+   const char *token = gEnv->GetValue("WebGui.ConnToken", "");
+   if (token && *token)
+      win->SetConnToken(token);
+
    fServer->RegisterWS(wshandler);
 
    return win;
