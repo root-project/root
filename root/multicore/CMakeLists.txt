@@ -87,15 +87,17 @@ if(ROOT_imt_FOUND)
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
 
-if(NOT MSVC OR win_broken_tests)
-  set(MULTIPROC_LIB "MultiProc")
-endif()
-
-ROOTTEST_GENERATE_EXECUTABLE(tExecutor tExecutor.cxx LIBRARIES Core Imt ${MULTIPROC_LIB} Net TreePlayer RIO Hist MathCore)
-
-ROOTTEST_ADD_TEST(tExecutor
-                  EXEC ${CMAKE_CURRENT_BINARY_DIR}/tExecutor
+ROOTTEST_GENERATE_EXECUTABLE(tExecutorMT tExecutorMT.cxx LIBRARIES Core Imt Net TreePlayer RIO Hist MathCore)
+ROOTTEST_ADD_TEST(tExecutorMT
+                  EXEC ${CMAKE_CURRENT_BINARY_DIR}/tExecutorMT
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+if(NOT MSVC) # TProcessExecutor is not available on windows
+ROOTTEST_GENERATE_EXECUTABLE(tExecutorMP tExecutorMP.cxx LIBRARIES Core MultiProc Imt Net TreePlayer RIO Hist MathCore)
+ROOTTEST_ADD_TEST(tExecutorMP
+                  EXEC ${CMAKE_CURRENT_BINARY_DIR}/tExecutorMP
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+endif()
 
 ROOTTEST_GENERATE_EXECUTABLE(current_dir current_dir.cpp LIBRARIES Core RIO Thread)
 
