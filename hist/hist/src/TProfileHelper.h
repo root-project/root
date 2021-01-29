@@ -106,18 +106,18 @@ Bool_t TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Dou
    }
    p->PutStats(s0);
 
-// Make the loop over the bins to calculate the Addition
-   Int_t bin;
+   // create sumw2 per bin if not set
+   if (p->fBinSumw2.fN == 0 && (p1->fBinSumw2.fN != 0 || p2->fBinSumw2.fN != 0)) p->Sumw2();
+
+   // Make the loop over the bins to calculate the Addition
    Double_t *cu1 = p1->GetW();    Double_t *cu2 = p2->GetW();
    Double_t *er1 = p1->GetW2();   Double_t *er2 = p2->GetW2();
    Double_t *en1 = p1->GetB();    Double_t *en2 = p2->GetB();
    Double_t *ew1 = p1->GetB2();   Double_t *ew2 = p2->GetB2();
-   // create sumw2 per bin if not set
-   if (p->fBinSumw2.fN == 0 && (p1->fBinSumw2.fN != 0 || p2->fBinSumw2.fN != 0) ) p->Sumw2();
    // if p1 has not the sum of weight squared/bin stored use just the sum of weights
-   if (ew1 == 0) ew1 = en1;
-   if (ew2 == 0) ew2 = en2;
-   for (bin =0;bin< p->fN;bin++) {
+   if (ew1 == nullptr) ew1 = en1;
+   if (ew2 == nullptr) ew2 = en2;
+   for (Int_t bin = 0; bin < p->fN; bin++) {
       p->fArray[bin]             = c1*cu1[bin] + c2*cu2[bin];
       p->fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
       p->fBinEntries.fArray[bin] = ac1*en1[bin] + ac2*en2[bin];
