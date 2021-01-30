@@ -6856,11 +6856,11 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
    if (info && info->fIsFirst && info->fOutputDirectory && info->fOutputDirectory->GetFile() != GetCurrentFile()) {
       TDirectory::TContext ctxt(info->fOutputDirectory);
       TIOFeatures saved_features = fIOFeatures;
-      if (info->fIOFeatures) {
-         fIOFeatures = *(info->fIOFeatures);
-      }
       TTree *newtree = CloneTree(-1, options);
-      fIOFeatures = saved_features;
+      if (info->fIOFeatures)
+         fIOFeatures = *(info->fIOFeatures);
+      else
+         fIOFeatures = saved_features;
       if (newtree) {
          newtree->Write();
          delete newtree;
