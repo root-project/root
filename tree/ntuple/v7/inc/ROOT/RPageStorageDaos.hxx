@@ -17,7 +17,6 @@
 #define ROOT7_RPageStorageDaos
 
 #include <ROOT/RPageStorage.hxx>
-#include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RStringView.hxx>
@@ -42,6 +41,39 @@ class RDaosContainer;
 
 // clang-format off
 /**
+\class ROOT::Experimental::RDaosNTuple
+\ingroup NTuple
+\brief Entry point for an RNTuple in a DAOS container. It encodes essential
+information to read the ntuple; currently, it contains (un)compressed size of
+the header/footer blobs.
+*/
+// clang-format on
+struct RDaosNTuple {
+   /// Allows for evolving the struct in future versions
+   std::uint32_t fVersion = 0;
+   /// The size of the compressed ntuple header
+   std::uint32_t fNBytesHeader = 0;
+   /// The size of the uncompressed ntuple header
+   std::uint32_t fLenHeader = 0;
+   /// The size of the compressed ntuple footer
+   std::uint32_t fNBytesFooter = 0;
+   /// The size of the uncompressed ntuple footer
+   std::uint32_t fLenFooter = 0;
+   /// Currently unused, reserved for later use
+   std::uint64_t fReserved = 0;
+
+   bool operator ==(const RDaosNTuple &other) const {
+      return fVersion == other.fVersion &&
+         fNBytesHeader == other.fNBytesHeader &&
+         fLenHeader == other.fLenHeader &&
+         fNBytesFooter == other.fNBytesFooter &&
+         fLenFooter == other.fLenFooter &&
+         fReserved == other.fReserved;
+   }
+};
+
+// clang-format off
+/**
 \class ROOT::Experimental::Detail::RPageSinkDaos
 \ingroup NTuple
 \brief Storage provider that writes ntuple pages to into a DAOS container
@@ -61,7 +93,7 @@ private:
    /// A URI to a DAOS pool of the form 'daos://pool-uuid:svc_replicas/container-uuid'
    std::string fLocator;
 
-   RNTuple fNTupleAnchor;
+   RDaosNTuple fNTupleAnchor;
    // FIXME: do we really need these data members?
    /// Byte offset of the first page of the current cluster
    std::uint64_t fClusterMinOffset = std::uint64_t(-1);
