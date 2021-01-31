@@ -182,7 +182,6 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleHeader(
    fDaosContainer->WriteObject(kOidHeader, data, nbytes, kDistributionKey, kAttributeKey);
    fNTupleAnchor.fLenHeader = lenHeader;
    fNTupleAnchor.fNBytesHeader = nbytes;
-   fNTupleAnchor.fSeekHeader = 0;
 }
 
 void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleFooter(
@@ -191,7 +190,6 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleFooter(
    fDaosContainer->WriteObject(kOidFooter, data, nbytes, kDistributionKey, kAttributeKey);
    fNTupleAnchor.fLenFooter = lenFooter;
    fNTupleAnchor.fNBytesFooter = nbytes;
-   fNTupleAnchor.fSeekFooter = 0;
 }
 
 void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleAnchor() {
@@ -273,7 +271,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::~RPageSourceDaos() = default;
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDaos::AttachImpl()
 {
    RNTupleDescriptorBuilder descBuilder;
-   RNTuple ntpl;
+   RDaosNTuple ntpl;
    fDaosContainer->ReadObject(kOidAnchor, &ntpl, sizeof(ntpl), kDistributionKey, kAttributeKey);
 
    auto buffer = std::unique_ptr<unsigned char[]>(new unsigned char[ntpl.fLenHeader]);
