@@ -141,6 +141,7 @@ RWebWindowsManager::~RWebWindowsManager()
 /// One also can configure usage of FastCGI server for web windows:
 ///
 ///      WebGui.FastCgiPort: 4000
+///      WebGui.FastCgiThreads: 10
 ///
 /// To be able start web browser for such windows, one can provide real URL of the
 /// web server which will connect with that FastCGI instance:
@@ -206,6 +207,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    int http_wstmout = gEnv->GetValue("WebGui.HttpWSTmout", 10000);
    int http_maxage = gEnv->GetValue("WebGui.HttpMaxAge", -1);
    int fcgi_port = gEnv->GetValue("WebGui.FastCgiPort", 0);
+   int fcgi_thrds = gEnv->GetValue("WebGui.FastCgiThreads", 10);
    const char *fcgi_serv = gEnv->GetValue("WebGui.FastCgiServer", "");
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
    const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
@@ -249,7 +251,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
       TString engine, url;
 
       if (fcgi_port > 0) {
-         engine.Form("fastcgi:%d", fcgi_port);
+         engine.Form("fastcgi:%d?thrds=%d", fcgi_port, fcgi_thrds);
          if (!fServer->CreateEngine(engine)) return false;
          if (fcgi_serv && (strlen(fcgi_serv) > 0)) fAddr = fcgi_serv;
          if (http_port < 0) return true;
