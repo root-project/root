@@ -172,15 +172,17 @@ MakeClusters(const std::vector<std::string> &treeNames, const std::vector<std::s
    }
 
    // Here we "fuse" together clusters if the number of clusters is too big with respect to
-   // the number of slots, otherwise we can incurr in an overhead which is big enough
+   // the number of slots, otherwise we can incur in an overhead which is big enough
    // to make parallelisation detrimental to performance.
    // For example, this is the case when, following a merging of many small files, a file
    // contains a tree with many entries and with clusters of just a few entries each.
-   // The criterion according to which we fuse clusters together is to have at most
-   // TTreeProcessorMT::GetMaxTasksPerFilePerWorker() clusters per file per slot.
-   // For example: given 2 files and 16 workers, at most
-   // 16 * 2 * TTreeProcessorMT::GetMaxTasksPerFilePerWorker() clusters will be created, at most
-   // 16 * TTreeProcessorMT::GetMaxTasksPerFilePerWorker() per file.
+   // Another problematic case is a high number of slots (e.g. 256) coupled with a high number
+   // of large files (e.g. 1000 files): the large amount of files might result in a large amount
+   // of tasks, but the elevated concurrency level makes the little synchronization required by
+   // task initialization very expensive. In this case it's better to simply process fewer, larger tasks.
+   // The criterion according to which we fuse clusters together is to have around
+   // TTreeProcessorMT::GetTasksPerWorkerHint() clusters per file per slot.
+   // In particular, for each file we will cap the number of tasks to ceil(GetTasksPerWorkerHint() * nWorkers / nFiles).
 
    std::vector<std::vector<EntryCluster>> eventRangesPerFile(clustersPerFile.size());
    auto clustersPerFileIt = clustersPerFile.begin();
@@ -632,30 +634,35 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
 }
 
 ////////////////////////////////////////////////////////////////////////
-/// \brief Sets the maximum number of tasks created per file, per worker.
-/// \return The maximum number of tasks created per file, per worker
+/// \brief This function is deprecated in favor of GetTasksPerWorkerHint().
 unsigned int TTreeProcessorMT::GetMaxTasksPerFilePerWorker()
 {
    return fgMaxTasksPerFilePerWorker;
 }
 
+////////////////////////////////////////////////////////////////////////
+/// \brief Retrieve the current value for the desired number of tasks per worker.
+/// \return The desired number of tasks to be created per worker. TTreeProcessorMT uses this value as an hint.
 unsigned int TTreeProcessorMT::GetTasksPerWorkerHint()
 {
    return fgTasksPerWorkerHint;
 }
 
 ////////////////////////////////////////////////////////////////////////
-/// \brief Sets the maximum number of tasks created per file, per worker.
-/// \param[in] maxTasksPerFile Name of the file containing the tree to process.
-///
-/// This allows to create a reasonable number of tasks even if any of the
-/// processed files features a bad clustering, for example with a lot of
-/// entries and just a few entries per cluster.
+/// \brief This function is deprecated in favor of SetTasksPerWorkerHint().
 void TTreeProcessorMT::SetMaxTasksPerFilePerWorker(unsigned int maxTasksPerFile)
 {
    fgMaxTasksPerFilePerWorker = maxTasksPerFile;
 }
 
+////////////////////////////////////////////////////////////////////////
+/// \brief Set the hint for the desired number of tasks created per worker.
+/// \param[in] tasksPerWorkerHint Desired number of tasks per worker.
+///
+/// This allows to create a reasonable number of tasks even if any of the
+/// processed files features a bad clustering, for example with a lot of
+/// entries and just a few entries per cluster, or to limit the number of
+/// tasks spawned when a very large number of files and workers is used.
 void TTreeProcessorMT::SetTasksPerWorkerHint(unsigned int tasksPerWorkerHint)
 {
    fgTasksPerWorkerHint = tasksPerWorkerHint;
