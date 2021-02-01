@@ -106,12 +106,12 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
    int maxfcn_eff = maxfcn;
    int ipass = 0;
    bool iterate = false;
-   bool runHessian = false;
+   bool hessianComputed = false;
 
    do {
 
       iterate = false;
-      runHessian = false;
+      hessianComputed = false;
 
       print.Debug(ipass > 0 ? "Continue" : "Start", "iterating...");
 
@@ -141,7 +141,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
 
          MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(), maxfcn);
 
-         runHessian = true;
+         hessianComputed = true;
 
          print.Info("After Hessian");
 
@@ -194,7 +194,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
       if (min.IsAboveMaxEdm()) {
          print.Info("Edm has been re-computed after Hesse; Edm", edm, "is now within tolerance");
       }
-      if (runHessian) min.Add(result.back());
+      if (hessianComputed) min.Add(result.back());
    }
 
    print.Debug("Minimum found", min);
