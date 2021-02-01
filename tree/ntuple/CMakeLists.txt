@@ -72,15 +72,21 @@ DEPENDENCIES
   ROOTVecOps
 )
 
-if(daos)
+# Enable RNTuple support for Intel DAOS
+if(daos OR daos_mock)
   set(ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageDaos.hxx)
   target_sources(ROOTNTuple PRIVATE v7/src/RDaos.cxx v7/src/RPageStorageDaos.cxx)
-
-  set_property(SOURCE v7/src/RDaos.cxx v7/src/RPageStorageDaos.cxx
-  	      APPEND PROPERTY COMPILE_OPTIONS -I${DAOS_INCLUDE_DIRS} -I${UUID_INCLUDE_DIR})
-  target_link_libraries(ROOTNTuple PRIVATE ${DAOS_LIBRARIES} ${UUID_LIBRARY})
-
   target_compile_definitions(ROOTNTuple PRIVATE R__ENABLE_DAOS)
+
+  target_include_directories(ROOTNTuple PRIVATE ${UUID_INCLUDE_DIR})
+  target_link_libraries(ROOTNTuple PRIVATE ${UUID_LIBRARY})
+  if(daos_mock)
+    target_include_directories(ROOTNTuple PRIVATE v7/inc/ROOT/libdaos_mock/)
+    target_sources(ROOTNTuple PRIVATE v7/src/libdaos_mock/libdaos_mock.cxx)
+  else()
+    target_include_directories(ROOTNTuple PRIVATE ${DAOS_INCLUDE_DIRS})
+    target_link_libraries(ROOTNTuple PRIVATE ${DAOS_LIBRARIES})
+  endif()
 endif()
 
 if(MSVC)
