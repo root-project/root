@@ -25,7 +25,7 @@ namespace Minuit2 {
 class BasicMinimumState {
 
 public:
-   /// constructor without parameter values but with function value, edm and nfcn
+   /// Constructor without parameter values, but with function value, edm and nfcn.
    /// This constructor will result in a state that is flagged as not valid
    BasicMinimumState(unsigned int n, double fval, double edm, int nfcn)
       : fParameters(MinimumParameters(n, fval)), fError(MinimumError(n)), fGradient(FunctionGradient(n)), fEDM(edm),
@@ -33,16 +33,17 @@ public:
    {
    }
 
-   /// COnstructor with parameters values, errors and gradient
+   /// Constructor with parameters values, errors and gradient
    BasicMinimumState(const MinimumParameters &states, const MinimumError &err, const FunctionGradient &grad, double edm,
                      int nfcn)
       : fParameters(states), fError(err), fGradient(grad), fEDM(edm), fNFcn(nfcn)
    {
    }
 
-   /// Constuctor with only parameter values, edm + nfcn
-   /// The resulting state will have not error (HasCovariance() returns false)
-   /// but it will be a valid state, since it contains parameter values
+   /// Constuctor with only parameter values, edm and nfcn, but without errors (covariance).
+   /// The resulting state it will be considered valid, since it contains the parameter values,
+   /// although it will has not the error matrix (MinimumError) with
+   /// HasCovariance() returning false.
    BasicMinimumState(const MinimumParameters &states, double edm, int nfcn)
       : fParameters(states), fError(MinimumError(states.Vec().size())),
         fGradient(FunctionGradient(states.Vec().size())), fEDM(edm), fNFcn(nfcn)
