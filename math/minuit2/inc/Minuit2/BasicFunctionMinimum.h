@@ -39,7 +39,7 @@ public:
    };
 
 public:
-   /// constructor from only MinimumSeed. Minimum is only from seed result not the full minimization
+   /// Constructor from only MinimumSeed. Minimum is only from seed result not the full minimization
    BasicFunctionMinimum(const MinimumSeed &seed, double up)
       : fSeed(seed), fStates(std::vector<MinimumState>(1, MinimumState(seed.Parameters(), seed.Error(), seed.Gradient(),
                                                                        seed.Parameters().Fval(), seed.NFcn()))),
@@ -47,28 +47,28 @@ public:
    {
    }
 
-   /// constructor at the end of a successfull minimization from seed and vector of states
+   /// Constructor at the end of a successfull minimization from seed and vector of states
    BasicFunctionMinimum(const MinimumSeed &seed, const std::vector<MinimumState> &states, double up)
       : fSeed(seed), fStates(states), fErrorDef(up), fAboveMaxEdm(false), fReachedCallLimit(false),
         fUserState(MnUserParameterState())
    {
    }
 
-   /// constructor at the end of a failed minimization due to exceeding function call limit
+   /// Constructor at the end of a failed minimization due to exceeding function call limit
    BasicFunctionMinimum(const MinimumSeed &seed, const std::vector<MinimumState> &states, double up, MnReachedCallLimit)
       : fSeed(seed), fStates(states), fErrorDef(up), fAboveMaxEdm(false), fReachedCallLimit(true),
         fUserState(MnUserParameterState())
    {
    }
 
-   /// constructor at the end of a failed minimization due to edm above maximum value
+   /// Constructor at the end of a failed minimization due to edm above maximum value
    BasicFunctionMinimum(const MinimumSeed &seed, const std::vector<MinimumState> &states, double up, MnAboveMaxEdm)
       : fSeed(seed), fStates(states), fErrorDef(up), fAboveMaxEdm(true), fReachedCallLimit(false),
         fUserState(MnUserParameterState())
    {
    }
 
-   /// copy constructor
+   /// Copy constructor
    BasicFunctionMinimum(const BasicFunctionMinimum &min)
       : fSeed(min.fSeed), fStates(min.fStates), fErrorDef(min.fErrorDef), fAboveMaxEdm(min.fAboveMaxEdm),
         fReachedCallLimit(min.fReachedCallLimit), fUserState(min.fUserState)
