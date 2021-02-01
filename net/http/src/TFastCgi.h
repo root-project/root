@@ -37,8 +37,9 @@ public:
 
    Bool_t IsTerminating() const { return fTerminating; }
 
-   void ProcessRequest(void *req);
+   Bool_t IsDebugMode() const { return fDebugMode; }
 
+   const char *GetTopName() const { return fTopName.Length() > 0 ? fTopName.Data() : nullptr; }
 };
 
 #endif
