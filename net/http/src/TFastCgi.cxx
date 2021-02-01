@@ -27,6 +27,8 @@
 
 class TFastCgiCallArg : public THttpCallArg {
 
+   bool fCanPostpone{false};
+
 protected:
 
    void CheckWSPageContent(THttpWSHandler *) override
@@ -37,10 +39,10 @@ protected:
    }
 
 public:
-   TFastCgiCallArg() = default;
+   TFastCgiCallArg(bool can_postpone) : THttpCallArg(), fCanPostpone(can_postpone) {};
 
    /** All FastCGI requests should be immediately replied to get slot for next */
-   Bool_t CanPostpone() const override { return kFALSE; }
+   Bool_t CanPostpone() const override { return fCanPostpone; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +77,7 @@ void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 }
 
 
-void process_request(TFastCgi *engine, FCGX_Request *request)
+void process_request(TFastCgi *engine, FCGX_Request *request, bool can_postpone)
 {
    int count = 0;
    count++;  // simple static request counter
@@ -86,7 +88,7 @@ void process_request(TFastCgi *engine, FCGX_Request *request)
    const char *inp_method = FCGX_GetParam("REQUEST_METHOD", request->envp);
    const char *inp_length = FCGX_GetParam("CONTENT_LENGTH", request->envp);
 
-   auto arg = std::make_shared<TFastCgiCallArg>();
+   auto arg = std::make_shared<TFastCgiCallArg>(can_postpone);
    if (inp_path)
       arg->SetPathAndFileName(inp_path);
    if (inp_query)
@@ -184,16 +186,19 @@ void run_multi_threads(TFastCgi *engine, Int_t nthrds)
 
          std::unique_ptr<FCGX_Request> request;
 
+         bool can_postpone = false;
+
          {
             std::unique_lock<std::mutex> lk(m);
             nwaiting++;
             cond.wait(lk);
             nwaiting--;
+            can_postpone = (nwaiting > 5);
             std::swap(arg, request);
          }
 
          if (request) {
-            process_request(engine, request.get());
+            process_request(engine, request.get(), can_postpone);
 
             FCGX_Finish_r(request.get());
          }
@@ -222,14 +227,12 @@ void run_multi_threads(TFastCgi *engine, Int_t nthrds)
             std::swap(request, arg);
       }
 
-      printf("Waiting %d\n", nwaiting);
-
       if (!request) {
          // notify thread to process request
          cond.notify_one();
       } else {
          // process request ourselfs
-         process_request(engine, request.get());
+         process_request(engine, request.get(), false);
          FCGX_Finish_r(request.get());
       }
    }
@@ -259,7 +262,7 @@ void run_single_thread(TFastCgi *engine)
       if (rc != 0)
          continue;
 
-      process_request(engine, &request);
+      process_request(engine, &request, false);
 
       FCGX_Finish_r(&request);
    }
@@ -299,7 +302,7 @@ void run_single_thread(TFastCgi *engine)
 //                                                                      //
 // Following additional options can be specified                        //
 //    top=foldername - name of top folder, seen in the browser          //
-//    thrds=N - run N worker threads to process requests, default 0     //
+//    thrds=N - run N worker threads to process requests, default 10    //
 //    debug=1 - run fastcgi server in debug mode                        //
 // Example:                                                             //
 //    serv->CreateEngine("fastcgi:9000?top=fastcgiserver");             //
