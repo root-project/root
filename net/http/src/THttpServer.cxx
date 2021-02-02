@@ -713,6 +713,37 @@ void THttpServer::ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create summary page with active WS handlers
+
+std::string THttpServer::BuildWSEntryPage()
+{
+
+   std::string arr = "[";
+
+   {
+      std::lock_guard<std::mutex> grd(fWSMutex);
+      for (auto &ws : fWSHandlers) {
+         if (arr.length() > 1)
+            arr.append(", ");
+
+         arr.append(Form("{ name: \"%s\", title: \"%s\" }", ws->GetName(), ws->GetTitle()));
+      }
+   }
+
+   arr.append("]");
+
+   std::string res = ReadFileContent((TROOT::GetDataDir() + "/js/files/wslist.htm").Data());
+
+   std::string arg = "\"$$$wslist$$$\"";
+
+   auto pos = res.find(arg);
+   if (pos != std::string::npos)
+      res.replace(pos, arg.length(), arr);
+
+   return res;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Process single http request
 /// Depending from requested path and filename different actions will be performed.
 /// In most cases information is provided by TRootSniffer class
@@ -761,6 +792,10 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
          }
       }
 
+      if (arg->fContent.empty() && arg->fFileName.IsNull() && arg->fPathName.IsNull() && IsWSOnly()) {
+         arg->fContent = BuildWSEntryPage();
+      }
+
       if (arg->fContent.empty() && !IsWSOnly()) {
 
          if (fDefaultPageCont.empty())
@@ -770,6 +805,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       }
 
       if (arg->fContent.empty()) {
+
          arg->Set404();
       } else if (!arg->Is404()) {
          // replace all references on JSROOT
@@ -908,7 +944,8 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
    }
 
    if (IsWSOnly()) {
-      arg->Set404();
+      if (arg->fContent.empty())
+         arg->Set404();
    } else if ((filename == "h.xml") || (filename == "get.xml")) {
 
       Bool_t compact = arg->fQuery.Index("compact") != kNPOS;
