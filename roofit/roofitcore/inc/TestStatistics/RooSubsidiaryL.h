@@ -11,10 +11,18 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
-#include <TestStatistics/RooConstraintL.h>
+#ifndef ROOT_ROOFIT_TESTSTATISTICS_RooSubsidiaryL
+#define ROOT_ROOFIT_TESTSTATISTICS_RooSubsidiaryL
+
+#include <TestStatistics/RooAbsL.h>
 
 namespace RooFit {
 namespace TestStatistics {
 
+class RooSubsidiaryL : RooAbsL {
+};
+
 }
 }
+
+#endif // ROOT_ROOFIT_TESTSTATISTICS_RooSubsidiaryL

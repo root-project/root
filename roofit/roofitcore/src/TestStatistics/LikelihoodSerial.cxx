@@ -21,7 +21,7 @@
 #include <TestStatistics/RooAbsL.h>
 #include <TestStatistics/RooUnbinnedL.h>
 #include <TestStatistics/RooBinnedL.h>
-#include <TestStatistics/RooConstraintL.h>
+#include <TestStatistics/RooSubsidiaryL.h>
 #include <TestStatistics/RooSimultaneousL.h>
 
 #include "RooRealVar.h"
@@ -42,8 +42,8 @@ LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::sha
       likelihood_type = LikelihoodType::binned;
    } else if (dynamic_cast<RooSimultaneousL *>(likelihood_.get()) != nullptr) {
       likelihood_type = LikelihoodType::simultaneous;
-//   } else if (dynamic_cast<RooConstraintL *>(likelihood_.get()) != nullptr) {
-//      likelihood_type = LikelihoodType::constraint;
+   } else if (dynamic_cast<RooSubsidiaryL *>(likelihood_.get()) != nullptr) {
+      likelihood_type = LikelihoodType::subsidiary;
    } else {
       throw std::logic_error("in LikelihoodSerial constructor: _likelihood is not of a valid subclass!");
    }

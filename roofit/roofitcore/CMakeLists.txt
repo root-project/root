@@ -259,7 +259,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         TestStatistics/MinuitFcnGrad.h
         TestStatistics/RooAbsL.h
         TestStatistics/RooBinnedL.h
-        TestStatistics/RooConstraintL.h
+        TestStatistics/RooSubsidiaryL.h
         TestStatistics/RooSimultaneousL.h
         TestStatistics/RooRealL.h
         TestStatistics/RooUnbinnedL.h
@@ -501,7 +501,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         TestStatistics/MinuitFcnGrad.cxx
         src/TestStatistics/RooAbsL.cxx
         src/TestStatistics/RooBinnedL.cxx
-        src/TestStatistics/RooConstraintL.cxx
+        src/TestStatistics/RooSubsidiaryL.cxx
         src/TestStatistics/RooSimultaneousL.cxx
         src/TestStatistics/RooRealL.cxx
         src/TestStatistics/RooUnbinnedL.cxx
