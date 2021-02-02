@@ -25,13 +25,13 @@ protected:
    std::unique_ptr<std::thread> fThrd;  ///<! thread which takes requests, can be many later
    Bool_t fTerminating{kFALSE};     ///<! set when http server wants to terminate all engines
 
-   virtual void Terminate() { fTerminating = kTRUE; }
+   void Terminate() override { fTerminating = kTRUE; }
 
 public:
    TFastCgi();
    virtual ~TFastCgi();
 
-   virtual Bool_t Create(const char *args);
+   Bool_t Create(const char *args) override;
 
    Int_t GetSocket() const { return fSocket; }
 
