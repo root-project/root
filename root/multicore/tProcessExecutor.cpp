@@ -1,5 +1,6 @@
 #include "executorTests.hxx"
 #include "ROOT/TProcessExecutor.hxx"
+#include "TROOT.h"
 
 int PoolTest() {
   ROOT::TProcessExecutor pool;
@@ -7,5 +8,8 @@ int PoolTest() {
 }
 
 int main() {
-	return PoolTest();
+   // On MacOS, Cocoa spawns threads. That's very bad for TProcessExecutor's `fork`:
+   // forking a multi-thread program can easily break, see e.g. `man 2 fork`.
+   gROOT->SetBatch(kTRUE);
+   return PoolTest();
 }
