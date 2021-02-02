@@ -2100,19 +2100,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (handle && ('execute' in handle))
          menu.add("Execute", () => this.executeCommand(itemname, menu.tree_node));
 
-      let drawurl = onlineprop.server + onlineprop.itemname + "/draw.htm", separ = "?";
-      if (this.isMonitoring()) {
-         drawurl += separ + "monitoring=" + this.getMonitoringInterval();
-         separ = "&";
-      }
-
       if (sett.opts && (node._can_draw !== false))
-         menu.addDrawMenu("Draw in new window", sett.opts, function(arg) { window.open(drawurl+separ+"opt=" +arg); });
+         menu.addDrawMenu("Draw in new window", sett.opts,
+                           arg => window.open(onlineprop.server + "?nobrowser&item=" + onlineprop.itemname +
+                                              (this.isMonitoring() ? "&monitoring=" + this.getMonitoringInterval() : "") +
+                                              (arg ? "&opt=" + arg : "")));
 
       if (sett.opts && (sett.opts.length > 0) && root_type && (node._can_draw !== false))
-         menu.addDrawMenu("Draw as png", sett.opts, function(arg) {
-            window.open(onlineprop.server + onlineprop.itemname + "/root.png?w=400&h=300&opt=" + arg);
-         });
+         menu.addDrawMenu("Draw as png", sett.opts,
+                           arg => window.open(onlineprop.server + onlineprop.itemname + "/root.png?w=600&h=400" + (arg ? "&opt=" + arg : "")));
 
       if ('_player' in node)
          menu.add("Player", () => this.player(itemname));
