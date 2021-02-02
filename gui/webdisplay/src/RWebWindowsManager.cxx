@@ -134,6 +134,13 @@ RWebWindowsManager::~RWebWindowsManager()
 ///
 ///      WebGui.HttpWSTmout: 10000
 ///
+/// By default, THttpServer created in restricted mode which only allows websocket handlers
+/// and processes only very few other related http requests. For security reasons such mode
+/// should be always enabled. Only if it is really necessary to process all other kinds
+/// of HTTP requests, one could specify 0 for following parameter (default 1):
+///
+///      WebGui.WSOnly: 1
+///
 /// Following parameter controls browser max-age caching parameter for files (default 3600)
 ///
 ///      WebGui.HttpMaxAge: 3600
@@ -180,6 +187,8 @@ bool RWebWindowsManager::CreateServer(bool with_http)
       if (gApplication)
          gApplication->Connect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
 
+      Int_t wsonly = gEnv->GetValue("WebGui.WSOnly", 1);
+      fServer->SetWSOnly(wsonly != 0);
 
       // this is location where all ROOT UI5 sources are collected
       // normally it is $ROOTSYS/ui5 or <prefix>/ui5 location
