@@ -22,6 +22,7 @@
 #include "RConfigure.h"
 #include "TRegexp.h"
 #include "TObjArray.h"
+#include "ROOT/RMakeUnique.hxx"
 
 #include "THttpEngine.h"
 #include "THttpLongPollEngine.h"
@@ -57,7 +58,7 @@ public:
 
    /// timeout handler
    /// used to process http requests in main ROOT thread
-   virtual void Timeout() { fServer.ProcessRequests(); }
+   void Timeout() override { fServer.ProcessRequests(); }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -235,9 +236,7 @@ THttpServer::~THttpServer()
 
 void THttpServer::SetSniffer(TRootSniffer *sniff)
 {
-   if (fSniffer)
-      delete fSniffer;
-   fSniffer = sniff;
+   fSniffer.reset(sniff);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -409,14 +408,13 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 {
    if (fTimer) {
       fTimer->Stop();
-      delete fTimer;
-      fTimer = nullptr;
+      fTimer.reset();
    }
    if (milliSec > 0) {
       if (fOwnThread) {
          Error("SetTimer", "Server runs already in special thread, therefore no any timer can be created");
       } else {
-         fTimer = new THttpTimer(milliSec, mode, *this);
+         fTimer = std::make_unique<THttpTimer>(milliSec, mode, *this);
          fTimer->TurnOn();
       }
    }
