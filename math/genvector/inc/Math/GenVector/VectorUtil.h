@@ -89,7 +89,7 @@ namespace ROOT {
 	  \param v1  Vector 1
 	  \param v2  Vector 2
 	  \return   Angle between the two vectors
-	  \f[ \Delta R2 = ( \Delta \phi )^2 + ( \Delta \y )^2  \f],
+	  \f[ \Delta R2 = ( \Delta \phi )^2 + ( \Delta \y )^2  \f]
 	  */
 	 template <class Vector1, class Vector2>
 	 inline typename Vector1::Scalar DeltaR2RapidityPhi( const Vector1 & v1, const Vector2 & v2) {
@@ -104,11 +104,11 @@ namespace ROOT {
           \param v1  Vector 1
           \param v2  Vector 2
           \return   Angle between the two vectors
-          \f[ \Delta R = \sqrt{  ( \Delta \phi )^2 + ( \Delta \eta )^2 } \f],
+          \f[ \Delta R = \sqrt{  ( \Delta \phi )^2 + ( \Delta \eta )^2 } \f]
           */
          template <class Vector1, class Vector2>
-         inline typename Vector1::Scalar DeltaR( const Vector1 & v1, const Vector2 & v2 ) {
-	       return std::sqrt( DeltaR2(v1,v2) );
+         inline typename Vector1::Scalar DeltaR( const Vector1 & v1, const Vector2 & v2) {
+            return std::sqrt( DeltaR2(v1,v2) );
          }
 
 	/**
@@ -120,7 +120,7 @@ namespace ROOT {
           \f[ \Delta R = \sqrt{  ( \Delta \phi )^2 + ( \Delta y )^2 } \f],
           */
          template <class Vector1, class Vector2>
-         inline typename Vector1::Scalar DeltaRapidityPhi( const Vector1 & v1, const Vector2 & v2 ) {
+         inline typename Vector1::Scalar DeltaRapidityPhi( const Vector1 & v1, const Vector2 & v2) {
             return std::sqrt( DeltaR2RapidityPhi(v1,v2) );
          }
 
