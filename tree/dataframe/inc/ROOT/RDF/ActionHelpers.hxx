@@ -1277,12 +1277,8 @@ public:
 
    void InitTask(TTreeReader *r, unsigned int /* slot */)
    {
-      if (!r) // empty source, nothing to do
-         return;
-      fInputTree = r->GetTree();
-      // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
-      // addresses of the branch values
-      fInputTree->AddClone(fOutputTree.get());
+      if (r)
+         fInputTree = r->GetTree();
    }
 
    void Exec(unsigned int /* slot */, ColTypes &... values)
@@ -1292,6 +1288,10 @@ public:
          UpdateCArraysPtrs(values..., ind_t{});
       } else {
          SetBranches(values..., ind_t{});
+         // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
+         // addresses of the branch values
+         if (fInputTree != nullptr)
+            fInputTree->AddClone(fOutputTree.get());
          fIsFirstEvent = false;
       }
       UpdateBoolArrays(values..., ind_t{});
