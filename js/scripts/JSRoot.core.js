@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "29/01/2021";
+   JSROOT.version_date = "1/02/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -1149,7 +1149,7 @@
       let xhr = JSROOT.nodejs ? new (require("xhr2"))() : new XMLHttpRequest();
 
       xhr.http_callback = (typeof user_accept_callback == 'function') ? user_accept_callback.bind(xhr) : function() {};
-      xhr.error_callback = (typeof user_reject_callback == 'function') ? user_reject_callback : function(err) { console.warn(err.message); this.http_callback(null); }.bind(xhr);
+      xhr.error_callback = (typeof user_reject_callback == 'function') ? user_reject_callback.bind(xhr) : function(err) { console.warn(err.message); this.http_callback(null); }.bind(xhr);
 
       if (!kind) kind = "buf";
 
@@ -1170,7 +1170,7 @@
             if (oEvent.lengthComputable && this.expected_size && (oEvent.loaded > this.expected_size)) {
                this.did_abort = true;
                this.abort();
-               this.error_callback(Error('Server sends more bytes ' + oEvent.loaded + ' than expected ' + this.expected_size + '. Abort I/O operation'));
+               this.error_callback(Error('Server sends more bytes ' + oEvent.loaded + ' than expected ' + this.expected_size + '. Abort I/O operation'), 598);
             }
          }.bind(xhr));
 
@@ -1183,7 +1183,7 @@
             if (!isNaN(len) && (len > this.expected_size) && !JSROOT.settings.HandleWrongHttpResponse) {
                this.did_abort = true;
                this.abort();
-               return this.error_callback(Error('Server response size ' + len + ' larger than expected ' + this.expected_size + '. Abort I/O operation'));
+               return this.error_callback(Error('Server response size ' + len + ' larger than expected ' + this.expected_size + '. Abort I/O operation'), 599);
             }
          }
 
@@ -1192,7 +1192,7 @@
          if ((this.status != 200) && (this.status != 206) && !browser.qt5 &&
              // in these special cases browsers not always set status
              !((this.status == 0) && ((url.indexOf("file://")==0) || (url.indexOf("blob:")==0)))) {
-               return this.error_callback(Error('Fail to load url ' + url));
+               return this.error_callback(Error('Fail to load url ' + url), this.status);
          }
 
          if (this.nodejs_checkzip && (this.getResponseHeader("content-encoding") == "gzip")) {
