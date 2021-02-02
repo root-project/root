@@ -15,7 +15,9 @@
 #include "TUrl.h"
 #include "THttpServer.h"
 
-#include <string.h>
+#include "ROOT/RMakeUnique.hxx"
+
+#include <cstring>
 
 #ifdef WIN32
 #include <io.h>
