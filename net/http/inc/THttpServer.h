@@ -68,6 +68,8 @@ protected:
 
    std::string BuildWSEntryPage();
 
+   void ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg);
+
    static Bool_t VerifyFilePath(const char *fname);
 
    THttpServer(const THttpServer &) = delete;
