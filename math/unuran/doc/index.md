@@ -1,8 +1,7 @@
 \defgroup Unuran Unuran
-
+\ingroup Math
 \brief Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers.
 
-\ingroup Math
 
 UNU.RAN, (Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers)
 is an ANSI C library licensed under GPL.<br>
@@ -95,7 +94,7 @@ In this case only the multi-dimensional pdf is required
          double x = unr.Sample();
 ~~~~
 
-- In the case of multi-dimension emprical distributions one needs to pass in addition to the iterators, the data dimension. It is assumed that the data are stored in the vector in this order : `(x0,y0,...),(x1,y1,....)`.
+- In the case of multi-dimension empirical distributions one needs to pass in addition to the iterators, the data dimension. It is assumed that the data are stored in the vector in this order : `(x0,y0,...),(x1,y1,....)`.
 
 - For binned data (only one dimensional data are supported) one uses directly the histogram
 

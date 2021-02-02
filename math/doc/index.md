@@ -1,23 +1,16 @@
 \defgroup Math Math
-
 \brief The %ROOT Mathematical Libraries.
 
-See the \ref MathPage "Mathematical Libraries" description page.
+They consist of the following components:
 
-
-\page MathPage The ROOT Mathematical Libraries
-
-
-The %ROOT Mathematical libraries consist of the following components:
-
-- \subpage MathCorePage "MathCore":   a self-consistent minimal set of tools required for the basic numerical computing.
+- \ref MathCore "MathCore":   a self-consistent minimal set of tools required for the basic numerical computing.
   It provides the major mathematical functions in the namespaces ROOT::Math and TMath,
   classes for random number generators, TRandom, class for complex numbers, TComplex,
   common interfaces for function evaluation and numerical algorithms.
   Basic implementations of some of the numerical algorithms such as integration or derivation, are also provided by MathCore.
   together with the core classes needed to fit any generic data set.
 
-- \subpage MathMorePage "MathMore": a package incorporating advanced numerical functionality and dependent on external libraries like the GNU Scientific Library ([GSL](http://www.gnu.org/software/gsl/)). It complements the MathCore library by providing a more complete sets of special mathematical functions and implementations of the numerical algorithms interfaces defined in MathCore using GSL.
+- \ref MathMore "MathMore": a package incorporating advanced numerical functionality and dependent on external libraries like the GNU Scientific Library ([GSL](http://www.gnu.org/software/gsl/)). It complements the MathCore library by providing a more complete sets of special mathematical functions and implementations of the numerical algorithms interfaces defined in MathCore using GSL.
 
 - **Minimization and Fitting Libraries**
  Libraries required for numerical minimization and fitting. The minimization libraries include the numerical methods for solving the fitting problem by finding minimum of multi-dimensional
@@ -37,13 +30,13 @@ The %ROOT Mathematical libraries consist of the following components:
 - **Physics Vectors**: Classes for describing vectors in 2, 3 and 4 dimensions (relativistic vectors) and their rotation and transformation algorithms. Two package exist in %ROOT:
 
    - Physics: library with the TVector3 and TLorentzVector classes.
-   - GenVector: new library providing generic class templates for modeling the vectors. See the \ref Vector "GenVector" page.
+   - GenVector: new library providing generic class templates for modeling the vectors. See the \ref GenVector "GenVector" page.
 
 - \ref Unuran "UNURAN": Package with universal algorithms for generating non-uniform pseudo-random numbers, from a large classes of continuous or discrete distributions in one or multi-dimensions.
 
 - **Foam**  Multi-dimensional general purpose Monte Carlo event generator (and integrator). It generates randomly points (vectors) according to an arbitrary probability distribution  in n dimensions.
 
-- **FFTW** Library with implementation of the fast Fourier transform (FFT) using the FFTW package. It requires a previous installation of [FFTW](http://www.fftw.org)>FFTW).
+- **FFTW** Library with implementation of the fast Fourier transform (FFT) using the FFTW package. It requires a previous installation of [FFTW](http://www.fftw.org).
 
 - **MLP** Library with the neural network class, TMultiLayerPerceptron based on the NN algorithm from the mlpfit package.
 

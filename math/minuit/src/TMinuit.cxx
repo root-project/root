@@ -9,19 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/**
 
-   \defgroup MinuitOld TMinuit
-   \ingroup Math
-
-   The Minuit Minimization package.
-   Direct C++ implementation of the Minuit minimization package.
-   This package was originally written in Fortran by Fred James
-   and part of PACKLIB (patch D506)
-   It has been converted to a C++ class, TMinuit, by R.Brun.
-*/
-
-/** \class TMinuit
+/*! \class TMinuit
+\ingroup MinuitOld
 
 Implementation in C++ of the Minuit package written by Fred James.
 This is a straightforward conversion of the original Fortran version.
@@ -328,7 +318,6 @@ necessary, and you are sensitive to the difference between the two ways of
 calculating the errors, it is suggested to use Minos errors which take
 into account the non-linearities much more precisely.
 
-@ingroup MinuitOld
 */
 
 #include <stdlib.h>
