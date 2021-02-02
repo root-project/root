@@ -268,6 +268,24 @@ void THttpServer::SetReadOnly(Bool_t readonly)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// returns true if only websockets are handled by the server
+/// Typically used by WebGui
+
+Bool_t THttpServer::IsWSOnly() const
+{
+   return fWSOnly;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set websocket-only mode. If true, server will only handle websockets connection
+/// plus serving file requests to access jsroot/ui5 scripts
+
+void THttpServer::SetWSOnly(Bool_t on)
+{
+   fWSOnly = on;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// add files location, which could be used in the server
 /// one could map some system folder to the server like AddLocation("mydir/","/home/user/specials");
 /// Than files from this directory could be addressed via server like
@@ -715,7 +733,8 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
 
       if (arg->fFileName == "default.htm") {
 
-         arg->fContent = ReadFileContent((fJSROOTSYS + "/files/online.htm").Data());
+         if (!IsWSOnly())
+            arg->fContent = ReadFileContent((fJSROOTSYS + "/files/online.htm").Data());
 
       } else {
          auto wsptr = FindWS(arg->GetPathName());
@@ -742,7 +761,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
          }
       }
 
-      if (arg->fContent.empty()) {
+      if (arg->fContent.empty() && !IsWSOnly()) {
 
          if (fDefaultPageCont.empty())
             fDefaultPageCont = ReadFileContent(fDefaultPage);
@@ -785,7 +804,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       return;
    }
 
-   if (arg->fFileName == "draw.htm") {
+   if ((arg->fFileName == "draw.htm") && !IsWSOnly()) {
       if (fDrawPageCont.empty())
          fDrawPageCont = ReadFileContent(fDrawPage);
 
@@ -888,7 +907,9 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       iszip = kTRUE;
    }
 
-   if ((filename == "h.xml") || (filename == "get.xml")) {
+   if (IsWSOnly()) {
+      arg->Set404();
+   } else if ((filename == "h.xml") || (filename == "get.xml")) {
 
       Bool_t compact = arg->fQuery.Index("compact") != kNPOS;
 

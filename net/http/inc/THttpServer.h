@@ -38,6 +38,7 @@ protected:
    Long_t fMainThrdId{0};               ///<! id of the thread for processing requests
    Bool_t fOwnThread{kFALSE};           ///<! true when specialized thread allocated for processing requests
    std::thread fThrd;                   ///<! own thread
+   Bool_t fWSOnly{kFALSE};              ///<! when true, handle only websockets / longpoll engine
 
    TString fJSROOTSYS;       ///<! location of local JSROOT files
    TString fTopName{"ROOT"}; ///<! name of top folder, default - "ROOT"
@@ -85,7 +86,11 @@ public:
 
    Bool_t IsReadOnly() const;
 
-   void SetReadOnly(Bool_t readonly);
+   void SetReadOnly(Bool_t readonly = kTRUE);
+
+   Bool_t IsWSOnly() const;
+
+   void SetWSOnly(Bool_t on = kTRUE);
 
    /** set termination flag, no any further requests will be processed */
    void SetTerminate();
