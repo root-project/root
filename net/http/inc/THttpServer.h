@@ -66,6 +66,8 @@ protected:
 
    void StopServerThread();
 
+   std::string BuildWSEntryPage();
+
    static Bool_t VerifyFilePath(const char *fname);
 
    THttpServer(const THttpServer &) = delete;
