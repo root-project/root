@@ -744,6 +744,45 @@ std::string THttpServer::BuildWSEntryPage()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Replaces all references like "jsrootsys/..."
+/// Either using pre-configured JSROOT installation from web or
+/// redirect to jsrootsys from the main server path to benefit from browser caching
+
+void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg)
+{
+   std::string repl;
+
+   if (fJSROOT.Length() > 0) {
+      repl = "=\"";
+      repl.append(fJSROOT.Data());
+      if (repl.back() != '/')
+         repl.append("/");
+   } else {
+      Int_t cnt = 0;
+      if (arg->fPathName.Length() > 0) cnt++;
+      for (Int_t n = 1; n < arg->fPathName.Length()-1; ++n)
+         if (arg->fPathName[n] == '/') {
+            if (arg->fPathName[n-1] != '/') {
+               cnt++; // normal slash in the middle, count it
+            } else {
+               cnt = 0; // double slash, do not touch such path
+               break;
+            }
+         }
+
+      if (cnt > 0) {
+         repl = "=\"";
+         while (cnt-- >0) repl.append("../");
+         repl.append("jsrootsys/");
+      }
+   }
+
+   if (!repl.empty())
+      arg->ReplaceAllinContent("=\"jsrootsys/", repl);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Process single http request
 /// Depending from requested path and filename different actions will be performed.
 /// In most cases information is provided by TRootSniffer class
@@ -808,14 +847,8 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
 
          arg->Set404();
       } else if (!arg->Is404()) {
-         // replace all references on JSROOT
-         if (fJSROOT.Length() > 0) {
-            std::string repl("=\"");
-            repl.append(fJSROOT.Data());
-            if (repl.back() != '/')
-               repl.append("/");
-            arg->ReplaceAllinContent("=\"jsrootsys/", repl);
-         }
+
+         ReplaceJSROOTLinks(arg);
 
          const char *hjsontag = "\"$$$h.json$$$\"";
 
@@ -852,14 +885,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
 
          arg->fContent = fDrawPageCont;
 
-         // replace all references on JSROOT
-         if (fJSROOT.Length() > 0) {
-            std::string repl("=\"");
-            repl.append(fJSROOT.Data());
-            if (repl.back() != '/')
-               repl.append("/");
-            arg->ReplaceAllinContent("=\"jsrootsys/", repl);
-         }
+         ReplaceJSROOTLinks(arg);
 
          if ((arg->fQuery.Index("no_h_json") == kNPOS) && (arg->fQuery.Index("webcanvas") == kNPOS) &&
              (arg->fContent.find(hjsontag) != std::string::npos)) {
