@@ -64,6 +64,8 @@ public:
     _batchEvaluations = on;
   }
 
+  using ComputeBatchedResult = std::pair<ROOT::Math::KahanSum<double>, double>;
+
 protected:
 
   virtual Bool_t processEmptyDataSets() const { return _extended ; }
@@ -72,18 +74,14 @@ protected:
   static RooArgSet _emptySet ; // Supports named argument constructor
 
 private:
-  std::tuple<double, double, double> computeBatched(
-      std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
-
-  std::tuple<double, double, double> computeScalar(
-        std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
+  ComputeBatchedResult computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
+  ComputeBatchedResult computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
 
   Bool_t _extended{false};
   bool _batchEvaluations{false};
   Bool_t _weightSq{false}; // Apply weights squared?
   mutable Bool_t _first{true}; //!
-  Double_t _offsetSaveW2{false}; //!
-  Double_t _offsetCarrySaveW2{false}; //!
+  ROOT::Math::KahanSum<double> _offsetSaveW2{0.0}; //!
 
   mutable std::vector<Double_t> _binw ; //!
   mutable RooRealSumPdf* _binnedPdf{nullptr}; //!
