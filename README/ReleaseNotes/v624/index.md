@@ -132,6 +132,12 @@ provide access to the widgets via websocket connection - any other kind of reque
 or exe.json will be refused completely. Cobined with connection tokens and https protocol,
 this makes usage of webgui components in public networks more secure.
 
+### Enabled WLCG Bearer Tokens support in RDavix
+Bearer tokens are part of WLCG capability-based infrastructure with capability-based scheme which uses an infrastructure that describes what the bearer is allowed to do as opposed to who that bearer is. Token discovery procedure are developed according WLCG Bearer Token Discovery specification document (https://github.com/WLCG-AuthZ-WG/bearer-token-discovery/blob/master/specification.md). Short overview:
+   1. If the `BEARER_TOKEN` environment variable is set, then the value is taken to be the token contents.
+   2. If the `BEARER_TOKEN_FILE` environment variable is set, then its value is interpreted as a filename. The contents of the specified file are taken to be the token contents.
+   3. If the `XDG_RUNTIME_DIR` environment variable is set, then take the token from the contents of `$XDG_RUNTIME_DIR/bt_u$ID`(this additional location is intended to provide improved security for shared login environments as `$XDG_RUNTIME_DIR` is defined to be user-specific as opposed to a system-wide directory.).
+   4. Otherwise, take the token from `/tmp/bt_u$ID`.
 
 ## GUI Libraries
 
