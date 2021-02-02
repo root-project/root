@@ -1502,7 +1502,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             break;
          case 'disable':
          case 'leavebtn':
-            if (!state) btn.property('timout_handler', setTimeout(() => toggleButtonsVisibility(handler, 'timeout'), 500));
+            if (!state) btn.property('timout_handler', setTimeout(() => toggleButtonsVisibility(handler, 'timeout'), 1200));
             return;
       }
 
