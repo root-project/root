@@ -101,26 +101,28 @@ namespace ROOT {
          /**
           Find difference in pseudorapidity (Eta) and Phi betwen two generic vectors
           The only requirements on the Vector classes is that they implement the Phi() and Eta() method
-	  An option to use the rapidity instead of Eta is included, for use with massive vectors.
           \param v1  Vector 1
           \param v2  Vector 2
-          \param useRapidity use rapidity instead of pseudorapidity?
           \return   Angle between the two vectors
           \f[ \Delta R = \sqrt{  ( \Delta \phi )^2 + ( \Delta \eta )^2 } \f],
-          or
-          \f[ \Delta R2 = ( \Delta \phi )^2 + ( \Delta \y )^2  \f]
-          if useRapidity is true.
           */
          template <class Vector1, class Vector2>
-         inline typename Vector1::Scalar DeltaR( const Vector1 & v1, const Vector2 & v2, const bool useRapidity=false) {
-	    if(useRapidity==false){
+         inline typename Vector1::Scalar DeltaR( const Vector1 & v1, const Vector2 & v2 ) {
 	       return std::sqrt( DeltaR2(v1,v2) );
-	    } else {
-	       return std::sqrt( DeltaR2RapidityPhi(v1,v2) );
-	    }
          }
 
-
+	/**
+          Find difference in Rapidity (y) and Phi betwen two generic vectors
+          The only requirements on the Vector classes is that they implement the Phi() and Rapidity() method
+          \param v1  Vector 1
+          \param v2  Vector 2
+          \return   Angle between the two vectors
+          \f[ \Delta R = \sqrt{  ( \Delta \phi )^2 + ( \Delta y )^2 } \f],
+          */
+         template <class Vector1, class Vector2>
+         inline typename Vector1::Scalar DeltaRapidityPhi( const Vector1 & v1, const Vector2 & v2 ) {
+            return std::sqrt( DeltaR2RapidityPhi(v1,v2) );
+         }
 
          /**
           Find CosTheta Angle between two generic 3D vectors
