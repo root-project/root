@@ -113,6 +113,10 @@ JSROOT.define([], () => {
             else
                this.handle.processRequest(res);
          }
+      }, function(err,status) {
+         // console.log('Get request error', err)
+         // console.log('Get request status', status)
+         this.handle.processRequest(null, "error");
       });
 
       req.handle = this;
@@ -124,7 +128,8 @@ JSROOT.define([], () => {
    LongPollSocket.prototype.processRequest = function(res, _offset) {
       if (res === null) {
          if (typeof this.onerror === 'function') this.onerror("receive data with connid " + (this.connid || "---"));
-         // if (typeof this.onclose === 'function') this.onclose();
+         if ((_offset == "error") && (typeof this.onclose === 'function'))
+            this.onclose("force_close");
          this.connid = null;
          return;
       } else if (res === -1111) {
@@ -395,7 +400,8 @@ JSROOT.define([], () => {
       this.cansend--; // decrease number of allowed send packets
 
       this._websocket.send(prefix + msg);
-      if (this.kind === "websocket") {
+
+      if ((this.kind === "websocket") || (this.kind === "longpoll")) {
          if (this.timerid) clearTimeout(this.timerid);
          this.timerid = setTimeout(() => this.keepAlive(), 10000);
       }
@@ -605,9 +611,9 @@ JSROOT.define([], () => {
                pthis.send('READY', 0); // send dummy message to server
          }
 
-         conn.onclose = function() {
+         conn.onclose = function(arg) {
             delete pthis._websocket;
-            if (pthis.state > 0) {
+            if ((pthis.state > 0) || (arg === "force_close")) {
                console.log('websocket closed');
                pthis.state = 0;
                pthis.invokeReceiver(true, "onWebsocketClosed");
