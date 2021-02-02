@@ -32,8 +32,8 @@ class THttpServer : public TNamed {
 
 protected:
    TList fEngines;                      ///<! engines which runs http server
-   THttpTimer *fTimer{nullptr};         ///<! timer used to access main thread
-   TRootSniffer *fSniffer{nullptr};     ///<! sniffer provides access to ROOT objects hierarchy
+   std::unique_ptr<THttpTimer> fTimer;   ///<! timer used to access main thread
+   std::unique_ptr<TRootSniffer> fSniffer; ///<! sniffer provides access to ROOT objects hierarchy
    Bool_t fTerminated{kFALSE};          ///<! termination flag, disables all requests processing
    Long_t fMainThrdId{0};               ///<! id of the thread for processing requests
    Bool_t fOwnThread{kFALSE};           ///<! true when specialized thread allocated for processing requests
@@ -67,8 +67,11 @@ protected:
 
    static Bool_t VerifyFilePath(const char *fname);
 
+   THttpServer(const THttpServer &) = delete;
+   THttpServer &operator=(const THttpServer &) = delete;
+
 public:
-   THttpServer(const char *engine = "civetweb:8080");
+   THttpServer(const char *engine = "http:8080");
    virtual ~THttpServer();
 
    Bool_t CreateEngine(const char *engine);
@@ -76,7 +79,7 @@ public:
    Bool_t IsAnyEngine() const { return fEngines.GetSize() > 0; }
 
    /** returns pointer on objects sniffer */
-   TRootSniffer *GetSniffer() const { return fSniffer; }
+   TRootSniffer *GetSniffer() const { return fSniffer.get(); }
 
    void SetSniffer(TRootSniffer *sniff);
 
@@ -151,7 +154,7 @@ public:
    /** Restrict access to specified object */
    void Restrict(const char *path, const char *options);
 
-   Bool_t RegisterCommand(const char *cmdname, const char *method, const char *icon = 0);
+   Bool_t RegisterCommand(const char *cmdname, const char *method, const char *icon = nullptr);
 
    Bool_t Hide(const char *fullname, Bool_t hide = kTRUE);
 
@@ -172,7 +175,7 @@ public:
    /** Reads content of file from the disk, use std::string in return value */
    static std::string ReadFileContent(const std::string &filename);
 
-   ClassDef(THttpServer, 0) // HTTP server for ROOT analysis
+   ClassDefOverride(THttpServer, 0) // HTTP server for ROOT analysis
 };
 
 #endif
