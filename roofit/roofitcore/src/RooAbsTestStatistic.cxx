@@ -66,8 +66,8 @@ RooAbsTestStatistic::RooAbsTestStatistic() :
   _func(0), _data(0), _projDeps(0), _splitRange(0), _simCount(0),
   _verbose(kFALSE), _init(kFALSE), _gofOpMode(Slave), _nEvents(0), _setNum(0),
   _numSets(0), _extSet(0), _nGof(0), _gofArray(0), _nCPU(1), _mpfeArray(0),
-  _mpinterl(RooFit::BulkPartition), _doOffset(kFALSE), _offset(0),
-  _offsetCarry(0), _evalCarry(0)
+  _mpinterl(RooFit::BulkPartition), _doOffset(kFALSE),
+  _evalCarry(0)
 {
 }
 
@@ -117,8 +117,6 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _mpfeArray(0),
   _mpinterl(interleave),
   _doOffset(kFALSE),
-  _offset(0),
-  _offsetCarry(0),
   _evalCarry(0)
 {
   // Register all parameters as servers
@@ -177,7 +175,6 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _mpinterl(other._mpinterl),
   _doOffset(other._doOffset),
   _offset(other._offset),
-  _offsetCarry(other._offsetCarry),
   _evalCarry(other._evalCarry)
 {
   // Our parameters are those of original
@@ -694,7 +691,6 @@ void RooAbsTestStatistic::enableOffsetting(Bool_t flag)
     // Clear offset if feature is disabled to that it is recalculated next time it is enabled
     if (!_doOffset) {
       _offset = 0 ;
-      _offsetCarry = 0;
     }
     setValueDirty() ;
     break ;
