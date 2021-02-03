@@ -6779,7 +6779,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
       Long64_t nentries = tree->GetEntries();
       if (nentries == 0) continue;
       if (!newtree) {
-         newtree = (TTree*)tree->CloneTree();
+         newtree = (TTree*)tree->CloneTree(-1, options);
          if (!newtree) continue;
 
          // Once the cloning is done, separate the trees,
