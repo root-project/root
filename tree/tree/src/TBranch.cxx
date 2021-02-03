@@ -2036,6 +2036,22 @@ TBranch* TBranch::GetMother() const
 {
    if (fMother) return fMother;
 
+   {
+      TBranch *parent = fParent;
+      while(parent) {
+         if (parent->fMother) {
+            const_cast<TBranch*>(this)->fMother = parent->fMother; // We can not yet use the 'mutable' keyword
+            return fMother;
+         }
+         if (!parent->fParent) {
+            // This is the top node
+            const_cast<TBranch*>(this)->fMother = parent; // We can not yet use the 'mutable' keyword
+            return fMother;
+         }
+         parent = parent->fParent;
+      }
+   }
+
    const TObjArray* array = fTree->GetListOfBranches();
    Int_t n = array->GetEntriesFast();
    for (Int_t i = 0; i < n; ++i) {
