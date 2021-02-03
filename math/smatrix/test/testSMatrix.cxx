@@ -933,6 +933,7 @@ int test16()
 {
    // test IsInUse() function  to create automatically temporaries
    int iret = 0;
+   int fail = 0;
 
    double a[6] = {1, 2, 3, 4, 5, 6};
    double w[9] = {10, 2, 3, 4, 50, 6, 7, 8, 90};
@@ -952,7 +953,7 @@ int test16()
    Y = W * Y;
 #ifndef _WIN32
    // this fails on Windows (bad calculations)
-   iret |= compare(Z == Y, true, "mult");
+   fail = compare(Z == Y, true, "mult");
 #else
    for (int i = 0; i < 9; ++i) {
       // avoid small value of a
@@ -962,11 +963,24 @@ int test16()
       iret |= compare(a, Y.apply(i), "index");
    }
 #endif
+   if (fail) {
+      std::cout << "Error: simple mult test : A = B * A  failed ! - print ref matrix and test matrix" << std::endl;
+      std::cout << Z << std::endl; 
+      std::cout << Y << std::endl; 
+   }
+   iret |= fail; 
 
    Z = (A + W) * (B + Y);
    Y = (A + W) * (B + Y);
 
-   iret |= compare(Z == Y, true, "complex mult");
+   fail |= compare(Z == Y, true, "complex mult");
+
+   if (fail) {
+      std::cout << "Error: complex mult test : Y = (A+W)*(B+Y) test failed ! - print ref matrix and test matrix" << std::endl;
+      std::cout << Z << std::endl; 
+      std::cout << Y << std::endl; 
+   }
+   iret |= fail; 
 
    // test of assign sym
    //   AssignSym::Evaluate(A,  W * A * Transpose(W)  );
