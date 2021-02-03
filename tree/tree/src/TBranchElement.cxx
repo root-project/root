@@ -60,7 +60,7 @@ namespace {
           && (str.Data()[prefix.Length()] == '.' || (prefix[prefix.Length()-1]=='.')))
       {
          if (!str.Index(prefix))
-            str.Remove(0, strlen(prefix));
+            str.Remove(0, prefix.Length());
       }
    }
    struct R__PushCache {
