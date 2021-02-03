@@ -2872,6 +2872,11 @@ void TBranch::Streamer(TBuffer& b)
             TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
             leaf->SetBranch(this);
          }
+         auto nbranches = fBranches.GetEntriesFast();
+         for (Int_t i=0;i<nbranches;i++) {
+            TBranch *br = (TBranch*)fBranches.UncheckedAt(i);
+            br->fParent = this;
+         }
 
          fNBaskets = fBaskets.GetEntries();
          for (Int_t j=fWriteBasket,n=0;j>=0 && n<fNBaskets;--j) {
