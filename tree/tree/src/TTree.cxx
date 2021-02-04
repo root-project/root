@@ -6854,20 +6854,29 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
 {
    const char *options = info ? info->fOptions.Data() : "";
    if (info && info->fIsFirst && info->fOutputDirectory && info->fOutputDirectory->GetFile() != GetCurrentFile()) {
-      TDirectory::TContext ctxt(info->fOutputDirectory);
-      TIOFeatures saved_features = fIOFeatures;
-      TTree *newtree = CloneTree(-1, options);
-      if (info->fIOFeatures)
-         fIOFeatures = *(info->fIOFeatures);
-      else
-         fIOFeatures = saved_features;
-      if (newtree) {
-         newtree->Write();
-         delete newtree;
+      if (GetCurrentFile() == nullptr) {
+         // In memory TTree, all we need to do is ... write it.
+         SetDirectory(info->fOutputDirectory);
+         FlushBasketsImpl();
+         fDirectory->WriteTObject(this);
+      } else if (info->fOptions.Contains("fast")) {
+         InPlaceClone(info->fOutputDirectory);
+      } else {
+         TDirectory::TContext ctxt(info->fOutputDirectory);
+         TIOFeatures saved_features = fIOFeatures;
+         TTree *newtree = CloneTree(-1, options);
+         if (info->fIOFeatures)
+            fIOFeatures = *(info->fIOFeatures);
+         else
+            fIOFeatures = saved_features;
+         if (newtree) {
+            newtree->Write();
+            delete newtree;
+         }
+         // Make sure things are really written out to disk before attempting any reading.
+         info->fOutputDirectory->GetFile()->Flush();
+         info->fOutputDirectory->ReadTObject(this,this->GetName());
       }
-      // Make sure things are really written out to disk before attempting any reading.
-      info->fOutputDirectory->GetFile()->Flush();
-      info->fOutputDirectory->ReadTObject(this,this->GetName());
    }
    if (!li) return 0;
    Long64_t storeAutoSave = fAutoSave;
@@ -6921,6 +6930,34 @@ void TTree::MoveReadCache(TFile *src, TDirectory *dir)
       src->SetCacheRead(0,this);
       delete pf;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the content to a new new file, update this TTree with the new
+/// location information and attach this TTree to the new directory.
+///
+/// options: Indicates a basket sorting method, see TTreeCloner::TTreeCloner for
+///          details
+///
+/// If new and old directory are in the same file, the data is untouched,
+/// this "just" does a call to SetDirectory.
+/// Equivalent to an "in place" cloning of the TTree.
+Bool_t TTree::InPlaceClone(TDirectory *newdirectory, const char *options)
+{
+   if (!newdirectory) {
+      LoadBaskets(2*fTotBytes);
+      SetDirectory(nullptr);
+      return true;
+   }
+   if (newdirectory->GetFile() == GetCurrentFile()) {
+      SetDirectory(newdirectory);
+      return true;
+   }
+   TTreeCloner cloner(this, newdirectory, options);
+   if (cloner.IsValid())
+      return cloner.Exec();
+   else
+      return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

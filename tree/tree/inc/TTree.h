@@ -540,6 +540,7 @@ public:
    virtual Long64_t        GetZipBytes() const { return fZipBytes; }
    virtual void            IncrementTotalBuffers(Int_t nbytes) { fTotalBuffers += nbytes; }
    Bool_t                  IsFolder() const { return kTRUE; }
+   virtual Bool_t          InPlaceClone(TDirectory *newdirectory, const char *options = "");
    virtual Int_t           LoadBaskets(Long64_t maxmemory = 2000000000);
    virtual Long64_t        LoadTree(Long64_t entry);
    virtual Long64_t        LoadTreeFriend(Long64_t entry, TTree* T);
