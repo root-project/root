@@ -117,6 +117,7 @@ public:
            Long64_t *GetTreeOffset() const { return fTreeOffset; }
            Int_t     GetTreeOffsetLen() const { return fTreeOffsetLen; }
    virtual Double_t  GetWeight() const;
+   virtual Bool_t    InPlaceClone(TDirectory *newdirectory, const char *options = "");
    virtual Int_t     LoadBaskets(Long64_t maxmemory);
    virtual Long64_t  LoadTree(Long64_t entry);
            void      Lookup(Bool_t force = kFALSE);
