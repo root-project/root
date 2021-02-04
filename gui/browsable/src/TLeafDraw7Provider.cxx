@@ -64,6 +64,29 @@ public:
          return true;
       });
 
+      RegisterDraw7(TVirtualBranchBrowsable::Class(), [](std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
+
+         auto hist = TLeafProvider::DrawBranchBrowsable(obj);
+
+         if (!hist)
+            return false;
+
+         if (subpad->NumPrimitives() > 0) {
+            subpad->Wipe();
+            subpad->GetCanvas()->Modified();
+            subpad->GetCanvas()->Update(true);
+         }
+
+         std::shared_ptr<TH1> shared;
+         shared.reset(hist);
+
+         subpad->Draw<ROOT::Experimental::TObjectDrawable>(shared, opt);
+
+         subpad->GetCanvas()->Update(true);
+
+         return true;
+      });
+
    }
 
 } newTLeafDraw7Provider;

@@ -44,6 +44,19 @@ public:
          return true;
       });
 
+      RegisterDraw6(TVirtualBranchBrowsable::Class(), [](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
+
+         auto hist = TLeafProvider::DrawBranchBrowsable(obj);
+
+         if (!hist)
+            return false;
+
+         pad->GetListOfPrimitives()->Clear();
+
+         pad->GetListOfPrimitives()->Add(hist, opt.c_str());
+
+         return true;
+      });
 
    }
 
