@@ -86,6 +86,12 @@ public:
       if (!fObject)
          return false;
 
+      auto vol = fObject->Get<TGeoVolume>();
+      if (vol) {
+         fViewer.SetGeometry(vol->GetGeoManager(), vol->GetName());
+         return true;
+      }
+
       // only handle TGeoManager now
       auto mgr = fObject->Get<TGeoManager>();
       if (!mgr) {
