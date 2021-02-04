@@ -774,11 +774,11 @@ Bool_t TPgSQLStatement::SetDouble(Int_t npar, Double_t value)
 
 Bool_t TPgSQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
-   if(sizeof(fBind[npar])<(unsigned)maxsize){
+   if(maxsize > kBindStringSize) {
       delete [] fBind[npar];
       fBind[npar] = new char[maxsize];
    }
-   strlcpy(fBind[npar],value,maxsize);
+   strlcpy(fBind[npar], value, maxsize);
    return kTRUE;
 }
 
