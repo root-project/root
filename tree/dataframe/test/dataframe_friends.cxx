@@ -7,6 +7,8 @@
 #include "TTree.h"
 #include "gtest/gtest.h"
 
+#include <algorithm> // std::equal
+
 // fixture that creates two files with two trees of 10 events each. One has branch `x`, the other branch `y`, both ints.
 class RDFAndFriends : public ::testing::Test {
 protected:
@@ -219,23 +221,23 @@ void FillIndexedFriend(const char *mainfile, const char *auxfile)
    TTree mainTree("mainTree", "mainTree");
    int idx;
    mainTree.Branch("idx", &idx);
-   float x;
+   int x;
    mainTree.Branch("x", &x);
 
    idx = 1;
-   x = 0.5;
+   x = 1;
    mainTree.Fill();
    idx = 1;
    x = 2;
    mainTree.Fill();
    idx = 1;
+   x = 3;
+   mainTree.Fill();
+   idx = 2;
+   x = 4;
+   mainTree.Fill();
+   idx = 2;
    x = 5;
-   mainTree.Fill();
-   idx = 2;
-   x = 1;
-   mainTree.Fill();
-   idx = 2;
-   x = 8;
    mainTree.Fill();
    mainTree.Write();
    f.Close();
@@ -244,12 +246,12 @@ void FillIndexedFriend(const char *mainfile, const char *auxfile)
    TFile f2(auxfile, "RECREATE");
    TTree auxTree("auxTree", "auxTree");
    auxTree.Branch("idx", &idx);
-   float y;
+   int y;
    auxTree.Branch("y", &y);
-   idx = 1;
+   idx = 2;
    y = 5;
    auxTree.Fill();
-   idx = 2;
+   idx = 1;
    y = 7;
    auxTree.Fill();
    auxTree.Write();
@@ -270,11 +272,14 @@ TEST(RDFAndFriendsNoFixture, IndexedFriend)
    auxChain.BuildIndex("idx");
    mainChain.AddFriend(&auxChain);
 
-   auto op = [&](){
-      auto df = ROOT::RDataFrame(mainChain);
-      *df.Min<int>("x");
-   };
-   EXPECT_ANY_THROW(op());
+   auto df = ROOT::RDataFrame(mainChain);
+   auto x = df.Take<int>("x");
+   auto y = df.Take<int>("auxTree.y");
+
+   std::vector<int> refx{{1,2,3,4,5}};
+   EXPECT_TRUE(std::equal(x->begin(), x->end(), refx.begin()));
+   std::vector<int> refy{{7,7,7,5,5}};
+   EXPECT_TRUE(std::equal(y->begin(), y->end(), refy.begin()));
 
    gSystem->Unlink(mainFile);
    gSystem->Unlink(auxFile);
