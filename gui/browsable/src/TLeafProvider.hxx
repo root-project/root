@@ -12,13 +12,14 @@
 #include "TLeaf.h"
 #include "TBranch.h"
 #include "TBranchElement.h"
+#include "TBranchBrowsable.h"
 #include "TTree.h"
 #include "TH1.h"
 #include "TDirectory.h"
 
 using namespace ROOT::Experimental::Browsable;
 
-/** Provider for drawing of ROOT6 classes */
+/** Provider for drawing of branches / leafs in the TTree */
 
 class TLeafProvider : public RProvider {
 public:
@@ -117,6 +118,34 @@ public:
       name.ReplaceAll(slash, escapedSlash);
 
       return DrawTree(tbranch->GetTree(), name.Data(), name.Data());
+   }
+
+   static TH1 *DrawBranchBrowsable(std::unique_ptr<RHolder> &obj)
+   {
+      auto browsable = obj->get_object<TVirtualBranchBrowsable>();
+      if (!browsable)
+         return nullptr;
+
+      auto cl = browsable->GetClassType();
+
+      bool can_draw  = (!cl || (cl->GetCollectionProxy() && cl->GetCollectionProxy()->GetType() > 0));
+      if (!can_draw)
+         return nullptr;
+
+      auto br = browsable->GetBranch();
+      if (!br)
+         return nullptr;
+
+      TString name;
+      browsable->GetScope(name);
+
+      // If this is meant to be run on the collection
+      // we need to "move" the "@" from branch.@member
+      // to branch@.member
+      name.ReplaceAll(".@","@.");
+      name.ReplaceAll("->@","@->");
+
+      return DrawTree(br->GetTree(), name.Data(), name.Data());
    }
 
 };
