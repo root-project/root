@@ -313,6 +313,13 @@ public:
    }
 };
 
+
+std::unique_ptr<RLevelIter> TObjectElement::GetCollectionIter(const TCollection *coll)
+{
+   return std::make_unique<TCollectionIter>(coll);
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 /// Provides iterator for TFolder
 
@@ -355,6 +362,7 @@ int TCollectionElement::GetNumChilds()
    auto coll = fObject->Get<TCollection>();
    return coll ? coll->GetSize() : 0;
 }
+
 
 // ==============================================================================================
 
