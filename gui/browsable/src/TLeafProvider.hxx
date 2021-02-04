@@ -21,12 +21,13 @@ using namespace ROOT::Experimental::Browsable;
 
 /** Provider for drawing of branches / leafs in the TTree */
 
+template<typename T>
 class TLeafProvider : public RProvider {
 public:
 
    virtual ~TLeafProvider() = default;
 
-   static TH1 *DrawTree(TTree *ttree, const std::string &expr, const std::string &hname)
+   TH1 *DrawTree(TTree *ttree, const std::string &expr, const std::string &hname)
    {
       if (!ttree)
          return nullptr;
@@ -49,7 +50,7 @@ public:
       return htemp;
    }
 
-   static TH1 *DrawLeaf(std::unique_ptr<RHolder> &obj)
+   TH1 *DrawLeaf(std::unique_ptr<RHolder> &obj)
    {
       auto tleaf = obj->get_object<TLeaf>();
       if (!tleaf)
@@ -58,7 +59,7 @@ public:
       return DrawTree(tleaf->GetBranch()->GetTree(), tleaf->GetName(), tleaf->GetName());
    }
 
-   static TH1 *DrawBranchElement(std::unique_ptr<RHolder> &obj)
+   TH1 *DrawBranchElement(std::unique_ptr<RHolder> &obj)
    {
       auto tbranch = obj->get_object<TBranchElement>();
       if (!tbranch)
@@ -117,10 +118,10 @@ public:
       }
       name.ReplaceAll(slash, escapedSlash);
 
-      return DrawTree(tbranch->GetTree(), name.Data(), name.Data());
+      return DrawTree(tbranch->GetTree(), name.Data(), tbranch->GetName());
    }
 
-   static TH1 *DrawBranchBrowsable(std::unique_ptr<RHolder> &obj)
+   TH1 *DrawBranchBrowsable(std::unique_ptr<RHolder> &obj)
    {
       auto browsable = obj->get_object<TVirtualBranchBrowsable>();
       if (!browsable)
@@ -145,7 +146,7 @@ public:
       name.ReplaceAll(".@","@.");
       name.ReplaceAll("->@","@->");
 
-      return DrawTree(br->GetTree(), name.Data(), name.Data());
+      return DrawTree(br->GetTree(), name.Data(), browsable->GetName());
    }
 
 };
