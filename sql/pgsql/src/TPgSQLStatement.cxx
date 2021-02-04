@@ -1170,8 +1170,10 @@ Bool_t TPgSQLStatement::SetSQLParamType(Int_t, int, bool, int)
 
 Bool_t TPgSQLStatement::SetNull(Int_t npar)
 {
-   if ((npar >= 0) && (npar < fNumBuffers))
-      fBind[npar] = 0;
+   if ((npar >= 0) && (npar < fNumBuffers)) {
+      delete [] fBind[npar];
+      fBind[npar] = nullptr;
+   }
    return kFALSE;
 }
 
