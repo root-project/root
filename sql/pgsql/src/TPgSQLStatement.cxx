@@ -173,11 +173,12 @@ Bool_t TPgSQLStatement::Process()
    if (IsSetParsMode()) {
       fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",fNumBuffers,
                                  (const char* const*)fBind,
-                                 0,0,0);
+                                 fParamLengths,
+                                 fParamFormats,
+                                 0);
 
    } else { //result set mode
-
-      fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",0,(const char* const*) 0,0,0,0);
+      fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",0,(const char* const*) nullptr, nullptr, nullptr,0);
    }
    ExecStatusType stat = PQresultStatus(fStmt->fRes);
    if (!pgsql_success(stat))
@@ -287,8 +288,8 @@ Bool_t TPgSQLStatement::NextIteration()
 
    fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",fNumBuffers,
                                (const char* const*)fBind,
-                               0,//fParamLengths,
-                               0,//fParamFormats,
+                               fParamLengths,
+                               fParamFormats,
                                0);
    ExecStatusType stat = PQresultStatus(fStmt->fRes);
    if (!pgsql_success(stat) ){
@@ -788,17 +789,17 @@ Bool_t TPgSQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t max
 {
    // Set parameter value as binary data.
 
-   size_t sz = size, mxsz = maxsize;
-   unsigned char* escape_ptr = PQescapeBytea((const unsigned char*)mem, sz, &mxsz);
-   unsigned char* binary_ptr = PQunescapeBytea((const unsigned char*)escape_ptr, &mxsz);
-   PQfreemem(escape_ptr);
+   if (maxsize < size) maxsize = size;
 
-   delete [] fBind[npar];
-   fBind[npar] = new char[mxsz+1];
-   fBind[npar][mxsz] = '\0';
-   memcpy(fBind[npar], binary_ptr, mxsz);
+   if (maxsize > kBindStringSize) {
+      delete [] fBind[npar];
+      fBind[npar] = new char[maxsize];
+   }
+   memcpy(fBind[npar], mem, size);
 
-   PQfreemem(binary_ptr);
+   fParamFormats[npar] = 1;
+   fParamLengths[npar] = size;
+
    return kTRUE;
 }
 
