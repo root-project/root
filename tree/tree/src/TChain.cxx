@@ -1225,6 +1225,14 @@ Double_t TChain::GetWeight() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Move content to a new file. (NOT IMPLEMENTED for TChain)
+Bool_t TChain::InPlaceClone(TDirectory * /* new directory */, const char * /* options */)
+{
+   Error("InPlaceClone", "not implemented");
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set the TTree to be reloaded as soon as possible.  In particular this
 /// is needed when adding a Friend.
 ///

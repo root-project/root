@@ -24,7 +24,9 @@
 
 class TBranch;
 class TTree;
+class TFile;
 class TFileCacheRead;
+class TDirectory;
 
 class TTreeCloner {
    TString    fWarningMsg;       ///< Text of the error message lead to an 'invalid' state
@@ -34,6 +36,8 @@ class TTreeCloner {
    UInt_t     fOptions;
    TTree     *fFromTree;
    TTree     *fToTree;
+   TDirectory*fToDirectory;
+   TFile     *fToFile;
    Option_t  *fMethod;
    TObjArray  fFromBranches;
    TObjArray  fToBranches;
@@ -88,6 +92,8 @@ private:
    TTreeCloner(const TTreeCloner&) = delete;
    TTreeCloner &operator=(const TTreeCloner&) = delete;
 
+   TTreeCloner(TTree *from, TTree *to, TDirectory *newdirectory, Option_t *method, UInt_t options = kNone);
+
 public:
    enum EClonerOptions {
       kNone       = 0,
@@ -97,6 +103,7 @@ public:
    };
 
    TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options = kNone);
+   TTreeCloner(TTree *from, TDirectory *newdirectory, Option_t *method, UInt_t options = kNone);
    virtual ~TTreeCloner();
 
    void   CloseOutWriteBaskets();
@@ -108,6 +115,7 @@ public:
    void   CopyStreamerInfos();
    void   CopyProcessIds();
    const char *GetWarning() const { return fWarningMsg; }
+   Bool_t IsInPlace() const { return fFromTree == fToTree; }
    Bool_t Exec();
    Bool_t IsValid() { return fIsValid; }
    Bool_t NeedConversion() { return fNeedConversion; }
