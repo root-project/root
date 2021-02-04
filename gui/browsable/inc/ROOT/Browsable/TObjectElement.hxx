@@ -41,7 +41,7 @@ public:
 
    TObjectElement(std::unique_ptr<RHolder> &obj, const std::string &name = "");
 
-   virtual ~TObjectElement();
+   virtual ~TObjectElement() = default;
 
    /** Name of TObject */
    std::string GetName() const override;
