@@ -11,6 +11,7 @@
 #include <ROOT/Browsable/RLevelIter.hxx>
 
 #include "TBranchElement.h"
+#include "TBranchBrowsable.h"
 
 using namespace ROOT::Experimental::Browsable;
 
@@ -41,6 +42,34 @@ public:
       return nullptr;
    }
 };
+
+
+////////////////////////////////////////////////////////////
+/// Representing TVirtualBranchBrowsable in browsables
+
+class TBrBrowsableElement : public TObjectElement {
+
+public:
+   TBrBrowsableElement(std::unique_ptr<RHolder> &br) : TObjectElement(br) {}
+
+   virtual ~TBrBrowsableElement() = default;
+
+   int GetNumChilds() override
+   {
+      auto br = fObject->Get<TVirtualBranchBrowsable>();
+      return br && br->GetLeaves() ? br->GetLeaves()->GetSize() : 0;
+   }
+
+   /** Create iterator for childs elements if any */
+   std::unique_ptr<RLevelIter> GetChildsIter() override
+   {
+      auto br = fObject->Get<TVirtualBranchBrowsable>();
+      if (br && br->GetLeaves())
+         return GetCollectionIter(br->GetLeaves());
+      return nullptr;
+   }
+};
+
 
 // ==============================================================================================
 
