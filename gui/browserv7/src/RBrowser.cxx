@@ -126,8 +126,6 @@ public:
 };
 
 
-
-
 /** \class ROOT::Experimental::RBrowser
 \ingroup rbrowser
 
@@ -180,7 +178,7 @@ RBrowser::RBrowser(bool use_rcanvas)
 
    // AddWidget("geom");  // add geometry viewer at the beginning
 
-   AddWidget("editor"); // one can add empty editor if necessary
+   // AddWidget("editor"); // one can add empty editor if necessary
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,6 +258,10 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
 
    auto dflt_action = elem->GetDefaultAction();
 
+   // check if object can be drawn in RCanvas even when default action is drawing in TCanvas
+   if ((dflt_action == Browsable::RElement::kActDraw6) && GetUseRCanvas() && elem->IsCapable(Browsable::RElement::kActDraw7))
+      dflt_action = Browsable::RElement::kActDraw7;
+
    std::string widget_kind;
    switch(dflt_action) {
       case Browsable::RElement::kActGeom: widget_kind = "geom"; break;
@@ -282,7 +284,6 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
    }
 
    if (elem->IsCapable(Browsable::RElement::kActBrowse) && (elem->GetNumChilds() > 0)) {
-      printf("Could CHDIR to %s full: %s\n", item_path.c_str(), Browsable::RElement::GetPathAsString(path).c_str());
       fBrowsable.SetWorkingPath(path);
       return GetCurrentWorkingDirectory();
    }
