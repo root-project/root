@@ -12,6 +12,7 @@
 #include <ROOT/Browsable/RElement.hxx>
 
 class TObject;
+class TCollection;
 
 namespace ROOT {
 namespace Experimental {
@@ -63,6 +64,8 @@ public:
    EActionKind GetDefaultAction() const override;
 
    bool IsCapable(EActionKind) const override;
+
+   static std::unique_ptr<RLevelIter> GetCollectionIter(const TCollection *);
 
 };
 
