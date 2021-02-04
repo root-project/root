@@ -951,18 +951,20 @@ int test16()
    SMatrix<double, 3> Z;
    Z = W * Y;
    Y = W * Y;
-#ifndef _WIN32
-   // this fails on Windows (bad calculations)
-   fail = compare(Z == Y, true, "mult");
-#else
+// #ifndef _WIN32
+//    // this fails on Windows (bad calculations)
+//    fail = compare(Z == Y, true, "mult");
+// #else
    for (int i = 0; i < 9; ++i) {
       // avoid small value of a
       double a = Z.apply(i);
+#ifdef _WIN32
       double eps = std::numeric_limits<double>::epsilon();
       if (a < eps) a = 0;
-      iret |= compare(a, Y.apply(i), "index");
-   }
 #endif
+      fail |= compare(a, Y.apply(i), "index mult");
+   }
+//#endif
    if (fail) {
       std::cout << "Error: simple mult test : A = B * A  failed ! - print ref matrix and test matrix" << std::endl;
       std::cout << Z << std::endl; 
@@ -973,7 +975,13 @@ int test16()
    Z = (A + W) * (B + Y);
    Y = (A + W) * (B + Y);
 
-   fail |= compare(Z == Y, true, "complex mult");
+   //fail = compare(Z == Y, true, "complex mult");
+   fail = 0;
+   for (int i = 0; i < 9; ++i) {
+      // avoid small value of a
+      double a = Z.apply(i);
+      fail |= compare(a, Y.apply(i), "index complex mult");
+   }
 
    if (fail) {
       std::cout << "Error: complex mult test : Y = (A+W)*(B+Y) test failed ! - print ref matrix and test matrix" << std::endl;
