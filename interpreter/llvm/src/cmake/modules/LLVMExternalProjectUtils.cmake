@@ -80,6 +80,7 @@ function(llvm_ExternalProject_Add name source_dir)
 
   set(STAMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/${name}-stamps/)
   set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${name}-bins/)
+  set(timeoutProject 600)
 
   add_custom_target(${name}-clear
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${BINARY_DIR}
@@ -157,6 +158,7 @@ function(llvm_ExternalProject_Add name source_dir)
     USES_TERMINAL_CONFIGURE 1
     USES_TERMINAL_BUILD 1
     USES_TERMINAL_INSTALL 1
+    TIMEOUT ${timeoutProject}
     )
 
   if(ARG_USE_TOOLCHAIN)

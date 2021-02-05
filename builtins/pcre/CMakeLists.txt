@@ -25,6 +25,7 @@ endif()
 
 set(PCRE_VERSION "8.43" CACHE INTERNAL "" FORCE)
 set(PCRE_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}pcre${PCRE_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(timeoutProject 600)
 
 # build byproducts only needed by Ninja
 if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
@@ -59,6 +60,7 @@ ExternalProject_Add(PCRE
     ${PCRE_BYPRODUCTS}
 
   INSTALL_COMMAND ""
+  TIMEOUT ${timeoutProject}
 )
 
 ExternalProject_Get_Property(PCRE BINARY_DIR)

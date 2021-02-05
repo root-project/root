@@ -516,6 +516,7 @@ if (CLANG_ENABLE_BOOTSTRAP)
   
   set(STAMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/${NEXT_CLANG_STAGE}-stamps/)
   set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${NEXT_CLANG_STAGE}-bins/)
+  set(timeoutProject 600)
 
   if(BOOTSTRAP_LLVM_ENABLE_LLD)
     add_dependencies(clang-bootstrap-deps lld)
@@ -669,6 +670,7 @@ if (CLANG_ENABLE_BOOTSTRAP)
     USES_TERMINAL_CONFIGURE 1
     USES_TERMINAL_BUILD 1
     USES_TERMINAL_INSTALL 1
+    TIMEOUT ${timeoutProject}
     )
 
   # exclude really-install from main target

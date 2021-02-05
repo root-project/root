@@ -5,6 +5,7 @@ include(ExternalProject)
 set(known_subdirs
   "libcxx"
   )
+set(timeoutProject 600)
 
 foreach (dir ${known_subdirs})
   if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${dir}/CMakeLists.txt)
@@ -85,6 +86,7 @@ if(LLVM_BUILD_EXTERNAL_COMPILER_RT AND EXISTS ${COMPILER_RT_SRC_ROOT}/)
     USES_TERMINAL_CONFIGURE 1
     USES_TERMINAL_BUILD 1
     USES_TERMINAL_INSTALL 1
+    TIMEOUT ${timeoutProject}
     )
 
   get_ext_project_build_command(run_clean_compiler_rt clean)
