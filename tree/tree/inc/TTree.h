@@ -418,7 +418,7 @@ public:
    virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
    virtual void            CopyAddresses(TTree*,Bool_t undo = kFALSE);
-   virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1, Option_t *option = "");
+   virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1, Option_t *option = "", Bool_t needCopyAddresses = false);
    virtual TTree          *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual TBasket        *CreateBasket(TBranch*);
    virtual void            DirectoryAutoAdd(TDirectory *);
