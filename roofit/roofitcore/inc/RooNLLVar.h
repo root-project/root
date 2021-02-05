@@ -64,7 +64,7 @@ public:
     _batchEvaluations = on;
   }
 
-  using ComputeBatchedResult = std::pair<ROOT::Math::KahanSum<double>, double>;
+  using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
 
 protected:
 
@@ -74,8 +74,8 @@ protected:
   static RooArgSet _emptySet ; // Supports named argument constructor
 
 private:
-  ComputeBatchedResult computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
-  ComputeBatchedResult computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
+  ComputeResult computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
+  ComputeResult computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
 
   Bool_t _extended{false};
   bool _batchEvaluations{false};
