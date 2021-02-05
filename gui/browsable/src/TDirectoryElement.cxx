@@ -88,6 +88,7 @@ public:
       auto item = std::make_unique<TKeyItem>(GetItemName(), CanItemHaveChilds() ? -1 : 0);
       item->SetClassName(fKey->GetClassName());
       item->SetIcon(RProvider::GetClassIcon(fKey->GetClassName()));
+      item->SetTitle(fKey->GetTitle());
       return item;
    }
 

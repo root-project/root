@@ -29,6 +29,7 @@ protected:
    std::string name;     ///< item name
    int nchilds{0};       ///< number of childs
    std::string icon;     ///< icon associated with item
+   std::string title;    ///< item title
    bool checked{false};  ///< is checked, not used yet
    bool expanded{false}; ///< is expanded, not used yet
 public:
@@ -40,12 +41,14 @@ public:
 
    const std::string &GetName() const { return name; }
    const std::string &GetIcon() const { return icon; }
+   const std::string &GetTitle() const { return title; }
    virtual bool IsFolder() const { return false; }
    virtual bool IsHidden() const { return false; }
 
    void SetChecked(bool on = true) { checked = on; }
    void SetExpanded(bool on = true) { expanded = on; }
    void SetIcon(const std::string &_icon) { icon = _icon; }
+   void SetTitle(const std::string &_title) { title = _title; }
 
    virtual bool Compare(const RItem *b, const std::string &) const
    {
