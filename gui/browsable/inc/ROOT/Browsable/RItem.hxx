@@ -1,11 +1,3 @@
-/// \file ROOT/RItem.hxx
-/// \ingroup WebGui ROOT7
-/// \author Bertrand Bellenot <bertrand.bellenot@cern.ch>
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \date 2019-02-28
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -23,7 +15,11 @@ namespace ROOT {
 namespace Experimental {
 namespace Browsable {
 
-/** Representation of single item in the browser */
+/** \class RItem
+\ingroup rbrowser
+\brief Representation of single item in the browser
+*/
+
 class RItem {
 protected:
    std::string name;     ///< item name

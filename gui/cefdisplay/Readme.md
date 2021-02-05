@@ -1,6 +1,8 @@
+\page cefpage ROOT installation with CEF
+
 ## Compilation with CEF support
 
-See details about [Chromimum Embeded Framework](https://bitbucket.org/chromiumembedded/cef)
+See details about [Chromimum Embedded Framework](https://bitbucket.org/chromiumembedded/cef)
 
 1. Current code tested with CEF3 branch 4147, Chromium 84 (August 2020)
    Older CEF versions are no longer supported.
