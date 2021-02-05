@@ -114,7 +114,7 @@ private:
    size_t fBuffered{0};                                          //< Number of bytes currently buffered
    TFileMerger fMerger{false, false};                            //< TFileMerger used to merge all buffers
    std::mutex fMergeMutex;                                       //< Mutex used to lock fMerger
-   std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
+   mutable std::mutex fQueueMutex;                               //< Mutex used to lock fQueue
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
 };
