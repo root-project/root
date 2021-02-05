@@ -83,15 +83,6 @@ public:
    void SetItemVisible(Int_t idx, Bool_t visible);
    void SetItemColorRGB(Int_t idx, UChar_t r, UChar_t g, UChar_t b);
 
-   void SetItemsChangeDelegate (std::function<void (REveDataItemList*, const std::vector<int>&)> handler_func)
-   {
-      _handler_items_change = handler_func;
-   }
-   void SetFillImpliedSelectedDelegate (std::function<void (REveDataItemList*, Set_t& impSelSet)> handler_func)
-   {
-      _handler_fillimp = handler_func;
-   }
-
    Bool_t SingleRnrState() const override { return kTRUE; }
    Bool_t SetRnrState(Bool_t) override;
 
@@ -101,6 +92,12 @@ public:
 
    using REveElement::GetHighlightTooltip;
    std::string GetHighlightTooltip(const std::set<int>& secondary_idcs) const override;
+
+   void SetItemsChangeDelegate (std::function<void (REveDataItemList*, const std::vector<int>&)> handler_func);
+   void SetFillImpliedSelectedDelegate (std::function<void (REveDataItemList*, Set_t& impSelSet)> handler_func);
+
+   static void DummyItemsChangeDelegate(REveDataItemList*, const std::vector<int>&);
+   static void DummyFillImpliedSelectedDelegate(REveDataItemList*, Set_t& impSelSet);
 };
 
 //==============================================================================
