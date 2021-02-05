@@ -256,7 +256,7 @@
                <l:Splitter orientation="Vertical" width="100%" height="100%">
                   <VBox>
                      <layoutData><l:SplitterLayoutData size="30%"/></layoutData>
-                     <Text text="Path: {/fullpath}"/>
+                     <Text text="Path: {/strpath}"/>
                      <Text text="Node name: {/node_name}"/>
                      <Text text="Type: {/node_type}"/>
                      <Text text="Shape name: {/shape_name}"/>

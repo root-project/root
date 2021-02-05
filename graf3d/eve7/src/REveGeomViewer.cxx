@@ -222,7 +222,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       auto req = TBufferJSON::FromJSON<REveGeomRequest>(arg.substr(6));
 
       if (req && (req->oper == "HOVER")) {
-         if (req->path != "OFF")
+         if ((req->path.size() > 0 ) && (req->path[0] != "OFF"))
             req->stack = fDesc.MakeStackByPath(req->path);
          req->path.clear();
       } else if (req && (req->oper == "HIGHL")) {

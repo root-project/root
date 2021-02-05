@@ -361,12 +361,6 @@ sap.ui.define([
                threshold2 = Math.round(threshold/2),
                nodes = this.reset_nodes ? {} : this.getProperty("/nodes");
 
-           function makeFullPath(path) {
-              let res = "/";
-              path.forEach(elem => res += elem + "/");
-              return res;
-           }
-
            // main method to scan through all existing sub-folders
            let scan = (lvl, elem, path) => {
 
@@ -375,7 +369,6 @@ sap.ui.define([
                  nodes[id] = {
                     name: elem.name,
                     path: path.slice(), // make array copy
-                    fullpath: makeFullPath(path), // create string to keep compatible
                     index: id,
                     _elem: elem,
                     isLeaf: !elem.nchilds,

@@ -1084,20 +1084,14 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByIds(const s
 /// Produce stack based on string path
 /// Used to highlight geo volumes by browser hover event
 
-std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByPath(const std::string &path)
+std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByPath(const std::vector<std::string> &path)
 {
    std::vector<int> res;
 
    RGeomBrowserIter iter(*this);
 
-   if (iter.Navigate(path)) {
-//      auto ids = iter.CurrentIds();
-//      printf("path %s ", path.c_str());
-//      for (auto &id: ids)
-//         printf("%d ", id);
-//      printf("\n");
+   if (iter.Navigate(path))
       res = MakeStackByIds(iter.CurrentIds());
-   }
 
    return res;
 }
@@ -1134,18 +1128,13 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeIdsByStack(const s
 /////////////////////////////////////////////////////////////////////////////////
 /// Returns path string for provided stack
 
-std::string ROOT::Experimental::REveGeomDescription::MakePathByStack(const std::vector<int> &stack)
+std::vector<std::string> ROOT::Experimental::REveGeomDescription::MakePathByStack(const std::vector<int> &stack)
 {
-   std::string path;
+   std::vector<std::string> path;
 
    auto ids = MakeIdsByStack(stack);
-   if (ids.size() > 0) {
-      path = "/";
-      for (auto &id : ids) {
-         path.append(fDesc[id].name);
-         path.append("/");
-      }
-   }
+   for (auto &id : ids)
+      path.emplace_back(fDesc[id].name);
 
    return path;
 }
@@ -1295,7 +1284,7 @@ bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, b
 /// Change visibility for specified element
 /// Returns true if changes was performed
 
-std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGeomDescription::MakeNodeInfo(const std::string &path)
+std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGeomDescription::MakeNodeInfo(const std::vector<std::string> &path)
 {
    std::unique_ptr<REveGeomNodeInfo> res;
 
@@ -1309,7 +1298,7 @@ std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGe
 
       res = std::make_unique<REveGeomNodeInfo>();
 
-      res->fullpath = path;
+      res->path = path;
       res->node_name = node->GetName();
       res->node_type = node->ClassName();
 
