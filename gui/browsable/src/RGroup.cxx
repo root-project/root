@@ -29,8 +29,8 @@ public:
    /** Returns current element name  */
    std::string GetItemName() const override { return fComp.GetChilds()[fIndx]->GetName(); }
 
-   /** Number of child elements in current element - not know, most probably there */
-   int GetNumItemChilds() const override { return -1; }
+   /** Returns true if item can have childs */
+   bool CanItemHaveChilds() const override { return true; }
 
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override { return fComp.GetChilds()[fIndx]; }
