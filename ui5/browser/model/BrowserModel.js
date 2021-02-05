@@ -4,7 +4,7 @@ sap.ui.define([
 ], function(JSONModel, BrowserListBinding) {
    "use strict";
 
-    var hRootModel = JSONModel.extend("rootui5.browser.model.BrowserModel", {
+    let hRootModel = JSONModel.extend("rootui5.browser.model.BrowserModel", {
 
         constructor: function() {
             JSONModel.apply(this);
@@ -287,13 +287,13 @@ sap.ui.define([
         },
 
         getNodeByIndex: function(indx) {
-           var nodes = this.getProperty("/nodes");
+           let nodes = this.getProperty("/nodes");
            return nodes ? nodes[indx] : null;
         },
 
         // return element of hierarchical structure by TreeTable index
         getElementByIndex: function(indx) {
-           var node = this.getNodeByIndex(indx);
+           let node = this.getNodeByIndex(indx);
            return node ? node._elem : null;
         },
 
@@ -301,7 +301,7 @@ sap.ui.define([
         // if element specified - returns index of that element
         scanShifts: function(for_elem) {
 
-           var id = 0, full = this.fullModel, res = -1;
+           let id = 0, full = this.fullModel, res = -1;
 
            function scan(lvl, elem) {
 
@@ -309,7 +309,7 @@ sap.ui.define([
 
               if (lvl >= 0) id++;
 
-              var before_id = id;
+              let before_id = id;
 
               if (elem.expanded) {
                  if (elem.childs === undefined) {
@@ -323,13 +323,13 @@ sap.ui.define([
                        id += elem.first;
 
                     // jump over all childs
-                    for (var k=0;k<elem.childs.length;++k)
+                    for (let k = 0; k < elem.childs.length; ++k)
                        scan(lvl+1, elem.childs[k]);
 
                     // gap at the end
                     if (!full) {
-                       var _last = (elem.first || 0) + elem.childs.length;
-                       var _remains = elem.nchilds  - _last;
+                       let _last = (elem.first || 0) + elem.childs.length,
+                           _remains = elem.nchilds  - _last;
                        if (_remains > 0) id += _remains;
                     }
                  }
@@ -374,7 +374,8 @@ sap.ui.define([
               if ((lvl >= 0) && (nodes !== null) && !nodes[id] && (id >= args.begin - threshold2) && (id < args.end + threshold2)) {
                  nodes[id] = {
                     name: elem.name,
-                    fullpath: makeFullPath(path), // make array copy
+                    path: path.slice(), // make array copy
+                    fullpath: makeFullPath(path), // create string to keep compatible
                     index: id,
                     _elem: elem,
                     isLeaf: !elem.nchilds,
@@ -479,7 +480,7 @@ sap.ui.define([
         // toggle expand state of specified node
         toggleNode: function(index) {
 
-           var node = this.getNodeByIndex(index),
+           let node = this.getNodeByIndex(index),
                elem = node ? node._elem : null;
 
            if (!node || !elem) return;
