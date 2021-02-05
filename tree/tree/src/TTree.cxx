@@ -3231,7 +3231,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
 
    if (nentries != 0) {
       if (fastClone && (nentries < 0)) {
-         if ( newtree->CopyEntries( this, -1, option ) < 0 ) {
+         if ( newtree->CopyEntries( this, -1, option, kFALSE ) < 0 ) {
             // There was a problem!
             Error("CloneTTree", "TTree has not been cloned\n");
             delete newtree;
@@ -3239,7 +3239,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
             return 0;
          }
       } else {
-         newtree->CopyEntries( this, nentries, option );
+         newtree->CopyEntries( this, nentries, option, kFALSE );
       }
    }
 
@@ -3479,7 +3479,7 @@ namespace {
 /// - BuildIndexOnError : If any of the underlying TTree objects do not have a TTreeIndex,
 ///                          all TTreeIndex are 'ignored' and the missing piece are rebuilt.
 
-Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t* option /* = "" */)
+Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t* option /* = "" */, Bool_t needCopyAddresses /* = false */)
 {
    if (!tree) {
       return 0;
@@ -3559,12 +3559,20 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
                if (cloner.NeedConversion()) {
                   TTree *localtree = tree->GetTree();
                   Long64_t tentries = localtree->GetEntries();
+                  if (needCopyAddresses) {
+                     // Copy MakeClass status.
+                     tree->SetMakeClass(fMakeClass);
+                     // Copy branch addresses.
+                     CopyAddresses(tree);
+                  }
                   for (Long64_t ii = 0; ii < tentries; ii++) {
                      if (localtree->GetEntry(ii) <= 0) {
                         break;
                      }
                      this->Fill();
                   }
+                  if (needCopyAddresses)
+                     tree->ResetBranchAddresses();
                   if (this->GetTreeIndex()) {
                      this->GetTreeIndex()->Append(tree->GetTree()->GetTreeIndex(), kTRUE);
                   }
@@ -3590,6 +3598,12 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
       } else if (nentries > treeEntries) {
          nentries = treeEntries;
       }
+      if (needCopyAddresses) {
+         // Copy MakeClass status.
+         tree->SetMakeClass(fMakeClass);
+         // Copy branch addresses.
+         CopyAddresses(tree);
+      }
       Int_t treenumber = -1;
       for (Long64_t i = 0; i < nentries; i++) {
          if (tree->LoadTree(i) < 0) {
@@ -3606,6 +3620,8 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
          }
          nbytes += this->Fill();
       }
+      if (needCopyAddresses)
+         tree->ResetBranchAddresses();
       if (this->GetTreeIndex()) {
          this->GetTreeIndex()->Append(0,kFALSE); // Force the sorting
       }
@@ -4525,8 +4541,8 @@ void TTree::DropBuffers(Int_t)
 /// Note that the user can decide to call FlushBaskets and AutoSave in her event loop
 /// base on the number of events written instead of the number of bytes written.
 ///
-/// \note Calling `TTree::FlushBaskets` too often increases the IO time. 
-/// 
+/// \note Calling `TTree::FlushBaskets` too often increases the IO time.
+///
 /// \note Calling `TTree::AutoSave` too often increases the IO time and also the
 ///       file size.
 ///
@@ -6792,11 +6808,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
          continue;
       }
 
-      newtree->CopyAddresses(tree);
-
-      newtree->CopyEntries(tree,-1,options);
-
-      tree->ResetBranchAddresses(); // Disconnect from new tree.
+      newtree->CopyEntries(tree, -1, options, kTRUE);
    }
    if (newtree && newtree->GetTreeIndex()) {
       newtree->GetTreeIndex()->Append(0,kFALSE); // Force the sorting
@@ -6831,11 +6843,7 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
       Long64_t nentries = tree->GetEntries();
       if (nentries == 0) continue;
 
-      CopyAddresses(tree);
-
-      CopyEntries(tree,-1,options);
-
-      tree->ResetBranchAddresses();
+      CopyEntries(tree, -1, options, kTRUE);
    }
    fAutoSave = storeAutoSave;
    return GetEntries();
@@ -6894,15 +6902,8 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
          fAutoSave = storeAutoSave;
          return -1;
       }
-      // Copy MakeClass status.
-      tree->SetMakeClass(fMakeClass);
 
-      // Copy branch addresses.
-      CopyAddresses(tree);
-
-      CopyEntries(tree,-1,options);
-
-      tree->ResetBranchAddresses();
+      CopyEntries(tree, -1, options, kTRUE);
    }
    fAutoSave = storeAutoSave;
    return GetEntries();
