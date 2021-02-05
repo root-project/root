@@ -1141,10 +1141,12 @@ void TBranchElement::BuildTitle(const char* name)
 {
    TString branchname;
 
-   Int_t nbranches = fBranches.GetEntries();
+   Int_t nbranches = fBranches.GetEntriesFast();
 
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranchElement* bre = (TBranchElement*) fBranches.At(i);
+      if (!bre)
+         continue;
       if (fType == 3) {
          bre->SetType(31);
       } else if (fType == 4) {
@@ -3233,7 +3235,7 @@ void TBranchElement::InitializeOffsets()
          {
             Int_t streamerType = subBranchElement->GetType();
             if (streamerType > TStreamerInfo::kObject
-                && subBranch->GetListOfBranches()->GetEntries()==0
+                && subBranch->GetListOfBranches()->GetEntriesFast()==0
                 && CanSelfReference(subBranchElement->GetClass()))
             {
                subBranch->SetBit(kBranchAny);
