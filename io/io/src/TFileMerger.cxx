@@ -527,6 +527,13 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                     key->GetName(), key->GetTitle());
                continue;
             }
+            Bool_t canBeFound = (type & kIncremental) && (current_sourcedir->GetList()->FindObject(key->GetName()) != nullptr);
+            Bool_t needWriteAnyWay = kFALSE;
+            if (canBeFound) {
+               // For now the code require a key (that might be ignored see search through current_sourcedir->GetList())
+               // in the output file in order for it to be even considered.
+               needWriteAnyWay = target->GetListOfKeys()->FindObject(key->GetName()) == nullptr;
+            }
             // if (cl->IsTObject())
             //    obj->ResetBit(kMustCleanup);
             if (cl->IsTObject() && cl != obj->IsA()) {
@@ -761,7 +768,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                }
                ((TCollection*)obj)->SetOwner();
                delete obj;
-            } else {
+            } else if (!canBeFound) { // Don't write the partial result for TTree and TH1
                // Don't overwrite, if the object were not merged.
                // NOTE: this is probably wrong for emulated objects.
                if (cl->IsTObject()) {
@@ -775,6 +782,17 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   }
                }
                cl->Destructor(obj); // just in case the class is not loaded.
+            } else if (needWriteAnyWay) {
+               if (cl->IsTObject()) {
+                  if ( obj->Write( oldkeyname, canBeMerged ? TObject::kOverwrite : 0) <= 0) {
+                     status = kFALSE;
+                  }
+                  obj->ResetBit(kMustCleanup);
+               } else {
+                  if ( target->WriteObjectAny( (void*)obj, cl, oldkeyname, canBeMerged ? "OverWrite" : "" ) <= 0) {
+                     status = kFALSE;
+                  }
+               }
             }
             info.Reset();
          } // while ( ( TKey *key = (TKey*)nextkey() ) )
@@ -892,8 +910,11 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
    } else {
       // Close or write is required so the file is complete.
       if (in_type & kIncremental) {
-         fOutputFile->Write("",TObject::kOverwrite);
+         if (!(in_type & kDelayWrite))
+            fOutputFile->Write("",TObject::kOverwrite);
       } else {
+         if (type & kIncremental)
+            fOutputFile->Write("",TObject::kOverwrite);
          gROOT->GetListOfFiles()->Remove(fOutputFile);
          fOutputFile->Close();
       }

@@ -64,13 +64,14 @@ public:
       kIncremental  = BIT(1),        ///< Merge the input file with the content of the output file (if already exising).
       kResetable    = BIT(2),        ///< Only the objects with a MergeAfterReset member function.
       kNonResetable = BIT(3),        ///< Only the objects without a MergeAfterReset member function.
+      kDelayWrite   = BIT(4),        ///< Delay the TFile write (to reduce the number of write when reusing the file)
 
       kAll            = BIT(2)|BIT(3),      ///< Merge all type of objects (default)
       kAllIncremental = kIncremental | kAll, ///< Merge incrementally all type of objects.
 
-      kOnlyListed     = BIT(4),        ///< Only the objects specified in fObjectNames list
-      kSkipListed     = BIT(5),        ///< Skip objects specified in fObjectNames list
-      kKeepCompression= BIT(6)         ///< Keep compression level unchanged for each input files
+      kOnlyListed     = BIT(5),        ///< Only the objects specified in fObjectNames list
+      kSkipListed     = BIT(6),        ///< Skip objects specified in fObjectNames list
+      kKeepCompression= BIT(7)         ///< Keep compression level unchanged for each input files
    };
 
    TFileMerger(Bool_t isLocal = kTRUE, Bool_t histoOneGo = kTRUE);
