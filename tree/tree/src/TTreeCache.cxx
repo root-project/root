@@ -314,7 +314,7 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize)
      fBrNames(new TList), fTree(tree), fPrefillType(GetConfiguredPrefillType())
 {
    fEntryNext = fEntryMin + fgLearnEntries;
-   Int_t nleaves = tree->GetListOfLeaves()->GetEntries();
+   Int_t nleaves = tree->GetListOfLeaves()->GetEntriesFast();
    fBranches = new TObjArray(nleaves);
 }
 

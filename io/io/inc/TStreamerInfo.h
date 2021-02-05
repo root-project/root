@@ -217,7 +217,7 @@ public:
    TStreamerInfoActions::TActionSequence *GetWriteObjectWiseActions() { return fWriteObjectWise; }
    TStreamerInfoActions::TActionSequence *GetWriteTextActions() { return fWriteText; }
    Int_t               GetNdata()   const {return fNdata;}
-   Int_t               GetNelement() const { return fElements->GetEntries(); }
+   Int_t               GetNelement() const { return fElements->GetEntriesFast(); }
    Int_t               GetNumber()  const {return fNumber;}
    Int_t               GetLength(Int_t id) const {return fComp[id].fLength;}
    ULong_t             GetMethod(Int_t id) const {return fComp[id].fMethod;}

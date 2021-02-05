@@ -3003,7 +3003,7 @@ void TStreamerInfo::Compile()
    assert(fComp == 0 && fCompFull == 0 && fCompOpt == 0);
 
 
-   Int_t ndata = fElements->GetEntries();
+   Int_t ndata = fElements->GetEntriesFast();
 
 
    if (fReadObjectWise) fReadObjectWise->fActions.clear();
@@ -3894,7 +3894,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
    TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
 
-   UInt_t ndata = info->GetElements()->GetEntries();
+   UInt_t ndata = info->GetElements()->GetEntriesFast();
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
    if (IsDefaultVector(proxy))
    {
@@ -4009,7 +4009,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          return new TStreamerInfoActions::TActionSequence(0,0);
       }
 
-      UInt_t ndata = info->GetElements()->GetEntries();
+      UInt_t ndata = info->GetElements()->GetEntriesFast();
       TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
       TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
 
