@@ -27,7 +27,6 @@ bool RLevelIter::Find(const std::string &name)
    return false;
 }
 
-
 /////////////////////////////////////////////////////////////////////
 /// Create generic description item for RBrowser
 

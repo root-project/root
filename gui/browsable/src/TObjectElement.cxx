@@ -81,6 +81,8 @@ public:
 
       item->SetIcon(RProvider::GetClassIcon(cl));
 
+      item->SetTitle(elem->GetTitle());
+
       return item;
    }
 
@@ -170,6 +172,8 @@ public:
       item->SetClassName(obj->ClassName());
 
       item->SetIcon(RProvider::GetClassIcon(obj->IsA()));
+
+      item->SetTitle(obj->GetTitle());
 
       return item;
    }

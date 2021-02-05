@@ -159,7 +159,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             node.ftype = elem.ftype;
             node.fuid = elem.fuid;
             node.fgid = elem.fgid;
-            node.className = elem.className
+            node.className = elem.className;
+            node.title = elem.title;
          };
 
          let t = this.getView().byId("treeTable");
@@ -172,8 +173,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             visible: true,
             template: new HorizontalLayout({
                content: [
-                         new CoreIcon({src:"{icon}"}),
-                         new mText({text:" {name}", renderWhitespace: true, wrapping: false })
+                         new CoreIcon({src:"{icon}", tooltip: "{className}" }),
+                         new mText({text:" {name}", tooltip: "{title}", renderWhitespace: true, wrapping: false })
                          ]
             })
          }));
