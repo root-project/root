@@ -113,7 +113,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    bool streamerInfosTest;
    {
      R__LOCKGUARD(gInterpreterMutex);
-     streamerInfosTest = (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->GetEntries()==0);
+     streamerInfosTest = (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->IsEmpty());
    }
    if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && streamerInfosTest) ) {
       TObjArrayIter titer( rule->GetTarget() );
@@ -495,7 +495,7 @@ Bool_t TSchemaRuleSet::TMatches::HasRuleWithSource( const TString& name, Bool_t 
       if( rule->HasSource( name ) ) {
          if (needingAlloc) {
             const TObjArray *targets = rule->GetTarget();
-            if (targets && (targets->GetEntries() > 1 || targets->GetEntries()==0) ) {
+            if (targets && (targets->GetEntriesFast() > 1 || targets->IsEmpty()) ) {
                return kTRUE;
             }
             if (targets && name != targets->UncheckedAt(0)->GetName() ) {
@@ -525,11 +525,11 @@ Bool_t TSchemaRuleSet::TMatches::HasRuleWithTarget( const TString& name, Bool_t 
       if( rule->HasTarget( name ) ) {
          if (willset) {
             const TObjArray *targets = rule->GetTarget();
-            if (targets && (targets->GetEntries() > 1 || targets->GetEntries()==0) ) {
+            if (targets && (targets->GetEntriesFast() > 1 || targets->IsEmpty()) ) {
                return kTRUE;
             }
             const TObjArray *sources = rule->GetSource();
-            if (sources && (sources->GetEntries() > 1 || sources->GetEntries()==0) ) {
+            if (sources && (sources->GetEntriesFast() > 1 || sources->IsEmpty()) ) {
                return kTRUE;
             }
             if (sources && name != sources->UncheckedAt(0)->GetName() ) {

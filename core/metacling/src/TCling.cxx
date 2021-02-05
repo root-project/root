@@ -6291,7 +6291,7 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          clang::DeclContext* previousScopeAsContext = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
          if (TClassEdit::IsStdClass(cls + offset))
             previousScopeAsContext = fInterpreter->getSema().getStdNamespace();
-         auto nTokens = tokens->GetEntries();
+         auto nTokens = tokens->GetEntriesFast();
          for (Int_t tk = 0; tk < nTokens; ++tk) {
             auto scopeObj = tokens->UncheckedAt(tk);
             auto scopeName = ((TObjString*) scopeObj)->String().Data();
