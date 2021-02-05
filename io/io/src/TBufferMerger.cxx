@@ -49,6 +49,10 @@ TBufferMerger::~TBufferMerger()
 
    if (!fQueue.empty())
       Merge();
+
+   TFile *out = fMerger.GetOutputFile();
+   if (out)
+      out->Write("",TObject::kOverwrite);
 }
 
 std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
@@ -121,7 +125,7 @@ void TBufferMerger::Merge()
          queue.pop();
       }
 
-      fMerger.PartialMerge();
+      fMerger.PartialMerge(TFileMerger::kAll | TFileMerger::kIncremental | TFileMerger::kDelayWrite);
       fMerger.Reset();
       fMergeMutex.unlock();
    }
