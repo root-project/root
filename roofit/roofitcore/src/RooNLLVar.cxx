@@ -362,15 +362,27 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
     if(_extended && _setNum==_extSet) {
       if (_weightSq) {
 
-        // TODO Batch this up
+
         // Calculate sum of weights-squared here for extended term
-        Double_t sumW2(0), sumW2carry(0);
-        for (decltype(_dataClone->numEntries()) i = 0; i < _dataClone->numEntries() ; i++) {
-          _dataClone->get(i);
-          Double_t y = _dataClone->weightSquared() - sumW2carry;
-          Double_t t = sumW2 + y;
-          sumW2carry = (t - sumW2) - y;
-          sumW2 = t;
+        Double_t sumW2;
+        if (_batchEvaluations) {
+          const RooSpan<const double> eventWeights = _dataClone->getWeightBatch(0, _nEvents);
+          if (eventWeights.empty()) {
+            sumW2 = (lastEvent - firstEvent) * _dataClone->weightSquared();
+          } else {
+            ROOT::Math::KahanSum<double, 4u> kahanWeight;
+            for (std::size_t i = 0; i < eventWeights.size(); ++i) {
+              kahanWeight.AddIndexed(eventWeights[i] * eventWeights[i], i);
+            }
+            sumW2 = kahanWeight.Sum();
+          }
+        } else { // scalar mode
+          ROOT::Math::KahanSum<double> sumW2KahanSum;
+          for (decltype(_dataClone->numEntries()) i = 0; i < _dataClone->numEntries() ; i++) {
+            _dataClone->get(i);
+            sumW2KahanSum += _dataClone->weightSquared();
+          }
+          sumW2 = sumW2KahanSum.Sum();
         }
 
         Double_t expected= pdfClone->expectedEvents(_dataClone->get());
@@ -443,7 +455,7 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 /// \param[in] firstEvent  First event to be processed.
 /// \param[in] lastEvent   First event not to be processed.
 /// \return Tuple with (Kahan sum of probabilities, carry of kahan sum, sum of weights)
-RooNLLVar::ComputeBatchedResult RooNLLVar::computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const
+RooNLLVar::ComputeResult RooNLLVar::computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const
 {
   const auto nEvents = lastEvent - firstEvent;
 
@@ -550,7 +562,7 @@ RooNLLVar::ComputeBatchedResult RooNLLVar::computeBatched(std::size_t stepSize, 
 }
 
 
-RooNLLVar::ComputeBatchedResult RooNLLVar::computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const {
+RooNLLVar::ComputeResult RooNLLVar::computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const {
   auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
 
   ROOT::Math::KahanSum<double> kahanWeight;
