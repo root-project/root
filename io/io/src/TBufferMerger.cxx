@@ -66,6 +66,12 @@ size_t TBufferMerger::GetQueueSize() const
    return fQueue.size();
 }
 
+size_t TBufferMerger::GetBuffered() const
+{
+   std::lock_guard<std::mutex> lock(fQueueMutex);
+   return fBuffered;
+}
+
 void TBufferMerger::Push(TBufferFile *buffer)
 {
    {

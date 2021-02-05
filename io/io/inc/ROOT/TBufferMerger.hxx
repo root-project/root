@@ -70,6 +70,9 @@ public:
    /** Returns the number of buffers currently in the queue. */
    size_t GetQueueSize() const;
 
+   /** Returns the number of bytes currently buffered (i.e. in the queue). */
+   size_t GetBuffered() const;
+
    /** Returns the current value of the auto save setting in bytes (default = 0). */
    size_t GetAutoSave() const;
 
