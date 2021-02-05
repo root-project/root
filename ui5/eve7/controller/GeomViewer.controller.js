@@ -166,9 +166,9 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      /** @brief Send REveGeomRequest data to geometry viewer */
+      /** @summary Send REveGeomRequest data to geometry viewer */
       sendViewerRequest: function(_oper, args) {
-         var req = { oper: _oper, path: "", stack: [] };
+         let req = { oper: _oper, path: [], stack: [] };
          JSROOT.extend(req, args);
          this.websocket.send("GVREQ:" + JSON.stringify(req));
       },
@@ -203,21 +203,22 @@ sap.ui.define(['sap/ui/core/Component',
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
          if (!this.standalone) {
-            var req = is_enter && prop && prop.fullpath && prop.isLeaf ? prop.fullpath : "OFF";
+            let req = is_enter && prop && prop.path && prop.isLeaf ? prop.path : [ "OFF" ];
             // avoid multiple time submitting same request
-            if (this._last_hover_req === req) return;
+            if (this.comparePaths(this._last_hover_req, req) === 1000) return;
+
             this._last_hover_req = req;
             return this.sendViewerRequest("HOVER", { path: req });
          }
 
          if (this.geo_painter && this.geo_clones) {
-            var fullpath = "";
+            let strpath = "";
 
-            if (prop && prop.fullpath && is_enter)
-               fullpath = prop.fullpath.substr(1, prop.fullpath.length-2);
+            if (prop && prop.path && is_enter)
+               strpath = prop.path.join("/");
 
             // remember current element with hover stack
-            this._hover_stack = fullpath ? this.geo_clones.findStackByName(fullpath) : null;
+            this._hover_stack = strpath ? this.geo_clones.findStackByName(strpath) : null;
 
             this.geo_painter.highlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
          }
@@ -262,36 +263,47 @@ sap.ui.define(['sap/ui/core/Component',
       /** Callback from geo painter when mesh object is highlighted. Use for update of TreeTable */
       highlightMesh: function(active_mesh, color, geo_object, geo_index, geo_stack) {
          if (!this.standalone) {
-            var req = geo_stack ? geo_stack : [];
+            let req = geo_stack ? geo_stack : [];
             // avoid multiple time submitting same request
             if (geo.isSameStack(this._last_highlight_req, req)) return;
             this._last_highlight_req = req;
             return this.sendViewerRequest("HIGHL", { stack: req });
          }
 
-         var hpath = "---";
+         let hpath = "";
 
          if (this.geo_clones && geo_stack) {
-            var info = this.geo_clones.resolveStack(geo_stack);
-            if (info && info.name) hpath = "/" + info.name + "/";
+            let info = this.geo_clones.resolveStack(geo_stack);
+            if (info && info.name) hpath = info.name;
          }
 
-         this.highlighRowWithPath(hpath);
+         this.highlighRowWithPath(hpath.split("/"));
+      },
+
+      /** @summary compare two paths to verify that both are the same
+        * @returns 1000 if both are equivalent or maximal match length */
+      comparePaths: function(path1, path2) {
+         if (!path1) path1 = [];
+         if (!path2) path2 = [];
+         let len = Math.min(path1.length, path2.length);
+         for (let i = 0; i < len; i++)
+            if (path1[i] != path2[i])
+               return i-1;
+
+         return path1.length == path2.length ? 1000 : len;
       },
 
       highlighRowWithPath: function(path) {
-         var rows = this.byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
+         let rows = this.byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
 
-         for (var i=0;i<rows.length;++i) {
+         for (let i=0;i<rows.length;++i) {
             rows[i].$().css("background-color", "");
-            if (path && (path !== "OFF")) {
-               var ctxt = rows[i].getBindingContext(),
-                   prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
-                   cmp = 0;
+            if (path && (path[0] !== "OFF")) {
+               let ctxt = rows[i].getBindingContext(),
+                   prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
-               if (prop && prop.fullpath) {
-                  if (prop.fullpath == path) cmp = 1000; else
-                  if (path.indexOf(prop.fullpath) == 0) cmp = prop.fullpath.length;
+               if (prop && prop.path) {
+                  let cmp = this.comparePaths(prop.path, path);
                   if (cmp > best_cmp) { best_cmp = cmp; best_indx = i; }
                }
             }
@@ -537,7 +549,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (typeof msg != "string")
             return console.error("Geom viewer do not uses binary messages len = " + mgs.byteLength);
 
-         var mhdr = msg.substr(0,6);
+         let mhdr = msg.substr(0,6);
          msg = msg.substr(6);
 
          console.log(mhdr, msg.length, msg.substr(0,70), "...");
@@ -763,18 +775,18 @@ sap.ui.define(['sap/ui/core/Component',
          this.model.setFullModel(nodes[0]);
       },
 
-      /** Here one tries to append only given stack to the tree
-        * used to build partial tree with visible objects
+      /** @summary Here one tries to append only given stack to the tree
+        * @desc used to build partial tree with visible objects
         * Used only in standalone mode */
       appendStackToTree: function(tnodes, stack, color) {
-         var prnt = null, node = null, path = "/";
-         for (var i=-1;i<stack.length;++i) {
-            var indx = (i<0) ? 0 : node.chlds[stack[i]];
+         let prnt = null, node = null, path = [];
+         for (let i = -1; i < stack.length; ++i) {
+            let indx = (i < 0) ? 0 : node.chlds[stack[i]];
             node = this.geo_clones.nodes[indx];
-            path += node.name + "/";
-            var tnode = tnodes[indx];
+            path.push(node.name);
+            let tnode = tnodes[indx];
             if (!tnode)
-               tnodes[indx] = tnode = { name: node.name, fullpath: path, id: indx, color_visible: false, node_visible: true };
+               tnodes[indx] = tnode = { name: node.name, path: path.slice(), id: indx, color_visible: false, node_visible: true };
 
             if (prnt) {
                if (!prnt.childs) prnt.childs = [];
@@ -921,31 +933,29 @@ sap.ui.define(['sap/ui/core/Component',
 
          if(prop && this.isInfoPageActive())
             if (this.standalone) {
-               this.processInfoOffline(prop.fullpath, prop.id);
+               this.processInfoOffline(prop.path, prop.id);
             } else {
-               this.sendViewerRequest("INFO", { path: prop.fullpath });
+               this.sendViewerRequest("INFO", { path: prop.path });
             }
       },
 
       /** Try to provide as much info as possible offline */
       processInfoOffline: function(path, id) {
-         var model = new JSONModel({ fullpath: path });
+         let model = new JSONModel({ path: path, strpath: path.join("/")  });
 
          this.byId("geomInfo").setModel(model);
 
          if (this.geo_clones && path) {
-            var stack = this.geo_clones.findStackByName(path.substr(1, path.length-2));
+            let stack = this.geo_clones.findStackByName(path.join("/"));
 
-            var info = stack ? this.geo_clones.resolveStack(stack) : null;
+            let info = stack ? this.geo_clones.resolveStack(stack) : null;
 
-            var build_shape = null;
-
-            // console.log('id', id, info ? info.id : "---");
+            let build_shape = null;
 
             // this can be moved into GeoPainter later
             if (info && (info.id !== undefined) && this.geo_painter && this.geo_painter._draw_nodes) {
-               for (var k=0;k<this.geo_painter._draw_nodes.length;++k) {
-                  var item = this.geo_painter._draw_nodes[k];
+               for (let k = 0; k < this.geo_painter._draw_nodes.length; ++k) {
+                  let item = this.geo_painter._draw_nodes[k];
                   if ((item.nodeid == info.id) && item.server_shape) {
                      build_shape = item.server_shape;
                      break;
@@ -957,14 +967,16 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      /** This is reply on INFO request */
+      /** @summary This is reply on INFO request */
       provideNodeInfo: function(info) {
 
-         var model = new JSONModel(info);
+         info.strpath = info.path.join("/"); // only for display
+
+         let model = new JSONModel(info);
 
          this.byId("geomInfo").setModel(model);
 
-         var server_shape = null;
+         let server_shape = null;
 
          if (info.ri)
             server_shape = this.createServerShape(info.ri, 0);
