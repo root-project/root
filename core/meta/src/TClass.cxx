@@ -6295,7 +6295,7 @@ void TClass::SetUnloaded()
       (*fEnums).Unload();
    }
 
-   if (fState <= kForwardDeclared && fStreamerInfo->GetEntries() != 0) {
+   if (fState <= kForwardDeclared && !fStreamerInfo->IsEmpty()) {
       fState = kEmulated;
    }
 

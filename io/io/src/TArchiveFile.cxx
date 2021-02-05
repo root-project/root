@@ -159,7 +159,7 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
    // FIXME: hard coded for "zip" archive format
    TString urloptions = u.GetOptions();
    TObjArray *objOptions = urloptions.Tokenize("&");
-   for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
+   for (Int_t n = 0; n < objOptions->GetEntriesFast(); n++) {
 
       TString loption = ((TObjString*)objOptions->At(n))->GetName();
       TObjArray *objTags = loption.Tokenize("=");

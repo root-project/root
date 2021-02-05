@@ -738,7 +738,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
 
       // Case of a custom collection (the user provided a CollectionProxy
       // for a class that is not an STL collection).
-      if (GetElements()->GetEntries() == 1) {
+      if (GetElements()->GetEntriesFast() == 1) {
          TObject *element = GetElements()->UncheckedAt(0);
          Bool_t isstl = element && strcmp("This",element->GetName())==0;
          if (isstl) {
@@ -799,7 +799,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
       const TObjArray *array = fClass->GetStreamerInfos();
       TStreamerInfo* info = 0;
 
-      if (fClass->TestBit(TClass::kIsEmulation) && array->GetEntries()==0) {
+      if (fClass->TestBit(TClass::kIsEmulation) && array->IsEmpty()) {
          // We have an emulated class that has no TStreamerInfo, this
          // means it was created to insert a (default) rule.  Consequently
          // the error message about the missing dictionary was not printed.
@@ -810,7 +810,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
 
       // Case of a custom collection (the user provided a CollectionProxy
       // for a class that is not an STL collection).
-      if (GetElements()->GetEntries() == 1) {
+      if (GetElements()->GetEntriesFast() == 1) {
          TObject *element = GetElements()->UncheckedAt(0);
          Bool_t isstl = element && strcmp("This",element->GetName())==0;
          if (isstl && !fClass->GetCollectionProxy()) {
@@ -1264,7 +1264,7 @@ void TStreamerInfo::BuildEmulated(TFile *file)
    fClassVersion = -1;
    fCheckSum = 2001;
    TObjArray *elements = GetElements();
-   Int_t ndata = elements ? elements->GetEntries() : 0;
+   Int_t ndata = elements ? elements->GetEntriesFast() : 0;
    for (Int_t i=0;i < ndata;i++) {
       TStreamerElement *element = (TStreamerElement*)elements->UncheckedAt(i);
       if (!element) break;
@@ -1583,14 +1583,14 @@ namespace {
             return nullptr;
          }
          TVirtualStreamerInfo *info = current->GetValueClass()->GetStreamerInfo();
-         if (info->GetElements()->GetEntries() != 2) {
+         if (info->GetElements()->GetEntriesFast() != 2) {
             return oldClass;
          }
          TStreamerElement *f = (TStreamerElement*) info->GetElements()->At(0);
          TStreamerElement *s = (TStreamerElement*) info->GetElements()->At(1);
 
          info = old->GetValueClass()->GetStreamerInfo();
-         assert(info->GetElements()->GetEntries() == 2);
+         assert(info->GetElements()->GetEntriesFast() == 2);
          TStreamerElement *of = (TStreamerElement*) info->GetElements()->At(0);
          TStreamerElement *os = (TStreamerElement*) info->GetElements()->At(1);
 
@@ -1755,7 +1755,7 @@ void TStreamerInfo::BuildOld()
 
    int nBaze = 0;
 
-   if ((fElements->GetEntries() == 1) && !strcmp(fElements->At(0)->GetName(), "This")) {
+   if ((fElements->GetEntriesFast() == 1) && !strcmp(fElements->At(0)->GetName(), "This")) {
       if (fClass->GetCollectionProxy())  {
          element = (TStreamerElement*)next();
          element->SetNewType( element->GetType() );
@@ -2782,7 +2782,7 @@ TObject *TStreamerInfo::Clone(const char *newname) const
    TStreamerInfo *newinfo = (TStreamerInfo*)TNamed::Clone(newname);
    if (newname && newname[0] && fName != newname) {
       TObjArray *newelems = newinfo->GetElements();
-      Int_t ndata = newelems->GetEntries();
+      Int_t ndata = newelems->GetEntriesFast();
       for(Int_t i = 0; i < ndata; ++i) {
          TObject *element = newelems->UncheckedAt(i);
          if (element->IsA() == TStreamerLoop::Class()) {
@@ -3163,7 +3163,7 @@ void TStreamerInfo::ForceWriteInfo(TFile* file, Bool_t force)
    if (fClass==0) {
       // Build or BuildCheck has not been called yet.
       // Let's use another means of checking.
-      if (fElements && fElements->GetEntries()==1 && strcmp("This",fElements->UncheckedAt(0)->GetName())==0) {
+      if (fElements && fElements->GetEntriesFast()==1 && strcmp("This",fElements->UncheckedAt(0)->GetName())==0) {
          // We are an STL collection.
          return;
       }
@@ -3593,7 +3593,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       return;
    }
 
-   Bool_t needGenericTemplate = fElements==0 || fElements->GetEntries() == 0;
+   Bool_t needGenericTemplate = fElements==0 || fElements->IsEmpty();
    Bool_t isTemplate = kFALSE;
    const char *clname = GetName();
    TString template_protoname;
@@ -3959,7 +3959,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
          }
       }
    }
-   Bool_t needGenericTemplate = isTemplate && (fElements==0 || fElements->GetEntries()==0);
+   Bool_t needGenericTemplate = isTemplate && (fElements==0 || fElements->IsEmpty());
 
    if (gDebug) printf("generating code for class %s\n",GetName());
 
@@ -4526,7 +4526,7 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
          newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
          toAdd.push_back(newel);
       } else {
-         toAdd.reserve(rule->GetTarget()->GetEntries());
+         toAdd.reserve(rule->GetTarget()->GetEntriesFast());
          TObjString * objstr = (TObjString*)(rule->GetTarget()->At(0));
          if (objstr) {
             TString newName = objstr->String();
@@ -4544,7 +4544,7 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
                // This would be a completely new member (so it would need to be cached)
                // TOBEDONE
             }
-            for(Int_t other = 1; other < rule->GetTarget()->GetEntries(); ++other) {
+            for(Int_t other = 1; other < rule->GetTarget()->GetEntriesFast(); ++other) {
                objstr = (TObjString*)(rule->GetTarget()->At(other));
                if (objstr) {
                   newName = objstr->String();
