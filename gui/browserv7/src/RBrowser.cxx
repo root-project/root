@@ -195,7 +195,6 @@ std::string RBrowser::ProcessBrowserRequest(const std::string &msg)
 
    if (msg.empty()) {
       request = std::make_unique<RBrowserRequest>();
-      request->path = "/";
       request->first = 0;
       request->number = 100;
    } else {

@@ -846,7 +846,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                let bresp = JSON.parse(msg);
                this.model.processResponse(bresp);
 
-               if (bresp.path === '/') {
+               if (bresp.path.length == 0) {
                   let tt = this.getView().byId("treeTable");
                   tt.autoResizeColumn(2);
                   tt.autoResizeColumn(1);

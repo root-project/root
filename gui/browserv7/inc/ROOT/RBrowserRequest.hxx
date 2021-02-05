@@ -14,6 +14,7 @@
 #define ROOT7_RBrowserRequest
 
 #include <string>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
@@ -25,7 +26,7 @@ namespace Experimental {
 
 class RBrowserRequest {
 public:
-   std::string path;      ///< requested path
+   std::vector<std::string> path; ///< requested path
    int first{0};          ///< first child to request
    int number{0};         ///< number of childs to request, 0 - all childs
    std::string sort;      ///< kind of sorting
