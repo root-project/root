@@ -229,11 +229,18 @@ long RBrowser::ProcessRunMacro(const std::string &file_path)
 /////////////////////////////////////////////////////////////////////////////////
 /// Process dbl click on browser item
 
-std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions, const std::string &)
+std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
 {
-   R__LOG_DEBUG(0, BrowserLog()) << "DoubleClick " << item_path;
+   args.pop_back(); // remove exec string, not used now
 
-   auto path = fBrowsable.DecomposePath(item_path, true);
+   std::string drawingOptions = args.back();
+   args.pop_back(); // remove draw option
+
+   auto path = fBrowsable.GetWorkingPath();
+   path.insert(path.end(), args.begin(), args.end());
+
+   R__LOG_DEBUG(0, BrowserLog()) << "DoubleClick " << Browsable::RElement::GetPathAsString(path);
+
    auto elem = fBrowsable.GetSubElement(path);
    if (!elem) return ""s;
 
@@ -493,8 +500,8 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       std::string reply;
 
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
-      if (arr && (arr->size() == 3))
-         reply = ProcessDblClick(arr->at(0), arr->at(1), arr->at(2));
+      if (arr && (arr->size() > 2))
+         reply = ProcessDblClick(*arr);
 
       if (!reply.empty())
          fWebWindow->Send(connid, reply);
