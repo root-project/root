@@ -58,11 +58,10 @@ public:
 
    std::string GetItemName() const override { return fElements[fCounter]->GetName(); }
 
-   int GetNumItemChilds() const override
+   bool CanItemHaveChilds() const override
    {
       std::shared_ptr<TObjectElement> telem = std::dynamic_pointer_cast<TObjectElement>(fElements[fCounter]);
-      if (!telem) return 0;
-      return telem->IsFolder() ? -1 : 0;
+      return telem ? telem->IsFolder() : false;
    }
 
    /** Create element for the browser */
@@ -154,11 +153,10 @@ public:
 
    std::string GetItemName() const override { return (*fIter)->GetName(); }
 
-   int GetNumItemChilds() const override
+   bool CanItemHaveChilds() const override
    {
       TObject *obj = *fIter;
-      if (!obj) return 0;
-      return obj->IsFolder() ? -1 : 0;
+      return obj ? obj->IsFolder() : false;
    }
 
    /** Returns full information for current element */

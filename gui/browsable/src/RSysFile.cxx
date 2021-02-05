@@ -243,21 +243,21 @@ public:
 
    std::string GetItemName() const override { return fItemName; }
 
-   /** Returns -1 if directory or file format supported */
-   int GetNumItemChilds() const override
+   /** Returns true if directory or is file format supported */
+   bool CanItemHaveChilds() const override
    {
       if (R_ISDIR(fCurrentStat.fMode))
-         return -1;
+         return true;
 
       if (RProvider::IsFileFormatSupported(GetFileExtension(fCurrentName)))
-         return -1;
+         return true;
 
-      return 0;
+      return false;
    }
 
    std::unique_ptr<RItem> CreateItem() override
    {
-      auto item = std::make_unique<RSysFileItem>(GetItemName(), GetNumItemChilds());
+      auto item = std::make_unique<RSysFileItem>(GetItemName(), CanItemHaveChilds() ? -1 : 0);
 
       // this is construction of current item
       char tmp[256];
