@@ -159,6 +159,21 @@ public:
       return obj ? obj->IsFolder() : false;
    }
 
+   /** Create item for current TObject */
+   std::unique_ptr<RItem> CreateItem() override
+   {
+      TObject *obj = *fIter;
+      if (!obj) return nullptr;
+
+      auto item = std::make_unique<TObjectItem>(obj->GetName(), obj->IsFolder() ? -1 : 0);
+
+      item->SetClassName(obj->ClassName());
+
+      item->SetIcon(RProvider::GetClassIcon(obj->IsA()));
+
+      return item;
+   }
+
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override
    {
