@@ -1058,7 +1058,10 @@ TColor::TColor(Float_t r, Float_t g, Float_t b, Float_t a): TNamed("","")
 TColor::~TColor()
 {
    gROOT->GetListOfColors()->Remove(this);
-   if (gROOT->GetListOfColors()->GetEntries() == 0) {fgPalette.Set(0); fgPalette=0;}
+   if (gROOT->GetListOfColors()->IsEmpty()) {
+      fgPalette.Set(0);
+      fgPalette=0;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

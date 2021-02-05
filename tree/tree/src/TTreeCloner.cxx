@@ -134,8 +134,8 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, TDirectory *newdirectory, Optio
    fToDirectory(newdirectory),
    fToFile(fToDirectory ? fToDirectory->GetFile() : nullptr),
    fMethod(method),
-   fFromBranches( from ? from->GetListOfLeaves()->GetEntries()+1 : 0),
-   fToBranches( to ? to->GetListOfLeaves()->GetEntries()+1 : 0),
+   fFromBranches( from ? from->GetListOfLeaves()->GetEntriesFast()+1 : 0),
+   fToBranches( to ? to->GetListOfLeaves()->GetEntriesFast()+1 : 0),
    fMaxBaskets(CollectBranches()),
    fBasketBranchNum(new UInt_t[fMaxBaskets]),
    fBasketNum(new UInt_t[fMaxBaskets]),
@@ -264,7 +264,7 @@ void TTreeCloner::CloseOutWriteBaskets()
    if (IsInPlace())
       return;
 
-   for(Int_t i=0; i<fToBranches.GetEntries(); ++i) {
+   for(Int_t i=0; i<fToBranches.GetEntriesFast(); ++i) {
       TBranch *to = (TBranch*)fToBranches.UncheckedAt(i);
       to->FlushOneBasket(to->GetWriteBasket());
    }
@@ -286,8 +286,8 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
       numBaskets += CollectBranches(fromclones->fBranchCount, toclones->fBranchCount);
 
    } else if (from->InheritsFrom(TBranchElement::Class())) {
-      Int_t nb = from->GetListOfLeaves()->GetEntries();
-      Int_t fnb = to->GetListOfLeaves()->GetEntries();
+      Int_t nb = from->GetListOfLeaves()->GetEntriesFast();
+      Int_t fnb = to->GetListOfLeaves()->GetEntriesFast();
       if (nb != fnb && (nb == 0 || fnb == 0)) {
          // We might be in the case where one branch is split
          // while the other is not split.  We must reject this match.
@@ -314,8 +314,8 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
       if (fromelem->fMaximum > toelem->fMaximum) toelem->fMaximum = fromelem->fMaximum;
    } else {
 
-      Int_t nb = from->GetListOfLeaves()->GetEntries();
-      Int_t fnb = to->GetListOfLeaves()->GetEntries();
+      Int_t nb = from->GetListOfLeaves()->GetEntriesFast();
+      Int_t fnb = to->GetListOfLeaves()->GetEntriesFast();
       if (nb != fnb) {
          fWarningMsg.Form("The export branch and the import branch (%s) do not have the same number of leaves (%d vs %d)",
                           from->GetName(), fnb, nb);
@@ -366,8 +366,8 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
 {
    // Since this is called from the constructor, this can not be a virtual function
 
-   Int_t fnb = from->GetEntries();
-   Int_t tnb = to->GetEntries();
+   Int_t fnb = from->GetEntriesFast();
+   Int_t tnb = to->GetEntriesFast();
    if (!fnb || !tnb) {
       return 0;
    }
@@ -450,7 +450,7 @@ UInt_t TTreeCloner::CollectBranches()
 
 void TTreeCloner::CollectBaskets()
 {
-   UInt_t len = fFromBranches.GetEntries();
+   UInt_t len = fFromBranches.GetEntriesFast();
 
    for(UInt_t i=0,bi=0; i<len; ++i) {
       TBranch *from = (TBranch*)fFromBranches.UncheckedAt(i);
@@ -516,11 +516,11 @@ void TTreeCloner::CopyMemoryBaskets()
       return;
 
    TBasket *basket = 0;
-   for(Int_t i=0; i<fToBranches.GetEntries(); ++i) {
+   for(Int_t i=0; i<fToBranches.GetEntriesFast(); ++i) {
       TBranch *from = (TBranch*)fFromBranches.UncheckedAt( i );
       TBranch *to   = (TBranch*)fToBranches.UncheckedAt( i );
 
-      basket = from->GetListOfBaskets()->GetEntries() ? from->GetBasket(from->GetWriteBasket()) : 0;
+      basket = (!from->GetListOfBaskets()->IsEmpty()) ? from->GetBasket(from->GetWriteBasket()) : 0;
       if (basket) {
          basket = (TBasket*)basket->Clone();
          basket->SetBranch(to);

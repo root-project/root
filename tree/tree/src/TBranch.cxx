@@ -1159,7 +1159,7 @@ Int_t TBranch::FlushBaskets()
 Int_t TBranch::FlushOneBasket(UInt_t ibasket)
 {
    Int_t nbytes = 0;
-   if (fDirectory && fBaskets.GetEntries()) {
+   if (fDirectory && fBaskets.GetEntriesFast()) {
       TBasket *basket = (TBasket*)fBaskets.UncheckedAt(ibasket);
 
       if (basket) {
