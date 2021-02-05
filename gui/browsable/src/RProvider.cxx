@@ -328,13 +328,13 @@ bool RProvider::Draw7(std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std
 /////////////////////////////////////////////////////////////////////
 /// Return icon name for the given class - either class name or TClass *
 
-std::string RProvider::GetClassIcon(const ClassArg &arg)
+std::string RProvider::GetClassIcon(const ClassArg &arg, bool is_folder)
 {
    auto &entry = GetClassEntry(arg);
    if (!entry.iconname.empty())
       return entry.iconname;
 
-   return "sap-icon://electronic-medical-record"s;
+   return is_folder ? "sap-icon://folder-blank"s : "sap-icon://electronic-medical-record"s;
 }
 
 

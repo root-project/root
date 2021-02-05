@@ -79,7 +79,7 @@ public:
 
       item->SetClassName(cl ? cl->GetName() : "");
 
-      item->SetIcon(RProvider::GetClassIcon(cl));
+      item->SetIcon(RProvider::GetClassIcon(cl, nchilds > 0));
 
       item->SetTitle(elem->GetTitle());
 
@@ -171,7 +171,7 @@ public:
 
       item->SetClassName(obj->ClassName());
 
-      item->SetIcon(RProvider::GetClassIcon(obj->IsA()));
+      item->SetIcon(RProvider::GetClassIcon(obj->IsA(), obj->IsFolder()));
 
       item->SetTitle(obj->GetTitle());
 
