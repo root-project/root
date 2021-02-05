@@ -10,5 +10,8 @@ int main()
       return 1;
    }
 
+   // On MacOS, Cocoa spawns threads. That's very bad for TProcessExecutor's `fork`:
+   // forking a multi-thread program can easily break, see e.g. `man 2 fork`.
+   gROOT->SetBatch(kTRUE);
    return ExecutorTest(ex);
 }
