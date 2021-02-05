@@ -37,8 +37,16 @@ REveDataItemList::REveDataItemList(const std::string& n, const std::string& t):
 {
    fAlwaysSecSelect = true;
 
-   _handler_items_change = 0;
-   _handler_fillimp  = 0;
+   SetItemsChangeDelegate([&] (REveDataItemList* collection, const REveDataCollection::Ids_t& ids) 
+   {
+      REveDataItemList::DummyItemsChangeDelegate(collection, ids);
+   });
+
+   SetFillImpliedSelectedDelegate([&] (REveDataItemList* collection, REveElement::Set_t& impSelSet)
+                                    {
+                                       REveDataItemList::DummyFillImpliedSelected( collection,  impSelSet);
+                                    });
+   
    SetupDefaultColorAndTransparency(REveDataCollection::fgDefaultColor, true, true);
 }
 //______________________________________________________________________________
@@ -188,6 +196,34 @@ void REveDataItemList::AddTooltipExpression(const std::string &title, const std:
    fTooltipExpressions.push_back(tt);
 }
 
+//______________________________________________________________________________
+void REveDataItemList::SetItemsChangeDelegate (std::function<void (REveDataItemList*, const std::vector<int>&)> handler_func)
+{
+   _handler_items_change = handler_func;
+}
+
+//______________________________________________________________________________
+void REveDataItemList::SetFillImpliedSelectedDelegate (std::function<void (REveDataItemList*, Set_t& impSelSet)> handler_func)
+{
+   _handler_fillimp = handler_func;
+}
+
+//______________________________________________________________________________
+void REveDataItemList::DummyItemsChangeDelegate(REveDataItemList*, const std::vector<int>&)
+{
+   if (gDebug) {
+      printf("REveDataItemList::DummyItemsCahngeDelegate not implemented\n");
+   }
+}
+
+
+//______________________________________________________________________________
+void REveDataItemList::DummyFillImpliedSelectedDelegate(REveDataItemList*, REveElement::Set_t&)
+{
+   if (gDebug) {
+      printf("REveDataItemList::DummyFillImpliedSelectedDelegate not implemented\n");
+   }
+}
 
 //==============================================================================
 // REveDataCollection
@@ -252,7 +288,7 @@ void REveDataCollection::ApplyFilter()
    }
    StampObjProps();
    fItemList->StampObjProps();
-   if (fItemList->_handler_items_change) fItemList->_handler_items_change( fItemList , ids);
+   fItemList->_handler_items_change( fItemList , ids);
 }
 
 //______________________________________________________________________________
@@ -343,7 +379,7 @@ void REveDataCollection::SetMainColor(Color_t newv)
    }
    fItemList->StampObjProps();
    fItemList->SetMainColor(newv);
-   if ( fItemList->_handler_items_change) fItemList->_handler_items_change( fItemList , ids);
+   fItemList->_handler_items_change( fItemList , ids);
 }
 
 //______________________________________________________________________________
