@@ -94,13 +94,12 @@ sap.ui.define(['sap/ui/core/Component',
          this.cfg_model = new JSONModel(this.cfg);
          this.getView().setModel(this.cfg_model);
 
-         var nobrowser = this.websocket.getUserArgs('nobrowser') || JSROOT.decodeUrl().has('nobrowser');
+         let nobrowser = this.websocket.getUserArgs('nobrowser') || JSROOT.decodeUrl().has('nobrowser');
 
          if (nobrowser) {
             // remove main area - plain geometry drawing
             // if master activated - immediately show control
-
-            var app = this.byId("geomViewerApp");
+            let app = this.byId("geomViewerApp");
             app.setMode(sap.m.SplitAppMode.HideMode);
             app.setInitialMaster(this.createId("geomControl"));
             app.removeMasterPage(this.byId("geomHierarchy"));
@@ -110,11 +109,11 @@ sap.ui.define(['sap/ui/core/Component',
             // create model only for browser - no need for anybody else
             this.model = new BrowserModel();
 
-            var t = this.byId("treeTable");
+            let t = this.byId("treeTable");
 
             t.setModel(this.model);
 
-            // var vis_selected_handler = this.visibilitySelected.bind(this);
+            // let vis_selected_handler = this.visibilitySelected.bind(this);
 
             this.model.assignTreeTable(t);
 
@@ -145,23 +144,23 @@ sap.ui.define(['sap/ui/core/Component',
          });
       },
 
-      /** invoked when visibility checkbox clicked */
+      /** @summary invoked when visibility checkbox clicked */
       visibilitySelected: function(oEvent) {
-         var nodeid = this.getRowNodeId(oEvent.getSource());
-         if (nodeid<0) {
+         let nodeid = this.getRowNodeId(oEvent.getSource());
+         if (nodeid < 0) {
             console.error('Fail to identify nodeid');
             return;
          }
 
-         var msg = "SETVI" + (oEvent.getParameter("selected") ? "1:" : "0:") + JSON.stringify(nodeid);
+         let msg = "SETVI" + (oEvent.getParameter("selected") ? "1:" : "0:") + JSON.stringify(nodeid);
 
          // send info message to client to change visibility
          this.websocket.send(msg);
       },
 
       assignRowHandlers: function() {
-         var rows = this.byId("treeTable").getRows();
-         for (var k=0;k<rows.length;++k) {
+         let rows = this.byId("treeTable").getRows();
+         for (let k = 0; k < rows.length; ++k) {
             rows[k].$().hover(this.onRowHover.bind(this, rows[k], true), this.onRowHover.bind(this, rows[k], false));
          }
       },
@@ -199,7 +198,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (!this.isDrawPageActive()) return;
 
          // property of current entry, not used now
-         var ctxt = row.getBindingContext(),
+         let ctxt = row.getBindingContext(),
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
          if (!this.standalone) {
@@ -224,24 +223,24 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      /** Return nodeid for the row */
+      /** @summary Return nodeid for the row */
       getRowNodeId: function(row) {
-         var ctxt = row.getBindingContext();
-         var ttt = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
-         return ttt && (ttt.id!==undefined) ? ttt.id : -1;
+         let ctxt = row.getBindingContext(),
+             ttt = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
+         return ttt && (ttt.id !== undefined) ? ttt.id : -1;
       },
 
-      /** Return arrys of ids for this row  */
+      /** @summary Return arrys of ids for this row  */
       getRowIds: function(row) {
-         var ctxt = row.getBindingContext();
+         let ctxt = row.getBindingContext();
          if (!ctxt) return null;
 
-         var path = ctxt.getPath(), lastpos = 0, ids = [];
+         let path = ctxt.getPath(), lastpos = 0, ids = [];
 
          while (lastpos>=0) {
             lastpos = path.indexOf("/childs", lastpos+1);
 
-            var ttt = ctxt.getProperty(path.substr(0,lastpos));
+            let ttt = ctxt.getProperty(path.substr(0,lastpos));
 
             if (!ttt || (ttt.id===undefined)) {
                // it is not an error - sometime TableTree does not have displayed items
@@ -254,13 +253,13 @@ sap.ui.define(['sap/ui/core/Component',
          return ids;
       },
 
-      /** try to produce stack out of row path */
+      /** @summary try to produce stack out of row path */
       getRowStack: function(row) {
-         var ids = this.getRowIds(row);
+         let ids = this.getRowIds(row);
          return ids ? this.geo_clones.buildStackByIds(ids) : null;
       },
 
-      /** Callback from geo painter when mesh object is highlighted. Use for update of TreeTable */
+      /** @summary Callback from geo painter when mesh object is highlighted. Use for update of TreeTable */
       highlightMesh: function(active_mesh, color, geo_object, geo_index, geo_stack) {
          if (!this.standalone) {
             let req = geo_stack ? geo_stack : [];
@@ -293,12 +292,13 @@ sap.ui.define(['sap/ui/core/Component',
          return path1.length == path2.length ? 1000 : len;
       },
 
+      /** @summary Highlights row with specified path */
       highlighRowWithPath: function(path) {
          let rows = this.byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
 
          for (let i=0;i<rows.length;++i) {
             rows[i].$().css("background-color", "");
-            if (path && (path[0] !== "OFF")) {
+            if (path && (path[0] != "OFF")) {
                let ctxt = rows[i].getBindingContext(),
                    prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
@@ -339,11 +339,11 @@ sap.ui.define(['sap/ui/core/Component',
          this.geo_painter.assignClones(this.geo_clones);
       },
 
-      /** Extract shapes from binary data using appropriate draw message
-       * Draw message is vector of REveGeomVisible objects, including info where shape is in raw data */
+      /** @summary Extract shapes from binary data using appropriate draw message
+       * @desc Draw message is vector of REveGeomVisible objects, including info where shape is in raw data */
       extractRawShapes: function(draw_msg, recreate) {
 
-         var nodes = null, old_gradpersegm = 0;
+         let nodes = null, old_gradpersegm = 0;
 
          // array for descriptors for each node
          // if array too large (>1M), use JS object while only ~1K nodes are expected to be used
@@ -352,8 +352,8 @@ sap.ui.define(['sap/ui/core/Component',
             nodes = (draw_msg.numnodes > 1e6) ? { length: draw_msg.numnodes } : new Array(draw_msg.numnodes); // array for all nodes
          }
 
-         for (var cnt=0;cnt < draw_msg.nodes.length; ++cnt) {
-            var node = draw_msg.nodes[cnt];
+         for (let cnt=0; cnt < draw_msg.nodes.length; ++cnt) {
+            let node = draw_msg.nodes[cnt];
             this.formatNodeElement(node);
             if (nodes)
                nodes[node.id] = node;
@@ -372,7 +372,7 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_clones.maxdepth = 20;
          }
 
-         var nsegm = 0;
+         let nsegm = 0;
          if (draw_msg.cfg)
             nsegm = draw_msg.cfg.nsegm;
          else if (this.geom_model)
@@ -383,8 +383,8 @@ sap.ui.define(['sap/ui/core/Component',
             geo.GradPerSegm = 360 / Math.max(nsegm,6);
          }
 
-         for (var cnt = 0; cnt < draw_msg.visibles.length; ++cnt) {
-            var item = draw_msg.visibles[cnt], rd = item.ri;
+         for (let cnt = 0; cnt < draw_msg.visibles.length; ++cnt) {
+            let item = draw_msg.visibles[cnt], rd = item.ri;
 
             // entry may be provided without shape - it is ok
             if (!rd) continue;
@@ -399,7 +399,7 @@ sap.ui.define(['sap/ui/core/Component',
          return true;
       },
 
-      /** Create single shape from provided raw data. If nsegm changed, shape will be recreated */
+      /** @summary Create single shape from provided raw data. If nsegm changed, shape will be recreated */
       createServerShape: function(rd, nsegm) {
 
          if (rd.server_shape && ((rd.nsegm===nsegm) || !rd.shape))
@@ -407,7 +407,7 @@ sap.ui.define(['sap/ui/core/Component',
 
          rd.nsegm = nsegm;
 
-         var g = null, off = 0;
+         let g = null, off = 0;
 
          if (rd.shape) {
             // case when TGeoShape provided as is
@@ -451,9 +451,8 @@ sap.ui.define(['sap/ui/core/Component',
          };
       },
 
-      /** function to accumulate and process all drawings messages
-       * if not all scripts are loaded, messages are quied and processed later */
-
+      /** @summary function to accumulate and process all drawings messages
+       * @desc if not all scripts are loaded, messages are quied and processed later */
       checkDrawMsg: function(kind, msg) {
          console.log('Get message kind ', kind);
          if (kind) {
@@ -602,19 +601,19 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      /** Format REveGeomNode data to be able use it in list of clones */
+      /** @summary Format REveGeomNode data to be able use it in list of clones */
       formatNodeElement: function(elem) {
          elem.kind = 2; // special element for geom viewer, used in TGeoPainter
          elem.vis = 2; // visibility is alwys on
-         var m = elem.matr;
+         let m = elem.matr;
          delete elem.matr;
          if (!m || !m.length) return;
 
          if (m.length == 16) {
             elem.matrix = m;
          } else {
-            var nm = elem.matrix = new Array(16);
-            for (var k=0;k<16;++k) nm[k] = 0;
+            let nm = elem.matrix = new Array(16);
+            for (let k = 0; k < 16; ++k) nm[k] = 0;
             nm[0] = nm[5] = nm[10] = nm[15] = 1;
 
             if (m.length == 3) {
@@ -634,19 +633,19 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      /** Parse compact geometry description,
-       * Used only to initialize hierarchy browser with full Tree,
+      /** @summary Parse compact geometry description
+       * @desc Used only to initialize hierarchy browser with full Tree,
        * later should be done differently */
       parseDescription: function(msg, is_original) {
 
          if (!this.model) return;
 
-         var descr = JSON.parse(msg), br = this.byId("treeTable");
+         let descr = JSON.parse(msg), br = this.byId("treeTable");
 
          br.setNoData("");
          br.setShowNoData(false);
 
-         var topnode = this.buildTreeNode(descr, [], 0, is_original ? 1 : 999);
+         let topnode = this.buildTreeNode(descr, [], 0, is_original ? 1 : 999);
          if (this.standalone)
             this.fullModel = topnode;
 
@@ -655,7 +654,7 @@ sap.ui.define(['sap/ui/core/Component',
 
       /** TO BE CHANGED !!! When single node element is modified on the server side */
       modifyDescription: function(msg) {
-         var arr = JSON.parse(msg), can_refresh = true;
+         let arr = JSON.parse(msg), can_refresh = true;
 
          if (!arr || !this.geo_clones) return;
 
@@ -663,12 +662,12 @@ sap.ui.define(['sap/ui/core/Component',
 
          return;
 
-         for (var k=0;k<arr.length;++k) {
-            var moditem = arr[k];
+         for (let k=0;k<arr.length;++k) {
+            let moditem = arr[k];
 
             this.formatNodeElement(moditem);
 
-            var item = this.geo_clones.nodes[moditem.id];
+            let item = this.geo_clones.nodes[moditem.id];
 
             if (!item)
                return console.error('Fail to find item ' + moditem.id);
@@ -676,7 +675,7 @@ sap.ui.define(['sap/ui/core/Component',
             item.vis = moditem.vis;
             item.matrix = moditem.matrix;
 
-            var dnode = this.originalCache ? this.originalCache[moditem.id] : null;
+            let dnode = this.originalCache ? this.originalCache[moditem.id] : null;
 
             if (dnode) {
                // here we can modify only node which was changed
@@ -700,11 +699,11 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       buildTreeNode: function(nodes, cache, indx, expand_lvl) {
-         var tnode = cache[indx];
+         let tnode = cache[indx];
          if (tnode) return tnode;
          if (!expand_lvl) expand_lvl = 0;
 
-         var node = nodes[indx];
+         let node = nodes[indx];
 
          cache[indx] = tnode = { name: node.name, id: indx, color_visible: false, node_visible: node.vis != 0 };
 
@@ -718,7 +717,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (node.chlds && (node.chlds.length>0)) {
             tnode.childs = [];
             tnode.nchilds = node.chlds.length;
-            for (var k=0;k<tnode.nchilds;++k)
+            for (let k = 0; k < tnode.nchilds; ++k)
                tnode.childs.push(this.buildTreeNode(nodes, cache, node.chlds[k], expand_lvl-1));
          } else {
             tnode.end_node = true; // TODO: no need for such flag
@@ -727,14 +726,14 @@ sap.ui.define(['sap/ui/core/Component',
          return tnode;
       },
 
-      /** search main drawn nodes for matches */
+      /** @summary search main drawn nodes for matches */
       findMatchesFromDraw: function(func) {
-         var matches = [];
+         let matches = [];
 
          if (this.last_draw_msg && this.last_draw_msg.visibles && this.geo_clones)
-            for (var k=0;k<this.last_draw_msg.visibles.length;++k) {
-               var item = this.last_draw_msg.visibles[k];
-               var res = this.geo_clones.resolveStack(item.stack);
+            for (let k = 0; k < this.last_draw_msg.visibles.length; ++k) {
+               let item = this.last_draw_msg.visibles[k];
+               let res = this.geo_clones.resolveStack(item.stack);
                if (func(res.node))
                   matches.push({ stack: item.stack, color: item.color });
             }
@@ -742,9 +741,9 @@ sap.ui.define(['sap/ui/core/Component',
          return matches;
       },
 
-      /** Show special message insted of nodes hierarchy */
+      /** @summary Show special message insted of nodes hierarchy */
       showTextInBrowser: function(text) {
-         var br = this.byId("treeTable");
+         let br = this.byId("treeTable");
          br.collapseAll();
          if (!text || (text === "RESET")) {
             br.setNoData("");
@@ -761,13 +760,13 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      /** Show found nodes in the browser, used for offline */
+      /** @summary Show found nodes in the browser, used for offline */
       showFoundNodes: function(matches) {
 
-         var br = this.byId("treeTable");
+         let br = this.byId("treeTable");
 
-         var nodes = [];
-         for (var k=0;k<matches.length;++k)
+         let nodes = [];
+         for (let k = 0; k < matches.length; ++k)
              this.appendStackToTree(nodes, matches[k].stack, matches[k].color);
 
          br.setNoData("");
@@ -803,7 +802,7 @@ sap.ui.define(['sap/ui/core/Component',
          prnt.color_visible = prnt.color.length > 0;
       },
 
-      /** Paint extra node - or remove them from painting */
+      /** @summary Paint extra node - or remove them from painting */
       paintFoundNodes: function(visibles, append_more) {
          if (!this.geo_painter) return;
 
@@ -811,10 +810,10 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_painter.appendMoreNodes(visibles || null);
 
          if (visibles && visibles.length && (visibles.length < 100)) {
-            var dflt = Math.max(this.geo_painter.ctrl.transparency, 0.98);
+            let dflt = Math.max(this.geo_painter.ctrl.transparency, 0.98);
             this.geo_painter.changedGlobalTransparency(function(node) {
                if (node.stack)
-                  for (var n=0;n<visibles.length;++n)
+                  for (let n=0;n<visibles.length;++n)
                      if (geo.isSameStack(node.stack, visibles[n].stack))
                         return 0;
                return dflt;
@@ -861,20 +860,20 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      /** method called from geom painter when specific node need to be activated in the browser
-       * Due to complex indexing in TreeTable it is not trivial to select special node */
+      /** @summary method called from geom painter when specific node need to be activated in the browser
+       * @desc Due to complex indexing in TreeTable it is not trivial to select special node */
       activateInTreeTable: function(itemnames, force) {
 
          if (!force || !itemnames || !this.model) return;
 
-         var index = this.model.expandNodeByPath(itemnames[0]),
+         let index = this.model.expandNodeByPath(itemnames[0]),
              tt = this.byId("treeTable");
 
          if ((index > 0) && tt)
             tt.setFirstVisibleRow(Math.max(0, index - Math.round(tt.getVisibleRowCount()/2)));
       },
 
-      /** Submit node search query to server, ignore in offline case */
+      /** @summary Submit node search query to server, ignore in offline case */
       submitSearchQuery: function(query, from_handler) {
 
          if (!from_handler) {
@@ -899,16 +898,16 @@ sap.ui.define(['sap/ui/core/Component',
          this.geo_painter.setAutoRotate(opt.indexOf("rotate") >= 0);
       },
 
-      /** when new query entered in the seach field */
+      /** @summary when new query entered in the seach field */
       onSearch : function(oEvt) {
-         var query = oEvt.getSource().getValue();
+         let query = oEvt.getSource().getValue();
          if (!query) {
             this.paintFoundNodes(null); // remove all search results
             this.doReload(false);
          } else if (!this.standalone) {
             this.submitSearchQuery(query);
          } else {
-            var lst = this.findMatchesFromDraw(function(node) {
+            let lst = this.findMatchesFromDraw(function(node) {
                return node.name.indexOf(query)==0;
             });
 
@@ -924,7 +923,7 @@ sap.ui.define(['sap/ui/core/Component',
 
       onCellClick: function(oEvent) {
 
-         var tt = this.byId("treeTable"),
+         let tt = this.byId("treeTable"),
              first = tt.getFirstVisibleRow() || 0,
              rowindx = oEvent.getParameters().rowIndex - first,
              row = (rowindx >=0) ? tt.getRows()[rowindx] : null,
@@ -986,7 +985,7 @@ sap.ui.define(['sap/ui/core/Component',
 
       drawNodeShape: function(server_shape, skip_cleanup) {
 
-         var nodeDrawing = this.byId("nodeDrawing");
+         let nodeDrawing = this.byId("nodeDrawing");
 
          nodeDrawing.setGeomPainter(null);
 
@@ -1021,17 +1020,17 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       produceImage: function(name) {
-         var painter = (this.node_painter_active && this.node_painter) ? this.node_painter : this.geo_painter;
+         let painter = (this.node_painter_active && this.node_painter) ? this.node_painter : this.geo_painter;
          if (!painter) return;
 
-         var dataUrl = painter.createSnapshot(this.standalone ? "geometry.png" : "asis");
+         let dataUrl = painter.createSnapshot(this.standalone ? "geometry.png" : "asis");
          if (!dataUrl) return;
-         var separ = dataUrl.indexOf("base64,");
+         let separ = dataUrl.indexOf("base64,");
          if ((separ>=0) && this.websocket && !this.standalone)
             this.websocket.send("IMAGE:" + name + "::" + dataUrl.substr(separ+7));
       },
 
-      /** Reload geometry description and base drawing, normally not required */
+      /** @summary Reload geometry description and base drawing, normally not required */
       onRealoadPress: function () {
          this.doReload(true);
       },
@@ -1053,19 +1052,19 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       isDrawPageActive: function() {
-         var app = this.byId("geomViewerApp");
-         var curr = app ? app.getCurrentDetailPage() : null;
+         let app = this.byId("geomViewerApp");
+         let curr = app ? app.getCurrentDetailPage() : null;
          return curr ? curr.getId() == this.createId("geomDraw") : false;
       },
 
       isInfoPageActive: function() {
-         var app = this.byId("geomViewerApp");
-         var curr = app ? app.getCurrentDetailPage() : null;
+         let app = this.byId("geomViewerApp");
+         let curr = app ? app.getCurrentDetailPage() : null;
          return curr ? curr.getId() == this.createId("geomInfo") : false;
       },
 
       onInfoPress: function() {
-         var app = this.byId("geomViewerApp"), ctrlmodel;
+         let app = this.byId("geomViewerApp"), ctrlmodel;
 
          if (this.isInfoPageActive()) {
             app.toDetail(this.createId("geomDraw"));
@@ -1102,16 +1101,16 @@ sap.ui.define(['sap/ui/core/Component',
          this.byId("geomViewerApp").toMaster(this.createId("geomControl"));
       },
 
-
       sendConfig: function() {
          if (!this.standalone && this.geo_painter && this.geo_painter.ctrl.cfg) {
-            var cfg = this.geo_painter.ctrl.cfg;
+            let cfg = this.geo_painter.ctrl.cfg;
             cfg.build_shapes = parseInt(cfg.build_shapes);
             this.websocket.send("CFG:" + JSROOT.toJSON(cfg));
          }
       },
 
-      // configuration handler changes, after short timeout send updated config to server
+      /** @summary configuration handler changes,
+        * @desc after short timeout send updated config to server  */
       configChanged: function() {
          if (this.config_tmout)
             clearTimeout(this.config_tmout);
@@ -1119,9 +1118,8 @@ sap.ui.define(['sap/ui/core/Component',
          this.config_tmout = setTimeout(this.sendConfig.bind(this), 500);
       },
 
-
       processPainterChange: function(func, arg) {
-         var painter = (this.node_painter_active && this.node_painter) ? this.node_painter : this.geo_painter;
+         let painter = (this.node_painter_active && this.node_painter) ? this.node_painter : this.geo_painter;
 
          if (painter && (typeof painter[func] == 'function'))
             painter[func](arg);
