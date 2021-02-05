@@ -13,18 +13,6 @@
 
 using namespace ROOT::Experimental::Browsable;
 
-
-/////////////////////////////////////////////////////////////////////
-/// Returns number of childs in current entry
-/// 0 if there is no childs
-/// >0 if there are really childs
-/// -1 if entry may have child elements
-
-int RLevelIter::GetNumItemChilds() const
-{
-   return 0;
-}
-
 /////////////////////////////////////////////////////////////////////
 /// Find item with specified name
 /// Default implementation, should work for all
@@ -45,8 +33,8 @@ bool RLevelIter::Find(const std::string &name)
 
 std::unique_ptr<RItem> RLevelIter::CreateItem()
 {
-   auto nchilds = GetNumItemChilds();
+   auto have_childs = CanItemHaveChilds();
 
-   return std::make_unique<RItem>(GetItemName(), nchilds, nchilds != 0 ? "sap-icon://folder-blank" : "sap-icon://document");
+   return std::make_unique<RItem>(GetItemName(), have_childs ? -1 : 0, have_childs ? "sap-icon://folder-blank" : "sap-icon://document");
 }
 
