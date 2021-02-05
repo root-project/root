@@ -94,10 +94,8 @@ Browsable::RElementPath_t RBrowserData::DecomposePath(const std::string &strpath
 
 bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply)
 {
-   if (gDebug > 0)
-      printf("REQ: Do decompose path '%s'\n",request.path.c_str());
-
-   auto path = DecomposePath(request.path, true);
+   auto path = fWorkingPath;
+   path.insert(path.end(), request.path.begin(), request.path.end());
 
    if ((path != fLastPath) || !fLastElement) {
 

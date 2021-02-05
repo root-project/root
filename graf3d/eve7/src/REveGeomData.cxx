@@ -149,8 +149,7 @@ public:
       return false;
    }
 
-   /** Navigate to specified path. For now path should start from '/' */
-
+   /** Navigate to specified path - path specified as string and should start with "/" */
    bool Navigate(const std::string &path)
    {
       size_t pos = path.find("/");
@@ -180,6 +179,28 @@ public:
 
       return true;
    }
+
+   /** Navigate to specified path  */
+   bool Navigate(const std::vector<std::string> &path)
+   {
+      Reset(); // set to the top of element
+
+      for (auto &folder : path) {
+
+         if (!Enter()) return false;
+
+         bool find = false;
+
+         do {
+            find = (folder.compare(GetName()) == 0);
+         } while (!find && Next());
+
+         if (!find) return false;
+      }
+
+      return true;
+   }
+
 
    /// Returns array of ids to currently selected node
    std::vector<int> CurrentIds() const
@@ -545,7 +566,6 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
 
    if (msg.empty()) {
       request = std::make_unique<RBrowserRequest>();
-      request->path = "/";
       request->first = 0;
       request->number = 100;
    }
@@ -553,7 +573,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
    if (!request)
       return res;
 
-   if ((request->path.compare("/") == 0) && (request->first == 0) && (GetNumNodes() < (IsPreferredOffline() ? 1000000 : 1000))) {
+   if (request->path.empty() && (request->first == 0) && (GetNumNodes() < (IsPreferredOffline() ? 1000000 : 1000))) {
 
       std::vector<REveGeomNodeBase *> vect(fDesc.size(), nullptr);
 
@@ -572,7 +592,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
 
    } else {
       std::vector<Browsable::RItem> temp_nodes;
-      bool toplevel = (request->path.compare("/") == 0);
+      bool toplevel = request->path.empty();
 
       // create temporary object for the short time
       RBrowserReply reply;
