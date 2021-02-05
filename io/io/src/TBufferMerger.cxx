@@ -62,6 +62,7 @@ std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
 
 size_t TBufferMerger::GetQueueSize() const
 {
+   std::lock_guard<std::mutex> lock(fQueueMutex);
    return fQueue.size();
 }
 
