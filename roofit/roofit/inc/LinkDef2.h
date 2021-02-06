@@ -14,11 +14,6 @@
 #pragma link C++ class RooHCggfZZMorph+;
 #pragma link C++ class RooHCvbfZZMorph+;
 #pragma link C++ class RooHCvbfMuMuMorph+;
-#pragma link C++ class RooHCggfWWMorph+;
-#pragma link C++ class RooHCvbfWWMorph+;
-#pragma link C++ class RooHCggfZZMorph+;
-#pragma link C++ class RooHCvbfZZMorph+;
-#pragma link C++ class RooHCvbfMuMuMorph+;
 #pragma link C++ class RooSMEFTggfWWMorph+;
 #pragma link C++ class RooSMEFTvbfWWMorph+;
 #pragma link C++ class RooSMEFTggfWWMorph+;

@@ -47,8 +47,8 @@ void rf1001_morph2params()
    // Construct two parameter morphing functions for pseudorapidity and
    // the transverse momentum of the Higgs in the process ggF Higgs
    // decaying to ZZ in the Higgs Characterisation Model
-   RooHCggfZZMorphFunc morphfunc_eta("ggfHZZ", "ggfHZZ", infilename.c_str(), "base/etah", inputs);
-   RooHCggfZZMorphFunc morphfunc_pt("ggfHZZ", "ggfHZZ", infilename.c_str(), "base/pth", inputs);
+   RooHCggfZZMorph morphfunc_eta("ggfHZZ", "ggfHZZ", infilename.c_str(), "base/etah", inputs);
+   RooHCggfZZMorph morphfunc_pt("ggfHZZ", "ggfHZZ", infilename.c_str(), "base/pth", inputs);
    // Set morphing function at parameter configuration of v1
    // available "v0", "v1"
    std::string validationsample = "v1";
@@ -62,7 +62,6 @@ void rf1001_morph2params()
    // Declare observables 'phi' & 'pt'
    RooRealVar eta("eta_H", "eta_H", -3.1415, 3.1415);
    RooRealVar pt("pt_H", "pT_H", 0, 250);
-
 
    // Create a binned dataset that imports the contents of the histogram and associates its contents to observable
    RooDataHist morph_eta_dh("morphed_eta", "morphed_eta", RooArgList(eta), morph_eta_hist);

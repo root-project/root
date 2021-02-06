@@ -237,6 +237,15 @@ namespace RooLagrangianMorphing {
     void setScale(double val);
     double getScale();
     
+  RooRealSumFunc* getFunc() const;
+  RooRealSumFunc* cloneFunc() const;
+  //virtual RooAbsPdf::ExtendMode extendMode() const override;
+  //virtual Double_t expectedEvents(const RooArgSet* nset) const override;
+  //virtual Double_t expectedEvents(const RooArgSet& nset) const override;
+  //virtual Double_t expectedEvents() const;
+  //RooRealSumPdf* getPdf() const;
+  //RooRealSumPdf* clonePdf() const;
+  //virtual Bool_t selfNormalized() const override;
   protected:
     double _scale = 1;
     std::string _fileName;
@@ -316,8 +325,6 @@ namespace RooLagrangianMorphing {
 //
 //  RooLagrangianMorph(const RooLagrangianMorph& other, const char* name) : RooLagrangianMorphBase(other,name){}
 //  RooLagrangianMorph() : RooLagrangianMorphBase(){}
-//  RooRealSumFunc* getFunc() const;
-//  RooRealSumFunc* cloneFunc() const;
 //  ClassDefOverride(RooLagrangianMorph,2)
 //};
 //
@@ -330,13 +337,6 @@ namespace RooLagrangianMorphing {
 ////  RooLagrangianMorph(const char *name, const char *title, const char* fileName, const char* obsName, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,folders,objFilter,allowNegativeYields){}
 //  RooLagrangianMorph(const RooLagrangianMorph& other, const char* name) : RooLagrangianMorphBase(other,name){}
 //  RooLagrangianMorph() : RooLagrangianMorphBase(){}
-//  virtual RooAbsPdf::ExtendMode extendMode() const override;
-//  virtual Double_t expectedEvents(const RooArgSet* nset) const override;
-//  virtual Double_t expectedEvents(const RooArgSet& nset) const override;
-//  virtual Double_t expectedEvents() const;
-//  RooRealSumPdf* getPdf() const;
-//  RooRealSumPdf* clonePdf() const;
-//  virtual Bool_t selfNormalized() const override;
 //  ClassDefOverride(RooLagrangianMorph,2)
 //};
 
@@ -409,11 +409,6 @@ class RooHCvbfMuMuMorph : public RooLagrangianMorphing::RooLagrangianMorph {
 };
 
 #ifndef __CINT__
-ClassImp(RooHCggfWWMorph)
-ClassImp(RooHCvbfWWMorph)
-ClassImp(RooHCggfZZMorph)
-ClassImp(RooHCvbfZZMorph)
-ClassImp(RooHCvbfMuMuMorph)
 ClassImp(RooHCggfWWMorph)
 ClassImp(RooHCvbfWWMorph)
 ClassImp(RooHCggfZZMorph)

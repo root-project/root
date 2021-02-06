@@ -48,7 +48,7 @@ void rf1005_morphfit()
   // Construct three parameter morphing function for the missing
   // transverse momentum in the process VBF Higgs decaying to  W+ W- in the
   // Higgs Characterisation Model
-  RooHCvbfWWMorphPdf morphfunc("morphfunc", "morphfunc", infilename.c_str(), "twoSelJets/pth_shower", inputs);
+  RooHCvbfWWMorph morphfunc("morphfunc", "morphfunc", infilename.c_str(), "twoSelJets/pth_shower", inputs);
 
   // Define identifier for validation sample
   std::string validationsample = "v3";

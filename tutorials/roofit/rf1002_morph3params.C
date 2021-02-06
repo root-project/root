@@ -28,7 +28,7 @@ void rf1002_morph3params()
 
   // Define identifier for input sample foldernames,
   // require 15 samples to describe three paramter morphing function
-  std::vector<std::string> samplelist = {"kAwwkHwwkSM0","kAwwkHwwkSM1","kAwwkHwwkSM10","","kAwwkHwwkSM11","kAwwkHwwkSM12",
+  std::vector<std::string> samplelist = {"kAwwkHwwkSM0","kAwwkHwwkSM1","kAwwkHwwkSM10","kAwwkHwwkSM11","kAwwkHwwkSM12",
                                          "kAwwkHwwkSM13","kAwwkHwwkSM2","kAwwkHwwkSM3","kAwwkHwwkSM4","kAwwkHwwkSM5",
                                           "kAwwkHwwkSM6","kAwwkHwwkSM7","kAwwkHwwkSM8","kAwwkHwwkSM9","kSM0"};
 
@@ -36,6 +36,7 @@ void rf1002_morph3params()
   RooArgList inputs;
   for(auto const& sample: samplelist)
   {
+     std::cout << sample.c_str() << std::endl;
      RooStringVar* v = new RooStringVar(sample.c_str(), sample.c_str(), sample.c_str());
      inputs.add(*v);
   }
@@ -46,9 +47,9 @@ void rf1002_morph3params()
   // Construct three parameter morphing functions for opening angle of the
   // final-state jets and the missing transverse momentum in the process VBF
   //  Higgs decaying to W+ W- in the Higgs Characterisation Model
-
-  RooHCvbfWWMorphFunc morphfunc_dphijj("morphfunc_dphijj", "morphfunc_dphijj", infilename.c_str(), "twoSelJets/dphijj", inputs);
-  RooHCvbfWWMorphFunc morphfunc_met("morphfunc_met", "morphfunc_met", infilename.c_str(), "twoSelJets/MET", inputs);
+  
+  RooHCvbfWWMorph morphfunc_dphijj("morphfunc_dphijj", "morphfunc_dphijj", infilename.c_str(), "twoSelJets/dphijj", inputs);
+  RooHCvbfWWMorph morphfunc_met("morphfunc_met", "morphfunc_met", infilename.c_str(), "twoSelJets/MET", inputs);
   // Define identifier for validation sample
   std::string validationsample = "kSM0";
 

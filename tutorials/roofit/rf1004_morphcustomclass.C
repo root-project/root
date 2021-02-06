@@ -23,10 +23,10 @@ using namespace RooFit;
 // -----------------------------------------
 
 // Declare custom morphing class
-class RooHCCustomMorphFunc : public RooLagrangianMorphFunc
+class RooHCCustomMorph : public RooLagrangianMorphing::RooLagrangianMorph
 {
-  MAKE_ROOLAGRANGIANMORPH(Func,RooHCCustomMorphFunc)
-  ClassDef(RooHCCustomMorphFunc,1)
+  MAKE_ROOLAGRANGIANMORPH(RooHCCustomMorph)
+  ClassDef(RooHCCustomMorph,1)
   protected:
   void makeCouplings()
   {
@@ -61,13 +61,13 @@ class RooHCCustomMorphFunc : public RooLagrangianMorphFunc
     decCouplings.add (*(new RooFormulaVar("_gSM"  ,"cosa*kSM",                        RooArgList(*cosa,*kSM))));
     decCouplings.add (*(new RooFormulaVar("_gHww" ,"cosa*kHww/Lambda",                RooArgList(*cosa,*kHww,*lambda))));
     decCouplings.add (*(new RooFormulaVar("_gAww" ,"sqrt(1-(cosa*cosa))*kAww/Lambda", RooArgList(*cosa,*kAww,*lambda))));
-    this->setCouplings(prodCouplings, decCouplings);
+    this->_config.setCouplings(prodCouplings, decCouplings);
     // Setup morphing function
     this->setup();
   }
 };
 
-ClassImp(RooHCCustomMorphFunc);
+ClassImp(RooHCCustomMorph);
 
 void rf1004_morphcustomclass()
 {
@@ -81,7 +81,7 @@ void rf1004_morphcustomclass()
 
   // Define identifier for input sample foldernames,
   // require 15 samples to describe three paramter morphing function
-  std::vector<std::string> samplelist = {"kAwwkHwwkSM0","kAwwkHwwkSM1","kAwwkHwwkSM10","","kAwwkHwwkSM11","kAwwkHwwkSM12",
+  std::vector<std::string> samplelist = {"kAwwkHwwkSM0","kAwwkHwwkSM1","kAwwkHwwkSM10","kAwwkHwwkSM11","kAwwkHwwkSM12",
                                          "kAwwkHwwkSM13","kAwwkHwwkSM2","kAwwkHwwkSM3","kAwwkHwwkSM4","kAwwkHwwkSM5",
                                          "kAwwkHwwkSM6","kAwwkHwwkSM7","kAwwkHwwkSM8","kAwwkHwwkSM9","kSM0"};
 
@@ -99,8 +99,8 @@ void rf1004_morphcustomclass()
   // Construct thee parameter customized morphing functions for the invariant mass
   // of the di-jet system and the number of reconstructed jets in the
   // process VBF Higgs decaying to W+ W- in the Higgs Characterisation Model
-  RooHCCustomMorphFunc morphfunc_mjj("morphunc_mjj", "morphfuinc_mjj", infilename.c_str(), "twoSelJets/mjj", inputs);
-  RooHCCustomMorphFunc morphfunc_nj("nj", "morphfunc_nj", infilename.c_str(), "twoSelJets/nj", inputs);
+  RooHCCustomMorph morphfunc_mjj("morphunc_mjj", "morphfuinc_mjj", infilename.c_str(), "twoSelJets/mjj", inputs);
+  RooHCCustomMorph morphfunc_nj("nj", "morphfunc_nj", infilename.c_str(), "twoSelJets/nj", inputs);
 
   // Define identifier for validation sample
   std::string validationsample("v1");

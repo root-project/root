@@ -3793,5 +3793,3 @@ double RooLagrangianMorphing::RooLagrangianMorph::getCondition() const
   if(!cache) ERROR("unable to retrieve cache!");
   return cache->_condition;
 }
-
-class RooLagrangianMorphing::RooLagrangianMorph;
