@@ -815,6 +815,8 @@ Bool_t TPgSQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 
 Bool_t TPgSQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
 {
+   if (size > maxsize) maxsize = size;
+
    if (!SetSQLParamType(npar, kTRUE, size, maxsize)) return kFALSE;
 
    memcpy(fBind[npar], mem, size);
