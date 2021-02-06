@@ -2894,13 +2894,13 @@ void TBranch::Streamer(TBuffer& b)
             br->fParent = this;
          }
 
-         fNBaskets = fBaskets.GetEntries();
-         for (Int_t j=fWriteBasket,n=0;j>=0 && n<fNBaskets;--j) {
+         fNBaskets = 0;
+         for (Int_t j = fWriteBasket; j>=0; --j) {
             TBasket *bk = (TBasket*)fBaskets.UncheckedAt(j);
             if (bk) {
                bk->SetBranch(this);
                // GetTree()->IncrementTotalBuffers(bk->GetBufferSize());
-               ++n;
+               ++fNBaskets;
             }
          }
          if (fWriteBasket >= fMaxBaskets) {
@@ -2968,13 +2968,13 @@ void TBranch::Streamer(TBuffer& b)
             TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
             leaf->SetBranch(this);
          }
-         fNBaskets = fBaskets.GetEntries();
-         for (j=fWriteBasket,n=0;j>=0 && n<fNBaskets;--j) {
+         fNBaskets = 0;
+         for (j = fWriteBasket; j >= 0; --j) {
             TBasket *bk = (TBasket*)fBaskets.UncheckedAt(j);
             if (bk) {
                bk->SetBranch(this);
                //GetTree()->IncrementTotalBuffers(bk->GetBufferSize());
-               ++n;
+               ++fNBaskets;
             }
          }
          if (fWriteBasket >= fMaxBaskets) {
@@ -3023,13 +3023,11 @@ void TBranch::Streamer(TBuffer& b)
          leaf->SetBranch(this);
       }
       fBaskets.Streamer(b);
-      Int_t nbaskets = fBaskets.GetEntries();
-      for (j=fWriteBasket,n=0;j>0 && n<nbaskets;--j) {
+      for (j = fWriteBasket; j > 0; --j) {
          TBasket *bk = (TBasket*)fBaskets.UncheckedAt(j);
          if (bk) {
             bk->SetBranch(this);
             //GetTree()->IncrementTotalBuffers(bk->GetBufferSize());
-            ++n;
          }
       }
       fBasketEntry = new Long64_t[fMaxBaskets];

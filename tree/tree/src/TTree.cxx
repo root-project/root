@@ -9364,13 +9364,11 @@ static void TBranch__SetTree(TTree *tree, TObjArray &branches)
       TBranch* br = (TBranch*) branches.UncheckedAt(i);
       br->SetTree(tree);
 
-      Int_t nBaskets = br->GetListOfBaskets()->GetEntries();
       Int_t writeBasket = br->GetWriteBasket();
-      for (Int_t j=writeBasket,n=0;j>=0 && n<nBaskets;--j) {
+      for (Int_t j = writeBasket; j >= 0; --j) {
          TBasket *bk = (TBasket*)br->GetListOfBaskets()->UncheckedAt(j);
          if (bk) {
             tree->IncrementTotalBuffers(bk->GetBufferSize());
-            ++n;
          }
       }
 
