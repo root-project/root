@@ -110,8 +110,11 @@ private:
 
    void Init(std::unique_ptr<TFile>);
 
+   void MergeImpl();
+
    void Merge();
    void Push(TBufferFile *buffer);
+   bool TryMerge(TBufferMergerFile *memfile);
 
    size_t fAutoSave{0};                                          //< AutoSave only every fAutoSave bytes
    size_t fBuffered{0};                                          //< Number of bytes currently buffered
