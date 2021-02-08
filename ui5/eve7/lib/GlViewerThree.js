@@ -479,11 +479,13 @@ sap.ui.define([
             this.ttip.style.top = null;
          }
 
-         this.ttip.style.display= "block";
+         // show tooltip only in static mode
+         if (this.handle.kind != "file") this.ttip.style.display= "block";
       },
       remoteToolTip: function (msg)
       {
          this.ttip_text.innerHTML = msg;
+         if (this.highlighted_scene) this.ttip.style.display= "block";
       },
       getRelativeOffsets: function(elem)
       {
