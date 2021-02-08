@@ -29,6 +29,14 @@ TBufferMergerFile::~TBufferMergerFile()
 
 Int_t TBufferMergerFile::Write(const char *name, Int_t opt, Int_t bufsize)
 {
+   // Instead of Writing the TTree, doing a memcpy, Pushing to the queue
+   // then Reading and then deleting, let's see if we can just merge using
+   // the live TTree.
+   if (fMerger.TryMerge(this)) {
+      ResetAfterMerge(0);
+      return 0;
+   }
+
    Int_t nbytes = TMemFile::Write(name, opt, bufsize);
 
    if (nbytes) {
