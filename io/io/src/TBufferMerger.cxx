@@ -112,23 +112,44 @@ void TBufferMerger::SetMergeOptions(const TString& options)
 void TBufferMerger::Merge()
 {
    if (fMergeMutex.try_lock()) {
-      std::queue<TBufferFile *> queue;
-      {
-         std::lock_guard<std::mutex> q(fQueueMutex);
-         std::swap(queue, fQueue);
-         fBuffered = 0;
-      }
-
-      while (!queue.empty()) {
-         std::unique_ptr<TBufferFile> buffer{queue.front()};
-         fMerger.AddAdoptFile(new TMemFile(fMerger.GetOutputFileName(), std::move(buffer)));
-         queue.pop();
-      }
-
-      fMerger.PartialMerge(TFileMerger::kAll | TFileMerger::kIncremental | TFileMerger::kDelayWrite);
-      fMerger.Reset();
+      MergeImpl();
       fMergeMutex.unlock();
    }
+}
+
+void TBufferMerger::MergeImpl()
+{
+   std::queue<TBufferFile *> queue;
+   {
+      std::lock_guard<std::mutex> q(fQueueMutex);
+      std::swap(queue, fQueue);
+      fBuffered = 0;
+   }
+
+   while (!queue.empty()) {
+      std::unique_ptr<TBufferFile> buffer{queue.front()};
+      fMerger.AddAdoptFile(new TMemFile(fMerger.GetOutputFileName(), std::move(buffer)));
+      queue.pop();
+   }
+
+   fMerger.PartialMerge(TFileMerger::kAll | TFileMerger::kIncremental | TFileMerger::kDelayWrite);
+   fMerger.Reset();
+}
+
+bool TBufferMerger::TryMerge(ROOT::Experimental::TBufferMergerFile *memfile)
+{
+   if (fMergeMutex.try_lock())
+   {
+      memfile->WriteStreamerInfo();
+      fMerger.AddFile(memfile);
+      MergeImpl();
+      fMergeMutex.unlock();
+      return true;
+   } else
+   {
+      return false;
+   }
+
 }
 
 } // namespace Experimental
