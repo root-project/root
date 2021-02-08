@@ -468,3 +468,40 @@ TEST(TreeProcessorMT, SetNThreads)
       gSystem->Unlink("treeprocmt_setnthreads.root");
    }
 }
+
+TEST(TreeProcessorMT, TreesInSameFile)
+{
+   const std::string fname = "treeprocmt_treesinsamefile.root";
+   std::vector<std::string> treeNames = {"t1", "t2"};
+   TFile f(fname.c_str(), "recreate");
+   int x = 0;
+   for (auto &name : treeNames) {
+      TTree t(name.c_str(), name.c_str());
+      t.Branch("x", &x);
+      t.Fill();
+      t.Write();
+      ++x;
+   }
+   f.Close();
+
+   ROOT::EnableImplicitMT(1);
+   int expected = 0;
+   auto procLambda = [&expected](TTreeReader &r) {
+      TTreeReaderValue<int> rx(r, "x");
+      ASSERT_TRUE(r.Next());
+      EXPECT_EQ(*rx, expected);
+      ASSERT_FALSE(r.Next());
+      ++expected;
+   };
+
+   TChain c;
+   c.AddFile((fname + "/" + treeNames[0]).c_str());
+   c.AddFile((fname + "/" + treeNames[1]).c_str());
+
+   ROOT::TTreeProcessorMT tp(c);
+   tp.Process(procLambda);
+
+   // Clean-up
+   gSystem->Unlink(fname.c_str());
+   ROOT::DisableImplicitMT();
+}
