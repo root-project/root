@@ -1,9 +1,6 @@
-/// \file rootwebpage.cpp
-/// \ingroup WebGui
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \date 2017-06-29
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2017-06-29
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -24,6 +21,10 @@ ROOT::Experimental::RLogChannel &QtWebDisplayLog()
    static ROOT::Experimental::RLogChannel sChannel("ROOT.QtWebDisplay");
    return sChannel;
 }
+
+/** \class RootWebPage
+\ingroup qt5webdisplay
+*/
 
 
 RootWebPage::RootWebPage(QObject *parent) : QWebEnginePage(parent)

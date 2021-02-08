@@ -22,7 +22,6 @@ class TColor;
 
 #include <string>
 
-/** Object used to store paint operations and deliver them to JSROOT */
 class TWebPainting : public TObject {
 
    protected:

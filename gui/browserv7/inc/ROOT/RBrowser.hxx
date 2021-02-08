@@ -1,10 +1,6 @@
-/// \file ROOT/RBrowser.hxx
-/// \ingroup rbrowser
-/// \author Bertrand Bellenot <bertrand.bellenot@cern.ch>
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \date 2019-02-28
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Authors: Bertrand Bellenot <bertrand.bellenot@cern.ch> Sergey Linev <S.Linev@gsi.de>
+// Date: 2019-02-28
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
@@ -27,8 +23,6 @@ namespace ROOT {
 namespace Experimental {
 
 class RBrowserWidget;
-
-/** Web-based ROOT file browser */
 
 class RBrowser {
 

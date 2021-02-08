@@ -45,6 +45,15 @@
 #include <fstream>
 #include <iostream>
 
+/** \class TWebCanvas
+\ingroup webgui6
+
+Basic TCanvasImp ABI implementation for Web-based GUI
+Provides painting of main ROOT6 classes in web browsers
+Major interactive features implemented in TWebCanvasFull class.
+
+*/
+
 using namespace std::string_literals;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,7 +142,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
 /// Configures custom script for canvas.
 /// If started from "load:" or "assert:" prefix will be loaded with JSROOT.AssertPrerequisites function
 /// Script should implement custom user classes, which transferred as is to client
-/// In the script draw handler for appropriate classes whould be assigned
+/// In the script draw handler for appropriate classes would be assigned
 
 void TWebCanvas::SetCustomScripts(const std::string &src)
 {
@@ -1195,7 +1204,7 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Create image using batch (headless) capability of Chrome browser
-/// Supported png, jpeg, svg, pdf folmats
+/// Supported png, jpeg, svg, pdf formats
 
 bool TWebCanvas::ProduceImage(TCanvas *c, const char *fileName, Int_t width, Int_t height)
 {

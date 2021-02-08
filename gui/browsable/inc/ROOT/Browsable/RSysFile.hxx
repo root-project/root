@@ -21,6 +21,10 @@ namespace Browsable {
 
 class RSysDirLevelIter;
 
+/** \class RSysFile
+\ingroup rbrowser
+*/
+
 class RSysFile : public RElement {
 
    friend class RSysDirLevelIter;

@@ -1,9 +1,6 @@
-/// \file ROOT/RFileDialog.cxx
-/// \ingroup rbrowser
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \date 2019-10-31
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2019-10-31
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -33,7 +30,7 @@
 using namespace ROOT::Experimental;
 using namespace std::string_literals;
 
-/** \class RFileDialog
+/** \class ROOT::Experimental::RFileDialog
 \ingroup rbrowser
 
 web-based FileDialog.

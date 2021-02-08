@@ -1,9 +1,6 @@
-/// \file RBrowserWidget.hxx
-/// \ingroup rbrowser
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \date 2021-01-22
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2021-01-22
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
@@ -25,8 +22,11 @@
 namespace ROOT {
 namespace Experimental {
 
-/** Abstract Web-based widget, which can be used in the RBrowser
-  * Used to embed canvas, geometry viewer and potentially any other widgets */
+/** \class ROOT::Experimental::RBrowserWidget
+\ingroup rbrowser
+Abstract Web-based widget, which can be used in the RBrowser
+Used to embed canvas, geometry viewer and potentially any other widgets
+*/
 
 class RBrowserWidget {
 

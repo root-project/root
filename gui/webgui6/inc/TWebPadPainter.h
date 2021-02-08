@@ -23,11 +23,6 @@
 
 class TWebCanvas;
 
-/*
-TWebPadPainter tries to support old Paint methods of the ROOT classes.
-Main classes (like histograms or graphs) should be painted on JavaScript side
-*/
-
 class TWebPadPainter : public TVirtualPadPainter, public TAttLine, public TAttFill, public TAttText, public TAttMarker {
 
 friend class TWebCanvas;

@@ -1,3 +1,7 @@
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2019-10-14
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+
 /*************************************************************************
  * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -24,6 +28,12 @@ ROOT::Experimental::RLogChannel &ROOT::Experimental::BrowserLog() {
    static RLogChannel sLog("ROOT.Browser");
    return sLog;
 }
+
+
+/** \class ROOT::Experimental::RBrowserData
+\ingroup rbrowser
+\brief Way to browse (hopefully) everything in %ROOT
+*/
 
 
 /////////////////////////////////////////////////////////////////////
