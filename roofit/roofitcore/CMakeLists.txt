@@ -457,4 +457,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     inc/LinkDef.h
 )
 
+# For recent clang, this can facilitate auto-vectorisation.
+# In RooFit, the errno side effect is not needed, anyway:
+target_compile_options(RooFitCore PUBLIC -fno-math-errno)
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)

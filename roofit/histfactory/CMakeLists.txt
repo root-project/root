@@ -78,6 +78,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     XMLParser
 )
 
+# For recent clang, this can facilitate auto-vectorisation.
+# In RooFit, the errno side effect is not needed, anyway:
+target_compile_options(HistFactory PUBLIC -fno-math-errno)
+
 ROOT_EXECUTABLE(hist2workspace
   MakeModelAndMeasurements.cxx
   hist2workspace.cxx
