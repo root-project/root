@@ -612,7 +612,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       }
    }
 
-   if (fEndEntry >= 0 && entry >= fEndEntry) {
+   if ((fEndEntry >= 0 && entry >= fEndEntry) || (fEntry >= fTree->GetEntriesFast())) {
       fEntryStatus = kEntryBeyondEnd;
       return fEntryStatus;
    }
