@@ -535,7 +535,7 @@ void TKDE::SetMirroredEvents() {
       SetBinCountData();
 
       // now mirror the bins
-      assert(fNBins = fData.size());
+      assert(fNBins == fData.size());
       if (fMirrorLeft) {
          fData.insert(fData.begin(), fNBins, 0.);
          fBinCount.insert(fBinCount.begin(), fNBins, 0.);
