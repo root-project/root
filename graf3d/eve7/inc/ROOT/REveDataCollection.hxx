@@ -96,8 +96,8 @@ public:
    void SetItemsChangeDelegate (std::function<void (REveDataItemList*, const std::vector<int>&)> handler_func);
    void SetFillImpliedSelectedDelegate (std::function<void (REveDataItemList*, Set_t& impSelSet)> handler_func);
 
-   static void DummyItemsChangeDelegate(REveDataItemList*, const std::vector<int>&);
-   static void DummyFillImpliedSelectedDelegate(REveDataItemList*, Set_t& impSelSet);
+   static void DummyItemsChange(REveDataItemList*, const std::vector<int>&);
+   static void DummyFillImpliedSelected(REveDataItemList*, Set_t& impSelSet);
 };
 
 //==============================================================================
