@@ -37,16 +37,14 @@ REveDataItemList::REveDataItemList(const std::string& n, const std::string& t):
 {
    fAlwaysSecSelect = true;
 
-   SetItemsChangeDelegate([&] (REveDataItemList* collection, const REveDataCollection::Ids_t& ids) 
-   {
-      REveDataItemList::DummyItemsChangeDelegate(collection, ids);
+   SetItemsChangeDelegate([&](REveDataItemList *collection, const REveDataCollection::Ids_t &ids) {
+      REveDataItemList::DummyItemsChange(collection, ids);
    });
 
-   SetFillImpliedSelectedDelegate([&] (REveDataItemList* collection, REveElement::Set_t& impSelSet)
-                                    {
-                                       REveDataItemList::DummyFillImpliedSelected( collection,  impSelSet);
-                                    });
-   
+   SetFillImpliedSelectedDelegate([&](REveDataItemList *collection, REveElement::Set_t &impSelSet) {
+      REveDataItemList::DummyFillImpliedSelected(collection, impSelSet);
+   });
+
    SetupDefaultColorAndTransparency(REveDataCollection::fgDefaultColor, true, true);
 }
 //______________________________________________________________________________
@@ -209,7 +207,7 @@ void REveDataItemList::SetFillImpliedSelectedDelegate (std::function<void (REveD
 }
 
 //______________________________________________________________________________
-void REveDataItemList::DummyItemsChangeDelegate(REveDataItemList*, const std::vector<int>&)
+void REveDataItemList::DummyItemsChange(REveDataItemList*, const std::vector<int>&)
 {
    if (gDebug) {
       printf("REveDataItemList::DummyItemsCahngeDelegate not implemented\n");
@@ -218,7 +216,7 @@ void REveDataItemList::DummyItemsChangeDelegate(REveDataItemList*, const std::ve
 
 
 //______________________________________________________________________________
-void REveDataItemList::DummyFillImpliedSelectedDelegate(REveDataItemList*, REveElement::Set_t&)
+void REveDataItemList::DummyFillImpliedSelected(REveDataItemList*, REveElement::Set_t&)
 {
    if (gDebug) {
       printf("REveDataItemList::DummyFillImpliedSelectedDelegate not implemented\n");
