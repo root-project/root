@@ -338,7 +338,10 @@ TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::st
 {
    const bool hasEntryList = entryList.GetN() > 0;
    const bool usingLocalEntries = friendInfo.fFriendNames.empty() && !hasEntryList;
-   if (fChain == nullptr || (usingLocalEntries && fileNames[0] != fChain->GetListOfFiles()->At(0)->GetTitle())) {
+   const bool needNewChain =
+      fChain == nullptr || (usingLocalEntries && (fileNames[0] != fChain->GetListOfFiles()->At(0)->GetTitle() ||
+                                                  treeNames[0] != fChain->GetListOfFiles()->At(0)->GetName()));
+   if (needNewChain) {
       MakeChain(treeNames, fileNames, friendInfo, nEntries, friendEntries);
       if (hasEntryList) {
          fEntryList.reset(new TEntryList(entryList));
