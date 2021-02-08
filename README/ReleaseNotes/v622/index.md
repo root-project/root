@@ -945,3 +945,9 @@ ROOT will implement a workaround for this in an upcoming release.
 ## HEAD of the v6-22-00-patches branch
 
 These changes will be part of a future 6.22/06.
+
+### Build, Configuration and Testing Infrastructure
+
+The following builtins have been updated:
+
+- VecCore 0.7.0
