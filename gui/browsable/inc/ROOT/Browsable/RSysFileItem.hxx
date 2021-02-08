@@ -15,7 +15,11 @@ namespace ROOT {
 namespace Experimental {
 namespace Browsable {
 
-/** Representation of single item in the file browser */
+/** \class RSysFileItem
+\ingroup rbrowser
+\brief Representation of single item in the file browser
+*/
+
 class RSysFileItem : public RItem {
 public:
    // internal data, used for generate directory list

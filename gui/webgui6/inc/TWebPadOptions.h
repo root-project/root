@@ -14,7 +14,13 @@
 #include <string>
 #include <vector>
 
-/// Class used to transport drawing options from the client
+/** \class TWebObjectOptions
+\ingroup webgui6
+
+Class used to transport drawing options from the client
+
+*/
+
 class TWebObjectOptions {
 public:
    std::string snapid;       ///< id of the object

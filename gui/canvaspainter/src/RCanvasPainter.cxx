@@ -1,9 +1,6 @@
-/// \file RCanvasPainter.cxx
-/// \ingroup CanvasPainter ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2017-05-31
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Axel Naumann <axel@cern.ch>
+// Date: 2017-05-31
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
@@ -51,9 +48,10 @@ RLogChannel &CanvasPainerLog() {
 }
 }
 
-// ==========================================================================================================
-
-// new implementation of canvas painter, using RWebWindow
+/** \class RCanvasPainter
+\ingroup webdisplay
+New implementation of canvas painter, using RWebWindow
+*/
 
 namespace ROOT {
 namespace Experimental {
@@ -76,7 +74,7 @@ private:
       enum { sInit, sRunning, sReady } fState{sInit}; ///<! true when command submitted
       bool fResult{false};                            ///<! result of command execution
       CanvasCallback_t fCallback{nullptr};            ///<! callback function associated with command
-      unsigned fConnId{0};                            ///<! connection id for the command, when 0 specified command will be sumbited to any available connection
+      unsigned fConnId{0};                            ///<! connection id for the command, when 0 specified command will be submitted to any available connection
       WebCommand() = default;
       WebCommand(const std::string &id, const std::string &name, const std::string &arg, CanvasCallback_t callback,
                  unsigned connid)
@@ -117,7 +115,7 @@ private:
    uint64_t fSnapshotDelivered{0};   ///<! minimal version delivered to all connections
    std::list<WebUpdate> fUpdatesLst; ///<! list of callbacks for canvas update
 
-   int fJsonComp{23};             ///<! json compression for data send to client
+   int fJsonComp{23};                ///<! json compression for data send to client
 
    /// Disable copy construction.
    RCanvasPainter(const RCanvasPainter &) = delete;
@@ -205,8 +203,8 @@ struct TNewCanvasPainterReg {
 } newCanvasPainterReg;
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-/// constructor
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
 
 RCanvasPainter::RCanvasPainter(RCanvas &canv) : fCanvas(canv)
 {
@@ -214,8 +212,8 @@ RCanvasPainter::RCanvasPainter(RCanvas &canv) : fCanvas(canv)
    if (comp >= 0) fJsonComp = comp;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-/// destructor
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
 
 RCanvasPainter::~RCanvasPainter()
 {
@@ -225,7 +223,7 @@ RCanvasPainter::~RCanvasPainter()
       fWindow->CloseConnections();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Cancel all pending Canvas::Update()
 
 void RCanvasPainter::CancelUpdates()
@@ -396,8 +394,8 @@ void RCanvasPainter::CanvasUpdated(uint64_t ver, bool async, CanvasCallback_t ca
    }
 }
 
-//////////////////////////////////////////////////////////////////////////
-/// perform special action when drawing is ready
+////////////////////////////////////////////////////////////////////////////////
+/// Perform special action when drawing is ready
 
 void RCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async,
                                                      CanvasCallback_t callback)
@@ -449,7 +447,7 @@ void RCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
 }
 
 
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Produce batch output, using chrome headless mode with DOM dump
 
 bool RCanvasPainter::ProduceBatchOutput(const std::string &fname, int width, int height)
@@ -462,7 +460,7 @@ bool RCanvasPainter::ProduceBatchOutput(const std::string &fname, int width, int
    return RWebDisplayHandle::ProduceImage(fname, snapshot, width, height);
 }
 
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Process data from the client
 
 void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
@@ -557,7 +555,7 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
    CheckDataToSend();
 }
 
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Create web window for canvas
 
 void RCanvasPainter::CreateWindow()
@@ -588,8 +586,7 @@ void RCanvasPainter::CreateWindow()
    // fWindow->SetGeometry(500,300);
 }
 
-
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Create new display for the canvas
 /// See RWebWindowsManager::Show() docu for more info
 
@@ -610,7 +607,7 @@ void RCanvasPainter::NewDisplay(const std::string &where)
    fWindow->Show(args);
 }
 
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Returns number of connected displays
 
 int RCanvasPainter::NumDisplays() const
@@ -620,7 +617,7 @@ int RCanvasPainter::NumDisplays() const
    return fWindow->NumConnections();
 }
 
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Returns web window name
 
 std::string RCanvasPainter::GetWindowAddr() const
@@ -630,7 +627,7 @@ std::string RCanvasPainter::GetWindowAddr() const
    return fWindow->GetAddr();
 }
 
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Add window as panel inside canvas window
 
 bool RCanvasPainter::AddPanel(std::shared_ptr<RWebWindow> win)
@@ -794,7 +791,7 @@ void RCanvasPainter::FrontCommandReplied(const std::string &reply)
    cmd->CallBack(result);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Run canvas functionality for specified period of time
 /// Required when canvas used not from the main thread
 
