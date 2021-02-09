@@ -3123,7 +3123,8 @@ Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBr
    // itself might be modified after `WriteBasketImpl` exits.
    auto doUpdates = [=]() {
       Int_t nout  = basket->WriteBuffer();    //  Write buffer
-      if (nout < 0) Error("TBranch::WriteBasketImpl", "basket's WriteBuffer failed.\n");
+      if (nout < 0)
+         Error("WriteBasketImpl", "basket's WriteBuffer failed.");
       fBasketBytes[where]  = basket->GetNbytes();
       fBasketSeek[where]   = basket->GetSeekKey();
       Int_t addbytes = basket->GetObjlen() + basket->GetKeylen();

@@ -20,6 +20,8 @@
 
 class TFile;
 class TDirectory;
+class THashList;
+class TKey;
 
 namespace ROOT {
 class TIOFeatures;
@@ -57,6 +59,11 @@ protected:
    virtual Bool_t AddFile(TFile *source, Bool_t own, Bool_t cpProgress);
    virtual Bool_t MergeRecursive(TDirectory *target, TList *sourcelist, Int_t type = kRegular | kAll);
 
+   virtual Bool_t MergeOne(TDirectory *target, TList *sourcelist, Int_t type,
+                TFileMergeInfo &info, TString &oldkeyname, THashList &allNames, Bool_t &status, Bool_t &onlyListed,
+                const TString &path,
+                TDirectory *current_sourcedir, TFile *current_file,
+                TKey *key, TObject *obj);
 public:
    /// Type of the partial merge
    enum EPartialMergeType {
