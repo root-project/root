@@ -38,6 +38,7 @@ private:
    Bool_t   fFiltered{false};
 
 public:
+
    REveDataItem(void* d, Color_t c): fDataPtr(d), fColor(c){}
 
    Bool_t  GetRnrSelf() const { return fRnrSelf; }
@@ -59,6 +60,9 @@ class REveDataItemList: public REveElement,
    friend class REveDataCollection;
 
 public:
+   typedef  std::function<void (REveDataItemList*, const std::vector<int>&)> ItemsChangeFunc_t;
+   typedef  std::function<void (REveDataItemList*, Set_t&)> FillImpliedSelectedFunc_t;
+
    struct TTip {
       std::string    fTooltipTitle;
       REveDataColumn fTooltipFunction;
@@ -66,8 +70,8 @@ public:
 
 private:
    std::vector<REveDataItem*> fItems;
-   std::function<void (REveDataItemList*, const std::vector<int>&)> fHandlerItemsChange;
-   std::function<void (REveDataItemList*, Set_t& impSel)> fHandlerFillImplied;
+   ItemsChangeFunc_t fHandlerItemsChange;
+   FillImpliedSelectedFunc_t fHandlerFillImplied;
 
    std::vector<TTip> fTooltipExpressions;
 
@@ -93,8 +97,8 @@ public:
    using REveElement::GetHighlightTooltip;
    std::string GetHighlightTooltip(const std::set<int>& secondary_idcs) const override;
 
-   void SetItemsChangeDelegate (std::function<void (REveDataItemList*, const std::vector<int>&)> handler_func);
-   void SetFillImpliedSelectedDelegate (std::function<void (REveDataItemList*, Set_t& impSelSet)> handler_func);
+   void SetItemsChangeDelegate (ItemsChangeFunc_t);
+   void SetFillImpliedSelectedDelegate (FillImpliedSelectedFunc_t);
 
    static void DummyItemsChange(REveDataItemList*, const std::vector<int>&);
    static void DummyFillImpliedSelected(REveDataItemList*, Set_t& impSelSet);

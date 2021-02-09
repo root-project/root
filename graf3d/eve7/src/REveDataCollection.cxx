@@ -195,13 +195,13 @@ void REveDataItemList::AddTooltipExpression(const std::string &title, const std:
 }
 
 //______________________________________________________________________________
-void REveDataItemList::SetItemsChangeDelegate (std::function<void (REveDataItemList*, const std::vector<int>&)> handler_func)
+void REveDataItemList::SetItemsChangeDelegate (ItemsChangeFunc_t handler_func)
 {
    fHandlerItemsChange = handler_func;
 }
 
 //______________________________________________________________________________
-void REveDataItemList::SetFillImpliedSelectedDelegate (std::function<void (REveDataItemList*, Set_t& impSelSet)> handler_func)
+void REveDataItemList::SetFillImpliedSelectedDelegate (FillImpliedSelectedFunc_t handler_func)
 {
    fHandlerFillImplied = handler_func;
 }
