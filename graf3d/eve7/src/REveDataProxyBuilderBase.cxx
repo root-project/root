@@ -77,7 +77,7 @@ void REveDataProxyBuilderBase::Build()
          Clean();
 
          if (!m_collection->GetRnrSelf())
-         return;
+            return;
 
          for (auto &pp: m_products)
          {
