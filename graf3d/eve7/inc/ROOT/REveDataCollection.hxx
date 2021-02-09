@@ -66,8 +66,8 @@ public:
 
 private:
    std::vector<REveDataItem*> fItems;
-   std::function<void (REveDataItemList*, const std::vector<int>&)> _handler_items_change;
-   std::function<void (REveDataItemList*, Set_t& impSel)> _handler_fillimp;
+   std::function<void (REveDataItemList*, const std::vector<int>&)> fHandlerItemsChange;
+   std::function<void (REveDataItemList*, Set_t& impSel)> fHandlerFillImplied;
 
    std::vector<TTip> fTooltipExpressions;
 
