@@ -1,9 +1,6 @@
-/// \file RCefWebDisplayHandle.cxx
-/// \ingroup WebGui ROOT7
-/// \author Sergey Linev <s.linev@gsi.de>
-/// \date 2020-08-21
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2020-08-21
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *

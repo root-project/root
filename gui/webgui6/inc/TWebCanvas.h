@@ -11,16 +11,6 @@
 #ifndef ROOT_TWebCanvas
 #define ROOT_TWebCanvas
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TWebCanvas                                                           //
-//                                                                      //
-// Basic TCanvasImp ABI implementation for Web-based GUI                //
-// Provides painting of main ROOT6 classes in web browsers              //
-// Major interactive features implemented in TWebCanvasFull class       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TCanvasImp.h"
 
 #include "TString.h"
