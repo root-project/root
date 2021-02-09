@@ -775,7 +775,9 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
 
   } else {
       if (fClass->GetCollectionType() > ROOT::kNotSTL) {
-         if (TClassEdit::IsSTLCont(fClass->GetName())) {
+         const bool isOldRVec = fClass->GetCollectionType() == ROOT::kROOTRVec && (fElements->GetEntries() == 1) &&
+                                !strcmp(fElements->At(0)->GetName(), "fData");
+         if (!isOldRVec && TClassEdit::IsSTLCont(fClass->GetName())) {
             // We have a collection that is indeed an STL collection,
             // we know we don't need its streamerInfo.
             SetBit(kCanDelete);
@@ -2124,6 +2126,13 @@ void TStreamerInfo::BuildOld()
                }
                int dsize = dm->GetUnitSize();
                element->SetSize(dsize*narr);
+            } else if (strcmp(element->GetName(), "fData") == 0 && strncmp(GetName(), "ROOT::VecOps::RVec", 18) == 0) {
+               Error("BuildCheck", "Reading RVecs that were written directly to file before ROOT v6.24 is not "
+                                   "supported, the program will likely crash.");
+               element->SetOffset(0);
+               element->Init(this);
+               dmType = element->GetTypeName();
+               dmIsPtr = false;
             }
          }
       } // Class corresponding to StreamerInfo is emulated or not.
