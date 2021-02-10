@@ -148,9 +148,25 @@ std::string RElement::GetPathAsString(const RElementPath_t &path)
    std::string res;
    for (auto &elem : path) {
       res.append("/");
-      res.append(elem);
+      std::string subname = elem;
+      ExtractItemIndex(subname);
+      res.append(subname);
    }
 
    return res;
 }
 
+/////////////////////////////////////////////////////////////////////
+/// Extract index from name
+/// Index coded by client with ###<indx>$$$ suffix
+/// Such coding used by browser to identify element by index
+
+int RElement::ExtractItemIndex(std::string &name)
+{
+   auto p1 = name.rfind("###"), p2 = name.rfind("$$$");
+   if ((p1 == std::string::npos) || (p2 == std::string::npos) || (p1 >= p2) || (p2 != name.length()-3)) return -1;
+
+   int indx = std::stoi(name.substr(p1+3,p2-p1-3));
+   name.resize(p1);
+   return indx;
+}

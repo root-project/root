@@ -214,15 +214,6 @@ class RSysDirLevelIter : public RLevelIter {
       return true;
    }
 
-   /** Try to find file directly by name */
-   bool FindDirEntry(const std::string &name)
-   {
-      if (!fDir && !OpenDir())
-         return false;
-
-      return TestDirEntry(name);
-   }
-
    std::string GetFileExtension(const std::string &fname) const
    {
       auto pos = fname.rfind(".");
@@ -239,7 +230,15 @@ public:
 
    bool Next() override { return NextDirEntry(); }
 
-   bool Find(const std::string &name) override { return FindDirEntry(name); }
+   bool Find(const std::string &name, int = -1) override
+   {
+      // ignore index, it is not possible to have duplicated file names
+
+      if (!fDir && !OpenDir())
+         return false;
+
+      return TestDirEntry(name);
+   }
 
    std::string GetItemName() const override { return fItemName; }
 
