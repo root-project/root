@@ -61,9 +61,9 @@ protected:
    Bool_t           fThresholdActive;     // kTRUE if glowing threhsholds are active
    Bool_t           fPeakMark;            // kTRUE if peak mark is active
    Bool_t           fMeanMark;            // kTRUE if mean mark is active
-   Int_t            fBufferSize;          // circular bufffer size
-   Int_t            fBufferCount;         // circular bufffer count
-   std::vector<Float_t> fBuffer;          // circular bufffer for mean calculation
+   Int_t            fBufferSize;          // circular buffer size
+   Int_t            fBufferCount;         // circular buffer count
+   std::vector<Float_t> fBuffer;          // circular buffer for mean calculation
 
    virtual void     DoRedraw();
            void     DrawNeedle();
