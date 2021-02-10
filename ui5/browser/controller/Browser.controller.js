@@ -757,7 +757,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (this._oSettingsModel.getProperty("/DBLCLKRun")) exec = "exec";
          if (!opt) opt = "";
 
-         let args = prop.path.slice();
+         let args = prop.path.slice(); // make copy of array
          args.push(opt, exec);
 
          this.websocket.send("DBLCLK:" + JSON.stringify(args));
