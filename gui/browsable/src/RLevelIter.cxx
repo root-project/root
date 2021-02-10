@@ -16,10 +16,19 @@ using namespace ROOT::Experimental::Browsable;
 /////////////////////////////////////////////////////////////////////
 /// Find item with specified name
 /// Default implementation, should work for all
+/// If index specified, not only name but also index should match
 
-bool RLevelIter::Find(const std::string &name)
+bool RLevelIter::Find(const std::string &name, int indx)
 {
+   int i = -1;
+
    while (Next()) {
+      if (indx >= 0) {
+         i++;
+         if (i > indx) return false;
+         if (i < indx) continue;
+      }
+
       if (GetItemName() == name)
          return true;
    }

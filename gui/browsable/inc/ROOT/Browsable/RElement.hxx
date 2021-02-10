@@ -91,6 +91,8 @@ public:
    static int ComparePaths(const RElementPath_t &path1, const RElementPath_t &path2);
 
    static std::string GetPathAsString(const RElementPath_t &path);
+
+   static int ExtractItemIndex(std::string &name);
 };
 
 } // namespace Browsable

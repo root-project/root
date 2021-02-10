@@ -45,7 +45,7 @@ public:
 
    virtual std::unique_ptr<RItem> CreateItem();
 
-   virtual bool Find(const std::string &name);
+   virtual bool Find(const std::string &name, int indx = -1);
 
 };
 
