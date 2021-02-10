@@ -234,7 +234,7 @@ TGDimension TGSpeedo::GetDefaultSize() const
 
 Float_t TGSpeedo::GetMean()
 {
-   return (Float_t) std::accumulate(fBuffer.begin(), fBuffer.end(), 0.0) / fBufferSize;
+   return (Float_t) std::accumulate(fBuffer.begin(), fBuffer.end(), 0.0) / fBuffer.size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -319,9 +319,9 @@ Bool_t TGSpeedo::HandleButton(Event_t *event)
 void TGSpeedo::SetBufferSize(Int_t size)
 {
    fBufferSize = size;
-   if (fBufferCount > fBufferSize)
-      fBufferCount = fBufferSize;
-   fBuffer.resize(fBufferSize);
+   fBuffer.clear();
+   fBuffer.reserve(fBufferSize);
+   fBufferCount = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -412,7 +412,10 @@ void TGSpeedo::SetScaleValue(Float_t val)
       fPeakVal = fValue;
 
    if (fBufferSize > 0) {
-      fBuffer[fBufferCount % fBufferSize] = fValue;
+      if (fBufferCount < fBufferSize)
+         fBuffer.push_back(fValue);
+      else
+         fBuffer[fBufferCount % fBufferSize] = fValue;
       ++fBufferCount;
       if (fBufferCount >= fBufferSize)
          fBufferCount = 0;
