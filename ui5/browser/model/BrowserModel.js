@@ -19,6 +19,8 @@ sap.ui.define([
                expanded: true
             };
 
+            this.useIndexSuffix = true; // use index suffix in path for handling name duplication
+
             this.loadDataCounter = 0; // counter of number of nodes
 
             this.sortMethod = "name"; // "name", "size"
@@ -110,7 +112,7 @@ sap.ui.define([
 
         /** @summary Code index as string */
         codeIndex: function(indx) {
-           return "###" + indx + "$$$";
+           return this.useIndexSuffix ? "###" + indx + "$$$" : "";
         },
 
         /** @summary Extract index from string */

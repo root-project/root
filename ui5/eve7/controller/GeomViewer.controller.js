@@ -109,6 +109,8 @@ sap.ui.define(['sap/ui/core/Component',
             // create model only for browser - no need for anybody else
             this.model = new BrowserModel();
 
+            this.model.useIndexSuffix = false;
+
             let t = this.byId("treeTable");
 
             t.setModel(this.model);
