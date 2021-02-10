@@ -47,7 +47,7 @@ private:
 
    const REveDataSimpleProxyBuilder& operator=(const REveDataSimpleProxyBuilder&); // stop default
 
-   bool VisibilityModelChanges(int idx, REveElement*, const REveViewContext*) override;
+   bool VisibilityModelChanges(int idx, REveElement*, std::string viewType, const REveViewContext*) override;
 
 };
 //==============================================================================
