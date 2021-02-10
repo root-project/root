@@ -40,6 +40,7 @@
 #include "snprintf.h"
 
 #include "TGSpeedo.h"
+#include <numeric>
 
 
 ClassImp(TGSpeedo);
@@ -71,6 +72,9 @@ TGSpeedo::TGSpeedo(const TGWindow *p, int id)
    fImage = TImage::Open(fPicName);
    if (!fImage || !fImage->IsValid())
       Error("TGSpeedo::Build", "%s not found", fPicName.Data());
+   fBufferCount = 0;
+   fBufferSize = 10;
+   fBuffer.resize(fBufferSize, 0.0);
    Build();
    AddInput(kButtonPressMask | kButtonReleaseMask);
 }
@@ -108,6 +112,9 @@ TGSpeedo::TGSpeedo(const TGWindow *p, Float_t smin, Float_t smax,
    fImage = TImage::Open(fPicName);
    if (!fImage || !fImage->IsValid())
       Error("TGSpeedo::Build", "%s not found", fPicName.Data());
+   fBufferCount = 0;
+   fBufferSize = 10;
+   fBuffer.resize(fBufferSize, 0.0);
    Build();
    AddInput(kButtonPressMask | kButtonReleaseMask);
 }
@@ -225,6 +232,14 @@ TGDimension TGSpeedo::GetDefaultSize() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Compute and return the mean of the circular buffer content.
+
+Float_t TGSpeedo::GetMean()
+{
+   return (Float_t) std::accumulate(fBuffer.begin(), fBuffer.end(), 0.0) / fBufferSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Make speedo glowing.
 
 void TGSpeedo::Glow(EGlowColor col)
@@ -298,6 +313,17 @@ Bool_t TGSpeedo::HandleButton(Event_t *event)
       }
    }
    return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change the circular buffer size (used for the automatic mean calculation).
+
+void TGSpeedo::SetBufferSize(Int_t size)
+{
+   fBufferSize = size;
+   if (fBufferCount > fBufferSize)
+      fBufferCount = fBufferSize;
+   fBuffer.resize(fBufferSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -386,6 +412,11 @@ void TGSpeedo::SetScaleValue(Float_t val)
    }
    if (fValue > fPeakVal)
       fPeakVal = fValue;
+
+   fBuffer[fBufferCount % fBufferSize] = fValue;
+   ++fBufferCount;
+   if (fBufferCount >= fBufferSize)
+      fBufferCount = 0;
 
    fAngle = fAngleMin + (fValue / ((fScaleMax - fScaleMin) /
            (fAngleMax - fAngleMin)));
@@ -480,7 +511,8 @@ void TGSpeedo::DrawNeedle()
    Translate(80.0, angle, &xpk0, &ypk0);
    Translate(67.0, angle, &xpk1, &ypk1);
 
-   // compute x/y position of the peak mark
+   fMeanVal = GetMean();
+   // compute x/y position of the mean mark
    angle = fAngleMin + (fMeanVal / ((fScaleMax - fScaleMin) /
           (fAngleMax - fAngleMin)));
    Translate(80.0, angle, &xmn0, &ymn0);
