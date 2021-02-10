@@ -189,8 +189,6 @@ RBrowser::~RBrowser()
 
 std::string RBrowser::ProcessBrowserRequest(const std::string &msg)
 {
-   std::string res;
-
    std::unique_ptr<RBrowserRequest> request;
 
    if (msg.empty()) {
@@ -202,7 +200,7 @@ std::string RBrowser::ProcessBrowserRequest(const std::string &msg)
    }
 
    if (!request)
-      return res;
+      return ""s;
 
    return "BREPL:"s + fBrowsable.ProcessRequest(*request.get());
 }

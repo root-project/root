@@ -237,9 +237,21 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable
    }
 
    while (pos < (int) path.size()) {
+      std::string subname = path[pos];
+      int indx = Browsable::RElement::ExtractItemIndex(subname);
+
       auto iter = elem->GetChildsIter();
-      if (!iter || !iter->Find(path[pos]))
+      if (!iter)
          return nullptr;
+
+      if (!iter->Find(subname, indx)) {
+         if (indx < 0)
+            return nullptr;
+         iter = elem->GetChildsIter();
+         if (!iter || !iter->Find(subname))
+            return nullptr;
+      }
+
       elem = iter->GetElement();
 
       if (!elem)
