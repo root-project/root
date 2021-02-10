@@ -538,7 +538,7 @@ TBuffer* TBranch::GetTransientBuffer(Int_t size)
 /// the insert (since we'll need to move all the record that are
 /// entere 'too early').
 /// Warning we also assume that the __current__ write basket is
-/// not present (aka has been removed).
+/// not present (aka has been removed) or is empty (no entries).
 
 void TBranch::AddBasket(TBasket& b, Bool_t ondisk, Long64_t startEntry)
 {
@@ -582,13 +582,20 @@ void TBranch::AddBasket(TBasket& b, Bool_t ondisk, Long64_t startEntry)
    }
    fBasketEntry[where] = startEntry;
 
+   TBasket *existing = (TBasket*)fBaskets.At(fWriteBasket);
+   if (existing && existing->GetNevBuf()) {
+      Fatal("AddBasket", "Dropping non-empty 'write' basket in %s %s",
+            GetTree()->GetName(), GetName());
+   }
+   delete existing;
    if (ondisk) {
       fBasketBytes[where] = basket->GetNbytes();  // not for in mem
       fBasketSeek[where] = basket->GetSeekKey();  // not for in mem
-      fBaskets.AddAtAndExpand(0,fWriteBasket);
+      fBaskets.AddAtAndExpand(0, fWriteBasket);
       ++fWriteBasket;
    } else {
       ++fNBaskets;
+      // The basket we are adding becomes the new 'write' basket.
       fBaskets.AddAtAndExpand(basket,fWriteBasket);
       fTree->IncrementTotalBuffers(basket->GetBufferSize());
    }
