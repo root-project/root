@@ -1626,7 +1626,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                prnt = prnt._parent;
             }
 
-            hitem._background = 'grey';
+            hitem._background = 'LightSteelBlue';
             if (active.indexOf(hitem)<0) active.push(hitem);
          }
 
