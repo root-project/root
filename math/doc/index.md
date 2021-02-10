@@ -45,8 +45,8 @@ They consist of the following components:
 
 Further information is available at the following links:
 
-- [The Math chapter in the user guide](https://root.cern.ch/root/htmldoc/guides/users-guide/MathLibraries.html)
-- [The Linear Algebra chapter in the user guide](https://root.cern.ch/root/htmldoc/guides/users-guide/LinearAlgebra.html)
-- [The Fitting chapter in the user guide](https://root.cern.ch/root/htmldoc/guides/users-guide/FittingHistograms.html)
+- [The Math page in the manual](https://root.cern/manual/math)
+- [The Linear Algebra section in the manual](https://root.cern/manual/math/#linear-algebra-packages)
+- [The Fitting histograms page in the manual](https://root.cern/manual/fitting/)
 - [Inventory of Math functions and algorithms] (http://project-mathlibs.web.cern.ch/project-mathlibs/mathTable.html)
 
