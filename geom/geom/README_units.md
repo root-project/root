@@ -26,8 +26,8 @@ TGeoManager::SetDefaultUnits(kRootUnits);
 
 To avoid confusion between materials described in ROOT units and materials described
 in Geant4 units, this switch should by all means be set once, before any element or
-material is constructed. If for whatever reason this it is necessary to change the
-system of units later, this is feasible disabling the fatal exception:
+material is constructed. If for whatever reason it is necessary to change the
+system of units later, this is feasible disabling the otherwise fatal exception:
 
 ``` {.cpp}
 TGeoManager::LockDefaultUnits(kFALSE);
