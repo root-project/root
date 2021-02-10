@@ -108,7 +108,23 @@ sap.ui.define([
            return this.getProperty("/length");
         },
 
-        /** @summary Get node by path which is array of strings */
+        /** @summary Code index as string */
+        codeIndex: function(indx) {
+           return "###" + indx + "$$$";
+        },
+
+        /** @summary Extract index from string */
+        extractIndex: function(name) {
+           if (!name || typeof name != "string") return "";
+           let p1 = name.lastIndexOf("###"), p2 = name.lastIndexOf("$$$");
+           if ((p1 < 0) || (p2 < 0) || (p1 >= p2) || (p2 != name.length - 3)) return name;
+
+           let indx = parseInt(name.substr(p1+3, p2-p1-3));
+           if (isNaN(indx) || (indx < 0)) return name;
+           return { n: name.substr(0, p1), i: indx };
+        },
+
+        /** @summary Get node by path which is array of strings, optionally includes indicies */
         getNodeByPath: function(path) {
            let curr = this.h;
            if (!path || (path.length == 0)) return curr;
@@ -116,14 +132,26 @@ sap.ui.define([
            let names = path.slice(); // make copy to avoid changes in argument
 
            while (names.length > 0) {
-              let name = names.shift(), find = false;
-              if (!name) continue; // ignore start or stop slash
+              let name = this.extractIndex(names.shift()), find = false, indx = -1;
 
-              for (let k = 0; k < curr.childs.length; ++k) {
+              if (typeof name != "string") {
+                 indx = name.i;
+                 name = name.n;
+              }
+
+              if (indx >= 0) {
+                 indx -= (curr.first || 0);
+                 if (curr.childs[indx] && (curr.childs[indx].name == name)) {
+                    curr = curr.childs[indx];
+                    find = true;
+                    console.log(`Match index ${indx} with name ${name}`);
+                 }
+              }
+
+              for (let k = 0; !find && (k < curr.childs.length); ++k) {
                  if (curr.childs[k].name == name) {
                     curr = curr.childs[k];
                     find = true;
-                    break;
                  }
               }
 
@@ -202,6 +230,7 @@ sap.ui.define([
         },
 
         /** @summary submit next request to the server
+          * @param {Array} path - path as array of strings
           * @desc directly use web socket, later can be dedicated channel */
         submitRequest: function(force_reload, elem, path, first, number) {
            if (first === "expanding") {
@@ -424,8 +453,8 @@ sap.ui.define([
 
               let subpath = path.slice(), // make copy to avoid changes in argument
                   subindx = subpath.push("") - 1;
-              for (let k=0; k < elem.childs.length; ++k) {
-                 subpath[subindx] = elem.childs[k].name;
+              for (let k = 0; k < elem.childs.length; ++k) {
+                 subpath[subindx] = elem.childs[k].name + this.codeIndex((elem.first || 0) + k);
                  scan(lvl+1, elem.childs[k], subpath);
               }
 
