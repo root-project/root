@@ -1377,7 +1377,7 @@ JSROOT.define(['rawinflate'], () => {
          let buf = new TBuffer(blob, 0, file);
 
          if (buf.substring(0, 4) !== 'root')
-            return Promise.reject(Error("NOT A ROOT FILE! " + file.fURL));
+            return Promise.reject(Error(`Not a ROOT file ${file.fURL}`));
 
          buf.shift(4);
 
@@ -1407,11 +1407,11 @@ JSROOT.define(['rawinflate'], () => {
 
          // empty file
          if (!file.fSeekInfo || !file.fNbytesInfo)
-            return Promise.reject(Error("Empty file " + file.fURL));
+            return Promise.reject(Error(`File ${file.fURL} does not provide streamer infos`));
 
          // extra check to prevent reading of corrupted data
          if (!file.fNbytesName || file.fNbytesName > 100000)
-            return Promise.reject(Error("Init : cannot read directory info of file " + file.fURL));
+            return Promise.reject(Error(`Cannot read directory info of the file ${file.fURL}`));
 
          //*-*-------------Read directory info
          let nbytes = file.fNbytesName + 22;
@@ -1436,7 +1436,7 @@ JSROOT.define(['rawinflate'], () => {
          buf3.classStreamer(file, 'TDirectory');
 
          if (!file.fSeekKeys)
-            return Promise.reject(Error("Empty keys list in " + file.fURL));
+            return Promise.reject(Error(`Empty keys list in ${file.fURL}`));
 
          // read with same request keys and streamer infos
          return file.readBuffer([file.fSeekKeys, file.fNbytesKeys, file.fSeekInfo, file.fNbytesInfo]);
@@ -1452,7 +1452,7 @@ JSROOT.define(['rawinflate'], () => {
          let buf5 = new TBuffer(blobs[1], 0, file),
             si_key = buf5.readTKey();
          if (!si_key)
-            return Promise.reject(Error("Fail to read data for TKeys"));
+            return Promise.reject(Error(`Fail to read StreamerInfo data in ${file.fURL}`));
 
          file.fKeys.push(si_key);
          return file.readObjBuffer(si_key);
