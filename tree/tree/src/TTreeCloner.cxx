@@ -521,7 +521,7 @@ void TTreeCloner::CopyMemoryBaskets()
       TBranch *to   = (TBranch*)fToBranches.UncheckedAt( i );
 
       basket = (!from->GetListOfBaskets()->IsEmpty()) ? from->GetBasket(from->GetWriteBasket()) : 0;
-      if (basket) {
+      if (basket && basket->GetNevBuf()) {
          basket = (TBasket*)basket->Clone();
          basket->SetBranch(to);
          to->AddBasket(*basket, kFALSE, fToStartEntries+from->GetBasketEntry()[from->GetWriteBasket()]);
