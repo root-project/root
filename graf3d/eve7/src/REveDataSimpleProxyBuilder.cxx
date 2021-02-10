@@ -161,7 +161,7 @@ REveDataSimpleProxyBuilder::ModelChanges(const REveDataCollection::Ids_t& iIds, 
       }
       applyColorAttrToChildren(comp);
 
-      if (VisibilityModelChanges(itemIdx, comp, p->m_viewContext))
+      if (VisibilityModelChanges(itemIdx, comp, p->m_viewType, p->m_viewContext))
       {
          elms->ProjectChild(comp);
          // printf("---REveDataProxyBuilderBase project child\n");
@@ -200,14 +200,16 @@ REveDataSimpleProxyBuilder::CreateCompound(bool set_color, bool propagate_color_
 //______________________________________________________________________________
 
 bool
-REveDataSimpleProxyBuilder::VisibilityModelChanges(int idx, REveElement* iCompound, const REveViewContext* vc)
+REveDataSimpleProxyBuilder::VisibilityModelChanges(int idx, REveElement* iCompound, std::string viewType, const REveViewContext* vc)
 {
-   const REveDataItem* item = Collection()->GetDataItem(idx);
+   const REveDataItem *item = Collection()->GetDataItem(idx);
    bool returnValue = false;
-   if (item->GetRnrSelf() && iCompound->NumChildren()==0)
-   {
-      Build(Collection()->GetDataPtr(idx), idx, iCompound, vc);
-      returnValue=true;
+   if (item->GetVisible() && iCompound->NumChildren() == 0) {
+      if (HaveSingleProduct())
+         Build(Collection()->GetDataPtr(idx), idx, iCompound, vc);
+      else
+         BuildViewType(Collection()->GetDataPtr(idx), idx, iCompound, viewType, vc);
+      returnValue = true;
    }
    return returnValue;
 }

@@ -320,7 +320,7 @@ void REveDataProxyBuilderBase::CollectionBeingDestroyed(const REveDataCollection
    m_products.clear();
 }
 
-bool REveDataProxyBuilderBase::VisibilityModelChanges(int, REveElement *, const REveViewContext *)
+bool REveDataProxyBuilderBase::VisibilityModelChanges(int, REveElement *, std::string, const REveViewContext *)
 {
    return false;
 }

@@ -72,7 +72,7 @@ public:
 protected:
    // Override this if visibility changes can cause (re)-creation of proxies.
    // Returns true if new proxies were created.
-   virtual bool VisibilityModelChanges(int idx, REveElement*, const REveViewContext*);
+   virtual bool VisibilityModelChanges(int idx, REveElement*, std::string viewType, const REveViewContext*);
 
    virtual void Build(const REveDataCollection* iItem, REveElement* product, const REveViewContext*);
    virtual void BuildViewType(const REveDataCollection* iItem, REveElement* product, std::string viewType, const REveViewContext*);
