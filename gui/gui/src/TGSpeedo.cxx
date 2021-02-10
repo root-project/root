@@ -73,8 +73,7 @@ TGSpeedo::TGSpeedo(const TGWindow *p, int id)
    if (!fImage || !fImage->IsValid())
       Error("TGSpeedo::Build", "%s not found", fPicName.Data());
    fBufferCount = 0;
-   fBufferSize = 10;
-   fBuffer.resize(fBufferSize, 0.0);
+   fBufferSize = 0;
    Build();
    AddInput(kButtonPressMask | kButtonReleaseMask);
 }
@@ -113,8 +112,7 @@ TGSpeedo::TGSpeedo(const TGWindow *p, Float_t smin, Float_t smax,
    if (!fImage || !fImage->IsValid())
       Error("TGSpeedo::Build", "%s not found", fPicName.Data());
    fBufferCount = 0;
-   fBufferSize = 10;
-   fBuffer.resize(fBufferSize, 0.0);
+   fBufferSize = 0;
    Build();
    AddInput(kButtonPressMask | kButtonReleaseMask);
 }
@@ -413,10 +411,12 @@ void TGSpeedo::SetScaleValue(Float_t val)
    if (fValue > fPeakVal)
       fPeakVal = fValue;
 
-   fBuffer[fBufferCount % fBufferSize] = fValue;
-   ++fBufferCount;
-   if (fBufferCount >= fBufferSize)
-      fBufferCount = 0;
+   if (fBufferSize > 0) {
+      fBuffer[fBufferCount % fBufferSize] = fValue;
+      ++fBufferCount;
+      if (fBufferCount >= fBufferSize)
+         fBufferCount = 0;
+   }
 
    fAngle = fAngleMin + (fValue / ((fScaleMax - fScaleMin) /
            (fAngleMax - fAngleMin)));
@@ -511,7 +511,9 @@ void TGSpeedo::DrawNeedle()
    Translate(80.0, angle, &xpk0, &ypk0);
    Translate(67.0, angle, &xpk1, &ypk1);
 
-   fMeanVal = GetMean();
+   if (fBufferSize > 0) {
+      fMeanVal = GetMean();
+   }
    // compute x/y position of the mean mark
    angle = fAngleMin + (fMeanVal / ((fScaleMax - fScaleMin) /
           (fAngleMax - fAngleMin)));
