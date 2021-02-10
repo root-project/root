@@ -626,8 +626,12 @@ void TBranch::AddLastBasket(Long64_t startEntry)
       Fatal("AddBasket","The last basket must have the highest entry number (%s/%lld/%d).",GetName(),startEntry,fWriteBasket);
 
    }
-   fBasketEntry[where] = startEntry;
-   fBaskets.AddAtAndExpand(0,fWriteBasket);
+   // The first basket (should) always start at zero. If we are asked to update
+   // it, this likely to be from merging 'empty' branches (base class node and the likes)
+   if (where) {
+      fBasketEntry[where] = startEntry;
+      fBaskets.AddAtAndExpand(0,fWriteBasket);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
