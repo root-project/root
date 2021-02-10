@@ -314,7 +314,7 @@ class JetProxyBuilder: public REveDataSimpleProxyBuilderTemplate<Jet>
    using REveDataSimpleProxyBuilderTemplate<Jet>::BuildViewType;
 
    void BuildViewType(const Jet& dj, int idx, REveElement* iItemHolder,
-                      std::string viewType, const REveViewContext* context) override
+                      const std::string& viewType, const REveViewContext* context) override
    {
       auto jet = new REveJetCone();
       jet->SetCylinder(context->GetMaxR(), context->GetMaxZ());

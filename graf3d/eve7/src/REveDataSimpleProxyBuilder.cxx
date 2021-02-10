@@ -83,7 +83,7 @@ REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
 
 void
 REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
-                                          REveElement* product, std::string viewType, const REveViewContext* vc)
+                                          REveElement* product, const std::string& viewType, const REveViewContext* vc)
 {
    auto size = collection->GetNItems();
    auto pIdx = product->RefChildren().begin();
@@ -200,7 +200,7 @@ REveDataSimpleProxyBuilder::CreateCompound(bool set_color, bool propagate_color_
 //______________________________________________________________________________
 
 bool
-REveDataSimpleProxyBuilder::VisibilityModelChanges(int idx, REveElement* iCompound, std::string viewType, const REveViewContext* vc)
+REveDataSimpleProxyBuilder::VisibilityModelChanges(int idx, REveElement* iCompound, const std::string& viewType, const REveViewContext* vc)
 {
    const REveDataItem *item = Collection()->GetDataItem(idx);
    bool returnValue = false;
