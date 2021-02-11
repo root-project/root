@@ -128,17 +128,16 @@ void Ingest() {
              << " seconds\n" << std::endl;
 }
 
-
+// Every data result that we want to get is declared first, and it is only upon their declaration that 
+// they are actually used. This stems from motivations relating to efficiency and optimization.
 void Analyze() {
    // Create a RDataframe by wrapping around NTuple.
    auto df = ROOT::Experimental::MakeNTupleDataFrame("GlobalTempData", kNTupleFileName);
    df.Display()->Print();
 
-   // Display the minimum and maximum temperature from the dataset.
-   auto minimum_value = df.Min("AverageTemperature");
-   cout << "\nThe Minimum temperature is: " << *minimum_value << std::endl;
+   // Declare the minimum and maximum temperature from the dataset.
+   auto min_value = df.Min("AverageTemperature");
    auto max_value = df.Max("AverageTemperature");
-   cout << "The Maximum temperature is: " << *max_value << std::endl;
 
    // Functions to filter by each season from date formatted "1944-12-01."
    auto fnWinter = [](int month) { return month == 12 || month == 1  || month == 2;  };
@@ -158,11 +157,17 @@ void Analyze() {
    auto summerCount = dfSummer.Count();
    auto fallCount = dfFall.Count();
 
-   // Display the count for each season.
-   cout << "\nThe count for Winter: " << *winterCount<< std::endl;
-   cout << "The count for Spring: " << *springCount << std::endl;
-   cout << "The count for Summer: " << *summerCount << std::endl;
-   cout << "The count for Fall: " << *fallCount << std::endl;
+   // Functions to filter for the time period between 2003-2013, and 1993-2002.
+   auto fn1993_to_2002 = [](int year) { return year >= 1993 && year <= 2002; };
+   auto fn2003_to_2013 = [](int year) { return year >= 2003 && year <= 2013; };
+
+   // Create a RDataFrame for decades 1993_to_2002 & 2003_to_2013.
+   auto df1993_to_2002 = df.Filter(fn1993_to_2002, {"Year"});
+   auto df2003_to_2013 = df.Filter(fn2003_to_2013, {"Year"});
+
+   // Get the count for each decade.
+   auto decade_1993_to_2002_Count = *df1993_to_2002.Count();
+   auto decade_2003_to_2013_Count = *df2003_to_2013.Count();
 
    // Configure histograms for each season.
    auto fallHistResultPtr = dfFall.Histo1D({"Fall Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
@@ -170,6 +175,27 @@ void Analyze() {
    auto springHistResultPtr = dfSpring.Histo1D({"Spring Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
    auto summerHistResultPtr = dfSummer.Histo1D({"Summer Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
   
+   // Configure histograms for each decade.
+   auto hist_1993_to_2002_ResultPtr = df1993_to_2002.Histo1D({"1993_to_2002 Average Temp", "Average Temperature: 1993_to_2002 vs. 2003_to_2013", 100, -40, 40}, "AverageTemperature");
+   auto hist_2003_to_2013_ResultPtr = df2003_to_2013.Histo1D({"2003_to_2013 Average Temp", "Average Temperature: 1993_to_2002 vs. 2003_to_2013", 100, -40, 40}, "AverageTemperature");
+
+   //____________________________________________________________________________________
+   
+   // Display the minimum and maximum temperature values.
+   std::cout << std::endl << "The Minimum temperature is: " << *min_value << std::endl;
+   std::cout << "The Maximum temperature is: " << *max_value << std::endl;
+
+   // Display the count for each season.
+   std::cout << std::endl << "The count for Winter: " << *winterCount<< std::endl;
+   std::cout << "The count for Spring: " << *springCount << std::endl;
+   std::cout << "The count for Summer: " << *summerCount << std::endl;
+   std::cout << "The count for Fall: " << *fallCount << std::endl;
+
+   // Display the count for each decade.
+   std::cout << std::endl << "The count for 1993_to_2002: " << decade_1993_to_2002_Count << std::endl;
+   std::cout << "The count for 2003_to_2013: " <<decade_2003_to_2013_Count << std::endl;
+
+   // Transform histogram in order to address ROOT 7 v 6 version compatibility
    auto fallHist = GetDrawableHist(fallHistResultPtr);
    auto winterHist = GetDrawableHist(winterHistResultPtr);
    auto springHist = GetDrawableHist(springHistResultPtr);
@@ -188,27 +214,7 @@ void Analyze() {
    summerHist->SetLineColor(kRed);
    summerHist->SetLineWidth(6);
 
-
-   // Functions to filter for the time period between 2003-2013, and 1993-2002.
-   auto fn1993_to_2002 = [](int year) { return year >= 1993 && year <= 2002; };
-   auto fn2003_to_2013 = [](int year) { return year >= 2003 && year <= 2013; };
-
-   // Create a RDataFrame for decades 1993_to_2002 & 2003_to_2013.
-   auto df1993_to_2002 = df.Filter(fn1993_to_2002, {"Year"});
-   auto df2003_to_2013 = df.Filter(fn2003_to_2013, {"Year"});
-
-   // Get the count for each decade.
-   auto decade_1993_to_2002_Count = *df1993_to_2002.Count();
-   auto decade_2003_to_2013_Count = *df2003_to_2013.Count();
-
-   // Display the count for each decade.
-   cout << "\nThe count for 1993_to_2002: " << decade_1993_to_2002_Count << std::endl;
-   cout << "The count for 2003_to_2013: " <<decade_2003_to_2013_Count << std::endl;
-
-   // Configure histograms for each decade.
-   auto hist_1993_to_2002_ResultPtr = df1993_to_2002.Histo1D({"1993_to_2002 Average Temp", "Average Temperature: 1993_to_2002 vs. 2003_to_2013", 100, -40, 40}, "AverageTemperature");
-   auto hist_2003_to_2013_ResultPtr = df2003_to_2013.Histo1D({"2003_to_2013 Average Temp", "Average Temperature: 1993_to_2002 vs. 2003_to_2013", 100, -40, 40}, "AverageTemperature");
-
+   // Transform histogram in order to address ROOT 7 v 6 version compatibility
    auto hist_1993_to_2002 = GetDrawableHist(hist_1993_to_2002_ResultPtr);
    auto hist_2003_to_2013 = GetDrawableHist(hist_2003_to_2013_ResultPtr);
 
@@ -228,7 +234,7 @@ void Analyze() {
    canvas->Draw<TObjectDrawable>(summerHist, "L");
 
    // Create a legend for the seasons canvas.
-   auto legend = std::make_shared<TLegend>(0.1,0.7,0.48,0.9);
+   auto legend = std::make_shared<TLegend>(0.15,0.65,0.53,0.85);
    legend->AddEntry(fallHist.get(),"fall","l");
    legend->AddEntry(winterHist.get(),"winter","l");
    legend->AddEntry(springHist.get(),"spring","l");
