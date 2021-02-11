@@ -813,7 +813,8 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 	}
 // 	cout<<"FK: rangeIdentical Single = "<<(rangeIdentical ? 'T':'F')<<endl;
 	// coverity[CONSTANT_EXPRESSION_RESULT]
-	if (!rangeIdentical || 1) {
+   // LM : avoid making integral ratio if range is the same. Why was not included ??? (same at line 857)
+	if (!rangeIdentical ) {
 // 	  cout << "PREPARING RATIO HERE (SINGLE TERM)" << endl ;
 	  RooAbsReal* ratio = makeCondPdfRatioCorr(*(RooAbsReal*)term->first(), termNSet, termImpSet, normRange(), RooNameReg::str(_refRangeName));
 	  ostringstream str; termImpSet.printValue(str);
@@ -854,7 +855,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 	    }
 	  }
 // 	  cout<<"FK: rangeIdentical Composite = "<<(rangeIdentical ? 'T':'F') <<endl;
-	  if (!rangeIdentical || 1) {
+	  if (!rangeIdentical ) {
 // 	    cout << "PREPARING RATIO HERE (COMPOSITE TERM)" << endl ;
 	    RooAbsReal* ratio = makeCondPdfRatioCorr(*(RooAbsReal*)term->first(), termNSet, termImpSet, normRange(), RooNameReg::str(_refRangeName));
 	    ostringstream str; termImpSet.printValue(str);
