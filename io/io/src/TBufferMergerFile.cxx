@@ -29,6 +29,10 @@ TBufferMergerFile::~TBufferMergerFile()
 
 Int_t TBufferMergerFile::Write(const char *name, Int_t opt, Int_t bufsize)
 {
+   // Make sure the compression of the basket is done in the unlocked thread and
+   // not in the locked section.
+   TMemFile::Write(name, opt | TObject::kOnlyPrepStep, bufsize);
+
    // Instead of Writing the TTree, doing a memcpy, Pushing to the queue
    // then Reading and then deleting, let's see if we can just merge using
    // the live TTree.
