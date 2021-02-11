@@ -37,8 +37,8 @@ namespace TStreamerInfoActions {
 
 class TVirtualCollectionProxy {
 private:
-   TVirtualCollectionProxy(const TVirtualCollectionProxy&); // Not implemented
-   TVirtualCollectionProxy& operator=(const TVirtualCollectionProxy&); // Not implemented
+   TVirtualCollectionProxy(const TVirtualCollectionProxy&) = delete;
+   TVirtualCollectionProxy& operator=(const TVirtualCollectionProxy&) = delete;
 
 protected:
    TClassRef fClass;
@@ -64,8 +64,8 @@ public:
          void *objectstart) : fProxy(proxy) { fProxy->PushProxy(objectstart); }
       inline ~TPushPop() { fProxy->PopProxy(); }
    private:
-      TPushPop(const TPushPop&); // Not implemented
-      TPushPop& operator=(const TPushPop&); // Not implemented
+      TPushPop(const TPushPop&) = delete;
+      TPushPop& operator=(const TPushPop&) = delete;
    };
 
    TVirtualCollectionProxy() : fClass(), fProperties(0) {};

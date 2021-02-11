@@ -148,8 +148,8 @@ namespace TClassEdit {
       bool IsTemplate();
 
    private:
-      TSplitType(const TSplitType&); // intentionally not implemented
-      TSplitType &operator=(const TSplitType &); // intentionally not implemented
+      TSplitType(const TSplitType&) = delete;
+      TSplitType &operator=(const TSplitType &) = delete;
    };
 
    void        Init(TClassEdit::TInterpreterLookupHelper *helper);
