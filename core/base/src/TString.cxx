@@ -260,6 +260,7 @@ char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
    if (capacity > MaxSize()) {
       Error("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
       capacity = MaxSize();
+   }
       
    char *data;
    if (capacity < kMinCap) {
