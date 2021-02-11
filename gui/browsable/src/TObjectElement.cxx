@@ -92,6 +92,17 @@ public:
       return fElements[fCounter];
    }
 
+   bool Find(const std::string &name, int indx = -1) override
+   {
+      if ((indx >= 0) && (indx < (int) fElements.size()) && (name == fElements[indx]->GetName())) {
+         fCounter = indx;
+         return true;
+      }
+
+      return RLevelIter::Find(name, -1);
+   }
+
+
 };
 
 // ===============================================================================================================
@@ -185,6 +196,7 @@ public:
 
       return RProvider::Browse(holder);
    }
+
 };
 
 

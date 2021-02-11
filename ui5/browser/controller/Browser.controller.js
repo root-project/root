@@ -746,10 +746,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary Double-click event handler */
       onRowDblClick: function (row) {
          let ctxt = row.getBindingContext(),
-            prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
-            fullpath = (prop && prop.fullpath) ? prop.fullpath.substr(1, prop.fullpath.length - 2) : "";
+            prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
-         if (!fullpath) return;
+         if (!prop || !prop.path) return;
 
          let className = this.getBaseClass(prop.className),
              opt = className ? this.drawingOptions[className] : "",
@@ -758,7 +757,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (this._oSettingsModel.getProperty("/DBLCLKRun")) exec = "exec";
          if (!opt) opt = "";
 
-         this.websocket.send(`DBLCLK:["${fullpath}","${opt}","${exec}"]`);
+         let args = prop.path.slice(); // make copy of array
+         args.push(opt, exec);
+
+         this.websocket.send("DBLCLK:" + JSON.stringify(args));
       },
 
       getBaseClass: function(className) {
@@ -846,7 +848,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                let bresp = JSON.parse(msg);
                this.model.processResponse(bresp);
 
-               if (bresp.path === '/') {
+               if (bresp.path.length == 0) {
                   let tt = this.getView().byId("treeTable");
                   tt.autoResizeColumn(2);
                   tt.autoResizeColumn(1);

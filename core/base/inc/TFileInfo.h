@@ -51,7 +51,7 @@ private:
 
    void             ParseInput(const char *in);
 
-   TFileInfo& operator=(const TFileInfo&);  // not implemented
+   TFileInfo& operator=(const TFileInfo&) = delete;
 
 public:
    enum EStatusBits {
@@ -115,7 +115,7 @@ private:
    Long64_t      fTotBytes;   // uncompressed size in bytes
    Long64_t      fZipBytes;   // compressed size in bytes
 
-   TFileInfoMeta& operator=(const TFileInfoMeta&);  // not implemented
+   TFileInfoMeta& operator=(const TFileInfoMeta &) = delete;
 
 public:
    enum EStatusBits { kExternal  = BIT(15) };

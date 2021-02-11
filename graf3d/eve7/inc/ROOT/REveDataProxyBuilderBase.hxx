@@ -53,7 +53,7 @@ public:
    void Build();
    // virtual void Build(REveElement* product);
 
-   REveElement* CreateProduct(std::string viewType, const REveViewContext*);
+   REveElement* CreateProduct(const std::string& viewType, const REveViewContext*);
    //  void removePerViewProduct(const REveViewContext* vc);
 
    void FillImpliedSelected(REveElement::Set_t& impSet);
@@ -72,10 +72,10 @@ public:
 protected:
    // Override this if visibility changes can cause (re)-creation of proxies.
    // Returns true if new proxies were created.
-   virtual bool VisibilityModelChanges(int idx, REveElement*, const REveViewContext*);
+   virtual bool VisibilityModelChanges(int idx, REveElement*, const std::string& viewType, const REveViewContext*);
 
    virtual void Build(const REveDataCollection* iItem, REveElement* product, const REveViewContext*);
-   virtual void BuildViewType(const REveDataCollection* iItem, REveElement* product, std::string viewType, const REveViewContext*);
+   virtual void BuildViewType(const REveDataCollection* iItem, REveElement* product, const std::string& viewType, const REveViewContext*);
 
    virtual void ModelChanges(const REveDataCollection::Ids_t&, Product*) = 0;
    virtual void FillImpliedSelected( REveElement::Set_t& /*impSet*/, Product*) {};
