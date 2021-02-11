@@ -1312,22 +1312,16 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
    // Check that the gROOT macro was exported by any core module.
    assert(clingInterp.getMacro("gROOT") && "Couldn't load gROOT macro?");
 
-   // C99 decided that it's a very good idea to name a macro `I` (the letter I).
-   // This seems to screw up nearly all the template code out there as `I` is
-   // common template parameter name and iterator variable name.
-   // Let's follow the GCC recommendation and undefine `I` in case any of the
-   // core modules have defined it:
-   // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
-   clingInterp.declare("#ifdef I\n #undef I\n #endif\n");
-
-   // libc++ complex.h has #define complex _Complex. Give preference to the one
-   // in std.
-   clingInterp.declare("#ifdef complex\n #undef complex\n #endif\n");
-
-   // These macros are from loading R related modules, which conflict with
+   // `ERROR` and `PI` are from loading R related modules, which conflict with
    // user's code.
-   clingInterp.declare("#ifdef PI\n #undef PI\n #endif\n");
-   clingInterp.declare("#ifdef ERROR\n #undef ERROR\n #endif\n");
+   clingInterp.declare(R"CODE(
+#ifdef PI
+# undef PI
+#endif
+#ifdef ERROR
+# undef ERROR
+#endif
+                       )CODE");
 }
 
 static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
