@@ -202,9 +202,9 @@ std::string RooFormula::processFormula(std::string formula) const {
   // Step 4: Replace all named references with "x[i]"-style
   for (unsigned int i = 0; i < _origList.size(); ++i) {
     const auto& var = _origList[i];
-    std::string regex = "\\b";
-    regex += var.GetName();
-    regex += "\\b(?!\\[)"; //Negative lookahead. If the variable is called `x`, this might otherwise replace `x[0]`.
+    auto regex = std::string{"\\b"} + var.GetName();
+    regex = std::regex_replace(regex, std::regex("([\\[\\]\\{\\}])"), "\\$1"); // The name might contain [, ], {, or }.
+    regex += "\\b(?!\\[)"; // Veto '[' as next character. If the variable is called `x`, this might otherwise replace `x[0]`.
     std::regex findParameterRegex(regex);
 
     std::stringstream replacement;
