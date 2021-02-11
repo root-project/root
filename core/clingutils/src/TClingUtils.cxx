@@ -5280,32 +5280,6 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::Template
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert a tmplt decl to its fwd decl
-
-int ROOT::TMetaUtils::AST2SourceTools::FwdDeclIfTmplSpec(const clang::RecordDecl& recordDecl,
-                                                         const cling::Interpreter& interpreter,
-                                                         std::string& defString,
-                                                         const std::string &normalizedName)
-{
-   // If this is an explicit specialization, inject it into cling, too, such that it can have
-   // externalLexicalStorage, see TCling.cxx's ExtVisibleStorageAdder::VisitClassTemplateSpecializationDecl.
-   if (auto tmplSpecDeclPtr = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&recordDecl)) {
-      if (const auto *specDef = tmplSpecDeclPtr->getDefinition()) {
-         if (specDef->getTemplateSpecializationKind() == clang::TSK_ExplicitSpecialization) {
-            // normalizedName contains scope, no need to enclose in namespace!
-            defString += "template <> class " + normalizedName + ';';
-            return 0;
-         }
-         // else: not an error, just fine.
-      }
-      // else: not an error, just fine.
-   }
-   // else: not an error, just fine.
-
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 static int TreatSingleTemplateArg(const clang::TemplateArgument& arg,
                                   std::string& argFwdDecl,
@@ -5350,6 +5324,48 @@ static int TreatSingleTemplateArg(const clang::TemplateArgument& arg,
    }
 
    return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a tmplt decl to its fwd decl
+
+int ROOT::TMetaUtils::AST2SourceTools::FwdDeclIfTmplSpec(const clang::RecordDecl& recordDecl,
+                                                         const cling::Interpreter& interpreter,
+                                                         std::string& defString,
+                                                         const std::string &normalizedName)
+{
+   // If this is an explicit specialization, inject it into cling, too, such that it can have
+   // externalLexicalStorage, see TCling.cxx's ExtVisibleStorageAdder::VisitClassTemplateSpecializationDecl.
+   if (auto tmplSpecDeclPtr = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&recordDecl)) {
+      if (const auto *specDef = tmplSpecDeclPtr->getDefinition()) {
+         if (specDef->getTemplateSpecializationKind() != clang::TSK_ExplicitSpecialization)
+            return 0;
+         // normalizedName contains scope, no need to enclose in namespace!
+         if (GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo)
+            std::cout << " Forward declaring template spec " << normalizedName << ":\n";
+         for (auto arg : tmplSpecDeclPtr->getTemplateArgs().asArray()) {
+            std::string argFwdDecl;
+            int retCode = TreatSingleTemplateArg(arg, argFwdDecl, interpreter, /*acceptStl=*/false);
+            if (GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
+               std::cout << " o Template argument ";
+               if (retCode == 0) {
+                  std::cout << "successfully treated. Arg fwd decl: " << argFwdDecl << std::endl;
+               } else {
+                  std::cout << "could not be treated. Abort fwd declaration generation.\n";
+               }
+            }
+
+            if (retCode != 0) { // A sign we must bail out
+               return retCode;
+            }
+            defString += argFwdDecl + '\n';
+         }
+         defString += "template <> class " + normalizedName + ';';
+         return 0;
+      }
+   }
+
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
