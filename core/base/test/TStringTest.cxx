@@ -14,5 +14,5 @@ TEST(TString, Basics)
    TString a = "test";
    a.Append("s", -5);
    EXPECT_STREQ("test", a);
-   ROOT_EXPECT_ERROR(a.Append("s", -5, "TString::Append", "Negative length!");
+   ROOT_EXPECT_ERROR(a.Append("s", -5), "TString::Append", "Negative length!");
 }
