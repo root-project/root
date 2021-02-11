@@ -43,10 +43,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     ROOT/RBrowserReply.hxx
     ROOT/RBrowserRequest.hxx
     ROOT/RFileDialog.hxx
+    ROOT/RWebBrowserImp.hxx
   SOURCES
     src/RBrowser.cxx
     src/RBrowserData.cxx
     src/RFileDialog.cxx
+    src//RWebBrowserImp.cxx
   LIBRARIES
     ROOTBrowserWidgets
   DEPENDENCIES
