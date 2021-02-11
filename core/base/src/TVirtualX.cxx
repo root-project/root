@@ -56,7 +56,7 @@ TVirtualX::TVirtualX(const char *name, const char *title) : TNamed(name, title),
 
 TVirtualX *&TVirtualX::Instance()
 {
-   static TVirtualX *instance = 0;
+   static TVirtualX *instance = nullptr;
    if (gPtr2VirtualX) instance = gPtr2VirtualX();
    return instance;
 }
