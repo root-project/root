@@ -9614,6 +9614,8 @@ void TTree::UseCurrentStyle()
 Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize) const
 {
    FlushBasketsImpl();
+   if (R__unlikely(option & kOnlyPrepStep))
+      return 0;
    return TObject::Write(name, option, bufsize);
 }
 

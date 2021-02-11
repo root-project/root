@@ -773,6 +773,9 @@ void TObject::UseCurrentStyle()
 
 Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
 {
+   if (R__unlikely(option & kOnlyPrepStep))
+      return 0;
+
    TString opt = "";
    if (option & kSingleKey)   opt += "SingleKey";
    if (option & kOverwrite)   opt += "OverWrite";
