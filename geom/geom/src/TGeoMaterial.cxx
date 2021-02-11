@@ -561,6 +561,18 @@ Int_t TGeoMaterial::GetDefaultColor() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get a pointer to the element this material is made of.
+/// This second call is to avaoid warnings to not call a virtual
+/// method from the constructor
+
+TGeoElement *TGeoMaterial::GetElement() const
+{
+   if (fElement) return fElement;
+   TGeoElementTable *table = gGeoManager->GetElementTable();
+   return table->GetElement(Int_t(fZ));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get a pointer to the element this material is made of.
 
 TGeoElement *TGeoMaterial::GetElement(Int_t) const
 {
@@ -568,6 +580,7 @@ TGeoElement *TGeoMaterial::GetElement(Int_t) const
    TGeoElementTable *table = gGeoManager->GetElementTable();
    return table->GetElement(Int_t(fZ));
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Single interface to get element properties.
 
