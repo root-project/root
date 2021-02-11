@@ -103,8 +103,8 @@ private:
    static Bool_t   fgRootInit;            //Singleton initialization flag
    static Bool_t   fgMemCheck;            //Turn on memory leak checker
 
-   TROOT(const TROOT&);                   //Not implemented
-   TROOT& operator=(const TROOT&);        //Not implemented
+   TROOT(const TROOT&) = delete;
+   TROOT& operator=(const TROOT&) = delete;
 
 protected:
    typedef std::atomic<TListOfEnums*> AListOfEnums_t;

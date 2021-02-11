@@ -69,8 +69,8 @@ class TLockGuard {
 private:
    TVirtualMutex *fMutex;
 
-   TLockGuard(const TLockGuard&);             // not implemented
-   TLockGuard& operator=(const TLockGuard&);  // not implemented
+   TLockGuard(const TLockGuard&) = delete;
+   TLockGuard& operator=(const TLockGuard&) = delete;
 
 public:
    TLockGuard(TVirtualMutex *mutex)

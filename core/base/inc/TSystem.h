@@ -334,8 +334,8 @@ protected:
    static const char     *StripOffProto(const char *path, const char *proto);
 
 private:
-   TSystem(const TSystem&) = delete;              // not implemented
-   TSystem& operator=(const TSystem&) = delete;   // not implemented
+   TSystem(const TSystem&) = delete;
+   TSystem& operator=(const TSystem&) = delete;
    Bool_t ExpandFileName(const char *fname, char *xname, const int kBufSize);
 
 public:
