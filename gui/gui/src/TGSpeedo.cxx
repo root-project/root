@@ -234,6 +234,8 @@ TGDimension TGSpeedo::GetDefaultSize() const
 
 Float_t TGSpeedo::GetMean()
 {
+   if ((fBufferSize == 0) || (fBuffer.size() == 0))
+      return fMeanVal;
    return (Float_t) std::accumulate(fBuffer.begin(), fBuffer.end(), 0.0) / fBuffer.size();
 }
 
@@ -412,12 +414,12 @@ void TGSpeedo::SetScaleValue(Float_t val)
       fPeakVal = fValue;
 
    if (fBufferSize > 0) {
-      if (fBufferCount < fBufferSize)
+      if ((Int_t)fBuffer.size() < (fBufferCount + 1))
          fBuffer.push_back(fValue);
       else
          fBuffer[fBufferCount % fBufferSize] = fValue;
       ++fBufferCount;
-      if ((fBufferCount + 1) > (Int_t)fBuffer.size())
+      if ((fBufferCount + 1) > fBufferSize)
          fBufferCount = 0;
    }
 
@@ -514,9 +516,8 @@ void TGSpeedo::DrawNeedle()
    Translate(80.0, angle, &xpk0, &ypk0);
    Translate(67.0, angle, &xpk1, &ypk1);
 
-   if (fBufferSize > 0) {
-      fMeanVal = GetMean();
-   }
+   fMeanVal = GetMean();
+
    // compute x/y position of the mean mark
    angle = fAngleMin + (fMeanVal / ((fScaleMax - fScaleMin) /
           (fAngleMax - fAngleMin)));
