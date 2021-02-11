@@ -7,8 +7,8 @@
 TEST(TString, Basics)
 {
    TString *s = nullptr;
-   EXPECT_STREQ("", s);
    ROOT_EXPECT_ERROR(s = new TString("Test", -5), "TString::TString", "Negative length!");
+   EXPECT_STREQ("", s);
    TString p("Test", 1);
    EXPECT_STREQ("T", p);
    TString a = "test";
