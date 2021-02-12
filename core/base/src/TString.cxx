@@ -381,7 +381,7 @@ TString& TString::Append(char c, Ssiz_t rep)
    if (!rep) return *this;
    
    if (rep < 0){
-      Error("TString& TString::Append", "Negative length!");
+      Error("TString::Append", "Negative length!");
       Zero();
    }
    Ssiz_t len = Length();
