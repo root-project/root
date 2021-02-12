@@ -269,3 +269,10 @@ void TTimer::SingleShot(Int_t milliSec, const char *receiver_class,
 
    singleShotTimer->Start(milliSec, kTRUE);
 }
+
+bool TTimer::IsRunning()
+{
+   if(gSystem)
+      return gSystem->GetListOfTimers()->IndexOf(this)!=-1;
+   return false;
+}
