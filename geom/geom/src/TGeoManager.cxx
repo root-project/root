@@ -301,6 +301,7 @@ Int_t  TGeoManager::fgNumThreads      = 0;
 UInt_t TGeoManager::fgExportPrecision = 17;
 TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kG4Units;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
+static Bool_t gGeometryLocked = kTRUE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -4006,7 +4007,27 @@ void TGeoManager::SetUseParallelWorldNav(Bool_t flag)
    if (fParallelWorld->CloseGeometry()) fUsePWNav=kTRUE;
 }
 
-TGeoManager::EDefaultUnits TGeoManager::GetDefaultUnits()
+Bool_t TGeoManager::LockDefaultUnits(Bool_t new_value)    {
+  Bool_t val = gGeometryLocked;
+  gGeometryLocked = new_value;
+  return val;
+}
+
+void TGeoManager::SetDefaultUnits(EDefaultUnits new_value)
 {
-  return fgDefaultUnits;
+   if ( fgDefaultUnits == new_value )   {
+      return;
+   }
+   else if ( gGeometryLocked )    {
+      ::Fatal("TGeoManager","The system of units may only be changed once, \n"
+	      "BEFORE any elements and materials are created! \n"
+	      "Alternatively unlock the default units at own risk.");
+   }
+   else if ( new_value == kG4Units )   {
+      ::Warning("TGeoManager","Changing system of units to Geant4 units (mm, ns, MeV).");
+   }
+   else if ( new_value == kRootUnits )   {
+      ::Warning("TGeoManager","Changing system of units to ROOT units (cm, s, GeV).");
+   }
+   fgDefaultUnits = new_value;
 }

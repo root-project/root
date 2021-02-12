@@ -7,8 +7,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-#include "IncrementalCUDADeviceCompiler.h"
-
+#include "cling/Interpreter/IncrementalCUDADeviceCompiler.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InvocationOptions.h"
 #include "cling/Interpreter/Transaction.h"
@@ -52,16 +51,15 @@ namespace cling {
 
     // cling -std=c++xx -Ox -x cuda -S --cuda-gpu-arch=sm_xx --cuda-device-only
     // ${include headers} ${-I/paths} [-v] [-g] ${m_CuArgs->additionalPtxOpt}
-    std::vector<std::string> argv = {
-        "cling",
-        m_CuArgs->cppStdVersion.c_str(),
-        "-O" + std::to_string(optLevel),
-        "-x",
-        "cuda",
-        "-S",
-        std::string("--cuda-gpu-arch=sm_")
-            .append(std::to_string(m_CuArgs->smVersion)),
-        "--cuda-device-only"};
+    argv = {"cling",
+            m_CuArgs->cppStdVersion.c_str(),
+            "-O" + std::to_string(optLevel),
+            "-x",
+            "cuda",
+            "-S",
+            std::string("--cuda-gpu-arch=sm_")
+                .append(std::to_string(m_CuArgs->smVersion)),
+            "--cuda-device-only"};
 
     addHeaderSearchPathFlags(argv, CI.getHeaderSearchOptsPtr());
 
@@ -157,6 +155,11 @@ namespace cling {
       std::string s = arg;
       if (s.compare(0, 2, "-D") == 0)
         additionalPtxOpt.push_back(s);
+    }
+
+    // use custom CUDA SDK path
+    if(!invocationOptions.CompilerOpts.CUDAPath.empty()){
+      additionalPtxOpt.push_back("--cuda-path=" + invocationOptions.CompilerOpts.CUDAPath);
     }
 
     enum FatBinFlags {

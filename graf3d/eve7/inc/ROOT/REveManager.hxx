@@ -217,6 +217,8 @@ public:
 
    void EnforceTimerActive (Bool_t ta) { fTimerActive = ta; }
 
+   std::shared_ptr<RWebWindow> GetWebWindow() const { return fWebWindow; }
+
    // void Send(void* buff, unsigned connid);
    void Send(unsigned connid, const std::string &data);
    void SendBinary(unsigned connid, const void *data, std::size_t len);

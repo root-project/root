@@ -10221,3 +10221,14 @@ TH1 *R__H(const char * hname)
 {
    return (TH1*)gDirectory->Get(hname);
 }
+
+
+/// \fn void TH1::SetBarOffset(Float_t offset)
+/// Set the bar offset as fraction of the bin width for drawing mode "B".
+/// This shifts bars to the right on the x axis, and helps to draw bars next to each other.
+/// \see THistPainter, SetBarWidth()
+
+/// \fn void TH1::SetBarWidth(Float_t width)
+/// Set the width of bars as fraction of the bin width for drawing mode "B".
+/// This allows for making bars narrower than the bin width. With SetBarOffset(), this helps to draw multiple bars next to each other.
+/// \see THistPainter, SetBarOffset()

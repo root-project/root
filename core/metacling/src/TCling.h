@@ -609,10 +609,10 @@ private: // Private Utility Functions and Classes
    };
 
    TCling();
-   TCling(const TCling&); // NOT IMPLEMENTED
-   TCling& operator=(const TCling&); // NOT IMPLEMENTED
+   TCling(const TCling&) = delete;
+   TCling& operator=(const TCling&) = delete;
 
-   void Execute(TMethod*, TObjArray*, int* /*error*/ = 0)
+   void Execute(TMethod*, TObjArray*, int* /*error*/ = nullptr)
    {
    }
 
