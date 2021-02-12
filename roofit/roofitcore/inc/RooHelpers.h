@@ -24,6 +24,8 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <utility>
+
 
 namespace RooHelpers {
 
@@ -111,6 +113,8 @@ struct DisableCachingRAII {
   bool _oldState;
 };
 
+
+std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const char* rangeName);
 
 
 }
