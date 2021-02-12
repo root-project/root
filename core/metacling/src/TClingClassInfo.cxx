@@ -135,6 +135,7 @@ void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, ptrdiff_t offs
    // determined by the parameter decl.
 
    OffsetPtrFunc_t executableFunc = 0;
+   std::unique_lock<std::mutex> lock(fOffsetCacheMutex);
    fOffsetCache[decl] = std::make_pair(offset, executableFunc);
 }
 
@@ -611,7 +612,7 @@ ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address, b
 {
 
    {
-      R__READ_LOCKGUARD(ROOT::gCoreMutex);
+      std::unique_lock<std::mutex> lock(fOffsetCacheMutex);
 
       // Check for the offset in the cache.
       auto iter = fOffsetCache.find(base->GetDecl());
