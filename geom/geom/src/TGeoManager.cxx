@@ -4013,6 +4013,11 @@ Bool_t TGeoManager::LockDefaultUnits(Bool_t new_value)    {
   return val;
 }
 
+TGeoManager::EDefaultUnits TGeoManager::GetDefaultUnits()
+{
+  return fgDefaultUnits;
+}
+
 void TGeoManager::SetDefaultUnits(EDefaultUnits new_value)
 {
    if ( fgDefaultUnits == new_value )   {
