@@ -478,7 +478,7 @@ public:
    static void            SetExportPrecision(UInt_t prec) {fgExportPrecision = prec;}
    static UInt_t          GetExportPrecision() {return fgExportPrecision;}
    static void            SetDefaultUnits(EDefaultUnits new_value);
-   static EDefaultUnits   GetDefaultUnits() {return fgDefaultUnits; }
+   static EDefaultUnits   GetDefaultUnits();
    static Bool_t          LockDefaultUnits(Bool_t new_value);
    Bool_t                 IsStreamingVoxels() const {return fStreamVoxels;}
    Bool_t                 IsCleaning() const {return fIsGeomCleaning;}
