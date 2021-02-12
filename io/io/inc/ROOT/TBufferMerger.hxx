@@ -117,7 +117,7 @@ private:
    bool TryMerge(TBufferMergerFile *memfile);
 
    size_t fAutoSave{0};                                          //< AutoSave only every fAutoSave bytes
-   size_t fBuffered{0};                                          //< Number of bytes currently buffered
+   std::atomic<size_t> fBuffered{0};                             //< Number of bytes currently buffered
    TFileMerger fMerger{false, false};                            //< TFileMerger used to merge all buffers
    std::mutex fMergeMutex;                                       //< Mutex used to lock fMerger
    mutable std::mutex fQueueMutex;                               //< Mutex used to lock fQueue
