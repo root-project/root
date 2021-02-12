@@ -236,7 +236,7 @@ Float_t TGSpeedo::GetMean()
 {
    if ((fBufferSize == 0) || (fBuffer.size() == 0))
       return fMeanVal;
-   return (Float_t) std::accumulate(fBuffer.begin(), fBuffer.end(), 0.0) / fBuffer.size();
+   return std::accumulate(fBuffer.begin(), fBuffer.end(), 0.0f) / fBuffer.size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -317,9 +317,15 @@ Bool_t TGSpeedo::HandleButton(Event_t *event)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the circular buffer size (used for the automatic mean calculation).
+/// SetMeanValue is ignored if SetBufferSize is called with a greater-than-zero
+/// argument. The mean value is then automatically calculated by using the sum
+/// of values contained in the buffer divided by their count.
+/// To disable automatic mean calculation, simply call SetBufferSize with a zero
+/// argument
 
 void TGSpeedo::SetBufferSize(Int_t size)
 {
+   if (size < 0) size = 0;
    fBufferSize = size;
    fBuffer.clear();
    fBuffer.reserve(fBufferSize);
