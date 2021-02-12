@@ -270,6 +270,10 @@ void TTimer::SingleShot(Int_t milliSec, const char *receiver_class,
    singleShotTimer->Start(milliSec, kTRUE);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// This function checks if the timer is running within gSystem 
+/// (Has been started and did not finish yet).
+
 bool TTimer::IsRunning()
 {
    if(gSystem)
