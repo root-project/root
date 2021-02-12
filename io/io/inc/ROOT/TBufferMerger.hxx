@@ -96,6 +96,20 @@ public:
     */
    void SetMergeOptions(const TString& options);
 
+   /** Indicates that the file will not contain any TTree objects
+    * and thus that steps that are specific to TTree can be skipped */
+   void SetNotrees(Bool_t notrees=kFALSE)
+   {
+      fMerger.SetNotrees(notrees);
+   }
+
+   /** Returns whether the the file has been marked as not containing any TTree objects
+    * and thus that steps that are specific to TTree can be skipped */
+   Bool_t GetNotrees() const
+   {
+      return fMerger.GetNotrees();
+   }
+
    friend class TBufferMergerFile;
 
 private:
