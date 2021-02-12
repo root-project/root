@@ -1553,7 +1553,8 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
 
 Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
 	Bool_t correctForBinSize, Bool_t inverseBinCor,
-	const std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >& ranges)
+	const std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >& ranges,
+    std::function<double(int)> getBinScale)
 {
   checkInit();
   checkBinBounds();
@@ -1624,7 +1625,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
     const Double_t corr = correctForBinSize ? (inverseBinCor ? 1. / _binv[ibin] : _binv[ibin] ) : 1.0;
     //cout << "adding bin[" << ibin << "] to sum wgt = " << _wgt[ibin] << " binv = " << theBinVolume << " _binv[" << ibin << "] " << _binv[ibin] << endl;
     // const Double_t y = _wgt[ibin] * corr * corrPartial - carry;
-    const Double_t y = get_wgt(ibin) * corr * corrPartial - carry;
+    const Double_t y = getBinScale(ibin)*(get_wgt(ibin) * corr * corrPartial) - carry;
     const Double_t t = total + y;
     carry = (t - total) - y;
     total = t;

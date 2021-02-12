@@ -25,6 +25,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <functional>
 
 class TObject ;
 class RooAbsArg;
@@ -95,7 +96,12 @@ public:
 
   Double_t sum(Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) const ;
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) ;
-  Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseCorr, const std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >& ranges);
+  Double_t sum(const RooArgSet& sumSet,
+               const RooArgSet& sliceSet,
+               Bool_t correctForBinSize,
+               Bool_t inverseCorr,
+               const std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >& ranges,
+               std::function<double(int)> getBinScale = [](int){ return 1.0; } );
 
   virtual Double_t weight() const { 
     // Return weight of current bin
