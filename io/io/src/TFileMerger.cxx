@@ -574,12 +574,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      Error("MergeRecursive", "error merging RNTuples");
                      return kFALSE;
                   }
-                  return kTRUE;
+               } else {
+                  TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
+                  Error("MergeRecursive", "Merging objects that don't inherit from TObject is unimplemented (key: %s of type %s in file %s)",
+                        key->GetName(), key->GetClassName(), nextsource->GetName());
+                  canBeMerged = kFALSE;
                }
-               TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
-               Error("MergeRecursive", "Merging objects that don't inherit from TObject is unimplemented (key: %s of type %s in file %s)",
-                      key->GetName(), key->GetClassName(), nextsource->GetName());
-               canBeMerged = kFALSE;
             } else if (cl->IsTObject() && cl->GetMerge()) {
                // Check if already treated
                if (alreadyseen) continue;
