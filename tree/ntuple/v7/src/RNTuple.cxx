@@ -100,12 +100,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
    InitPageSource();
 }
 
-ROOT::Experimental::RNTupleReader::~RNTupleReader()
-{
-#ifdef R__USE_IMT
-   fSource->SetTaskScheduler(nullptr);
-#endif
-}
+ROOT::Experimental::RNTupleReader::~RNTupleReader() = default;
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(
    std::unique_ptr<RNTupleModel> model,
