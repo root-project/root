@@ -80,6 +80,7 @@ public:
    Bool_t         IsSync() const { return fSync; }
    Bool_t         IsAsync() const { return !fSync; }
    Bool_t         IsInterruptingSyscalls() const { return fIntSyscalls; }
+   Bool_t         IsRunning();///< Check if timer is running within gSystem (has been started and did not finish yet).
    virtual Bool_t Notify();
    void           Add() { TurnOn(); }
    void           Remove() { TurnOff(); }
