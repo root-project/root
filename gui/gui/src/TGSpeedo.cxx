@@ -419,7 +419,7 @@ void TGSpeedo::SetScaleValue(Float_t val)
       else
          fBuffer[fBufferCount % fBufferSize] = fValue;
       ++fBufferCount;
-      if ((fBufferCount + 1) > fBufferSize)
+      if (fBufferCount == fBufferSize)
          fBufferCount = 0;
    }
 
