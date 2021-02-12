@@ -42,7 +42,11 @@ Int_t TBufferMergerFile::Write(const char *name, Int_t opt, Int_t bufsize)
       return 0;
    }
 
+   auto oldCompLevel = GetCompressionLevel();
+   if (!fMerger.GetCompressTemporaryKeys())
+      SetCompressionLevel(0);
    Int_t nbytes = TMemFile::Write(name, opt, bufsize);
+   SetCompressionLevel(oldCompLevel);
 
    if (nbytes) {
       TBufferFile *buffer = new TBufferFile(TBuffer::kWrite, GetSize());
