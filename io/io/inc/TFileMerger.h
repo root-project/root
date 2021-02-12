@@ -120,6 +120,7 @@ public:
    virtual Bool_t Merge(Bool_t = kTRUE);
    virtual Bool_t PartialMerge(Int_t type = kAll | kIncremental);
    virtual void   SetFastMethod(Bool_t fast=kTRUE)  {fFastMethod = fast;}
+           Bool_t GetNotrees() const { return fNoTrees; }
    virtual void   SetNotrees(Bool_t notrees=kFALSE) {fNoTrees = notrees;}
    virtual void        RecursiveRemove(TObject *obj);
 
