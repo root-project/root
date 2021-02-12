@@ -311,9 +311,7 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
 }
 
 
-ROOT::Experimental::Detail::RPageSourceFile::~RPageSourceFile()
-{
-}
+ROOT::Experimental::Detail::RPageSourceFile::~RPageSourceFile() = default;
 
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::AttachImpl()

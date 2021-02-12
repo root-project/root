@@ -86,6 +86,10 @@ Individual fields can be read as well by instantiating a tree view.
 // clang-format on
 class RNTupleReader {
 private:
+   /// Set as the page source's scheduler for parallel page decompression if IMT is on
+   /// Needs to be destructed after the pages source is destructed (an thus be declared before)
+   RNTupleImtTaskScheduler fUnzipTasks;
+
    std::unique_ptr<Detail::RPageSource> fSource;
    /// Needs to be destructed before fSource
    std::unique_ptr<RNTupleModel> fModel;
@@ -94,8 +98,6 @@ private:
    /// is a clone of the original reader.
    std::unique_ptr<RNTupleReader> fDisplayReader;
    Detail::RNTupleMetrics fMetrics;
-   /// Set as the page source's scheduler for parallel page decompression if IMT is on
-   RNTupleImtTaskScheduler fUnzipTasks;
 
    void ConnectModel(const RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
