@@ -31,6 +31,9 @@
 #include "TGHtml.h"
 #include "TPRegexp.h"
 
+#include "TVirtualX.h"
+#include "TROOT.h"
+
 #include "TEveManager.h"
 #include "TEveViewer.h"
 #include "TEveBrowser.h"
