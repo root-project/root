@@ -47,6 +47,8 @@ set(ZSTD_SOURCES
 
 set(ZSTD_HEADERS
        zstd.h
+       zstd_errors.h
+       zdict.h
        common/bitstream.h
        common/threading.h
        common/zstd_internal.h
@@ -60,7 +62,6 @@ set(ZSTD_HEADERS
        common/entropy_common.c
        common/fse.h
        common/mem.h
-       common/zstd_errors.h
        compress/zstd_compress_internal.h
        compress/zstd_ldm.h
        compress/zstd_compress_superblock.h
@@ -78,7 +79,6 @@ set(ZSTD_HEADERS
        decompress/zstd_decompress_block.h
        dictBuilder/cover.h
        dictBuilder/divsufsort.h
-       dictBuilder/zdict.h
 )
 
 set(ZSTD_VERSION ${ZSTD_VERSION_STRING} CACHE INTERNAL "" FORCE)
@@ -88,7 +88,7 @@ set(ZSTD_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
 
 add_library(zstd STATIC ${ZSTDHEADERS} ${ZSTD_SOURCES})
 set_target_properties(zstd PROPERTIES COMPILE_DEFINITIONS "ZSTD_HEAPMODE=0;_CRT_SECURE_NO_WARNINGS" C_VISIBILITY_PRESET hidden)
-target_include_directories(zstd INTERFACE $<BUILD_INTERFACE:${ZSTD_INCLUDE_DIR}>)
+target_include_directories(zstd PRIVATE ${ZSTD_INCLUDE_DIR} INTERFACE $<BUILD_INTERFACE:${ZSTD_INCLUDE_DIR}>)
 if(NOT MSVC)
   target_compile_options(zstd PRIVATE -fPIC -Wno-unused-variable -O3)
 endif()
