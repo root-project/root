@@ -231,6 +231,18 @@ public:
       fData = &(*fContainer->begin());
    }
 
+   /// \brief Contruct a tensor owning data initialized with new container
+   /// \param[in] shape   Shape vector
+   /// \param[in] strides Strides vector
+   /// \param[in] layout  Memory layout
+   RTensor(Shape_t shape, Shape_t strides,MemoryLayout layout = MemoryLayout::RowMajor)
+      : fShape(shape), fStrides(strides), fLayout(layout)
+   {
+      fSize = Internal::GetSizeFromShape(shape);
+      fContainer = std::make_shared<Container_t>(fSize);
+      fData = &(*fContainer->begin());
+   }
+
    // Access elements
    Value_t &operator()(const Index_t &idx);
    const Value_t &operator() (const Index_t &idx) const;
