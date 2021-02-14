@@ -5147,10 +5147,14 @@ static void GetLinuxMemInfo(MemInfo_t *meminfo)
          TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
          meminfo->fSwapFree = (s.Atoi() / 1024);
       }
+      if (s.BeginsWith("MemAvailable")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fMemAvailable = (s.Atoi() / 1024);
+      }
    }
    fclose(f);
 
-   meminfo->fMemUsed  = meminfo->fMemTotal - meminfo->fMemFree;
+   meminfo->fMemUsed = meminfo->fMemTotal - meminfo->fMemAvailable;
    meminfo->fSwapUsed = meminfo->fSwapTotal - meminfo->fSwapFree;
 }
 
