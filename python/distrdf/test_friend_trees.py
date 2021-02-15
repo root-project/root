@@ -1,0 +1,112 @@
+import os
+import sys
+import unittest
+from array import array
+
+import pyspark
+import ROOT
+from DistRDF.Backends import Spark
+
+
+class SparkFriendTreesTest(unittest.TestCase):
+    """Integration tests to check the working of DistRDF with friend trees"""
+
+    @classmethod
+    def setUpClass(cls):
+        """
+        Synchronize PYSPARK_PYTHON variable to the current Python executable.
+
+        Needed to avoid mismatch between python versions on driver and on
+        the fake executor on the same machine.
+        """
+        os.environ["PYSPARK_PYTHON"] = sys.executable
+
+    @classmethod
+    def tearDownClass(cls):
+        """
+        Stop the SparkContext and reset environment variable.
+        """
+        pyspark.SparkContext.getOrCreate().stop()
+        os.environ["PYSPARK_PYTHON"] = ""
+
+    def create_parent_tree(self):
+        """Creates a .root file with the parent TTree"""
+        f = ROOT.TFile("treeparent.root", "recreate")
+        T = ROOT.TTree("T", "test friend trees")
+
+        x = array("f", [0])
+        T.Branch("x", x, "x/F")
+
+        r = ROOT.TRandom()
+        # The parent will have a gaussian distribution with mean 10 and
+        # standard deviation 1
+        for i in range(10000):
+            x[0] = r.Gaus(10, 1)
+            T.Fill()
+
+        f.Write()
+        f.Close()
+
+    def create_friend_tree(self):
+        """Creates a .root file with the friend TTree"""
+        ff = ROOT.TFile("treefriend.root", "recreate")
+        TF = ROOT.TTree("TF", "tree friend")
+
+        x = array("f", [0])
+        TF.Branch("x", x, "x/F")
+
+        r = ROOT.TRandom()
+        # The friend will have a gaussian distribution with mean 20 and
+        # standard deviation 1
+        for i in range(10000):
+            x[0] = r.Gaus(20, 1)
+            TF.Fill()
+
+        ff.Write()
+        ff.Close()
+
+    def test_friend_tree_histo(self):
+        """
+        Tests that the computational graph can be issued both on the
+        parent tree and the friend tree.
+        """
+        self.create_parent_tree()
+        self.create_friend_tree()
+
+        # Parent Tree
+        baseTree = ROOT.TChain("T")
+        baseTree.Add("treeparent.root")
+
+        # Friend Tree
+        friendTree = ROOT.TChain("TF")
+        friendTree.Add("treefriend.root")
+
+        # Add friendTree to the parent
+        baseTree.AddFriend(friendTree)
+
+        # Create a DistRDF RDataFrame with the parent and the friend trees
+        df = Spark.RDataFrame(baseTree)
+
+        # Create histograms
+        h_parent = df.Histo1D("x")
+        h_friend = df.Histo1D("TF.x")
+
+        # Both trees have the same number of entries, i.e. 10000
+        self.assertEqual(h_parent.GetEntries(), 10000)
+        self.assertEqual(h_friend.GetEntries(), 10000)
+
+        # Check the mean of the distribution for each tree
+        self.assertAlmostEqual(h_parent.GetMean(), 10, delta=0.01)
+        self.assertAlmostEqual(h_friend.GetMean(), 20, delta=0.01)
+
+        # Check the standard deviation of the distribution for each tree
+        self.assertAlmostEqual(h_parent.GetStdDev(), 1, delta=0.01)
+        self.assertAlmostEqual(h_friend.GetStdDev(), 1, delta=0.01)
+
+        # Remove unnecessary .root files
+        os.remove("treeparent.root")
+        os.remove("treefriend.root")
+
+
+if __name__ == "__main__":
+    unittest.main(argv=[__file__])
