@@ -72,6 +72,7 @@
 ///
 /// \author Matevz Tadel
 
+#include "MultiView.C"
 #include "alice_esd_html_summary.C"
 
 // Forward declarations.
@@ -103,7 +104,7 @@ const char* esd_file_name = "http://root.cern.ch/files/alice_ESDs.root";
 // There seems to be no way to get it working without AliRoot.
 // const char* esd_friends_file_name =
 //       "http://root.cern.ch/files/alice_ESDfriends.root";
-const char* esd_friends_file_name = 0;
+const char* esd_friends_file_name = nullptr;
 
 const char* esd_geom_file_name =
    "http://root.cern.ch/files/alice_ESDgeometry.root";
@@ -112,24 +113,23 @@ const char* esd_geom_file_name =
 // const char* esd_file_name         = "AliESDs.root";
 // const char* esd_friends_file_name = "AliESDfriends.root";
 
-TFile *esd_file          = 0;
-TFile *esd_friends_file  = 0;
+TFile *esd_file          = nullptr;
+TFile *esd_friends_file  = nullptr;
 
-TTree *esd_tree          = 0;
+TTree *esd_tree          = nullptr;
 
-AliESDEvent  *esd        = 0;
-TList        *esd_objs   = 0;
-AliESDfriend *esd_friend = 0;
+AliESDEvent  *esd        = nullptr;
+TList        *esd_objs   = nullptr;
+AliESDfriend *esd_friend = nullptr;
 
 Int_t esd_event_id       = 0; // Current event id.
 
-TEveTrackList *gTrackList = 0;
+TEveTrackList *gTrackList = nullptr;
 
-TEveGeoShape *gGeomGentle = 0;
+TEveGeoShape *gGeomGentle = nullptr;
 
 // Implemented in MultiView.C
-class MultiView;
-MultiView* gMultiView = 0;
+MultiView *gMultiView = nullptr;
 
 /******************************************************************************/
 // Initialization and steering functions
