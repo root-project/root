@@ -180,6 +180,7 @@ struct MemInfo_t {
    Int_t     fMemTotal;    // total RAM in MB
    Int_t     fMemUsed;     // used RAM in MB
    Int_t     fMemFree;     // free RAM in MB
+   Int_t     fMemAvailable; // available RAM in MB
    Int_t     fSwapTotal;   // total swap in MB
    Int_t     fSwapUsed;    // used swap in MB
    Int_t     fSwapFree;    // free swap in MB
