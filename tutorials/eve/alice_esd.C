@@ -74,10 +74,6 @@
 
 void alice_esd()
 {
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("alice_esd.C","");
-   dir.ReplaceAll("/./","/");
-   gROOT->LoadMacro(dir +"MultiView.C+");
    const char* esd_file_name = "http://root.cern.ch/files/alice_ESDs.root";
    TFile::SetCacheFileDir(".");
    TString lib(Form("aliesd/aliesd.%s", gSystem->GetSoExt()));
