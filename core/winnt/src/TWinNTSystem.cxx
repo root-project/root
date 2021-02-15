@@ -5979,6 +5979,7 @@ static void GetWinNTMemInfo(MemInfo_t *meminfo)
    meminfo->fMemTotal  = (Int_t) (total >> 20); // divide by 1024 * 1024
    meminfo->fMemUsed   = (Int_t) (used >> 20);
    meminfo->fMemFree   = (Int_t) (free >> 20);
+   meminfo->fMemAvailable = meminfo->fMemFree;
 
    swap_total = (Long64_t)(statex.ullTotalPageFile - statex.ullTotalPhys);
    swap_avail = (Long64_t)(statex.ullAvailPageFile - statex.ullAvailPhys);
