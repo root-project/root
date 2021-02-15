@@ -72,6 +72,15 @@ TEST(RResultPtr, ImplConv)
    EXPECT_TRUE(hasRun);
 }
 
+TEST(RResultPtr, Release)
+{
+   ROOT::RDataFrame df(1);
+   auto p = df.Sum<ULong64_t>("rdfentry_");
+   p.GetValue();
+   p.Release();
+   EXPECT_TRUE(p == nullptr);
+}
+
 TEST(RResultPtr, IsReady)
 {
    ROOT::RDataFrame df(1);
