@@ -170,7 +170,12 @@ public:
 
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   const T &GetValue() { return *Get(); }
+   const T &GetValue()
+   {
+      if (fObjPtr == nullptr)
+         throw std::runtime_error("Trying to access the contents of a null RResultPtr.");
+      return *Get();
+   }
 
    /// Get the pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
@@ -300,6 +305,18 @@ public:
       };
       fLoopManager->RegisterCallback(everyNEvents, std::move(c));
       return *this;
+   }
+
+   /// Return a pointer to the result, releasing its ownership and leaving this object empty.
+   T *Release()
+   {
+      if (!fActionPtr->HasRun())
+         TriggerRun();
+      fActionPtr = nullptr;
+      fLoopManager = nullptr;
+      auto p = fObjPtr.get();
+      fObjPtr.reset();
+      return p;
    }
 
    // clang-format off
