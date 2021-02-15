@@ -858,6 +858,29 @@ class Regression24CppPythonInheritance(MyTestCase):
        self.assertEqual(x.bar(), 4) # MyCppClass11's bar
 
 
+class Regression25MapGetItemToCall(MyTestCase):
+   def test01MapGetItemToCall(self):
+       """Test reduction of range of mapping __getitem__ to __call__"""
+       # 7179
+
+       cppyy.cppdef('''
+       struct Foo7179 {
+          float operator[](float x) {
+             return x;
+          }
+       };
+
+       struct Bar7179 : public Foo7179 {
+          float operator()(float x) {
+             return -1;
+          }
+       };
+       ''')
+
+       b = cppyy.gbl.Bar7179()
+       self.assertEqual(b[42], 42)
+
+
 ## actual test run
 if __name__ == '__main__':
    from MyTextTestRunner import MyTextTestRunner
