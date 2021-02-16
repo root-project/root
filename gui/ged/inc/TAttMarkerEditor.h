@@ -22,8 +22,6 @@
 
 #include "TGedFrame.h"
 
-#include "TGSlider.h"
-
 class TGNumberEntry;
 class TGColorSelect;
 class TGedMarkerSelect;
