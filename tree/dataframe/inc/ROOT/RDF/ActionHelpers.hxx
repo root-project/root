@@ -1195,7 +1195,7 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
                  "be written out as a std::vector instead of a TClonesArray. Specify that the type of the branch is "
                  "TClonesArray as a Snapshot template parameter to write out a TClonesArray instead.", inName.c_str());
       }
-      outputTree.Branch(outName.c_str(), &ab->AsVector());
+      outputTree.Branch(outName.c_str(), &(ab->fData));
       return;
    }
 
