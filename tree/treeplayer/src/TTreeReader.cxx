@@ -182,7 +182,7 @@ ClassImp(TTreeReader);
 using namespace ROOT::Internal;
 
 // Provide some storage for the poor little symbol.
-constexpr const char * const TTreeReader::fgEntryStatusText[TTreeReader::kEntryBeyondEnd + 1];
+constexpr const char * const TTreeReader::fgEntryStatusText[TTreeReader::kEntryUnknownError + 1];
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.  Call SetTree to connect to a TTree.
@@ -428,7 +428,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
 
    fBeginEntry = beginEntry;
 
-   if (beginEntry - 1 < 0) 
+   if (beginEntry - 1 < 0)
       // Reset the cache if reading from the first entry of the tree
       Restart();
    else {
