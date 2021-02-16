@@ -1306,7 +1306,7 @@ void TPad::Draw(Option_t *option)
    // pad cannot be in itself and it can only be in one other pad at a time
    if (!fPrimitives) fPrimitives = new TList;
    if (gPad != this) {
-      if (fMother && fMother->TestBit(kNotDeleted)) 
+      if (fMother && fMother->TestBit(kNotDeleted))
             if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
       TPad *oldMother = fMother;
       fCanvas = gPad->GetCanvas();
@@ -6218,7 +6218,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    TPad *is_pad = dynamic_cast<TPad *>( object );
    TVirtualPad *padSave = 0;
    padSave = gPad;
-   if (is_pad) 
+   if (is_pad)
      if (is_pad->GetMother()) is_pad->GetMother()->cd();
 
    static TPad * tmpGuideLinePad;
@@ -6899,13 +6899,14 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    Bool_t hasname = strlen(pname) > 0;
    if (!pname[0] && !emode[0]) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
-   while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad()) {
+   while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad() && gPad) {
       if (gROOT->GetEditorMode() == 0) {
          if (hasname) {
             obj = FindObject(pname);
             if (obj) return obj;
          }
          if (testlast) {
+            if (!gPad->GetListOfPrimitives()) return nullptr;
             obj = gPad->GetListOfPrimitives()->Last();
             if (obj != oldlast) return obj;
             Int_t event = GetEvent();
