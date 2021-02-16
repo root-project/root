@@ -6834,19 +6834,20 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 
    if (!fPrimitives) fPrimitives = new TList;
    gSystem->ProcessEvents();
-   TObject *oldlast = gPad->GetListOfPrimitives()->Last();
+   TObject *oldlast = gPad->GetListOfPrimitives() ? gPad->GetListOfPrimitives()->Last() : nullptr;
    TObject *obj = 0;
    Bool_t testlast = kFALSE;
    Bool_t hasname = strlen(pname) > 0;
    if (!pname[0] && !emode[0]) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
-   while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad()) {
+   while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad() && gPad) {
       if (gROOT->GetEditorMode() == 0) {
          if (hasname) {
             obj = FindObject(pname);
             if (obj) return obj;
          }
          if (testlast) {
+            if (!gPad->GetListOfPrimitives()) return nullptr;
             obj = gPad->GetListOfPrimitives()->Last();
             if (obj != oldlast) return obj;
             Int_t event = GetEvent();
