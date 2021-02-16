@@ -31,9 +31,9 @@
 #include "TGNumberEntry.h"
 #include "TColor.h"
 #include "TGLabel.h"
+#include "TGSlider.h"
 #include "TCanvas.h"
 #include "TROOT.h"
-
 
 ClassImp(TAttMarkerEditor);
 

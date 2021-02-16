@@ -22,8 +22,6 @@
 
 #include "TGedFrame.h"
 
-#include "TGSlider.h"
-
 class TGComboBox;
 class TGFontTypeComboBox;
 class TGColorSelect;
