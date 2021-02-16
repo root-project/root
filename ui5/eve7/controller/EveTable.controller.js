@@ -509,6 +509,7 @@ sap.ui.define([
       endChanges: function (oEvent) {
          if (this.refreshTable) {
             this.locateEveTable();
+            this.buildTableHeader();
             this.buildTableBody();
             this.refreshTable = false;
          }
