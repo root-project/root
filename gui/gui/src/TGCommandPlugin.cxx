@@ -14,6 +14,7 @@
 #include "TGTextEntry.h"
 #include "TInterpreter.h"
 #include "Getline.h"
+#include "KeySymbols.h"
 
 #include "TGCommandPlugin.h"
 
@@ -33,9 +34,13 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
       TGMainFrame(p, w, h)
 {
    SetCleanup(kDeepCleanup);
+   fHistAdd = kFALSE;
+   fPos = 0;
    fHf = new TGHorizontalFrame(this, 100, 20);
    fComboCmd   = new TGComboBox(fHf, "", 1);
    fCommand    = fComboCmd->GetTextEntry();
+   fCommand->Connect("CursorOutUp()", "TGCommandPlugin", this, "HandleArrows(=kKey_Up)");
+   fCommand->Connect("CursorOutDown()", "TGCommandPlugin", this, "HandleArrows(=kKey_Down)");
    fCommandBuf = fCommand->GetBuffer();
    fComboCmd->Resize(200, fCommand->GetDefaultHeight());
    fHf->AddFrame(fComboCmd, new TGLayoutHints(kLHintsCenterY |
@@ -76,7 +81,7 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
       linecount = 0;
       while (fgets(histline, 256, lunin)) {
          histline[strlen(histline)-1] = 0; // remove trailing "\n"
-         fComboCmd->InsertEntry(histline, 0, -1);
+         fComboCmd->InsertEntry(histline, linecount, -1);
          // limit the history size to 500 lines
          if (++linecount > 500)
             break;
@@ -133,6 +138,28 @@ void TGCommandPlugin::CheckRemote(const char * /*str*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Handle the 'up' and 'down' arrow keys event.
+
+void TGCommandPlugin::HandleArrows(Int_t keysym)
+{
+   Int_t entries = fComboCmd->GetNumberOfEntries();
+   switch ((EKeySym)keysym) {
+      case kKey_Up:
+         if (fPos < entries-1) ++fPos;
+         break;
+      case kKey_Down:
+         if (fPos > 0) --fPos;
+         break;
+      default:
+         break;
+   }
+   TGTextLBEntry *te = (TGTextLBEntry *)fComboCmd->GetListBox()->GetEntry(entries-fPos);
+   if (te) {
+      fCommand->SetText(te->GetText()->GetString());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Handle command line from the "command" combo box.
 
 void TGCommandPlugin::HandleCommand()
@@ -154,8 +181,10 @@ void TGCommandPlugin::HandleCommand()
       gSystem->RedirectOutput(pathtmp.Data(), "a");
       gApplication->SetBit(TApplication::kProcessRemotely);
       gROOT->ProcessLine(string);
-      fComboCmd->InsertEntry(string, 0, -1);
-      if (app->InheritsFrom("TRint"))
+      Int_t entries = fComboCmd->GetNumberOfEntries();
+      fComboCmd->InsertEntry(string, entries, -1);
+      fPos = 0;
+      if (app->InheritsFrom("TRint") || fHistAdd)
          Gl_histadd((char *)string);
       gSystem->RedirectOutput(0);
       fStatus->LoadFile(pathtmp.Data());

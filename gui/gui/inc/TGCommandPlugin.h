@@ -16,7 +16,9 @@ class TTimer;
 class TGCommandPlugin : public TGMainFrame {
 
 protected:
+   Bool_t             fHistAdd;           // flag to add commands to history
    Int_t              fPid;               // current process id
+   Int_t              fPos;               // current history position
    TGHorizontalFrame *fHf;                // horizontal frame
    TGLabel           *fLabel;             // "command :" label
    TGComboBox        *fComboCmd;          // commands combobox
@@ -31,7 +33,10 @@ public:
    virtual ~TGCommandPlugin();
 
    void           CheckRemote(const char * /*str*/);
+   void           HandleArrows(Int_t keysym);
    void           HandleCommand();
+   Bool_t         GetHistAdd() const { return fHistAdd; }
+   void           SetHistAdd(Bool_t add = kTRUE) { fHistAdd = add; }
 
    virtual Bool_t HandleTimer(TTimer *t);
 
