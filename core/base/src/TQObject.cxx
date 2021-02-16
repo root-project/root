@@ -171,7 +171,7 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Checking of consitency of sender/receiver methods/arguments.
+/// Checking of consistency of sender/receiver methods/arguments.
 /// Returns -1 on error, otherwise number or arguments of signal function.
 /// Static method.
 
@@ -571,7 +571,7 @@ Bool_t TQObject::ConnectToClass(TQObject *sender,
    TString signal_name = CompressName(signal);
    TString slot_name   = CompressName(slot);
 
-   // check consitency of signal/slot methods/args
+   // check consistency of signal/slot methods/args
    Int_t nsigargs;
    if ((nsigargs = CheckConnectArgs(sender, sender->IsA(), signal_name, cl, slot_name)) == -1)
       return kFALSE;
@@ -629,7 +629,7 @@ Bool_t TQObject::ConnectToClass(const char *class_name,
    TString signal_name = CompressName(signal);
    TString slot_name   = CompressName(slot);
 
-   // check consitency of signal/slot methods/args
+   // check consistency of signal/slot methods/args
    Int_t nsigargs;
    if ((nsigargs = CheckConnectArgs(0, sender, signal_name, cl, slot_name)) == -1)
       return kFALSE;
@@ -719,7 +719,7 @@ Bool_t TQObject::Connect(TQObject *sender,
    TString signal_name = CompressName(signal);
    TString slot_name   = CompressName(slot);
 
-   // check consitency of signal/slot methods/args
+   // check consistency of signal/slot methods/args
    Int_t nsigargs;
    if ((nsigargs = CheckConnectArgs(sender, sender->IsA(), signal_name, 0, slot_name)) == -1)
       return kFALSE;
@@ -815,7 +815,7 @@ Bool_t TQObject::Connect(const char *class_name,
    TString signal_name = CompressName(signal);
    TString slot_name   = CompressName(slot);
 
-   // check consitency of signal/slot methods/args
+   // check consistency of signal/slot methods/args
    Int_t nsigargs;
    if ((nsigargs = CheckConnectArgs(0, sender, signal_name, 0, slot_name)) == -1)
       return kFALSE;
@@ -872,7 +872,7 @@ Bool_t TQObject::Connect(const char *signal,
    TString signal_name = CompressName(signal);
    TString slot_name   = CompressName(slot);
 
-   // check consitency of signal/slot methods/args
+   // check consistency of signal/slot methods/args
    TClass *cl = 0;
    if (receiver_class)
       cl = TClass::GetClass(receiver_class);
