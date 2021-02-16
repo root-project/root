@@ -37,7 +37,6 @@
 #include "TGWindow.h"
 #include "TSystem.h"
 #include "TGFrame.h"
-#include "TGLIncludes.h"
 #include "TError.h"
 #include "TColor.h"
 #include "TROOT.h"
