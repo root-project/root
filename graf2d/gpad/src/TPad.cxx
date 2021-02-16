@@ -6886,15 +6886,15 @@ void TPad::UseCurrentStyle()
 
 TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 {
-   if (!gPad) return 0;
+   if (!gPad) return nullptr;
 
    if (strlen(emode)) gROOT->SetEditorMode(emode);
    if (gROOT->GetEditorMode() == 0 && strlen(pname) > 2) gROOT->SetEditorMode(&pname[1]);
 
    if (!fPrimitives) fPrimitives = new TList;
    gSystem->ProcessEvents();
-   TObject *oldlast = gPad->GetListOfPrimitives()->Last();
-   TObject *obj = 0;
+   TObject *oldlast = gPad->GetListOfPrimitives() ? gPad->GetListOfPrimitives()->Last() : nullptr;
+   TObject *obj = nullptr;
    Bool_t testlast = kFALSE;
    Bool_t hasname = strlen(pname) > 0;
    if (!pname[0] && !emode[0]) testlast = kTRUE;
@@ -6921,7 +6921,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
       gSystem->Sleep(10);
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -66,8 +66,8 @@ protected:
    static Bool_t fgIsFolder;       ///< Indicates if canvas can be browsed as a folder
 
 private:
-   TCanvas(const TCanvas &canvas);  // cannot copy canvas, use TObject::Clone()
-   TCanvas &operator=(const TCanvas &rhs);  // idem
+   TCanvas(const TCanvas &canvas) = delete;
+   TCanvas &operator=(const TCanvas &rhs) = delete;
    void     Build();
    void     CopyPixmaps();
    void     DrawEventStatus(Int_t event, Int_t x, Int_t y, TObject *selected);
