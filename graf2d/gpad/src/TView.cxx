@@ -2,7 +2,7 @@
 // Author: Rene Brun  19/02/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -26,7 +26,7 @@ See TView3D.
 
 TView *TView::CreateView(Int_t system, const Double_t *rmin, const Double_t *rmax)
 {
-   TView *view = 0;
+   TView *view = nullptr;
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TView"))) {
       if (h->LoadPlugin() == -1)
