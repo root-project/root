@@ -16,11 +16,13 @@
 #ifndef ROO_LINKED_LIST
 #define ROO_LINKED_LIST
 
-#include <vector>
-
 #include "TObject.h"
 #include "RooLinkedListElem.h"
-#include "RooHashTable.h"
+#include "TString.h"
+
+#include <vector>
+#include <memory>
+#include <unordered_map>
 
 class RooLinkedListIter ;
 class RooFIter;
@@ -61,7 +63,7 @@ public:
 
   virtual void Add(TObject* arg) { Add(arg,1) ; }
   virtual Bool_t Remove(TObject* arg) ;
-  TObject* At(Int_t index) const ;
+  TObject* At(int index) const ;
   Bool_t Replace(const TObject* oldArg, const TObject* newArg) ;
   TIterator* MakeIterator(Bool_t forward = kTRUE) const ;
   RooLinkedListIter iterator(Bool_t forward = kTRUE) const ;
@@ -112,8 +114,11 @@ protected:
   Int_t _size ;                //  Current size of list
   RooLinkedListElem*  _first ; //! Link to first element of list
   RooLinkedListElem*  _last ;  //! Link to last element of list
-  RooHashTable*       _htableName ; //! Hash table by name 
-  RooHashTable*       _htableLink ; //! Hash table by link pointer
+
+  using HashTableByName = std::unordered_map<std::string,TObject const*>;
+  using HashTableByLink = std::unordered_map<TObject const*,TObject const*>;
+  std::unique_ptr<HashTableByName> _htableName; //! Hash table by name 
+  std::unique_ptr<HashTableByLink> _htableLink; //! Hash table by link pointer
 
   TString             _name ; 
   Bool_t              _useNptr ; //!
@@ -131,8 +136,5 @@ private:
 
   ClassDef(RooLinkedList,3) // Doubly linked list for storage of RooAbsArg objects
 };
-
-
-
 
 #endif
