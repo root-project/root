@@ -435,7 +435,7 @@ sap.ui.define([
 
          for (let i = 0; i < intersects.length; ++i)
          {
-            if (intersects[i].object.get_ctrl)
+            if (intersects[i].object.get_ctrl && intersects[i].object.visible)
             {
                intersects[i].mouse = mouse;
                intersects[i].w = w;
