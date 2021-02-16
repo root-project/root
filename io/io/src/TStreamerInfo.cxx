@@ -295,6 +295,13 @@ void TStreamerInfo::Build(Bool_t isTransient)
       return;
    }
 
+   // Warn on read/write of RVec (see 6.24 release notes)
+   if (strncmp(GetName(), "ROOT::VecOps::RVec<", 19) == 0) {
+      Warning("Build", "Due to some major, backward-incompatible improvements planned for ROOT::RVec, direct I/O of "
+                       "ROOT::RVec objects will break between v6.24 and v6.26. Please use std::vectors instead. See "
+                       "the release notes of v6.24 for more information.");
+   }
+
    TStreamerElement::Class()->IgnoreTObjectStreamer();
 
    fClass->BuildRealData(nullptr, isTransient);
