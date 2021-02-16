@@ -129,8 +129,8 @@ protected:
    virtual void  SetBatch(Bool_t batch=kTRUE);
 
 private:
-   TPad(const TPad &pad);  // cannot copy pads, use TObject::Clone()
-   TPad &operator=(const TPad &rhs);  // idem
+   TPad(const TPad &pad) = delete;
+   TPad &operator=(const TPad &rhs) = delete;
 
    void CopyBackgroundPixmap(Int_t x, Int_t y);
    void CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y);
