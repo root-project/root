@@ -2,7 +2,7 @@
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,7 +11,6 @@
 
 #ifndef ROOT_TSlider
 #define ROOT_TSlider
-
 
 #include "TPad.h"
 
@@ -24,8 +23,8 @@ protected:
    TString       fMethod;       ///< command to be executed when slider is changed
 
 private:
-   TSlider(const TSlider &org);             // no copy, use TObject::Clone()
-   TSlider &operator=(const TSlider &rhs);  // idem
+   TSlider(const TSlider &) = delete;
+   TSlider &operator=(const TSlider &) = delete;
 
 public:
    TSlider();

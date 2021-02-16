@@ -2,7 +2,7 @@
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -30,7 +30,7 @@ The moving box in a TSlider
 
 TSliderBox::TSliderBox(): TWbox()
 {
-   fSlider = 0;
+   fSlider = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,7 +39,7 @@ TSliderBox::TSliderBox(): TWbox()
 TSliderBox::TSliderBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
            :TWbox(x1,y1,x2,y2,color,bordersize,bordermode)
 {
-   fSlider = 0;
+   fSlider = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

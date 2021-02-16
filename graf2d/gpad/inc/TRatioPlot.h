@@ -2,7 +2,7 @@
 // Author: Paul Gessinger   25/08/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -43,8 +43,8 @@ class TBrowser;
 class TRatioPlot : public TObject {
 
 private:
-   TRatioPlot& operator=(const TRatioPlot&) = delete; // Not implemented
-   TRatioPlot(const TRatioPlot &hrp) = delete;
+   TRatioPlot& operator=(const TRatioPlot&) = delete;
+   TRatioPlot(const TRatioPlot &) = delete;
 
    enum CalculationMode {
       kDivideHist = 1, ///< Use `TH1::Divide` to create the ratio.
