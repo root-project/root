@@ -464,7 +464,7 @@ void TGComboBox::Select(Int_t id, Bool_t emit)
          if (emit) {
             Selected(fWidgetId, id);
             Selected(id);
-            Selected();
+            Changed();
          }
       }
    }
@@ -610,7 +610,7 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
                }
                Selected(fWidgetId, (Int_t)parm2);
                Selected((Int_t)parm2);
-               Selected();
+               Changed();
                fClient->NeedRedraw(this);
                break;
          }
