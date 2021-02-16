@@ -30,6 +30,7 @@
 #include "TColor.h"
 #include "TGraph.h"
 #include "TGLabel.h"
+#include "TGSlider.h"
 #include "TGNumberEntry.h"
 #include "TCanvas.h"
 #include "TROOT.h"
