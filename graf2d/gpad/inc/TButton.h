@@ -2,7 +2,7 @@
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,7 +11,6 @@
 
 #ifndef ROOT_TButton
 #define ROOT_TButton
-
 
 #include "TPad.h"
 #include "TAttText.h"
@@ -22,8 +21,8 @@ private:
    Bool_t fFocused;     ///< If cursor is in...
    Bool_t fFraming;     ///< True if you want a frame to be painted when pressed
 
-   TButton(const TButton &org);            // no copy ctor, use TObject::Clone()
-   TButton &operator=(const TButton &rhs); // idem
+   TButton(const TButton &) = delete;
+   TButton &operator=(const TButton &) = delete;
 
 protected:
    TString      fMethod;      ///< Method to be executed by this button

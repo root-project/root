@@ -2,7 +2,7 @@
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,14 +12,13 @@
 #ifndef ROOT_TGroupButton
 #define ROOT_TGroupButton
 
-
 #include "TButton.h"
 
 class TGroupButton : public TButton {
 
 private:
-   TGroupButton(const TGroupButton &org);  // no copy, use TObject::Clone()
-   TGroupButton &operator=(const TGroupButton &rhs);  // idem
+   TGroupButton(const TGroupButton &) = delete;
+   TGroupButton &operator=(const TGroupButton &) = delete;
 
 public:
    TGroupButton();
