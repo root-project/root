@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -48,8 +48,8 @@ class TTimer;
 class TGScrollBarElement : public TGFrame {
 
 private:
-   TGScrollBarElement(const TGScrollBarElement&); // Not implemented
-   TGScrollBarElement& operator=(const TGScrollBarElement&); // Not implemented
+   TGScrollBarElement(const TGScrollBarElement&) = delete;
+   TGScrollBarElement& operator=(const TGScrollBarElement&) = delete;
 
 protected:
    Int_t            fState;      // state of scrollbar element (button up or down)
@@ -61,7 +61,7 @@ protected:
    Int_t            fStyle;      // modern or classic style
 
 public:
-   TGScrollBarElement(const TGWindow *p = 0, const TGPicture *pic = 0,
+   TGScrollBarElement(const TGWindow *p = nullptr, const TGPicture *pic = nullptr,
                       UInt_t w = 1, UInt_t h = 1,
                       UInt_t options = kRaisedFrame | kDoubleBorder,
                       Pixel_t back = GetDefaultFrameBackground());
@@ -80,8 +80,8 @@ public:
 class TGScrollBar : public TGFrame, public TGWidget {
 
 private:
-   TGScrollBar(const TGScrollBar&); // Not implemented
-   TGScrollBar& operator=(const TGScrollBar&); // Not implemented
+   TGScrollBar(const TGScrollBar&) = delete;
+   TGScrollBar& operator=(const TGScrollBar&) = delete;
 
 protected:
    Int_t                fX0, fY0;      // current slider position in pixels
@@ -112,7 +112,7 @@ public:
    static Pixmap_t  GetBckgndPixmap();
    static Int_t     GetScrollBarWidth();
 
-   TGScrollBar(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGScrollBar(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGScrollBar();
@@ -160,7 +160,7 @@ public:
 class TGHScrollBar : public TGScrollBar {
 
 public:
-   TGHScrollBar(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 2,
+   TGHScrollBar(const TGWindow *p = nullptr, UInt_t w = 4, UInt_t h = 2,
                 UInt_t options = kHorizontalFrame,
                 Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGHScrollBar() { }
@@ -183,7 +183,7 @@ public:
 class TGVScrollBar : public TGScrollBar {
 
 public:
-   TGVScrollBar(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 4,
+   TGVScrollBar(const TGWindow *p = nullptr, UInt_t w = 2, UInt_t h = 4,
                 UInt_t options = kVerticalFrame,
                 Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGVScrollBar() { }

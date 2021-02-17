@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -87,8 +87,9 @@ private:
    Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas
    Int_t                fButton;     // currently pressed button
 
-   TRootCanvas(const TRootCanvas&); // Not implemented
-   TRootCanvas& operator=(const TRootCanvas&); // Not implemented
+   TRootCanvas(const TRootCanvas&) = delete;
+   TRootCanvas& operator=(const TRootCanvas&) = delete;
+
    void     CreateCanvas(const char *name);
    void     CreateEditor();
 
@@ -107,7 +108,7 @@ private:
    Bool_t   HandleDNDLeave();
 
 public:
-   TRootCanvas(TCanvas *c = 0, const char *name = "ROOT Canvas", UInt_t width = 500, UInt_t height = 300);
+   TRootCanvas(TCanvas *c = nullptr, const char *name = "ROOT Canvas", UInt_t width = 500, UInt_t height = 300);
    TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TRootCanvas();
 

@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -45,11 +45,11 @@ protected:
    TGLBEntry *fSelected;
 
 private:
-   TGComboBoxPopup(const TGComboBoxPopup&);            // Not implemented
-   TGComboBoxPopup& operator=(const TGComboBoxPopup&); // Not implemented
+   TGComboBoxPopup(const TGComboBoxPopup&) = delete;
+   TGComboBoxPopup& operator=(const TGComboBoxPopup&) = delete;
 
 public:
-   TGComboBoxPopup(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGComboBoxPopup(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                    UInt_t options = kVerticalFrame,
                    Pixel_t back = GetWhitePixel());
 
@@ -67,8 +67,8 @@ public:
 class TGComboBox : public TGCompositeFrame, public TGWidget {
 
 private:
-   TGComboBox(const TGComboBox&);            // Not implemented
-   TGComboBox& operator=(const TGComboBox&); // Not implemented
+   TGComboBox(const TGComboBox&) = delete;
+   TGComboBox& operator=(const TGComboBox&) = delete;
 
 protected:
    TGLBEntry           *fSelEntry;      // selected item frame
@@ -84,7 +84,7 @@ protected:
    virtual void Init();
 
 public:
-   TGComboBox(const TGWindow *p = 0, Int_t id = -1,
+   TGComboBox(const TGWindow *p = nullptr, Int_t id = -1,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
    TGComboBox(const TGWindow *p, const char *text, Int_t id = -1,
@@ -161,7 +161,7 @@ public:
 class TGLineStyleComboBox : public TGComboBox {
 
 public:
-   TGLineStyleComboBox(const TGWindow *p = 0, Int_t id = -1,
+   TGLineStyleComboBox(const TGWindow *p = nullptr, Int_t id = -1,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
 
