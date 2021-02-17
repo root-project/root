@@ -27,6 +27,7 @@
 
 #include "TGView.h"
 #include "TGText.h"
+#include "TTimer.h"
 
 class TViewTimer;
 
@@ -76,7 +77,7 @@ private:
    TGTextView& operator=(const TGTextView&) = delete;
 
 public:
-   TGTextView(const TGWindow *parent = 0, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
+   TGTextView(const TGWindow *parent = nullptr, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
               UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
               Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());

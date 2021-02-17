@@ -34,7 +34,6 @@
 
 #include "TGFrame.h"
 #include "TGWidget.h"
-#include "TTimer.h"
 
 class TGViewFrame;
 class TGHScrollBar;
