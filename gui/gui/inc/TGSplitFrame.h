@@ -2,7 +2,7 @@
 // Author: Bertrand Bellenot 23/01/2008
 
 /*************************************************************************
- * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -22,8 +22,8 @@ class TContextMenu;
 class TGRectMap : public TObject {
 
 private:
-   TGRectMap(const TGRectMap&);             // not implemented
-   TGRectMap& operator=(const TGRectMap&);  // not implemented
+   TGRectMap(const TGRectMap&) = delete;
+   TGRectMap& operator=(const TGRectMap&) = delete;
 
 public:
    Int_t         fX;    // x position
@@ -54,11 +54,11 @@ private:
    Int_t              fX;           // X position in fWindow where to popup
    Int_t              fY;           // Y position in fWindow where to popup
 
-   TGSplitTool(const TGSplitTool&);             // not implemented
-   TGSplitTool& operator=(const TGSplitTool&);  // not implemented
+   TGSplitTool(const TGSplitTool&) = delete;
+   TGSplitTool& operator=(const TGSplitTool&) = delete;
 
 public:
-   TGSplitTool(const TGWindow *p = 0, const TGFrame *f = 0);
+   TGSplitTool(const TGWindow *p = nullptr, const TGFrame *f = nullptr);
    virtual ~TGSplitTool();
 
    void   AddRectangle(TGFrame *frm, Int_t x, Int_t y, Int_t w, Int_t h);

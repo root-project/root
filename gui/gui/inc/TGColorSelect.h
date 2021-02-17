@@ -2,7 +2,7 @@
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -52,11 +52,11 @@ protected:
    Pixel_t         fColor;       // returned color value
 
 private:
-   TGColorFrame(const TGColorFrame&);             // not implemented
-   TGColorFrame& operator=(const TGColorFrame&);  // not implemented
+   TGColorFrame(const TGColorFrame&) = delete;
+   TGColorFrame& operator=(const TGColorFrame&) = delete;
 
 public:
-   TGColorFrame(const TGWindow *p = 0, Pixel_t c = 0, Int_t n = 1);
+   TGColorFrame(const TGWindow *p = nullptr, Pixel_t c = 0, Int_t n = 1);
    virtual ~TGColorFrame() { }
 
    virtual Bool_t  HandleButton(Event_t *event);
@@ -78,11 +78,11 @@ protected:
    TGColorFrame    *fCe[16];     // matrix of color cells
 
 private:
-   TG16ColorSelector(const TG16ColorSelector&);             // not implemented
-   TG16ColorSelector& operator=(const TG16ColorSelector&);  // not implemented
+   TG16ColorSelector(const TG16ColorSelector&) = delete;
+   TG16ColorSelector& operator=(const TG16ColorSelector&) = delete;
 
 public:
-   TG16ColorSelector(const TGWindow *p = 0);
+   TG16ColorSelector(const TGWindow *p = nullptr);
    virtual ~TG16ColorSelector();
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
@@ -104,11 +104,11 @@ protected:
    Pixel_t          fCurrentColor;  // currently selected color value
 
 private:
-   TGColorPopup(const TGColorPopup&);              // not implemented
-   TGColorPopup& operator=(const TGColorPopup&);   // not implemented
+   TGColorPopup(const TGColorPopup&) = delete;
+   TGColorPopup& operator=(const TGColorPopup&) = delete;
 
 public:
-   TGColorPopup(const TGWindow *p = 0, const TGWindow *m = 0, Pixel_t color = 0);
+   TGColorPopup(const TGWindow *p = nullptr, const TGWindow *m = nullptr, Pixel_t color = 0);
    virtual ~TGColorPopup();
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -137,11 +137,11 @@ protected:
    void DrawTriangle(GContext_t gc, Int_t x, Int_t y);
 
 private:
-   TGColorSelect(const TGColorSelect&);             // not implemented
-   TGColorSelect& operator=(const TGColorSelect&);  // not implemented
+   TGColorSelect(const TGColorSelect&) = delete;
+   TGColorSelect& operator=(const TGColorSelect&) = delete;
 
 public:
-   TGColorSelect(const TGWindow *p = 0, Pixel_t color = 0,
+   TGColorSelect(const TGWindow *p = nullptr, Pixel_t color = 0,
                  Int_t id = -1);
    virtual ~TGColorSelect();
 
@@ -157,7 +157,7 @@ public:
    // dummy methods just to remove from context menu
    void SetDown(Bool_t on = kTRUE, Bool_t emit = kFALSE) { TGButton::SetDown(on, emit); }
    void Rename(const char *title)  { TGTextButton::SetTitle(title); }
-   void SetEnabled(Bool_t e = kTRUE) {TGButton::SetEnabled(e); }
+   void SetEnabled(Bool_t e = kTRUE) { TGButton::SetEnabled(e); }
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(43, 21); }
    virtual void SavePrimitive(std::ostream &out, Option_t * = "");

@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,7 +11,6 @@
 
 #ifndef ROOT_TGFrame
 #define ROOT_TGFrame
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -154,8 +153,8 @@ protected:
    virtual void StartGuiBuilding(Bool_t on = kTRUE);
 
 private:
-   TGFrame(const TGFrame&);             // not implemented
-   TGFrame& operator=(const TGFrame&);  // not implemented
+   TGFrame(const TGFrame&) = delete;
+   TGFrame& operator=(const TGFrame&) = delete;
 
 public:
    // Default colors and graphics contexts
@@ -169,9 +168,9 @@ public:
    static const TGGC &GetShadowGC();
    static const TGGC &GetBckgndGC();
 
-   TGFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
            UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
-   TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
+   TGFrame(TGClient *c, Window_t id, const TGWindow *parent = nullptr);
    virtual ~TGFrame();
 
    virtual void DeleteWindow();
@@ -334,14 +333,14 @@ protected:
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
 
 private:
-   TGCompositeFrame(const TGCompositeFrame&);            // not implemented
-   TGCompositeFrame& operator=(const TGCompositeFrame&); // not implemented
+   TGCompositeFrame(const TGCompositeFrame&) = delete;
+   TGCompositeFrame& operator=(const TGCompositeFrame&) = delete;
 
 public:
-   TGCompositeFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGCompositeFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                     UInt_t options = 0,
                     Pixel_t back = GetDefaultFrameBackground());
-   TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
+   TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = nullptr);
    virtual ~TGCompositeFrame();
 
    virtual TList *GetList() const { return fList; }
@@ -484,11 +483,11 @@ protected:
    TString GetMWMinpString() const;    //used in SaveSource()
 
 private:
-   TGMainFrame(const TGMainFrame&);             // not implemented
-   TGMainFrame& operator=(const TGMainFrame&);  // not implemented
+   TGMainFrame(const TGMainFrame&) = delete;
+   TGMainFrame& operator=(const TGMainFrame&) = delete;
 
 public:
-   TGMainFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGMainFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kVerticalFrame);
    virtual ~TGMainFrame();
 
@@ -556,11 +555,11 @@ protected:
    const TGWindow   *fMain;  // window over which to popup dialog
 
 private:
-   TGTransientFrame(const TGTransientFrame&);             // not implemented
-   TGTransientFrame& operator=(const TGTransientFrame&);  // not implemented
+   TGTransientFrame(const TGTransientFrame&) = delete;
+   TGTransientFrame& operator=(const TGTransientFrame&) = delete;
 
 public:
-   TGTransientFrame(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
+   TGTransientFrame(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,
                     UInt_t options = kVerticalFrame);
 
    enum EPlacement { kCenter, kLeft, kRight, kTop, kBottom, kTopLeft, kTopRight,
@@ -599,8 +598,8 @@ protected:
    static const TGGC   *fgDefaultGC;
 
 private:
-   TGGroupFrame(const TGGroupFrame&);              // not implemented
-   TGGroupFrame& operator=(const TGGroupFrame&);   // not implemented
+   TGGroupFrame(const TGGroupFrame&) = delete;
+   TGGroupFrame& operator=(const TGGroupFrame&) = delete;
 
 public:
    enum ETitlePos { kLeft = -1, kCenter = 0, kRight = 1 };

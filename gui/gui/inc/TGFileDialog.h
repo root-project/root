@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -54,8 +54,8 @@ class TGFSComboBox;
 class TGFileInfo {
 
 private:
-   TGFileInfo(const TGFileInfo&) = delete;              // not implemented
-   TGFileInfo& operator=(const TGFileInfo&) = delete;   // not implemented
+   TGFileInfo(const TGFileInfo&) = delete;
+   TGFileInfo& operator=(const TGFileInfo&) = delete;
 
 public:
    char         *fFilename{nullptr};            // selected file name
@@ -101,12 +101,12 @@ protected:
    TGFileInfo        *fFileInfo; // file info passed to this dialog
 
 private:
-   TGFileDialog(const TGFileDialog&);              // not implemented
-   TGFileDialog& operator=(const TGFileDialog&);   // not implemented
+   TGFileDialog(const TGFileDialog&) = delete;
+   TGFileDialog& operator=(const TGFileDialog&) = delete;
 
 public:
-   TGFileDialog(const TGWindow *p = 0, const TGWindow *main = 0,
-                EFileDialogMode dlg_type = kFDOpen, TGFileInfo *file_info = 0);
+   TGFileDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr,
+                EFileDialogMode dlg_type = kFDOpen, TGFileInfo *file_info = nullptr);
    virtual ~TGFileDialog();
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);

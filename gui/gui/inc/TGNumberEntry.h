@@ -2,7 +2,7 @@
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
- * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -165,8 +165,8 @@ private:
    const TGPicture  *fPicUp;      // Up arrow
    const TGPicture  *fPicDown;    // Down arrow
 
-   TGNumberEntry(const TGNumberEntry&);             // not implemented
-   TGNumberEntry& operator=(const TGNumberEntry&);  // not implemented
+   TGNumberEntry(const TGNumberEntry&) = delete;
+   TGNumberEntry& operator=(const TGNumberEntry&) = delete;
 
 protected:
    TGNumberEntryField *fNumericEntry;  // Number text entry field
@@ -175,7 +175,7 @@ protected:
    Bool_t              fButtonToNum;   // Send button messages to parent rather than number entry field
 
 public:
-   TGNumberEntry(const TGWindow *parent = 0, Double_t val = 0,
+   TGNumberEntry(const TGWindow *parent = nullptr, Double_t val = 0,
                  Int_t digitwidth = 5, Int_t id = -1,
                  EStyle style = kNESReal,
                  EAttribute attr = kNEAAnyNumber,
@@ -290,8 +290,8 @@ protected:
    TGNumberEntry *fBox;        // pointer to numeric control box
 
 private:
-   TGNumberEntryLayout(const TGNumberEntryLayout&);             // not implemented
-   TGNumberEntryLayout& operator=(const TGNumberEntryLayout&);  // not implemented
+   TGNumberEntryLayout(const TGNumberEntryLayout&) = delete;
+   TGNumberEntryLayout& operator=(const TGNumberEntryLayout&) = delete;
 
 public:
    TGNumberEntryLayout(TGNumberEntry *box): fBox(box) { }
