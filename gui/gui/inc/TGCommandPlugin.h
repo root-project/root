@@ -55,7 +55,7 @@ public:
    void           HandleTab();
    void           HandleTextChanged(const char *);
    Bool_t         GetHistAdd() { return fHistAdd; }
-   void           SetHistAdd(Bool_t add = kTRUE) { fHistAdd = add; }
+   void           SetHistAdd(Bool_t add = kTRUE);
 
    virtual Bool_t HandleTimer(TTimer *t);
 

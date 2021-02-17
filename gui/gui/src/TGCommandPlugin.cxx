@@ -263,3 +263,19 @@ Bool_t TGCommandPlugin::HandleTimer(TTimer *t)
    CheckRemote("");
    return kTRUE;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// The function SetHistAdd() is needed for a standalone TApplication to log the
+/// TGCommandPlugin commands into a ROOT history file.
+/// However, this function has no effect if the user does not explictly set on
+/// his standalone application the name of the ROOT history file.
+/// To log into the default ROOT history file, call this on the user-side of the
+/// code:
+///    Gl_histinit(gEnv->GetValue("Rint.History", gSystem->HomeDirectory()));
+/// Otherwise, replace the argument of Gl_histinit with a text file name you want
+/// to use for application-specific logging.
+
+void TGCommandPlugin::SetHistAdd(Bool_t add)
+{
+   fHistAdd = add;
+}
