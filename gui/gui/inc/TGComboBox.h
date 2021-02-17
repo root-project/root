@@ -143,6 +143,7 @@ public:
    virtual void Selected(Int_t widgetId, Int_t id);                  // *SIGNAL*
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  // *SIGNAL*
    virtual void Selected(const char *txt) { Emit("Selected(char*)", txt); } // *SIGNAL*
+   virtual void Changed() { Emit("Changed()"); } // *SIGNAL*
    virtual void ReturnPressed();                                     // *SIGNAL*
    virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 

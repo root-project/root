@@ -167,7 +167,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// Acitvate signal without args.
+   /// Activate signal without args.
    /// Example:
    ///          theButton->Emit("Clicked()");
    void  Emit(const char *signal) { EmitVA(signal, (Int_t) 0); }
