@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -90,8 +90,8 @@ protected:
    static const TGGC   &GetDefaultSelectedBackgroundGC();
 
 private:
-   TGTextEntry(const TGTextEntry&);              // not implemented
-   TGTextEntry& operator=(const TGTextEntry&);   // not implemented
+   TGTextEntry(const TGTextEntry&) = delete;
+   TGTextEntry& operator=(const TGTextEntry&) = delete;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -186,7 +186,7 @@ public:
    virtual  Bool_t      HandleTimer(TTimer *t);
    virtual  Bool_t      HandleConfigureNotify(Event_t *event);
 
-   virtual  void        TextChanged(const char *text = 0);      //*SIGNAL*
+   virtual  void        TextChanged(const char *text = nullptr);//*SIGNAL*
    virtual  void        ReturnPressed();                        //*SIGNAL*
    virtual  void        TabPressed();                           //*SIGNAL*
    virtual  void        ShiftTabPressed();                      //*SIGNAL*

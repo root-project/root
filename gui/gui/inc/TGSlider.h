@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -80,11 +80,11 @@ protected:
    virtual void CreateDisabledPicture();
 
 private:
-   TGSlider(const TGSlider&);             // not implemented
-   TGSlider& operator=(const TGSlider&);  // not implemented
+   TGSlider(const TGSlider&) = delete;
+   TGSlider& operator=(const TGSlider&) = delete;
 
 public:
-   TGSlider(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGSlider(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
             UInt_t type = kSlider1 | kScaleBoth, Int_t id = -1,
             UInt_t options = kChildFrame,
             Pixel_t back = GetDefaultFrameBackground());
@@ -132,7 +132,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGVSlider(const TGWindow *p = 0, UInt_t h = 40,
+   TGVSlider(const TGWindow *p = nullptr, UInt_t h = 40,
              UInt_t type = kSlider1 | kScaleBoth, Int_t id = -1,
              UInt_t options = kVerticalFrame,
              Pixel_t back = GetDefaultFrameBackground());

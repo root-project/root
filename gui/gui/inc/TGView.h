@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -71,11 +71,11 @@ protected:
    virtual Bool_t ItemLayout() { return kFALSE; }
 
 private:
-   TGView(const TGView&);              // not implemented
-   TGView& operator=(const TGView&);   // not implemented
+   TGView(const TGView&) = delete;
+   TGView& operator=(const TGView&) = delete;
 
 public:
-   TGView(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
+   TGView(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
           UInt_t xMargin = 0, UInt_t yMargin = 0,
           UInt_t options = kSunkenFrame | kDoubleBorder,
           UInt_t sboptions = 0,
@@ -130,8 +130,8 @@ class TGViewFrame : public TGCompositeFrame {
 private:
    TGView   *fView;  // pointer back to the view
 
-   TGViewFrame(const TGViewFrame&);              // not implemented
-   TGViewFrame& operator=(const TGViewFrame&);   // not implemented
+   TGViewFrame(const TGViewFrame&) = delete;
+   TGViewFrame& operator=(const TGViewFrame&) = delete;
 
 public:
    TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options = 0,

@@ -57,8 +57,8 @@ protected:
    static const TGGC    *fgDefaultGC;
 
 private:
-   TGLabel(const TGLabel&);             // not implemented
-   TGLabel& operator=(const TGLabel&);  // not implemented
+   TGLabel(const TGLabel&) = delete;
+   TGLabel& operator=(const TGLabel&) = delete;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -69,7 +69,7 @@ public:
            FontStruct_t font = GetDefaultFontStruct(),
            UInt_t options = kChildFrame,
            Pixel_t back = GetDefaultFrameBackground());
-   TGLabel(const TGWindow *p = 0, const char *text = 0,
+   TGLabel(const TGWindow *p = nullptr, const char *text = nullptr,
            GContext_t norm = GetDefaultGC()(),
            FontStruct_t font = GetDefaultFontStruct(),
            UInt_t options = kChildFrame,

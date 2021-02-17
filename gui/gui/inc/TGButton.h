@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -91,14 +91,14 @@ protected:
    static Window_t fgReleaseBtn; // the last released button
 
 private:
-   TGButton(const TGButton&);             // not implemented
-   TGButton& operator=(const TGButton&);  // not implemented
+   TGButton(const TGButton&) = delete;
+   TGButton& operator=(const TGButton&) = delete;
 
 public:
    static const TGGC   &GetDefaultGC();
    static const TGGC   &GetHibckgndGC();
 
-   TGButton(const TGWindow *p = 0, Int_t id = -1, GContext_t norm = GetDefaultGC()(),
+   TGButton(const TGWindow *p = nullptr, Int_t id = -1, GContext_t norm = GetDefaultGC()(),
             UInt_t option = kRaisedFrame | kDoubleBorder);
    virtual ~TGButton();
 
@@ -162,8 +162,8 @@ protected:
    virtual void DoRedraw();
 
 private:
-   TGTextButton(const TGTextButton&);              // not implemented
-   TGTextButton& operator=(const TGTextButton&);   // not implemented
+   TGTextButton(const TGTextButton&) = delete;
+   TGTextButton& operator=(const TGTextButton&) = delete;
 
 public:
    static FontStruct_t GetDefaultFontStruct();
@@ -236,8 +236,8 @@ protected:
    virtual void CreateDisabledPicture();
 
 private:
-   TGPictureButton(const TGPictureButton&);             // not implemented
-   TGPictureButton& operator=(const TGPictureButton&);  // not implemented
+   TGPictureButton(const TGPictureButton&) = delete;
+   TGPictureButton& operator=(const TGPictureButton&) = delete;
 
 public:
    TGPictureButton(const TGWindow *p, const TGPicture *pic, Int_t id = -1,
@@ -246,7 +246,7 @@ public:
    TGPictureButton(const TGWindow *p, const TGPicture *pic, const char *cmd,
                    Int_t id = -1, GContext_t norm = GetDefaultGC()(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
-   TGPictureButton(const TGWindow *p = 0, const char* pic = 0, Int_t id = -1,
+   TGPictureButton(const TGWindow *p = nullptr, const char* pic = 0, Int_t id = -1,
                    GContext_t norm = GetDefaultGC()(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
    virtual ~TGPictureButton();

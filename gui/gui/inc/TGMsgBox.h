@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -79,18 +79,18 @@ protected:
                 Int_t buttons, Int_t *ret_code, Int_t text_align);
 
 private:
-   TGMsgBox(const TGMsgBox&);              // not implemented
-   TGMsgBox& operator=(const TGMsgBox&);   // not implemented
+   TGMsgBox(const TGMsgBox&) = delete;
+   TGMsgBox& operator=(const TGMsgBox&) = delete;
 
 public:
-   TGMsgBox(const TGWindow *p = 0, const TGWindow *main = 0,
-            const char *title = 0, const char *msg = 0, const TGPicture *icon = 0,
-            Int_t buttons = kMBDismiss, Int_t *ret_code = 0,
+   TGMsgBox(const TGWindow *p = nullptr, const TGWindow *main = nullptr,
+            const char *title = nullptr, const char *msg = nullptr, const TGPicture *icon = nullptr,
+            Int_t buttons = kMBDismiss, Int_t *ret_code = nullptr,
             UInt_t options = kVerticalFrame,
             Int_t text_align = kTextCenterX | kTextCenterY);
    TGMsgBox(const TGWindow *p, const TGWindow *main,
             const char *title, const char *msg, EMsgBoxIcon icon,
-            Int_t buttons = kMBDismiss, Int_t *ret_code = 0,
+            Int_t buttons = kMBDismiss, Int_t *ret_code = nullptr,
             UInt_t options = kVerticalFrame,
             Int_t text_align = kTextCenterX | kTextCenterY);
    virtual ~TGMsgBox();

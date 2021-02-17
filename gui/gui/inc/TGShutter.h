@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -47,11 +47,11 @@ protected:
    TGLayoutHints *fL1, *fL2;   // positioning hints
 
 private:
-   TGShutterItem(const TGShutterItem&);              // not implemented
-   TGShutterItem& operator=(const TGShutterItem&);   // not implemented
+   TGShutterItem(const TGShutterItem&) = delete;
+   TGShutterItem& operator=(const TGShutterItem&) = delete;
 
 public:
-   TGShutterItem(const TGWindow *p = 0, TGHotString *s = 0, Int_t id = -1,
+   TGShutterItem(const TGWindow *p = nullptr, TGHotString *s = nullptr, Int_t id = -1,
                  UInt_t options = 0);
    virtual ~TGShutterItem();
 
@@ -80,11 +80,11 @@ protected:
    UInt_t          fDefHeight;              // Default height
 
 private:
-   TGShutter(const TGShutter&);             // not implemented
-   TGShutter& operator=(const TGShutter&);  // not implemented
+   TGShutter(const TGShutter&) = delete;
+   TGShutter& operator=(const TGShutter&) = delete;
 
 public:
-   TGShutter(const TGWindow *p = 0, UInt_t options = kSunkenFrame);
+   TGShutter(const TGWindow *p = nullptr, UInt_t options = kSunkenFrame);
    virtual ~TGShutter();
 
    virtual void   AddItem(TGShutterItem *item);

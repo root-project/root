@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -44,8 +44,8 @@ protected:
    TList    *fList;      // list of frames to arrange
 
 private:
-   TGTabLayout(const TGTabLayout&);             // not implemented
-   TGTabLayout& operator=(const TGTabLayout&);  // not implemented
+   TGTabLayout(const TGTabLayout&) = delete;
+   TGTabLayout& operator=(const TGTabLayout&) = delete;
 
 public:
    TGTabLayout(TGTab *main);
@@ -75,14 +75,14 @@ protected:
    static const TGGC   *fgDefaultGC;
 
 private:
-   TGTab(const TGTab&);             // not implemented
-   TGTab& operator=(const TGTab&);  // not implemented
+   TGTab(const TGTab&) = delete;
+   TGTab& operator=(const TGTab&) = delete;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
 
-   TGTab(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGTab(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
          GContext_t norm = GetDefaultGC()(),
          FontStruct_t font = GetDefaultFontStruct(),
          UInt_t options = kChildFrame,
@@ -142,11 +142,11 @@ protected:
    Bool_t           fActive;          // true if active (in front)
 
 private:
-   TGTabElement(const TGTabElement&);             // not implemented
-   TGTabElement& operator=(const TGTabElement&);  // not implemented
+   TGTabElement(const TGTabElement&) = delete;
+   TGTabElement& operator=(const TGTabElement&) = delete;
 
 public:
-   TGTabElement(const TGWindow *p = 0, TGString *text = 0, UInt_t w = 1, UInt_t h = 1,
+   TGTabElement(const TGWindow *p = nullptr, TGString *text = nullptr, UInt_t w = 1, UInt_t h = 1,
                 GContext_t norm = TGTab::GetDefaultGC()(),
                 FontStruct_t font = TGTab::GetDefaultFontStruct(),
                 UInt_t options = kRaisedFrame,

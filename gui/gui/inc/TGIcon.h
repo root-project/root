@@ -37,15 +37,15 @@ protected:
    virtual void DoRedraw();
 
 private:
-   TGIcon(const TGIcon &);            // not implemented
-   TGIcon& operator=(const TGIcon&);  // not implemented
+   TGIcon(const TGIcon &) = delete;
+   TGIcon& operator=(const TGIcon&) = delete;
 
 public:
    TGIcon(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,
       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground()) :
-         TGFrame(p, w, h, options, back), fPic(pic), fImage(0), fPath() { SetWindowName(); }
+         TGFrame(p, w, h, options, back), fPic(pic), fImage(nullptr), fPath() { SetWindowName(); }
 
-   TGIcon(const TGWindow *p = 0, const char *image = 0);
+   TGIcon(const TGWindow *p = nullptr, const char *image = nullptr);
 
    virtual ~TGIcon();
 

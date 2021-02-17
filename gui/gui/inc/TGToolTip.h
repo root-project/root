@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -44,11 +44,11 @@ private:
    Int_t              fX;       // X position in fWindow where to popup
    Int_t              fY;       // Y position in fWindow where to popup
 
-   TGToolTip(const TGToolTip&);             // not implemented
-   TGToolTip& operator=(const TGToolTip&);  // not implemented
+   TGToolTip(const TGToolTip&) = delete;
+   TGToolTip& operator=(const TGToolTip&) = delete;
 
 public:
-   TGToolTip(const TGWindow *p = 0, const TGFrame *f = 0, const char *text = 0, Long_t delayms = 350);
+   TGToolTip(const TGWindow *p = nullptr, const TGFrame *f = nullptr, const char *text = nullptr, Long_t delayms = 350);
    TGToolTip(const TGWindow *p, const TBox *b, const char *text, Long_t delayms);
    TGToolTip(const TBox *b, const char *text, Long_t delayms);
    TGToolTip(Int_t x, Int_t y, const char *text, Long_t delayms);
