@@ -293,10 +293,10 @@ hpt->Draw();
 template <typename T>
 class RVec {
    // TODO remove this friendship in 6.26, when fData is removed
-   friend void ROOT::Internal::RDF::SetBranchesHelper<T>(ROOT::Internal::RDF::BoolArrayMap &boolArrays,
-                                                         TTree *inputTree, TTree &outputTree, const std::string &inName,
-                                                         const std::string &outName, TBranch *&branch,
-                                                         void *&branchAddress, RVec<T> *ab);
+   friend void ::ROOT::Internal::RDF::SetBranchesHelper<T>(ROOT::Internal::RDF::BoolArrayMap &boolArrays,
+                                                           TTree *inputTree, TTree &outputTree,
+                                                           const std::string &inName, const std::string &outName,
+                                                           TBranch *&branch, void *&branchAddress, RVec<T> *ab);
 
    // Here we check if T is a bool. This is done in order to decide what type
    // to use as a storage. If T is anything but bool, we use a vector<T, RAdoptAllocator<T>>.
