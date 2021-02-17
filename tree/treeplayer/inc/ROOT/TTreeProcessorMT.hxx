@@ -107,7 +107,10 @@ public:
    TTreeProcessorMT(TTree &tree, UInt_t nThreads = 0u);
 
    void Process(std::function<void(TTreeReader &)> func);
+
+   R__DEPRECATED(6, 26, "Please use SetTasksPerWorkerHint instead. This setting will be ignored.")
    static void SetMaxTasksPerFilePerWorker(unsigned int m);
+   R__DEPRECATED(6, 26, "Please use SetTasksPerWorkerHint and GetTasksPerWorkerHint instead. This setting is ignored.")
    static unsigned int GetMaxTasksPerFilePerWorker();
    static void SetTasksPerWorkerHint(unsigned int m);
    static unsigned int GetTasksPerWorkerHint();
