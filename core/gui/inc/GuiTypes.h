@@ -365,7 +365,7 @@ struct Rectangle_t {
 // Atoms used for text cut and paste between windows
 const Atom_t kPrimarySelection = 1;  // magic values, must match the ones
 const Atom_t kCutBuffer        = 9;  // in /usr/include/X11/Xatom.h
-const Int_t  kMaxPixel         = 2147483647; // Max value for an int
+const Int_t  kMaxPixel         = INT_MAX; // Max value for an int
 
 const int kNumCursors = 19;
 enum ECursor { kBottomLeft, kBottomRight, kTopLeft, kTopRight,
