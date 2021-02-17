@@ -24,9 +24,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GuiTypes.h"
-#include "TGString.h"
 #include "WidgetMessageTypes.h"
-
+#include "TString.h"
 
 //--- Text justification modes
 
@@ -50,7 +49,6 @@ enum EWidgetStatus {
 
 
 class TGWindow;
-
 
 class TGWidget {
 
