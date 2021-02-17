@@ -139,7 +139,7 @@ THREE.OutlinePass = function ( resolution, scene, camera ) {
 
 };
 
-THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype ), {
+THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype), {
 
 	constructor: THREE.OutlinePass,
 
@@ -168,6 +168,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 						}
 					}
 				}
+
 				if (found)
 					break;
 			}
@@ -177,9 +178,9 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 			}
 		}
 		catch (e) {
-			console.log("TREE.OutlinePass.parseAtts ", e);
-		}
-	},
+				console.log("TREE.OutlinePass.parseAtts ", e);
+			}
+		},
 
 	checkForCustomAtts: function(){
 		/*
