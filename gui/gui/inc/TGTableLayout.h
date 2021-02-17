@@ -2,7 +2,7 @@
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
- * Copyright (C) 2001, Brett Viren                                       *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,7 +13,6 @@
 #define ROOT_TGTableLayout
 
 #include "TGLayout.h"
-
 
 // extension of ELayoutHints
 enum ETableLayoutHints {
@@ -35,8 +34,8 @@ enum ETableLayoutHints {
 class TGTableLayoutHints : public TGLayoutHints {
 
 private:
-   TGTableLayoutHints(const TGTableLayoutHints&); // Not implemented
-   TGTableLayoutHints& operator=(const TGTableLayoutHints&); // Not implemented
+   TGTableLayoutHints(const TGTableLayoutHints&) = delete;
+   TGTableLayoutHints& operator=(const TGTableLayoutHints&) = delete;
 
 protected:
    UInt_t fAttachLeft;         // Column/row division number on which
@@ -85,8 +84,8 @@ public:
 class TGTableLayout : public TGLayoutManager {
 
 private:
-   TGTableLayout(const TGTableLayout&); // Not implemented
-   TGTableLayout& operator=(const TGTableLayout&); // Not implemented
+   TGTableLayout(const TGTableLayout&) = delete;
+   TGTableLayout& operator=(const TGTableLayout&) = delete;
 
 protected:
    struct TableData_t {

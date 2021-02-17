@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -141,8 +141,8 @@ public:
 class TGLineLBEntry : public TGTextLBEntry {
 
 private:
-   TGLineLBEntry(const TGLineLBEntry&);  // Not implemented
-   TGLineLBEntry operator=(const TGLineLBEntry&);  // Not implemented
+   TGLineLBEntry(const TGLineLBEntry&) = delete;
+   TGLineLBEntry operator=(const TGLineLBEntry&) = delete;
 
 protected:
    UInt_t      fLineWidth;       // line width
@@ -153,7 +153,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGLineLBEntry(const TGWindow *p = 0, Int_t id = -1, const char *str = 0,
+   TGLineLBEntry(const TGWindow *p = nullptr, Int_t id = -1, const char *str = nullptr,
                      UInt_t w = 0, Style_t s = 0,
                      UInt_t options = kHorizontalFrame,
                      Pixel_t back = GetWhitePixel());
@@ -183,8 +183,8 @@ public:
 class TGIconLBEntry : public TGTextLBEntry {
 
 private:
-   TGIconLBEntry(const TGIconLBEntry&);  // Not implemented
-   TGIconLBEntry operator=(const TGIconLBEntry&);  // Not implemented
+   TGIconLBEntry(const TGIconLBEntry&) = delete;
+   TGIconLBEntry operator=(const TGIconLBEntry&) = delete;
 
 protected:
    const TGPicture *fPicture;    // icon
@@ -192,8 +192,8 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGIconLBEntry(const TGWindow *p = 0, Int_t id = -1, const char *str = 0,
-                 const TGPicture *pic = 0,
+   TGIconLBEntry(const TGWindow *p = nullptr, Int_t id = -1, const char *str = nullptr,
+                 const TGPicture *pic = nullptr,
                  UInt_t w = 0, Style_t s = 0,
                  UInt_t options = kHorizontalFrame,
                  Pixel_t back = GetWhitePixel());
@@ -202,7 +202,7 @@ public:
    virtual TGDimension GetDefaultSize() const
                   { return TGDimension(fTWidth, fTHeight+1); }
    const TGPicture *GetPicture() const { return fPicture; }
-   virtual void  SetPicture(const TGPicture *pic = 0);
+   virtual void  SetPicture(const TGPicture *pic = nullptr);
 
    virtual void  Update(TGLBEntry *e);
    virtual void  DrawCopy(Handle_t id, Int_t x, Int_t y);
@@ -224,8 +224,8 @@ class TGLBContainer : public TGContainer {
 friend class TGListBox;
 
 private:
-   TGLBContainer(const TGLBContainer&);  // Not implemented
-   TGLBContainer operator=(const TGLBContainer&);  // Not implemented
+   TGLBContainer(const TGLBContainer&) = delete;
+   TGLBContainer operator=(const TGLBContainer&) = delete;
 
 protected:
    TGLBEntry      *fLastActive;    // last active listbox entry in single selection listbox
@@ -238,7 +238,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGLBContainer(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGLBContainer(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                  UInt_t options = kSunkenFrame,
                  Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGLBContainer();
@@ -288,8 +288,8 @@ public:
 class TGListBox : public TGCompositeFrame, public TGWidget {
 
 private:
-   TGListBox(const TGListBox&);  // Not implemented
-   TGListBox operator=(const TGListBox&);  // Not implemented
+   TGListBox(const TGListBox&) = delete;
+   TGListBox operator=(const TGListBox&) = delete;
 
 protected:
    UInt_t           fItemVsize;       // maximum height of single entry
@@ -303,7 +303,7 @@ protected:
    virtual void InitListBox();
 
 public:
-   TGListBox(const TGWindow *p = 0, Int_t id = -1,
+   TGListBox(const TGWindow *p = nullptr, Int_t id = -1,
              UInt_t options = kSunkenFrame | kDoubleBorder,
              Pixel_t back = GetWhitePixel());
    virtual ~TGListBox();

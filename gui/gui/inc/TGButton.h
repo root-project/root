@@ -265,8 +265,8 @@ class TGCheckButton : public TGTextButton {
 
 private:
 
-   TGCheckButton(const TGCheckButton&); // Not implemented
-   TGCheckButton& operator=(const TGCheckButton&); // Not implemented
+   TGCheckButton(const TGCheckButton&) = delete;
+   TGCheckButton& operator=(const TGCheckButton&) = delete;
 
 protected:
    EButtonState       fPrevState;     // previous check button state
@@ -322,8 +322,8 @@ public:
 class TGRadioButton : public TGTextButton {
 
 private:
-   TGRadioButton(const TGRadioButton&);
-   TGRadioButton& operator=(const TGRadioButton&);
+   TGRadioButton(const TGRadioButton&) = delete;
+   TGRadioButton& operator=(const TGRadioButton&) = delete;
 
 protected:
    EButtonState       fPrevState;   // previous radio button state
@@ -381,8 +381,8 @@ class TGSplitButton : public TGTextButton {
 friend class TGPopupMenu;
 
 private:
-   TGSplitButton(const TGSplitButton&);            // Not implemented
-   TGSplitButton& operator=(const TGSplitButton&); // Not implemented
+   TGSplitButton(const TGSplitButton&) = delete;
+   TGSplitButton& operator=(const TGSplitButton&) = delete;
 
    void CalcSize();
    void DrawTriangle(const GContext_t gc, Int_t x, Int_t y);

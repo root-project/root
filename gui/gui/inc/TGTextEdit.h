@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -32,8 +32,8 @@ class TGTextEditHist;
 class TGTextEdit : public TGTextView {
 
 private:
-   TGTextEdit(const TGTextEdit&); // Not implemented
-   TGTextEdit& operator=(const TGTextEdit&); // Not implemented
+   TGTextEdit(const TGTextEdit&) = delete;
+   TGTextEdit& operator=(const TGTextEdit&) = delete;
 
 public:
    enum EInsertMode { kInsert, kReplace };

@@ -612,7 +612,7 @@ public:
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 Pixel_t back = GetDefaultFrameBackground());
-   TGGroupFrame(const TGWindow *p = 0, const char *title = 0,
+   TGGroupFrame(const TGWindow *p = nullptr, const char *title = nullptr,
                 UInt_t options = kVerticalFrame,
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
@@ -651,8 +651,8 @@ public:
 
 class TGHeaderFrame : public TGHorizontalFrame {
 private:
-   TGHeaderFrame(const TGHeaderFrame&); // Not implemented
-   TGHeaderFrame& operator=(const TGHeaderFrame&); // Not implemented
+   TGHeaderFrame(const TGHeaderFrame&) = delete;
+   TGHeaderFrame& operator=(const TGHeaderFrame&) = delete;
 
 protected:
    Int_t              fNColumns;     // number of columns
@@ -664,7 +664,7 @@ protected:
    Int_t              fLastButton;   // Indicates the last button clicked if any
 
 public:
-   TGHeaderFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGHeaderFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                  UInt_t options = kChildFrame,
                  Pixel_t back = GetDefaultFrameBackground());
 

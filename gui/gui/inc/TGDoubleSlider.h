@@ -2,7 +2,7 @@
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -72,8 +72,8 @@ enum EDoubleSliderScale {
 class TGDoubleSlider : public TGFrame, public TGWidget {
 
 private:
-   TGDoubleSlider(const TGDoubleSlider&); // Not implemented
-   TGDoubleSlider& operator=(const TGDoubleSlider&); // Not implemented
+   TGDoubleSlider(const TGDoubleSlider&) = delete;
+   TGDoubleSlider& operator=(const TGDoubleSlider&) = delete;
 
 protected:
    Double_t      fPos;           // logical position between fVmin and fVmax

@@ -77,8 +77,8 @@ public:
 class TGSplitFrame : public TGCompositeFrame {
 
 private:
-   TGSplitFrame(const TGSplitFrame&); // Not implemented
-   TGSplitFrame& operator=(const TGSplitFrame&); // Not implemented
+   TGSplitFrame(const TGSplitFrame&) = delete;
+   TGSplitFrame& operator=(const TGSplitFrame&) = delete;
 
 protected:
    TGFrame          *fFrame;       // Pointer to the embedded frame (if any)
@@ -91,11 +91,11 @@ protected:
    Float_t           fHRatio;      // Height ratio between the first child and this
 
 public:
-   TGSplitFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGSplitFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                 UInt_t options = 0);
    virtual ~TGSplitFrame();
 
-   virtual void   AddFrame(TGFrame *f, TGLayoutHints *l = 0);
+   virtual void   AddFrame(TGFrame *f, TGLayoutHints *l = nullptr);
    virtual void   Cleanup();
    virtual Bool_t HandleConfigureNotify(Event_t *);
    virtual void   HSplit(UInt_t h = 0);
