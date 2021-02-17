@@ -12,7 +12,6 @@
 #ifndef ROOT_TGMsgBox
 #define ROOT_TGMsgBox
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TMsgBox                                                              //
@@ -22,10 +21,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
-#include "TGString.h"
-#include "TGPicture.h"
 #include "TGWidget.h"
-
 
 //--- Icon types
 
