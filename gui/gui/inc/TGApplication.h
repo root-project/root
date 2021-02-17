@@ -2,7 +2,7 @@
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
- * Copyright (C) 2001, Guy Barrand.                                      *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

@@ -21,20 +21,17 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
-#include "TMap.h"
-
 
 class TGButton;
-
-
+class TMap;
 
 class TGButtonGroup : public TGGroupFrame {
 
 friend class TGButton;
 
 private:
-   TGButtonGroup(const TGButtonGroup&); // Not implemented
-   TGButtonGroup& operator=(const TGButtonGroup&); // Not implemented
+   TGButtonGroup(const TGButtonGroup&) = delete;
+   TGButtonGroup& operator=(const TGButtonGroup&) = delete;
 
 protected:
    Bool_t  fState;           // kTRUE if group is enabled
@@ -76,7 +73,7 @@ public:
    Bool_t IsExclusive() const { return fExclGroup; }
    Bool_t IsRadioButtonExclusive() const  { return fRadioExcl; }
    Bool_t IsBorderDrawn() const { return fDrawBorder; }
-   Int_t  GetCount() const { return fMapOfButtons->GetSize(); }
+   Int_t  GetCount() const;
    Int_t  GetId(TGButton *button) const;
 
    virtual void SetExclusive(Bool_t flag = kTRUE);
