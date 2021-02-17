@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -40,7 +40,7 @@ private:
    void CreateMenu(TObject *object);
 
 public:
-   TRootContextMenu(TContextMenu *c = 0, const char *name = "ROOT Context Menu");
+   TRootContextMenu(TContextMenu *c = nullptr, const char *name = "ROOT Context Menu");
    virtual ~TRootContextMenu();
 
    virtual void   DisplayPopup(Int_t x, Int_t y);
@@ -58,8 +58,8 @@ public:
 
 protected:
    TGPopupMenu * FindHierarchy(const char *commentstring, TString &last_component);
-   void AddEntrySorted(TGPopupMenu *current, const char *s, Int_t id, void *ud = 0,
-                       const TGPicture *p = 0, Bool_t sorted = kTRUE);
+   void AddEntrySorted(TGPopupMenu *current, const char *s, Int_t id, void *ud = nullptr,
+                       const TGPicture *p = nullptr, Bool_t sorted = kTRUE);
 
    ClassDef(TRootContextMenu,0)  //ROOT native GUI context sensitive popup menu
 };
