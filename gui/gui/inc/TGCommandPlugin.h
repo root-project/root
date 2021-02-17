@@ -1,8 +1,24 @@
 // @(#)root/gui:$Id$
 // Author: Bertrand Bellenot   26/09/2007
 
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TGCommandPlugin
 #define ROOT_TGCommandPlugin
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGCommandPlugin                                                      //
+//                                                                      //
+// Class used to redirect command line input/output.                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 
@@ -26,6 +42,7 @@ protected:
    TGTextBuffer      *fCommandBuf;        // command text buffer
    TGTextView        *fStatus;            // output capture view
    TTimer            *fTimer;             // for local/remote update
+   TString           fTempString;         // temporary command string
 
 public:
 
@@ -35,7 +52,9 @@ public:
    void           CheckRemote(const char * /*str*/);
    void           HandleArrows(Int_t keysym);
    void           HandleCommand();
-   Bool_t         GetHistAdd() const { return fHistAdd; }
+   void           HandleTab();
+   void           HandleTextChanged(const char *);
+   Bool_t         GetHistAdd() { return fHistAdd; }
    void           SetHistAdd(Bool_t add = kTRUE) { fHistAdd = add; }
 
    virtual Bool_t HandleTimer(TTimer *t);

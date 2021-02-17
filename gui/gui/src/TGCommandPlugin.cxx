@@ -1,6 +1,22 @@
 // @(#)root/gui:$Id$
 // Author: Bertrand Bellenot   26/09/2007
 
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGCommandPlugin                                                      //
+//                                                                      //
+// Class used to redirect command line input/output.                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TRint.h"
@@ -17,13 +33,8 @@
 #include "KeySymbols.h"
 
 #include "TGCommandPlugin.h"
-
-//_____________________________________________________________________________
-//
-// TGCommandPlugin
-//
-// Class used to redirect command line input/output.
-//_____________________________________________________________________________
+#include <vector>
+#include <string>
 
 ClassImp(TGCommandPlugin);
 
@@ -36,11 +47,10 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
    SetCleanup(kDeepCleanup);
    fHistAdd = kFALSE;
    fPos = 0;
+   fTempString = "";
    fHf = new TGHorizontalFrame(this, 100, 20);
    fComboCmd   = new TGComboBox(fHf, "", 1);
    fCommand    = fComboCmd->GetTextEntry();
-   fCommand->Connect("CursorOutUp()", "TGCommandPlugin", this, "HandleArrows(=kKey_Up)");
-   fCommand->Connect("CursorOutDown()", "TGCommandPlugin", this, "HandleArrows(=kKey_Down)");
    fCommandBuf = fCommand->GetBuffer();
    fComboCmd->Resize(200, fCommand->GetDefaultHeight());
    fHf->AddFrame(fComboCmd, new TGLayoutHints(kLHintsCenterY |
@@ -52,6 +62,14 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
             kLHintsExpandX, 3, 3, 3, 3));
    fCommand->Connect("ReturnPressed()", "TGCommandPlugin", this,
                      "HandleCommand()");
+   fCommand->Connect("CursorOutUp()", "TGCommandPlugin", this,
+                     "HandleArrows(=kKey_Up)");
+   fCommand->Connect("CursorOutDown()", "TGCommandPlugin", this,
+                     "HandleArrows(=kKey_Down)");
+   fCommand->Connect("TabPressed()", "TGCommandPlugin", this,
+                     "HandleTab()");
+   fCommand->Connect("TextChanged(const char *)", "TGCommandPlugin", this,
+                     "HandleTextChanged(const char *)");
    fStatus = new TGTextView(this, 10, 100, 1);
    if (gClient->GetStyle() < 2) {
       Pixel_t pxl;
@@ -105,6 +123,10 @@ TGCommandPlugin::~TGCommandPlugin()
                                      gSystem->TempDirectory(), fPid);
    gSystem->Unlink(pathtmp);
    fCommand->Disconnect("ReturnPressed()");
+   fCommand->Disconnect("CursorOutUp()");
+   fCommand->Disconnect("CursorOutDown()");
+   fCommand->Disconnect("TabPressed()");
+   fCommand->Disconnect("TextChanged(const char *)");
    delete fTimer;
    fTimer = 0;
    Cleanup();
@@ -138,7 +160,7 @@ void TGCommandPlugin::CheckRemote(const char * /*str*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Handle the 'up' and 'down' arrow keys event.
+/// Handle the 'up' and 'down' arrow key events.
 
 void TGCommandPlugin::HandleArrows(Int_t keysym)
 {
@@ -153,9 +175,16 @@ void TGCommandPlugin::HandleArrows(Int_t keysym)
       default:
          break;
    }
-   TGTextLBEntry *te = (TGTextLBEntry *)fComboCmd->GetListBox()->GetEntry(entries-fPos);
-   if (te) {
-      fCommand->SetText(te->GetText()->GetString());
+   if (fPos > 0) {
+      TGTextLBEntry *te = (TGTextLBEntry *)fComboCmd->GetListBox()->GetEntry(entries-fPos);
+      if (te) {
+         fCommand->SetText(te->GetText()->GetString(), kFALSE);
+      }
+   } else {
+      if (fTempString.Length() > 0)
+         fCommand->SetText(fTempString.Data(), kFALSE);
+      else
+         fCommand->Clear();
    }
 }
 
@@ -191,7 +220,38 @@ void TGCommandPlugin::HandleCommand()
       fStatus->ShowBottom();
       CheckRemote(string);
       fCommand->Clear();
+      fTempString.Clear();
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Handle the 'TAB' key events.
+
+void TGCommandPlugin::HandleTab()
+{
+   std::string prompt = gInterpreter->GetPrompt();
+   std::string line = fCommandBuf->GetString();
+   if (prompt.find("root") == std::string::npos)
+      prompt = "root []";
+   prompt += " ";
+   prompt += line;
+   fStatus->AddLine(prompt.c_str());
+   fStatus->ShowBottom();
+   std::vector<std::string> result;
+   size_t cur = line.length();
+   gInterpreter->CodeComplete(line, cur, result);
+   for (auto& res : result) {
+      fStatus->AddLine(res.c_str());
+      fStatus->ShowBottom();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Handle the text changed events.
+
+void TGCommandPlugin::HandleTextChanged(const char *text)
+{
+   fTempString = text;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
