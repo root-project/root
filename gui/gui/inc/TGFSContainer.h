@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -66,10 +66,10 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGFileItem(const TGWindow *p = 0,
-              const TGPicture *bpic = 0, const TGPicture *blpic = 0,
-              const TGPicture *spic = 0, const TGPicture *slpic = 0,
-              TGString *name = 0, Int_t type = 0, Long64_t size = 1,
+   TGFileItem(const TGWindow *p = nullptr,
+              const TGPicture *bpic = nullptr, const TGPicture *blpic = nullptr,
+              const TGPicture *spic = nullptr, const TGPicture *slpic = nullptr,
+              TGString *name = nullptr, Int_t type = 0, Long64_t size = 1,
               Int_t uid = 0, Int_t gid = 0, Long_t modtime = 0,
               EListViewMode viewMode = kLVList, UInt_t options = kVerticalFrame,
               Pixel_t back = GetWhitePixel());
@@ -146,7 +146,7 @@ protected:
    void CreateFileList();
 
 public:
-   TGFileContainer(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGFileContainer(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                    UInt_t options = kSunkenFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    TGFileContainer(TGCanvas *p, UInt_t options = kSunkenFrame,
@@ -158,9 +158,9 @@ public:
    void StopRefreshTimer();
    void StartRefreshTimer(ULong_t msec=1000);
 
-   virtual TGFileItem *AddFile(const char *name, const TGPicture *pic = 0, const TGPicture *lpic = 0);
-   virtual TGFileItem *AddRemoteFile(TObject *obj, const TGPicture *ipic = 0, const TGPicture *ilpic = 0);
-   virtual void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
+   virtual TGFileItem *AddFile(const char *name, const TGPicture *pic = nullptr, const TGPicture *lpic = nullptr);
+   virtual TGFileItem *AddRemoteFile(TObject *obj, const TGPicture *ipic = nullptr, const TGPicture *ilpic = nullptr);
+   virtual void AddFrame(TGFrame *f, TGLayoutHints *l = nullptr);
    virtual void Sort(EFSSortMode sortType);
    virtual void SetFilter(const char *filter);
    virtual void ChangeDirectory(const char *path);

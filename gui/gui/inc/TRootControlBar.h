@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -38,7 +38,7 @@ private:
    UInt_t          fBwidth;  // button width in pixels
 
 public:
-   TRootControlBar(TControlBar *c = 0, const char *title = "ROOT Control Bar",
+   TRootControlBar(TControlBar *c = nullptr, const char *title = "ROOT Control Bar",
                    Int_t x = -999, Int_t y = -999);
    virtual ~TRootControlBar();
 
