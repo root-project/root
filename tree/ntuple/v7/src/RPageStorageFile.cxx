@@ -42,7 +42,7 @@
 #include <thread>
 #include <queue>
 
-ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, std::string_view path,
+ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName,
    const RNTupleWriteOptions &options)
    : RPageSink(ntupleName, options)
    , fMetrics("RPageSinkRoot")
@@ -50,7 +50,13 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
 {
    R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
+}
 
+
+ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, std::string_view path,
+   const RNTupleWriteOptions &options)
+   : RPageSinkFile(ntupleName, options)
+{
    fWriter = std::unique_ptr<Internal::RNTupleFileWriter>(Internal::RNTupleFileWriter::Recreate(
       ntupleName, path, options.GetCompression(), options.GetContainerFormat()));
 }
@@ -58,25 +64,16 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
 
 ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TFile &file,
    const RNTupleWriteOptions &options)
-   : RPageSink(ntupleName, options)
-   , fMetrics("RPageSinkRoot")
-   , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
+   : RPageSinkFile(ntupleName, options)
 {
-   R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. " <<
-      "Do not store real data with this version of RNTuple!";
-
    fWriter = std::unique_ptr<Internal::RNTupleFileWriter>(Internal::RNTupleFileWriter::Append(ntupleName, file));
 }
 
 
 ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, std::string_view path,
    const RNTupleWriteOptions &options, std::unique_ptr<TFile> &file)
-   : RPageSink(ntupleName, options)
-   , fMetrics("RPageSinkRoot")
-   , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
+   : RPageSinkFile(ntupleName, options)
 {
-   R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. " <<
-      "Do not store real data with this version of RNTuple!";
    fWriter = std::unique_ptr<Internal::RNTupleFileWriter>(
       Internal::RNTupleFileWriter::Recreate(ntupleName, path, file));
 }
