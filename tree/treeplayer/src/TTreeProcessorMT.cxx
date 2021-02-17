@@ -575,8 +575,9 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    const std::vector<std::vector<std::string>> &friendFileNames = fFriendInfo.fFriendFileNames;
 
    // compute number of tasks per file
-   const unsigned int maxTasksPerFile = std::ceil(float(GetTasksPerWorkerHint()*fPool.GetPoolSize())/float(fFileNames.size()));
-   
+   const unsigned int maxTasksPerFile =
+      std::ceil(float(GetTasksPerWorkerHint() * fPool.GetPoolSize()) / float(fFileNames.size()));
+
    // If an entry list or friend trees are present, we need to generate clusters with global entry numbers,
    // so we do it here for all files.
    // Otherwise we can do it later, concurrently for each file, and clusters will contain local entry numbers.
