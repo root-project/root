@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
- * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -123,11 +123,11 @@ protected:
    Int_t          fNumChunks;    // Number of chunks actually used in following array.
    LayoutChunk_t *fChunks;       // Array of chunks. The actual size will be maxChunks.
 
-   TGTextLayout(const TGTextLayout &tlayout);     // not implemented
-   void operator=(const TGTextLayout &tlayout);   // not implemented
+   TGTextLayout(const TGTextLayout &tlayout) = delete;
+   void operator=(const TGTextLayout &tlayout) = delete;
 
 public:
-   TGTextLayout(): fFont(NULL), fString(""), fWidth(0), fNumChunks(0), fChunks(NULL) {}
+   TGTextLayout(): fFont(nullptr), fString(""), fWidth(0), fNumChunks(0), fChunks(NULL) {}
    virtual ~TGTextLayout();
 
    void   DrawText(Drawable_t dst, GContext_t gc, Int_t x, Int_t y,
@@ -180,8 +180,8 @@ protected:
       }
    }
 
-   TGFont(const TGFont &font);           // not implemented
-   void operator=(const TGFont &font);   // not implemented
+   TGFont(const TGFont &) = delete;
+   void operator=(const TGFont &) = delete;
 
    LayoutChunk_t *NewChunk(TGTextLayout *layout, int *maxPtr,
                            const char *start, int numChars,
@@ -230,8 +230,8 @@ private:
    THashTable    *fUidTable;   // Hash table for some used string values like family names, etc.
    THashTable    *fNamedTable; // Map a name to a set of attributes for a font
 
-   TGFontPool(const TGFontPool& fp);             // not implemented
-   TGFontPool& operator=(const TGFontPool& fp);  // not implemented
+   TGFontPool(const TGFontPool& fp) = delete;
+   TGFontPool& operator=(const TGFontPool& fp) = delete;
 
 protected:
    const char *GetUid(const char *string);

@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -35,11 +35,11 @@ protected:
    const TGPicture *fSplitterPic; // picture to draw splitter
 
 private:
-   TGSplitter(const TGSplitter&);             // not implemented
-   TGSplitter& operator=(const TGSplitter&);  // not implemented
+   TGSplitter(const TGSplitter&) = delete;
+   TGSplitter& operator=(const TGSplitter&) = delete;
 
 public:
-   TGSplitter(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 4,
+   TGSplitter(const TGWindow *p = nullptr, UInt_t w = 2, UInt_t h = 4,
               UInt_t options = kChildFrame,
               Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGSplitter() { }
@@ -63,8 +63,8 @@ public:
 class TGVSplitter : public TGSplitter {
 
 private:
-   TGVSplitter(const TGVSplitter&);             // not implemented
-   TGVSplitter& operator=(const TGVSplitter&);  // not implemented
+   TGVSplitter(const TGVSplitter&) = delete;
+   TGVSplitter& operator=(const TGVSplitter&) = delete;
 
 protected:
    Int_t       fStartX;         // x position when dragging starts
@@ -76,7 +76,7 @@ protected:
    Bool_t      fLeft;           // true if frame is on the left of splitter
 
 public:
-   TGVSplitter(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 4,
+   TGVSplitter(const TGWindow *p = nullptr, UInt_t w = 4, UInt_t h = 4,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external);
@@ -100,8 +100,8 @@ public:
 class TGHSplitter : public TGSplitter {
 
 private:
-   TGHSplitter(const TGHSplitter&);             // not implemented
-   TGHSplitter& operator=(const TGHSplitter&);  // not implemented
+   TGHSplitter(const TGHSplitter&) = delete;
+   TGHSplitter& operator=(const TGHSplitter&) = delete;
 
 protected:
    Int_t       fStartY;         // y position when dragging starts
@@ -113,7 +113,7 @@ protected:
    Bool_t      fAbove;          // true if frame is above the splitter
 
 public:
-   TGHSplitter(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 4,
+   TGHSplitter(const TGWindow *p = nullptr, UInt_t w = 4, UInt_t h = 4,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external);
@@ -135,8 +135,12 @@ public:
 
 class TGVFileSplitter : public TGVSplitter {
 
+private:
+   TGVFileSplitter(const TGVFileSplitter&) = delete;
+   TGVFileSplitter& operator=(const TGVFileSplitter&) = delete;
+
 public:
-   TGVFileSplitter(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 4,
+   TGVFileSplitter(const TGWindow *p = nullptr, UInt_t w = 4, UInt_t h = 4,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGVFileSplitter();

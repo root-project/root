@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -45,8 +45,8 @@ class TGListTreeItem
    friend class TGListTree;
 
 private:
-   TGListTreeItem(const TGListTreeItem&);             // not implemented
-   TGListTreeItem& operator=(const TGListTreeItem&);  // not implemented
+   TGListTreeItem(const TGListTreeItem&) = delete;
+   TGListTreeItem& operator=(const TGListTreeItem&) = delete;
 
 protected:
    TGClient        *fClient;       // pointer to TGClient
@@ -156,12 +156,12 @@ private:
    Bool_t           fHasColor;     // true if item has assigned color
    Color_t          fColor;        // item's color
 
-   TGListTreeItemStd(const TGListTreeItemStd&);             // not implemented
-   TGListTreeItemStd& operator=(const TGListTreeItemStd&);  // not implemented
+   TGListTreeItemStd(const TGListTreeItemStd&) = delete;
+   TGListTreeItemStd& operator=(const TGListTreeItemStd&) = delete;
 
 public:
-   TGListTreeItemStd(TGClient *fClient = gClient, const char *name = 0,
-                     const TGPicture *opened = 0, const TGPicture *closed = 0,
+   TGListTreeItemStd(TGClient *fClient = gClient, const char *name = nullptr,
+                     const TGPicture *opened = nullptr, const TGPicture *closed = nullptr,
                      Bool_t checkbox = kFALSE);
    virtual ~TGListTreeItemStd();
 
@@ -315,11 +315,11 @@ protected:
    void KeyPressed(TGFrame *, UInt_t /*keysym*/, UInt_t /*mask*/) { }
 
 private:
-   TGListTree(const TGListTree&);               // not implemented
-   TGListTree& operator=(const TGListTree&);    // not implemented
+   TGListTree(const TGListTree&) = delete;
+   TGListTree& operator=(const TGListTree&) = delete;
 
 public:
-   TGListTree(TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGListTree(TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
               UInt_t options = 0, Pixel_t back = GetWhitePixel());
    TGListTree(TGCanvas *p, UInt_t options, Pixel_t back = GetWhitePixel());
 

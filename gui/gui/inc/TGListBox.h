@@ -96,14 +96,14 @@ protected:
    static TGGC         *fgDefaultGC;
 
 private:
-   TGTextLBEntry(const TGTextLBEntry &);            // not implemented
-   TGTextLBEntry &operator=(const TGTextLBEntry &); // not implemented
+   TGTextLBEntry(const TGTextLBEntry &) = delete;
+   TGTextLBEntry &operator=(const TGTextLBEntry &) = delete;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
 
-   TGTextLBEntry(const TGWindow *p = 0, TGString *s = 0, Int_t id = -1,
+   TGTextLBEntry(const TGWindow *p = nullptr, TGString *s = nullptr, Int_t id = -1,
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t options = kHorizontalFrame,

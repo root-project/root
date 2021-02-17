@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -31,8 +31,8 @@ class TGStatusBar : public TGHorizontalFrame {
 friend class TGStatusBarPart;
 
 private:
-   TGStatusBar(const TGStatusBar&);            // not implemented
-   TGStatusBar& operator=(const TGStatusBar&); // not implemented
+   TGStatusBar(const TGStatusBar&) = delete;
+   TGStatusBar& operator=(const TGStatusBar&) = delete;
 
 protected:
    TGStatusBarPart **fStatusPart; // frames containing statusbar text
@@ -51,7 +51,7 @@ protected:
    static const TGGC   &GetDefaultGC();
 
 public:
-   TGStatusBar(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 2,
+   TGStatusBar(const TGWindow *p = nullptr, UInt_t w = 4, UInt_t h = 2,
                UInt_t options = kSunkenFrame | kHorizontalFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGStatusBar();
