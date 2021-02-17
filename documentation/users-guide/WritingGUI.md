@@ -1233,8 +1233,8 @@ by the emitted signal argument. The second line would be ok, the
 argument passed by value would not be overwritten.
 
 ``` {.cpp}
-Connect(myComboBox, "Selected(const char*)", "TH1", hist, "Draw(=\"LEGO\")");
-Connect(myComboBox, "Selected(const char*)", "TH1", hist, "Draw(const char*, =\"LEGO\")");
+Connect(myComboBox, "Selected(const char*)", "TTree", myTree, "Draw(=\"x\")");
+Connect(myComboBox, "Selected(const char*)", "TTree", myTree, "Draw(const char*, =\" y==1 \")");
 ```
 
 In addition, if the signal and slot arguments differ in argument type,
