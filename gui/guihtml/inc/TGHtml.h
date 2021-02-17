@@ -2,7 +2,7 @@
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2001, Rene Brun, Fons Rademakers and Reiner Rohlfs *
+ * Copyright (C) 1995-2021, Rene Brun, Fons Rademakers and Reiner Rohlfs *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -284,8 +284,8 @@ public:
 
 class TGHtmlTextElement : public TGHtmlElement {
 private:
-   TGHtmlTextElement(const TGHtmlTextElement&);            // Not implemented.
-   TGHtmlTextElement &operator=(const TGHtmlTextElement&); // Not implemented.
+   TGHtmlTextElement(const TGHtmlTextElement&) = delete;
+   TGHtmlTextElement &operator=(const TGHtmlTextElement&) = delete;
 
 public:
    TGHtmlTextElement(int size);
@@ -505,8 +505,8 @@ class TGHtmlImageMarkup;
 
 class TGHtmlImage : public TObject {
 private:
-   TGHtmlImage(const TGHtmlImage&);            // Not implemented.
-   TGHtmlImage &operator=(const TGHtmlImage&); // Not implemented.
+   TGHtmlImage(const TGHtmlImage&) = delete;
+   TGHtmlImage &operator=(const TGHtmlImage&) = delete;
 
 public:
    TGHtmlImage(TGHtml *htm, const char *url, const char *width,

@@ -41,6 +41,7 @@
 #include "TObjString.h"
 #include "TGIdleHandler.h"
 #include "TImage.h"
+#include "TTimer.h"
 #include "TGTextEntry.h"
 #include "TGText.h"
 #include "TGComboBox.h"

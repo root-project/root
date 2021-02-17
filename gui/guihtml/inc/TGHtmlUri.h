@@ -54,11 +54,11 @@
 
 class TGHtmlUri : public TObject {
 private:
-   TGHtmlUri(const TGHtmlUri&);            // Not implemented.
-   TGHtmlUri &operator=(const TGHtmlUri&); // Not implemented.
+   TGHtmlUri(const TGHtmlUri&) = delete;
+   TGHtmlUri &operator=(const TGHtmlUri&) = delete;
 
 public:
-   TGHtmlUri(const char *zUri = 0);
+   TGHtmlUri(const char *zUri = nullptr);
    TGHtmlUri(const TGHtmlUri *uri);
    virtual ~TGHtmlUri();
 
