@@ -2,7 +2,7 @@
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -35,14 +35,13 @@ class TGTabElement;
 class TVirtualPad;
 class TGedFrame;
 class TGedNameFrame;
-
 class TGedTabInfo;
 
 class TGedEditor : public TVirtualPadEditor, public TGMainFrame
 {
 private:
-   TGedEditor(const TGedEditor&);            // Not implemented
-   TGedEditor& operator=(const TGedEditor&); // Not implemented
+   TGedEditor(const TGedEditor&) = delete;
+   TGedEditor& operator=(const TGedEditor&) = delete;
 
 protected:
    TMap              fFrameMap;         //global map of available frames
@@ -69,7 +68,7 @@ protected:
    static TGedEditor *fgFrameCreator;
 
 public:
-   TGedEditor(TCanvas* canvas = 0, UInt_t width = 175, UInt_t height = 20);
+   TGedEditor(TCanvas* canvas = nullptr, UInt_t width = 175, UInt_t height = 20);
    virtual ~TGedEditor();
 
    void          PrintFrameStat();
