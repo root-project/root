@@ -2,7 +2,7 @@
 // Author: G. Ganis   10/10/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -50,12 +50,12 @@ private:
    FILE        *fLogFileRead;
 
 private:
-   TGRedirectOutputGuard(const TGRedirectOutputGuard&);            // Not implemented.
-   TGRedirectOutputGuard &operator=(const TGRedirectOutputGuard&); // Not implemented.
+   TGRedirectOutputGuard(const TGRedirectOutputGuard&) = delete;
+   TGRedirectOutputGuard &operator=(const TGRedirectOutputGuard&) = delete;
 
 public:
    TGRedirectOutputGuard(TGTextView *tv,
-                         const char *flog = 0, const char *mode = "a");
+                         const char *flog = nullptr, const char *mode = "a");
    virtual ~TGRedirectOutputGuard();
 
    void Update(); // Update window with file content
