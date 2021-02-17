@@ -68,6 +68,7 @@ private:
    std::uint64_t fClusterMaxOffset = 0;
    /// Helper for zipping keys and header / footer; comprises a 16MB zip buffer
    RNTupleCompressor fCompressor;
+   RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
 protected:
    void CreateImpl(const RNTupleModel &model) final;
