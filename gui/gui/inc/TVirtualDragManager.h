@@ -1,8 +1,8 @@
-// $Id: TVirtualDragManager.h,v 1.1 2004/09/08 16:03:57 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -59,7 +59,7 @@ public:
    virtual void      SetSource(TGFrame *f) { fSource = f; }
    virtual void      SetPasteFrame(TGFrame *f) { fPasteFrame = f; }
 
-   virtual Bool_t    StartDrag(TGFrame * = 0, Int_t = 0, Int_t = 0) { return kFALSE; }
+   virtual Bool_t    StartDrag(TGFrame * = nullptr, Int_t = 0, Int_t = 0) { return kFALSE; }
    virtual Bool_t    EndDrag() { return kFALSE; }
    virtual Bool_t    Drop() { return kFALSE; }
    virtual Bool_t    Cancel(Bool_t = kTRUE) { return kFALSE; }
