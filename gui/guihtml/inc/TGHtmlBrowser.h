@@ -2,7 +2,7 @@
 // Author: Bertrand Bellenot   26/09/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -55,9 +55,9 @@ protected:
    Int_t              fNbFavorites;       // number of favorites in the menu
 
 public:
-   TGHtmlBrowser(const char *filename = 0, const TGWindow *p = 0,
+   TGHtmlBrowser(const char *filename = nullptr, const TGWindow *p = nullptr,
                  UInt_t w = 900, UInt_t h = 600);
-   virtual ~TGHtmlBrowser() { ; }
+   virtual ~TGHtmlBrowser() {}
 
    virtual Bool_t    ProcessMessage(Long_t msg, Long_t parm1, Long_t);
    void              Selected(const char *txt);
