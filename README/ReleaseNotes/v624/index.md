@@ -85,9 +85,7 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 ## Math Libraries
 
 - Update the definitions of the physical constants using the recommended 2018 values from NIST.
- - Use also the new SI definition of base units from 2019, where the Planck constant, the Boltzman constant , the elementary electric charge and the Avogadro constant are exact numerical values. See
- <https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units>. Note that with this new definition the functions `TMath::HUncertainty()`, `TMath::KUncertainty()`,
- `TMath::QeUncertainty()` and `TMath::NaUncertainty()` all return a  `0.0` value.
+- Use also the new SI definition of base units from 2019, where the Planck constant, the Boltzmann constant, the elementary electric charge and the Avogadro constant are exact numerical values. See <https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units>. Note that with this new definition the functions `TMath::HUncertainty()`, `TMath::KUncertainty()`, `TMath::QeUncertainty()` and `TMath::NaUncertainty()` all return a  `0.0` value.
 - Due to some planned major improvements to `RVec`, the layout of `RVec` objects will change in a backward-incompatible way between v6.24 and v6.26.
   Because of this, we now print a warning if an application is reading or writing a `ROOT::RVec` object from/to a ROOT file. We assume this is an
   exceedingly rare case, as the ROOT interface typically used to manipulate `RVec`s is `RDataFrame`, and `RDataFrame` performs an on-the-fly
@@ -110,7 +108,7 @@ For details, see the RooFit tutorial [rf612_recoverFromInvalidParameters.C](http
 
 ## 2D Graphics Libraries
 
-- Add the method `AddPoint`to `TGraph(x,y)` and `TGraph2D(x,y,z)`. equivalent to `SetPoint(g->GetN(),x,y)`and `SetPoint(g->GetN(),x,y,z)`
+- Add the method `AddPoint`to `TGraph(x,y)` and `TGraph2D(x,y,z)`, equivalent to `SetPoint(g->GetN(),x,y)`and `SetPoint(g->GetN(),x,y,z)`
 - Option `E0` draws error bars and markers are drawn for bins with 0 contents. Now, combined
   with options E1 and E2, it avoids error bars clipping.
 
