@@ -37,7 +37,8 @@
 enum EFileDialogMode {
    kFDOpen,
    kFDSave,
-   kDSelect
+   kDOpen,
+   kDSave
 };
 
 
@@ -100,6 +101,7 @@ protected:
    TGListView        *fFv;       // file list view
    TGFileContainer   *fFc;       // file list view container (containing the files)
    TGFileInfo        *fFileInfo; // file info passed to this dialog
+   EFileDialogMode fDlgType;     // the dialog type passed
 
 private:
    TGFileDialog(const TGFileDialog&);              // not implemented
