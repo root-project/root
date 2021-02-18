@@ -592,6 +592,11 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                if (e2->GetItemName())
                                   fTbfname->AddText(0, e2->GetItemName()->GetString());
                                fClient->NeedRedraw(fName);
+                               fOk->SetEnabled(kTRUE);
+                            }
+                            else if((e2))
+                            {
+                                fOk->SetEnabled(kFALSE);
                             }
                         }
                      }
@@ -639,7 +644,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            fTbfname->AddText(0, f->GetItemName()->GetString());
                            fClient->NeedRedraw(fName);
                         }
-                     } else {
+                     } else if(fDlgType == kFDOpen || fDlgType == kFDSave){
                         if (!strcmp(fOk->GetTitle(), "Save") && fCheckB &&
                             (!(fCheckB->GetState() == kButtonDown))) {
 
@@ -679,6 +684,9 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          break;
 
       case kC_TEXTENTRY:
+        if((fDlgType==kDOpen || fDlgType==kDSave) && fOk->GetState()==kButtonDisabled)//when typing, re-enable previously disabled button after having clicked on file instead of folder
+            fOk->SetEnabled(kTRUE);
+
          switch (GET_SUBMSG(msg)) {
             case kTE_ENTER:
                // same code as under kIDF_OK
