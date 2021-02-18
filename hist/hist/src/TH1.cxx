@@ -13,6 +13,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cctype>
+#include <climits>
 #include <sstream>
 #include <cmath>
 #include <iostream>
@@ -84,19 +85,19 @@ ROOT supports the following histogram types:
   - 1-D histograms:
       - TH1C : histograms with one byte per channel.   Maximum bin content = 127
       - TH1S : histograms with one short per channel.  Maximum bin content = 32767
-      - TH1I : histograms with one int per channel.    Maximum bin content = 2147483647
+      - TH1I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "1")
       - TH1F : histograms with one float per channel.  Maximum precision 7 digits
       - TH1D : histograms with one double per channel. Maximum precision 14 digits
   - 2-D histograms:
       - TH2C : histograms with one byte per channel.   Maximum bin content = 127
       - TH2S : histograms with one short per channel.  Maximum bin content = 32767
-      - TH2I : histograms with one int per channel.    Maximum bin content = 2147483647
+      - TH2I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "1")
       - TH2F : histograms with one float per channel.  Maximum precision 7 digits
       - TH2D : histograms with one double per channel. Maximum precision 14 digits
   - 3-D histograms:
       - TH3C : histograms with one byte per channel.   Maximum bin content = 127
       - TH3S : histograms with one short per channel.  Maximum bin content = 32767
-      - TH3I : histograms with one int per channel.    Maximum bin content = 2147483647
+      - TH3I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "1")
       - TH3F : histograms with one float per channel.  Maximum precision 7 digits
       - TH3D : histograms with one double per channel. Maximum precision 14 digits
   - Profile histograms: See classes  TProfile, TProfile2D and TProfile3D.
@@ -107,6 +108,8 @@ ROOT supports the following histogram types:
       histogram or scatter-plot; If Y is an unknown (but single-valued)
       approximate function of X, this function is displayed by a profile
       histogram with much better precision than by a scatter-plot.
+
+\anchor intmax 1. INT_MAX = 2147483647
 
 The inheritance hierarchy looks as follows:
 ~~~
@@ -9664,6 +9667,7 @@ TH1S operator/(const TH1S &h1, const TH1S &h2)
 //______________________________________________________________________________
 //                     TH1I methods
 // TH1I : histograms with one int per channel.    Maximum bin content = 2147483647
+// 2147483647 = INT_MAX
 //______________________________________________________________________________
 
 ClassImp(TH1I);
@@ -9736,7 +9740,7 @@ TH1I::TH1I(const TH1I &h1i) : TH1(), TArrayI()
 
 void TH1I::AddBinContent(Int_t bin)
 {
-   if (fArray[bin] < 2147483647) fArray[bin]++;
+   if (fArray[bin] < INT_MAX) fArray[bin]++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9745,9 +9749,9 @@ void TH1I::AddBinContent(Int_t bin)
 void TH1I::AddBinContent(Int_t bin, Double_t w)
 {
    Long64_t newval = fArray[bin] + Long64_t(w);
-   if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Int_t(newval); return;}
-   if (newval < -2147483647) fArray[bin] = -2147483647;
-   if (newval >  2147483647) fArray[bin] =  2147483647;
+   if (newval > -INT_MAX && newval < INT_MAX) {fArray[bin] = Int_t(newval); return;}
+   if (newval < -INT_MAX) fArray[bin] = -INT_MAX;
+   if (newval >  INT_MAX) fArray[bin] =  INT_MAX;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

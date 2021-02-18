@@ -3945,7 +3945,7 @@ TH3I::TH3I(const TH3I &h3i) : TH3(), TArrayI()
 
 void TH3I::AddBinContent(Int_t bin)
 {
-   if (fArray[bin] < 2147483647) fArray[bin]++;
+   if (fArray[bin] < INT_MAX) fArray[bin]++;
 }
 
 
@@ -3955,9 +3955,9 @@ void TH3I::AddBinContent(Int_t bin)
 void TH3I::AddBinContent(Int_t bin, Double_t w)
 {
    Long64_t newval = fArray[bin] + Long64_t(w);
-   if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Int_t(newval); return;}
-   if (newval < -2147483647) fArray[bin] = -2147483647;
-   if (newval >  2147483647) fArray[bin] =  2147483647;
+   if (newval > -INT_MAX && newval < INT_MAX) {fArray[bin] = Int_t(newval); return;}
+   if (newval < -INT_MAX) fArray[bin] = -INT_MAX;
+   if (newval >  INT_MAX) fArray[bin] =  INT_MAX;
 }
 
 
