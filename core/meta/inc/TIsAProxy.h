@@ -36,7 +36,7 @@ private:
    static constexpr UInt_t fgMaxLastSlot = 8;
 
    const std::type_info     *fType;        //Actual typeid of the proxy
-   Atomic_t<TClass*>         fClass;       //Actual TClass
+   TClass                   *fClass;       //Actual TClass
    Char_t                    fSubTypes[72];//map of known sub-types
    mutable Atomic_t<UInt_t>  fSubTypesReaders; //number of readers of fSubTypes
    Atomic_t<Bool_t>          fSubTypesWriteLockTaken; //True if there is a writer

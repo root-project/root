@@ -85,30 +85,29 @@ void TIsAProxy::SetClass(TClass *cl)
 TClass* TIsAProxy::operator()(const void *obj)
 {
    if ( !fInit )  {
-      if ( !fClass.load() && fType ) {
-         auto cls = TClass::GetClass(*fType);
-         TClass* expected = nullptr;
-         fClass.compare_exchange_strong(expected,cls);
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      if ( !fClass && fType ) {
+         fClass = TClass::GetClass(*fType);
       }
-      if ( !fClass.load() ) return nullptr;
+      if ( !fClass ) return nullptr;
       fVirtual = (*fClass).ClassProperty() & kClassHasVirtual;
       fInit = kTRUE;
    }
    if ( !obj || !fVirtual )  {
-      return fClass.load();
+      return fClass;
    }
    // Avoid the case that the first word is a virtual_base_offset_table instead of
    // a virtual_function_table
    Long_t offset = **(Long_t**)obj;
    if ( offset == 0 ) {
-      return fClass.load();
+      return fClass;
    }
 
    DynamicType* ptr = (DynamicType*)obj;
    const std::type_info* typ = &typeid(*ptr);
 
    if ( typ == fType )  {
-     return fClass.load();
+     return fClass;
    }
    for(auto& slot : fLasts) {
       auto last = ToPair(slot);
