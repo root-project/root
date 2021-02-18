@@ -48,7 +48,7 @@ namespace {
 TIsAProxy::TIsAProxy(const std::type_info& typ)
    : fType(&typ), fClass(nullptr),
      fSubTypesReaders(0), fSubTypesWriteLockTaken(kFALSE),
-     fVirtual(kFALSE), fInit(kFALSE)
+     fInit(kFALSE), fVirtual(kFALSE)
 {
    static_assert(sizeof(ClassMap_t)<=sizeof(fSubTypes), "ClassMap size is to large for array");
 
