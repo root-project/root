@@ -1566,7 +1566,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
       RooAbsPdf* pdf = (RooAbsPdf*) term->first() ;
 
       RooAbsReal* partInt = pdf->createIntegral(termISet,termNSet,isetRangeName) ;
-      //partInt->setOperMode(operMode()) ;
+      partInt->setOperMode(operMode()) ;
       partInt->setStringAttribute("PROD_TERM_TYPE","IIIa") ;
 
       isOwned=kTRUE ;
@@ -1591,7 +1591,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
       const std::string name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
       RooAbsReal* partInt = new RooGenProdProj(name.c_str(),name.c_str(),*term,termISet,termNSet,isetRangeName) ;
       partInt->setStringAttribute("PROD_TERM_TYPE","IIIb") ;
-      //partInt->setOperMode(operMode()) ;
+      partInt->setOperMode(operMode()) ;
 
       //cout << "processProductTerm(" << GetName() << ") case IIIb func = " << partInt->GetName() << endl ;
 
@@ -1620,7 +1620,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
     partInt->setExpensiveObjectCache(expensiveObjectCache()) ;
 
     partInt->setStringAttribute("PROD_TERM_TYPE","IVa") ;
-    //partInt->setOperMode(operMode()) ;
+    partInt->setOperMode(operMode()) ;
 
     //cout << "processProductTerm(" << GetName() << ") case IVa func = " << partInt->GetName() << endl ;
 
