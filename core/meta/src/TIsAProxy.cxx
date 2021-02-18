@@ -39,19 +39,22 @@ namespace {
    {
       return (ClassMap_t::value_type*)p;
    }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Standard initializing constructor
 
 TIsAProxy::TIsAProxy(const std::type_info& typ)
-   : fType(&typ), fClass(nullptr), fLast(nullptr),
+   : fType(&typ), fClass(nullptr),
      fSubTypesReaders(0), fSubTypesWriteLockTaken(kFALSE),
      fVirtual(kFALSE), fInit(kFALSE)
 {
    static_assert(sizeof(ClassMap_t)<=sizeof(fSubTypes), "ClassMap size is to large for array");
 
    ::new(fSubTypes) ClassMap_t();
+   for(auto& slot : fLasts)
+      slot = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +75,8 @@ void TIsAProxy::SetClass(TClass *cl)
 {
    GetMap(fSubTypes)->clear();
    fClass = cl;
-   fLast = nullptr;
+   for(auto& slot : fLasts)
+      slot = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,20 +110,30 @@ TClass* TIsAProxy::operator()(const void *obj)
    if ( typ == fType )  {
      return fClass.load();
    }
-   auto last = ToPair(fLast.load());
-   if ( last && typ == last->first )  {
-      return last->second;
+   for(auto& slot : fLasts) {
+      auto last = ToPair(slot);
+      if ( last && typ == last->first )  {
+         return last->second;
+      }
    }
+
    // Check if type is already in sub-class cache
-   last = ToPair(FindSubType(typ));
+   auto last = ToPair(FindSubType(typ));
    if ( last == nullptr || last->second == nullptr )  {
       // Last resort: lookup root class
       auto cls = TClass::GetClass(*typ);
       last = ToPair(CacheSubType(typ,cls));
    }
-   fLast.store(last);
 
-   return last == nullptr? nullptr: last->second;
+   UChar_t next = fNextLastSlot++;
+   if (next >= fgMaxLastSlot) {
+      UChar_t expected_value = next + 1;
+      next = next % fgMaxLastSlot;
+      fNextLastSlot.compare_exchange_strong(expected_value, next + 1);
+   }
+   fLasts[next].store(last);
+
+   return last == nullptr ? nullptr: last->second;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
