@@ -871,7 +871,7 @@ void TProfile3D::LabelsInflate(Option_t *ax)
 ///  - "u" draw labels up (end of label right adjusted)
 ///  - "d" draw labels down (start of label left adjusted)
 
-void TProfile3D::LabelsOption(Option_t */* option */, Option_t * /* ax */)
+void TProfile3D::LabelsOption(Option_t * /* option */, Option_t * /* ax */)
 {
    Error("LabelsOption","Labels option function is not implemented for a TProfile3D");
 }
