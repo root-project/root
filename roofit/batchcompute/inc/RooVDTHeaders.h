@@ -54,7 +54,7 @@ inline double fast_exp(double x) {
 }
 
 inline double fast_log(double x) {
-  return std::exp(x);
+  return std::log(x);
 }
 
 inline double fast_isqrt(double x) {
