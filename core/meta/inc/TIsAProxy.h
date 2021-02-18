@@ -37,13 +37,13 @@ private:
 
    const std::type_info     *fType;        //Actual typeid of the proxy
    TClass                   *fClass;       //Actual TClass
-   Char_t                    fSubTypes[72];//map of known sub-types
-   mutable Atomic_t<UInt_t>  fSubTypesReaders; //number of readers of fSubTypes
+   Atomic_t<void*>           fLasts[fgMaxLastSlot];   // points into fSubTypes map for last used values
+   Char_t                    fSubTypes[72];           //map of known sub-types
+   mutable Atomic_t<UInt_t>  fSubTypesReaders;        //number of readers of fSubTypes
    Atomic_t<Bool_t>          fSubTypesWriteLockTaken; //True if there is a writer
-   Bool_t                    fVirtual;     //Flag if class is virtual
-   Atomic_t<Bool_t>          fInit;        //Initialization flag
-   Atomic_t<void*>           fLasts[fgMaxLastSlot]; // points into fSubTypes map for last used values
-   Atomic_t<UChar_t>         fNextLastSlot;// Next slot in fLasts to use for update (ring buffer)
+   Atomic_t<UChar_t>         fNextLastSlot; // Next slot in fLasts to use for update (ring buffer)
+   Atomic_t<Bool_t>          fInit;         //Initialization flag
+   Bool_t                    fVirtual;      //Flag if class is virtual
 
    void* FindSubType(const std::type_info*) const;
    void* CacheSubType(const std::type_info*, TClass*);
