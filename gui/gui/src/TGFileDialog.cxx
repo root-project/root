@@ -640,7 +640,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            fClient->NeedRedraw(fName);
                         }
                      } else {
-                        if (!strcmp(fOk->GetTitle(), "Save") &&
+                        if (!strcmp(fOk->GetTitle(), "Save") && fCheckB &&
                             (!(fCheckB->GetState() == kButtonDown))) {
 
                            Int_t ret;
@@ -700,7 +700,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      fName->SetText("", kFALSE);
                      return kTRUE;
                   }
-                  else if (!strcmp(fOk->GetTitle(), "Save") &&
+                  else if (!strcmp(fOk->GetTitle(), "Save") && fCheckB
                           (!(fCheckB->GetState() == kButtonDown))) {
                      Int_t ret;
                      txt = TString::Format("File name %s already exists, OK to overwrite it?",
