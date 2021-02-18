@@ -99,6 +99,10 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 When RooFit performs binned fits, it takes the probability density at the bin centre as a proxy for the probability in the bin. This can lead to a bias.
 To alleviate this, the new class [RooBinSamplingPdf](https://root.cern/doc/v624/classRooBinSamplingPdf.html) has been added to RooFit.
 
+### More accurate residual and pull distributions
+When making residual or pull distributions with `RooPlot::residHist` or `RooPlot::pullHist`, the histogram is now compared with the curve's average values within a given bin by default, ensuring that residual and pull distributions are valid for strongly curved distributions.
+The old default behaviour was to interpolate the curve at the bin centres, which can still be enabled by setting the `useAverage` parameter of `RooPlot::residHist` or `RooPlot::pullHist` to `false`.
+
 ### Improved recovery from invalid parameters
 When a function in RooFit is undefined (Poisson with negative mean, PDF with negative values, etc), RooFit can now pass information about the
 "badness" of the violation to the minimiser. The minimiser can use this to compute a gradient to find its way out of the undefined region.
