@@ -5229,8 +5229,14 @@ TBranch* TTree::GetBranch(const char* name)
       return 0;
    }
 
+   // Look for an exact match in the list of top level
+   // branches.
+   TBranch *result = (TBranch*)fBranches.FindObject(name);
+   if (result)
+      return result;
+
    // Search using branches, breadth first.
-   TBranch *result = R__GetBranch(fBranches, name);
+   result = R__GetBranch(fBranches, name);
    if (result)
      return result;
 
