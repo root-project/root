@@ -36,7 +36,8 @@
 
 enum EFileDialogMode {
    kFDOpen,
-   kFDSave
+   kFDSave,
+   kDSelect
 };
 
 
