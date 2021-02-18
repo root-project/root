@@ -249,11 +249,13 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
    : fSink(std::move(sink))
    , fModel(std::move(model))
+   , fMetrics("RNTupleWriter")
    , fClusterSizeEntries(kDefaultClusterSizeEntries)
    , fLastCommitted(0)
    , fNEntries(0)
 {
    fSink->Create(*fModel.get());
+   fMetrics.ObserveMetrics(fSink->GetMetrics());
 }
 
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()

@@ -216,6 +216,7 @@ private:
    std::unique_ptr<Detail::RPageSink> fSink;
    /// Needs to be destructed before fSink
    std::unique_ptr<RNTupleModel> fModel;
+   Detail::RNTupleMetrics fMetrics;
    NTupleSize_t fClusterSizeEntries;
    NTupleSize_t fLastCommitted;
    NTupleSize_t fNEntries;
@@ -248,6 +249,9 @@ public:
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void CommitCluster();
+
+   void EnableMetrics() { fMetrics.Enable(); }
+   const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 };
 
 // clang-format off
