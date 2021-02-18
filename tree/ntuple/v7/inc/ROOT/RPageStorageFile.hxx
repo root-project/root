@@ -58,6 +58,11 @@ public:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
 
 private:
+   /// I/O performance counters that get registered in fMetrics
+   struct RCounters {
+      RNTupleAtomicCounter &fNPageCommitted;
+   };
+   std::unique_ptr<RCounters> fCounters;
    RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 

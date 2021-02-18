@@ -50,6 +50,9 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
 {
    R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
+   fCounters = std::unique_ptr<RCounters>(new RCounters{
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageCommitted", "", "number of pages committed to storage")
+   });
 }
 
 
@@ -133,6 +136,7 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnH
    RClusterDescriptor::RLocator result;
    result.fPosition = offsetData;
    result.fBytesOnStorage = zippedBytes;
+   fCounters->fNPageCommitted.Inc();
    return result;
 }
 
