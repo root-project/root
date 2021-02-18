@@ -49,7 +49,7 @@ inline double _rf_fast_exp(double x) {
 }
 
 inline double _rf_fast_log(double x) {
-  return std::exp(x);
+  return std::log(x);
 }
 
 inline double _rf_fast_isqrt(double x) {
