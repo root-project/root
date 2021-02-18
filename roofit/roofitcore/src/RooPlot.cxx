@@ -1133,6 +1133,8 @@ Double_t RooPlot::chiSquare(const char* curvename, const char* histname, int nFi
 /// to curve 'curvename'. If normalize is true, the residuals are divided by the error
 /// of the histogram, effectively returning a pull histogram.
 /// The plotting range of the graph is adapted to the plotting range of the current plot.
+/// If `useAverage` is true, the histogram is compared with the curve's average values within a given bin.
+/// Otherwise, the curve is interpolated at the bin centres, which is not accurate for curved distributions.
 RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool normalize, bool useAverage) const
 {
   // Find curve object
