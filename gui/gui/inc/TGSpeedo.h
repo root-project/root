@@ -82,6 +82,7 @@ public:
 
    const TGPicture     *GetPicture() const { return fBase; }
    TImage              *GetImage() const { return fImage; }
+   Int_t                GetOdoVal() const { return fCounter; }
    Float_t              GetPeakVal() const { return fPeakVal; }
    Float_t              GetScaleMin() const { return fScaleMin; }
    Float_t              GetScaleMax() const { return fScaleMax; }
