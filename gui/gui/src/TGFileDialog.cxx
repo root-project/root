@@ -641,7 +641,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         }
                         if (fDlgType == kDOpen || fDlgType == kDSave) {
                            fTbfname->Clear();
-                           fTbfname->AddText(0, f->GetItemName()->GetString());
+                           fTbfname->AddText(0, fFc->GetDirectory());
                            fClient->NeedRedraw(fName);
                         }
                      } else if(fDlgType == kFDOpen || fDlgType == kFDSave){
