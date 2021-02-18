@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Rtypes.h"
+#include <limits>
 
 // Basic GUI types
 typedef ULong_t            Handle_t;     //Generic resource handle
@@ -98,7 +99,7 @@ struct SetWindowAttributes_t {
    Int_t      fBitGravity;           // one of bit gravity values
    Int_t      fWinGravity;           // one of the window gravity values
    Int_t      fBackingStore;         // kNotUseful, kWhenMapped, kAlways
-   ULong_t    fBackingPlanes;        // planes to be preseved if possible
+   ULong_t    fBackingPlanes;        // planes to be preserved if possible
    ULong_t    fBackingPixel;         // value to use in restoring planes
    Bool_t     fSaveUnder;            // should bits under be saved (popups)?
    Long_t     fEventMask;            // set of events that should be saved
@@ -173,7 +174,7 @@ const Mask_t kColormapChangeMask  = BIT(12);
 struct Event_t {
    EGEventType fType;              // of event (see EGEventType)
    Window_t    fWindow;            // window reported event is relative to
-   Time_t      fTime;              // time event event occured in ms
+   Time_t      fTime;              // time event event occurred in ms
    Int_t       fX, fY;             // pointer x, y coordinates in event window
    Int_t       fXRoot, fYRoot;     // coordinates relative to root
    UInt_t      fCode;              // key or button code
@@ -235,7 +236,7 @@ struct GCValues_t {
    Int_t    fFillRule;           // kEvenOddRule, kWindingRule
    Int_t    fArcMode;            // kArcChord, kArcPieSlice
    Pixmap_t fTile;               // tile pixmap for tiling operations
-   Pixmap_t fStipple;            // stipple 1 plane pixmap for stipping
+   Pixmap_t fStipple;            // stipple 1 plane pixmap for stippling
    Int_t    fTsXOrigin;          // offset for tile or stipple operations
    Int_t    fTsYOrigin;
    FontH_t  fFont;               // default text font for text operations
@@ -365,7 +366,7 @@ struct Rectangle_t {
 // Atoms used for text cut and paste between windows
 const Atom_t kPrimarySelection = 1;  // magic values, must match the ones
 const Atom_t kCutBuffer        = 9;  // in /usr/include/X11/Xatom.h
-const Int_t  kMaxPixel         = 32000;
+const Int_t  kMaxPixel         = 2147483647; // Max value for an int
 
 const int kNumCursors = 19;
 enum ECursor { kBottomLeft, kBottomRight, kTopLeft, kTopRight,
