@@ -150,6 +150,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:
-target_compile_options(RooFit PUBLIC -fno-math-errno)
+if(NOT MSVC)
+  target_compile_options(RooFit PUBLIC -fno-math-errno)
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
