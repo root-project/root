@@ -12,13 +12,9 @@
 #ifndef ROOT_TGCommandPlugin
 #define ROOT_TGCommandPlugin
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGCommandPlugin                                                      //
-//                                                                      //
-// Class used to redirect command line input/output.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGCommandPlugin
+Class used to redirect the command line input/output.
+**/
 
 #include "TGFrame.h"
 

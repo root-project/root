@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGCommandPlugin                                                      //
-//                                                                      //
-// Class used to redirect command line input/output.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGCommandPlugin
+Class used to redirect the command line input/output.
+**/
 
 #include "TROOT.h"
 #include "TSystem.h"
