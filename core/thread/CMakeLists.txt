@@ -81,6 +81,12 @@ target_include_directories(Thread PRIVATE
 set_source_files_properties(src/RConcurrentHashColl.cxx
   PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/foundation/res)
 
+if (tbb OR builtin_tbb)
+  target_include_directories(Thread SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
+  target_link_libraries(Thread PRIVATE ${TBB_LIBRARIES})
+  set_target_properties(Thread PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
+endif()
+  
 if(WIN32)
   target_sources(Thread PRIVATE
     src/TWin32Condition.cxx
