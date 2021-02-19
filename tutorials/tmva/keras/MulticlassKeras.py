@@ -13,10 +13,9 @@
 from ROOT import TMVA, TFile, TTree, TCut, gROOT
 from os.path import isfile
 
-from keras.models import Sequential
-from keras.layers.core import Dense, Activation
-from keras.regularizers import l2
-from keras.optimizers import SGD
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation
+from tensorflow.keras.optimizers import SGD
 
 # Setup TMVA
 TMVA.Tools.Instance()
@@ -54,7 +53,7 @@ dataloader.PrepareTrainingAndTestTree(TCut(''),
 
 # Define model
 model = Sequential()
-model.add(Dense(32, activation='relu', W_regularizer=l2(1e-5), input_dim=4))
+model.add(Dense(32, activation='relu', input_dim=4))
 model.add(Dense(4, activation='softmax'))
 
 # Set loss and optimizer
