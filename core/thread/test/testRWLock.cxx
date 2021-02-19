@@ -501,7 +501,7 @@ TEST(RWLock, concurrentResetRestoreSpin)
 
 TEST(RWLock, concurrentResetRestoreStd)
 {
-   concurrentResetRestore(gRWMutexSpin, 2, gRepetition / 10000);
+   concurrentResetRestore(gRWMutexStd, 2, gRepetition / 10000);
 }
 
 TEST(RWLock, LargeconcurrentResetRestore)
