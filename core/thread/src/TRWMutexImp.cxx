@@ -114,4 +114,9 @@ template class TRWMutexImp<std::mutex>;
 template class TRWMutexImp<TMutex, ROOT::Internal::UniqueLockRecurseCount>;
 template class TRWMutexImp<ROOT::TSpinMutex, ROOT::Internal::UniqueLockRecurseCount>;
 
+#ifdef R__HAS_TBB
+template class TRWMutexImp<std::mutex, ROOT::Internal::RecurseCountsTBB>;
+template class TRWMutexImp<std::mutex, ROOT::Internal::RecurseCountsTBBUnique>;
+#endif
+
 } // End of namespace ROOT
