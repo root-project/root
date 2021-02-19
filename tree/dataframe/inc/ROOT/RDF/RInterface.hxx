@@ -440,7 +440,7 @@ public:
    /// \attention In multi-thread runs (i.e. when EnableImplicitMT() has been called) threads will loop over clusters of
    /// entries in undefined order, so Snapshot will produce outputs in which (clusters of) entries will be shuffled with
    /// respect to the input TTree. Using such "shuffled" TTrees as friends of the original trees would result in wrong
-   /// associations between entries in the main TTree and entries in the "shuffled" friend. Recent ROOT versions will
+   /// associations between entries in the main TTree and entries in the "shuffled" friend. Since v6.22, ROOT will
    /// error out if such a "shuffled" TTree is used in a friendship.
    ///
    /// ### Example invocations:
