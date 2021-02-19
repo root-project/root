@@ -18,17 +18,21 @@
 #include <RooProdPdf.h>
 #include <TestStatistics/RooBinnedL.h>
 #include <TestStatistics/RooUnbinnedL.h>
+#include <TestStatistics/RooSubsidiaryL.h>
 #include <ROOT/RMakeUnique.hxx>
 
-#include <algorithm>  // min, max
+#include <algorithm> // min, max
 
 namespace RooFit {
 namespace TestStatistics {
 
-RooSimultaneousL::RooSimultaneousL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended)
+RooSimultaneousL::RooSimultaneousL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended,
+                                   ConstrainedParameters constrained_parameters, ExternalConstraints external_constraints,
+                                   GlobalObservables global_observables, std::string global_observables_tag)
    : RooAbsL(pdf, data,
-             data->numEntries(),  // TODO: this may be misleading, because components in reality will have their own N_events...
-             0,  // will be set to true value in ctor with N_components
+             data->numEntries(), // TODO: this may be misleading, because components in reality will have their own
+                                 // N_events...
+             0,                  // will be set to true value in ctor with N_components
              extended)
 {
    auto sim_pdf = dynamic_cast<RooSimultaneous *>(pdf_.get());
@@ -41,7 +45,8 @@ RooSimultaneousL::RooSimultaneousL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Ex
    RooAbsCategoryLValue &simCat = (RooAbsCategoryLValue &)sim_pdf->indexCat();
 
    TString simCatName(simCat.GetName());
-   // Note: important not to use cloned dataset here, use the original one (which is indeed the one set to data_ for RooSimultaneousL)
+   // Note: important not to use cloned dataset here, use the original one (which is indeed the one set to data_ for
+   // RooSimultaneousL)
    std::unique_ptr<TList> dsetList{data_->split(simCat, processEmptyDataSets())};
    if (!dsetList) {
       oocoutE((TObject *)nullptr, Fitting)
@@ -78,14 +83,15 @@ RooSimultaneousL::RooSimultaneousL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Ex
 
       if (component_pdf && dset && (0. != dset->sumEntries() || processEmptyDataSets())) {
          ooccoutI((TObject *)nullptr, Fitting)
-            << "RooSimultaneousL: creating slave calculator #" << n << " for state " << type->GetName()
-            << " (" << dset->numEntries() << " dataset entries)" << std::endl;
+            << "RooSimultaneousL: creating slave calculator #" << n << " for state " << type->GetName() << " ("
+            << dset->numEntries() << " dataset entries)" << std::endl;
 
          // *** START HERE
          // WVE HACK determine if we have a RooRealSumPdf and then treat it like a binned likelihood
          RooAbsPdf *binnedPdf = 0;
          Bool_t binnedL = kFALSE;
-         if (component_pdf->getAttribute("BinnedLikelihood") && component_pdf->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
+         if (component_pdf->getAttribute("BinnedLikelihood") &&
+             component_pdf->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
             // Simplest case: top-level of component is a RRSP
             binnedPdf = component_pdf;
             binnedL = kTRUE;
@@ -109,21 +115,23 @@ RooSimultaneousL::RooSimultaneousL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Ex
          // WVE END HACK
          // Below here directly pass binnedPdf instead of PROD(binnedPdf,constraints) as constraints are evaluated
          // elsewhere anyway and omitting them reduces model complexity and associated handling/cloning times
-//         if (_splitRange && rangeName) {
-//            _gofArray[n] =
-//               create(type->GetName(), type->GetName(), (binnedPdf ? *binnedPdf : *component_pdf), *dset, *projDeps,
-//                      Form("%s_%s", rangeName, type->GetName()), addCoefRangeName, _nCPU * (_mpinterl ? -1 : 1),
-//                      _mpinterl, _CPUAffinity, _verbose, _splitRange, binnedL);
-//         } else {
-//            _gofArray[n] =
-//               create(type->GetName(), type->GetName(), (binnedPdf ? *binnedPdf : *component_pdf), *dset, *projDeps, rangeName,
-//                      addCoefRangeName, _nCPU, _mpinterl, _CPUAffinity, _verbose, _splitRange, binnedL);
+         //         if (_splitRange && rangeName) {
+         //            _gofArray[n] =
+         //               create(type->GetName(), type->GetName(), (binnedPdf ? *binnedPdf : *component_pdf), *dset,
+         //               *projDeps,
+         //                      Form("%s_%s", rangeName, type->GetName()), addCoefRangeName, _nCPU * (_mpinterl ? -1 :
+         //                      1), _mpinterl, _CPUAffinity, _verbose, _splitRange, binnedL);
+         //         } else {
+         //            _gofArray[n] =
+         //               create(type->GetName(), type->GetName(), (binnedPdf ? *binnedPdf : *component_pdf), *dset,
+         //               *projDeps, rangeName,
+         //                      addCoefRangeName, _nCPU, _mpinterl, _CPUAffinity, _verbose, _splitRange, binnedL);
          if (binnedL) {
             components_.push_back(std::make_unique<RooBinnedL>((binnedPdf ? binnedPdf : component_pdf), dset));
          } else {
             components_.push_back(std::make_unique<RooUnbinnedL>((binnedPdf ? binnedPdf : component_pdf), dset));
          }
-//         }
+         //         }
          components_.back()->set_sim_count(N_components);
          // *** END HERE
 
@@ -144,41 +152,134 @@ RooSimultaneousL::RooSimultaneousL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Ex
          //
          // Servers may have been redirected between instantiation and (deferred) initialization
 
-         std::unique_ptr<RooArgSet> actualParams {binnedPdf ? binnedPdf->getParameters(dset) : component_pdf->getParameters(dset)};
-         std::unique_ptr<RooArgSet> selTargetParams {(RooArgSet *)getParameters()->selectCommon(*actualParams)};
+         std::unique_ptr<RooArgSet> actualParams{binnedPdf ? binnedPdf->getParameters(dset)
+                                                           : component_pdf->getParameters(dset)};
+         std::unique_ptr<RooArgSet> selTargetParams{(RooArgSet *)getParameters()->selectCommon(*actualParams)};
 
-         // TODO: I don't think we have to redirect servers, because our classes make no use of those, but we should make sure. Do we need to reset the parameter set instead?
-//         components_.back()->recursiveRedirectServers(*selTargetParams);
+         // TODO: I don't think we have to redirect servers, because our classes make no use of those, but we should
+         // make sure. Do we need to reset the parameter set instead?
+         //         components_.back()->recursiveRedirectServers(*selTargetParams);
          assert(selTargetParams->equals(*components_.back()->getParameters()));
 
          ++n;
       } else {
          if ((!dset || (0. != dset->sumEntries() && !processEmptyDataSets())) && component_pdf) {
             ooccoutD((TObject *)nullptr, Fitting) << "RooSimultaneousL: state " << type->GetName()
-                                                      << " has no data entries, no slave calculator created" << std::endl;
+                                                  << " has no data entries, no slave calculator created" << std::endl;
          }
       }
    }
-   oocoutI((TObject *)nullptr, Fitting) << "RooSimultaneousL: created " << n << " slave calculators."
-                                            << std::endl;
+   oocoutI((TObject *)nullptr, Fitting) << "RooSimultaneousL: created " << n << " slave calculators." << std::endl;
 
-//   // Delete datasets by hand as TList::Delete() doesn't see our datasets as 'on the heap'...
-//   std::unique_ptr<TIterator> iter {dsetList->MakeIterator()};
-//   TObject *ds;
-//   while ((ds = iter->Next())) {
-//      delete ds;
+   // BEGIN CONSTRAINT COLLECTION; copied from RooAbsPdf::createNLL
+
+   Bool_t doStripDisconnected = kFALSE;
+   // If no explicit list of parameters to be constrained is specified apply default algorithm
+   // All terms of RooProdPdfs that do not contain observables and share a parameters with one or more
+   // terms that do contain observables are added as constraints.
+#ifndef NDEBUG
+   bool did_default_constraint_algo = false;
+   std::size_t N_default_constraints = 0;
+#endif
+   if (constrained_parameters.set.getSize() == 0) {
+      std::unique_ptr<RooArgSet> default_constraints{pdf_->getParameters(*data_, kFALSE)};
+      constrained_parameters.set.add(*default_constraints);
+      doStripDisconnected = kTRUE;
+#ifndef NDEBUG
+      did_default_constraint_algo = true;
+      N_default_constraints = default_constraints->getSize();
+#endif
+   }
+   if (did_default_constraint_algo) {
+      assert(N_default_constraints == constrained_parameters.set.getSize());
+   }
+
+   // Collect internal and external constraint specifications
+   RooArgSet allConstraints;
+
+   if (!global_observables_tag.empty()) {
+      std::cout << "DEBUG: global_observables_tag > 0" << std::endl;
+      if (global_observables.set.getSize() > 0) {
+         global_observables.set.removeAll();
+      }
+      std::unique_ptr<RooArgSet> allVars {pdf->getVariables()};
+      global_observables.set.add(*dynamic_cast<RooArgSet *>(allVars->selectByAttrib(global_observables_tag.c_str(), kTRUE)));
+      oocoutI((TObject*)nullptr, Minimization) << "User-defined specification of global observables definition with tag named '" <<  global_observables_tag << "'" << std::endl;
+   } else if (global_observables.set.getSize() == 0) {
+      // neither global_observables nor global_observables_tag was given - try if a default tag is defined in the head node
+      const char* defGlobObsTag = pdf->getStringAttribute("DefaultGlobalObservablesTag");
+      if (defGlobObsTag) {
+         oocoutI((TObject*)nullptr, Minimization) << "p.d.f. provides built-in specification of global observables definition with tag named '" <<  defGlobObsTag << "'" << std::endl;
+         std::unique_ptr<RooArgSet> allVars {pdf->getVariables()};
+         global_observables.set.add(*dynamic_cast<RooArgSet *>(allVars->selectByAttrib(defGlobObsTag, kTRUE)));
+      }
+   }
+
+   // EGP: commented out workspace (RooAbsPdf::_myws) based stuff for now; TODO: reconnect this class to workspaces
+//   if (_myws && _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()))) {
+//
+//      // retrieve from cache
+//      const RooArgSet *constr =
+//         _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()));
+//      coutI(Minimization) << "createNLL picked up cached consraints from workspace with " << constr->getSize()
+//                          << " entries" << endl;
+//      allConstraints.add(*constr);
+//
+//   } else {
+
+   if (constrained_parameters.set.getSize() > 0) {
+      std::unique_ptr<RooArgSet> constraints{pdf->getAllConstraints(*data->get(), constrained_parameters.set, doStripDisconnected)};
+      allConstraints.add(*constraints);
+   }
+   if (external_constraints.set.getSize() > 0) {
+      allConstraints.add(external_constraints.set);
+   }
+
+//      // write to cache
+//      if (_myws) {
+//         // cout << "createNLL: creating cache for allconstraints=" << allConstraints << endl ;
+//         coutI(Minimization) << "createNLL: caching constraint set under name "
+//                             << Form("CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content())
+//                             << " with " << allConstraints.getSize() << " entries" << endl;
+//         _myws->defineSetInternal(
+//            Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()), allConstraints);
+//      }
 //   }
-   // NOTE: commented out, because it actually causes two error messages, "Error in TList::Clear: A list is accessing an object (0x7f8320ae8f64) already deleted (list name = TList)" and another like that
+
+   // Include constraints, if any, in likelihood
+   if (allConstraints.getSize() > 0) {
+
+      oocoutI((TObject*) nullptr, Minimization) << " Including the following contraint terms in minimization: " << allConstraints << std::endl;
+      if (global_observables.set.getSize() > 0) {
+         oocoutI((TObject*) nullptr, Minimization) << "The following global observables have been defined: " << global_observables.set << std::endl;
+      }
+      components_.push_back(std::make_unique<RooSubsidiaryL>(GetName(), allConstraints,
+                                                             (global_observables.set.getSize() > 0) ? global_observables.set : constrained_parameters.set));
+      ++N_components;
+   }
+
+   // END CONSTRAINT COLLECTION; copied from RooAbsPdf::createNLL
 }
+
+// delegating convenience constructors
+RooSimultaneousL::RooSimultaneousL(RooAbsPdf* pdf, RooAbsData* data, ConstrainedParameters constrained_parameters)
+   : RooSimultaneousL(pdf, data, RooAbsL::Extended::Auto, constrained_parameters) {}
+RooSimultaneousL::RooSimultaneousL(RooAbsPdf* pdf, RooAbsData* data, ExternalConstraints external_constraints)
+   : RooSimultaneousL(pdf, data, RooAbsL::Extended::Auto, {}, external_constraints) {}
+RooSimultaneousL::RooSimultaneousL(RooAbsPdf* pdf, RooAbsData* data, GlobalObservables global_observables)
+   : RooSimultaneousL(pdf, data, RooAbsL::Extended::Auto, {}, {}, global_observables) {}
+RooSimultaneousL::RooSimultaneousL(RooAbsPdf* pdf, RooAbsData* data, std::string global_observables_tag)
+   : RooSimultaneousL(pdf, data, RooAbsL::Extended::Auto, {}, {}, {}, global_observables_tag) {}
+
 
 bool RooSimultaneousL::processEmptyDataSets() const
 {
-   // TODO: check whether this is correct! This is copied the implementation of the RooNLLVar override; the implementation in RooAbsTestStatistic always returns true
+   // TODO: check whether this is correct! This is copied the implementation of the RooNLLVar override; the
+   // implementation in RooAbsTestStatistic always returns true
    return extended_;
 }
 
-double RooSimultaneousL::evaluate_partition(Section events,
-                                            std::size_t components_begin, std::size_t components_end)
+double RooSimultaneousL::evaluate_partition(Section events, std::size_t components_begin, std::size_t components_end)
 {
    // Evaluate specified range of owned GOF objects
    double ret = 0;
@@ -187,7 +288,9 @@ double RooSimultaneousL::evaluate_partition(Section events,
    eval_carry_ = 0;
    for (std::size_t ix = components_begin; ix < components_end; ++ix) {
       // TODO: make sure we only calculate over events in the sub-range that the caller asked for
-//      std::size_t component_events_begin = std::max(events_begin, components_[ix]->get_N_events())  // THIS WON'T WORK, we need to somehow allow evaluate_partition to take in separate event ranges for all components...
+      //      std::size_t component_events_begin = std::max(events_begin, components_[ix]->get_N_events())  // THIS
+      //      WON'T WORK, we need to somehow allow evaluate_partition to take in separate event ranges for all
+      //      components...
 
       double y = components_[ix]->evaluate_partition(events, 0, 0);
       eval_carry_ += components_[ix]->get_carry();

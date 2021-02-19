@@ -29,7 +29,7 @@ namespace TestStatistics {
 class RooAbsL {
 public:
    enum class Extended {
-      Yes, No, Auto
+      Auto, Yes, No
    };
 
    /// wrapper class used to distinguish ctors
@@ -84,17 +84,17 @@ public:
    double get_carry() const;
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
-   RooArgSet *getParameters();
+   virtual RooArgSet *getParameters();
    void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt);
 
-   std::string GetName() const;
-   std::string GetTitle() const;
+   virtual std::string GetName() const;
+   virtual std::string GetTitle() const;
 
    // necessary in RooMinimizer (via LikelihoodWrapper)
    virtual double defaultErrorLevel() const;
 
    // necessary in LikelihoodJob
-   std::size_t numDataEntries() const;
+   virtual std::size_t numDataEntries() const;
 
    bool is_offsetting() const;
    void enable_offsetting(bool flag);

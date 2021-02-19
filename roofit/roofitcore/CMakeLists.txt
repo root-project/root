@@ -264,6 +264,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         TestStatistics/RooRealL.h
         TestStatistics/RooUnbinnedL.h
         TestStatistics/kahan_sum.h
+        TestStatistics/optional_parameter_types.h
         RooAbsMinimizerFcn.h
   SOURCES
     src/Roo1DTable.cxx
@@ -505,6 +506,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/TestStatistics/RooSimultaneousL.cxx
         src/TestStatistics/RooRealL.cxx
         src/TestStatistics/RooUnbinnedL.cxx
+        src/TestStatistics/optional_parameter_types.cxx
         src/RooAbsMinimizerFcn.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"

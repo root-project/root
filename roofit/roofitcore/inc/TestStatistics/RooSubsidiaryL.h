@@ -15,6 +15,8 @@
 #define ROOT_ROOFIT_TESTSTATISTICS_RooSubsidiaryL
 
 #include <TestStatistics/RooAbsL.h>
+#include <RooArgList.h>
+#include <RooArgSet.h>
 
 namespace RooFit {
 namespace TestStatistics {
@@ -26,7 +28,19 @@ namespace TestStatistics {
 /// Note that when a subsidiary PDF is part of multiple component PDFs, it will only be summed
 /// once in this class! This doesn't change the derivative of the log likelihood (which is what
 /// matters in fitting the likelihood), but does change the value of the (log-)likelihood itself.
-class RooSubsidiaryL : RooAbsL {
+class RooSubsidiaryL : public RooAbsL {
+public:
+   RooSubsidiaryL(const std::string & parent_pdf_name, const RooArgSet & pdfs, const RooArgSet & parameter_set);
+
+   double evaluate_partition(Section events, std::size_t components_begin, std::size_t components_end) override;
+   RooArgSet * getParameters() override;
+   std::string GetName() const override;
+   std::string GetTitle() const override;
+   std::size_t numDataEntries() const override;
+private:
+   std::string parent_pdf_name_;
+   RooArgList subsidiary_pdfs_{"subsidiary_pdfs"};    // Set of subsidiary PDF or "constraint" terms
+   RooArgSet parameter_set_{"parameter_set"};       // Set of parameters to which constraints apply
 };
 
 }

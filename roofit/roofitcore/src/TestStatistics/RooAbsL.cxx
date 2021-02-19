@@ -33,6 +33,7 @@
 namespace RooFit {
 namespace TestStatistics {
 
+// private ctor
 RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> data,
                  std::size_t N_events, std::size_t N_components, Extended extended)
    : pdf_(std::move(pdf)), data_(std::move(data)), N_events(N_events), N_components(N_components)
