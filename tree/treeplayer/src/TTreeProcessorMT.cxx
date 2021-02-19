@@ -171,18 +171,20 @@ MakeClusters(const std::vector<std::string> &treeNames, const std::vector<std::s
       entriesPerFile.emplace_back(entries);
    }
 
-   // Here we "fuse" together clusters if the number of clusters is too big with respect to
+   // Here we "fuse" clusters together if the number of clusters is too big with respect to
    // the number of slots, otherwise we can incur in an overhead which is big enough
    // to make parallelisation detrimental to performance.
    // For example, this is the case when, following a merging of many small files, a file
    // contains a tree with many entries and with clusters of just a few entries each.
    // Another problematic case is a high number of slots (e.g. 256) coupled with a high number
-   // of large files (e.g. 1000 files): the large amount of files might result in a large amount
+   // of files (e.g. 1000 files): the large amount of files might result in a large amount
    // of tasks, but the elevated concurrency level makes the little synchronization required by
    // task initialization very expensive. In this case it's better to simply process fewer, larger tasks.
+   // Cluster-merging can help reduce the number of tasks down to a minumum of one task per file.
+   //
    // The criterion according to which we fuse clusters together is to have around
-   // TTreeProcessorMT::GetTasksPerWorkerHint() clusters per file per slot.
-   // In particular, for each file we will cap the number of tasks to ceil(GetTasksPerWorkerHint() * nWorkers / nFiles).
+   // TTreeProcessorMT::GetTasksPerWorkerHint() clusters per slot.
+   // Concretely, for each file we will cap the number of tasks to ceil(GetTasksPerWorkerHint() * nWorkers / nFiles).
 
    std::vector<std::vector<EntryCluster>> eventRangesPerFile(clustersPerFile.size());
    auto clustersPerFileIt = clustersPerFile.begin();
