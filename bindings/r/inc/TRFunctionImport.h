@@ -1,9 +1,9 @@
 // @(#)root/r:$Id$
-// Author: Omar Zapata   28/06/2015
+// Author: Omar Zapata  Omar.Zapata@cern.ch  28/06/2015
 
 
 /*************************************************************************
- * Copyright (C) 2015, Omar Andres Zapata Mesa                           *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
