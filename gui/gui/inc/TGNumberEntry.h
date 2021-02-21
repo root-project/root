@@ -264,6 +264,7 @@ public:
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    virtual void   ValueChanged(Long_t val);     //*SIGNAL*
    virtual void   ValueSet(Long_t val);         //*SIGNAL*
+   virtual void   Modified();                   //*SIGNAL*
 
    TGNumberEntryField *GetNumberEntry() const {
       // Get the number entry field
