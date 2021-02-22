@@ -641,6 +641,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #                            [WORKING_DIR dir]
 #                            [TIMEOUT tmout]
 #                            [COPY_TO_BUILDDIR file1 file2 ...])
+#                            [ENVIRONMENT ENV_VAR1=value1;ENV_VAR2=value2; ...])
 #
 # This function defines a roottest test. It adds a number of additional
 # options on top of the ROOT defined ROOT_ADD_TEST.

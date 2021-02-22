@@ -20,14 +20,14 @@ ROOTTEST_ADD_TEST(WriteFile
                   PRECMD ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target base${fast}
                   MACRO execWriteFile.cxx+
                   OUTREF execWriteFile${ref_suffix})
+
 if(${compression_default} STREQUAL "lz4")
-	ROOTTEST_ADD_TEST(hadd_autoload
-                  	COMMAND hadd -f data_merge.root data1.root data2.root
-                  	OUTREF hadd_autoloadLZ4.ref
-                  	DEPENDS WriteFile)
+  set(outref_suffix "LZ4")
 else()
-	ROOTTEST_ADD_TEST(hadd_autoload
-                  	COMMAND hadd -f data_merge.root data1.root data2.root
-                  	OUTREF hadd_autoloadZLIB.ref
-                  	DEPENDS WriteFile)
+  set(outref_suffix "ZLIB")
 endif()
+ROOTTEST_ADD_TEST(hadd_autoload
+  COMMAND hadd -f data_merge.root data1.root data2.root
+  OUTREF hadd_autoload${outref_suffix}.ref
+  DEPENDS WriteFile
+  ENVIRONMENT ROOT_INCLUDE_PATH=${CMAKE_CURRENT_SOURCE_DIR})
