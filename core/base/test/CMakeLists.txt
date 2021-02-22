@@ -9,7 +9,7 @@
 # onepcm targets to be built.
 
 if(NOT MSVC)
-  set(dllib dl)
+  set(extralibs Cling dl)
 endif()
 
 ROOT_ADD_GTEST(CoreBaseTests
@@ -17,6 +17,6 @@ ROOT_ADD_GTEST(CoreBaseTests
   TQObjectTests.cxx
   TExceptionHandlerTests.cxx
   TStringTest.cxx
-  LIBRARIES Core Cling RIO ${dllib})
+  LIBRARIES Core Cling RIO ${extralibs})
 
 ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
