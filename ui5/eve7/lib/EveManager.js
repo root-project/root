@@ -37,8 +37,37 @@ sap.ui.define([], function() {
 
       this.initialized = false;
       this.busyProcessingChanges = false;
-   }
 
+
+      // ---------------------------------
+      JSROOT.EVE.console = {};
+      JSROOT.EVE.console.txt = "";
+
+      JSROOT.EVE.console.stdlog = console.log.bind(console);
+      console.log = function () {
+         JSROOT.EVE.console.txt += "<p>";
+         JSROOT.EVE.console.txt += Array.from(arguments);
+         JSROOT.EVE.console.stdlog.apply(console, arguments);
+         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
+      }
+
+      JSROOT.EVE.console.stderror = console.error.bind(console);
+      console.error = function () {
+         JSROOT.EVE.console.txt += "<p style=\"color:red;\">";
+         JSROOT.EVE.console.txt += Array.from(arguments);
+         JSROOT.EVE.console.stderror.apply(console, arguments);
+         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
+      }
+
+      JSROOT.EVE.console.stdwarn = console.warn.bind(console);
+      console.warning = function () {
+         JSROOT.EVE.console.txt += "<p style=\"color:yellow;\">";
+         JSROOT.EVE.console.txt += Array.from(arguments);
+         JSROOT.EVE.console.stdwarn.apply(console, arguments);
+         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
+      }
+
+   }
 
    //==============================================================================
    // BEGIN protoype functions
@@ -104,8 +133,7 @@ sap.ui.define([], function() {
    }
 
    /** Called when data comes via the websocket */
-   EveManager.prototype.onWebsocketMsg = function(handle, msg, offset)
-   {
+   EveManager.prototype.onWebsocketMsg = function (handle, msg, offset) {
       // if (this.ignore_all) return;
 
       if (typeof msg != "string")
@@ -118,13 +146,13 @@ sap.ui.define([], function() {
       }
 
       if (JSROOT.EVE.gDebug)
-         console.log("onWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 1000) ? msg : (msg.substr(0,1000) + "..."));
+         console.log("OnWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 1000) ? msg : (msg.substr(0,1000) + "..."));
 
       let resp = JSON.parse(msg);
 
       if (resp === undefined)
       {
-         console.log("onWebsocketMsg can't parse json: msg len=", msg.length, " txt:", msg.substr(0,120), "...");
+         console.log("OnWebsocketMsg can't parse json: msg len=", msg.length, " txt:", msg.substr(0,120), "...");
          return;
       }
 
@@ -148,7 +176,7 @@ sap.ui.define([], function() {
       else if (resp.content == "BrowseElement") {
          this.BrowseElement(resp.id);
       } else {
-         console.log("onWebsocketMsg Unhandled message type: msg len=", msg.length, " txt:", msg.substr(0,120), "...");
+         console.log("OnWebsocketMsg Unhandled message type: msg len=", msg.length, " txt:", msg.substr(0,120), "...");
       }
    }
 

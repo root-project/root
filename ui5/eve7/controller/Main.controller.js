@@ -192,6 +192,50 @@ sap.ui.define(['sap/ui/core/Component',
          alert("User support: root-webgui@cern.ch");
       },
 
+      showLog: function (oEvent) {
+         let oPopover = sap.ui.getCore().byId("logView");
+         if (!oPopover)
+         {
+            let oFT = new sap.m.FormattedText("EveConsoleText", {
+               convertLinksToAnchorTags: sap.m.LinkConversion.All,
+               width: "100%",
+               height: "auto"
+            });
+
+            oPopover = new sap.m.Popover("logView", {
+               placement: sap.m.PlacementType.Auto,
+               title: "Console log",
+               content: [
+                  oFT
+               ]
+            });
+
+            // footer
+            let fa = new sap.m.OverflowToolbar();
+            let btnDebug = new sap.m.CheckBox({ text: "Debug", selected: JSROOT.EVE.gDebug ? false : JSROOT.EVE.gDebug });
+            btnDebug.attachSelect(
+               function (oEvent) {
+                  JSROOT.EVE.gDebug = this.getSelected();
+               }
+            );
+            fa.addContent(btnDebug);
+            let cBtn = new sap.m.Button({ text: "Close", icon: "sap-icon://sys-cancel", press: function () { oPopover.close(); }});
+            fa.addContent(cBtn);
+            oPopover.setFooter(fa);
+
+            // set callback function
+            JSROOT.EVE.console.refresh = this.loadLog;
+         }
+
+         this.loadLog();
+         oPopover.openBy(this.getView().byId("logButton"));
+      },
+
+      loadLog: function () {
+         let oFT = sap.ui.getCore().byId("EveConsoleText");
+         oFT.setHtmlText(JSROOT.EVE.console.txt);
+      },
+
       showUserURL : function(oEvent) {
          MobileLibrary.URLHelper.redirect("https://github.com/alja/jsroot/blob/dev/eve7.md", true);
       },
