@@ -1,6 +1,7 @@
 #include "ROOTUnitTestSupport.h"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RResultHandle.hxx"
+#include "TH1D.h" // for NullResultPtr test case
 
 #include "gtest/gtest.h"
 
@@ -51,6 +52,46 @@ TEST(RResultPtr, MoveCtor)
    EXPECT_EQ(*res, 1u);
 }
 
+TEST(RResultPtr, Release)
+{
+   ROOT::RDataFrame df(1);
+   auto p = df.Sum<ULong64_t>("rdfentry_");
+   p.GetValue();
+   p.Release();
+   EXPECT_TRUE(p == nullptr);
+}
+
+TEST(RResultPtr, NullResultPtr)
+{
+   // build null result ptrs in 3 different ways
+   ROOT::RDF::RResultPtr<TH1D> r1;
+
+   auto r2 = ROOT::RDataFrame(1).Histo1D<ULong64_t>("rdfentry_");
+   auto r3 = r2;
+   ROOT::RDF::RResultPtr<TH1D>(std::move(r2));
+   EXPECT_EQ(r3->GetEntries(), 1ll); // trigger event loop, to check moved-after-event-loop state
+   r3.Release();
+
+   // make sure they have consistent, sane behavior
+   auto checkResPtr = [](ROOT::RDF::RResultPtr<TH1D> &r) {
+      EXPECT_EQ(r, nullptr);
+      EXPECT_EQ(r.GetPtr(), nullptr);
+      EXPECT_FALSE(r.IsReady());
+      EXPECT_FALSE(bool(r));
+
+      EXPECT_THROW(r.GetValue(), std::runtime_error);
+      EXPECT_THROW(r.OnPartialResult(1, [] (TH1D&) {}), std::runtime_error);
+      EXPECT_THROW(r->GetEntries(), std::runtime_error);
+      EXPECT_THROW(*r, std::runtime_error);
+
+      EXPECT_EQ(r.Release(), nullptr);
+   };
+
+   checkResPtr(r1);
+   checkResPtr(r2);
+   checkResPtr(r3);
+}
+
 TEST(RResultPtr, ImplConv)
 {
    RResultPtr<Dummy> p1;
@@ -70,15 +111,6 @@ TEST(RResultPtr, ImplConv)
 
    EXPECT_TRUE(m != nullptr);
    EXPECT_TRUE(hasRun);
-}
-
-TEST(RResultPtr, Release)
-{
-   ROOT::RDataFrame df(1);
-   auto p = df.Sum<ULong64_t>("rdfentry_");
-   p.GetValue();
-   p.Release();
-   EXPECT_TRUE(p == nullptr);
 }
 
 TEST(RResultPtr, IsReady)
