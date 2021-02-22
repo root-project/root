@@ -1424,6 +1424,7 @@ bool TClassEdit::IsStdClass(const char *classname)
    if ( strncmp(classname,"unordered_map<",strlen("unordered_map<"))==0) return true;
    if ( strncmp(classname,"unordered_multimap<",strlen("unordered_multimap<"))==0) return true;
    if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
+   if ( strncmp(classname,"ROOT::VecOps::RVec<",strlen("ROOT::VecOps::RVec<"))==0) return true;
 
    return false;
 }
