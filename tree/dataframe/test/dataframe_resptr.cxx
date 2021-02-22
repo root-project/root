@@ -123,6 +123,14 @@ TEST(RResultPtr, IsReady)
    EXPECT_TRUE(p.IsReady());
 }
 
+// ROOT-9785, ROOT-10321
+TEST(RResultPtr, CastToBase)
+{
+   auto ptr = ROOT::RDataFrame(42).Histo1D<ULong64_t>("rdfentry_");
+   auto basePtr = ROOT::RDF::RResultPtr<TH1>(ptr);
+   EXPECT_EQ(basePtr->GetEntries(), 42ll);
+}
+
 TEST(RResultHandle, Ctor)
 {
    ROOT::RDataFrame df(3);
