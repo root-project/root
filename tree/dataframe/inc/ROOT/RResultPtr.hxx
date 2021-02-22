@@ -137,9 +137,15 @@ class RResultPtr {
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
    T *Get()
    {
-      if (!fActionPtr->HasRun())
+      if (fActionPtr != nullptr && !fActionPtr->HasRun())
          TriggerRun();
       return fObjPtr.get();
+   }
+
+   void ThrowIfNull()
+   {
+      if (fObjPtr == nullptr)
+         throw std::runtime_error("Trying to access the contents of a null RResultPtr.");
    }
 
    RResultPtr(std::shared_ptr<T> objPtr, RDFDetail::RLoopManager *lm,
@@ -172,8 +178,7 @@ public:
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
    const T &GetValue()
    {
-      if (fObjPtr == nullptr)
-         throw std::runtime_error("Trying to access the contents of a null RResultPtr.");
+      ThrowIfNull();
       return *Get();
    }
 
@@ -183,17 +188,26 @@ public:
 
    /// Get a pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   T &operator*() { return *Get(); }
+   T &operator*()
+   {
+      ThrowIfNull();
+      return *Get();
+   }
 
    /// Get a pointer to the encapsulated object.
    /// Ownership is not transferred to the caller.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   T *operator->() { return Get(); }
+   T *operator->()
+   {
+      ThrowIfNull();
+      return Get();
+   }
 
    /// Return an iterator to the beginning of the contained object if this makes
    /// sense, throw a compilation error otherwise
    typename RIterationHelper<T>::Iterator_t begin()
    {
+      ThrowIfNull();
       if (!fActionPtr->HasRun())
          TriggerRun();
       return RIterationHelper<T>::GetBegin(*fObjPtr);
@@ -203,6 +217,7 @@ public:
    /// sense, throw a compilation error otherwise
    typename RIterationHelper<T>::Iterator_t end()
    {
+      ThrowIfNull();
       if (!fActionPtr->HasRun())
          TriggerRun();
       return RIterationHelper<T>::GetEnd(*fObjPtr);
@@ -253,6 +268,7 @@ public:
    // clang-format on
    RResultPtr<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T &)> callback)
    {
+      ThrowIfNull();
       const auto nSlots = fLoopManager->GetNSlots();
       auto actionPtr = fActionPtr;
       auto c = [nSlots, actionPtr, callback](unsigned int slot) {
@@ -298,6 +314,7 @@ public:
    // clang-format on
    RResultPtr<T> &OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T &)> callback)
    {
+      ThrowIfNull();
       auto actionPtr = fActionPtr;
       auto c = [actionPtr, callback](unsigned int slot) {
          auto partialResult = static_cast<Value_t *>(actionPtr->PartialUpdate(slot));
@@ -310,7 +327,7 @@ public:
    /// Return a pointer to the result, releasing its ownership and leaving this object empty.
    T *Release()
    {
-      if (!fActionPtr->HasRun())
+      if (fActionPtr != nullptr && !fActionPtr->HasRun())
          TriggerRun();
       fActionPtr = nullptr;
       fLoopManager = nullptr;
@@ -331,6 +348,8 @@ public:
    // clang-format on
    bool IsReady() const
    {
+      if (fActionPtr == nullptr)
+         return false;
       return fActionPtr->HasRun();
    }
 };
