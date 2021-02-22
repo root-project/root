@@ -178,7 +178,7 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 			}
 		}
 		catch (e) {
-			console.log("TREE.OutlinePass.parseAtts ", e);
+			console.error("TREE.OutlinePass.parseAtts ", e);
 		}
 		finally {
 		}
