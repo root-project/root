@@ -120,14 +120,13 @@ TEST(RooNaNPacker, FitSimpleLinear) {
 /// The minimiser needs to recover from that.
 /// Test also that when recovery with NaN packing is switched off, the minimiser fails to recover.
 TEST(RooNaNPacker, FitParabola) {
-  constexpr bool verbose = false;
+  RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING); // We don't need integration messages
 
   RooRealVar x("x", "x", -10, 10);
   RooRealVar a1("a1", "a1", 12., -10., 20.);
   RooRealVar a2("a2", "a2", 1.1, -10., 20.);
   RooGenericPdf pdf("pdf", "a1 + x + a2 *x*x", RooArgSet(x, a1, a2));
   std::unique_ptr<RooDataSet> data(pdf.generate(x, 10000));
-  auto nll = pdf.createNLL(*data);
 
   RooArgSet params(a1, a2);
   RooArgSet paramsInit;
@@ -137,45 +136,43 @@ TEST(RooNaNPacker, FitParabola) {
   a2.setVal(-1.);
   params.snapshot(evilValues);
 
-  RooFitResult *fitResult1 = nullptr, *fitResult2 = nullptr;
-  for (auto tryRecover : std::initializer_list<double>{0., 10.}) {
+  for (bool batchMode : std::initializer_list<bool>{true, false}) {
+    SCOPED_TRACE(batchMode ? "in batch mode" : "in single-value mode");
+
     params = evilValues;
+    std::unique_ptr<RooFitResult> fitResultOld( pdf.fitTo(*data,
+        RooFit::RecoverFromUndefinedRegions(0.),
+        RooFit::Save(),
+        RooFit::PrintLevel(-1), // Don't need fit status printed
+        RooFit::PrintEvalErrors(-1), // We provoke a lot of evaluation errors in this test. Don't print those.
+        RooFit::BatchMode(batchMode),
+        RooFit::Minos()));
 
-    RooMinimizer::cleanup();
-    RooMinimizer minim(*nll);
-    minim.setRecoverFromNaNStrength(tryRecover);
-    minim.setPrintLevel(-1);
-    minim.setPrintEvalErrors(-1);
-    minim.migrad();
-    minim.hesse();
-    minim.minos();
-    auto fitResult = minim.save();
-    (tryRecover != 0. ? fitResult1 : fitResult2) = fitResult;
+    params = evilValues;
+    std::unique_ptr<RooFitResult> fitResultNew( pdf.fitTo(*data,
+        RooFit::Save(),
+        RooFit::PrintLevel(-1),
+        RooFit::PrintEvalErrors(-1),
+        RooFit::BatchMode(batchMode),
+        RooFit::Minos()));
 
-    std::string config = (tryRecover != 0. ? "With recovery" : "Without recovery");
-    const auto& a1Final = static_cast<RooRealVar&>(fitResult->floatParsFinal()[0]);
-    const auto& a2Final = static_cast<RooRealVar&>(fitResult->floatParsFinal()[1]);
+    ASSERT_NE(fitResultOld, nullptr);
+    ASSERT_NE(fitResultNew, nullptr);
 
-    if (tryRecover != 0.) {
-      EXPECT_EQ(fitResult->status(), 0) << config;
-      EXPECT_NEAR(a1Final.getVal(), static_cast<RooAbsReal&>(paramsInit["a1"]).getVal(), a1Final.getError()) << config;
-      EXPECT_NEAR(a2Final.getVal(), static_cast<RooAbsReal&>(paramsInit["a2"]).getVal(), a2Final.getError()) << config;
-    } else {
-      EXPECT_LT(a1Final.getVal(), 0.);
-      EXPECT_LT(a2Final.getVal(), 0.);
-    }
+    const auto& a1Old = static_cast<RooRealVar&>(fitResultOld->floatParsFinal()[0]);
+    const auto& a2Old = static_cast<RooRealVar&>(fitResultOld->floatParsFinal()[1]);
 
-    if (verbose) {
-      std::cout << "Recovery strength:" << tryRecover << std::endl;
-      fitResult->Print();
-    }
-  }
+    const auto& a1Recover = static_cast<RooRealVar&>(fitResultNew->floatParsFinal()[0]);
+    const auto& a2Recover = static_cast<RooRealVar&>(fitResultNew->floatParsFinal()[1]);
 
-  // This makes clang-tidy happy:
-  ASSERT_NE(fitResult1, nullptr);
-  ASSERT_NE(fitResult2, nullptr);
-  if (fitResult1 && fitResult2) { // makes clang-tidy happy
-    EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
+    EXPECT_EQ(fitResultNew->status(), 0);
+    EXPECT_NEAR(a1Recover.getVal(), static_cast<RooAbsReal&>(paramsInit["a1"]).getVal(), a1Recover.getError());
+    EXPECT_NEAR(a2Recover.getVal(), static_cast<RooAbsReal&>(paramsInit["a2"]).getVal(), a2Recover.getError());
+
+    EXPECT_LT(a1Old.getVal(), 0.);
+    EXPECT_LT(a2Old.getVal(), 0.);
+
+    EXPECT_LT(fitResultNew->numInvalidNLL(), fitResultOld->numInvalidNLL());
   }
 }
 
