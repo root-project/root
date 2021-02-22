@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <functional>
+#include <type_traits> // std::is_constructible
 
 namespace ROOT {
 namespace Internal {
@@ -164,14 +165,15 @@ public:
    RResultPtr &operator=(const RResultPtr &) = default;
    RResultPtr &operator=(RResultPtr &&) = default;
    explicit operator bool() const { return bool(fObjPtr); }
-   template <typename TO, typename std::enable_if<std::is_convertible<T, TO>::value, int>::type = 0>
-   operator RResultPtr<TO>() const
+
+   /// Convert a RResultPtr<T2> to a RResultPtr<T>.
+   ///
+   /// Useful e.g. to store a number of RResultPtr<TH1D> and RResultPtr<TH2D> in a std::vector<RResultPtr<TH1>>.
+   /// The requirements on T2 and T are the same as for conversion between std::shared_ptr<T2> and std::shared_ptr<T>.
+   template <typename T2, typename std::enable_if<std::is_constructible<std::shared_ptr<T>, std::shared_ptr<T2>>::value,
+                                                  int>::type = 0>
+   RResultPtr(const RResultPtr<T2> &r) : fLoopManager(r.fLoopManager), fObjPtr(r.fObjPtr), fActionPtr(r.fActionPtr)
    {
-      RResultPtr<TO> rp;
-      rp.fLoopManager = fLoopManager;
-      rp.fObjPtr = fObjPtr;
-      rp.fActionPtr = fActionPtr;
-      return rp;
    }
 
    /// Get a const reference to the encapsulated object.
