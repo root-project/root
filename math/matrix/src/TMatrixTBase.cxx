@@ -852,7 +852,7 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::Randomize(Element alpha,Element be
 /// Check to see if two matrices are identical.
 
 template<class Element>
-Bool_t operator==(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
+Bool_t TMatrixTAutoloadOps::operator==(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 {
    if (!AreCompatible(m1,m2)) return kFALSE;
    return (memcmp(m1.GetMatrixArray(),m2.GetMatrixArray(),
@@ -863,7 +863,7 @@ Bool_t operator==(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m
 /// Square of the Euclidian norm of the difference between two matrices.
 
 template<class Element>
-Element E2Norm(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
+Element TMatrixTAutoloadOps::E2Norm(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 {
    if (gMatrixCheck && !AreCompatible(m1,m2)) {
       ::Error("E2Norm","matrices not compatible");
@@ -885,7 +885,7 @@ Element E2Norm(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 /// Check that matrice sm1 and m2 areboth valid and have identical shapes .
 
 template<class Element1,class Element2>
-Bool_t AreCompatible(const TMatrixTBase<Element1> &m1,const TMatrixTBase<Element2> &m2,Int_t verbose)
+Bool_t TMatrixTAutoloadOps::AreCompatible(const TMatrixTBase<Element1> &m1,const TMatrixTBase<Element2> &m2,Int_t verbose)
 {
    if (!m1.IsValid()) {
       if (verbose)
@@ -912,7 +912,7 @@ Bool_t AreCompatible(const TMatrixTBase<Element1> &m1,const TMatrixTBase<Element
 /// Compare two matrices and print out the result of the comparison.
 
 template<class Element>
-void Compare(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
+void TMatrixTAutoloadOps::Compare(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 {
    if (!AreCompatible(m1,m2)) {
       Error("Compare(const TMatrixTBase<Element> &,const TMatrixTBase<Element> &)","matrices are incompatible");
@@ -966,7 +966,7 @@ void Compare(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 /// Validate that all elements of matrix have value val within maxDevAllow.
 
 template<class Element>
-Bool_t VerifyMatrixValue(const TMatrixTBase<Element> &m,Element val,Int_t verbose,Element maxDevAllow)
+Bool_t TMatrixTAutoloadOps::VerifyMatrixValue(const TMatrixTBase<Element> &m,Element val,Int_t verbose,Element maxDevAllow)
 {
    R__ASSERT(m.IsValid());
 
@@ -1009,7 +1009,7 @@ Bool_t VerifyMatrixValue(const TMatrixTBase<Element> &m,Element val,Int_t verbos
 /// Verify that elements of the two matrices are equal within MaxDevAllow .
 
 template<class Element>
-Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2,Int_t verbose,
+Bool_t TMatrixTAutoloadOps::VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2,Int_t verbose,
                             Element maxDevAllow)
 {
    if (!AreCompatible(m1,m2,verbose))
@@ -1091,30 +1091,30 @@ Element & TMatrixTBase<Element>::NaNValue()
 
 template class TMatrixTBase<Float_t>;
 
-template Bool_t   operator==          <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
-template Float_t  E2Norm              <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
-template Bool_t   AreCompatible<Float_t,Float_t>
+template Bool_t   TMatrixTAutoloadOps::operator==          <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
+template Float_t  TMatrixTAutoloadOps::E2Norm              <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
+template Bool_t   TMatrixTAutoloadOps::AreCompatible<Float_t,Float_t>
                                                (const TMatrixFBase &m1,const TMatrixFBase &m2,Int_t verbose);
-template Bool_t   AreCompatible<Float_t,Double_t>
+template Bool_t   TMatrixTAutoloadOps::AreCompatible<Float_t,Double_t>
                                                (const TMatrixFBase &m1,const TMatrixDBase &m2,Int_t verbose);
-template void     Compare             <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
-template Bool_t   VerifyMatrixValue   <Float_t>(const TMatrixFBase &m,Float_t val,Int_t verbose,Float_t maxDevAllow);
-template Bool_t   VerifyMatrixValue   <Float_t>(const TMatrixFBase &m,Float_t val);
-template Bool_t   VerifyMatrixIdentity<Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2,
+template void     TMatrixTAutoloadOps::Compare             <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixValue   <Float_t>(const TMatrixFBase &m,Float_t val,Int_t verbose,Float_t maxDevAllow);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixValue   <Float_t>(const TMatrixFBase &m,Float_t val);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixIdentity<Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2,
                                                 Int_t verbose,Float_t maxDevAllowN);
-template Bool_t   VerifyMatrixIdentity<Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixIdentity<Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
 
 template class TMatrixTBase<Double_t>;
 
-template Bool_t   operator==          <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
-template Double_t E2Norm              <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
-template Bool_t   AreCompatible<Double_t,Double_t>
+template Bool_t   TMatrixTAutoloadOps::operator==          <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
+template Double_t TMatrixTAutoloadOps::E2Norm              <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
+template Bool_t   TMatrixTAutoloadOps::AreCompatible<Double_t,Double_t>
                                                (const TMatrixDBase &m1,const TMatrixDBase &m2,Int_t verbose);
-template Bool_t   AreCompatible<Double_t,Float_t>
+template Bool_t   TMatrixTAutoloadOps::AreCompatible<Double_t,Float_t>
                                                (const TMatrixDBase &m1,const TMatrixFBase &m2,Int_t verbose);
-template void     Compare             <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
-template Bool_t   VerifyMatrixValue   <Double_t>(const TMatrixDBase &m,Double_t val,Int_t verbose,Double_t maxDevAllow);
-template Bool_t   VerifyMatrixValue   <Double_t>(const TMatrixDBase &m,Double_t val);
-template Bool_t   VerifyMatrixIdentity<Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2,
+template void     TMatrixTAutoloadOps::Compare             <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixValue   <Double_t>(const TMatrixDBase &m,Double_t val,Int_t verbose,Double_t maxDevAllow);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixValue   <Double_t>(const TMatrixDBase &m,Double_t val);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixIdentity<Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2,
                                                  Int_t verbose,Double_t maxDevAllow);
-template Bool_t   VerifyMatrixIdentity<Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixIdentity<Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
