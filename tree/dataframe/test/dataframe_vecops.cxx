@@ -58,7 +58,7 @@ TEST(RDFAndVecOps, SnapshotRVec)
    auto b = static_cast<TBranchElement *>(t->GetBranch("v"));
    ASSERT_TRUE(b != nullptr);
    auto branchTypeName = b->GetClassName();
-   EXPECT_STREQ(branchTypeName, "vector<int,ROOT::Detail::VecOps::RAdoptAllocator<int> >");
+   EXPECT_STREQ(branchTypeName, "ROOT::VecOps::RVec<int>");
 
    gSystem->Unlink(fname);
 }
