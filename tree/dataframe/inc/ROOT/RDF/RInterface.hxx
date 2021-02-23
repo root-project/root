@@ -257,8 +257,7 @@ public:
                                  fLoopManager->GetBranchNames(), fDefines, fLoopManager->GetTree(), fDataSource);
 
       fLoopManager->Book(jittedFilter.get());
-      return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fDefines,
-                                                        fDataSource);
+      return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fDefines, fDataSource);
    }
 
    // clang-format off
@@ -370,13 +369,12 @@ public:
    RInterface<Proxied, DS_t> Define(std::string_view name, std::string_view expression)
    {
       // this check must be done before jitting lest we throw exceptions in jitted code
-      RDFInternal::CheckDefine(name, fLoopManager->GetTree(), fDefines.GetNames(),
-                                     fLoopManager->GetAliasMap(),
-                                     fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      RDFInternal::CheckDefine(name, fLoopManager->GetTree(), fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                               fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fDefines,
-                                                           fLoopManager->GetBranchNames(), upcastNodeOnHeap);
+                                                     fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RBookedDefines newCols(fDefines);
       newCols.AddColumn(jittedDefine, name);
@@ -408,8 +406,8 @@ public:
       auto &dsColumnNames = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
 
       // If the alias name is a column name, there is a problem
-      RDFInternal::CheckDefine(alias, fLoopManager->GetTree(), fDefines.GetNames(),
-                                     fLoopManager->GetAliasMap(), dsColumnNames);
+      RDFInternal::CheckDefine(alias, fLoopManager->GetTree(), fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                               dsColumnNames);
 
       const auto validColumnName = GetValidatedColumnNames(1, {std::string(columnName)})[0];
 
@@ -897,8 +895,7 @@ public:
       auto valuesPtr = std::make_shared<COLL>();
       const auto nSlots = fLoopManager->GetNSlots();
 
-      auto action =
-         std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, fProxiedPtr, fDefines);
+      auto action = std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, fProxiedPtr, fDefines);
       fLoopManager->Book(action.get());
       return MakeResultPtr(valuesPtr, *fLoopManager, std::move(action));
    }
@@ -2127,8 +2124,8 @@ public:
 
       CheckAndFillDSColumns(validColumnNames, RDFInternal::TypeList<ColumnTypes...>());
 
-      auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr,
-                                               fDefines);
+      auto action =
+         std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr, fDefines);
       fLoopManager->Book(action.get());
       return MakeResultPtr(resPtr, *fLoopManager, std::move(action));
    }
@@ -2219,8 +2216,7 @@ private:
       const std::string entryColName = "rdfentry_";
       const std::string entryColType = "ULong64_t";
       auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
-      using NewColEntry_t =
-         RDFDetail::RDefine<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
+      using NewColEntry_t = RDFDetail::RDefine<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
 
       auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
                                                          ColumnNames_t{}, fLoopManager->GetNSlots(), newCols,
@@ -2326,9 +2322,8 @@ private:
    typename std::enable_if<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>::type
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns)
    {
-      RDFInternal::CheckDefine(name, fLoopManager->GetTree(), fDefines.GetNames(),
-                                     fLoopManager->GetAliasMap(),
-                                     fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      RDFInternal::CheckDefine(name, fLoopManager->GetTree(), fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                               fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
       using ColTypesTmp_t = typename RDFInternal::RemoveFirstParameterIf<
@@ -2424,8 +2419,8 @@ private:
    }
 
 protected:
-   RInterface(const std::shared_ptr<Proxied> &proxied, RLoopManager &lm,
-              const RDFInternal::RBookedDefines &columns, RDataSource *ds)
+   RInterface(const std::shared_ptr<Proxied> &proxied, RLoopManager &lm, const RDFInternal::RBookedDefines &columns,
+              RDataSource *ds)
       : fProxiedPtr(proxied), fLoopManager(&lm), fDataSource(ds), fDefines(columns)
    {
    }
@@ -2438,8 +2433,7 @@ protected:
    /// which is expensive in terms of runtime, is called at most once.
    ColumnNames_t GetValidatedColumnNames(const unsigned int nColumns, const ColumnNames_t &columns)
    {
-      return RDFInternal::GetValidatedColumnNames(*fLoopManager, nColumns, columns, fDefines.GetNames(),
-                                                  fDataSource);
+      return RDFInternal::GetValidatedColumnNames(*fLoopManager, nColumns, columns, fDefines.GetNames(), fDataSource);
    }
 
    template <typename... ColumnTypes>
