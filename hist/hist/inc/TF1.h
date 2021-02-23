@@ -268,7 +268,6 @@ protected:
    std::unique_ptr<TFormula>   fFormula;        //Pointer to TFormula in case when user define formula
    std::unique_ptr<TF1Parameters> fParams;   //Pointer to Function parameters object (exists only for not-formula functions)
    std::unique_ptr<TF1AbsComposition> fComposition; //Pointer to composition (NSUM or CONV)
-   TF1AbsComposition *fComposition_ptr{nullptr};   //saved pointer (unique_ptr is transient)
 
    /// General constructor for TF1. Most of the other constructors delegate on it
    TF1(EFType functionType, const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList, TF1Parameters *params = nullptr, TF1FunctorPointer * functor = nullptr):
@@ -712,7 +711,7 @@ private:
    inline double EvalParVec(const Double_t *data, const Double_t *params);
 #endif
 
-   ClassDef(TF1, 11) // The Parametric 1-D function
+   ClassDef(TF1, 12) // The Parametric 1-D function
 };
 
 namespace ROOT {
