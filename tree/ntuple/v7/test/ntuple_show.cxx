@@ -267,3 +267,31 @@ TEST(RNTupleShow, Objects)
       + "}\n" };
    EXPECT_EQ(fString, os.str());
 }
+
+
+TEST(RNTupleShow, Collections)
+{
+   std::string rootFileName{"test_ntuple_show_collection.root"};
+   std::string ntupleName{"Collections"};
+   FileRaii fileGuard(rootFileName);
+   {
+      auto model = RNTupleModel::Create();
+      auto collection_model = RNTupleModel::Create();
+      auto int_field = collection_model->MakeField<int>("int");
+      auto float_field = collection_model->MakeField<float>("float");
+      auto collection = model->MakeCollection("collection", std::move(collection_model));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
+      *int_field = 0;
+      *float_field = 10.0;
+      collection->Fill();
+      *int_field = 1;
+      *float_field = 20.0;
+      collection->Fill();
+      ntuple->Fill();
+    }
+
+   auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
+   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON);
+   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary);
+   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails);
+}
