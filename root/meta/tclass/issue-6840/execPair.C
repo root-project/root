@@ -3,6 +3,8 @@
 #include "TClass.h"
 #include "TStreamerInfo.h"
 #include "TFile.h"
+#include "TError.h"
+#include "TSystem.h"
 
 
 int check(const char *args, size_t old_index)
@@ -35,12 +37,12 @@ int check(const char *args, size_t old_index)
       Error("pair offset-size", "Can not get the %s TClass after library loading", pairname.Data());
       return 4;
    }
-   if (cl->GetClassSize() != proxy->GetIncrement()) {
+   if ((int)cl->GetClassSize() != (int)proxy->GetIncrement()) {
       Error("pair offset-size", "The TClass for %s and the proxy for the map disagree on size: %d vs %d after library loading",
             pairname.Data(), (int)cl->GetClassSize(), (int)proxy->GetIncrement());
       return 5;
    }
-   if (cl->GetClassSize() != cl->GetStreamerInfo()->GetSize()) {
+   if ((int)cl->GetClassSize() != (int)cl->GetStreamerInfo()->GetSize()) {
       Error("pair offset-size", "EXPECTED FOR NOW The TClass for %s and its StreamerInfo disagree on size: %d vs %d after library loading",
             pairname.Data(), (int)cl->GetClassSize(), (int)cl->GetStreamerInfo()->GetSize());
       cl->GetStreamerInfo()->ls();
