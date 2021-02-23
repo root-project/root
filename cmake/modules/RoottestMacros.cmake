@@ -49,6 +49,7 @@ function(ROOTTEST_ADD_TESTDIRS)
     # create .rootrc in binary directory to avoid filling $HOME/.root_hist
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${d}/.rootrc "
 Rint.History:  .root_hist
+ACLiC.LinkLibs:  1
 ")
   endforeach()
 

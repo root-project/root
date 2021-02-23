@@ -81,29 +81,27 @@ ROOTTEST_ADD_TEST(modelReadDict2TFile
 #                   DEPENDS aclicModelWrite)
 
 # The dependency is there not to compile the macros simultaneously
-if(NOT MSVC OR win_broken_tests)
-    ROOTTEST_ADD_TEST(modelReadDictTFile
-                      MACRO  modelReadDict.C+
-                      MACROARG "\"model.root\""
-                      OUTREF modelReadDict.ref
-                      DEPENDS modelReadDictTXMLFile)
+ROOTTEST_ADD_TEST(modelReadDictTFile
+                  MACRO  modelReadDict.C+
+                  MACROARG "\"model.root\""
+                  OUTREF modelReadDict.ref
+                  DEPENDS modelReadDictTXMLFile)
 
-    ROOTTEST_ADD_TEST(modelReadDictTXMLFile
-                      MACRO  modelReadDict.C+
-                      MACROARG "\"model.xml\""
-                      OUTREF modelReadDict.ref
-                      DEPENDS aclicModelWrite)
+ROOTTEST_ADD_TEST(modelReadDictTXMLFile
+                  MACRO  modelReadDict.C+
+                  MACROARG "\"model.xml\""
+                  OUTREF modelReadDict.ref
+                  DEPENDS aclicModelWrite)
 
-    ROOTTEST_ADD_TEST(modelReadNoDictTFile
-                      MACRO  modelReadNoDict.C
-                      MACROARG "\"model.root\""
-                      OUTREF modelReadNoDict.ref
-                      DEPENDS aclicModelWrite)
+ROOTTEST_ADD_TEST(modelReadNoDictTFile
+                  MACRO  modelReadNoDict.C
+                  MACROARG "\"model.root\""
+                  OUTREF modelReadNoDict.ref
+                  DEPENDS aclicModelWrite)
 
-    ROOTTEST_ADD_TEST(modelCheckValues
-                      MACRO modelCheckValues.C
-                      DEPENDS aclicModelWrite)
-endif()
+ROOTTEST_ADD_TEST(modelCheckValues
+                  MACRO modelCheckValues.C
+                  DEPENDS aclicModelWrite)
 
 # ROOTTEST_ADD_TEST(modelReadNoDictTXMLFile
 #                   MACRO  modelReadNoDict.C
