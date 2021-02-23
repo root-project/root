@@ -50,6 +50,7 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
       f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 31, 1, 2));
       fType = new TGComboBox(f);
       fType->AddEntry("RPhi", TEveProjection::kPT_RPhi);
+      fType->AddEntry("XZ",   TEveProjection::kPT_XZ);
       fType->AddEntry("RhoZ", TEveProjection::kPT_RhoZ);
       fType->AddEntry("3D",   TEveProjection::kPT_3D);
       TGListBox* lb = fType->GetListBox();

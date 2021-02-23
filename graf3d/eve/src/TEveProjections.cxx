@@ -580,7 +580,6 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
       if (fUsePreScale)
          PreScalePoint(y, x);
 
-
       // distort
 
       if (!fDisplaceOrigin) {
@@ -762,8 +761,120 @@ void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
          y += fCenter.fY;
       }
    }
+
    z = d;
 }
+
+/** \class TEveXZProjection
+\ingroup TEve
+XZ projection with distortion around given center.
+*/
+
+ClassImp(TEveXZProjection);
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
+TEveXZProjection::TEveXZProjection() :
+   TEveProjection()
+{
+   fType    = kPT_XZ;
+   fGeoMode = kGM_Polygons;
+   fName    = "XZ";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Project point.
+
+void TEveXZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
+                                    Float_t d, EPProc_e proc)
+{
+   using namespace TMath;
+   
+   if (fDisplaceOrigin)
+   {
+      x  -= fCenter.fX;
+      y  -= fCenter.fY;
+      z  -= fCenter.fZ;
+   }
+
+   // projection
+   if (proc == kPP_Plane || proc == kPP_Full)
+   {
+      y = z;
+      z = d;
+   }
+   if (proc != kPP_Distort || proc == kPP_Full)
+   {
+      Float_t r, phi;
+      if (fUsePreScale)
+      {
+         r   = Sqrt(x*x + y*y);
+         phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+         PreScalePoint(r, phi);
+         x = r*Cos(phi);
+         y = r*Sin(phi);
+      }
+
+      if (!fDisplaceOrigin)
+      {
+         x -= fProjectedCenter.fX;
+         y -= fProjectedCenter.fY;
+      }
+
+      r   = Sqrt(x*x + y*y);
+      phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+
+      if (r > fFixR)
+         r =  fFixR + fPastFixRScale*(r - fFixR);
+      else if (r < -fFixR)
+         r = -fFixR + fPastFixRScale*(r + fFixR);
+      else
+         r =  r * fScaleR / (1.0f + r*fDistortion);
+
+      x = r*Cos(phi);
+      y = r*Sin(phi);
+
+      if (!fDisplaceOrigin)
+      {
+         x += fProjectedCenter.fX;
+         y += fProjectedCenter.fY;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set center of distortion (virtual method).
+
+void TEveXZProjection::SetCenter(TEveVector& v)
+{
+   fCenter = v;
+
+   if (fDisplaceOrigin)
+   {
+      fProjectedCenter.Set(0.f, 0.f, 0.f);
+   }
+   else
+   {
+      fProjectedCenter.fX = fCenter.fX;
+      fProjectedCenter.fY = fCenter.fZ;
+      fProjectedCenter.fZ = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get direction in the unprojected space for axis index in the
+/// projected space.
+/// This is virtual method from base-class TEveProjection.
+
+void TEveXZProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
+{
+   if (screenAxis == 0)
+      vec.Set(1.0f, 0.0f, 0.0f);
+   else if (screenAxis == 1)
+      vec.Set(0.0f, 0.0f, 1.0f);
+}
+
 
 /** \class TEve3DProjection
 \ingroup TEve
