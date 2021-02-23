@@ -1052,7 +1052,7 @@ void ROOT::Experimental::RVariantField::CommitCluster()
 
 ROOT::Experimental::RCollectionField::RCollectionField(
    std::string_view name,
-   std::shared_ptr<RCollectionNTuple> collectionNTuple,
+   std::shared_ptr<RCollectionNTupleWriter> collectionNTuple,
    std::unique_ptr<RNTupleModel> collectionModel)
    : RFieldBase(name, ":Collection:", ENTupleStructure::kCollection, true /* isSimple */)
    , fCollectionNTuple(collectionNTuple)
