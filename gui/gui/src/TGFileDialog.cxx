@@ -311,9 +311,8 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    }
 
    fTypes->GetListBox()->Resize(230, 120);
-   if(dlg_type == kDOpen || dlg_type == kDSave)
-   {
-       fTypes->SetEnabled(kFALSE);
+   if (dlg_type == kDOpen || dlg_type == kDSave) {
+      fTypes->SetEnabled(kFALSE);
    }
 
    fHftype->AddFrame(fLftypes, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 5, 2, 2));
@@ -576,28 +575,23 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   if (fFc->NumSelected() > 0) {
                      if ( fFileInfo->fMultipleSelection == kFALSE ) {
                         TGLVEntry *e2 = (TGLVEntry *) fFc->GetNextSelected(&p);
-                        if(fDlgType == kFDOpen || fDlgType == kFDSave)
-                        {
-                            if ((e2) && !R_ISDIR(((TGFileItem *)e2)->GetType())) {
-                               fTbfname->Clear();
-                               if (e2->GetItemName())
-                                  fTbfname->AddText(0, e2->GetItemName()->GetString());
-                               fClient->NeedRedraw(fName);
-                            }
-                        }
-                        else
-                        {
-                            if ((e2) && R_ISDIR(((TGFileItem *)e2)->GetType())) {
-                               fTbfname->Clear();
-                               if (e2->GetItemName())
-                                  fTbfname->AddText(0, e2->GetItemName()->GetString());
-                               fClient->NeedRedraw(fName);
-                               fOk->SetEnabled(kTRUE);
-                            }
-                            else if((e2))
-                            {
-                                fOk->SetEnabled(kFALSE);
-                            }
+                        if (fDlgType == kFDOpen || fDlgType == kFDSave) {
+                           if ((e2) && !R_ISDIR(((TGFileItem *)e2)->GetType())) {
+                              fTbfname->Clear();
+                              if (e2->GetItemName())
+                                 fTbfname->AddText(0, e2->GetItemName()->GetString());
+                              fClient->NeedRedraw(fName);
+                           }
+                        } else {
+                           if ((e2) && R_ISDIR(((TGFileItem *)e2)->GetType())) {
+                              fTbfname->Clear();
+                              if (e2->GetItemName())
+                                 fTbfname->AddText(0, e2->GetItemName()->GetString());
+                              fClient->NeedRedraw(fName);
+                              fOk->SetEnabled(kTRUE);
+                           } else if ((e2)) {
+                              fOk->SetEnabled(kFALSE);
+                           }
                         }
                      }
                      else {
@@ -644,7 +638,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            fTbfname->AddText(0, fFc->GetDirectory());
                            fClient->NeedRedraw(fName);
                         }
-                     } else if(fDlgType == kFDOpen || fDlgType == kFDSave){
+                     } else if (fDlgType == kFDOpen || fDlgType == kFDSave) {
                         if (!strcmp(fOk->GetTitle(), "Save") && fCheckB &&
                             (!(fCheckB->GetState() == kButtonDown))) {
 
@@ -684,7 +678,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          break;
 
       case kC_TEXTENTRY:
-        if((fDlgType==kDOpen || fDlgType==kDSave) && fOk->GetState()==kButtonDisabled)//when typing, re-enable previously disabled button after having clicked on file instead of folder
+         if ((fDlgType==kDOpen || fDlgType==kDSave) && fOk->GetState()==kButtonDisabled) //when typing, re-enable previously disabled button after having clicked on file instead of folder
             fOk->SetEnabled(kTRUE);
 
          switch (GET_SUBMSG(msg)) {
