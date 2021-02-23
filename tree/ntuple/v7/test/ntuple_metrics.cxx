@@ -109,5 +109,5 @@ TEST(Metrics, RNTupleWriter)
    auto* page_counter = ntuple->GetMetrics().GetCounter("RNTupleWriter.RPageSinkFile.nPageCommitted");
    ASSERT_FALSE(page_counter == nullptr);
    // one page for the int field, one for the float field
-   EXPECT_EQ(page_counter->GetValueAsInt(), 2);
+   EXPECT_EQ(2, page_counter->GetValueAsInt());
 }
