@@ -24,5 +24,4 @@ ROOTTEST_ADD_TEST(execROOT_6019
 
 ROOTTEST_ADD_TEST(execROOT_6277
                   MACRO execROOT_6277.cxx+
-                  OUTREF execROOT_6277.ref
-                  ${WILLFAIL_ON_WIN32})
+                  OUTREF execROOT_6277.ref)
