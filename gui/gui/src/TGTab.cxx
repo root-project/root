@@ -139,17 +139,17 @@ Bool_t TGTabElement::HandleButton(Event_t *event)
       if (fParent && (event->fCode == kButton4 || event->fCode == kButton5)) { //scroll wheel events
          TGTab* main = (TGTab*)fParent;
 
-         if(event->fCode == kButton4) { //scroll up = move left, as in Firefox
-            for(Int_t c = main->GetCurrent() - 1; c >= 0; --c) {
-               if(main->GetTabTab(c)->IsEnabled()) {
+         if (event->fCode == kButton4) { //scroll up = move left, as in Firefox
+            for (Int_t c = main->GetCurrent() - 1; c >= 0; --c) {
+               if (main->GetTabTab(c)->IsEnabled()) {
                   // change tab and generate event
                   main->SetTab(c);
                   break;
                }
             }
-         } else if(event->fCode == kButton5) { //scroll down = move right, as in Firefox
-            for(Int_t c = main->GetCurrent() + 1; c < main->GetNumberOfTabs(); ++c) {
-               if(main->GetTabTab(c)->IsEnabled()) {
+         } else if (event->fCode == kButton5) { //scroll down = move right, as in Firefox
+            for (Int_t c = main->GetCurrent() + 1; c < main->GetNumberOfTabs(); ++c) {
+               if (main->GetTabTab(c)->IsEnabled()) {
                   // change tab and generate event
                   main->SetTab(c);
                   break;
