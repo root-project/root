@@ -29,7 +29,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class RCollectionNTuple;
+class RCollectionNTupleWriter;
 
 // clang-format off
 /**
@@ -91,7 +91,7 @@ public:
    }
 
    /// Ingests a model for a sub collection and attaches it to the current model
-   std::shared_ptr<RCollectionNTuple> MakeCollection(
+   std::shared_ptr<RCollectionNTupleWriter> MakeCollection(
       std::string_view fieldName,
       std::unique_ptr<RNTupleModel> collectionModel);
 

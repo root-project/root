@@ -258,32 +258,32 @@ public:
 /**
 \class ROOT::Experimental::RCollectionNTuple
 \ingroup NTuple
-\brief A virtual ntuple for collections that can be used to some extent like a real ntuple
+\brief A virtual ntuple used for writing untyped collections that can be used to some extent like an RNTupleWriter
 *
 * This class is between a field and a ntuple.  It carries the offset column for the collection and the default entry
-* taken from the collection model.  It does not, however, have a tree model because the collection model has been merged
-* into the larger ntuple model.
+* taken from the collection model.  It does not, however, own an ntuple model because the collection model has been
+* merged into the larger ntuple model.
 */
 // clang-format on
-class RCollectionNTuple {
+class RCollectionNTupleWriter {
 private:
    ClusterSize_t fOffset;
    std::unique_ptr<REntry> fDefaultEntry;
 public:
-   explicit RCollectionNTuple(std::unique_ptr<REntry> defaultEntry);
-   RCollectionNTuple(const RCollectionNTuple&) = delete;
-   RCollectionNTuple& operator=(const RCollectionNTuple&) = delete;
-   ~RCollectionNTuple() = default;
+   explicit RCollectionNTupleWriter(std::unique_ptr<REntry> defaultEntry);
+   RCollectionNTupleWriter(const RCollectionNTupleWriter&) = delete;
+   RCollectionNTupleWriter& operator=(const RCollectionNTupleWriter&) = delete;
+   ~RCollectionNTupleWriter() = default;
 
    void Fill() { Fill(fDefaultEntry.get()); }
    void Fill(REntry *entry) {
-      for (auto& treeValue : *entry) {
-         treeValue.GetField()->Append(treeValue);
+      for (auto &value : *entry) {
+         value.GetField()->Append(value);
       }
       fOffset++;
    }
 
-   ClusterSize_t* GetOffsetPtr() { return &fOffset; }
+   ClusterSize_t *GetOffsetPtr() { return &fOffset; }
 };
 
 } // namespace Experimental

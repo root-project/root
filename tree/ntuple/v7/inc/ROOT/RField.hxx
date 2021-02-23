@@ -48,7 +48,7 @@ namespace ROOT {
 namespace Experimental {
 
 class RCollectionField;
-class RCollectionNTuple;
+class RCollectionNTupleWriter;
 class REntry;
 class RNTupleModel;
 
@@ -432,11 +432,11 @@ public:
 class RCollectionField : public ROOT::Experimental::Detail::RFieldBase {
 private:
    /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
-   std::shared_ptr<RCollectionNTuple> fCollectionNTuple;
+   std::shared_ptr<RCollectionNTupleWriter> fCollectionNTuple;
 public:
    static std::string TypeName() { return ":RCollectionField:"; }
    RCollectionField(std::string_view name,
-                    std::shared_ptr<RCollectionNTuple> collectionNTuple,
+                    std::shared_ptr<RCollectionNTupleWriter> collectionNTuple,
                     std::unique_ptr<RNTupleModel> collectionModel);
    RCollectionField(RCollectionField&& other) = default;
    RCollectionField& operator =(RCollectionField&& other) = default;
