@@ -1261,7 +1261,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
       nesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream,cl);
    }
 
-   dictStream << "   namespace ROOT {" << std::endl;
+   dictStream << "   namespace ROOTDict {" << std::endl;
 
 #if !defined(R__AIX)
    dictStream << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;

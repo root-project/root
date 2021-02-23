@@ -367,7 +367,7 @@ public: \
 
 #define NamespaceImpUnique(name,key) \
    namespace name { \
-      namespace ROOT { \
+      namespace ROOTDict { \
          ::ROOT::TGenericClassInfo *GenerateInitInstance(); \
          namespace { \
             static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
