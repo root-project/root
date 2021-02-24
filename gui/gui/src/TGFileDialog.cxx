@@ -264,7 +264,8 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    TGHorizontalFrame *fHfname = new TGHorizontalFrame(fVf, 10, 10);
 
-   TGLabel *fLfname = new TGLabel(fHfname, new TGHotString((dlg_type == kDOpen || dlg_type == kDSave ) ? "Folder &name:" : "File &name:"));
+   TGLabel *fLfname = new TGLabel(fHfname, new TGHotString(
+      (dlg_type == kDOpen || dlg_type == kDSave ) ? "Folder &name:" : "File &name:"));
    fTbfname = new TGTextBuffer(1034);
    fName = new TGTextEntry(fHfname, fTbfname);
    fName->Resize(230, fName->GetDefaultHeight());
