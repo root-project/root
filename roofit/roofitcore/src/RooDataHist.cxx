@@ -1380,12 +1380,12 @@ void RooDataHist::set(std::size_t binNumber, double wgt, double wgtErr) {
 /// \deprecated Prefer set(std::size_t, double, double).
 /// \param[in] wgt New bin content.
 /// \param[in] wgtErr Optional error of the bin content.
-void RooDataHist::set(double weight, double wgtErr) {
+void RooDataHist::set(double wgt, double wgtErr) {
   if (_curIndex == std::numeric_limits<std::size_t>::max()) {
     _curIndex = calcTreeIndex(_vars, true) ;
   }
 
-  set(_curIndex, weight, wgtErr);
+  set(_curIndex, wgt, wgtErr);
 }
 
 
@@ -1470,17 +1470,17 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize, Bool_t inverseBinCor) const
     return _cache_sum ;
   }
 
-  ROOT::Math::KahanSum<double> sum;
+  ROOT::Math::KahanSum<double> kahanSum;
   for (Int_t i=0; i < _arrSize; i++) {
     const double theBinVolume = correctForBinSize ? (inverseBinCor ? 1/_binv[i] : _binv[i]) : 1.0 ;
-    sum += get_wgt(i) * theBinVolume;
+    kahanSum += get_wgt(i) * theBinVolume;
   }
 
   // Store result in cache
   _cache_sum_valid = cache_code;
-  _cache_sum = sum;
+  _cache_sum = kahanSum;
 
-  return sum;
+  return kahanSum;
 }
 
 
@@ -1747,7 +1747,7 @@ Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) cons
     }
     
     // Otherwise sum the weights in the event
-    ROOT::Math::KahanSum<> sum;
+    ROOT::Math::KahanSum<> kahanSum;
     for (Int_t i=0; i < _arrSize; i++) {
       get(i) ;
       if ((!_maskedWeights.empty() && _maskedWeights[i] == 0.)
@@ -1755,12 +1755,12 @@ Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) cons
           || (cutRange && !_vars.allInRange(cutRange)))
           continue;
 
-      sum += weight(i);
+      kahanSum += weight(i);
     }
     
     if (select) delete select ;
     
-    return sum;
+    return kahanSum;
   }
 }
 
