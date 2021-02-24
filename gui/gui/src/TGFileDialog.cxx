@@ -214,8 +214,10 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
       fCheckB->SetToolTipText("Allows multiple file selection when SHIFT is pressed");
       fCheckB->Connect("Toggled(Bool_t)","TGFileInfo",fFileInfo,"SetMultipleSelection(Bool_t)");
    }
-   if(fCheckB) fHtop->AddFrame(fCheckB, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-   if(fCheckB) fCheckB->SetOn(fFileInfo->fMultipleSelection);
+   if (fCheckB) {
+      fHtop->AddFrame(fCheckB, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+      fCheckB->SetOn(fFileInfo->fMultipleSelection);
+   }
    AddFrame(fHtop, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 4, 4, 3, 1));
 
    //--- file view
