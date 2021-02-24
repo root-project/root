@@ -302,6 +302,38 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
 };
 
+/// The field for an untyped record. The subfields are stored consequitively in a memory block, i.e.
+/// the memory layout is identical to one that a named C++ struct would have
+class RRecordField : public Detail::RFieldBase {
+private:
+   std::size_t fMaxAlignment = 1;
+   std::size_t fSize = 0;
+
+   std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
+
+protected:
+   void AppendImpl(const Detail::RFieldValue& value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
+
+public:
+   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields);
+   RRecordField(RRecordField&& other) = default;
+   RRecordField& operator =(RRecordField&& other) = default;
+   ~RRecordField() = default;
+   std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final;
+
+   void GenerateColumnsImpl() final {}
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void* where) final;
+   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
+   Detail::RFieldValue CaptureValue(void *where) final;
+   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   size_t GetValueSize() const final { return fSize; }
+   size_t GetAlignment() const final { return fMaxAlignment; }
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
 class RVectorField : public Detail::RFieldBase {
 private:
@@ -429,12 +461,13 @@ public:
 };
 
 
+/// The collection field is only used for writing; when reading, untyped collections are projected to an std::vector
 class RCollectionField : public ROOT::Experimental::Detail::RFieldBase {
 private:
    /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
    std::shared_ptr<RCollectionNTupleWriter> fCollectionNTuple;
 public:
-   static std::string TypeName() { return ":RCollectionField:"; }
+   static std::string TypeName() { return ""; }
    RCollectionField(std::string_view name,
                     std::shared_ptr<RCollectionNTupleWriter> collectionNTuple,
                     std::unique_ptr<RNTupleModel> collectionModel);
