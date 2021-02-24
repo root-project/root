@@ -678,7 +678,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          break;
 
       case kC_TEXTENTRY:
-         if ((fDlgType==kDOpen || fDlgType==kDSave) && fOk->GetState()==kButtonDisabled) //when typing, re-enable previously disabled button after having clicked on file instead of folder
+         // when typing, re-enable previously disabled button after having clicked on file instead of folder
+         if ((fDlgType==kDOpen || fDlgType==kDSave) && fOk->GetState()==kButtonDisabled)
             fOk->SetEnabled(kTRUE);
 
          switch (GET_SUBMSG(msg)) {
