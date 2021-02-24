@@ -853,6 +853,8 @@ function(ROOTTEST_ADD_TEST testname)
 
   if(MSVC)
     set(environment ENVIRONMENT
+                    ${ROOTTEST_ENV_EXTRA}
+                    ${ARG_ENVIRONMENT}
                     ROOTSYS=${ROOTSYS}
                     PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
   else()
