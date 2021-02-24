@@ -5,8 +5,9 @@
 #                  OUTREF execdummy.ref
 #                  DEPENDS ${GENERATE_REFLEX_TEST})
 
-ROOTTEST_ADD_TEST(5594
-                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/AliAODPid.h
-                               -o  AliAODPid.cxx 
-                               --select=${CMAKE_CURRENT_SOURCE_DIR}/AliAODPid_selection.xml
-                               ${WILLFAIL_ON_WIN32})
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_ADD_TEST(5594
+                    COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/AliAODPid.h
+                                 -o  AliAODPid.cxx
+                                 --select=${CMAKE_CURRENT_SOURCE_DIR}/AliAODPid_selection.xml)
+endif()
