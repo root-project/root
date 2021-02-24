@@ -34,8 +34,13 @@ namespace ROOT {
 namespace Experimental {
 
 class RDanglingFieldDescriptor;
+class RNTupleDescriptor;
 class RNTupleDescriptorBuilder;
 class RNTupleModel;
+
+namespace Detail {
+   class RFieldBase;
+}
 
 // clang-format off
 /**
@@ -84,6 +89,9 @@ public:
    bool operator==(const RFieldDescriptor &other) const;
    /// Get a copy of the descriptor
    RFieldDescriptor Clone() const;
+   /// In general, we create a field simply from the C++ type name. For untyped fields, however, we potentially need
+   /// access to sub fields, which is provided by the ntuple descriptor argument.
+   std::unique_ptr<Detail::RFieldBase> CreateField(const RNTupleDescriptor &ntplDesc) const;
 
    DescriptorId_t GetId() const { return fFieldId; }
    RNTupleVersion GetFieldVersion() const { return fFieldVersion; }
@@ -530,10 +538,6 @@ public:
    std::unique_ptr<RNTupleModel> GenerateModel() const;
    void PrintInfo(std::ostream &output) const;
 };
-
-namespace Detail {
-   class RFieldBase;
-}
 
 // clang-format off
 /**

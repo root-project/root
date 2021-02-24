@@ -502,6 +502,25 @@ ROOT::Experimental::RFieldDescriptor::Clone() const {
    return clone;
 }
 
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc) const
+{
+   if (GetTypeName().empty() && GetStructure() == ENTupleStructure::kCollection) {
+      // For untyped collections, we have no class available to collect all the sub fields.
+      // Therefore, we create an untyped record field as an artifical binder for the collection items.
+      std::vector<std::unique_ptr<Detail::RFieldBase>> memberFields;
+      for (auto id : fLinkIds) {
+         const auto &memberDesc = ntplDesc.GetFieldDescriptor(id);
+         memberFields.emplace_back(memberDesc.CreateField(ntplDesc));
+      }
+      auto recordField = std::make_unique<RRecordField>("_0", memberFields);
+      auto collectionField = std::make_unique<RVectorField>(GetFieldName(), std::move(recordField));
+      return collectionField;
+   }
+
+   return Detail::RFieldBase::Create(GetFieldName(), GetTypeName()).Unwrap();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -763,10 +782,8 @@ ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterI
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
 {
    auto model = std::make_unique<RNTupleModel>();
-   for (const auto &topDesc : GetTopLevelFields()) {
-      auto field = Detail::RFieldBase::Create(topDesc.GetFieldName(), topDesc.GetTypeName());
-      model->AddField(field.Unwrap());
-   }
+   for (const auto &topDesc : GetTopLevelFields())
+      model->AddField(topDesc.CreateField(*this));
    return model;
 }
 

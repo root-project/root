@@ -257,6 +257,36 @@ void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RClassField &
 }
 
 
+void ROOT::Experimental::RPrintValueVisitor::VisitRecordField(const RRecordField &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << "{";
+   auto elems = field.SplitValue(fValue);
+   for (auto iValue = elems.begin(); iValue != elems.end(); ) {
+      if (!fPrintOptions.fPrintSingleLine)
+         fOutput << std::endl;
+
+      RPrintOptions options;
+      options.fPrintSingleLine = fPrintOptions.fPrintSingleLine;
+      RPrintValueVisitor visitor(*iValue, fOutput, fLevel + 1, options);
+      iValue->GetField()->AcceptVisitor(visitor);
+
+      if (++iValue == elems.end()) {
+         if (!fPrintOptions.fPrintSingleLine)
+            fOutput << std::endl;
+         break;
+      } else {
+         fOutput << ",";
+         if (fPrintOptions.fPrintSingleLine)
+           fOutput << " ";
+      }
+   }
+   PrintIndent();
+   fOutput << "}";
+}
+
+
 void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RVectorField &field)
 {
    PrintCollection(field);
