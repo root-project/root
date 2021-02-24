@@ -598,7 +598,7 @@ sap.ui.define([
 	 var attributes = this.attributes;
 	 var positions = attributes.position.array;
 	 if ( attributes.normal === undefined ) {
-	    this.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( positions.length ), 3 ) );
+	    this.setAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( positions.length ), 3 ) );
 	 } else {
 	    // reset existing normals to zero
 	    var array = attributes.normal.array;
