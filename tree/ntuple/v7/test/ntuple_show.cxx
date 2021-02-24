@@ -277,8 +277,8 @@ TEST(RNTupleShow, Collections)
    {
       auto model = RNTupleModel::Create();
       auto collection_model = RNTupleModel::Create();
-      auto int_field = collection_model->MakeField<int>("int");
-      auto float_field = collection_model->MakeField<float>("float");
+      auto int_field = collection_model->MakeField<int>("myInt");
+      auto float_field = collection_model->MakeField<float>("myFloat");
       auto collection = model->MakeCollection("collection", std::move(collection_model));
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
       *int_field = 0;
@@ -291,7 +291,7 @@ TEST(RNTupleShow, Collections)
     }
 
    auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
-   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON);
+   //ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON);
    ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary);
    ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails);
 }

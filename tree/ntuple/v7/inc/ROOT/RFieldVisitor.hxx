@@ -48,6 +48,7 @@ public:
    virtual void VisitArrayField(const RArrayField &field) { VisitField(field); }
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
    virtual void VisitClassField(const RClassField &field) { VisitField(field); }
+   virtual void VisitRecordField(const RRecordField &field) { VisitField(field); }
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
@@ -196,6 +197,7 @@ public:
 
    void VisitArrayField(const RArrayField &field) final;
    void VisitClassField(const RClassField &field) final;
+   void VisitRecordField(const RRecordField &field) final;
    void VisitVectorField(const RVectorField &field) final;
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
 };
