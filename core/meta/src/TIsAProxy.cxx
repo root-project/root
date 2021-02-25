@@ -118,10 +118,13 @@ TClass* TIsAProxy::operator()(const void *obj)
 
    // Check if type is already in sub-class cache
    auto last = ToPair(FindSubType(typ));
-   if ( last == nullptr || last->second == nullptr )  {
+   if ( last == nullptr )  {
       // Last resort: lookup root class
       auto cls = TClass::GetClass(*typ);
-      last = ToPair(CacheSubType(typ,cls));
+      if (cls)
+         last = ToPair(CacheSubType(typ,cls));
+      else
+         return nullptr; // Don't record failed searches (a library might be loaded between now and the next search).
    }
 
    UChar_t next = fNextLastSlot++;
@@ -132,7 +135,7 @@ TClass* TIsAProxy::operator()(const void *obj)
    }
    fLasts[next].store(last);
 
-   return last == nullptr ? nullptr: last->second;
+   return last == nullptr ? nullptr : last->second;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
