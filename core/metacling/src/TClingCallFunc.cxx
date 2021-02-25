@@ -447,6 +447,7 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
          callbuf << "((const " << class_name << "*)obj)->";
       else
          callbuf << "((" << class_name << "*)obj)->";
+      callbuf << class_name << "::";
    } else if (const NamedDecl *ND =
                  dyn_cast<NamedDecl>(GetDeclContext())) {
       // This is a namespace member.
