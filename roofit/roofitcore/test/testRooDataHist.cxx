@@ -1,5 +1,6 @@
 // Tests for the RooDataHist
 // Authors: Stephan Hageboeck, CERN  01/2019
+//          Jonas Rembser, CERN 02/2020
 
 #include "RooDataHist.h"
 #include "RooGlobalFunc.h"
@@ -7,6 +8,8 @@
 #include "RooHelpers.h"
 #include "RooCategory.h"
 #include "RunContext.h"
+#include "RooHistFunc.h"
+#include "RooHistPdf.h"
 
 #include "TH1D.h"
 #include "TH2D.h"
@@ -448,4 +451,181 @@ TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRangeWithMasking) {
   for (unsigned int i=0; i < numEntries; ++i) {
     EXPECT_TRUE((-8. < xBatch[i] && xBatch[i] < 5.) || weights[i] == 0.);
   }
+}
+
+double integrate(RooAbsReal &absReal, const RooArgSet &iset, const RooArgSet &nset, const char *rangeName = 0)
+{
+   return absReal.createIntegral(iset, nset, rangeName)->getVal();
+}
+
+double integrate(RooAbsReal &absReal, const RooArgSet &iset, const char *rangeName = 0)
+{
+   return absReal.createIntegral(iset, rangeName)->getVal();
+}
+
+double integrateTH1DAsFunction(TH1D &hist)
+{
+   double result = 0;
+   for (int i = 1; i < hist.GetNbinsX() + 1; ++i) {
+      result += hist.GetBinContent(i) * hist.GetBinWidth(i);
+   }
+   return result;
+}
+
+TEST(RooDataHist, AnalyticalIntegration)
+{
+   // The RooDataHit can be analytically integrated with the RooDataHist::sum()
+   // member functions.  This functionality is used in the analytical
+   // integration capabilities of RooHistPdf and RooHistFunc.  Therefore, to
+   // test these two classes at the same time, this tests validated
+   // RooDataHist::sum() via the RooHistPdf and RooHistFunc interfaces.
+
+   // The histograms for this example are kept simple such that one can easily
+   // calculate the expected values with a calculator.
+
+   // We first create an easy non-uniform histogram for the x variable so we
+   // can know what we expect as test results analytically.  The histogram will
+   // have the following bins with contents:
+
+   //  - bin1 [0.0, 1.0]: 3 counts (bin volume x counts = 3)
+   //  - bin2 [1.0, 3.0]: 1 count  (bin volume x counts = 2)
+   //  - bin3 [3.0, 3.5]: 8 counts (bin volume x counts = 4)
+
+   RooRealVar x("x", "x", 0, 3.5);
+   x.setRange("R1", 1.0, 3.0);  // subrange that respects the bin edges
+   x.setRange("R2", 0.5, 3.25); // subrange that slices throught the bins
+
+   RooRealVar y("y", "y", 0.5, 0, 3.5);
+   y.setRange("R1", 0, 2.5); // subrange that respects the bin edges
+   y.setRange("R2", 0, 3.3); // subrange that slices throught the bins
+
+   RooArgSet bothXandY{x, y};
+
+   // histogram bin and content information
+   std::vector<double> xEdges{0.0, 1.0, 3.0, 3.5};
+   std::vector<double> yEdges{0.0, 2.5, 3.5};
+   std::vector<double> yEdgesTrivial{0.0, 3.5};
+
+   std::vector<double> xVals{0.5, 2.0, 3.1};
+   std::vector<double> xWeights{3, 1, 8};
+   std::vector<double> xValsInSecondYBin{0.5, 2.0, 3.1};
+   std::vector<double> xWeightsInSecondYBin{1, 2, 1};
+
+   TH1D h1{"h1", "h1", 3, xEdges.data()};
+   for (size_t i = 0; i < xVals.size(); ++i) {
+      h1.Fill(xVals[i], xWeights[i]);
+   }
+
+   RooDataHist dh1("dh1", "dh1", x, &h1);
+
+   // test the RooHistFunc
+
+   RooHistFunc hf1("hf1", "hf1", x, dh1);
+
+   // RooHistFunc integrals are unnormalized, so no need to pass normalization sets
+   EXPECT_FLOAT_EQ(integrate(hf1, x), integrateTH1DAsFunction(h1));
+   EXPECT_FLOAT_EQ(integrate(hf1, x, "R1"), 2.0);
+   EXPECT_FLOAT_EQ(integrate(hf1, x, "R2"), 5.5);
+
+   // test the RooHistPdf
+   RooHistPdf hpdf1("hpdf1", "hpdf1", x, dh1);
+
+   EXPECT_FLOAT_EQ(integrate(hpdf1, x, x), 1.0);
+   EXPECT_FLOAT_EQ(integrate(hpdf1, x, x, "R1"), h1.Integral(2, 2) / h1.Integral());
+   EXPECT_FLOAT_EQ(integrate(hpdf1, x, x, "R2"), 6.5 / 12);
+
+   {
+
+      // Now test the simple 2D case where there just an additional dummy variable y that is always in the first bin
+      // This should consistently give the same results as the 1D case.
+
+      TH2D h2trivial{"h2trivial", "h2trivial", 3, xEdges.data(), 1, yEdgesTrivial.data()};
+      for (size_t i = 0; i < xVals.size(); ++i) {
+         h2trivial.Fill(xVals[i], 0.5, xWeights[i]);
+      }
+
+      RooDataHist dh2trivial("dh2trivial", "dh2trivial", bothXandY, &h2trivial);
+
+      // test RooHistFunc
+      RooHistFunc hf2trivial("hf2trivial", "hf2trivial", bothXandY, dh2trivial);
+
+      EXPECT_FLOAT_EQ(integrate(hf2trivial, x), integrate(hf1, x));
+      EXPECT_FLOAT_EQ(integrate(hf2trivial, x, "R1"), integrate(hf1, x, "R1"));
+      EXPECT_FLOAT_EQ(integrate(hf2trivial, x, "R2"), integrate(hf1, x, "R2"));
+
+      // test RooHistPdf
+      RooHistPdf hpdf2trivial("hpdf2trivial", "hpdf2trivial", bothXandY, dh2trivial);
+
+      EXPECT_FLOAT_EQ(integrate(hpdf2trivial, x, x), integrate(hpdf1, x, x));
+      EXPECT_FLOAT_EQ(integrate(hpdf2trivial, x, x, "R1"), integrate(hpdf1, x, x, "R1"));
+      EXPECT_FLOAT_EQ(integrate(hpdf2trivial, x, x, "R2"), integrate(hpdf1, x, x, "R2"));
+   }
+
+   // Now test the complete 2D case where the y variable is also distributed
+   // with non-uniform binning.  To make things simple, the histogram has only
+   // 2 bins.
+   //
+   // The x-histogram will have the following content for the entries where y
+   // is in the [0, 2.5] bin (12 entries):
+   //
+   //  - bin1 [0.0, 1.0]: 3 counts (bin volume x counts = 3)
+   //  - bin2 [1.0, 3.0]: 1 count  (bin volume x counts = 2)
+   //  - bin3 [3.0, 3.5]: 8 counts (bin volume x counts = 4)
+   //
+   // Then, there are some more entries with y in the [2.5, 3.5] bin (4 entries);
+   //
+   //  - bin6 [0.0, 1.0]: 1 counts (bin volume x counts = 1)
+   //  - bin7 [1.0, 3.0]: 2 counts  (bin volume x counts = 4)
+   //  - bin8 [3.0, 3.5]: 1 counts (bin volume x counts = 0.5)
+
+   TH2D h2{"h2", "h2", 3, xEdges.data(), 2, yEdges.data()};
+   for (size_t i = 0; i < xVals.size(); ++i) {
+      h2.Fill(xVals[i], 0.5, xWeights[i]);
+      h2.Fill(xValsInSecondYBin[i], 3.0, xWeightsInSecondYBin[i]);
+   }
+
+   RooDataHist dh2("dh2", "dh2", bothXandY, &h2);
+
+   // test RooHistFunc
+   RooHistFunc hf2("hf2", "hf2", bothXandY, dh2);
+
+   y.setVal(2.0);
+   EXPECT_FLOAT_EQ(integrate(hf2, bothXandY), 28);
+   EXPECT_FLOAT_EQ(integrate(hf2, bothXandY, "R1"), 5.);
+   EXPECT_FLOAT_EQ(integrate(hf2, bothXandY, "R2"), 17.55);
+
+   y.setVal(0.5);
+   EXPECT_FLOAT_EQ(integrate(hf2, x), integrate(hf1, x));
+   EXPECT_FLOAT_EQ(integrate(hf2, x, "R1"), integrate(hf1, x, "R1"));
+   EXPECT_FLOAT_EQ(integrate(hf2, x, "R2"), integrate(hf1, x, "R2"));
+
+   x.setVal(0.5);
+   EXPECT_FLOAT_EQ(integrate(hf2, y), 8.5);
+   EXPECT_FLOAT_EQ(integrate(hf2, y, "R1"), 7.5);
+   EXPECT_FLOAT_EQ(integrate(hf2, y, "R2"), 8.3);
+
+   // test RooHistPdf
+   RooHistPdf hpdf2("hpdf2", "hpdf2", bothXandY, dh2);
+
+   EXPECT_FLOAT_EQ(integrate(hpdf2, x, x), 1.);
+   EXPECT_FLOAT_EQ(integrate(hpdf2, x, x, "R1"), 1. / 12.);
+   EXPECT_FLOAT_EQ(integrate(hpdf2, x, x, "R2"), 6.5 / 12.);
+
+   // Here one should not forget to divide by the bin volume of the slice set,
+   // which is y = 0.5 in the first bin with width 2.5
+   const double normXoverXY = h2.Integral(1, 3, 1, 1) / (2.5 * h2.Integral());
+   EXPECT_FLOAT_EQ(integrate(hpdf2, x, bothXandY), normXoverXY);
+   EXPECT_FLOAT_EQ(integrate(hpdf2, x, bothXandY, "R1"), 1. / 12. * normXoverXY);
+   EXPECT_FLOAT_EQ(integrate(hpdf2, x, bothXandY, "R2"), 6.5 / 12. * normXoverXY);
+
+   EXPECT_FLOAT_EQ(integrate(hpdf2, y, y), 1.);
+   EXPECT_FLOAT_EQ(integrate(hpdf2, y, y, "R1"), 3.0 / 4.);
+   EXPECT_FLOAT_EQ(integrate(hpdf2, y, y, "R2"), 3.8 / 4.);
+
+   // Here one should not forget to divide by the bin volume of the slice set,
+   // which is x = 0.5 in the first bin with width 1.0
+   const double normYoverXY = h2.Integral(1, 1, 1, 2) / (1.0 * h2.Integral());
+   EXPECT_FLOAT_EQ(integrate(hpdf2, y, bothXandY), 1 * normYoverXY);
+   EXPECT_FLOAT_EQ(integrate(hpdf2, y, bothXandY, "R1"), 3.0 / 4. * normYoverXY);
+   EXPECT_FLOAT_EQ(integrate(hpdf2, y, bothXandY, "R2"), 3.8 / 4. * normYoverXY);
 }
