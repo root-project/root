@@ -53,6 +53,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogoff.C "{}")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.rootrc "
 Proof.Sandbox: /tmp/proof
 Rint.History:  .root_hist
+ACLiC.LinkLibs:  1
 ")
 
 #---Definition of the helper function--------------------------------
