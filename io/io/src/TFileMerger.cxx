@@ -705,7 +705,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       dirpath.Remove(0, std::strlen(dirobj->GetFile()->GetPath()));
 
       // Do not delete the directory if it is part of the output
-      // and we are in incremental mode (because it will be reuse
+      // and we are in incremental mode (because it will be reused
       // and has not been written to disk (for performance reason).
       // coverity[var_deref_model] the IsA()->InheritsFrom guarantees that the dynamic_cast will succeed.
       if (!(type & kIncremental) || dirobj->GetFile() != target) {
@@ -718,7 +718,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       TFile *nextsource = current_file ? (TFile *)sourcelist->After(current_file) : (TFile *)sourcelist->First();
       while (nextsource) {
          TDirectory *ndir = nextsource->GetDirectory(dirpath);
-         // For consistency (and persformance), we reset the MustCleanup be also for those
+         // For consistency (and performance), we reset the MustCleanup be also for those
          // 'key' retrieved indirectly.
          if (ndir) {
             ndir->ResetBit(kMustCleanup);
