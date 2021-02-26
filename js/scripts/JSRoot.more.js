@@ -528,14 +528,22 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       if ((tf1.fSave.length > 0) && !this.nosave) {
          // in the case where the points have been saved, useful for example
          // if we don't have the user's function
+
          let np = tf1.fSave.length - 2,
              xmin = tf1.fSave[np],
              xmax = tf1.fSave[np+1],
-             dx = (xmax - xmin) / (np-1),
-             res = [];
+             use_histo = tf1.$histo && (xmin === xmax),
+             bin = 0, dx = 0, res = [];
 
-         for (let n=0; n < np; ++n) {
-            let xx = xmin + dx*n;
+         if (use_histo) {
+            xmin = tf1.fSave[--np];
+            bin = tf1.$histo.fXaxis.FindBin(xmin, 0);
+         } else {
+            dx = (xmax - xmin) / (np-1);
+         }
+
+         for (let n = 0; n < np; ++n) {
+            let xx = use_histo ? tf1.$histo.fXaxis.GetBinCenter(bin+n+1) : xmin + dx*n;
             // check if points need to be displayed at all, keep at least 4-5 points for Bezier curves
             if ((gxmin !== gxmax) && ((xx + 2*dx < gxmin) || (xx - 2*dx > gxmax))) continue;
             let yy = tf1.fSave[n];
@@ -613,9 +621,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TF1Painter.prototype.processTooltipEvent = function(pnt) {
       let cleanup = false;
 
-      if (!pnt || (this.bins === null)) {
+      if (!pnt || (this.bins === null) || pnt.disabled) {
          cleanup = true;
-      } else if ((this.bins.length==0) || (pnt.x < this.bins[0].grx) || (pnt.x > this.bins[this.bins.length-1].grx)) {
+      } else if (!this.bins.length || (pnt.x < this.bins[0].grx) || (pnt.x > this.bins[this.bins.length-1].grx)) {
          cleanup = true;
       }
 
@@ -1421,6 +1429,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
          }
       }
+
+      if (JSROOT.batch_mode) return;
+
+      return JSROOT.require(['interactive'])
+                   .then(inter => inter.addMoveHandler(this, this.testEditable()));
    }
 
    /** @summary Provide tooltip at specified point
@@ -1428,10 +1441,10 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TGraphPainter.prototype.extractTooltip = function(pnt) {
       if (!pnt) return null;
 
-      if ((this.draw_kind=="lines") || (this.draw_kind=="path") || (this.draw_kind=="mark"))
+      if ((this.draw_kind == "lines") || (this.draw_kind == "path") || (this.draw_kind == "mark"))
          return this.extractTooltipForPath(pnt);
 
-      if (this.draw_kind!="nodes") return null;
+      if (this.draw_kind != "nodes") return null;
 
       let pmain = this.getFramePainter(),
           height = pmain.getFrameHeight(),
@@ -1440,7 +1453,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
           findbin = null, best_dist2 = 1e10, best = null,
           msize = this.marker_size ? Math.round(this.marker_size/2 + 1.5) : 0;
 
-      this.draw_g.selectAll('.grpoint').each(() => {
+      this.draw_g.selectAll('.grpoint').each(function() {
          let d = d3.select(this).datum();
          if (d===undefined) return;
          let dist2 = Math.pow(pnt.x - d.grx1, 2);
@@ -1626,13 +1639,15 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
-   /** @summary Check editable flag for TGraph */
-   TGraphPainter.prototype.testEditable = function(toggle) {
+   /** @summary Check editable flag for TGraph
+     * @desc if arg specified changes or toggles editable flag */
+   TGraphPainter.prototype.testEditable = function(arg) {
       let obj = this.getObject(),
           kNotEditable = JSROOT.BIT(18);   // bit set if graph is non editable
 
       if (!obj) return false;
-      if (toggle) obj.InvertBit(kNotEditable);
+      if ((arg == "toggle") || ((arg!==undefined) && (!arg != obj.TestBit(kNotEditable))))
+         obj.InvertBit(kNotEditable);
       return !obj.TestBit(kNotEditable);
    }
 
@@ -1747,6 +1762,12 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Check if graph moving is enabled
+     * @private */
+   TGraphPainter.prototype.moveEnabled = function() {
+      return this.testEditable();
+   }
+
    /** @summary Start moving of TGraph
      * @private */
    TGraphPainter.prototype.moveStart = function(x,y) {
@@ -1817,7 +1838,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       JSROOT.ObjectPainter.prototype.fillContextMenu.call(this, menu);
 
       if (!this.snapid)
-         menu.addchk(this.testEditable(), "Editable", () => this.testEditable(true));
+         menu.addchk(this.testEditable(), "Editable", () => { this.testEditable("toggle"); this.drawGraph(); });
 
       return menu.size() > 0;
    }
@@ -2035,11 +2056,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       return promise.then(() => {
          painter.addToPadPrimitives();
-         painter.drawGraph();
+         return painter.drawGraph();
          // wait until interactive elements assigned
-         if (painter.testEditable() && !JSROOT.batch_mode)
-            return JSROOT.require(['interactive'])
-                         .then(inter => inter.addMoveHandler(painter));
       }).then(() => painter.drawNextFunction(0));
    }
 
@@ -3990,6 +4008,121 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return Promise.resolve(painter);
    }
 
+   // =================================================================================
+
+   /**
+    * @summary Painter class for TRatioPlot
+    *
+    * @class
+    * @memberof JSROOT
+    * @extends JSROOT.ObjectPainter
+    * @param {object|string} dom - DOM element for drawing or element id
+    * @param {object} ratio - TRatioPlot object
+    * @param {string} [opt] - draw options
+    * @private
+    */
+
+   function TRatioPlotPainter(dom, ratio, opt) {
+      JSROOT.ObjectPainter.call(this, dom, ratio, opt);
+   }
+
+   TRatioPlotPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
+
+   /** @summary Redraw TRatioPlot */
+   TRatioPlotPainter.prototype.redraw = function() {
+      let ratio = this.getObject(),
+          pp = this.getPadPainter();
+
+      let top_p = pp.findPainterFor(ratio.fTopPad, "top_pad", "TPad");
+      if (top_p) top_p.disablePadDrawing();
+
+      let up_p = pp.findPainterFor(ratio.fUpperPad, "upper_pad", "TPad"),
+          up_main = up_p ? up_p.getMainPainter() : null,
+          up_fp = up_p ? up_p.getFramePainter() : null,
+          low_p = pp.findPainterFor(ratio.fLowerPad, "lower_pad", "TPad"),
+          low_main = low_p ? low_p.getMainPainter() : null,
+          low_fp = low_p ? low_p.getFramePainter() : null,
+          lbl_size = 20;
+
+      if (up_p && up_main && up_fp && low_fp && !up_p._ratio_configured) {
+         up_p._ratio_configured = true;
+         up_main.options.Axis = 0; // draw both axes
+
+         lbl_size = up_main.getHisto().fYaxis.fLabelSize;
+         if (lbl_size < 1) lbl_size = Math.round(lbl_size*Math.min(up_p.getPadWidth(), up_p.getPadHeight()));
+
+         let h = up_main.getHisto();
+         h.fXaxis.fLabelSize = 0; // do not draw X axis labels
+         h.fXaxis.fTitle = ""; // do not draw X axis labels
+         h.fYaxis.fLabelSize = lbl_size;
+         h.fYaxis.fTitleSize = lbl_size;
+
+         up_p.getRootPad().fTicky = 1;
+         up_p.redraw();
+
+         up_fp.o_zoom = up_fp.zoom;
+         up_fp._ratio_low_fp = low_fp;
+         up_fp.zoom = function(xmin,xmax,ymin,ymax,zmin,zmax) {
+            this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax);
+            this._ratio_low_fp.o_zoom(xmin,xmax);
+         }
+
+         up_fp.o_sizeChanged = up_fp.sizeChanged;
+         up_fp.sizeChanged = function() {
+            this.o_sizeChanged();
+            this._ratio_low_fp.fX1NDC = this.fX1NDC;
+            this._ratio_low_fp.fX2NDC = this.fX2NDC;
+            this._ratio_low_fp.o_sizeChanged();
+         }
+      }
+
+      if (low_p && low_main && low_fp && up_fp && !low_p._ratio_configured) {
+         low_p._ratio_configured = true;
+         low_main.options.Axis = 0; // draw both axes
+         let h = low_main.getHisto();
+         h.fXaxis.fTitle = "x"; // do not draw X axis labels
+         h.fXaxis.fLabelSize = lbl_size;
+         h.fXaxis.fTitleSize = lbl_size;
+         h.fYaxis.fLabelSize = lbl_size;
+         h.fYaxis.fTitleSize = lbl_size;
+         low_p.getRootPad().fTicky = 1;
+
+         low_p.forEachPainterInPad(objp => {
+            if (typeof objp.testEditable == 'function')
+               objp.testEditable(false);
+         });
+
+         low_fp.zoom(up_fp.scale_xmin,  up_fp.scale_xmax);
+
+         low_fp.o_zoom = low_fp.zoom;
+         low_fp._ratio_up_fp = up_fp;
+
+         low_fp.zoom = function(xmin,xmax,ymin,ymax,zmin,zmax) {
+            this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax);
+            this._ratio_up_fp.o_zoom(xmin,xmax);
+         }
+
+         low_fp.o_sizeChanged = low_fp.sizeChanged;
+         low_fp.sizeChanged = function() {
+            this.o_sizeChanged();
+            this._ratio_up_fp.fX1NDC = this.fX1NDC;
+            this._ratio_up_fp.fX2NDC = this.fX2NDC;
+            this._ratio_up_fp.o_sizeChanged();
+         }
+      }
+   }
+
+   let drawRatioPlot = (divid, ratio, opt) => {
+      let painter = new TRatioPlotPainter(divid, ratio, opt);
+
+      return jsrp.ensureTCanvas(painter, false).then(() => {
+
+         painter.redraw();
+
+         return painter;
+      });
+
+   }
 
    // ==================================================================================================
 
@@ -4012,7 +4145,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    jsrp.drawEfficiency = drawEfficiency;
    jsrp.drawGraphPolargram = drawGraphPolargram;
    jsrp.drawASImage = drawASImage;
-
+   jsrp.drawRatioPlot = drawRatioPlot;
 
    JSROOT.TF1Painter = TF1Painter;
    JSROOT.TGraphPainter = TGraphPainter;
@@ -4020,6 +4153,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    JSROOT.TMultiGraphPainter = TMultiGraphPainter;
    JSROOT.TSplinePainter = TSplinePainter;
    JSROOT.TASImagePainter = TASImagePainter;
+   JSROOT.TRatioPlotPainter = TRatioPlotPainter;
 
    return JSROOT;
 
