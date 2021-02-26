@@ -427,8 +427,17 @@ namespace cling {
     }
 
     if (posOpenCurly != (size_t)-1 && !content.empty()) {
-      assert(content[posOpenCurly] == '{'
-             && "No curly at claimed position of opening curly!");
+//      assert(content[posOpenCurly] == '{'
+//             && "No curly at claimed position of opening curly!");
+      if (content[posOpenCurly] != '{') {
+        cling::errs()
+          << "cling::MetaProcessor: No curly at claimed position of opening curly!\n"
+          << "in " << llvm::sys::path::filename(filename) << "\n"
+          << "content[" << posOpenCurly << "] = "
+          << content[posOpenCurly]
+          << "\n";
+        assert(content[posOpenCurly] == '{');
+      }
       // hide the curly brace:
       content[posOpenCurly] = ' ';
       // and the matching closing '}'
