@@ -2433,10 +2433,10 @@ JSROOT.define(['rawinflate'], () => {
 
       return new Promise((resolve,reject) =>
 
-         this.fs.open(filename, 'r', (status, fd) => {
+         this.fs.open(this.fFileName, 'r', (status, fd) => {
             if (status) {
                console.log(status.message);
-               return reject(Error(`Not possible to open ${filename} inside node.js`));
+               return reject(Error(`Not possible to open ${this.fFileName} inside node.js`));
             }
             let stats = this.fs.fstatSync(fd);
 
@@ -2462,7 +2462,7 @@ JSROOT.define(['rawinflate'], () => {
 
          let cnt = 0, blobs = [];
 
-         function readfunc(err, bytesRead, buf) {
+         let readfunc = (err, bytesRead, buf) => {
 
             let res = new DataView(buf.buffer, buf.byteOffset, place[cnt + 1]);
             if (place.length === 2) return resolve(res);
@@ -2470,10 +2470,10 @@ JSROOT.define(['rawinflate'], () => {
             blobs.push(res);
             cnt += 2;
             if (cnt >= place.length) return resolve(blobs);
-            this.fs.read(this.fd, new Buffer(place[cnt + 1]), 0, place[cnt + 1], place[cnt], readfunc);
+            this.fs.read(this.fd, Buffer.alloc(place[cnt + 1]), 0, place[cnt + 1], place[cnt], readfunc);
          }
 
-         this.fs.read(this.fd, new Buffer(place[1]), 0, place[1], place[0], readfunc);
+         this.fs.read(this.fd, Buffer.alloc(place[1]), 0, place[1], place[0], readfunc);
       });
    }
 

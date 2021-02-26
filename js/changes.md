@@ -1,5 +1,13 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Fix problem with matrixes in eve geometries (#206)
+2. Fix problem with TF1 drawing from histogram list of primitives
+3. Let disable showing of StreamerInfo in the GUI by adding &skipsi to URL
+4. Support drawing produced by TRatioPlot, including interactive zooming
+5. Provide tooltips when TH1 drawn with "E" or "P" option
+
+
 ## Changes in 6.0.0
 
 1. Major release with:
