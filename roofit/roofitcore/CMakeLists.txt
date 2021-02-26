@@ -227,6 +227,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooWrapperPdf.h
     RooNaNPacker.h
     RooBinSamplingPdf.h
+    RunContextTracker.h
     RooFitLegacy/RooCatTypeLegacy.h
     RooFitLegacy/RooCategorySharedProperties.h
     RooFitLegacy/RooTreeData.h
@@ -440,6 +441,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooHelpers.cxx
     src/RooWrapperPdf.cxx
     src/RooBinSamplingPdf.cxx
+    src/RunContextTracker.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx
     src/RooFitLegacy/RooCategorySharedProperties.cxx
     src/RooFitLegacy/RooMultiCatIter.cxx

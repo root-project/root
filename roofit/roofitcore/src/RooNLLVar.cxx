@@ -49,6 +49,8 @@ In extended mode, a
 #include "TMath.h"
 #include "Math/Util.h"
 
+#include "ROOT/RMakeUnique.hxx"
+
 #include <algorithm>
 
 namespace {
@@ -447,6 +449,10 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
     result -= _offset;
   }
 
+  if(_runContextTracker) {
+     _runContextTracker->resetTrackers();
+  }
+
   _evalCarry = result.Carry();
   return result.Sum() ;
 }
@@ -474,6 +480,11 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatched(std::size_t stepSize, std::si
   // is only allocated once.
   if (!_evalData) {
     _evalData.reset(new RooBatchCompute::RunContext);
+  } 
+  if (_runContextTracker){
+    _runContextTracker->cleanRunContext(*this, *_evalData);
+  } else {
+    _evalData->clear();
   }
   _evalData->clear();
   _dataClone->getBatches(*_evalData, firstEvent, nEvents);
@@ -534,6 +545,10 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatched(std::size_t stepSize, std::si
       kahanWeight.AddIndexed(weight, i);
     }
     sumOfWeights = kahanWeight.Sum();
+  }
+
+  if (!_runContextTracker) {
+    _runContextTracker = std::make_unique<RunContextTracker>(*_evalData);
   }
 
   if (std::isnan(kahanProb.Sum())) {

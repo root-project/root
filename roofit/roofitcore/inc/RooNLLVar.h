@@ -19,6 +19,8 @@
 #include "RooAbsOptTestStatistic.h"
 #include "RooCmdArg.h"
 #include "RooAbsPdf.h"
+#include "RunContextTracker.h"
+
 #include <vector>
 #include <utility>
 
@@ -78,6 +80,7 @@ private:
   mutable std::vector<Double_t> _binw ; //!
   mutable RooRealSumPdf* _binnedPdf{nullptr}; //!
   mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; //! Struct to store function evaluation workspaces.
+  mutable std::unique_ptr<RunContextTracker> _runContextTracker; //!
    
   ClassDef(RooNLLVar,3) // Function representing (extended) -log(L) of p.d.f and dataset
 };
