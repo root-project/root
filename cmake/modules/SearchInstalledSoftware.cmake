@@ -133,7 +133,9 @@ if(builtin_freetype)
       BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${freetypebuild}
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypebuild}/freetype.lib ${FREETYPE_LIBRARY}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
-      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
+      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY}
+      TIMEOUT 600
+    )
   else()
     set(_freetype_cflags -O)
     set(_freetype_cc ${CMAKE_C_COMPILER})
@@ -153,7 +155,9 @@ if(builtin_freetype)
                           "CC=${_freetype_cc}" CFLAGS=${_freetype_cflags}
       INSTALL_COMMAND ""
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
+      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY}
+      TIMEOUT 600
+    )
   endif()
   set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/include)
   set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
@@ -215,7 +219,9 @@ if(builtin_lzma)
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
-      LOG_DOWNLOAD 1)
+      LOG_DOWNLOAD 1
+      TIMEOUT 600
+    )
     set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
   else()
     if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
@@ -238,7 +244,9 @@ if(builtin_lzma)
                         --with-pic --disable-shared --quiet
                         CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${LIBLZMA_CFLAGS} LDFLAGS=${LIBLZMA_LDFLAGS}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES})
+      BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES}
+      TIMEOUT 600
+    )
     set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   endif()
 endif()
@@ -417,7 +425,9 @@ if(builtin_afterimage)
                     CFG=${astepbld} NMAKECXXFLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different libAfterImage.lib <INSTALL_DIR>/lib/.
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
+      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
+      TIMEOUT 600
+    )
     set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE)
   else()
     message(STATUS "Building AfterImage library included in ROOT itself")
@@ -460,7 +470,9 @@ if(builtin_afterimage)
                         --with-png ${_pnginclude} ${_tiffinclude}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
+      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
+      TIMEOUT 600
+    )
     set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/libAfterImage)
   endif()
   if(builtin_freetype)
@@ -512,6 +524,7 @@ if(mathmore OR builtin_gsl)
                         LDFLAGS=${_gsl_ldflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${GSL_LIBRARIES}
+      TIMEOUT 600
     )
     set(GSL_TARGET GSL)
     # FIXME: one need to find better way to extract path with GSL include files
@@ -788,6 +801,7 @@ if(builtin_fftw3)
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${FFTW_LIBRARIES}
+    TIMEOUT 600
   )
   set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   set(FFTW3_TARGET FFTW3)
@@ -819,6 +833,7 @@ if(fitsio OR builtin_cfitsio)
                 COMMAND ${CMAKE_COMMAND} -E copy ${cfitsiobuild}/cfitsio.lib <INSTALL_DIR>/lib
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
         BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
+        TIMEOUT 600
       )
       set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CFITSIO-prefix/src/CFITSIO)
     else()
@@ -832,6 +847,7 @@ if(fitsio OR builtin_cfitsio)
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
         BUILD_IN_SOURCE 1
         BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
+        TIMEOUT 600
       )
       # We need to know which CURL_LIBRARIES were used in CFITSIO ExternalProject build
       # and which ${CURL_LIBRARIES} should be used after for linking in ROOT together with CFITSIO.
@@ -939,6 +955,7 @@ if(builtin_xrootd)
             COMMAND ${CMAKE_COMMAND} -E copy_directory <INSTALL_DIR>/include/xrootd <INSTALL_DIR>/include
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     BUILD_BYPRODUCTS ${XROOTD_LIBRARIES}
+    TIMEOUT 600
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
 
@@ -1220,6 +1237,7 @@ if(builtin_tbb)
       BUILD_IN_SOURCE 1
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${TBB_LIBRARIES}
+      TIMEOUT 600
     )
     install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*")
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*")
@@ -1247,6 +1265,7 @@ if(builtin_tbb)
       BUILD_IN_SOURCE 1
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${TBB_LIBRARIES}
+      TIMEOUT 600
     )
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
   endif()
@@ -1309,6 +1328,7 @@ if(vc AND NOT Vc_FOUND)
                -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
                -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
     INSTALL_COMMAND env DESTDIR=${Vc_DESTDIR} ${CMAKE_COMMAND} --build . --target install
+    TIMEOUT 600
   )
 
   set(VC_TARGET Vc)
@@ -1393,6 +1413,7 @@ if(builtin_veccore)
                -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
                -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
     INSTALL_COMMAND env DESTDIR=${VecCore_DESTDIR} ${CMAKE_COMMAND} --build . --target install
+    TIMEOUT 600
   )
 
   set(VECCORE_TARGET VecCore)
@@ -1469,6 +1490,7 @@ if(vdt OR builtin_vdt)
         -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${VDT_LIBRARIES}
+      TIMEOUT 600
     )
     ExternalProject_Add_Step(
        VDT copy2externals
@@ -1731,7 +1753,9 @@ if (testing)
     # Wrap download, configure and build steps in a script to log output
     LOG_DOWNLOAD ON
     LOG_CONFIGURE ON
-    LOG_BUILD ON)
+    LOG_BUILD ON
+    TIMEOUT 600
+  )
 
   # Specify include dirs for gtest and gmock
   ExternalProject_Get_Property(googletest source_dir)
@@ -1792,7 +1816,9 @@ if(webgui)
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
+        TIMEOUT 600
+      )
     else()
       ExternalProject_Add(
         OPENUI5
@@ -1801,7 +1827,9 @@ if(webgui)
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
+        TIMEOUT 600
+      )
     endif()
     install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
   endif()
