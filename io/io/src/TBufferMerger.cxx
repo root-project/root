@@ -70,11 +70,6 @@ size_t TBufferMerger::GetQueueSize() const
    return fQueue.size();
 }
 
-size_t TBufferMerger::GetBuffered() const
-{
-   return fBuffered;
-}
-
 void TBufferMerger::Push(TBufferFile *buffer)
 {
    {
