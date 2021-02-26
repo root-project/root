@@ -122,6 +122,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
                             {"TGraph2D", false},
                             {"TGraph2DErrors", false},
                             {"TASImage", false},
+                            {"TRatioPlot", false},
                             {nullptr, false}};
 
    // fast check of class name
