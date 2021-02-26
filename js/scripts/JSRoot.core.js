@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "10/02/2021";
+   JSROOT.version_date = "26/02/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -351,7 +351,9 @@
        * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each JSROOT script loaded
        * In such case browser will be forced to load JSROOT functionality disregards of server cache settings
        * @default false */
-      NoCache: false
+      NoCache: false,
+      /** @summary Skip streamer infos from the GUI */
+      SkipStreamerInfos: false
    };
 
    /** @namespace
@@ -1048,7 +1050,8 @@
 
          for (let k = 0; k < len; ++k) {
             let name = ks[k];
-            tgt[name] = copy_value(value[name]);
+            if (name && (name[0] != '$'))
+               tgt[name] = copy_value(value[name]);
          }
 
          return tgt;

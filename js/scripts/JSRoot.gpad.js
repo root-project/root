@@ -513,14 +513,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          axis_g.append("svg:path").attr("d", res2).call(this.lineatt.func);
    }
 
-   /** @summary Draw axis labels */
+   /** @summary Draw axis labels
+     * @returns {Promise} with array label size and max width */
    TAxisPainter.prototype.drawLabels = function(axis_g, axis, w, h, handle, side, labelSize, labeloffset, tickSize, ticksPlusMinus, max_text_width) {
       let label_color = this.getColor(axis.fLabelColor),
           center_lbls = this.isCenteredLabels(),
           rotate_lbls = axis.TestBit(JSROOT.EAxisBits.kLabelsVert),
           textscale = 1, maxtextlen = 0, applied_scale = 0,
           label_g = [ axis_g.append("svg:g").attr("class","axis_labels") ],
-          lbl_pos = handle.lbl_pos || handle.major, lbl_tilt = false;
+          lbl_pos = handle.lbl_pos || handle.major, lbl_tilt = false, max_textwidth = 0;
 
       if (this.lbls_both_sides)
          label_g.push(axis_g.append("svg:g").attr("class","axis_labels").attr("transform", this.vertical ? "translate(" + w + ",0)" : "translate(0," + (-h) + ")"));
@@ -528,6 +529,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // function called when text is drawn to analyze width, required to correctly scale all labels
       function process_drawtext_ready(painter) {
          let textwidth = this.result_width;
+         max_textwidth = Math.max(max_textwidth, textwidth);
 
          if (textwidth && ((!painter.vertical && !rotate_lbls) || (painter.vertical && rotate_lbls)) && !painter.log) {
             let maxwidth = this.gap_before*0.45 + this.gap_after*0.45;
@@ -634,7 +636,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (labelfont) labelSize = labelfont.size; // use real font size
 
-         return labelSize;
+         return [ labelSize, max_textwidth ];
       });
    }
 
@@ -702,6 +704,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           optionInt = (chOpt.indexOf("I")>=0),    // integer labels
           optionNoexp = axis.TestBit(JSROOT.EAxisBits.kNoExponent);
 
+      if (text_scaling_size <= 0) text_scaling_size = 0.0001;
+
       if (is_gaxis && axis.TestBit(JSROOT.EAxisBits.kTickPlus)) optionPlus = true;
       if (is_gaxis && axis.TestBit(JSROOT.EAxisBits.kTickMinus)) optionMinus = true;
 
@@ -723,23 +727,26 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if ((labelSize0 <= 0) || (Math.abs(axis.fLabelOffset) > 1.1)) optionUnlab = true; // disable labels when size not specified
 
-      let labelsPromise, title_shift_x = 0, title_shift_y = 0, title_g = null, axis_rect = null, title_fontsize = 0;
+      let labelsPromise, title_shift_x = 0, title_shift_y = 0, title_g = null, axis_rect = null,
+          title_fontsize = 0, labelMaxWidth = 0;
 
       // draw labels (sometime on both sides)
       if (!disable_axis_drawing && !optionUnlab)
          labelsPromise = this.drawLabels(axis_g, axis, w, h, handle, side, labelSize0, labeloffset, tickSize, ticksPlusMinus, max_text_width);
       else
-         labelsPromise = Promise.resolve(labelSize0);
+         labelsPromise = Promise.resolve([labelSize0, 0]);
 
-      return labelsPromise.then(labelSize => {
+      return labelsPromise.then(arr => {
+         labelMaxWidth = arr[1];
          if (JSROOT.settings.Zooming && !this.disable_zooming && !JSROOT.batch_mode) {
-            let r = axis_g.append("svg:rect")
+            let labelSize = arr[0],
+                r = axis_g.append("svg:rect")
                           .attr("class", "axis_zoom")
                           .style("opacity", "0")
                           .style("cursor", "crosshair");
 
             if (vertical)
-               r.attr("x", (side>0) ? (-2*labelSize - 3) : 3)
+               r.attr("x", (side > 0) ? (-2*labelSize - 3) : 3)
                 .attr("y", 0)
                 .attr("width", 2*labelSize + 3)
                 .attr("height", h)
@@ -767,7 +774,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          title_g = axis_g.append("svg:g").attr("class", "axis_title");
          title_fontsize = (axis.fTitleSize >= 1) ? axis.fTitleSize : Math.round(axis.fTitleSize * text_scaling_size);
 
-         let title_offest_k = 1.6*(axis.fTitleSize<1 ? axis.fTitleSize : axis.fTitleSize/(this.getCanvPainter().getPadHeight() || 10)),
+         let title_offest_k = 1.6*((axis.fTitleSize < 1) ? axis.fTitleSize : axis.fTitleSize/(text_scaling_size || 10)),
              center = axis.TestBit(JSROOT.EAxisBits.kCenterTitle),
              opposite = axis.TestBit(JSROOT.EAxisBits.kOppositeTitle),
              rotate = axis.TestBit(JSROOT.EAxisBits.kRotateTitle) ? -1 : 1,
@@ -816,10 +823,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (!title_g) return true;
 
+         // fine-tuning of title position when possible
          if (axis_rect) {
             let title_rect = title_g.node().getBoundingClientRect();
-            title_shift_x = (side > 0) ? Math.round(axis_rect.left - title_rect.right - title_fontsize*0.3) :
-                                         Math.round(axis_rect.right - title_rect.left + title_fontsize*0.3);
+            if ((axis_rect.left != axis_rect.right) && (title_rect.left != title_rect.right))
+               title_shift_x = (side > 0) ? Math.round(axis_rect.left - title_rect.right - title_fontsize*0.3) :
+                                            Math.round(axis_rect.right - title_rect.left + title_fontsize*0.3);
+            else
+               title_shift_x = -1 * Math.round(((side > 0) ? (labeloffset + labelMaxWidth) : 0) + title_fontsize*0.7);
          }
 
          title_g.attr('transform', 'translate(' + title_shift_x + ',' + title_shift_y + ')')
@@ -1313,7 +1324,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary draw axes, return Promise which ready when drawing is completed  */
-   TFramePainter.prototype.drawAxes = function(shrink_forbidden, disable_axis_draw, AxisPos, has_x_obstacle) {
+   TFramePainter.prototype.drawAxes = function(shrink_forbidden,
+                                               disable_x_draw, disable_y_draw,
+                                               AxisPos, has_x_obstacle) {
 
       this.cleanAxesDrawings();
 
@@ -1338,23 +1351,23 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let draw_horiz = this.swap_xy ? this.y_handle : this.x_handle,
           draw_vertical = this.swap_xy ? this.x_handle : this.y_handle;
 
-      if (!disable_axis_draw) {
+      if (!disable_x_draw || !disable_y_draw) {
          let pp = this.getPadPainter();
-         if (pp && pp._fast_drawing) disable_axis_draw = true;
+         if (pp && pp._fast_drawing) disable_x_draw = disable_y_draw = true;
       }
 
-      if (!disable_axis_draw) {
+      if (!disable_x_draw || !disable_y_draw) {
 
          let can_adjust_frame = !shrink_forbidden && JSROOT.settings.CanAdjustFrame;
 
          let promise1 = draw_horiz.drawAxis(layer, w, h,
                                             draw_horiz.invert_side ? undefined : "translate(0," + h + ")",
-                                            pad && pad.fTickx ? -h : 0, disable_axis_draw,
+                                            pad && pad.fTickx ? -h : 0, disable_x_draw,
                                             undefined, false);
 
          let promise2 = draw_vertical.drawAxis(layer, w, h,
                                                draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
-                                               pad && pad.fTicky ? w : 0, disable_axis_draw,
+                                               pad && pad.fTicky ? w : 0, disable_y_draw,
                                                draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
 
          return Promise.all([promise1, promise2]).then(() => {
@@ -2370,7 +2383,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           width = svg_can.property("draw_width"),
           height = svg_can.property("draw_height"),
           pad_enlarged = svg_can.property("pad_enlarged"),
-          pad_visible = !pad_enlarged || (pad_enlarged === this.pad),
+          pad_visible = !this.pad_draw_disabled && (!pad_enlarged || (pad_enlarged === this.pad)),
           w = Math.round(this.pad.fAbsWNDC * width),
           h = Math.round(this.pad.fAbsHNDC * height),
           x = Math.round(this.pad.fAbsXlowNDC * width),
@@ -2440,7 +2453,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this._fast_drawing = JSROOT.settings.SmallPad && ((w < JSROOT.settings.SmallPad.width) || (h < JSROOT.settings.SmallPad.height));
 
-       // special case of 3D canvas overlay
+      // special case of 3D canvas overlay
       if (svg_pad.property('can3d') === JSROOT.constants.Embed3D.Overlay)
           this.selectDom().select(".draw3d_" + this.this_pad_name)
               .style('display', pad_visible ? '' : 'none');
@@ -2449,6 +2462,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.alignButtons(btns, w, h);
 
       return pad_visible;
+   }
+
+   /** @summary Disable pad drawing
+     * @desc Complete SVG element will be hidden */
+   TPadPainter.prototype.disablePadDrawing = function() {
+      if (!this.pad_draw_disabled && this.has_canvas && !this.iscan) {
+         this.pad_draw_disabled = true;
+         this.createPadSvg(true);
+      }
    }
 
    /** @summary Check if it is special object, which should be handled separately
@@ -2942,8 +2964,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          padpainter.createPadSvg();
 
-         if (padpainter.matchObjectType("TPad") && snap.fPrimitives.length > 0)
-            padpainter.addPadButtons();
+         if (padpainter.matchObjectType("TPad") && (snap.fPrimitives.length > 0))
+            padpainter.addPadButtons(true);
 
          // we select current pad, where all drawing is performed
          let prev_name = padpainter.selectCurrentPad(padpainter.this_pad_name);
@@ -3343,7 +3365,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          items.push(item);
 
          // remove buttons from each subpad
-         let btns = pp.getLayerSvg("btns_layer", this.this_pad_name);
+         let btns = pp.getLayerSvg("btns_layer", pp.this_pad_name);
          item.btns_node = btns.node();
          if (item.btns_node) {
             item.btns_prnt = item.btns_node.parentNode;
@@ -3504,14 +3526,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (this.painters && (this.painters.length > 0)) {
                menu.add("separator");
                let shown = [];
-               for (let n=0;n<this.painters.length;++n) {
+               for (let n = 0; n < this.painters.length; ++n) {
                   let pp = this.painters[n];
                   let obj = pp ? pp.getObject() : null;
-                  if (!obj || (shown.indexOf(obj)>=0)) continue;
-
+                  if (!obj || (shown.indexOf(obj) >= 0)) continue;
                   let name = ('_typename' in obj) ? (obj._typename + "::") : "";
                   if ('fName' in obj) name += obj.fName;
-                  if (name.length==0) name = "item" + n;
+                  if (!name.length) name = "item" + n;
                   menu.add(name, n, this.itemContextMenu);
                }
             }

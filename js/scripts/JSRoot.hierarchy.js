@@ -187,13 +187,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let key = keys[i];
 
          let item = {
-            _name : key.fName + ";" + key.fCycle,
-            _cycle : key.fCycle,
-            _kind : "ROOT." + key.fClassName,
-            _title : key.fTitle,
-            _keyname : key.fName,
-            _readobj : null,
-            _parent : folder
+            _name: key.fName + ";" + key.fCycle,
+            _cycle: key.fCycle,
+            _kind: "ROOT." + key.fClassName,
+            _title: key.fTitle,
+            _keyname: key.fName,
+            _readobj: null,
+            _parent: folder
          };
 
          if (key.fObjlen > 1e5) item._title += ' (size: ' + (key.fObjlen/1e6).toFixed(1) + 'MB)';
@@ -215,8 +215,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                item._name = key.fName;
                keysHierarchy(item, dir.fKeys, file, dirname + key.fName + "/");
             }
-         } else
-         if ((key.fClassName == 'TList') && (key.fName == 'StreamerInfo')) {
+         } else if ((key.fClassName == 'TList') && (key.fName == 'StreamerInfo')) {
+            if (JSROOT.settings.SkipStreamerInfos) continue;
             item._name = 'StreamerInfo';
             item._kind = "ROOT.TStreamerInfoList";
             item._title = "List of streamer infos for binary I/O";

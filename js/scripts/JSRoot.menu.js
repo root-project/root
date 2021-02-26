@@ -531,7 +531,6 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
      *        }); */
    function createMenu(evnt, handler, menuname) {
       let menu = new JQueryMenu(handler, menuname || 'root_ctx_menu', evnt);
-
       return Promise.resolve(menu);
    }
 
