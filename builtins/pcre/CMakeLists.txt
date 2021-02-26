@@ -59,6 +59,7 @@ ExternalProject_Add(PCRE
     ${PCRE_BYPRODUCTS}
 
   INSTALL_COMMAND ""
+  TIMEOUT 600
 )
 
 ExternalProject_Get_Property(PCRE BINARY_DIR)
