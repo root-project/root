@@ -6,14 +6,14 @@ sap.ui.define([], function() {
    {
       this.viewer_class = viewer_class;
 
-      // console.log(this.get_name() + " - constructor");
+      console.log(this.get_name() + " - constructor");
    };
 
    GlViewer.prototype = {
 
       init: function(controller)
       {
-         // console.log(this.get_name() + ".init()");
+         console.log(this.get_name() + ".init()");
 
          if (this.controller) throw new Error(this.get_name() + "already initialized.");
 
@@ -31,7 +31,7 @@ sap.ui.define([], function() {
 
       make_object:   function(name) { return null; },
       get_top_scene: function()     { return null; },
-
+      get_manager:   function()     { return this.controller.mgr; }
    };
 
    return GlViewer;

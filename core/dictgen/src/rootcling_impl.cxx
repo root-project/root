@@ -66,7 +66,6 @@
 #include "cling/Interpreter/Value.h"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/Basic/Diagnostic.h"
-#include "clang/Basic/MemoryBufferCache.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
@@ -78,7 +77,8 @@
 #include "clang/Serialization/ASTWriter.h"
 #include "cling/Utils/AST.h"
 
-#include "llvm/Bitcode/BitstreamWriter.h"
+#include "llvm/ADT/StringRef.h"
+
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/PrettyStackTrace.h"
@@ -1261,7 +1261,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
       nesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream,cl);
    }
 
-   dictStream << "   namespace ROOT {" << std::endl;
+   dictStream << "   namespace ROOTDict {" << std::endl;
 
 #if !defined(R__AIX)
    dictStream << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
@@ -1985,13 +1985,14 @@ static bool InjectModuleUtilHeader(const char *argv0,
 /// If module is not a null pointer, we only write the given module to the
 /// given file and not the whole AST.
 /// Returns true if the AST was successfully written.
-static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstance, StringRef iSysRoot,
+static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compilerInstance,
+                     llvm::StringRef iSysRoot,
                      clang::Module *module = nullptr)
 {
    // From PCHGenerator and friends:
    llvm::SmallVector<char, 128> buffer;
    llvm::BitstreamWriter stream(buffer);
-   clang::ASTWriter writer(stream, buffer, compilerInstance->getPCMCache(), /*Extensions=*/{});
+   clang::ASTWriter writer(stream, buffer, compilerInstance->getModuleCache(), /*Extensions=*/{});
    std::unique_ptr<llvm::raw_ostream> out =
       compilerInstance->createOutputFile(fileName, /*Binary=*/true,
                                          /*RemoveFileOnSignal=*/false, /*InFile*/ "",
@@ -2475,7 +2476,13 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
       if (llvm::isa<clang::ClassTemplateSpecializationDecl>(rDecl)) {
          fwdDeclaration = "";
          retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(*rDecl, interpreter, fwdDeclaration);
-         if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
+         if (retCode == 0) {
+            std::string fwdDeclarationTemplateSpec;
+            retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclIfTmplSpec(*rDecl, interpreter, fwdDeclarationTemplateSpec, normalizedName);
+            fwdDeclaration += '\n' + fwdDeclarationTemplateSpec;
+         }
+         if (retCode == 0)
+            ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
       }
 
 
@@ -3445,7 +3452,8 @@ public:
    virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
                                    llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
                                    const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
-                                   llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/)
+                                   llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
+                                   clang::SrcMgr::CharacteristicKind /*FileType*/)
    {
       if (isLocked) return;
       if (IsAngled) return;
@@ -3838,14 +3846,14 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *modul
 ////////////////////////////////////////////////////////////////////////////////
 /// Check moduleName validity from modulemap. Check if this module is defined or not.
 static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
-                           StringRef LinkdefPath, const std::string &moduleName)
+                             llvm::StringRef LinkdefPath, const std::string &moduleName)
 {
    clang::CompilerInstance *CI = interpreter.getCI();
    clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
    headerSearch.loadTopLevelSystemModules();
 
    // Actually lookup the module on the computed module name.
-   clang::Module *module = headerSearch.lookupModule(StringRef(moduleName));
+   clang::Module *module = headerSearch.lookupModule(llvm::StringRef(moduleName));
 
    // Inform the user and abort if we can't find a module with a given name.
    if (!module) {
@@ -4153,7 +4161,7 @@ int RootClingMain(int argc,
    bool isPCH = (gOptDictionaryFileName.getValue() == "allDict.cxx");
    std::string outputFile;
    // Data is in 'outputFile', therefore in the same scope.
-   StringRef moduleName;
+   llvm::StringRef moduleName;
    std::string vfsArg;
    // Adding -fmodules to the args will break lexing with __CINT__ defined,
    // and we actually do lex with __CINT__ and reuse this variable later,
@@ -4459,7 +4467,7 @@ int RootClingMain(int argc,
       IgnoringPragmaHandler(const char* pragma):
          clang::PragmaNamespace(pragma) {}
       void HandlePragma(clang::Preprocessor &PP,
-                        clang::PragmaIntroducerKind Introducer,
+                        clang::PragmaIntroducer Introducer,
                         clang::Token &tok) {
          PP.DiscardUntilEndOfDirective();
       }

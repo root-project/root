@@ -1,9 +1,8 @@
 //===- Archive.cpp - ar File Format implementation ------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -175,15 +174,19 @@ Expected<StringRef> ArchiveMemberHeader::getName(uint64_t Size) const {
                             "the end of the string table for archive member "
                             "header at offset " + Twine(ArchiveOffset));
     }
-    const char *addr = Parent->getStringTable().begin() + StringOffset;
 
     // GNU long file names end with a "/\n".
     if (Parent->kind() == Archive::K_GNU ||
-        Parent->kind() == Archive::K_MIPS64) {
-      StringRef::size_type End = StringRef(addr).find('\n');
-      return StringRef(addr, End - 1);
+        Parent->kind() == Archive::K_GNU64) {
+      size_t End = Parent->getStringTable().find('\n', /*From=*/StringOffset);
+      if (End == StringRef::npos || End < 1 ||
+          Parent->getStringTable()[End - 1] != '/') {
+        return malformedError("string table at long name offset " +
+                              Twine(StringOffset) + "not terminated");
+      }
+      return Parent->getStringTable().slice(StringOffset, End - 1);
     }
-    return addr;
+    return Parent->getStringTable().begin() + StringOffset;
   }
 
   if (Name.startswith("#1/")) {
@@ -338,7 +341,7 @@ Archive::Child::Child(const Archive *Parent, const char *Start, Error *Err)
 
   ErrorAsOutParameter ErrAsOutParam(Err);
 
-  // If there was an error in the construction of the Header 
+  // If there was an error in the construction of the Header
   // then just return with the error now set.
   if (*Err)
     return;
@@ -508,7 +511,7 @@ Expected<MemoryBufferRef> Archive::Child::getMemoryBufferRef() const {
   StringRef Name = NameOrErr.get();
   Expected<StringRef> Buf = getBuffer();
   if (!Buf)
-    return Buf.takeError();
+    return createFileError(Name, Buf.takeError());
   return MemoryBufferRef(*Buf, Name);
 }
 
@@ -698,7 +701,7 @@ Archive::Archive(MemoryBufferRef Source, Error &Err)
   }
 
   if (Name == "//") {
-    Format = has64SymTable ? K_MIPS64 : K_GNU;
+    Format = has64SymTable ? K_GNU64 : K_GNU;
     // The string table is never an external member, but we still
     // must check any Expected<> return value.
     Expected<StringRef> BufOrErr = C->getBuffer();
@@ -715,7 +718,7 @@ Archive::Archive(MemoryBufferRef Source, Error &Err)
   }
 
   if (Name[0] != '/') {
-    Format = has64SymTable ? K_MIPS64 : K_GNU;
+    Format = has64SymTable ? K_GNU64 : K_GNU;
     setFirstRegular(*C);
     Err = Error::success();
     return;
@@ -775,19 +778,18 @@ Archive::child_iterator Archive::child_begin(Error &Err,
     return child_end();
 
   if (SkipInternal)
-    return child_iterator(Child(this, FirstRegularData,
-                                FirstRegularStartOfFile),
-                          &Err);
+    return child_iterator::itr(
+        Child(this, FirstRegularData, FirstRegularStartOfFile), Err);
 
   const char *Loc = Data.getBufferStart() + strlen(Magic);
   Child C(this, Loc, &Err);
   if (Err)
     return child_end();
-  return child_iterator(C, &Err);
+  return child_iterator::itr(C, Err);
 }
 
 Archive::child_iterator Archive::child_end() const {
-  return child_iterator(Child(nullptr, nullptr, nullptr), nullptr);
+  return child_iterator::end(Child(nullptr, nullptr, nullptr));
 }
 
 StringRef Archive::Symbol::getName() const {
@@ -797,14 +799,14 @@ StringRef Archive::Symbol::getName() const {
 Expected<Archive::Child> Archive::Symbol::getMember() const {
   const char *Buf = Parent->getSymbolTable().begin();
   const char *Offsets = Buf;
-  if (Parent->kind() == K_MIPS64 || Parent->kind() == K_DARWIN64)
+  if (Parent->kind() == K_GNU64 || Parent->kind() == K_DARWIN64)
     Offsets += sizeof(uint64_t);
   else
     Offsets += sizeof(uint32_t);
-  uint32_t Offset = 0;
+  uint64_t Offset = 0;
   if (Parent->kind() == K_GNU) {
     Offset = read32be(Offsets + SymbolIndex * 4);
-  } else if (Parent->kind() == K_MIPS64) {
+  } else if (Parent->kind() == K_GNU64) {
     Offset = read64be(Offsets + SymbolIndex * 8);
   } else if (Parent->kind() == K_BSD) {
     // The SymbolIndex is an index into the ranlib structs that start at
@@ -902,7 +904,7 @@ Archive::symbol_iterator Archive::symbol_begin() const {
     uint32_t symbol_count = 0;
     symbol_count = read32be(buf);
     buf += sizeof(uint32_t) + (symbol_count * (sizeof(uint32_t)));
-  } else if (kind() == K_MIPS64) {
+  } else if (kind() == K_GNU64) {
     uint64_t symbol_count = read64be(buf);
     buf += sizeof(uint64_t) + (symbol_count * (sizeof(uint64_t)));
   } else if (kind() == K_BSD) {
@@ -959,7 +961,7 @@ uint32_t Archive::getNumberOfSymbols() const {
   const char *buf = getSymbolTable().begin();
   if (kind() == K_GNU)
     return read32be(buf);
-  if (kind() == K_MIPS64)
+  if (kind() == K_GNU64)
     return read64be(buf);
   if (kind() == K_BSD)
     return read32le(buf) / 8;

@@ -13,25 +13,22 @@
 
 using namespace ROOT::Experimental::Browsable;
 
-
-/////////////////////////////////////////////////////////////////////
-/// Returns number of childs in current entry
-/// 0 if there is no childs
-/// >0 if there are really childs
-/// -1 if entry may have child elements
-
-int RLevelIter::GetNumItemChilds() const
-{
-   return 0;
-}
-
 /////////////////////////////////////////////////////////////////////
 /// Find item with specified name
 /// Default implementation, should work for all
+/// If index specified, not only name but also index should match
 
-bool RLevelIter::Find(const std::string &name)
+bool RLevelIter::Find(const std::string &name, int indx)
 {
+   int i = -1;
+
    while (Next()) {
+      if (indx >= 0) {
+         i++;
+         if (i > indx) return false;
+         if (i < indx) continue;
+      }
+
       if (GetItemName() == name)
          return true;
    }
@@ -39,14 +36,13 @@ bool RLevelIter::Find(const std::string &name)
    return false;
 }
 
-
 /////////////////////////////////////////////////////////////////////
 /// Create generic description item for RBrowser
 
 std::unique_ptr<RItem> RLevelIter::CreateItem()
 {
-   auto nchilds = GetNumItemChilds();
+   auto have_childs = CanItemHaveChilds();
 
-   return std::make_unique<RItem>(GetItemName(), nchilds, nchilds != 0 ? "sap-icon://folder-blank" : "sap-icon://document");
+   return std::make_unique<RItem>(GetItemName(), have_childs ? -1 : 0, have_childs ? "sap-icon://folder-blank" : "sap-icon://document");
 }
 

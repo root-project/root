@@ -19,20 +19,14 @@
 #
 ###############################################################################
 
-# Python 2 and Python 3 compatibility
-from __future__ import print_function
 
 import sys
 
 if sys.version_info < (3, 0):
-    # Python 2.x
-    from urllib2 import urlopen
-    input = raw_input
-else:
-    # Python 3.x
-    from urllib.request import urlopen
+    raise Exception("cpt needs Python 3")
 
 import argparse
+import copy
 import os
 import platform
 import subprocess
@@ -48,7 +42,7 @@ import time
 import multiprocessing
 import stat
 import json
-
+from urllib.request import urlopen
 
 ###############################################################################
 #              Platform independent functions (formerly indep.py)             #
@@ -238,7 +232,9 @@ def download_llvm_binary():
     box_draw("Fetching LLVM binary")
     print('Current working directory is: ' + workdir + '\n')
     if DIST=="Ubuntu":
-        subprocess.call("sudo -H pip install lit", shell=True)
+        subprocess.call(
+            "sudo -H {0} -m pip install lit".format(sys.executable), shell=True
+            )
         llvm_config_path = exec_subprocess_check_output("which llvm-config-{0}".format(llvm_vers), workdir)
         if llvm_config_path != '' and tar_required is False:
             llvm_dir = os.path.join("/usr", "lib", "llvm-"+llvm_vers)
@@ -251,7 +247,9 @@ def download_llvm_binary():
         else:
             tar_required = True
     elif DIST == 'MacOSX':
-        subprocess.call("sudo -H pip install lit", shell=True)
+        subprocess.call(
+            "sudo -H {0} -m pip install lit".format(sys.executable), shell=True
+            )
         if tar_required is False:
             llvm_dir = os.path.join("/opt", "local", "libexec", "llvm-"+llvm_vers)
             llvm_config_path = os.path.join(llvm_dir, "bin", "llvm-config")
@@ -691,16 +689,76 @@ def runSingleTest(test, Idx = 2, Recurse = True):
         print("Error running '%s': %s" % (test, err))
         pass
 
-def build_filecheck():
+def setup_tests():
+    global tar_required
     llvm_revision = urlopen(
         "https://raw.githubusercontent.com/root-project/cling/master/LastKnownGoodLLVMSVNRevision.txt").readline().strip().decode(
         'utf-8')
-    exec_subprocess_call("svn export http://llvm.org/svn/llvm-project/llvm/branches/{0}/utils/FileCheck FileCheck".format(llvm_revision),
-                         os.path.join(CLING_SRC_DIR, "tools"))
+    assert llvm_revision[:-2] == "release_"
+    branch_vers = llvm_revision[-2]
+    branch_ref = subprocess.check_output(
+        [
+            "git",
+            "ls-remote",
+            "https://github.com/llvm/llvm-project.git",
+            "release/{0}.x".format(branch_vers),
+        ],
+        stderr=subprocess.STDOUT,
+    ).decode()
+    commit = branch_ref[: branch_ref.find("\trefs/heads")]
+    # We get zip instead of git clone to not download git history
+    subprocess.Popen(
+        [
+            'sudo wget https://github.com/llvm/llvm-project/archive/{0}.zip && sudo unzip {0}.zip "llvm-project-{0}/llvm/utils/*"'.format(
+                commit
+            )
+        ],
+        cwd=os.path.join(CLING_SRC_DIR, "tools"),
+        shell=True,
+        stdin=subprocess.PIPE,
+        stdout=None,
+        stderr=subprocess.STDOUT,
+    ).communicate("yes".encode("utf-8"))
+    subprocess.Popen(
+        ["sudo cp -r llvm-project-{0}/llvm/utils/FileCheck FileCheck".format(commit)],
+        cwd=os.path.join(CLING_SRC_DIR, "tools"),
+        shell=True,
+        stdin=subprocess.PIPE,
+        stdout=None,
+        stderr=subprocess.STDOUT,
+    ).communicate("yes".encode("utf-8"))
     with open(os.path.join(CLING_SRC_DIR, 'tools', 'CMakeLists.txt'), 'a') as file:
         file.writelines('add_subdirectory(\"FileCheck\")')
     exec_subprocess_call("cmake {0}".format(LLVM_OBJ_ROOT), CLING_SRC_DIR)
     exec_subprocess_call("cmake --build . --target FileCheck -- -j{0}".format(multiprocessing.cpu_count()), LLVM_OBJ_ROOT)
+    if not os.path.exists(os.path.join(CLING_SRC_DIR, "..", "clang", "test")):
+        llvm_dir = exec_subprocess_check_output("llvm-config --src-root", ".").strip()
+        if llvm_dir == "":
+            if tar_required:
+                llvm_dir = copy.copy(srcdir)
+            else:
+                llvm_dir = os.path.join("/usr", "lib", "llvm-" + llvm_vers, "build")
+        subprocess.Popen(
+            ["sudo mkdir {1}/utils/".format(commit, llvm_dir)],
+            cwd=os.path.join(CLING_SRC_DIR, "tools"),
+            shell=True,
+            stdin=subprocess.PIPE,
+            stdout=None,
+            stderr=subprocess.STDOUT,
+        ).communicate("yes".encode("utf-8"))
+        subprocess.Popen(
+            [
+                "sudo mv llvm-project-{0}/llvm/utils/lit/ {1}/utils/".format(
+                    commit, llvm_dir
+                )
+            ],
+            cwd=os.path.join(CLING_SRC_DIR, "tools"),
+            shell=True,
+            stdin=subprocess.PIPE,
+            stdout=None,
+            stderr=subprocess.STDOUT,
+        ).communicate("yes".encode("utf-8"))
+
 
 def test_cling():
     box_draw("Run Cling test suite")
@@ -798,13 +856,6 @@ def check_ubuntu(pkg):
         else:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
             return True
-    elif pkg == "python":
-        if float(platform.python_version()[:3]) < 2.7:
-            print(pkg.ljust(20) + '[OUTDATED VERSION (<2.7)]'.ljust(30))
-            return False
-        else:
-            print(pkg.ljust(20) + '[OK]'.ljust(30))
-            return True
     elif pkg == "cmake":
         CMAKE = os.environ.get('CMAKE', 'cmake')
         output = exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()
@@ -813,20 +864,6 @@ def check_ubuntu(pkg):
             return False
         else:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
-    elif pkg == "SSL":
-        if sys.version_info < (3, 0):
-            # Python 2.x
-            import socket
-            if hasattr(socket, 'ssl'):
-                print(pkg.ljust(20) + '[SUPPORTED]'.ljust(30))
-                return True
-            else:
-                print(pkg.ljust(20) + '[NOT SUPPORTED]'.ljust(30))
-                return False
-        else:
-            # Python 3.x
-            print(pkg.ljust(20) + '[SUPPORTED]'.ljust(30))
-            return True
     elif pkg == "gcc":
         if float(exec_subprocess_check_output('gcc -dumpversion', '/')[:3].strip()) <= 4.7:
             print(pkg.ljust(20) + '[UNSUPPORTED VERSION (<4.7)]'.ljust(30))
@@ -841,27 +878,6 @@ def check_ubuntu(pkg):
         else:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
             return True
-    elif pkg == "python-pip":
-        if exec_subprocess_check_output('pip --version', workdir) != '':
-            print(pkg.ljust(20) + '[OK]'.ljust(30))
-            return True
-        else:
-            print(pkg.ljust(20) + '[NOT INSTALLED]'.ljust(30))
-            return False
-    elif pkg == "python3-pip":
-        if exec_subprocess_check_output('pip --version', workdir) != '':
-            print(pkg.ljust(20) + '[OK]'.ljust(30))
-            return True
-        else:
-            print(pkg.ljust(20) + '[NOT INSTALLED]'.ljust(30))
-            return False
-    elif pkg == "subversion":
-        if exec_subprocess_check_output('which svn', workdir) != '':
-            print(pkg.ljust(20) + '[OK]'.ljust(30))
-            return True
-        else:
-            print(pkg.ljust(20) + '[NOT INSTALLED]'.ljust(30))
-            return False
     elif pkg == "lit":
         if exec_subprocess_check_output('which lit', workdir) != '':
             print(pkg.ljust(20) + '[OK]'.ljust(30))
@@ -1122,38 +1138,13 @@ cling (%s-1) unstable; urgency=low
 ###############################################################################
 
 def check_redhat(pkg):
-    if pkg == "python":
-        if platform.python_version()[0] == '3':
-            print(pkg.ljust(20) + '[UNSUPPORTED VERSION (Python 3)]'.ljust(30))
-            return False
-        elif float(platform.python_version()[:3]) < 2.7:
-            print(pkg.ljust(20) + '[OUTDATED VERSION (<2.7)]'.ljust(30))
-            return False
-        else:
-            print(pkg.ljust(20) + '[OK]'.ljust(30))
-            return True
-    elif pkg == "cmake":
+    if pkg == "cmake":
         CMAKE = os.environ.get('CMAKE', 'cmake')
         if not check_version_string_ge(exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()[-1], '3.4.3'):
             print(pkg.ljust(20) + '[OUTDATED VERSION (<3.4.3)]'.ljust(30))
             return False
         else:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
-    elif pkg == "SSL":
-        if sys.version_info < (3, 0):
-            # Python 2.x
-            import socket
-            if hasattr(socket, 'ssl'):
-                print(pkg.ljust(20) + '[SUPPORTED]'.ljust(30))
-                return True
-            else:
-                print(pkg.ljust(20) + '[NOT SUPPORTED]'.ljust(30))
-                return False
-        else:
-            # Python 3.x
-            print(pkg.ljust(20) + '[SUPPORTED]'.ljust(30))
-            return True
-
     elif exec_subprocess_check_output("rpm -qa | grep -w %s" % (pkg), '/').strip() == '':
         print(pkg.ljust(20) + '[NOT INSTALLED]'.ljust(30))
         return False
@@ -1292,27 +1283,7 @@ def check_win(pkg):
             print(pkg.ljust(20) + '[OK]'.ljust(30))
         else:
             print(pkg.ljust(20) + '[NOT INSTALLED]'.ljust(30))
-
-    elif pkg == "python":
-        if platform.python_version()[0] == '3':
-            print(pkg.ljust(20) + '[UNSUPPORTED VERSION (Python 3)]'.ljust(30))
-        elif float(platform.python_version()[:3]) < 2.7:
-            print(pkg.ljust(20) + '[OUTDATED VERSION (<2.7)]'.ljust(30))
-        else:
-            print(pkg.ljust(20) + '[OK]'.ljust(30))
-    elif pkg == 'SSL':
-        if sys.version_info < (3, 0):
-            # Python 2.x
-            import socket
-            if hasattr(socket, 'ssl'):
-                print(pkg.ljust(20) + '[SUPPORTED]'.ljust(30))
-            else:
-                print(pkg.ljust(20) + '[NOT SUPPORTED]'.ljust(30))
-        else:
-            # Python 3.x
-            print(pkg.ljust(20) + '[SUPPORTED]'.ljust(30))
-
-            # Check for other tools
+    # Check for other tools
     else:
         if exec_subprocess_check_output('where %s' % (pkg), 'C:\\').find(
                 'INFO: Could not find files for the given pattern') != -1:
@@ -1637,51 +1608,13 @@ def build_nsis():
 ###############################################################################
 
 def check_mac(pkg):
-    if pkg == "python":
-        if platform.python_version()[0] == '3':
-            print(pkg.ljust(20) + '[UNSUPPORTED VERSION (Python 3)]'.ljust(30))
-            return False
-        elif float(platform.python_version()[:3]) < 2.7:
-            print(pkg.ljust(20) + '[OUTDATED VERSION (<2.7)]'.ljust(30))
-            return False
-        else:
-            print(pkg.ljust(20) + '[OK]'.ljust(30))
-            return True
-    elif pkg == "cmake":
+    if pkg == "cmake":
         CMAKE = os.environ.get('CMAKE', 'cmake')
         if not check_version_string_ge(exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()[-1].split('-')[0], '3.4.3'):
             print(pkg.ljust(20) + '[OUTDATED VERSION (<3.4.3)]'.ljust(30))
             return False
         else:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
-    elif pkg == "SSL":
-        if sys.version_info < (3, 0):
-            # Python 2.x
-            import socket
-            if hasattr(socket, 'ssl'):
-                print(pkg.ljust(20) + '[SUPPORTED]'.ljust(30))
-                return True
-            else:
-                print(pkg.ljust(20) + '[NOT SUPPORTED]'.ljust(30))
-                return False
-        else:
-            # Python 3.x
-            print(pkg.ljust(20) + '[SUPPORTED]'.ljust(30))
-            return True
-    elif pkg == "python-pip":
-        if exec_subprocess_check_output('pip --version', workdir) != '':
-            print(pkg.ljust(20) + '[OK]'.ljust(30))
-            return True
-        else:
-            print(pkg.ljust(20) + '[NOT INSTALLED]'.ljust(30))
-            return False
-    elif pkg == "svn":
-        if exec_subprocess_check_output('which svn', workdir) != '':
-            print(pkg.ljust(20) + '[OK]'.ljust(30))
-            return True
-        else:
-            print(pkg.ljust(20) + '[NOT INSTALLED]'.ljust(30))
-            return False
     elif pkg == "lit":
         if exec_subprocess_check_output('which lit', workdir) != '':
             print(pkg.ljust(20) + '[OK]'.ljust(30))
@@ -1957,27 +1890,16 @@ elif OS == 'Linux':
     except:
         yes = {'yes', 'y', 'ye', ''}
         choice = custom_input('''
-            CPT will now attempt to install the distro (and pip) package automatically.
+            CPT will now attempt to install the distro package automatically.
             Do you want to continue? [yes/no]: ''', args['y']).lower()
         if choice in yes:
-            if sys.version_info[0] == 3:
-                pipver = 'python3-pip'
-            else:
-                pipver = 'python2-pip'
-            if check_ubuntu(pipver) is False:
-                subprocess.Popen(['sudo apt-get install {0}'.format(pipver)],
-                                shell=True,
-                                stdin=subprocess.PIPE,
-                                stdout=None,
-                                stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
-            if sys.version_info[0] == 3:
-                subprocess.call("sudo pip3 install distro", shell=True)
-            else:
-                subprocess.call("sudo pip install distro", shell=True)
+            subprocess.call(
+                "sudo {0} -m pip install distro".format(sys.executable), shell=True
+            )
             import distro
         else:
             print('Install/update the distro package from pip')
-            import distro
+            import distro  # Error out
 
     DIST = distro.linux_distribution()[0]
     RELEASE = distro.linux_distribution()[2]
@@ -2064,11 +1986,9 @@ if args['check_requirements']:
     box_draw('Check availability of required softwares')
     if DIST == 'Ubuntu':
         install_line = ""
-        prerequisite = ['git', 'cmake', 'gcc', 'g++', 'debhelper', 'devscripts', 'gnupg', 'python', 'SSL', 'zlib1g-dev']
+        prerequisite = ['git', 'cmake', 'gcc', 'g++', 'debhelper', 'devscripts', 'gnupg', 'zlib1g-dev']
         if args["with_binary_llvm"] or args["with_llvm_tar"]:
             prerequisite.extend(['subversion'])
-            if check_ubuntu('lit') is False:
-                prerequisite.extend(['python-pip'])
         if args["with_binary_llvm"] and not args["with_llvm_tar"]:        
             if check_ubuntu('llvm-'+llvm_vers+'-dev') is False:
                 llvm_binary_name = 'llvm-{0}-dev'.format(llvm_vers)
@@ -2120,8 +2040,6 @@ if args['check_requirements']:
 
     elif OS == 'Windows':
         check_win('git')
-        check_win('python')
-        check_win('SSL')
         # Check Windows registry for keys that prove an MS Visual Studio 14.0 installation
         check_win('msvc')
         print('''
@@ -2130,7 +2048,7 @@ Refer to the documentation of CPT for information on setting up your Windows env
 ''')
     elif DIST == 'Fedora' or DIST == 'Scientific Linux CERN SLC':
         install_line = ''
-        prerequisite = ['git', 'cmake', 'gcc', 'gcc-c++', 'rpm-build', 'python', 'SSL']
+        prerequisite = ['git', 'cmake', 'gcc', 'gcc-c++', 'rpm-build']
         for pkg in prerequisite:
             if check_redhat(pkg) is False:
                 install_line += pkg + ' '
@@ -2153,7 +2071,7 @@ Refer to the documentation of CPT for information on setting up your Windows env
                 elif choice in no:
                     print('''
     Install/update the required packages by:
-    sudo yum install git cmake gcc gcc-c++ rpm-build python
+    sudo yum install git cmake gcc gcc-c++ rpm-build
     ''')
                     break
                 else:
@@ -2161,10 +2079,8 @@ Refer to the documentation of CPT for information on setting up your Windows env
                     continue
 
     if DIST == 'MacOSX':
-        prerequisite = ['git', 'cmake', 'clang', 'clang++', 'python', 'SSL', 'svn', 'zlib*']
+        prerequisite = ['git', 'cmake', 'clang', 'clang++', 'zlib*']
         install_line = ''
-        if check_mac('lit') is False:
-            prerequisite.extend(['python-pip'])
         if args['with_llvm_tar']:
             tar_required = True
         else:
@@ -2271,7 +2187,7 @@ if args['current_dev']:
         install_prefix()
         if not args['no_test']:
             if args['with_binary_llvm']:
-                build_filecheck()
+                setup_tests()
             test_cling()
         tarball()
         cleanup()
@@ -2281,7 +2197,7 @@ if args['current_dev']:
         install_prefix()
         if not args['no_test']:
             if args['with_binary_llvm']:
-                build_filecheck()
+                setup_tests()
             test_cling()
         tarball_deb()
         debianize()
@@ -2311,7 +2227,7 @@ if args['current_dev']:
         install_prefix()
         if not args['no_test']:
             if args['with_binary_llvm']:
-                build_filecheck()
+                setup_tests()
             test_cling()
         make_dmg()
         cleanup()
@@ -2321,7 +2237,7 @@ if args['current_dev']:
         install_prefix()
         if not args['no_test']:
             if args['with_binary_llvm']:
-                build_filecheck()
+                setup_tests()
             test_cling()
         tarball()
         cleanup()
@@ -2330,7 +2246,6 @@ if args['last_stable']:
     tag = json.loads(urlopen("https://api.github.com/repos/vgvassilev/cling/tags")
                      .read().decode('utf-8'))[0]['name'].encode('ascii', 'ignore').decode("utf-8")
 
-    # For Python 3 compatibility
     tag = str(tag)
 
     # FIXME
@@ -2368,7 +2283,7 @@ if args['last_stable']:
         install_prefix()
         if not args['no_test']:
             if args['with_binary_llvm']:
-                build_filecheck()
+                setup_tests()
             test_cling()
         tarball()
         cleanup()
@@ -2379,7 +2294,7 @@ if args['last_stable']:
         install_prefix()
         if not args['no_test']:
             if args['with_binary_llvm']:
-                build_filecheck()
+                setup_tests()
             test_cling()
         tarball_deb()
         debianize()
@@ -2412,7 +2327,7 @@ if args['last_stable']:
         install_prefix()
         if not args['no_test']:
             if args['with_binary_llvm']:
-                build_filecheck()
+                setup_tests()
             test_cling()
         make_dmg()
         cleanup()
@@ -2423,7 +2338,7 @@ if args['last_stable']:
         install_prefix()
         if not args['no_test']:
             if args['with_binary_llvm']:
-                build_filecheck()
+                setup_tests()
             test_cling()
         tarball()
         cleanup()
@@ -2458,7 +2373,7 @@ if args['tarball_tag']:
     install_prefix()
     if not args['no_test']:
         if args['with_binary_llvm']:
-            build_filecheck()
+            setup_tests()
         test_cling()
     tarball()
     cleanup()

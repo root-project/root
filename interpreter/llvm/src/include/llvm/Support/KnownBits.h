@@ -1,9 +1,8 @@
 //===- llvm/Support/KnownBits.h - Stores known zeros/ones -------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -25,7 +24,7 @@ struct KnownBits {
   APInt One;
 
 private:
-  // Internal constructor for creating a ConstantRange from two APInts.
+  // Internal constructor for creating a KnownBits from two APInts.
   KnownBits(APInt Zero, APInt One)
       : Zero(std::move(Zero)), One(std::move(One)) {}
 
@@ -100,37 +99,46 @@ public:
 
   /// Make this value negative.
   void makeNegative() {
-    assert(!isNonNegative() && "Can't make a non-negative value negative");
     One.setSignBit();
   }
 
-  /// Make this value negative.
+  /// Make this value non-negative.
   void makeNonNegative() {
-    assert(!isNegative() && "Can't make a negative value non-negative");
     Zero.setSignBit();
   }
 
   /// Truncate the underlying known Zero and One bits. This is equivalent
   /// to truncating the value we're tracking.
-  KnownBits trunc(unsigned BitWidth) {
+  KnownBits trunc(unsigned BitWidth) const {
     return KnownBits(Zero.trunc(BitWidth), One.trunc(BitWidth));
   }
 
-  /// Zero extends the underlying known Zero and One bits. This is equivalent
-  /// to zero extending the value we're tracking.
-  KnownBits zext(unsigned BitWidth) {
-    return KnownBits(Zero.zext(BitWidth), One.zext(BitWidth));
+  /// Extends the underlying known Zero and One bits.
+  /// By setting ExtendedBitsAreKnownZero=true this will be equivalent to
+  /// zero extending the value we're tracking.
+  /// With ExtendedBitsAreKnownZero=false the extended bits are set to unknown.
+  KnownBits zext(unsigned BitWidth, bool ExtendedBitsAreKnownZero) const {
+    unsigned OldBitWidth = getBitWidth();
+    APInt NewZero = Zero.zext(BitWidth);
+    if (ExtendedBitsAreKnownZero)
+      NewZero.setBitsFrom(OldBitWidth);
+    return KnownBits(NewZero, One.zext(BitWidth));
   }
 
   /// Sign extends the underlying known Zero and One bits. This is equivalent
   /// to sign extending the value we're tracking.
-  KnownBits sext(unsigned BitWidth) {
+  KnownBits sext(unsigned BitWidth) const {
     return KnownBits(Zero.sext(BitWidth), One.sext(BitWidth));
   }
 
-  /// Zero extends or truncates the underlying known Zero and One bits. This is
-  /// equivalent to zero extending or truncating the value we're tracking.
-  KnownBits zextOrTrunc(unsigned BitWidth) {
+  /// Extends or truncates the underlying known Zero and One bits. When
+  /// extending the extended bits can either be set as known zero (if
+  /// ExtendedBitsAreKnownZero=true) or as unknown (if
+  /// ExtendedBitsAreKnownZero=false).
+  KnownBits zextOrTrunc(unsigned BitWidth,
+                        bool ExtendedBitsAreKnownZero) const {
+    if (BitWidth > getBitWidth())
+      return zext(BitWidth, ExtendedBitsAreKnownZero);
     return KnownBits(Zero.zextOrTrunc(BitWidth), One.zextOrTrunc(BitWidth));
   }
 
@@ -193,6 +201,14 @@ public:
   unsigned countMaxPopulation() const {
     return getBitWidth() - Zero.countPopulation();
   }
+
+  /// Compute known bits resulting from adding LHS, RHS and a 1-bit Carry.
+  static KnownBits computeForAddCarry(
+      const KnownBits &LHS, const KnownBits &RHS, const KnownBits &Carry);
+
+  /// Compute known bits resulting from adding LHS and RHS.
+  static KnownBits computeForAddSub(bool Add, bool NSW, const KnownBits &LHS,
+                                    KnownBits RHS);
 };
 
 } // end namespace llvm

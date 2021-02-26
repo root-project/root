@@ -46,6 +46,35 @@ class _gROOTWrapper(object):
         return setattr(self._gROOT, name, value)
 
 
+def _create_rdf_experimental_distributed_module(parent):
+    """
+    Create the ROOT.RDF.Experimental.Distributed python module.
+
+    This module will be injected into the ROOT.RDF namespace.
+
+    Arguments:
+        parent: The ROOT.RDF namespace. Needed to define __package__.
+
+    Returns:
+        types.ModuleType: The ROOT.RDF.Experimental.Distributed submodule.
+    """
+    import DistRDF
+
+    # Create dummy ROOT.RDF.Experimental package
+    experimental = types.ModuleType("ROOT.RDF.Experimental")
+    # PEP302 attributes
+    experimental.__file__ = "<namespace ROOT.RDF>"
+    # experimental.__name__ is the constructor argument
+    experimental.__path__ = []  # this makes it a package
+    # experimental.__loader__ is not defined
+    experimental.__package__ = parent
+
+    # Inject submodules
+    experimental.Distributed = DistRDF.create_distributed_module(
+        experimental)
+
+    return experimental
+
 class ROOTFacade(types.ModuleType):
     """Facade class for ROOT module"""
 
@@ -257,8 +286,12 @@ class ROOTFacade(types.ModuleType):
     def RDF(self):
         ns = self._fallback_getattr('RDF')
         try:
+            # Inject MakeNumpyDataFrame function
             from libROOTPythonizations import MakeNumpyDataFrame
             ns.MakeNumpyDataFrame = MakeNumpyDataFrame
+
+            # Inject Experimental.Distributed package into namespace RDF
+            ns.Experimental = _create_rdf_experimental_distributed_module(ns)
         except:
             raise Exception('Failed to pythonize the namespace RDF')
         del type(self).RDF

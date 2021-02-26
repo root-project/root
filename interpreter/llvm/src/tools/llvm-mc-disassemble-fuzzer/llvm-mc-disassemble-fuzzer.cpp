@@ -1,15 +1,13 @@
-//===--- llvm-mc-fuzzer.cpp - Fuzzer for the MC layer ---------------------===//
+//===-- llvm-mc-disassemble-fuzzer.cpp - Fuzzer for the MC layer ----------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
 //===----------------------------------------------------------------------===//
 
-#include "FuzzerInterface.h"
 #include "llvm-c/Disassembler.h"
 #include "llvm-c/Target.h"
 #include "llvm/MC/SubtargetFeature.h"
@@ -74,11 +72,12 @@ int DisassembleOneInput(const uint8_t *Data, size_t Size) {
   return 0;
 }
 
-int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
   return DisassembleOneInput(Data, Size);
 }
 
-int LLVMFuzzerInitialize(int *argc, char ***argv) {
+extern "C" LLVM_ATTRIBUTE_USED int LLVMFuzzerInitialize(int *argc,
+                                                        char ***argv) {
   // The command line is unusual compared to other fuzzers due to the need to
   // specify the target. Options like -triple, -mcpu, and -mattr work like
   // their counterparts in llvm-mc, while -fuzzer-args collects options for the

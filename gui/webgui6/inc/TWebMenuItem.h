@@ -21,8 +21,11 @@
 class TClass;
 
 /** \class TWebMenuItem
-  Class contains info for producing menu item on the JS side.
-  */
+\ingroup webgui6
+
+Class contains info for producing menu item on the JS side.
+
+*/
 
 class TWebMenuItem {
 protected:

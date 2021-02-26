@@ -1,9 +1,8 @@
 //===- SourceCoverageViewHTML.h - A html code coverage view ---------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
@@ -18,9 +17,11 @@
 
 namespace llvm {
 
+using namespace coverage;
+
 struct FileCoverageSummary;
 
-/// \brief A coverage printer for html output.
+/// A coverage printer for html output.
 class CoveragePrinterHTML : public CoveragePrinter {
 public:
   Expected<OwnedStream> createViewFile(StringRef Path,
@@ -29,7 +30,8 @@ public:
   void closeViewFile(OwnedStream OS) override;
 
   Error createIndexFile(ArrayRef<std::string> SourceFiles,
-                        const coverage::CoverageMapping &Coverage) override;
+                        const coverage::CoverageMapping &Coverage,
+                        const CoverageFiltersMatchAll &Filters) override;
 
   CoveragePrinterHTML(const CoverageViewOptions &Opts)
       : CoveragePrinter(Opts) {}
@@ -38,9 +40,11 @@ private:
   void emitFileSummary(raw_ostream &OS, StringRef SF,
                        const FileCoverageSummary &FCS,
                        bool IsTotals = false) const;
+  std::string buildLinkToFile(StringRef SF,
+                              const FileCoverageSummary &FCS) const;
 };
 
-/// \brief A code coverage view which supports html-based rendering.
+/// A code coverage view which supports html-based rendering.
 class SourceCoverageViewHTML : public SourceCoverageView {
   void renderViewHeader(raw_ostream &OS) override;
 
@@ -54,14 +58,11 @@ class SourceCoverageViewHTML : public SourceCoverageView {
 
   void renderViewDivider(raw_ostream &OS, unsigned ViewDepth) override;
 
-  void renderLine(raw_ostream &OS, LineRef L,
-                  const coverage::CoverageSegment *WrappedSegment,
-                  CoverageSegmentArray Segments, unsigned ExpansionCol,
-                  unsigned ViewDepth) override;
+  void renderLine(raw_ostream &OS, LineRef L, const LineCoverageStats &LCS,
+                  unsigned ExpansionCol, unsigned ViewDepth) override;
 
   void renderExpansionSite(raw_ostream &OS, LineRef L,
-                           const coverage::CoverageSegment *WrappedSegment,
-                           CoverageSegmentArray Segments, unsigned ExpansionCol,
+                           const LineCoverageStats &LCS, unsigned ExpansionCol,
                            unsigned ViewDepth) override;
 
   void renderExpansionView(raw_ostream &OS, ExpansionView &ESV,
@@ -75,7 +76,7 @@ class SourceCoverageViewHTML : public SourceCoverageView {
 
   void renderLineNumberColumn(raw_ostream &OS, unsigned LineNo) override;
 
-  void renderRegionMarkers(raw_ostream &OS, CoverageSegmentArray Segments,
+  void renderRegionMarkers(raw_ostream &OS, const LineCoverageStats &Line,
                            unsigned ViewDepth) override;
 
   void renderTitle(raw_ostream &OS, StringRef Title) override;

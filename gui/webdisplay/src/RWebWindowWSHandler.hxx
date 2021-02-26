@@ -1,9 +1,6 @@
-/// \file RWebWindowWSHandler.hxx
-/// \ingroup WebGui ROOT7
-/// \author Sergey Linev <s.linev@gsi.de>
-/// \date 2018-08-20
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <s.linev@gsi.de>
+// Date: 2018-08-20
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -18,6 +15,7 @@
 
 #include "THttpWSHandler.h"
 #include "TEnv.h"
+#include "TUrl.h"
 
 #include <ROOT/RWebWindow.hxx>
 
@@ -40,6 +38,19 @@ protected:
 
    void VerifyDefaultPageContent(std::shared_ptr<THttpCallArg> &arg) override
    {
+      auto token = fWindow.GetConnToken();
+      if (!token.empty()) {
+         TUrl url;
+         url.SetOptions(arg->GetQuery());
+         // refuse connection which does not provide proper token
+         if (!url.HasOption("token") || (token != url.GetValueFromOptions("token"))) {
+            // refuce loading of default web page without token
+            arg->SetContent("refused");
+            arg->Set404();
+            return;
+         }
+      }
+
       auto version = fWindow.GetClientVersion();
       if (!version.empty()) {
          std::string search = "jsrootsys/scripts/JSRoot.core."s;

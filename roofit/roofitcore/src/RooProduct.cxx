@@ -148,6 +148,8 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   }
   if (indep->getSize()!=0) {
     map->push_back( std::make_pair(new RooArgSet(),indep) );
+  } else {
+     delete indep;
   }
 
   // Map observables -> functions ; start with individual observables

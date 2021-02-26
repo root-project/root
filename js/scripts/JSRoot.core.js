@@ -101,11 +101,11 @@
    /** @summary JSROOT version id
      * @desc For the JSROOT release the string in format "major.minor.patch" like "6.0.0"
      * For the ROOT release string is "ROOT major.minor.patch" like "ROOT 6.24.00" */
-   JSROOT.version_id = "6.0.0";
+   JSROOT.version_id = "dev";
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "14/01/2021";
+   JSROOT.version_date = "10/02/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -1149,14 +1149,19 @@
       let xhr = JSROOT.nodejs ? new (require("xhr2"))() : new XMLHttpRequest();
 
       xhr.http_callback = (typeof user_accept_callback == 'function') ? user_accept_callback.bind(xhr) : function() {};
-      xhr.error_callback = (typeof user_reject_callback == 'function') ? user_reject_callback : function(err) { console.warn(err.message); this.http_callback(null); }.bind(xhr);
+      xhr.error_callback = (typeof user_reject_callback == 'function') ? user_reject_callback.bind(xhr) : function(err) { console.warn(err.message); this.http_callback(null); }.bind(xhr);
 
       if (!kind) kind = "buf";
 
       let method = "GET", async = true, p = kind.indexOf(";sync");
       if (p > 0) { kind = kind.substr(0,p); async = false; }
-      if (kind === "head") method = "HEAD"; else
-      if ((kind === "post") || (kind === "multi") || (kind === "posttext")) method = "POST";
+      switch (kind) {
+         case "head": method = "HEAD"; break;
+         case "posttext": method = "POST"; kind = "text"; break;
+         case "postbuf":  method = "POST"; kind = "buf"; break;
+         case "post":
+         case "multi":  method = "POST"; kind = buf; break;
+      }
 
       xhr.kind = kind;
 
@@ -1165,7 +1170,7 @@
             if (oEvent.lengthComputable && this.expected_size && (oEvent.loaded > this.expected_size)) {
                this.did_abort = true;
                this.abort();
-               this.error_callback(Error('Server sends more bytes ' + oEvent.loaded + ' than expected ' + this.expected_size + '. Abort I/O operation'));
+               this.error_callback(Error('Server sends more bytes ' + oEvent.loaded + ' than expected ' + this.expected_size + '. Abort I/O operation'), 598);
             }
          }.bind(xhr));
 
@@ -1178,7 +1183,7 @@
             if (!isNaN(len) && (len > this.expected_size) && !JSROOT.settings.HandleWrongHttpResponse) {
                this.did_abort = true;
                this.abort();
-               return this.error_callback(Error('Server response size ' + len + ' larger than expected ' + this.expected_size + '. Abort I/O operation'));
+               return this.error_callback(Error('Server response size ' + len + ' larger than expected ' + this.expected_size + '. Abort I/O operation'), 599);
             }
          }
 
@@ -1187,7 +1192,7 @@
          if ((this.status != 200) && (this.status != 206) && !browser.qt5 &&
              // in these special cases browsers not always set status
              !((this.status == 0) && ((url.indexOf("file://")==0) || (url.indexOf("blob:")==0)))) {
-               return this.error_callback(Error('Fail to load url ' + url));
+               return this.error_callback(Error('Fail to load url ' + url), this.status);
          }
 
          if (this.nodejs_checkzip && (this.getResponseHeader("content-encoding") == "gzip")) {
@@ -1200,7 +1205,6 @@
 
          switch(this.kind) {
             case "xml": return this.http_callback(this.responseXML);
-            case "posttext":
             case "text": return this.http_callback(this.responseText);
             case "object": return this.http_callback(JSROOT.parse(this.responseText));
             case "multi": return this.http_callback(JSROOT.parseMulti(this.responseText));
@@ -1246,6 +1250,7 @@
      *    - "xml" - returns req.responseXML
      *    - "head" - returns request itself, uses "HEAD" request method
      *    - "post" - creates post request, submits req.send(post_data)
+     *    - "postbuf" - creates post request, expectes binary data as response
      * @param {string} url - URL for the request
      * @param {string} kind - kind of requested data
      * @param {string} [post_data] - data submitted with post kind of request

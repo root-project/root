@@ -7,6 +7,8 @@
 
 #include "gtest/gtest.h"
 
+#include <string>
+
 
 // ROOT-10702
 TEST(TTreeReaderRegressions, CompositeTypeWithNameClash)
@@ -75,6 +77,99 @@ TEST(TTreeReaderRegressions, AutoloadedFriends)
    ASSERT_TRUE(r.Next());
    EXPECT_EQ(*rv, 42);
    EXPECT_FALSE(r.Next());
+
+   gSystem->Unlink(fname);
+}
+
+// ROOT-10824
+TEST(TTreeReaderRegressions, IndexedFriend)
+{
+   const auto fname = "treereader_fillindexedfriend.root";
+
+   {
+      TFile f(fname, "recreate");
+      // Create main tree
+      TTree mainTree("mainTree", "mainTree");
+      int idx;
+      mainTree.Branch("idx", &idx);
+      float x;
+      mainTree.Branch("x", &x);
+
+      idx = 1;
+      x = 1.f;
+      mainTree.Fill();
+      idx = 1;
+      x = 2.f;
+      mainTree.Fill();
+      idx = 2;
+      x = 10.f;
+      mainTree.Fill();
+      idx = 2;
+      x = 20.f;
+      mainTree.Fill();
+      mainTree.Write();
+
+      // Create aux tree
+      TTree auxTree("auxTree", "auxTree");
+      auxTree.Branch("idx", &idx);
+      std::string s;
+      auxTree.Branch("s", &s);
+      idx = 1;
+      s = "small";
+      auxTree.Fill();
+      idx = 2;
+      s = "big";
+      auxTree.Fill();
+      auxTree.Write();
+      f.Close();
+   }
+
+   auto checkTreeReader = [](TTreeReader &r, TTreeReaderValue<float> &rx, TTreeReaderValue<std::string> &rs) {
+      ASSERT_TRUE(r.Next());
+      EXPECT_EQ(*rx, 1.f);
+      EXPECT_EQ(*rs, "small");
+      ASSERT_TRUE(r.Next());
+      EXPECT_EQ(*rx, 2.f);
+      EXPECT_EQ(*rs, "small");
+      ASSERT_TRUE(r.Next());
+      EXPECT_EQ(*rx, 10.f);
+      EXPECT_EQ(*rs, "big");
+      ASSERT_TRUE(r.Next());
+      EXPECT_EQ(*rx, 20.f);
+      EXPECT_EQ(*rs, "big");
+      ASSERT_FALSE(r.Next());
+   };
+
+   // Test reading back with TTreeReader+TTree
+   {
+      TFile f(fname);
+      auto mainTree = f.Get<TTree>("mainTree");
+      auto auxTree = f.Get<TTree>("auxTree");
+
+      auxTree->BuildIndex("idx");
+      mainTree->AddFriend(auxTree);
+
+      TTreeReader r(mainTree);
+      TTreeReaderValue<float> rx(r, "x");
+      TTreeReaderValue<std::string> rs(r, "auxTree.s");
+      checkTreeReader(r, rx, rs);
+   }
+
+   // Test reading back with TTreeReader+TChain
+   {
+      TChain mainChain("mainTree", "mainTree");
+      mainChain.Add(fname);
+      TChain auxChain("auxTree", "auxTree");
+      auxChain.Add(fname);
+
+      auxChain.BuildIndex("idx");
+      mainChain.AddFriend(&auxChain);
+
+      TTreeReader r(&mainChain);
+      TTreeReaderValue<float> rx(r, "x");
+      TTreeReaderValue<std::string> rs(r, "auxTree.s");
+      checkTreeReader(r, rx, rs);
+   }
 
    gSystem->Unlink(fname);
 }

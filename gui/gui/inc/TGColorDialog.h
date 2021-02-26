@@ -3,7 +3,7 @@
 // Author: Ilka Antcheva (color wheel support)   16/03/07
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -54,8 +54,8 @@ class TGColorPalette : public TGFrame, public TGWidget {
 
 private:
 
-   TGColorPalette(const TGColorPalette&); // Not implemented
-   TGColorPalette& operator=(const TGColorPalette&); // Not implemented
+   TGColorPalette(const TGColorPalette&) = delete;
+   TGColorPalette& operator=(const TGColorPalette&) = delete;
 
 protected:
    Int_t    fCx;           // x coordinate of currently selected color cell
@@ -158,8 +158,8 @@ class TGColorDialog : public TGTransientFrame {
 
 private:
 
-   TGColorDialog(const TGColorDialog&); // Not implemented
-   TGColorDialog& operator=(const TGColorDialog&); // Not implemented
+   TGColorDialog(const TGColorDialog&) = delete;
+   TGColorDialog& operator=(const TGColorDialog&) = delete;
 
 protected:
    Pixel_t         fCurrentColor;   // currently selected color
@@ -190,8 +190,8 @@ protected:
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
 public:
-   TGColorDialog(const TGWindow *p = 0, const TGWindow *m = 0, Int_t *retc = 0,
-                 Pixel_t *color = 0, Bool_t wait = kTRUE);
+   TGColorDialog(const TGWindow *p = nullptr, const TGWindow *m = nullptr, Int_t *retc = nullptr,
+                 Pixel_t *color = nullptr, Bool_t wait = kTRUE);
    virtual ~TGColorDialog();
 
    TGColorPalette *GetPalette() const { return fPalette; }

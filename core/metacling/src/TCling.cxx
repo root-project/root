@@ -1076,7 +1076,7 @@ static bool HasASTFileOnDisk(clang::Module *M, const clang::Preprocessor &PP, st
    std::string ModuleFileName;
    if (!HSOpts.PrebuiltModulePaths.empty())
       // Load the module from *only* in the prebuilt module path.
-      ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M->Name, /*ModuleMapPath*/"", /*UsePrebuiltPath*/ true);
+      ModuleFileName = PP.getHeaderSearchInfo().getPrebuiltModuleFileName(M->Name);
    if (FullFileName)
       *FullFileName = ModuleFileName;
 
@@ -1084,7 +1084,7 @@ static bool HasASTFileOnDisk(clang::Module *M, const clang::Preprocessor &PP, st
 }
 
 static bool HaveFullGlobalModuleIndex = false;
-static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling::Interpreter &interp)
+static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp)
 {
    CompilerInstance &CI = *interp.getCI();
    Preprocessor &PP = CI.getPreprocessor();
@@ -1174,10 +1174,10 @@ static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling
          };
          DefinitionFinder defFinder(IDs, CI.getASTContext().getTranslationUnitDecl());
 
-         GlobalModuleIndex::writeIndex(CI.getFileManager(),
-                                       CI.getPCHContainerReader(),
-                                       ModuleIndexPath,
-                                       &IDs);
+         llvm::cantFail(GlobalModuleIndex::writeIndex(CI.getFileManager(),
+                                                      CI.getPCHContainerReader(),
+                                                      ModuleIndexPath,
+                                                      &IDs));
          ModuleManager->resetForReload();
          ModuleManager->loadGlobalIndex();
          GlobalIndex = ModuleManager->getGlobalIndex();
@@ -1261,7 +1261,7 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       }
 
       if (supportedPlatform) {
-         loadGlobalModuleIndex(SourceLocation(), clingInterp);
+         loadGlobalModuleIndex(clingInterp);
          // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
          // We should investigate how to suppress it completely.
          GlobalIndex = CI.getModuleManager()->getGlobalIndex();
@@ -1312,22 +1312,16 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
    // Check that the gROOT macro was exported by any core module.
    assert(clingInterp.getMacro("gROOT") && "Couldn't load gROOT macro?");
 
-   // C99 decided that it's a very good idea to name a macro `I` (the letter I).
-   // This seems to screw up nearly all the template code out there as `I` is
-   // common template parameter name and iterator variable name.
-   // Let's follow the GCC recommendation and undefine `I` in case any of the
-   // core modules have defined it:
-   // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
-   clingInterp.declare("#ifdef I\n #undef I\n #endif\n");
-
-   // libc++ complex.h has #define complex _Complex. Give preference to the one
-   // in std.
-   clingInterp.declare("#ifdef complex\n #undef complex\n #endif\n");
-
-   // These macros are from loading R related modules, which conflict with
+   // `ERROR` and `PI` are from loading R related modules, which conflict with
    // user's code.
-   clingInterp.declare("#ifdef PI\n #undef PI\n #endif\n");
-   clingInterp.declare("#ifdef ERROR\n #undef ERROR\n #endif\n");
+   clingInterp.declare(R"CODE(
+#ifdef PI
+# undef PI
+#endif
+#ifdef ERROR
+# undef ERROR
+#endif
+                       )CODE");
 }
 
 static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
@@ -3197,6 +3191,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
                                               /*RequestingModule*/ 0,
                                               /*SuggestedModule*/ 0,
                                               /*IsMapped*/ 0,
+                                              /*IsFrameworkFound*/ nullptr,
                                               /*SkipCache*/ false,
                                               /*BuildSystemModule*/ false,
                                               /*OpenFile*/ false,
@@ -4687,7 +4682,7 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
    DeclarationName DName = &SemaR.Context.Idents.get(name);
 
    LookupResult R(SemaR, DName, SourceLocation(), Sema::LookupOrdinaryName,
-                  Sema::ForRedeclaration);
+                  Sema::ForExternalRedeclaration);
 
    // Could trigger deserialization of decls.
    cling::Interpreter::PushTransactionRAII RAII(GetInterpreterImpl());
@@ -5401,7 +5396,7 @@ const char* TCling::TypeName(const char* typeDesc)
    return t;
 }
 
-static bool requiresRootMap(const char* rootmapfile, cling::Interpreter* interp)
+static bool requiresRootMap(const char* rootmapfile)
 {
    assert(rootmapfile && *rootmapfile);
 
@@ -5422,7 +5417,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
    if (!(rootmapfile && *rootmapfile))
       return 0;
 
-   if (!requiresRootMap(rootmapfile, GetInterpreterImpl()))
+   if (!requiresRootMap(rootmapfile))
       return 0; // success
 
    // For "class ", "namespace ", "typedef ", "header ", "enum ", "var " respectively
@@ -5436,8 +5431,8 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
    if (fRootmapFiles->FindObject(rootmapfileNoBackslash.c_str()))
       return -1;
 
-   if (uniqueString)
-      uniqueString->Append(std::string("\n#line 1 \"Forward declarations from ") + rootmapfileNoBackslash + "\"\n");
+   // Line 1 is `{ decls }`
+   std::string lineDirective = std::string("\n#line 2 \"Forward declarations from ") + rootmapfileNoBackslash + "\"\n";
 
    std::ifstream file(rootmapfileNoBackslash);
    std::string line;
@@ -5463,7 +5458,9 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
                      rootmapfileNoBackslash.c_str());
                return -4;
             }
-            uniqueString->Append(line);
+            if (!lineDirective.empty())
+               uniqueString->Append(lineDirective);
+            uniqueString->Append(line + '\n');
          }
       }
       const char firstChar = line[0];
@@ -5540,9 +5537,9 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
 
 void TCling::InitRootmapFile(const char *name)
 {
-   assert(requiresRootMap(name, GetInterpreterImpl()) && "We have a module!");
+   assert(requiresRootMap(name) && "We have a module!");
 
-   if (!requiresRootMap(name, GetInterpreterImpl()))
+   if (!requiresRootMap(name))
       return;
 
    Bool_t ignore = fMapfile->IgnoreDuplicates(kFALSE);
@@ -5582,8 +5579,8 @@ namespace {
 
    class ExtVisibleStorageAdder: public RecursiveASTVisitor<ExtVisibleStorageAdder>{
       // This class is to be considered an helper for AutoLoading.
-      // It is a recursive visitor is used to inspect namespaces coming from
-      // forward declarations in rootmaps and to set the external visible
+      // It is a recursive visitor is used to inspect namespaces and specializations
+      // coming from forward declarations in rootmaps and to set the external visible
       // storage flag for them.
    public:
       ExtVisibleStorageAdder(std::unordered_set<const NamespaceDecl*>& nsSet): fNSSet(nsSet) {};
@@ -5596,9 +5593,24 @@ namespace {
          fNSSet.insert(nsDecl);
          return true;
       }
+      bool VisitClassTemplateSpecializationDecl(ClassTemplateSpecializationDecl* specDecl) {
+         // We want to enable the external lookup for this specialization
+         // because we can provide a definition for it!
+         if (specDecl->getTemplateSpecializationKind() == TSK_ExplicitSpecialization)
+            //SpecSet.insert(specDecl);
+            specDecl->setHasExternalLexicalStorage();
+
+         // No need to recurse. On the contrary, recursing is actively harmful:
+         // NOTE: must not recurse to prevent this visitor from triggering loading from
+         // the external AST source (i.e. autoloading). This would be triggered right here,
+         // before autoloading is even set up, as rootmap file parsing happens before that.
+         // Even if autoloading is off and has no effect, triggering loading from external
+         // AST source resets the flag setHasExternalLexicalStorage(), hiding this specialization
+         // from subsequent autoloads!
+         return false;
+      }
    private:
       std::unordered_set<const NamespaceDecl*>& fNSSet;
-
    };
 }
 
@@ -5611,7 +5623,7 @@ namespace {
 
 Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 {
-   if (rootmapfile && *rootmapfile && !requiresRootMap(rootmapfile, GetInterpreterImpl()))
+   if (rootmapfile && *rootmapfile && !requiresRootMap(rootmapfile))
       return 0;
 
    R__LOCKGUARD(gInterpreterMutex);
@@ -5769,13 +5781,13 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
                "Problems in %s declaring '%s' were encountered.", rootmapfile, uniqueString.Data()) ;
    }
 
-   if (T){
+   if (T) {
       ExtVisibleStorageAdder evsAdder(fNSFromRootmaps);
       for (auto declIt = T->decls_begin(); declIt < T->decls_end(); ++declIt) {
          if (declIt->m_DGR.isSingleDecl()) {
             if (Decl* D = declIt->m_DGR.getSingleDecl()) {
-               if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(D)) {
-                  evsAdder.TraverseDecl(NSD);
+               if (clang::isa<TagDecl>(D) || clang::isa<NamespaceDecl>(D)) {
+                  evsAdder.TraverseDecl(D);
                }
             }
          }
@@ -6133,6 +6145,9 @@ Int_t TCling::DeepAutoLoadImpl(const char *cls)
 
 Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
 {
+   // Prevent update to IsClassAutoloading between our check and our actions.
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
    // TClass::GetClass explicitly calls gInterpreter->AutoLoad. When called from
    // rootcling (in *_rdict.pcm file generation) it is a no op.
    // FIXME: We should avoid calling autoload when we know we are not supposed
@@ -6147,7 +6162,7 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
 
    assert(IsClassAutoLoadingEnabled() && "Calling when AutoLoading is off!");
 
-   R__LOCKGUARD(gInterpreterMutex);
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    if (!knowDictNotLoaded && gClassTable->GetDictNorm(cls)) {
       // The library is already loaded as the class's dictionary is known.
@@ -8821,7 +8836,7 @@ Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
    const clang::FunctionDecl *fd = ft->getTemplatedDecl();
    if (const clang::CXXMethodDecl *md =
        llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
-      if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
+      if (md->getMethodQualifiers().hasConst()) {
          property |= kIsConstant | kIsConstMethod;
       }
       if (md->isVirtual()) {

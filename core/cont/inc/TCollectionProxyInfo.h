@@ -254,7 +254,7 @@ namespace Detail {
       PairHolder(const PairHolder& c) : first(c.first), second(c.second) {}
       virtual ~PairHolder() {}
    private:
-      PairHolder& operator=(const PairHolder&);  // not implemented
+      PairHolder& operator=(const PairHolder&) = delete;
    };
 
    template <class T> struct Address {

@@ -1971,6 +1971,8 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
                                           limits, min, max);
    fNumericEntry->Connect("ReturnPressed()", "TGNumberEntry", this,
                           "ValueSet(Long_t=0)");
+   fNumericEntry->Connect("ReturnPressed()", "TGNumberEntry", this,
+                          "Modified()");
    fNumericEntry->Associate(fMsgWindow);
    AddFrame(fNumericEntry, 0);
    fButtonUp = new TGRepeatFireButton(this, fPicUp, 1,
@@ -2076,6 +2078,7 @@ Bool_t TGNumberEntry::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
             }
          // Emit a signal needed by pad editor
          ValueSet(10000 * (parm1 - 1) + parm2);
+         Modified();
          }
          break;
       }
@@ -2120,6 +2123,15 @@ void TGNumberEntry::ValueChanged(Long_t val)
 void TGNumberEntry::ValueSet(Long_t val)
 {
    Emit("ValueSet(Long_t)", val);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Modified() signal. This signal is emitted when the
+/// number entry value is changed.
+
+void TGNumberEntry::Modified()
+{
+   Emit("Modified()");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

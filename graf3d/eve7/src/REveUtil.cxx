@@ -26,8 +26,6 @@
 #include "TROOT.h"
 #include "TInterpreter.h"
 
-#include "TGMimeTypes.h"
-
 #include <list>
 #include <algorithm>
 #include <string>

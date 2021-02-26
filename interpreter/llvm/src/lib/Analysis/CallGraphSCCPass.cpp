@@ -1,9 +1,8 @@
 //===- CallGraphSCCPass.cpp - Pass that operates BU on call graph ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,23 +15,33 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Analysis/CallGraphSCCPass.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SCCIterator.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/IR/Function.h"
-#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/IRPrintingPasses.h"
+#include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/LegacyPassManagers.h"
+#include "llvm/IR/Module.h"
 #include "llvm/IR/OptBisect.h"
+#include "llvm/IR/PassTimingInfo.h"
+#include "llvm/Pass.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Timer.h"
 #include "llvm/Support/raw_ostream.h"
+#include <cassert>
+#include <string>
+#include <utility>
+#include <vector>
+
 using namespace llvm;
 
 #define DEBUG_TYPE "cgscc-passmgr"
 
-static cl::opt<unsigned> 
+static cl::opt<unsigned>
 MaxIterations("max-cg-scc-iterations", cl::ReallyHidden, cl::init(4));
 
 STATISTIC(MaxSCCIterations, "Maximum CGSCCPassMgr iterations on one SCC");
@@ -47,8 +56,8 @@ namespace {
 class CGPassManager : public ModulePass, public PMDataManager {
 public:
   static char ID;
-  explicit CGPassManager() 
-    : ModulePass(ID), PMDataManager() { }
+
+  explicit CGPassManager() : ModulePass(ID), PMDataManager() {}
 
   /// Execute all of the passes scheduled for execution.  Keep track of
   /// whether any of the passes modifies the module, and if so, return true.
@@ -88,13 +97,13 @@ public:
   }
 
   PassManagerType getPassManagerType() const override {
-    return PMT_CallGraphPassManager; 
+    return PMT_CallGraphPassManager;
   }
-  
+
 private:
   bool RunAllPassesOnSCC(CallGraphSCC &CurSCC, CallGraph &CG,
                          bool &DevirtualizedCall);
-  
+
   bool RunPassOnSCC(Pass *P, CallGraphSCC &CurSCC,
                     CallGraph &CG, bool &CallGraphUpToDate,
                     bool &DevirtualizedCall);
@@ -106,40 +115,58 @@ private:
 
 char CGPassManager::ID = 0;
 
-
 bool CGPassManager::RunPassOnSCC(Pass *P, CallGraphSCC &CurSCC,
                                  CallGraph &CG, bool &CallGraphUpToDate,
                                  bool &DevirtualizedCall) {
   bool Changed = false;
   PMDataManager *PM = P->getAsPMDataManager();
+  Module &M = CG.getModule();
 
   if (!PM) {
-    CallGraphSCCPass *CGSP = (CallGraphSCCPass*)P;
+    CallGraphSCCPass *CGSP = (CallGraphSCCPass *)P;
     if (!CallGraphUpToDate) {
       DevirtualizedCall |= RefreshCallGraph(CurSCC, CG, false);
       CallGraphUpToDate = true;
     }
 
     {
+      unsigned InstrCount, SCCCount = 0;
+      StringMap<std::pair<unsigned, unsigned>> FunctionToInstrCount;
+      bool EmitICRemark = M.shouldEmitInstrCountChangedRemark();
       TimeRegion PassTimer(getPassTimer(CGSP));
+      if (EmitICRemark)
+        InstrCount = initSizeRemarkInfo(M, FunctionToInstrCount);
       Changed = CGSP->runOnSCC(CurSCC);
+
+      if (EmitICRemark) {
+        // FIXME: Add getInstructionCount to CallGraphSCC.
+        SCCCount = M.getInstructionCount();
+        // Is there a difference in the number of instructions in the module?
+        if (SCCCount != InstrCount) {
+          // Yep. Emit a remark and update InstrCount.
+          int64_t Delta =
+              static_cast<int64_t>(SCCCount) - static_cast<int64_t>(InstrCount);
+          emitInstrCountChangedRemark(P, M, Delta, InstrCount,
+                                      FunctionToInstrCount);
+          InstrCount = SCCCount;
+        }
+      }
     }
-    
+
     // After the CGSCCPass is done, when assertions are enabled, use
     // RefreshCallGraph to verify that the callgraph was correctly updated.
 #ifndef NDEBUG
     if (Changed)
       RefreshCallGraph(CurSCC, CG, true);
 #endif
-    
+
     return Changed;
   }
-  
-  
+
   assert(PM->getPassManagerType() == PMT_FunctionPassManager &&
          "Invalid CGPassManager member");
   FPPassManager *FPP = (FPPassManager*)P;
-  
+
   // Run pass P on all functions in the current SCC.
   for (CallGraphNode *CGN : CurSCC) {
     if (Function *F = CGN->getFunction()) {
@@ -151,17 +178,16 @@ bool CGPassManager::RunPassOnSCC(Pass *P, CallGraphSCC &CurSCC,
       F->getContext().yield();
     }
   }
-  
+
   // The function pass(es) modified the IR, they may have clobbered the
   // callgraph.
   if (Changed && CallGraphUpToDate) {
-    DEBUG(dbgs() << "CGSCCPASSMGR: Pass Dirtied SCC: "
-                 << P->getPassName() << '\n');
+    LLVM_DEBUG(dbgs() << "CGSCCPASSMGR: Pass Dirtied SCC: " << P->getPassName()
+                      << '\n');
     CallGraphUpToDate = false;
   }
   return Changed;
 }
-
 
 /// Scan the functions in the specified CFG and resync the
 /// callgraph with the call sites found in it.  This is used after
@@ -172,20 +198,18 @@ bool CGPassManager::RunPassOnSCC(Pass *P, CallGraphSCC &CurSCC,
 /// meaning it turned an indirect call into a direct call.  This happens when
 /// a function pass like GVN optimizes away stuff feeding the indirect call.
 /// This never happens in checking mode.
-///
 bool CGPassManager::RefreshCallGraph(const CallGraphSCC &CurSCC, CallGraph &CG,
                                      bool CheckingMode) {
-  DenseMap<Value*, CallGraphNode*> CallSites;
-  
-  DEBUG(dbgs() << "CGSCCPASSMGR: Refreshing SCC with " << CurSCC.size()
-               << " nodes:\n";
-        for (CallGraphNode *CGN : CurSCC)
-          CGN->dump();
-        );
+  DenseMap<Value *, CallGraphNode *> Calls;
+
+  LLVM_DEBUG(dbgs() << "CGSCCPASSMGR: Refreshing SCC with " << CurSCC.size()
+                    << " nodes:\n";
+             for (CallGraphNode *CGN
+                  : CurSCC) CGN->dump(););
 
   bool MadeChange = false;
   bool DevirtualizedCall = false;
-  
+
   // Scan all functions in the SCC.
   unsigned FunctionNo = 0;
   for (CallGraphSCC::iterator SCCIdx = CurSCC.begin(), E = CurSCC.end();
@@ -193,47 +217,47 @@ bool CGPassManager::RefreshCallGraph(const CallGraphSCC &CurSCC, CallGraph &CG,
     CallGraphNode *CGN = *SCCIdx;
     Function *F = CGN->getFunction();
     if (!F || F->isDeclaration()) continue;
-    
+
     // Walk the function body looking for call sites.  Sync up the call sites in
     // CGN with those actually in the function.
 
     // Keep track of the number of direct and indirect calls that were
     // invalidated and removed.
     unsigned NumDirectRemoved = 0, NumIndirectRemoved = 0;
-    
+
     // Get the set of call sites currently in the function.
     for (CallGraphNode::iterator I = CGN->begin(), E = CGN->end(); I != E; ) {
       // If this call site is null, then the function pass deleted the call
       // entirely and the WeakTrackingVH nulled it out.
+      auto *Call = dyn_cast_or_null<CallBase>(I->first);
       if (!I->first ||
           // If we've already seen this call site, then the FunctionPass RAUW'd
           // one call with another, which resulted in two "uses" in the edge
           // list of the same call.
-          CallSites.count(I->first) ||
+          Calls.count(I->first) ||
 
           // If the call edge is not from a call or invoke, or it is a
-          // instrinsic call, then the function pass RAUW'd a call with 
+          // instrinsic call, then the function pass RAUW'd a call with
           // another value. This can happen when constant folding happens
           // of well known functions etc.
-          !CallSite(I->first) ||
-          (CallSite(I->first).getCalledFunction() &&
-           CallSite(I->first).getCalledFunction()->isIntrinsic() &&
-           Intrinsic::isLeaf(
-               CallSite(I->first).getCalledFunction()->getIntrinsicID()))) {
+          !Call ||
+          (Call->getCalledFunction() &&
+           Call->getCalledFunction()->isIntrinsic() &&
+           Intrinsic::isLeaf(Call->getCalledFunction()->getIntrinsicID()))) {
         assert(!CheckingMode &&
                "CallGraphSCCPass did not update the CallGraph correctly!");
-        
+
         // If this was an indirect call site, count it.
         if (!I->second->getFunction())
           ++NumIndirectRemoved;
-        else 
+        else
           ++NumDirectRemoved;
-        
+
         // Just remove the edge from the set of callees, keep track of whether
         // I points to the last element of the vector.
         bool WasLast = I + 1 == E;
         CGN->removeCallEdge(I);
-        
+
         // If I pointed to the last element of the vector, we have to bail out:
         // iterator checking rejects comparisons of the resultant pointer with
         // end.
@@ -242,96 +266,97 @@ bool CGPassManager::RefreshCallGraph(const CallGraphSCC &CurSCC, CallGraph &CG,
         E = CGN->end();
         continue;
       }
-      
-      assert(!CallSites.count(I->first) &&
+
+      assert(!Calls.count(I->first) &&
              "Call site occurs in node multiple times");
-      
-      CallSite CS(I->first);
-      if (CS) {
-        Function *Callee = CS.getCalledFunction();
+
+      if (Call) {
+        Function *Callee = Call->getCalledFunction();
         // Ignore intrinsics because they're not really function calls.
         if (!Callee || !(Callee->isIntrinsic()))
-          CallSites.insert(std::make_pair(I->first, I->second));
+          Calls.insert(std::make_pair(I->first, I->second));
       }
       ++I;
     }
-    
+
     // Loop over all of the instructions in the function, getting the callsites.
     // Keep track of the number of direct/indirect calls added.
     unsigned NumDirectAdded = 0, NumIndirectAdded = 0;
 
     for (BasicBlock &BB : *F)
       for (Instruction &I : BB) {
-        CallSite CS(&I);
-        if (!CS) continue;
-        Function *Callee = CS.getCalledFunction();
-        if (Callee && Callee->isIntrinsic()) continue;
-        
+        auto *Call = dyn_cast<CallBase>(&I);
+        if (!Call)
+          continue;
+        Function *Callee = Call->getCalledFunction();
+        if (Callee && Callee->isIntrinsic())
+          continue;
+
         // If this call site already existed in the callgraph, just verify it
-        // matches up to expectations and remove it from CallSites.
-        DenseMap<Value*, CallGraphNode*>::iterator ExistingIt =
-          CallSites.find(CS.getInstruction());
-        if (ExistingIt != CallSites.end()) {
+        // matches up to expectations and remove it from Calls.
+        DenseMap<Value *, CallGraphNode *>::iterator ExistingIt =
+            Calls.find(Call);
+        if (ExistingIt != Calls.end()) {
           CallGraphNode *ExistingNode = ExistingIt->second;
 
-          // Remove from CallSites since we have now seen it.
-          CallSites.erase(ExistingIt);
-          
+          // Remove from Calls since we have now seen it.
+          Calls.erase(ExistingIt);
+
           // Verify that the callee is right.
-          if (ExistingNode->getFunction() == CS.getCalledFunction())
+          if (ExistingNode->getFunction() == Call->getCalledFunction())
             continue;
-          
+
           // If we are in checking mode, we are not allowed to actually mutate
           // the callgraph.  If this is a case where we can infer that the
           // callgraph is less precise than it could be (e.g. an indirect call
           // site could be turned direct), don't reject it in checking mode, and
           // don't tweak it to be more precise.
-          if (CheckingMode && CS.getCalledFunction() &&
+          if (CheckingMode && Call->getCalledFunction() &&
               ExistingNode->getFunction() == nullptr)
             continue;
-          
+
           assert(!CheckingMode &&
                  "CallGraphSCCPass did not update the CallGraph correctly!");
-          
+
           // If not, we either went from a direct call to indirect, indirect to
           // direct, or direct to different direct.
           CallGraphNode *CalleeNode;
-          if (Function *Callee = CS.getCalledFunction()) {
+          if (Function *Callee = Call->getCalledFunction()) {
             CalleeNode = CG.getOrInsertFunction(Callee);
             // Keep track of whether we turned an indirect call into a direct
             // one.
             if (!ExistingNode->getFunction()) {
               DevirtualizedCall = true;
-              DEBUG(dbgs() << "  CGSCCPASSMGR: Devirtualized call to '"
-                           << Callee->getName() << "'\n");
+              LLVM_DEBUG(dbgs() << "  CGSCCPASSMGR: Devirtualized call to '"
+                                << Callee->getName() << "'\n");
             }
           } else {
             CalleeNode = CG.getCallsExternalNode();
           }
 
           // Update the edge target in CGN.
-          CGN->replaceCallEdge(CS, CS, CalleeNode);
+          CGN->replaceCallEdge(*Call, *Call, CalleeNode);
           MadeChange = true;
           continue;
         }
-        
+
         assert(!CheckingMode &&
                "CallGraphSCCPass did not update the CallGraph correctly!");
 
         // If the call site didn't exist in the CGN yet, add it.
         CallGraphNode *CalleeNode;
-        if (Function *Callee = CS.getCalledFunction()) {
+        if (Function *Callee = Call->getCalledFunction()) {
           CalleeNode = CG.getOrInsertFunction(Callee);
           ++NumDirectAdded;
         } else {
           CalleeNode = CG.getCallsExternalNode();
           ++NumIndirectAdded;
         }
-        
-        CGN->addCalledFunction(CS, CalleeNode);
+
+        CGN->addCalledFunction(Call, CalleeNode);
         MadeChange = true;
       }
-    
+
     // We scanned the old callgraph node, removing invalidated call sites and
     // then added back newly found call sites.  One thing that can happen is
     // that an old indirect call site was deleted and replaced with a new direct
@@ -345,30 +370,28 @@ bool CGPassManager::RefreshCallGraph(const CallGraphSCC &CurSCC, CallGraph &CG,
     if (NumIndirectRemoved > NumIndirectAdded &&
         NumDirectRemoved < NumDirectAdded)
       DevirtualizedCall = true;
-    
+
     // After scanning this function, if we still have entries in callsites, then
     // they are dangling pointers.  WeakTrackingVH should save us for this, so
     // abort if
     // this happens.
-    assert(CallSites.empty() && "Dangling pointers found in call sites map");
-    
+    assert(Calls.empty() && "Dangling pointers found in call sites map");
+
     // Periodically do an explicit clear to remove tombstones when processing
     // large scc's.
     if ((FunctionNo & 15) == 15)
-      CallSites.clear();
+      Calls.clear();
   }
 
-  DEBUG(if (MadeChange) {
-          dbgs() << "CGSCCPASSMGR: Refreshed SCC is now:\n";
-          for (CallGraphNode *CGN : CurSCC)
-            CGN->dump();
-          if (DevirtualizedCall)
-            dbgs() << "CGSCCPASSMGR: Refresh devirtualized a call!\n";
-
-         } else {
-           dbgs() << "CGSCCPASSMGR: SCC Refresh didn't change call graph.\n";
-         }
-        );
+  LLVM_DEBUG(if (MadeChange) {
+    dbgs() << "CGSCCPASSMGR: Refreshed SCC is now:\n";
+    for (CallGraphNode *CGN : CurSCC)
+      CGN->dump();
+    if (DevirtualizedCall)
+      dbgs() << "CGSCCPASSMGR: Refresh devirtualized a call!\n";
+  } else {
+    dbgs() << "CGSCCPASSMGR: SCC Refresh didn't change call graph.\n";
+  });
   (void)MadeChange;
 
   return DevirtualizedCall;
@@ -380,7 +403,7 @@ bool CGPassManager::RefreshCallGraph(const CallGraphSCC &CurSCC, CallGraph &CG,
 bool CGPassManager::RunAllPassesOnSCC(CallGraphSCC &CurSCC, CallGraph &CG,
                                       bool &DevirtualizedCall) {
   bool Changed = false;
-  
+
   // Keep track of whether the callgraph is known to be up-to-date or not.
   // The CGSSC pass manager runs two types of passes:
   // CallGraphSCC Passes and other random function passes.  Because other
@@ -394,7 +417,7 @@ bool CGPassManager::RunAllPassesOnSCC(CallGraphSCC &CurSCC, CallGraph &CG,
   for (unsigned PassNo = 0, e = getNumContainedPasses();
        PassNo != e; ++PassNo) {
     Pass *P = getContainedPass(PassNo);
-    
+
     // If we're in -debug-pass=Executions mode, construct the SCC node list,
     // otherwise avoid constructing this string as it is expensive.
     if (isPassDebuggingExecutionsOrMore()) {
@@ -411,23 +434,23 @@ bool CGPassManager::RunAllPassesOnSCC(CallGraphSCC &CurSCC, CallGraph &CG,
       dumpPassInfo(P, EXECUTION_MSG, ON_CG_MSG, Functions);
     }
     dumpRequiredSet(P);
-    
+
     initializeAnalysisImpl(P);
-    
+
     // Actually run this pass on the current SCC.
     Changed |= RunPassOnSCC(P, CurSCC, CG,
                             CallGraphUpToDate, DevirtualizedCall);
-    
+
     if (Changed)
       dumpPassInfo(P, MODIFICATION_MSG, ON_CG_MSG, "");
     dumpPreservedSet(P);
-    
-    verifyPreservedAnalysis(P);      
+
+    verifyPreservedAnalysis(P);
     removeNotPreservedAnalysis(P);
     recordAvailableAnalysis(P);
     removeDeadPasses(P, "", ON_CG_MSG);
   }
-  
+
   // If the callgraph was left out of date (because the last pass run was a
   // functionpass), refresh it before we move on to the next SCC.
   if (!CallGraphUpToDate)
@@ -440,7 +463,7 @@ bool CGPassManager::RunAllPassesOnSCC(CallGraphSCC &CurSCC, CallGraph &CG,
 bool CGPassManager::runOnModule(Module &M) {
   CallGraph &CG = getAnalysis<CallGraphWrapperPass>().getCallGraph();
   bool Changed = doInitialization(CG);
-  
+
   // Walk the callgraph in bottom-up SCC order.
   scc_iterator<CallGraph*> CGI = scc_begin(&CG);
 
@@ -467,16 +490,17 @@ bool CGPassManager::runOnModule(Module &M) {
     unsigned Iteration = 0;
     bool DevirtualizedCall = false;
     do {
-      DEBUG(if (Iteration)
-              dbgs() << "  SCCPASSMGR: Re-visiting SCC, iteration #"
-                     << Iteration << '\n');
+      LLVM_DEBUG(if (Iteration) dbgs()
+                 << "  SCCPASSMGR: Re-visiting SCC, iteration #" << Iteration
+                 << '\n');
       DevirtualizedCall = false;
       Changed |= RunAllPassesOnSCC(CurSCC, CG, DevirtualizedCall);
     } while (Iteration++ < MaxIterations && DevirtualizedCall);
-    
+
     if (DevirtualizedCall)
-      DEBUG(dbgs() << "  CGSCCPASSMGR: Stopped iteration after " << Iteration
-                   << " times, due to -max-cg-scc-iterations\n");
+      LLVM_DEBUG(dbgs() << "  CGSCCPASSMGR: Stopped iteration after "
+                        << Iteration
+                        << " times, due to -max-cg-scc-iterations\n");
 
     MaxSCCIterations.updateMax(Iteration);
   }
@@ -484,11 +508,10 @@ bool CGPassManager::runOnModule(Module &M) {
   return Changed;
 }
 
-
 /// Initialize CG
 bool CGPassManager::doInitialization(CallGraph &CG) {
   bool Changed = false;
-  for (unsigned i = 0, e = getNumContainedPasses(); i != e; ++i) {  
+  for (unsigned i = 0, e = getNumContainedPasses(); i != e; ++i) {
     if (PMDataManager *PM = getContainedPass(i)->getAsPMDataManager()) {
       assert(PM->getPassManagerType() == PMT_FunctionPassManager &&
              "Invalid CGPassManager member");
@@ -503,7 +526,7 @@ bool CGPassManager::doInitialization(CallGraph &CG) {
 /// Finalize CG
 bool CGPassManager::doFinalization(CallGraph &CG) {
   bool Changed = false;
-  for (unsigned i = 0, e = getNumContainedPasses(); i != e; ++i) {  
+  for (unsigned i = 0, e = getNumContainedPasses(); i != e; ++i) {
     if (PMDataManager *PM = getContainedPass(i)->getAsPMDataManager()) {
       assert(PM->getPassManagerType() == PMT_FunctionPassManager &&
              "Invalid CGPassManager member");
@@ -529,13 +552,12 @@ void CallGraphSCC::ReplaceNode(CallGraphNode *Old, CallGraphNode *New) {
     Nodes[i] = New;
     break;
   }
-  
+
   // Update the active scc_iterator so that it doesn't contain dangling
   // pointers to the old CallGraphNode.
   scc_iterator<CallGraph*> *CGI = (scc_iterator<CallGraph*>*)Context;
   CGI->ReplaceNode(Old, New);
 }
-
 
 //===----------------------------------------------------------------------===//
 // CallGraphSCCPass Implementation
@@ -544,18 +566,18 @@ void CallGraphSCC::ReplaceNode(CallGraphNode *Old, CallGraphNode *New) {
 /// Assign pass manager to manage this pass.
 void CallGraphSCCPass::assignPassManager(PMStack &PMS,
                                          PassManagerType PreferredType) {
-  // Find CGPassManager 
+  // Find CGPassManager
   while (!PMS.empty() &&
          PMS.top()->getPassManagerType() > PMT_CallGraphPassManager)
     PMS.pop();
 
   assert(!PMS.empty() && "Unable to handle Call Graph Pass");
   CGPassManager *CGP;
-  
+
   if (PMS.top()->getPassManagerType() == PMT_CallGraphPassManager)
     CGP = (CGPassManager*)PMS.top();
   else {
-    // Create new Call Graph SCC Pass Manager if it does not exist. 
+    // Create new Call Graph SCC Pass Manager if it does not exist.
     assert(!PMS.empty() && "Unable to create Call Graph Pass Manager");
     PMDataManager *PMD = PMS.top();
 
@@ -586,22 +608,23 @@ void CallGraphSCCPass::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.addPreserved<CallGraphWrapperPass>();
 }
 
-
 //===----------------------------------------------------------------------===//
 // PrintCallGraphPass Implementation
 //===----------------------------------------------------------------------===//
 
 namespace {
+
   /// PrintCallGraphPass - Print a Module corresponding to a call graph.
   ///
   class PrintCallGraphPass : public CallGraphSCCPass {
     std::string Banner;
-    raw_ostream &Out;       // raw_ostream to print on.
-    
+    raw_ostream &OS;       // raw_ostream to print on.
+
   public:
     static char ID;
-    PrintCallGraphPass(const std::string &B, raw_ostream &o)
-      : CallGraphSCCPass(ID), Banner(B), Out(o) {}
+
+    PrintCallGraphPass(const std::string &B, raw_ostream &OS)
+      : CallGraphSCCPass(ID), Banner(B), OS(OS) {}
 
     void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesAll();
@@ -609,45 +632,80 @@ namespace {
 
     bool runOnSCC(CallGraphSCC &SCC) override {
       bool BannerPrinted = false;
-      auto PrintBannerOnce = [&] () {
+      auto PrintBannerOnce = [&]() {
         if (BannerPrinted)
           return;
-        Out << Banner;
+        OS << Banner;
         BannerPrinted = true;
-        };
+      };
+
+      bool NeedModule = llvm::forcePrintModuleIR();
+      if (isFunctionInPrintList("*") && NeedModule) {
+        PrintBannerOnce();
+        OS << "\n";
+        SCC.getCallGraph().getModule().print(OS, nullptr);
+        return false;
+      }
+      bool FoundFunction = false;
       for (CallGraphNode *CGN : SCC) {
         if (Function *F = CGN->getFunction()) {
           if (!F->isDeclaration() && isFunctionInPrintList(F->getName())) {
-            PrintBannerOnce();
-            F->print(Out);
+            FoundFunction = true;
+            if (!NeedModule) {
+              PrintBannerOnce();
+              F->print(OS);
+            }
           }
-        } else if (llvm::isFunctionInPrintList("*")) {
+        } else if (isFunctionInPrintList("*")) {
           PrintBannerOnce();
-          Out << "\nPrinting <null> Function\n";
+          OS << "\nPrinting <null> Function\n";
         }
+      }
+      if (NeedModule && FoundFunction) {
+        PrintBannerOnce();
+        OS << "\n";
+        SCC.getCallGraph().getModule().print(OS, nullptr);
       }
       return false;
     }
-    
+
     StringRef getPassName() const override { return "Print CallGraph IR"; }
   };
-  
+
 } // end anonymous namespace.
 
 char PrintCallGraphPass::ID = 0;
 
-Pass *CallGraphSCCPass::createPrinterPass(raw_ostream &O,
+Pass *CallGraphSCCPass::createPrinterPass(raw_ostream &OS,
                                           const std::string &Banner) const {
-  return new PrintCallGraphPass(Banner, O);
+  return new PrintCallGraphPass(Banner, OS);
+}
+
+static std::string getDescription(const CallGraphSCC &SCC) {
+  std::string Desc = "SCC (";
+  bool First = true;
+  for (CallGraphNode *CGN : SCC) {
+    if (First)
+      First = false;
+    else
+      Desc += ", ";
+    Function *F = CGN->getFunction();
+    if (F)
+      Desc += F->getName();
+    else
+      Desc += "<<null function>>";
+  }
+  Desc += ")";
+  return Desc;
 }
 
 bool CallGraphSCCPass::skipSCC(CallGraphSCC &SCC) const {
-  return !SCC.getCallGraph().getModule()
-              .getContext()
-              .getOptBisect()
-              .shouldRunPass(this, SCC);
+  OptPassGate &Gate =
+      SCC.getCallGraph().getModule().getContext().getOptPassGate();
+  return Gate.isEnabled() && !Gate.shouldRunPass(this, getDescription(SCC));
 }
 
 char DummyCGSCCPass::ID = 0;
+
 INITIALIZE_PASS(DummyCGSCCPass, "DummyCGSCCPass", "DummyCGSCCPass", false,
                 false)

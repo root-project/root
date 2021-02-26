@@ -1,9 +1,8 @@
 //===- llvm-cxxdump.cpp - Dump C++ data in an Object File -------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -20,11 +19,10 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/FileSystem.h"
-#include "llvm/Support/ManagedStatic.h"
-#include "llvm/Support/PrettyStackTrace.h"
-#include "llvm/Support/Signals.h"
+#include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/WithColor.h"
 #include "llvm/Support/raw_ostream.h"
 #include <map>
 #include <string>
@@ -45,17 +43,23 @@ namespace llvm {
 static void error(std::error_code EC) {
   if (!EC)
     return;
-  outs() << "\nError reading file: " << EC.message() << ".\n";
+  WithColor::error(outs(), "") << "reading file: " << EC.message() << ".\n";
   outs().flush();
   exit(1);
 }
 
-static void error(Error Err) {
-  if (Err) {
-    logAllUnhandledErrors(std::move(Err), outs(), "Error reading file: ");
-    outs().flush();
-    exit(1);
-  }
+LLVM_ATTRIBUTE_NORETURN static void error(Error Err) {
+  logAllUnhandledErrors(std::move(Err), WithColor::error(outs()),
+                        "reading file: ");
+  outs().flush();
+  exit(1);
+}
+
+template <typename T>
+T unwrapOrError(Expected<T> EO) {
+  if (!EO)
+    error(EO.takeError());
+  return std::move(*EO);
 }
 
 } // namespace llvm
@@ -63,7 +67,7 @@ static void error(Error Err) {
 static void reportError(StringRef Input, StringRef Message) {
   if (Input == "-")
     Input = "<stdin>";
-  errs() << Input << ": " << Message << "\n";
+  WithColor::error(errs(), Input) << Message << "\n";
   errs().flush();
   exit(1);
 }
@@ -196,8 +200,7 @@ static void dumpCXXData(const ObjectFile *Obj) {
     // Skip virtual or BSS sections.
     if (Sec.isBSS() || Sec.isVirtual())
       continue;
-    StringRef SecContents;
-    error(Sec.getContents(SecContents));
+    StringRef SecContents = unwrapOrError(Sec.getContents());
     Expected<uint64_t> SymAddressOrErr = Sym.getAddress();
     error(errorToErrorCode(SymAddressOrErr.takeError()));
     uint64_t SymAddress = *SymAddressOrErr;
@@ -498,7 +501,7 @@ static void dumpArchive(const Archive *Arc) {
       if (auto E = isNotObjectErrorInvalidFileType(ChildOrErr.takeError())) {
         std::string Buf;
         raw_string_ostream OS(Buf);
-        logAllUnhandledErrors(std::move(E), OS, "");
+        logAllUnhandledErrors(std::move(E), OS);
         OS.flush();
         reportError(Arc->getFileName(), Buf);
       }
@@ -511,7 +514,8 @@ static void dumpArchive(const Archive *Arc) {
     else
       reportError(Arc->getFileName(), cxxdump_error::unrecognized_file_format);
   }
-  error(std::move(Err));
+  if (Err)
+    error(std::move(Err));
 }
 
 static void dumpInput(StringRef File) {
@@ -533,9 +537,7 @@ static void dumpInput(StringRef File) {
 }
 
 int main(int argc, const char *argv[]) {
-  sys::PrintStackTraceOnErrorSignal(argv[0]);
-  PrettyStackTraceProgram X(argc, argv);
-  llvm_shutdown_obj Y;
+  InitLLVM X(argc, argv);
 
   // Initialize targets.
   llvm::InitializeAllTargetInfos();
@@ -549,8 +551,7 @@ int main(int argc, const char *argv[]) {
   if (opts::InputFilenames.size() == 0)
     opts::InputFilenames.push_back("-");
 
-  std::for_each(opts::InputFilenames.begin(), opts::InputFilenames.end(),
-                dumpInput);
+  llvm::for_each(opts::InputFilenames, dumpInput);
 
   return EXIT_SUCCESS;
 }

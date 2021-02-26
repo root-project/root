@@ -1,9 +1,8 @@
 //===--- Comment.h - Comment AST nodes --------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -98,7 +97,7 @@ protected:
     unsigned RenderKind : 2;
     unsigned CommandID : CommandInfo::NumCommandIDBits;
   };
-  enum { NumInlineCommandCommentBits = NumInlineContentCommentBits + 2 + 
+  enum { NumInlineCommandCommentBits = NumInlineContentCommentBits + 2 +
                                        CommandInfo::NumCommandIDBits };
 
   class HTMLTagCommentBitfields {
@@ -146,7 +145,7 @@ protected:
     /// Contains values from CommandMarkerKind enum.
     unsigned CommandMarker : 1;
   };
-  enum { NumBlockCommandCommentBits = NumCommentBits + 
+  enum { NumBlockCommandCommentBits = NumCommentBits +
                                       CommandInfo::NumCommandIDBits + 1 };
 
   class ParamCommandCommentBitfields {
@@ -215,13 +214,9 @@ public:
 
   SourceRange getSourceRange() const LLVM_READONLY { return Range; }
 
-  SourceLocation getLocStart() const LLVM_READONLY {
-    return Range.getBegin();
-  }
+  SourceLocation getBeginLoc() const LLVM_READONLY { return Range.getBegin(); }
 
-  SourceLocation getLocEnd() const LLVM_READONLY {
-    return Range.getEnd();
-  }
+  SourceLocation getEndLoc() const LLVM_READONLY { return Range.getEnd(); }
 
   SourceLocation getLocation() const LLVM_READONLY { return Loc; }
 
@@ -351,8 +346,7 @@ public:
   }
 
   SourceRange getCommandNameRange() const {
-    return SourceRange(getLocStart().getLocWithOffset(-1),
-                       getLocEnd());
+    return SourceRange(getBeginLoc().getLocWithOffset(-1), getEndLoc());
   }
 
   RenderKind getRenderKind() const {
@@ -566,9 +560,9 @@ public:
 
     ParagraphCommentBits.IsWhitespaceValid = false;
 
-    setSourceRange(SourceRange(Content.front()->getLocStart(),
-                               Content.back()->getLocEnd()));
-    setLocation(Content.front()->getLocStart());
+    setSourceRange(SourceRange(Content.front()->getBeginLoc(),
+                               Content.back()->getEndLoc()));
+    setLocation(Content.front()->getBeginLoc());
   }
 
   static bool classof(const Comment *C) {
@@ -662,13 +656,13 @@ public:
   }
 
   SourceLocation getCommandNameBeginLoc() const {
-    return getLocStart().getLocWithOffset(1);
+    return getBeginLoc().getLocWithOffset(1);
   }
 
   SourceRange getCommandNameRange(const CommandTraits &Traits) const {
     StringRef Name = getCommandName(Traits);
     return SourceRange(getCommandNameBeginLoc(),
-                       getLocStart().getLocWithOffset(1 + Name.size()));
+                       getBeginLoc().getLocWithOffset(1 + Name.size()));
   }
 
   unsigned getNumArgs() const {
@@ -688,7 +682,7 @@ public:
     if (Args.size() > 0) {
       SourceLocation NewLocEnd = Args.back().Range.getEnd();
       if (NewLocEnd.isValid())
-        setSourceRange(SourceRange(getLocStart(), NewLocEnd));
+        setSourceRange(SourceRange(getBeginLoc(), NewLocEnd));
     }
   }
 
@@ -702,9 +696,9 @@ public:
 
   void setParagraph(ParagraphComment *PC) {
     Paragraph = PC;
-    SourceLocation NewLocEnd = PC->getLocEnd();
+    SourceLocation NewLocEnd = PC->getEndLoc();
     if (NewLocEnd.isValid())
-      setSourceRange(SourceRange(getLocStart(), NewLocEnd));
+      setSourceRange(SourceRange(getBeginLoc(), NewLocEnd));
   }
 
   CommandMarkerKind getCommandMarker() const LLVM_READONLY {
@@ -978,7 +972,7 @@ public:
   }
 
   SourceRange getTextRange() const {
-    return SourceRange(TextBegin, getLocEnd());
+    return SourceRange(TextBegin, getEndLoc());
   }
 };
 
@@ -987,17 +981,17 @@ struct DeclInfo {
   /// Declaration the comment is actually attached to (in the source).
   /// Should not be NULL.
   const Decl *CommentDecl;
-  
+
   /// CurrentDecl is the declaration with which the FullComment is associated.
   ///
-  /// It can be different from \c CommentDecl.  It happens when we we decide
+  /// It can be different from \c CommentDecl.  It happens when we decide
   /// that the comment originally attached to \c CommentDecl is fine for
   /// \c CurrentDecl too (for example, for a redeclaration or an overrider of
   /// \c CommentDecl).
   ///
   /// The information in the DeclInfo corresponds to CurrentDecl.
   const Decl *CurrentDecl;
-  
+
   /// Parameters that can be referenced by \\param if \c CommentDecl is something
   /// that we consider a "function".
   ArrayRef<const ParmVarDecl *> ParamVars;
@@ -1105,9 +1099,9 @@ public:
     if (Blocks.empty())
       return;
 
-    setSourceRange(SourceRange(Blocks.front()->getLocStart(),
-                               Blocks.back()->getLocEnd()));
-    setLocation(Blocks.front()->getLocStart());
+    setSourceRange(
+        SourceRange(Blocks.front()->getBeginLoc(), Blocks.back()->getEndLoc()));
+    setLocation(Blocks.front()->getBeginLoc());
   }
 
   static bool classof(const Comment *C) {
@@ -1119,21 +1113,21 @@ public:
   }
 
   child_iterator child_end() const {
-    return reinterpret_cast<child_iterator>(Blocks.end()); 
+    return reinterpret_cast<child_iterator>(Blocks.end());
   }
 
   const Decl *getDecl() const LLVM_READONLY {
     return ThisDeclInfo->CommentDecl;
   }
-  
+
   const DeclInfo *getDeclInfo() const LLVM_READONLY {
     if (!ThisDeclInfo->IsFilled)
       ThisDeclInfo->fill();
     return ThisDeclInfo;
   }
-  
+
   ArrayRef<BlockContentComment *> getBlocks() const { return Blocks; }
-  
+
 };
 } // end namespace comments
 } // end namespace clang

@@ -5,6 +5,7 @@
 set(LLVM_VERSION_MAJOR @LLVM_VERSION_MAJOR@)
 set(LLVM_VERSION_MINOR @LLVM_VERSION_MINOR@)
 set(LLVM_VERSION_PATCH @LLVM_VERSION_PATCH@)
+set(LLVM_VERSION_SUFFIX @LLVM_VERSION_SUFFIX@)
 set(LLVM_PACKAGE_VERSION @PACKAGE_VERSION@)
 
 set(LLVM_BUILD_TYPE @CMAKE_BUILD_TYPE@)
@@ -12,6 +13,10 @@ set(LLVM_BUILD_TYPE @CMAKE_BUILD_TYPE@)
 set(LLVM_COMMON_DEPENDS @LLVM_COMMON_DEPENDS@)
 
 set(LLVM_AVAILABLE_LIBS @LLVM_AVAILABLE_LIBS@)
+
+@LLVM_CONFIG_LINK_LLVM_DYLIB@
+
+set(LLVM_DYLIB_COMPONENTS @LLVM_DYLIB_COMPONENTS@)
 
 set(LLVM_ALL_TARGETS @LLVM_ALL_TARGETS@)
 
@@ -37,6 +42,10 @@ set(LLVM_ENABLE_THREADS @LLVM_ENABLE_THREADS@)
 
 set(LLVM_ENABLE_ZLIB @LLVM_ENABLE_ZLIB@)
 
+set(LLVM_LIBXML2_ENABLED @LLVM_LIBXML2_ENABLED@)
+
+set(LLVM_WITH_Z3 @LLVM_WITH_Z3@)
+
 set(LLVM_ENABLE_DIA_SDK @LLVM_ENABLE_DIA_SDK@)
 
 set(LLVM_NATIVE_ARCH @LLVM_NATIVE_ARCH@)
@@ -54,17 +63,18 @@ set(LLVM_EXPORT_SYMBOLS_FOR_PLUGINS @LLVM_EXPORT_SYMBOLS_FOR_PLUGINS@)
 set(LLVM_PLUGIN_EXT @LLVM_PLUGIN_EXT@)
 
 set(LLVM_ON_UNIX @LLVM_ON_UNIX@)
-set(LLVM_ON_WIN32 @LLVM_ON_WIN32@)
 
 set(LLVM_LIBDIR_SUFFIX @LLVM_LIBDIR_SUFFIX@)
 
 set(LLVM_INCLUDE_DIRS "@LLVM_CONFIG_INCLUDE_DIRS@")
 set(LLVM_LIBRARY_DIRS "@LLVM_CONFIG_LIBRARY_DIRS@")
 
-# These variables are duplicated, but they must match the LLVM variables of the
-# same name. The variables ending in "S" could some day become lists, and are
-# preserved for convention and compatibility.
-set(LLVM_INCLUDE_DIR "@LLVM_CONFIG_INCLUDE_DIRS@")
+# These variables are duplicated for install tree but they have different
+# values for build tree.  LLVM_INCLUDE_DIRS contains both source
+# and generated include directories while the following variables have
+# them split.
+set(LLVM_INCLUDE_DIR "@LLVM_CONFIG_INCLUDE_DIR@")
+set(LLVM_MAIN_INCLUDE_DIR "@LLVM_CONFIG_MAIN_INCLUDE_DIR@")
 set(LLVM_LIBRARY_DIR "@LLVM_CONFIG_LIBRARY_DIRS@")
 
 set(LLVM_DEFINITIONS "@LLVM_DEFINITIONS@")
@@ -72,11 +82,20 @@ set(LLVM_CMAKE_DIR "@LLVM_CONFIG_CMAKE_DIR@")
 set(LLVM_BINARY_DIR "@LLVM_CONFIG_BINARY_DIR@")
 set(LLVM_TOOLS_BINARY_DIR "@LLVM_CONFIG_TOOLS_BINARY_DIR@")
 set(LLVM_TOOLS_INSTALL_DIR "@LLVM_TOOLS_INSTALL_DIR@")
+set(LLVM_HAVE_OPT_VIEWER_MODULES @LLVM_HAVE_OPT_VIEWER_MODULES@)
+set(LLVM_CONFIGURATION_TYPES @CMAKE_CONFIGURATION_TYPES@)
 
 if(NOT TARGET LLVMSupport)
   set(LLVM_EXPORTED_TARGETS "@LLVM_CONFIG_EXPORTS@")
   include("@LLVM_CONFIG_EXPORTS_FILE@")
   @llvm_config_include_buildtree_only_exports@
+endif()
+
+# By creating intrinsics_gen here, subprojects that depend on LLVM's
+# tablegen-generated headers can always depend on this target whether building
+# in-tree with LLVM or not.
+if(NOT TARGET intrinsics_gen)
+  add_custom_target(intrinsics_gen)
 endif()
 
 set_property(GLOBAL PROPERTY LLVM_TARGETS_CONFIGURED On)

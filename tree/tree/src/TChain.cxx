@@ -58,6 +58,7 @@ the trees in the chain.
 #include "TFileStager.h"
 #include "TFilePrefetch.h"
 #include "TVirtualMutex.h"
+#include "TVirtualPerfStats.h"
 #include "strlcpy.h"
 #include "snprintf.h"
 
@@ -1492,6 +1493,9 @@ Long64_t TChain::LoadTree(Long64_t entry)
       fTree = 0;
       returnCode = -3;
    } else {
+      if (fPerfStats)
+         fPerfStats->SetFile(fFile);
+
       // Note: We do *not* own fTree after this, the file does!
       fTree = dynamic_cast<TTree*>(fFile->Get(element->GetName()));
       if (!fTree) {

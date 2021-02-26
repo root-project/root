@@ -1,6 +1,8 @@
 llvm-bcanalyzer - LLVM bitcode analyzer
 =======================================
 
+.. program:: llvm-bcanalyzer
+
 SYNOPSIS
 --------
 
@@ -301,5 +303,4 @@ The detailed output provides additional information on a per-function basis.
 SEE ALSO
 --------
 
-:doc:`/CommandGuide/llvm-dis`, :doc:`/BitCodeFormat`
-
+:manpage:`llvm-dis(1)`, :doc:`/BitCodeFormat`

@@ -17,7 +17,11 @@ namespace ROOT {
 namespace Experimental {
 namespace Browsable {
 
-/** Representation of single item in the file browser for object from TKey */
+/** \class TKeyItem
+\ingroup rbrowser
+Representation of single item in the file browser for object from TKey
+*/
+
 class TKeyItem : public RItem {
    std::string className; ///< class name
 

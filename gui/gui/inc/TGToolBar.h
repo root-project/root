@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -47,11 +47,11 @@ protected:
    TMap    *fMapOfButtons;  // map of button/id pairs in this group
 
 private:
-   TGToolBar(const TGToolBar&);              // not implemented
-   TGToolBar& operator=(const TGToolBar&);   // not implemented
+   TGToolBar(const TGToolBar&) = delete;
+   TGToolBar& operator=(const TGToolBar&) = delete;
 
 public:
-   TGToolBar(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGToolBar(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
              UInt_t options = kHorizontalFrame,
              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGToolBar();

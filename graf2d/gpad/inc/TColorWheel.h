@@ -2,7 +2,7 @@
 // Author: Rene Brun   10/03/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,7 +11,6 @@
 
 #ifndef ROOT_TColorWheel
 #define ROOT_TColorWheel
-
 
 #include "TNamed.h"
 
@@ -37,8 +36,8 @@ private:
    TText    *fText;     ///<! pointer to utility text
    TGraph   *fGraph;    ///<! pointer to utility graph
 
-   TColorWheel(const TColorWheel &org);             // no copy, use TObject::Clone()
-   TColorWheel &operator=(const TColorWheel &rhs);  // idem
+   TColorWheel(const TColorWheel &) = delete;
+   TColorWheel &operator=(const TColorWheel &) = delete;
 
 protected:
    Int_t InCircles(Double_t x, Double_t y, Int_t coffset, Double_t angle) const;

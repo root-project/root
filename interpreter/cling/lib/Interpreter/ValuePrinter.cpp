@@ -53,7 +53,7 @@
 using namespace cling;
 
 // Implements the CValuePrinter interface.
-extern "C" void cling_PrintValue(void * /*cling::Value**/ V) {
+extern "C" void cling_PrintValue(void * /*cling::Value* V*/) {
   //Value* value = (Value*)V;
 
   //std::string typeStr = printTypeInternal(*value);
@@ -431,7 +431,7 @@ namespace cling {
 #else // !LLVM_UTF8
 
   template <class T> struct CharTraits { typedef T value_type; };
-#if defined(LLVM_ON_WIN32) // Likely only to be needed when _MSC_VER < 19??
+#if defined(_WIN32) // Likely only to be needed when _MSC_VER < 19??
   template <> struct CharTraits<char16_t> { typedef unsigned short value_type; };
   template <> struct CharTraits<char32_t> { typedef unsigned int value_type; };
 #endif
@@ -481,9 +481,9 @@ namespace cling {
                   sizeof(wchar_t) == sizeof(char32_t), "Bad wchar_t size");
 
     if (sizeof(wchar_t) == sizeof(char32_t))
-      return toUTF8(reinterpret_cast<const char32_t * const>(Str), N, Prefix);
+      return toUTF8(reinterpret_cast<const char32_t *>(Str), N, Prefix);
 
-    return toUTF8(reinterpret_cast<const char16_t * const>(Str), N, Prefix);
+    return toUTF8(reinterpret_cast<const char16_t *>(Str), N, Prefix);
   }
 
   template <>
@@ -626,8 +626,8 @@ static const char* BuildAndEmitVPWrapperBody(cling::Interpreter &Interp,
   if (RetStmt.isInvalid())
     return "ERROR in cling's callPrintValue(): cannot build return expression";
 
-  auto *Body = new (Ctx) clang::CompoundStmt(noSrcLoc);
-  Body->setStmts(Ctx, {RetStmt.get()});
+  auto *Body
+    = clang::CompoundStmt::Create(Ctx, {RetStmt.get()}, noSrcLoc, noSrcLoc);
   WrapperFD->setBody(Body);
   auto &Consumer = Interp.getCI()->getASTConsumer();
   Consumer.HandleTopLevelDecl(clang::DeclGroupRef(WrapperFD));
@@ -706,7 +706,7 @@ executePrintValue(const Value& V, const T& val) {
 
 template <typename T> static
 typename std::enable_if<HasExplicitPrintValue<const T>::value, std::string>::type
-executePrintValue(const Value& V, const T& val) {
+executePrintValue(const Value& /*V*/, const T& val) {
   return printValue(&val);
 }
 
@@ -780,7 +780,7 @@ static std::string printFunctionValue(const Value &V, const void *ptr,
       if (SRange.isValid()) {
         clang::SourceManager &SM = C.getSourceManager();
         clang::SourceLocation LocBegin = SRange.getBegin();
-        LocBegin = SM.getExpansionRange(LocBegin).first;
+        LocBegin = SM.getExpansionRange(LocBegin).getBegin();
         o << "  at " << SM.getFilename(LocBegin);
         unsigned LineNo = SM.getSpellingLineNumber(LocBegin, &Invalid);
         if (!Invalid)
@@ -790,7 +790,7 @@ static std::string printFunctionValue(const Value &V, const void *ptr,
         cBegin = SM.getCharacterData(LocBegin, &Invalid);
         if (!Invalid) {
           clang::SourceLocation LocEnd = SRange.getEnd();
-          LocEnd = SM.getExpansionRange(LocEnd).second;
+          LocEnd = SM.getExpansionRange(LocEnd).getEnd();
           cEnd = SM.getCharacterData(LocEnd, &Invalid);
           if (Invalid)
             cBegin = 0;

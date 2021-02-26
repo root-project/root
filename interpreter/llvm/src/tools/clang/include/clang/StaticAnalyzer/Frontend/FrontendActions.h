@@ -1,9 +1,8 @@
 //===-- FrontendActions.h - Useful Frontend Actions -------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -31,7 +30,7 @@ protected:
                                                  StringRef InFile) override;
 };
 
-/// \brief Frontend action to parse model files.
+/// Frontend action to parse model files.
 ///
 /// This frontend action is responsible for parsing model files. Model files can
 /// not be parsed on their own, they rely on type information that is available
@@ -52,9 +51,20 @@ private:
   llvm::StringMap<Stmt *> &Bodies;
 };
 
-void printCheckerHelp(raw_ostream &OS, ArrayRef<std::string> plugins);
+void printCheckerHelp(raw_ostream &OS,
+                      ArrayRef<std::string> plugins,
+                      AnalyzerOptions &opts,
+                      DiagnosticsEngine &diags,
+                      const LangOptions &LangOpts);
 void printEnabledCheckerList(raw_ostream &OS, ArrayRef<std::string> plugins,
-                             const AnalyzerOptions &opts);
+                             AnalyzerOptions &opts,
+                             DiagnosticsEngine &diags,
+                             const LangOptions &LangOpts);
+void printAnalyzerConfigList(raw_ostream &OS);
+void printCheckerConfigList(raw_ostream &OS, ArrayRef<std::string> plugins,
+                            AnalyzerOptions &opts,
+                            DiagnosticsEngine &diags,
+                            const LangOptions &LangOpts);
 
 } // end GR namespace
 

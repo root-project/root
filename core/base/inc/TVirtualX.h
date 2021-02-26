@@ -59,7 +59,7 @@ public:
    TVirtualX(const char *name, const char *title);
    virtual ~TVirtualX() { }
 
-   virtual Bool_t    Init(void *display=0);
+   virtual Bool_t    Init(void *display = nullptr);
    virtual void      ClearWindow();
    virtual void      ClosePixmap();
    virtual void      CloseWindow();

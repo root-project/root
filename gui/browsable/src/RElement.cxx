@@ -96,6 +96,35 @@ std::string RElement::GetContent(const std::string &kind)
 }
 
 /////////////////////////////////////////////////////////////////////
+/// Parse string path to produce RElementPath_t
+/// One should avoid to use string pathes as much as possible
+
+RElementPath_t RElement::ParsePath(const std::string &strpath)
+{
+   RElementPath_t arr;
+   if (strpath.empty())
+      return arr;
+
+   std::string slash = "/";
+
+   std::string::size_type previous = 0;
+   if (strpath[0] == slash[0]) previous++;
+
+   auto current = strpath.find(slash, previous);
+   while (current != std::string::npos) {
+      if (current > previous)
+         arr.emplace_back(strpath.substr(previous, current - previous));
+      previous = current + 1;
+      current = strpath.find(slash, previous);
+   }
+
+   if (previous < strpath.length())
+      arr.emplace_back(strpath.substr(previous));
+
+   return arr;
+}
+
+/////////////////////////////////////////////////////////////////////
 /// Compare two paths,
 /// Returns number of elements matches in both paths
 
@@ -119,9 +148,25 @@ std::string RElement::GetPathAsString(const RElementPath_t &path)
    std::string res;
    for (auto &elem : path) {
       res.append("/");
-      res.append(elem);
+      std::string subname = elem;
+      ExtractItemIndex(subname);
+      res.append(subname);
    }
 
    return res;
 }
 
+/////////////////////////////////////////////////////////////////////
+/// Extract index from name
+/// Index coded by client with ###<indx>$$$ suffix
+/// Such coding used by browser to identify element by index
+
+int RElement::ExtractItemIndex(std::string &name)
+{
+   auto p1 = name.rfind("###"), p2 = name.rfind("$$$");
+   if ((p1 == std::string::npos) || (p2 == std::string::npos) || (p1 >= p2) || (p2 != name.length()-3)) return -1;
+
+   int indx = std::stoi(name.substr(p1+3,p2-p1-3));
+   name.resize(p1);
+   return indx;
+}

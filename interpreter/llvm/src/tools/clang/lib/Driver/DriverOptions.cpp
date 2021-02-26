@@ -1,9 +1,8 @@
 //===--- DriverOptions.cpp - Driver Options Table -------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -11,6 +10,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Option/OptTable.h"
 #include "llvm/Option/Option.h"
+#include <cassert>
 
 using namespace clang::driver;
 using namespace clang::driver::options;
@@ -40,5 +40,13 @@ public:
 }
 
 std::unique_ptr<OptTable> clang::driver::createDriverOptTable() {
-  return llvm::make_unique<DriverOptTable>();
+  auto Result = llvm::make_unique<DriverOptTable>();
+  // Options.inc is included in DriverOptions.cpp, and calls OptTable's
+  // addValues function.
+  // Opt is a variable used in the code fragment in Options.inc.
+  OptTable &Opt = *Result;
+#define OPTTABLE_ARG_INIT
+#include "clang/Driver/Options.inc"
+#undef OPTTABLE_ARG_INIT
+  return std::move(Result);
 }

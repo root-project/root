@@ -9,7 +9,7 @@
 
 // The test checks whether setting a new include path at runtime also works for
 // the PTX compiler.
-// RUN: cat %s | %cling -DTEST_PATH="\"%/p/\"" -x cuda -Xclang -verify 2>&1 | FileCheck %s
+// RUN: cat %s | %cling -DTEST_PATH="\"%/p/\"" -x cuda --cuda-path=%cudapath %cudasmlevel -Xclang -verify 2>&1 | FileCheck %s
 // REQUIRES: cuda-runtime
 
 #include <iostream>
@@ -17,12 +17,12 @@
 // Check if cuda driver is available
 int version;
 cudaDriverGetVersion(&version)
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 
 // Check if a CUDA compatible device (GPU) is available.
 int device_count = 0;
 cudaGetDeviceCount(&device_count)
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 device_count > 0
 // CHECK: (bool) true
 
@@ -39,7 +39,7 @@ foo()
 // the host interpreter.
 bar<<<1,1>>>();
 cudaGetLastError()
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 
 
 // expected-no-diagnostics

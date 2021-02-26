@@ -1,9 +1,8 @@
 //===-- LanaiTargetTransformInfo.h - Lanai specific TTI ---------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -22,7 +21,8 @@
 #include "LanaiTargetMachine.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/CodeGen/BasicTTIImpl.h"
-#include "llvm/Target/TargetLowering.h"
+#include "llvm/CodeGen/TargetLowering.h"
+#include "llvm/Support/MathExtras.h"
 
 namespace llvm {
 class LanaiTTIImpl : public BasicTTIImplBase<LanaiTTIImpl> {
@@ -47,6 +47,32 @@ public:
     if (TyWidth == 32)
       return TTI::PSK_FastHardware;
     return TTI::PSK_Software;
+  }
+
+  int getIntImmCost(const APInt &Imm, Type *Ty) {
+    assert(Ty->isIntegerTy());
+    if (Imm == 0)
+      return TTI::TCC_Free;
+    if (isInt<16>(Imm.getSExtValue()))
+      return TTI::TCC_Basic;
+    if (isInt<21>(Imm.getZExtValue()))
+      return TTI::TCC_Basic;
+    if (isInt<32>(Imm.getSExtValue())) {
+      if ((Imm.getSExtValue() & 0xFFFF) == 0)
+        return TTI::TCC_Basic;
+      return 2 * TTI::TCC_Basic;
+    }
+
+    return 4 * TTI::TCC_Basic;
+  }
+
+  int getIntImmCost(unsigned Opc, unsigned Idx, const APInt &Imm, Type *Ty) {
+    return getIntImmCost(Imm, Ty);
+  }
+
+  int getIntImmCost(Intrinsic::ID IID, unsigned Idx, const APInt &Imm,
+                    Type *Ty) {
+    return getIntImmCost(Imm, Ty);
   }
 
   unsigned getArithmeticInstrCost(

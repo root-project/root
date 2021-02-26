@@ -1,9 +1,8 @@
 //===-- SIInstrFormats.td - SI Instruction Encodings ----------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,8 +12,7 @@
 
 class InstSI <dag outs, dag ins, string asm = "",
               list<dag> pattern = []> :
-  AMDGPUInst<outs, ins, asm, pattern>, PredicateControl {
-
+  AMDGPUInst<outs, ins, asm, pattern>, GCNPredicateControl {
   // Low bits - basic encoding information.
   field bit SALU = 0;
   field bit VALU = 0;
@@ -45,7 +43,7 @@ class InstSI <dag outs, dag ins, string asm = "",
   field bit FLAT = 0;
   field bit DS = 0;
 
-   // Pseudo instruction formats.
+  // Pseudo instruction formats.
   field bit VGPRSpill = 0;
   field bit SGPRSpill = 0;
 
@@ -79,9 +77,52 @@ class InstSI <dag outs, dag ins, string asm = "",
   // is unable to infer the encoding from the operands.
   field bit VOPAsmPrefer32Bit = 0;
 
+  // This bit indicates that this is a VOP3 opcode which supports op_sel
+  // modifier (gfx9 only).
+  field bit VOP3_OPSEL = 0;
+
+  // Is it possible for this instruction to be atomic?
+  field bit maybeAtomic = 0;
+
+  // This bit indicates that this is a VI instruction which is renamed
+  // in GFX9. Required for correct mapping from pseudo to MC.
+  field bit renamedInGFX9 = 0;
+
   // This bit indicates that this has a floating point result type, so
   // the clamp modifier has floating point semantics.
   field bit FPClamp = 0;
+
+  // This bit indicates that instruction may support integer clamping
+  // which depends on GPU features.
+  field bit IntClamp = 0;
+
+  // This field indicates that the clamp applies to the low component
+  // of a packed output register.
+  field bit ClampLo = 0;
+
+  // This field indicates that the clamp applies to the high component
+  // of a packed output register.
+  field bit ClampHi = 0;
+
+  // This bit indicates that this is a packed VOP3P instruction
+  field bit IsPacked = 0;
+
+  // This bit indicates that this is a D16 buffer instruction.
+  field bit D16Buf = 0;
+
+  // This field indicates that FLAT instruction accesses FLAT_GLBL or
+  // FLAT_SCRATCH segment. Must be 0 for non-FLAT instructions.
+  field bit IsNonFlatSeg = 0;
+
+  // This bit indicates that this uses the floating point double precision
+  // rounding mode flags
+  field bit FPDPRounding = 0;
+
+  // Instruction is FP atomic.
+  field bit FPAtomic = 0;
+
+  // This bit indicates that this is one of MFMA instructions.
+  field bit IsMAI = 0;
 
   // These need to be kept in sync with the enum in SIInstrFlags.
   let TSFlags{0} = SALU;
@@ -126,7 +167,27 @@ class InstSI <dag outs, dag ins, string asm = "",
   let TSFlags{39} = ScalarStore;
   let TSFlags{40} = FixedSize;
   let TSFlags{41} = VOPAsmPrefer32Bit;
-  let TSFlags{42} = FPClamp;
+  let TSFlags{42} = VOP3_OPSEL;
+
+  let TSFlags{43} = maybeAtomic;
+  let TSFlags{44} = renamedInGFX9;
+
+  let TSFlags{45} = FPClamp;
+  let TSFlags{46} = IntClamp;
+  let TSFlags{47} = ClampLo;
+  let TSFlags{48} = ClampHi;
+
+  let TSFlags{49} = IsPacked;
+
+  let TSFlags{50} = D16Buf;
+
+  let TSFlags{51} = IsNonFlatSeg;
+
+  let TSFlags{52} = FPDPRounding;
+
+  let TSFlags{53} = FPAtomic;
+
+  let TSFlags{54} = IsMAI;
 
   let SchedRW = [Write32Bit];
 
@@ -136,6 +197,9 @@ class InstSI <dag outs, dag ins, string asm = "",
 
   let isAsmParserOnly = !if(!eq(DisableDecoder{0}, {0}), 0, 1);
   let AsmVariantName = AMDGPUAsmVariants.Default;
+
+  // Avoid changing source registers in a way that violates constant bus read limitations.
+  let hasExtraSrcRegAllocReq = !if(VOP1,1,!if(VOP2,1,!if(VOP3,1,!if(VOPC,1,!if(SDWA,1, !if(VALU,1,0))))));
 }
 
 class PseudoInstSI<dag outs, dag ins, list<dag> pattern = [], string asm = "">
@@ -192,34 +256,57 @@ class VINTRPe <bits<2> op> : Enc32 {
   let Inst{31-26} = 0x32; // encoding
 }
 
-class MIMGe <bits<7> op> : Enc64 {
+class MIMGe : Enc64 {
   bits<8> vdata;
   bits<4> dmask;
   bits<1> unorm;
   bits<1> glc;
-  bits<1> da;
   bits<1> r128;
   bits<1> tfe;
   bits<1> lwe;
   bits<1> slc;
-  bits<8> vaddr;
+  bit d16;
   bits<7> srsrc;
   bits<7> ssamp;
 
   let Inst{11-8} = dmask;
   let Inst{12} = unorm;
   let Inst{13} = glc;
-  let Inst{14} = da;
   let Inst{15} = r128;
   let Inst{16} = tfe;
   let Inst{17} = lwe;
-  let Inst{24-18} = op;
   let Inst{25} = slc;
   let Inst{31-26} = 0x3c;
-  let Inst{39-32} = vaddr;
   let Inst{47-40} = vdata;
   let Inst{52-48} = srsrc{6-2};
   let Inst{57-53} = ssamp{6-2};
+  let Inst{63} = d16;
+}
+
+class MIMGe_gfx6789 <bits<8> op> : MIMGe {
+  bits<8> vaddr;
+  bits<1> da;
+
+  let Inst{0} = op{7};
+  let Inst{14} = da;
+  let Inst{24-18} = op{6-0};
+  let Inst{39-32} = vaddr;
+}
+
+class MIMGe_gfx10 <bits<8> op> : MIMGe {
+  bits<8> vaddr0;
+  bits<3> dim;
+  bits<2> nsa;
+  bits<1> dlc;
+  bits<1> a16 = 0; // TODO: this should be an operand
+
+  let Inst{0} = op{7};
+  let Inst{2-1} = nsa;
+  let Inst{5-3} = dim;
+  let Inst{7} = dlc;
+  let Inst{24-18} = op{6-0};
+  let Inst{39-32} = vaddr0;
+  let Inst{62} = a16;
 }
 
 class EXPe : Enc64 {
@@ -264,6 +351,7 @@ class VINTRPCommon <dag outs, dag ins, string asm, list<dag> pattern> :
   let mayLoad = 0;
   let mayStore = 0;
   let hasSideEffects = 0;
+  let VALU = 1;
 }
 
 class EXPCommon<dag outs, dag ins, string asm, list<dag> pattern> :
@@ -278,15 +366,3 @@ class EXPCommon<dag outs, dag ins, string asm, list<dag> pattern> :
 }
 
 } // End Uses = [EXEC]
-
-class MIMG <dag outs, dag ins, string asm, list<dag> pattern> :
-    InstSI <outs, ins, asm, pattern> {
-
-  let VM_CNT = 1;
-  let EXP_CNT = 1;
-  let MIMG = 1;
-  let Uses = [EXEC];
-
-  let UseNamedOperandTable = 1;
-  let hasSideEffects = 0; // XXX ????
-}

@@ -86,6 +86,7 @@
 #include "TList.h"
 #include "TGResourcePool.h"
 #include "TVirtualX.h"
+#include "TMap.h"
 
 #include <iostream>
 
@@ -424,6 +425,14 @@ TGButton *TGButtonGroup::Find(Int_t id) const
    }
 
    return item;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of buttons in group
+
+Int_t  TGButtonGroup::GetCount() const
+{
+   return fMapOfButtons->GetSize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

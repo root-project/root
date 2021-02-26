@@ -1,9 +1,8 @@
 //===- SimplifyLibCalls.h - Library call simplifier -------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -28,8 +27,11 @@ class Instruction;
 class TargetLibraryInfo;
 class BasicBlock;
 class Function;
+class OptimizationRemarkEmitter;
+class BlockFrequencyInfo;
+class ProfileSummaryInfo;
 
-/// \brief This class implements simplifications for calls to fortified library
+/// This class implements simplifications for calls to fortified library
 /// functions (__st*cpy_chk, __memcpy_chk, __memmove_chk, __memset_chk), to,
 /// when possible, replace them with their non-checking counterparts.
 /// Other optimizations can also be done, but it's possible to disable them and
@@ -44,7 +46,7 @@ public:
   FortifiedLibCallSimplifier(const TargetLibraryInfo *TLI,
                              bool OnlyLowerUnknownSize = false);
 
-  /// \brief Take the given call instruction and return a more
+  /// Take the given call instruction and return a more
   /// optimal value to replace the instruction with or 0 if a more
   /// optimal form can't be found.
   /// The call must not be an indirect call.
@@ -55,14 +57,41 @@ private:
   Value *optimizeMemMoveChk(CallInst *CI, IRBuilder<> &B);
   Value *optimizeMemSetChk(CallInst *CI, IRBuilder<> &B);
 
-  // Str/Stp cpy are similar enough to be handled in the same functions.
+  /// Str/Stp cpy are similar enough to be handled in the same functions.
   Value *optimizeStrpCpyChk(CallInst *CI, IRBuilder<> &B, LibFunc Func);
   Value *optimizeStrpNCpyChk(CallInst *CI, IRBuilder<> &B, LibFunc Func);
+  Value *optimizeMemCCpyChk(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeSNPrintfChk(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeSPrintfChk(CallInst *CI,IRBuilder<> &B);
+  Value *optimizeStrCatChk(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeStrLCat(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeStrNCatChk(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeStrLCpyChk(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeVSNPrintfChk(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeVSPrintfChk(CallInst *CI, IRBuilder<> &B);
 
-  /// \brief Checks whether the call \p CI to a fortified libcall is foldable
+  /// Checks whether the call \p CI to a fortified libcall is foldable
   /// to the non-fortified version.
+  ///
+  /// \param CI the call to the fortified libcall.
+  ///
+  /// \param ObjSizeOp the index of the object size parameter of this chk
+  /// function. Not optional since this is mandatory.
+  ///
+  /// \param SizeOp optionally set to the parameter index of an explicit buffer
+  /// size argument. For instance, set to '2' for __strncpy_chk.
+  ///
+  /// \param StrOp optionally set to the parameter index of the source string
+  /// parameter to strcpy-like functions, where only the strlen of the source
+  /// will be writtin into the destination.
+  ///
+  /// \param FlagsOp optionally set to the parameter index of a 'flags'
+  /// parameter. These are used by an implementation to opt-into stricter
+  /// checking.
   bool isFortifiedCallFoldable(CallInst *CI, unsigned ObjSizeOp,
-                               unsigned SizeOp, bool isString);
+                               Optional<unsigned> SizeOp = None,
+                               Optional<unsigned> StrOp = None,
+                               Optional<unsigned> FlagsOp = None);
 };
 
 /// LibCallSimplifier - This class implements a collection of optimizations
@@ -73,22 +102,40 @@ private:
   FortifiedLibCallSimplifier FortifiedSimplifier;
   const DataLayout &DL;
   const TargetLibraryInfo *TLI;
+  OptimizationRemarkEmitter &ORE;
+  BlockFrequencyInfo *BFI;
+  ProfileSummaryInfo *PSI;
   bool UnsafeFPShrink;
   function_ref<void(Instruction *, Value *)> Replacer;
+  function_ref<void(Instruction *)> Eraser;
 
-  /// \brief Internal wrapper for RAUW that is the default implementation.
+  /// Internal wrapper for RAUW that is the default implementation.
   ///
   /// Other users may provide an alternate function with this signature instead
   /// of this one.
-  static void replaceAllUsesWithDefault(Instruction *I, Value *With);
+  static void replaceAllUsesWithDefault(Instruction *I, Value *With) {
+    I->replaceAllUsesWith(With);
+  }
 
-  /// \brief Replace an instruction's uses with a value using our replacer.
+  /// Internal wrapper for eraseFromParent that is the default implementation.
+  static void eraseFromParentDefault(Instruction *I) { I->eraseFromParent(); }
+
+  /// Replace an instruction's uses with a value using our replacer.
   void replaceAllUsesWith(Instruction *I, Value *With);
 
+  /// Erase an instruction from its parent with our eraser.
+  void eraseFromParent(Instruction *I);
+
+  Value *foldMallocMemset(CallInst *Memset, IRBuilder<> &B);
+
 public:
-  LibCallSimplifier(const DataLayout &DL, const TargetLibraryInfo *TLI,
-                    function_ref<void(Instruction *, Value *)> Replacer =
-                        &replaceAllUsesWithDefault);
+  LibCallSimplifier(
+      const DataLayout &DL, const TargetLibraryInfo *TLI,
+      OptimizationRemarkEmitter &ORE,
+      BlockFrequencyInfo *BFI, ProfileSummaryInfo *PSI,
+      function_ref<void(Instruction *, Value *)> Replacer =
+          &replaceAllUsesWithDefault,
+      function_ref<void(Instruction *)> Eraser = &eraseFromParentDefault);
 
   /// optimizeCall - Take the given call instruction and return a more
   /// optimal value to replace the instruction with or 0 if a more
@@ -118,22 +165,30 @@ private:
   Value *optimizeStrStr(CallInst *CI, IRBuilder<> &B);
   Value *optimizeMemChr(CallInst *CI, IRBuilder<> &B);
   Value *optimizeMemCmp(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeBCmp(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeMemCmpBCmpCommon(CallInst *CI, IRBuilder<> &B);
   Value *optimizeMemCpy(CallInst *CI, IRBuilder<> &B);
   Value *optimizeMemMove(CallInst *CI, IRBuilder<> &B);
   Value *optimizeMemSet(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeRealloc(CallInst *CI, IRBuilder<> &B);
   Value *optimizeWcslen(CallInst *CI, IRBuilder<> &B);
   // Wrapper for all String/Memory Library Call Optimizations
   Value *optimizeStringMemoryLibCall(CallInst *CI, IRBuilder<> &B);
 
   // Math Library Optimizations
-  Value *optimizeCos(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeCAbs(CallInst *CI, IRBuilder<> &B);
   Value *optimizePow(CallInst *CI, IRBuilder<> &B);
+  Value *replacePowWithExp(CallInst *Pow, IRBuilder<> &B);
+  Value *replacePowWithSqrt(CallInst *Pow, IRBuilder<> &B);
   Value *optimizeExp2(CallInst *CI, IRBuilder<> &B);
   Value *optimizeFMinFMax(CallInst *CI, IRBuilder<> &B);
   Value *optimizeLog(CallInst *CI, IRBuilder<> &B);
   Value *optimizeSqrt(CallInst *CI, IRBuilder<> &B);
   Value *optimizeSinCosPi(CallInst *CI, IRBuilder<> &B);
   Value *optimizeTan(CallInst *CI, IRBuilder<> &B);
+  // Wrapper for all floating point library call optimizations
+  Value *optimizeFloatingPointLibCall(CallInst *CI, LibFunc Func,
+                                      IRBuilder<> &B);
 
   // Integer Library Call Optimizations
   Value *optimizeFFS(CallInst *CI, IRBuilder<> &B);
@@ -142,15 +197,22 @@ private:
   Value *optimizeIsDigit(CallInst *CI, IRBuilder<> &B);
   Value *optimizeIsAscii(CallInst *CI, IRBuilder<> &B);
   Value *optimizeToAscii(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeAtoi(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeStrtol(CallInst *CI, IRBuilder<> &B);
 
   // Formatting and IO Library Call Optimizations
   Value *optimizeErrorReporting(CallInst *CI, IRBuilder<> &B,
                                 int StreamArg = -1);
   Value *optimizePrintF(CallInst *CI, IRBuilder<> &B);
   Value *optimizeSPrintF(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeSnPrintF(CallInst *CI, IRBuilder<> &B);
   Value *optimizeFPrintF(CallInst *CI, IRBuilder<> &B);
   Value *optimizeFWrite(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeFRead(CallInst *CI, IRBuilder<> &B);
   Value *optimizeFPuts(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeFGets(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeFPutc(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeFGetc(CallInst *CI, IRBuilder<> &B);
   Value *optimizePuts(CallInst *CI, IRBuilder<> &B);
 
   // Helper methods
@@ -161,6 +223,7 @@ private:
                       SmallVectorImpl<CallInst *> &SinCosCalls);
   Value *optimizePrintFString(CallInst *CI, IRBuilder<> &B);
   Value *optimizeSPrintFString(CallInst *CI, IRBuilder<> &B);
+  Value *optimizeSnPrintFString(CallInst *CI, IRBuilder<> &B);
   Value *optimizeFPrintFString(CallInst *CI, IRBuilder<> &B);
 
   /// hasFloatVersion - Checks if there is a float version of the specified

@@ -330,7 +330,7 @@ sap.ui.define([
       },
 
       toggleTableEdit: function () {
-         var header = sap.ui.getCore().byId("EveViewer21--header");
+         var header = this.getView().byId("header");
          if (!this.editor) {
             this.editor = new VerticalLayout("tableEdit", { "width": "100%" });
 
@@ -509,6 +509,7 @@ sap.ui.define([
       endChanges: function (oEvent) {
          if (this.refreshTable) {
             this.locateEveTable();
+            this.buildTableHeader();
             this.buildTableBody();
             this.refreshTable = false;
          }

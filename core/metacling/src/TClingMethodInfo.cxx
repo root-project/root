@@ -508,7 +508,7 @@ long TClingMethodInfo::Property() const
 
    if (const clang::CXXMethodDecl *md =
             llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
-      if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
+      if (md->getMethodQualifiers().hasConst()) {
          property |= kIsConstant | kIsConstMethod;
       }
       if (md->isVirtual()) {
@@ -641,7 +641,7 @@ const char *TClingMethodInfo::GetPrototype()
 
    if (const clang::CXXMethodDecl *md =
        llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
-      if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
+      if (md->getMethodQualifiers().hasConst()) {
          buf += " const";
       }
    }

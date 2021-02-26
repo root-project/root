@@ -8,15 +8,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TWebGuiFactory                                                       //
-//                                                                      //
-// This class is a factory for Web GUI components. It overrides         //
-// the member functions of the abstract TGuiFactory.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TWebGuiFactory.h"
 #include "TRootGuiFactory.h"
 
@@ -24,6 +15,15 @@
 #include "TEnv.h"
 
 #include <ROOT/RMakeUnique.hxx>
+
+/** \class TWebGuiFactory
+\ingroup webgui6
+
+This class is a proxy-factory for web-base ROOT GUI components.
+it overrides the member functions of the X11/win32gdk-based
+TGuiFactory.
+
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TWebGuiFactory ctor.

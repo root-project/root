@@ -6,6 +6,7 @@ set(LLVM_LINK_COMPONENTS
 add_clang_library(clangIndex
   CodegenNameGenerator.cpp
   CommentToXML.cpp
+  FileIndexRecord.cpp
   IndexBody.cpp
   IndexDecl.cpp
   IndexingAction.cpp
@@ -23,6 +24,7 @@ add_clang_library(clangIndex
   clangBasic
   clangFormat
   clangFrontend
+  clangLex
   clangRewrite
   clangSerialization
   clangToolingCore

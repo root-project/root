@@ -1,7 +1,7 @@
 // Author: Olivier Couet 22/12/2013
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -19,6 +19,7 @@
 
 #ifndef ROOT_TTextEditor
 #define ROOT_TTextEditor
+
 #include "TGedFrame.h"
 
 class TText;
@@ -40,7 +41,7 @@ protected:
    void ConnectSignals2Slots();
 
 public:
-   TTextEditor(const TGWindow *p = 0,
+   TTextEditor(const TGWindow *p = nullptr,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());

@@ -53,6 +53,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogoff.C "{}")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.rootrc "
 Proof.Sandbox: /tmp/proof
 Rint.History:  .root_hist
+ACLiC.LinkLibs:  1
 ")
 
 #---Definition of the helper function--------------------------------
@@ -267,8 +268,10 @@ if(root7)
   if(NOT davix)
     list(APPEND root7_veto v7/ntuple/ntpl003_lhcbOpenData.C)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
+    list(APPEND root7_veto v7/climate/global_temperatures.C)
   endif()
   if(NOT dataframe)
+    list(APPEND root7_veto v7/climate/global_temperatures.C)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
   endif()
 else()
@@ -445,7 +448,9 @@ file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 #--List multithreaded tutorials to run them serially
 set (multithreaded
      dataframe/df10[2-7]*
-     multicore/mp103*)
+     multicore/mp103*
+     tmva/TMVA_CNN_Classification.C
+     tmva/TMVA_RNN_Classification.C)
 file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 
 #---Loop over all tutorials and define the corresponding test---------

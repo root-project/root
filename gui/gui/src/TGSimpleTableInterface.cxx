@@ -50,6 +50,10 @@ Double_t TGSimpleTableInterface::GetValue(UInt_t row, UInt_t column)
       Error("TGSimpleTableInterface","Non existing value requested.");
       return 0;
    }
+   if (fData == nullptr) {
+      Error("TGSimpleTableInterface","Non existing table data.");
+      return 0;
+   }
    return fData[row][column];
 }
 

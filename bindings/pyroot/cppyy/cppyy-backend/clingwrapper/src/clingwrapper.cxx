@@ -1714,13 +1714,30 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
     return (TCppMethod_t)nullptr;
 }
 
+static inline
+std::string type_remap(const std::string& n1, const std::string& n2)
+{
+// Operator lookups of (C++ string, Python str) should succeeded, for the combos of
+// string/str, wstring/str, string/unicode and wstring/unicode; since C++ does not have a
+// operator+(std::string, std::wstring), we'll have to look up the same type and rely on
+// the converters in CPyCppyy/_cppyy.
+    if (n1 == "str") {
+        if (n2 == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >")
+            return n2;                      // match like for like
+        return "std::string";               // probably best bet
+    } else if (n1 == "float")
+        return "double";                    // debatable, but probably intended
+    return n1;
+}
+
 Cppyy::TCppIndex_t Cppyy::GetGlobalOperator(
     TCppType_t scope, const std::string& lc, const std::string& rc, const std::string& opname)
 {
 // Find a global operator function with a matching signature; prefer by-ref, but
 // fall back on by-value if that fails.
-    const std::string& lcname = TClassEdit::CleanType(lc.c_str());
-    const std::string& rcname = rc.empty() ? rc : TClassEdit::CleanType(rc.c_str());
+    std::string lcname1 = TClassEdit::CleanType(lc.c_str());
+    const std::string& rcname = rc.empty() ? rc : type_remap(TClassEdit::CleanType(rc.c_str()), lcname1);
+    const std::string& lcname = type_remap(lcname1, rcname);
 
     std::string proto = lcname + "&" + (rc.empty() ? rc : (", " + rcname + "&"));
     if (scope == (cppyy_scope_t)GLOBAL_HANDLE) {

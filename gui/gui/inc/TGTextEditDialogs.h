@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -33,7 +33,7 @@ public:
    Bool_t  fCaseSensitive;
    char   *fBuffer;
    Bool_t  fClose;
-   TGSearchType() { fDirection = kTRUE; fCaseSensitive = kFALSE; fBuffer = 0; fClose = kTRUE; }
+   TGSearchType() { fDirection = kTRUE; fCaseSensitive = kFALSE; fBuffer = nullptr; fClose = kTRUE; }
    ~TGSearchType() { if (fBuffer) delete [] fBuffer;}
 };
 
@@ -68,7 +68,7 @@ protected:
    static TGSearchDialog *fgSearchDialog;      // global singleton
 
 public:
-   TGSearchDialog(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
+   TGSearchDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,
                   TGSearchType *sstruct = 0, Int_t *ret_code = 0,
                   UInt_t options = kVerticalFrame);
    virtual ~TGSearchDialog();
@@ -104,8 +104,8 @@ protected:
    Int_t             *fRetCode;                    // return code
 
 public:
-   TGPrintDialog(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
-                 char **printerName = 0, char **printProg = 0, Int_t *ret_code = 0,
+   TGPrintDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,
+                 char **printerName = nullptr, char **printProg = nullptr, Int_t *ret_code = nullptr,
                  UInt_t options = kVerticalFrame);
    virtual ~TGPrintDialog();
 
@@ -130,8 +130,8 @@ protected:
    Long_t           *fRetCode;                 // return code
 
 public:
-   TGGotoDialog(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
-                Long_t *ret_code = 0, UInt_t options = kVerticalFrame);
+   TGGotoDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,
+                Long_t *ret_code = nullptr, UInt_t options = kVerticalFrame);
    virtual ~TGGotoDialog();
 
    virtual void   CloseWindow();

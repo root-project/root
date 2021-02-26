@@ -12,6 +12,7 @@
 
 #include "clang/AST/DeclarationName.h"
 #include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
 
 #include "llvm/ADT/ArrayRef.h"
 
@@ -103,16 +104,17 @@ namespace cling {
 
    virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/,
                                    const clang::Token& /*IncludeTok*/,
-                                   llvm::StringRef FileName,
+                                   llvm::StringRef /*FileName*/,
                                    bool /*IsAngled*/,
                                    clang::CharSourceRange /*FilenameRange*/,
                                    const clang::FileEntry* /*File*/,
                                    llvm::StringRef /*SearchPath*/,
                                    llvm::StringRef /*RelativePath*/,
-                                   const clang::Module* /*Imported*/) {}
-    virtual void EnteredSubmodule(clang::Module* M,
-                                  clang::SourceLocation ImportLoc,
-                                  bool ForPragma) {}
+                                   const clang::Module* /*Imported*/,
+                              clang::SrcMgr::CharacteristicKind /*FileType*/) {}
+    virtual void EnteredSubmodule(clang::Module* /*M*/,
+                                  clang::SourceLocation /*ImportLoc*/,
+                                  bool /*ForPragma*/) {}
 
     virtual bool FileNotFound(llvm::StringRef FileName,
                               llvm::SmallVectorImpl<char>& RecoveryPath);
@@ -276,7 +278,7 @@ namespace cling {
       bool LookupObject(const clang::DeclContext*, clang::DeclarationName) {
         return false;
       }
-      bool LookupObject(clang::TagDecl* Tag) {
+      bool LookupObject(clang::TagDecl*) {
         return false;
       }
       bool ShouldResolveAtRuntime(clang::LookupResult& R, clang::Scope* S);

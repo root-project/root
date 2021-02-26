@@ -1,9 +1,8 @@
 //===- ProfileSummary.h - Profile summary data structure. -------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -43,15 +42,14 @@ using SummaryEntryVector = std::vector<ProfileSummaryEntry>;
 
 class ProfileSummary {
 public:
-  enum Kind { PSK_Instr, PSK_Sample };
+  enum Kind { PSK_Instr, PSK_CSInstr, PSK_Sample };
 
 private:
   const Kind PSK;
-  static const char *KindStr[2];
   SummaryEntryVector DetailedSummary;
   uint64_t TotalCount, MaxCount, MaxInternalCount, MaxFunctionCount;
   uint32_t NumCounts, NumFunctions;
-  /// \brief Return detailed summary as metadata.
+  /// Return detailed summary as metadata.
   Metadata *getDetailedSummaryMD(LLVMContext &Context);
 
 public:
@@ -67,9 +65,9 @@ public:
         NumCounts(NumCounts), NumFunctions(NumFunctions) {}
 
   Kind getKind() const { return PSK; }
-  /// \brief Return summary information as metadata.
+  /// Return summary information as metadata.
   Metadata *getMD(LLVMContext &Context);
-  /// \brief Construct profile summary from metdata.
+  /// Construct profile summary from metdata.
   static ProfileSummary *getFromMD(Metadata *MD);
   SummaryEntryVector &getDetailedSummary() { return DetailedSummary; }
   uint32_t getNumFunctions() { return NumFunctions; }

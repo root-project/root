@@ -1,20 +1,23 @@
 //===- DWARFDebugLine.h -----------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_DEBUGINFO_DWARFDEBUGLINE_H
 #define LLVM_DEBUGINFO_DWARFDEBUGLINE_H
 
+#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/DebugInfo/DIContext.h"
+#include "llvm/DebugInfo/DWARF/DWARFCompileUnit.h"
 #include "llvm/DebugInfo/DWARF/DWARFDataExtractor.h"
 #include "llvm/DebugInfo/DWARF/DWARFFormValue.h"
 #include "llvm/DebugInfo/DWARF/DWARFRelocMap.h"
+#include "llvm/DebugInfo/DWARF/DWARFTypeUnit.h"
+#include "llvm/Support/MD5.h"
 #include <cstdint>
 #include <map>
 #include <string>
@@ -22,6 +25,7 @@
 
 namespace llvm {
 
+class DWARFUnit;
 class raw_ostream;
 
 class DWARFDebugLine {
@@ -29,10 +33,30 @@ public:
   struct FileNameEntry {
     FileNameEntry() = default;
 
-    StringRef Name;
+    DWARFFormValue Name;
     uint64_t DirIdx = 0;
     uint64_t ModTime = 0;
     uint64_t Length = 0;
+    MD5::MD5Result Checksum;
+    DWARFFormValue Source;
+  };
+
+  /// Tracks which optional content types are present in a DWARF file name
+  /// entry format.
+  struct ContentTypeTracker {
+    ContentTypeTracker() = default;
+
+    /// Whether filename entries provide a modification timestamp.
+    bool HasModTime = false;
+    /// Whether filename entries provide a file size.
+    bool HasLength = false;
+    /// For v5, whether filename entries provide an MD5 checksum.
+    bool HasMD5 = false;
+    /// For v5, whether filename entries provide source text.
+    bool HasSource = false;
+
+    /// Update tracked content types with \p ContentType.
+    void trackContentType(dwarf::LineNumberEntryFormat ContentType);
   };
 
   struct Prologue {
@@ -44,12 +68,12 @@ public:
     /// Version, address size (starting in v5), and DWARF32/64 format; these
     /// parameters affect interpretation of forms (used in the directory and
     /// file tables starting with v5).
-    DWARFFormParams FormParams;
-    /// In v5, size in bytes of a segment selector.
-    uint8_t SegSelectorSize;
+    dwarf::FormParams FormParams;
     /// The number of bytes following the prologue_length field to the beginning
     /// of the first byte of the statement program itself.
     uint64_t PrologueLength;
+    /// In v5, size in bytes of a segment selector.
+    uint8_t SegSelectorSize;
     /// The size in bytes of the smallest target machine instruction. Statement
     /// program opcodes that alter the address register first multiply their
     /// operands by this value.
@@ -65,11 +89,13 @@ public:
     uint8_t LineRange;
     /// The number assigned to the first special opcode.
     uint8_t OpcodeBase;
+    /// This tracks which optional file format content types are present.
+    ContentTypeTracker ContentTypes;
     std::vector<uint8_t> StandardOpcodeLengths;
-    std::vector<StringRef> IncludeDirectories;
+    std::vector<DWARFFormValue> IncludeDirectories;
     std::vector<FileNameEntry> FileNames;
 
-    const DWARFFormParams getFormParams() const { return FormParams; }
+    const dwarf::FormParams getFormParams() const { return FormParams; }
     uint16_t getVersion() const { return FormParams.Version; }
     uint8_t getAddressSize() const { return FormParams.AddrSize; }
     bool isDWARF64() const { return FormParams.Format == dwarf::DWARF64; }
@@ -77,6 +103,8 @@ public:
     uint32_t sizeofTotalLength() const { return isDWARF64() ? 12 : 4; }
 
     uint32_t sizeofPrologueLength() const { return isDWARF64() ? 8 : 4; }
+
+    bool totalLengthIsValid() const;
 
     /// Length of the prologue in bytes.
     uint32_t getLength() const {
@@ -93,9 +121,21 @@ public:
       return LineBase + (int8_t)LineRange - 1;
     }
 
+    /// Get DWARF-version aware access to the file name entry at the provided
+    /// index.
+    const llvm::DWARFDebugLine::FileNameEntry &
+    getFileNameEntry(uint64_t Index) const;
+
+    bool hasFileAtIndex(uint64_t FileIndex) const;
+
+    bool getFileNameByIndex(uint64_t FileIndex, StringRef CompDir,
+                            DILineInfoSpecifier::FileLineInfoKind Kind,
+                            std::string &Result) const;
+
     void clear();
-    void dump(raw_ostream &OS) const;
-    bool parse(const DWARFDataExtractor &DebugLineData, uint32_t *OffsetPtr);
+    void dump(raw_ostream &OS, DIDumpOptions DumpOptions) const;
+    Error parse(const DWARFDataExtractor &DebugLineData, uint32_t *OffsetPtr,
+                const DWARFContext &Ctx, const DWARFUnit *U = nullptr);
   };
 
   /// Standard .debug_line state machine structure.
@@ -110,12 +150,16 @@ public:
     static void dumpTableHeader(raw_ostream &OS);
 
     static bool orderByAddress(const Row &LHS, const Row &RHS) {
-      return LHS.Address < RHS.Address;
+      return std::tie(LHS.Address.SectionIndex, LHS.Address.Address) <
+             std::tie(RHS.Address.SectionIndex, RHS.Address.Address);
     }
 
     /// The program-counter value corresponding to a machine instruction
-    /// generated by the compiler.
-    uint64_t Address;
+    /// generated by the compiler and section index pointing to the section
+    /// containg this PC. If relocation information is present then section
+    /// index is the index of the section which contains above address.
+    /// Otherwise this is object::SectionedAddress::Undef value.
+    object::SectionedAddress Address;
     /// An unsigned integer indicating a source line number. Lines are numbered
     /// beginning at 1. The compiler may emit the value 0 in cases where an
     /// instruction cannot be attributed to any source line.
@@ -163,21 +207,29 @@ public:
     /// and is described by line table rows [FirstRowIndex, LastRowIndex).
     uint64_t LowPC;
     uint64_t HighPC;
+    /// If relocation information is present then this is the index of the
+    /// section which contains above addresses. Otherwise this is
+    /// object::SectionedAddress::Undef value.
+    uint64_t SectionIndex;
     unsigned FirstRowIndex;
     unsigned LastRowIndex;
     bool Empty;
 
     void reset();
 
-    static bool orderByLowPC(const Sequence &LHS, const Sequence &RHS) {
-      return LHS.LowPC < RHS.LowPC;
+    static bool orderByHighPC(const Sequence &LHS, const Sequence &RHS) {
+      return std::tie(LHS.SectionIndex, LHS.HighPC) <
+             std::tie(RHS.SectionIndex, RHS.HighPC);
     }
 
     bool isValid() const {
       return !Empty && (LowPC < HighPC) && (FirstRowIndex < LastRowIndex);
     }
 
-    bool containsPC(uint64_t PC) const { return (LowPC <= PC && PC < HighPC); }
+    bool containsPC(object::SectionedAddress PC) const {
+      return SectionIndex == PC.SectionIndex &&
+             (LowPC <= PC.Address && PC.Address < HighPC);
+    }
   };
 
   struct LineTable {
@@ -194,30 +246,42 @@ public:
 
     /// Returns the index of the row with file/line info for a given address,
     /// or UnknownRowIndex if there is no such row.
-    uint32_t lookupAddress(uint64_t Address) const;
+    uint32_t lookupAddress(object::SectionedAddress Address) const;
 
-    bool lookupAddressRange(uint64_t Address, uint64_t Size,
+    bool lookupAddressRange(object::SectionedAddress Address, uint64_t Size,
                             std::vector<uint32_t> &Result) const;
 
-    bool hasFileAtIndex(uint64_t FileIndex) const;
+    bool hasFileAtIndex(uint64_t FileIndex) const {
+      return Prologue.hasFileAtIndex(FileIndex);
+    }
 
     /// Extracts filename by its index in filename table in prologue.
+    /// In Dwarf 4, the files are 1-indexed and the current compilation file
+    /// name is not represented in the list. In DWARF v5, the files are
+    /// 0-indexed and the primary source file has the index 0.
     /// Returns true on success.
-    bool getFileNameByIndex(uint64_t FileIndex, const char *CompDir,
+    bool getFileNameByIndex(uint64_t FileIndex, StringRef CompDir,
                             DILineInfoSpecifier::FileLineInfoKind Kind,
-                            std::string &Result) const;
+                            std::string &Result) const {
+      return Prologue.getFileNameByIndex(FileIndex, CompDir, Kind, Result);
+    }
 
     /// Fills the Result argument with the file and line information
     /// corresponding to Address. Returns true on success.
-    bool getFileLineInfoForAddress(uint64_t Address, const char *CompDir,
+    bool getFileLineInfoForAddress(object::SectionedAddress Address,
+                                   const char *CompDir,
                                    DILineInfoSpecifier::FileLineInfoKind Kind,
                                    DILineInfo &Result) const;
 
-    void dump(raw_ostream &OS) const;
+    void dump(raw_ostream &OS, DIDumpOptions DumpOptions) const;
     void clear();
 
     /// Parse prologue and all rows.
-    bool parse(const DWARFDataExtractor &DebugLineData, uint32_t *OffsetPtr);
+    Error parse(
+        DWARFDataExtractor &DebugLineData, uint32_t *OffsetPtr,
+        const DWARFContext &Ctx, const DWARFUnit *U,
+        std::function<void(Error)> RecoverableErrorCallback,
+        raw_ostream *OS = nullptr);
 
     using RowVector = std::vector<Row>;
     using RowIter = RowVector::const_iterator;
@@ -230,25 +294,85 @@ public:
 
   private:
     uint32_t findRowInSeq(const DWARFDebugLine::Sequence &Seq,
-                          uint64_t Address) const;
+                          object::SectionedAddress Address) const;
+    Optional<StringRef>
+    getSourceByIndex(uint64_t FileIndex,
+                     DILineInfoSpecifier::FileLineInfoKind Kind) const;
+
+    uint32_t lookupAddressImpl(object::SectionedAddress Address) const;
+
+    bool lookupAddressRangeImpl(object::SectionedAddress Address, uint64_t Size,
+                                std::vector<uint32_t> &Result) const;
   };
 
   const LineTable *getLineTable(uint32_t Offset) const;
-  const LineTable *getOrParseLineTable(const DWARFDataExtractor &DebugLineData,
-                                       uint32_t Offset);
+  Expected<const LineTable *> getOrParseLineTable(
+      DWARFDataExtractor &DebugLineData, uint32_t Offset,
+      const DWARFContext &Ctx, const DWARFUnit *U,
+      std::function<void(Error)> RecoverableErrorCallback);
+
+  /// Helper to allow for parsing of an entire .debug_line section in sequence.
+  class SectionParser {
+  public:
+    using cu_range = DWARFUnitVector::iterator_range;
+    using tu_range = DWARFUnitVector::iterator_range;
+    using LineToUnitMap = std::map<uint64_t, DWARFUnit *>;
+
+    SectionParser(DWARFDataExtractor &Data, const DWARFContext &C, cu_range CUs,
+                  tu_range TUs);
+
+    /// Get the next line table from the section. Report any issues via the
+    /// callbacks.
+    ///
+    /// \param RecoverableErrorCallback - any issues that don't prevent further
+    /// parsing of the table will be reported through this callback.
+    /// \param UnrecoverableErrorCallback - any issues that prevent further
+    /// parsing of the table will be reported through this callback.
+    /// \param OS - if not null, the parser will print information about the
+    /// table as it parses it.
+    LineTable
+    parseNext(
+        function_ref<void(Error)> RecoverableErrorCallback,
+        function_ref<void(Error)> UnrecoverableErrorCallback,
+        raw_ostream *OS = nullptr);
+
+    /// Skip the current line table and go to the following line table (if
+    /// present) immediately.
+    ///
+    /// \param ErrorCallback - report any prologue parsing issues via this
+    /// callback.
+    void skip(function_ref<void(Error)> ErrorCallback);
+
+    /// Indicates if the parser has parsed as much as possible.
+    ///
+    /// \note Certain problems with the line table structure might mean that
+    /// parsing stops before the end of the section is reached.
+    bool done() const { return Done; }
+
+    /// Get the offset the parser has reached.
+    uint32_t getOffset() const { return Offset; }
+
+  private:
+    DWARFUnit *prepareToParse(uint32_t Offset);
+    void moveToNextTable(uint32_t OldOffset, const Prologue &P);
+
+    LineToUnitMap LineToUnit;
+
+    DWARFDataExtractor &DebugLineData;
+    const DWARFContext &Context;
+    uint32_t Offset = 0;
+    bool Done = false;
+  };
 
 private:
   struct ParsingState {
     ParsingState(struct LineTable *LT);
 
     void resetRowAndSequence();
-    void appendRowToMatrix(uint32_t Offset);
+    void appendRowToMatrix();
 
     /// Line table we're currently parsing.
     struct LineTable *LineTable;
-    /// The row number that starts at zero for the prologue, and increases for
-    /// each row added to the matrix.
-    unsigned RowNumber = 0;
     struct Row Row;
     struct Sequence Sequence;
   };

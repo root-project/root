@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -27,6 +27,7 @@
 
 #include "TGView.h"
 #include "TGText.h"
+#include "TTimer.h"
 
 class TViewTimer;
 
@@ -72,11 +73,11 @@ protected:
    static const TGGC   &GetDefaultSelectedBackgroundGC();
 
 private:
-   TGTextView(const TGTextView&);
-   TGTextView& operator=(const TGTextView&);
+   TGTextView(const TGTextView&) = delete;
+   TGTextView& operator=(const TGTextView&) = delete;
 
 public:
-   TGTextView(const TGWindow *parent = 0, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
+   TGTextView(const TGWindow *parent = nullptr, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
               UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
               Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
@@ -157,8 +158,8 @@ class TViewTimer : public TTimer {
 private:
    TGView   *fView;
 
-   TViewTimer(const TViewTimer&);             // not implemented
-   TViewTimer& operator=(const TViewTimer&);  // not implemented
+   TViewTimer(const TViewTimer&) = delete;
+   TViewTimer& operator=(const TViewTimer&) = delete;
 
 public:
    TViewTimer(TGView *t, Long_t ms) : TTimer(ms, kTRUE), fView(t) { }

@@ -500,9 +500,9 @@ namespace cling {
     //  Try parsing the type name.
     //
     clang::ParsedAttributes Attrs(P.getAttrFactory());
-
-    TypeResult Res(P.ParseTypeName(0,Declarator::TypeNameContext,clang::AS_none,
-                                   0,&Attrs));
+    // FIXME: All arguments to ParseTypeName are the default arguments. Remove.
+    TypeResult Res(P.ParseTypeName(0, DeclaratorContext::TypeNameContext,
+                                   clang::AS_none, 0, &Attrs));
     if (Res.isUsable()) {
       // Accept it only if the whole name was parsed.
       if (P.NextToken().getKind() == clang::tok::eof) {
@@ -1231,11 +1231,11 @@ namespace cling {
         // Double check const-ness.
         if (const clang::CXXMethodDecl *md =
             llvm::dyn_cast<clang::CXXMethodDecl>(TheDecl)) {
-          if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
+          if (md->getMethodQualifiers().hasConst()) {
             if (!objectIsConst) {
               TheDecl = 0;
             }
-          } else {
+          } else { // FIXME: The else should be attached to the if hasConst stmt
             if (objectIsConst) {
               TheDecl = 0;
             }
@@ -1380,7 +1380,7 @@ namespace cling {
                              /*AllowDestructorName*/true,
                              /*AllowConstructorName*/true,
                              /*AllowDeductionGuide*/ false,
-                             ParsedType(), TemplateKWLoc,
+                             ParsedType(), &TemplateKWLoc,
                              FuncId)) {
       // Failed parse, cleanup.
       return false;
@@ -1676,7 +1676,7 @@ namespace cling {
           // memory corruption on the OpaqueValueExpr. See ROOT-7749.
           clang::QualType NonRefQT(QT.getNonReferenceType());
           ExprMemory.resize(++nargs);
-          new (&ExprMemory[nargs-1]) OpaqueValueExpr(TSI->getTypeLoc().getLocStart(),
+          new (&ExprMemory[nargs-1]) OpaqueValueExpr(TSI->getTypeLoc().getBeginLoc(),
                                                      NonRefQT, VK);
         }
         // Type names should be comma separated.

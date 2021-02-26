@@ -11,8 +11,6 @@ class DStmt<Stmt base, bit abstract = 0> : Stmt<abstract> {
 // Statements
 def NullStmt : Stmt;
 def CompoundStmt : Stmt;
-def LabelStmt : Stmt;
-def AttributedStmt : Stmt;
 def IfStmt : Stmt;
 def SwitchStmt : Stmt;
 def WhileStmt : Stmt;
@@ -28,6 +26,12 @@ def SwitchCase : Stmt<1>;
 def CaseStmt : DStmt<SwitchCase>;
 def DefaultStmt : DStmt<SwitchCase>;
 def CapturedStmt : Stmt;
+
+// Statements that might produce a value (for example, as the last non-null
+// statement in a GNU statement-expression).
+def ValueStmt : Stmt<1>;
+def LabelStmt : DStmt<ValueStmt>;
+def AttributedStmt : DStmt<ValueStmt>;
 
 // Asm statements
 def AsmStmt : Stmt<1>;
@@ -53,10 +57,11 @@ def CoroutineBodyStmt : Stmt;
 def CoreturnStmt : Stmt;
 
 // Expressions
-def Expr : Stmt<1>;
+def Expr : DStmt<ValueStmt, 1>;
 def PredefinedExpr : DStmt<Expr>;
 def DeclRefExpr : DStmt<Expr>;
 def IntegerLiteral : DStmt<Expr>;
+def FixedPointLiteral : DStmt<Expr>;
 def FloatingLiteral : DStmt<Expr>;
 def ImaginaryLiteral : DStmt<Expr>;
 def StringLiteral : DStmt<Expr>;
@@ -91,6 +96,11 @@ def ParenListExpr : DStmt<Expr>;
 def VAArgExpr : DStmt<Expr>;
 def GenericSelectionExpr : DStmt<Expr>;
 def PseudoObjectExpr : DStmt<Expr>;
+def SourceLocExpr : DStmt<Expr>;
+
+// Wrapper expressions
+def FullExpr : DStmt<Expr, 1>;
+def ConstantExpr : DStmt<FullExpr>;
 
 // Atomic expressions
 def AtomicExpr : DStmt<Expr>;
@@ -130,7 +140,7 @@ def DependentScopeDeclRefExpr : DStmt<Expr>;
 def CXXConstructExpr : DStmt<Expr>;
 def CXXInheritedCtorInitExpr : DStmt<Expr>;
 def CXXBindTemporaryExpr : DStmt<Expr>;
-def ExprWithCleanups : DStmt<Expr>;
+def ExprWithCleanups : DStmt<FullExpr>;
 def CXXTemporaryObjectExpr : DStmt<CXXConstructExpr>;
 def CXXUnresolvedConstructExpr : DStmt<Expr>;
 def CXXDependentScopeMemberExpr : DStmt<Expr>;
@@ -182,11 +192,12 @@ def ConvertVectorExpr : DStmt<Expr>;
 def BlockExpr : DStmt<Expr>;
 def OpaqueValueExpr : DStmt<Expr>;
 def TypoExpr : DStmt<Expr>;
+def BuiltinBitCastExpr : DStmt<ExplicitCastExpr>;
 
 // Microsoft Extensions.
 def MSPropertyRefExpr : DStmt<Expr>;
 def MSPropertySubscriptExpr : DStmt<Expr>;
-def CXXUuidofExpr : DStmt<Expr>; 
+def CXXUuidofExpr : DStmt<Expr>;
 def SEHTryStmt : Stmt;
 def SEHExceptStmt : Stmt;
 def SEHFinallyStmt : Stmt;

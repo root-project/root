@@ -477,9 +477,9 @@ public:
    static Bool_t          IsLocked();
    static void            SetExportPrecision(UInt_t prec) {fgExportPrecision = prec;}
    static UInt_t          GetExportPrecision() {return fgExportPrecision;}
-   static void            SetDefaultG4Units() {fgDefaultUnits = kG4Units;}
-   static void            SetDefaultRootUnits() {fgDefaultUnits = kRootUnits;}
+   static void            SetDefaultUnits(EDefaultUnits new_value);
    static EDefaultUnits   GetDefaultUnits();
+   static Bool_t          LockDefaultUnits(Bool_t new_value);
    Bool_t                 IsStreamingVoxels() const {return fStreamVoxels;}
    Bool_t                 IsCleaning() const {return fIsGeomCleaning;}
 

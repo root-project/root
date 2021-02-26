@@ -50,7 +50,7 @@ JSROOT.define([], () => {
             url += "&post=" + btoa(data);
          } else {
             // send data with post request - most efficient way
-            reqmode = "post";
+            reqmode = "postbuf";
             post = data;
          }
       }
@@ -88,8 +88,10 @@ JSROOT.define([], () => {
             while (i < offset) str += String.fromCharCode(u8Arr[i++]);
 
             if (str) {
-               if (str == "<<nope>>") str = "";
-               this.handle.processRequest(str);
+               if (str == "<<nope>>")
+                  this.handle.processRequest(-1111);
+               else
+                   this.handle.processRequest(str);
             }
             if (offset < u8Arr.length)
                this.handle.processRequest(res, offset);
@@ -106,9 +108,15 @@ JSROOT.define([], () => {
                   str += String.fromCharCode(u8Arr[i]);
                res = str;
             }
-            if (res == "<<nope>>") res = "";
-            this.handle.processRequest(res);
+            if (res == "<<nope>>")
+               this.handle.processRequest(-1111);
+            else
+               this.handle.processRequest(res);
          }
+      }, function(err,status) {
+         // console.log('Get request error', err)
+         // console.log('Get request status', status)
+         this.handle.processRequest(null, "error");
       });
 
       req.handle = this;
@@ -120,9 +128,15 @@ JSROOT.define([], () => {
    LongPollSocket.prototype.processRequest = function(res, _offset) {
       if (res === null) {
          if (typeof this.onerror === 'function') this.onerror("receive data with connid " + (this.connid || "---"));
-         // if (typeof this.onclose === 'function') this.onclose();
+         if ((_offset == "error") && (typeof this.onclose === 'function'))
+            this.onclose("force_close");
          this.connid = null;
          return;
+      } else if (res === -1111) {
+         this.nope_cnt = (this.nope_cnt || 0) + 1;
+         res = "";
+      } else {
+         delete this.nope_cnt;
       }
 
       if (this.connid === "connect") {
@@ -143,7 +157,12 @@ JSROOT.define([], () => {
             this.onmessage({ data: res, offset: _offset });
       }
 
-      if (!this.req) this.nextRequest("", "dummy"); // send new poll request when necessary
+      if (!this.req) {
+         if (this.nope_cnt && (this.nope_cnt > 10))
+            setTimeout(() => { if (!this.req) this.nextRequest("", "dummy"); }, 50); // minimal timeout to reduce load
+         else
+            this.nextRequest("", "dummy"); // send new poll request when necessary
+      }
    }
 
    /** @summary Send data */
@@ -234,6 +253,12 @@ JSROOT.define([], () => {
          return (this.user_args && (typeof this.user_args == 'object')) ? this.user_args[field] : undefined;
 
       return this.user_args;
+   }
+
+   /** @summary Set user args
+     * @desc Normally set via RWebWindow::SetUserArgs() method */
+   WebWindowHandle.prototype.setUserArgs = function(args) {
+      this.user_args = args;
    }
 
    /** @summary Set callbacks receiver.
@@ -375,7 +400,8 @@ JSROOT.define([], () => {
       this.cansend--; // decrease number of allowed send packets
 
       this._websocket.send(prefix + msg);
-      if (this.kind === "websocket") {
+
+      if ((this.kind === "websocket") || (this.kind === "longpoll")) {
          if (this.timerid) clearTimeout(this.timerid);
          this.timerid = setTimeout(() => this.keepAlive(), 10000);
       }
@@ -436,15 +462,28 @@ JSROOT.define([], () => {
    /** @summary Returns used channel ID, 1 by default */
    WebWindowHandle.prototype.getChannelId = function() { return this.channelid && this.master ? this.channelid : 1; }
 
-   /** @summary Method opens relative path with the same kind of socket.
-    * @private */
-   WebWindowHandle.prototype.createRelative = function(relative) {
-      if (!relative || !this.kind || !this.href) return null;
+   /** @summary Assign href parameter
+     * @param {string} [path] - absolute path, when not specified window.location.url will be used
+     * @private */
+    WebWindowHandle.prototype.setHRef = function(path) {
+      this.href = path;
+   }
 
-      let handle = new WebWindowHandle(this.kind, this.credits);
-      console.log('Try to connect ', this.href + relative);
-      handle.connect(this.href + relative);
-      return handle;
+   /** @summary Return href part
+     * @param {string} [relative_path] - relative path to the handle
+     * @private */
+   WebWindowHandle.prototype.getHRef = function(relative_path) {
+      if (!relative_path || !this.kind || !this.href) return this.href;
+
+      let addr = this.href;
+      if (relative_path.indexOf("../")==0) {
+         let ddd = addr.lastIndexOf("/",addr.length-2);
+         addr = addr.substr(0,ddd) + relative_path.substr(2);
+      } else {
+         addr += relative_path;
+      }
+
+      return addr;
    }
 
    /** @summary Create configured socket for current object.
@@ -452,8 +491,14 @@ JSROOT.define([], () => {
    WebWindowHandle.prototype.connect = function(href) {
 
       this.close();
+      if (!href && this.href) href = this.href;
 
-      let pthis = this, ntry = 0, args = (this.key ? ("key=" + this.key) : "");
+      let pthis = this, ntry = 0,
+          args = (this.key ? ("key=" + this.key) : "");
+      if (this.token) {
+         if (args) args += "&";
+         args += "token=" + this.token;
+      }
 
       function retry_open(first_time) {
 
@@ -566,9 +611,9 @@ JSROOT.define([], () => {
                pthis.send('READY', 0); // send dummy message to server
          }
 
-         conn.onclose = function() {
+         conn.onclose = function(arg) {
             delete pthis._websocket;
-            if (pthis.state > 0) {
+            if ((pthis.state > 0) || (arg === "force_close")) {
                console.log('websocket closed');
                pthis.state = 0;
                pthis.invokeReceiver(true, "onWebsocketClosed");
@@ -603,6 +648,7 @@ JSROOT.define([], () => {
      * @param {object} arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
      * @param {string} arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned in handle.first_msg
      * @param {string} [arg.prereq2] - second part of prerequcities, which is loaded parallel to connecting with WebWindow
+     * @param {string} [arg.href] - URL to RWebWindow, using window.location.href by default
      * @returns {Promise} ready-to-use WebWindowHandle instance  */
    JSROOT.connectWebWindow = function(arg) {
 
@@ -660,7 +706,8 @@ JSROOT.define([], () => {
 
       return new Promise(resolveFunc => {
          let handle = new WebWindowHandle(arg.socket_kind, arg.credits);
-         handle.user_args = arg.user_args;
+         handle.setUserArgs(arg.user_args);
+         if (arg.href) handle.setHRef(arg.href); // apply href now  while connect can be called from other place
 
          if (window) {
             window.onbeforeunload = () => handle.close(true);
@@ -668,6 +715,7 @@ JSROOT.define([], () => {
          }
 
          handle.key = d.get("key");
+         handle.token = d.get("token");
 
          if (arg.first_recv) {
             arg.receiver = {

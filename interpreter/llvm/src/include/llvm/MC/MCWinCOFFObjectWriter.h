@@ -1,25 +1,26 @@
 //===- llvm/MC/MCWinCOFFObjectWriter.h - Win COFF Object Writer -*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_MC_MCWINCOFFOBJECTWRITER_H
 #define LLVM_MC_MCWINCOFFOBJECTWRITER_H
 
+#include "llvm/MC/MCObjectWriter.h"
+#include <memory>
+
 namespace llvm {
 
 class MCAsmBackend;
 class MCContext;
 class MCFixup;
-class MCObjectWriter;
 class MCValue;
 class raw_pwrite_stream;
 
-  class MCWinCOFFObjectTargetWriter {
+  class MCWinCOFFObjectTargetWriter : public MCObjectTargetWriter {
     virtual void anchor();
 
     const unsigned Machine;
@@ -30,6 +31,11 @@ class raw_pwrite_stream;
   public:
     virtual ~MCWinCOFFObjectTargetWriter() = default;
 
+    virtual Triple::ObjectFormatType getFormat() const { return Triple::COFF; }
+    static bool classof(const MCObjectTargetWriter *W) {
+      return W->getFormat() == Triple::COFF;
+    }
+
     unsigned getMachine() const { return Machine; }
     virtual unsigned getRelocType(MCContext &Ctx, const MCValue &Target,
                                   const MCFixup &Fixup, bool IsCrossSection,
@@ -37,13 +43,14 @@ class raw_pwrite_stream;
     virtual bool recordRelocation(const MCFixup &) const { return true; }
   };
 
-  /// \brief Construct a new Win COFF writer instance.
+  /// Construct a new Win COFF writer instance.
   ///
   /// \param MOTW - The target specific WinCOFF writer subclass.
   /// \param OS - The stream to write to.
   /// \returns The constructed object writer.
-  MCObjectWriter *createWinCOFFObjectWriter(MCWinCOFFObjectTargetWriter *MOTW,
-                                            raw_pwrite_stream &OS);
+  std::unique_ptr<MCObjectWriter>
+  createWinCOFFObjectWriter(std::unique_ptr<MCWinCOFFObjectTargetWriter> MOTW,
+                            raw_pwrite_stream &OS);
 } // end namespace llvm
 
 #endif // LLVM_MC_MCWINCOFFOBJECTWRITER_H

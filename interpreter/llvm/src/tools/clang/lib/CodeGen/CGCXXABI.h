@@ -1,9 +1,8 @@
 //===----- CGCXXABI.h - Interface to C++ ABIs -------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -40,7 +39,7 @@ class CodeGenFunction;
 class CodeGenModule;
 struct CatchTypeInfo;
 
-/// \brief Implements C++ ABI-specific code generation functions.
+/// Implements C++ ABI-specific code generation functions.
 class CGCXXABI {
 protected:
   CodeGenModule &CGM;
@@ -73,9 +72,10 @@ protected:
     return CGF.CXXStructorImplicitParamValue;
   }
 
-  /// Perform prolog initialization of the parameter variable suitable
-  /// for 'this' emitted by buildThisParam.
-  void EmitThisParam(CodeGenFunction &CGF);
+  /// Loads the incoming C++ this pointer as it was passed by the caller.
+  llvm::Value *loadIncomingCXXThis(CodeGenFunction &CGF);
+
+  void setCXXABIThisValue(CodeGenFunction &CGF, llvm::Value *ThisPtr);
 
   ASTContext &getContext() const { return CGM.getContext(); }
 
@@ -135,10 +135,6 @@ public:
     /// Pass it as a pointer to temporary memory.
     RAA_Indirect
   };
-
-  /// Returns true if C++ allows us to copy the memory of an object of type RD
-  /// when it is passed as an argument.
-  bool canCopyArgument(const CXXRecordDecl *RD) const;
 
   /// Returns how an argument of the given record type should be passed.
   virtual RecordArgABI getRecordArgABI(const CXXRecordDecl *RD) const = 0;
@@ -221,7 +217,7 @@ protected:
   /// is required.
   llvm::Constant *getMemberPointerAdjustment(const CastExpr *E);
 
-  /// \brief Computes the non-virtual adjustment needed for a member pointer
+  /// Computes the non-virtual adjustment needed for a member pointer
   /// conversion along an inheritance path stored in an APValue.  Unlike
   /// getMemberPointerAdjustment(), the adjustment can be negative if the path
   /// is from a derived type to a base type.
@@ -236,7 +232,7 @@ public:
   virtual void emitThrow(CodeGenFunction &CGF, const CXXThrowExpr *E) = 0;
   virtual llvm::GlobalVariable *getThrowInfo(QualType T) { return nullptr; }
 
-  /// \brief Determine whether it's possible to emit a vtable for \p RD, even
+  /// Determine whether it's possible to emit a vtable for \p RD, even
   /// though we do not know that the vtable has been marked as used by semantic
   /// analysis.
   virtual bool canSpeculativelyEmitVTable(const CXXRecordDecl *RD) const = 0;
@@ -309,7 +305,7 @@ public:
   /// adding any required parameters.  For convenience, ArgTys has been
   /// initialized with the type of 'this'.
   virtual AddedStructorArgs
-  buildStructorSignature(const CXXMethodDecl *MD, StructorType T,
+  buildStructorSignature(GlobalDecl GD,
                          SmallVectorImpl<CanQualType> &ArgTys) = 0;
 
   /// Returns true if the given destructor type should be emitted as a linkonce
@@ -317,6 +313,14 @@ public:
   /// not.
   virtual bool useThunkForDtorVariant(const CXXDestructorDecl *Dtor,
                                       CXXDtorType DT) const = 0;
+
+  virtual void setCXXDestructorDLLStorage(llvm::GlobalValue *GV,
+                                          const CXXDestructorDecl *Dtor,
+                                          CXXDtorType DT) const;
+
+  virtual llvm::GlobalValue::LinkageTypes
+  getCXXDestructorLinkage(GVALinkage Linkage, const CXXDestructorDecl *Dtor,
+                          CXXDtorType DT) const;
 
   /// Emit destructor variants required by this ABI.
   virtual void EmitCXXDestructors(const CXXDestructorDecl *D) = 0;
@@ -358,13 +362,6 @@ public:
     return CharUnits::Zero();
   }
 
-  /// Perform ABI-specific "this" parameter adjustment in a virtual function
-  /// prologue.
-  virtual llvm::Value *adjustThisParameterInVirtualFunctionPrologue(
-      CodeGenFunction &CGF, GlobalDecl GD, llvm::Value *This) {
-    return This;
-  }
-
   /// Emit the ABI-specific prolog for the function.
   virtual void EmitInstanceFunctionProlog(CodeGenFunction &CGF) = 0;
 
@@ -381,7 +378,7 @@ public:
   virtual void EmitDestructorCall(CodeGenFunction &CGF,
                                   const CXXDestructorDecl *DD, CXXDtorType Type,
                                   bool ForVirtualBase, bool Delegating,
-                                  Address This) = 0;
+                                  Address This, QualType ThisTy) = 0;
 
   /// Emits the VTable definitions required for the given record type.
   virtual void emitVTableDefinitions(CodeGenVTables &CGVT,
@@ -420,16 +417,19 @@ public:
 
   /// Build a virtual function pointer in the ABI-specific way.
   virtual CGCallee getVirtualFunctionPointer(CodeGenFunction &CGF,
-                                             GlobalDecl GD,
-                                             Address This,
+                                             GlobalDecl GD, Address This,
                                              llvm::Type *Ty,
                                              SourceLocation Loc) = 0;
 
+  using DeleteOrMemberCallExpr =
+      llvm::PointerUnion<const CXXDeleteExpr *, const CXXMemberCallExpr *>;
+
   /// Emit the ABI-specific virtual destructor call.
-  virtual llvm::Value *
-  EmitVirtualDestructorCall(CodeGenFunction &CGF, const CXXDestructorDecl *Dtor,
-                            CXXDtorType DtorType, Address This,
-                            const CXXMemberCallExpr *CE) = 0;
+  virtual llvm::Value *EmitVirtualDestructorCall(CodeGenFunction &CGF,
+                                                 const CXXDestructorDecl *Dtor,
+                                                 CXXDtorType DtorType,
+                                                 Address This,
+                                                 DeleteOrMemberCallExpr E) = 0;
 
   virtual void adjustCallArgsForDestructorThunk(CodeGenFunction &CGF,
                                                 GlobalDecl GD,
@@ -440,6 +440,7 @@ public:
   /// base tables.
   virtual void emitVirtualInheritanceTables(const CXXRecordDecl *RD) = 0;
 
+  virtual bool exportThunk() = 0;
   virtual void setThunkLinkage(llvm::Function *Thunk, bool ForVTable,
                                GlobalDecl GD, bool ReturnAdjustment) = 0;
 
@@ -555,7 +556,7 @@ public:
   /// \param Dtor - a function taking a single pointer argument
   /// \param Addr - a pointer to pass to the destructor function.
   virtual void registerGlobalDtor(CodeGenFunction &CGF, const VarDecl &D,
-                                  llvm::Constant *Dtor,
+                                  llvm::FunctionCallee Dtor,
                                   llvm::Constant *Addr) = 0;
 
   /*************************** thread_local initialization ********************/
@@ -587,7 +588,14 @@ public:
 
   /// Emit a single constructor/destructor with the given type from a C++
   /// constructor Decl.
-  virtual void emitCXXStructor(const CXXMethodDecl *MD, StructorType Type) = 0;
+  virtual void emitCXXStructor(GlobalDecl GD) = 0;
+
+  /// Load a vtable from This, an object of polymorphic type RD, or from one of
+  /// its virtual bases if it does not have its own vtable. Returns the vtable
+  /// and the class from which the vtable was loaded.
+  virtual std::pair<llvm::Value *, const CXXRecordDecl *>
+  LoadVTablePtr(CodeGenFunction &CGF, Address This,
+                const CXXRecordDecl *RD) = 0;
 };
 
 // Create an instance of a C++ ABI class:
@@ -598,6 +606,17 @@ CGCXXABI *CreateItaniumCXXABI(CodeGenModule &CGM);
 /// Creates a Microsoft-family ABI.
 CGCXXABI *CreateMicrosoftCXXABI(CodeGenModule &CGM);
 
+struct CatchRetScope final : EHScopeStack::Cleanup {
+  llvm::CatchPadInst *CPI;
+
+  CatchRetScope(llvm::CatchPadInst *CPI) : CPI(CPI) {}
+
+  void Emit(CodeGenFunction &CGF, Flags flags) override {
+    llvm::BasicBlock *BB = CGF.createBasicBlock("catchret.dest");
+    CGF.Builder.CreateCatchRet(CPI, BB);
+    CGF.EmitBlock(BB);
+  }
+};
 }
 }
 

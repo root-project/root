@@ -2015,7 +2015,7 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
   }
 
   // Write header
-  os << "digraph " << GetName() << "{" << endl ;
+  os << "digraph \"" << GetName() << "\"{" << endl ;
 
   // First list all the tree nodes
   RooArgSet nodeSet ;
@@ -2048,9 +2048,8 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
   graphVizAddConnections(links) ;
 
   // And write them out
-  set<pair<RooAbsArg*,RooAbsArg*> >::iterator liter = links.begin() ;
-  for( ; liter != links.end() ; ++liter ) {
-    os << "\"" << liter->first->GetName() << "\" -> \"" << liter->second->GetName() << "\";" << endl ;
+  for(auto const& link : links) {
+    os << "\"" << link.first->GetName() << "\" -> \"" << link.second->GetName() << "\";" << endl ;
   }
 
   // Write trailer

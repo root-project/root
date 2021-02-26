@@ -1,9 +1,6 @@
-/// \file ROOT/RFileDialog.cxx
-/// \ingroup rbrowser
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \date 2019-10-31
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2019-10-31
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -33,7 +30,7 @@
 using namespace ROOT::Experimental;
 using namespace std::string_literals;
 
-/** \class RFileDialog
+/** \class ROOT::Experimental::RFileDialog
 \ingroup rbrowser
 
 web-based FileDialog.
@@ -69,9 +66,9 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
    }
 
    auto comp = std::make_shared<Browsable::RGroup>("top", "Top file dialog element");
-   workdir = Browsable::RSysFile::ProvideTopEntries(comp, workdir);
+   auto workpath = Browsable::RSysFile::ProvideTopEntries(comp, workdir);
    fBrowsable.SetTopElement(comp);
-   fBrowsable.SetWorkingDirectory(workdir);
+   fBrowsable.SetWorkingPath(workpath);
 
    fWebWindow = RWebWindow::Create();
 
@@ -229,8 +226,6 @@ std::string RFileDialog::GetRegexp(const std::string &fname) const
 
 void RFileDialog::SendInitMsg(unsigned connid)
 {
-   printf("Sending dialog init msg\n");
-
    auto filter = GetSelectedFilter();
    RBrowserRequest req;
    req.sort = "alphabetical";
@@ -248,7 +243,7 @@ void RFileDialog::SendInitMsg(unsigned connid)
                                    "\"filter\" : "s + jfilter.Data() + ","s +
                                    "\"filters\" : "s + jfilters.Data() + ","s +
                                    "\"fname\" : "s + jfname.Data() + ","s +
-                                   "\"brepl\" : "s + fBrowsable.ProcessRequest(req) + "   }"s);
+                                   "\"brepl\" : "s + fBrowsable.ProcessRequest(req) + " }"s);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -263,7 +258,7 @@ void RFileDialog::SendChPathMsg(unsigned connid)
    auto jpath = TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath());
 
    fWebWindow->Send(connid, "CHMSG:{\"path\" : "s + jpath.Data() +
-                                 ", \"brepl\" : "s + fBrowsable.ProcessRequest(req) + "   }"s);
+                                 ", \"brepl\" : "s + fBrowsable.ProcessRequest(req) + " }"s);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -271,12 +266,6 @@ void RFileDialog::SendChPathMsg(unsigned connid)
 
 void RFileDialog::ProcessMsg(unsigned connid, const std::string &arg)
 {
-   size_t len = arg.find("\n");
-   if (len != std::string::npos)
-      printf("Recv %s\n", arg.substr(0, len).c_str());
-   else
-      printf("Recv %s\n", arg.c_str());
-
    if (arg.compare(0, 7, "CHPATH:") == 0) {
       auto path = TBufferJSON::FromJSON<Browsable::RElementPath_t>(arg.substr(7));
       if (path) fBrowsable.SetWorkingPath(*path);

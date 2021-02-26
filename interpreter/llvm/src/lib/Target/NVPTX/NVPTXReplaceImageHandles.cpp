@@ -1,9 +1,8 @@
 //===-- NVPTXReplaceImageHandles.cpp - Replace image handles for Fermi ----===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -17,6 +16,7 @@
 #include "NVPTXMachineFunctionInfo.h"
 #include "NVPTXSubtarget.h"
 #include "NVPTXTargetMachine.h"
+#include "MCTargetDesc/NVPTXBaseInfo.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -158,7 +158,7 @@ findIndexForHandle(MachineOperand &Op, MachineFunction &MF, unsigned &Idx) {
     unsigned Param = atoi(Sym.data()+ParamBaseName.size());
     std::string NewSym;
     raw_string_ostream NewSymStr(NewSym);
-    NewSymStr << MF.getFunction()->getName() << "_param_" << Param;
+    NewSymStr << MF.getName() << "_param_" << Param;
 
     InstrsToRemove.insert(&TexHandleDef);
     Idx = MFI->getImageHandleSymbolIndex(NewSymStr.str().c_str());

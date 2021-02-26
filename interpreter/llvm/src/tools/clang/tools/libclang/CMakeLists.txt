@@ -36,10 +36,12 @@ set(SOURCES
 set(LIBS
   clangAST
   clangBasic
+  clangDriver
   clangFrontend
   clangIndex
   clangLex
   clangSema
+  clangSerialization
   clangTooling
 )
 
@@ -51,6 +53,9 @@ if (TARGET clangTidyPlugin)
   add_definitions(-DCLANG_TOOL_EXTRA_BUILD)
   list(APPEND LIBS clangTidyPlugin)
   list(APPEND LIBS clangIncludeFixerPlugin)
+  if(LLVM_ENABLE_MODULES)
+    list(APPEND LLVM_COMPILE_FLAGS "-fmodules-ignore-macro=CLANG_TOOL_EXTRA_BUILD")
+  endif()
 endif ()
 
 find_library(DL_LIBRARY_PATH dl)
@@ -64,13 +69,13 @@ option(LIBCLANG_BUILD_STATIC
 set(LLVM_EXPORTED_SYMBOL_FILE ${CMAKE_CURRENT_SOURCE_DIR}/libclang.exports)
 
 if(MSVC)
-  # Avoid LNK4197 not to spceify libclang.def here.
+  # Avoid LNK4197 by not specifying libclang.exports here.
   # Each functions is exported as "dllexport" in include/clang-c.
   # KB835326
   set(LLVM_EXPORTED_SYMBOL_FILE)
 endif()
 
-if( LLVM_ENABLE_PIC )
+if(LLVM_ENABLE_PIC OR WIN32)
   set(ENABLE_SHARED SHARED)
 endif()
 
@@ -84,10 +89,15 @@ else()
   set(output_name "clang")
 endif()
 
-add_clang_library(libclang ${ENABLE_SHARED} ${ENABLE_STATIC}
+# libclang requires headers which need _ALL_SOURCE to build on AIX
+if (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "AIX")
+    remove_definitions("-D_XOPEN_SOURCE=700")
+endif()
+
+add_clang_library(libclang ${ENABLE_SHARED} ${ENABLE_STATIC} INSTALL_WITH_TOOLCHAIN
   OUTPUT_NAME ${output_name}
   ${SOURCES}
-  DEPENDS clang-headers
+  DEPENDS clang-resource-headers
 
   LINK_LIBS
   ${LIBS}
@@ -115,6 +125,12 @@ if(ENABLE_SHARED)
       PROPERTIES
       VERSION ${LIBCLANG_LIBRARY_VERSION}
       DEFINE_SYMBOL _CINDEX_LIB_)
+    # FIXME: _CINDEX_LIB_ affects dllexport/dllimport on Win32.
+    if(LLVM_ENABLE_MODULES AND NOT WIN32)
+      target_compile_options(libclang PRIVATE
+        "-fmodules-ignore-macro=_CINDEX_LIB_"
+        )
+    endif()
   endif()
 endif()
 
@@ -132,10 +148,32 @@ install(DIRECTORY ../../include/clang-c
   PATTERN ".svn" EXCLUDE
   )
 
-if (NOT CMAKE_CONFIGURATION_TYPES) # don't add this for IDE's.
-  add_custom_target(install-libclang-headers
-    DEPENDS
-    COMMAND "${CMAKE_COMMAND}"
-            -DCMAKE_INSTALL_COMPONENT=libclang-headers
-            -P "${CMAKE_BINARY_DIR}/cmake_install.cmake")
+# LLVM_DISTRIBUTION_COMPONENTS requires that each component have both a
+# component and an install-component target, so add a dummy libclang-headers
+# target to allow using it in LLVM_DISTRIBUTION_COMPONENTS.
+add_custom_target(libclang-headers)
+set_target_properties(libclang-headers PROPERTIES FOLDER "Misc")
+
+if (NOT LLVM_ENABLE_IDE)
+  add_llvm_install_targets(install-libclang-headers
+                           COMPONENT libclang-headers)
 endif()
+
+# Create a target to install the python bindings to make them easier to
+# distribute.  Since the bindings are over libclang, which is installed
+# unbundled to the clang version, follow suit.
+foreach(PythonVersion ${CLANG_PYTHON_BINDINGS_VERSIONS})
+  install(DIRECTORY
+            ${CMAKE_CURRENT_SOURCE_DIR}/../../bindings/python/clang
+          COMPONENT
+            libclang-python-bindings
+          DESTINATION
+            "lib${LLVM_LIBDIR_SUFFIX}/python${PythonVersion}/site-packages")
+endforeach()
+if(NOT LLVM_ENABLE_IDE)
+  add_custom_target(libclang-python-bindings)
+  add_llvm_install_targets(install-libclang-python-bindings
+                           COMPONENT
+                             libclang-python-bindings)
+endif()
+

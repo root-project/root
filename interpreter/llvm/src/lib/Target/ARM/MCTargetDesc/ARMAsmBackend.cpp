@@ -1,9 +1,8 @@
 //===-- ARMAsmBackend.cpp - ARM Assembler Backend -------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,7 +11,6 @@
 #include "MCTargetDesc/ARMAsmBackendDarwin.h"
 #include "MCTargetDesc/ARMAsmBackendELF.h"
 #include "MCTargetDesc/ARMAsmBackendWinCOFF.h"
-#include "MCTargetDesc/ARMBaseInfo.h"
 #include "MCTargetDesc/ARMFixupKinds.h"
 #include "MCTargetDesc/ARMMCTargetDesc.h"
 #include "llvm/ADT/StringSwitch.h"
@@ -25,14 +23,15 @@
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCFixupKindInfo.h"
-#include "llvm/MC/MCMachObjectWriter.h"
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSectionELF.h"
 #include "llvm/MC/MCSectionMachO.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/MCValue.h"
+#include "llvm/MC/MCAsmLayout.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/EndianStream.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Format.h"
 #include "llvm/Support/TargetParser.h"
@@ -47,6 +46,13 @@ public:
                                 /*HasRelocationAddend*/ false) {}
 };
 } // end anonymous namespace
+
+Optional<MCFixupKind> ARMAsmBackend::getFixupKind(StringRef Name) const {
+  if (STI.getTargetTriple().isOSBinFormatELF() && Name == "R_ARM_NONE")
+    return FK_NONE;
+
+  return MCAsmBackend::getFixupKind(Name);
+}
 
 const MCFixupKindInfo &ARMAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
   const static MCFixupKindInfo InfosLE[ARM::NumTargetFixupKinds] = {
@@ -99,6 +105,13 @@ const MCFixupKindInfo &ARMAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
       {"fixup_t2_movw_lo16", 0, 20, 0},
       {"fixup_arm_mod_imm", 0, 12, 0},
       {"fixup_t2_so_imm", 0, 26, 0},
+      {"fixup_bf_branch", 0, 32, MCFixupKindInfo::FKF_IsPCRel},
+      {"fixup_bf_target", 0, 32, MCFixupKindInfo::FKF_IsPCRel},
+      {"fixup_bfl_target", 0, 32, MCFixupKindInfo::FKF_IsPCRel},
+      {"fixup_bfc_target", 0, 32, MCFixupKindInfo::FKF_IsPCRel},
+      {"fixup_bfcsel_else_target", 0, 32, 0},
+      {"fixup_wls", 0, 32, MCFixupKindInfo::FKF_IsPCRel},
+      {"fixup_le", 0, 32, MCFixupKindInfo::FKF_IsPCRel}
   };
   const static MCFixupKindInfo InfosBE[ARM::NumTargetFixupKinds] = {
       // This table *must* be in the order that the fixup_* kinds are defined in
@@ -150,6 +163,13 @@ const MCFixupKindInfo &ARMAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
       {"fixup_t2_movw_lo16", 12, 20, 0},
       {"fixup_arm_mod_imm", 20, 12, 0},
       {"fixup_t2_so_imm", 26, 6, 0},
+      {"fixup_bf_branch", 0, 32, MCFixupKindInfo::FKF_IsPCRel},
+      {"fixup_bf_target", 0, 32, MCFixupKindInfo::FKF_IsPCRel},
+      {"fixup_bfl_target", 0, 32, MCFixupKindInfo::FKF_IsPCRel},
+      {"fixup_bfc_target", 0, 32, MCFixupKindInfo::FKF_IsPCRel},
+      {"fixup_bfcsel_else_target", 0, 32, 0},
+      {"fixup_wls", 0, 32, MCFixupKindInfo::FKF_IsPCRel},
+      {"fixup_le", 0, 32, MCFixupKindInfo::FKF_IsPCRel}
   };
 
   if (Kind < FirstTargetFixupKind)
@@ -157,7 +177,8 @@ const MCFixupKindInfo &ARMAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
 
   assert(unsigned(Kind - FirstTargetFixupKind) < getNumFixupKinds() &&
          "Invalid kind!");
-  return (IsLittleEndian ? InfosLE : InfosBE)[Kind - FirstTargetFixupKind];
+  return (Endian == support::little ? InfosLE
+                                    : InfosBE)[Kind - FirstTargetFixupKind];
 }
 
 void ARMAsmBackend::handleAssemblerFlag(MCAssemblerFlag Flag) {
@@ -173,9 +194,10 @@ void ARMAsmBackend::handleAssemblerFlag(MCAssemblerFlag Flag) {
   }
 }
 
-unsigned ARMAsmBackend::getRelaxedOpcode(unsigned Op) const {
-  bool HasThumb2 = STI->getFeatureBits()[ARM::FeatureThumb2];
-  bool HasV8MBaselineOps = STI->getFeatureBits()[ARM::HasV8MBaselineOps];
+unsigned ARMAsmBackend::getRelaxedOpcode(unsigned Op,
+                                         const MCSubtargetInfo &STI) const {
+  bool HasThumb2 = STI.getFeatureBits()[ARM::FeatureThumb2];
+  bool HasV8MBaselineOps = STI.getFeatureBits()[ARM::HasV8MBaselineOps];
 
   switch (Op) {
   default:
@@ -195,10 +217,18 @@ unsigned ARMAsmBackend::getRelaxedOpcode(unsigned Op) const {
   }
 }
 
-bool ARMAsmBackend::mayNeedRelaxation(const MCInst &Inst) const {
-  if (getRelaxedOpcode(Inst.getOpcode()) != Inst.getOpcode())
+bool ARMAsmBackend::mayNeedRelaxation(const MCInst &Inst,
+                                      const MCSubtargetInfo &STI) const {
+  if (getRelaxedOpcode(Inst.getOpcode(), STI) != Inst.getOpcode())
     return true;
   return false;
+}
+
+static const char *checkPCRelOffset(uint64_t Value, int64_t Min, int64_t Max) {
+  int64_t Offset = int64_t(Value) - 4;
+  if (Offset < Min || Offset > Max)
+    return "out of range pc-relative fixup value";
+  return nullptr;
 }
 
 const char *ARMAsmBackend::reasonForFixupRelaxation(const MCFixup &Fixup,
@@ -241,13 +271,39 @@ const char *ARMAsmBackend::reasonForFixupRelaxation(const MCFixup &Fixup,
   }
   case ARM::fixup_arm_thumb_cb: {
     // If we have a Thumb CBZ or CBNZ instruction and its target is the next
-    // instruction it is is actually out of range for the instruction.
+    // instruction it is actually out of range for the instruction.
     // It will be changed to a NOP.
     int64_t Offset = (Value & ~1);
     if (Offset == 2)
       return "will be converted to nop";
     break;
   }
+  case ARM::fixup_bf_branch:
+    return checkPCRelOffset(Value, 0, 30);
+  case ARM::fixup_bf_target:
+    return checkPCRelOffset(Value, -0x10000, +0xfffe);
+  case ARM::fixup_bfl_target:
+    return checkPCRelOffset(Value, -0x40000, +0x3fffe);
+  case ARM::fixup_bfc_target:
+    return checkPCRelOffset(Value, -0x1000, +0xffe);
+  case ARM::fixup_wls:
+    return checkPCRelOffset(Value, 0, +0xffe);
+  case ARM::fixup_le:
+    // The offset field in the LE and LETP instructions is an 11-bit
+    // value shifted left by 2 (i.e. 0,2,4,...,4094), and it is
+    // interpreted as a negative offset from the value read from pc,
+    // i.e. from instruction_address+4.
+    //
+    // So an LE instruction can in principle address the instruction
+    // immediately after itself, or (not very usefully) the address
+    // half way through the 4-byte LE.
+    return checkPCRelOffset(Value, -0xffe, 0);
+  case ARM::fixup_bfcsel_else_target: {
+    if (Value != 2 && Value != 4)
+      return "out of range label-relative fixup value";
+    break;
+  }
+
   default:
     llvm_unreachable("Unexpected fixup kind in reasonForFixupRelaxation()!");
   }
@@ -263,7 +319,7 @@ bool ARMAsmBackend::fixupNeedsRelaxation(const MCFixup &Fixup, uint64_t Value,
 void ARMAsmBackend::relaxInstruction(const MCInst &Inst,
                                      const MCSubtargetInfo &STI,
                                      MCInst &Res) const {
-  unsigned RelaxedOp = getRelaxedOpcode(Inst.getOpcode());
+  unsigned RelaxedOp = getRelaxedOpcode(Inst.getOpcode(), STI);
 
   // Sanity check w/ diagnostic if we get here w/ a bogus instruction.
   if (RelaxedOp == Inst.getOpcode()) {
@@ -291,7 +347,7 @@ void ARMAsmBackend::relaxInstruction(const MCInst &Inst,
   Res.setOpcode(RelaxedOp);
 }
 
-bool ARMAsmBackend::writeNopData(uint64_t Count, MCObjectWriter *OW) const {
+bool ARMAsmBackend::writeNopData(raw_ostream &OS, uint64_t Count) const {
   const uint16_t Thumb1_16bitNopEncoding = 0x46c0; // using MOV r8,r8
   const uint16_t Thumb2_16bitNopEncoding = 0xbf00; // NOP
   const uint32_t ARMv4_NopEncoding = 0xe1a00000;   // using MOV r0,r0
@@ -301,9 +357,9 @@ bool ARMAsmBackend::writeNopData(uint64_t Count, MCObjectWriter *OW) const {
         hasNOP() ? Thumb2_16bitNopEncoding : Thumb1_16bitNopEncoding;
     uint64_t NumNops = Count / 2;
     for (uint64_t i = 0; i != NumNops; ++i)
-      OW->write16(nopEncoding);
+      support::endian::write(OS, nopEncoding, Endian);
     if (Count & 1)
-      OW->write8(0);
+      OS << '\0';
     return true;
   }
   // ARM mode
@@ -311,21 +367,20 @@ bool ARMAsmBackend::writeNopData(uint64_t Count, MCObjectWriter *OW) const {
       hasNOP() ? ARMv6T2_NopEncoding : ARMv4_NopEncoding;
   uint64_t NumNops = Count / 4;
   for (uint64_t i = 0; i != NumNops; ++i)
-    OW->write32(nopEncoding);
+    support::endian::write(OS, nopEncoding, Endian);
   // FIXME: should this function return false when unable to write exactly
   // 'Count' bytes with NOP encodings?
   switch (Count % 4) {
   default:
     break; // No leftover bytes to write
   case 1:
-    OW->write8(0);
+    OS << '\0';
     break;
   case 2:
-    OW->write16(0);
+    OS.write("\0\0", 2);
     break;
   case 3:
-    OW->write16(0);
-    OW->write8(0xa0);
+    OS.write("\0\0\xa0", 3);
     break;
   }
 
@@ -362,7 +417,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
                                          const MCFixup &Fixup,
                                          const MCValue &Target, uint64_t Value,
                                          bool IsResolved, MCContext &Ctx,
-                                         bool IsLittleEndian) const {
+                                         const MCSubtargetInfo* STI) const {
   unsigned Kind = Fixup.getKind();
 
   // MachO tries to make .o files that look vaguely pre-linked, so for MOVW/MOVT
@@ -372,6 +427,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
   // interfere with checking valid expressions.
   if (const MCSymbolRefExpr *A = Target.getSymA()) {
     if (A->hasSubsectionsViaSymbols() && Asm.isThumbFunc(&A->getSymbol()) &&
+        A->getSymbol().isExternal() &&
         (Kind == FK_Data_4 || Kind == ARM::fixup_arm_movw_lo16 ||
          Kind == ARM::fixup_arm_movt_hi16 || Kind == ARM::fixup_t2_movw_lo16 ||
          Kind == ARM::fixup_t2_movt_hi16))
@@ -382,6 +438,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
   default:
     Ctx.reportError(Fixup.getLoc(), "bad relocation fixup type");
     return 0;
+  case FK_NONE:
   case FK_Data_1:
   case FK_Data_2:
   case FK_Data_4:
@@ -391,6 +448,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
   case FK_SecRel_4:
     return Value;
   case ARM::fixup_arm_movt_hi16:
+    assert(STI != nullptr);
     if (IsResolved || !STI->getTargetTriple().isOSBinFormatELF())
       Value >>= 16;
     LLVM_FALLTHROUGH;
@@ -403,6 +461,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     return Value;
   }
   case ARM::fixup_t2_movt_hi16:
+    assert(STI != nullptr);
     if (IsResolved || !STI->getTargetTriple().isOSBinFormatELF())
       Value >>= 16;
     LLVM_FALLTHROUGH;
@@ -416,7 +475,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     // inst{14-12} = Mid3;
     // inst{7-0} = Lo8;
     Value = (Hi4 << 16) | (i << 26) | (Mid3 << 12) | (Lo8);
-    return swapHalfWords(Value, IsLittleEndian);
+    return swapHalfWords(Value, Endian == support::little);
   }
   case ARM::fixup_arm_ldst_pcrel_12:
     // ARM PC-relative values are offset by 8.
@@ -439,7 +498,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     // Same addressing mode as fixup_arm_pcrel_10,
     // but with 16-bit halfwords swapped.
     if (Kind == ARM::fixup_t2_ldst_pcrel_12)
-      return swapHalfWords(Value, IsLittleEndian);
+      return swapHalfWords(Value, Endian == support::little);
 
     return Value;
   }
@@ -472,7 +531,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     out |= (Value & 0x700) << 4;
     out |= (Value & 0x0FF);
 
-    return swapHalfWords(out, IsLittleEndian);
+    return swapHalfWords(out, Endian == support::little);
   }
 
   case ARM::fixup_arm_condbranch:
@@ -489,6 +548,11 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     return 0xffffff & ((Value - 8) >> 2);
   case ARM::fixup_t2_uncondbranch: {
     Value = Value - 4;
+    if (!isInt<25>(Value)) {
+      Ctx.reportError(Fixup.getLoc(), "Relocation out of range");
+      return 0;
+    }
+
     Value >>= 1; // Low bit is not encoded.
 
     uint32_t out = 0;
@@ -504,10 +568,15 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     out |= (Value & 0x1FF800) << 5; // imm6 field
     out |= (Value & 0x0007FF);      // imm11 field
 
-    return swapHalfWords(out, IsLittleEndian);
+    return swapHalfWords(out, Endian == support::little);
   }
   case ARM::fixup_t2_condbranch: {
     Value = Value - 4;
+    if (!isInt<21>(Value)) {
+      Ctx.reportError(Fixup.getLoc(), "Relocation out of range");
+      return 0;
+    }
+
     Value >>= 1; // Low bit is not encoded.
 
     uint64_t out = 0;
@@ -517,12 +586,14 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     out |= (Value & 0x1F800) << 5; // imm6 field
     out |= (Value & 0x007FF);      // imm11 field
 
-    return swapHalfWords(out, IsLittleEndian);
+    return swapHalfWords(out, Endian == support::little);
   }
   case ARM::fixup_arm_thumb_bl: {
-    // FIXME: We get both thumb1 and thumb2 in here, so we can only check for
-    // the less strict thumb2 value.
-    if (!isInt<26>(Value - 4)) {
+    if (!isInt<25>(Value - 4) ||
+        (!STI->getFeatureBits()[ARM::FeatureThumb2] &&
+         !STI->getFeatureBits()[ARM::HasV8MBaselineOps] &&
+         !STI->getFeatureBits()[ARM::HasV6MOps] &&
+         !isInt<23>(Value - 4))) {
       Ctx.reportError(Fixup.getLoc(), "Relocation out of range");
       return 0;
     }
@@ -551,7 +622,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     uint32_t FirstHalf = (((uint16_t)signBit << 10) | (uint16_t)imm10Bits);
     uint32_t SecondHalf = (((uint16_t)J1Bit << 13) | ((uint16_t)J2Bit << 11) |
                            (uint16_t)imm11Bits);
-    return joinHalfWords(FirstHalf, SecondHalf, IsLittleEndian);
+    return joinHalfWords(FirstHalf, SecondHalf, Endian == support::little);
   }
   case ARM::fixup_arm_thumb_blx: {
     // The value doesn't encode the low two bits (always zero) and is offset by
@@ -587,12 +658,13 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     uint32_t FirstHalf = (((uint16_t)signBit << 10) | (uint16_t)imm10HBits);
     uint32_t SecondHalf = (((uint16_t)J1Bit << 13) | ((uint16_t)J2Bit << 11) |
                            ((uint16_t)imm10LBits) << 1);
-    return joinHalfWords(FirstHalf, SecondHalf, IsLittleEndian);
+    return joinHalfWords(FirstHalf, SecondHalf, Endian == support::little);
   }
   case ARM::fixup_thumb_adr_pcrel_10:
   case ARM::fixup_arm_thumb_cp:
     // On CPUs supporting Thumb2, this will be relaxed to an ldr.w, otherwise we
     // could have an error on our hands.
+    assert(STI != nullptr);
     if (!STI->getFeatureBits()[ARM::FeatureThumb2] && IsResolved) {
       const char *FixupDiagnostic = reasonForFixupRelaxation(Fixup, Value);
       if (FixupDiagnostic) {
@@ -617,6 +689,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
   }
   case ARM::fixup_arm_thumb_br:
     // Offset by 4 and don't encode the lower bit, which is always 0.
+    assert(STI != nullptr);
     if (!STI->getFeatureBits()[ARM::FeatureThumb2] &&
         !STI->getFeatureBits()[ARM::HasV8MBaselineOps]) {
       const char *FixupDiagnostic = reasonForFixupRelaxation(Fixup, Value);
@@ -628,6 +701,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     return ((Value - 4) >> 1) & 0x7ff;
   case ARM::fixup_arm_thumb_bcc:
     // Offset by 4 and don't encode the lower bit, which is always 0.
+    assert(STI != nullptr);
     if (!STI->getFeatureBits()[ARM::FeatureThumb2]) {
       const char *FixupDiagnostic = reasonForFixupRelaxation(Fixup, Value);
       if (FixupDiagnostic) {
@@ -675,7 +749,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     // Same addressing mode as fixup_arm_pcrel_10, but with 16-bit halfwords
     // swapped.
     if (Kind == ARM::fixup_t2_pcrel_10)
-      return swapHalfWords(Value, IsLittleEndian);
+      return swapHalfWords(Value, Endian == support::little);
 
     return Value;
   }
@@ -706,7 +780,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     // Same addressing mode as fixup_arm_pcrel_9, but with 16-bit halfwords
     // swapped.
     if (Kind == ARM::fixup_t2_pcrel_9)
-      return swapHalfWords(Value, IsLittleEndian);
+      return swapHalfWords(Value, Endian == support::little);
 
     return Value;
   }
@@ -732,7 +806,61 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
     EncValue |= (Value & 0x800) << 15;
     EncValue |= (Value & 0x700) << 4;
     EncValue |= (Value & 0xff);
-    return swapHalfWords(EncValue, IsLittleEndian);
+    return swapHalfWords(EncValue, Endian == support::little);
+  }
+  case ARM::fixup_bf_branch: {
+    const char *FixupDiagnostic = reasonForFixupRelaxation(Fixup, Value);
+    if (FixupDiagnostic) {
+      Ctx.reportError(Fixup.getLoc(), FixupDiagnostic);
+      return 0;
+    }
+    uint32_t out = (((Value - 4) >> 1) & 0xf) << 23;
+    return swapHalfWords(out, Endian == support::little);
+  }
+  case ARM::fixup_bf_target:
+  case ARM::fixup_bfl_target:
+  case ARM::fixup_bfc_target: {
+    const char *FixupDiagnostic = reasonForFixupRelaxation(Fixup, Value);
+    if (FixupDiagnostic) {
+      Ctx.reportError(Fixup.getLoc(), FixupDiagnostic);
+      return 0;
+    }
+    uint32_t out = 0;
+    uint32_t HighBitMask = (Kind == ARM::fixup_bf_target ? 0xf800 :
+                            Kind == ARM::fixup_bfl_target ? 0x3f800 : 0x800);
+    out |= (((Value - 4) >> 1) & 0x1) << 11;
+    out |= (((Value - 4) >> 1) & 0x7fe);
+    out |= (((Value - 4) >> 1) & HighBitMask) << 5;
+    return swapHalfWords(out, Endian == support::little);
+  }
+  case ARM::fixup_bfcsel_else_target: {
+    // If this is a fixup of a branch future's else target then it should be a
+    // constant MCExpr representing the distance between the branch targetted
+    // and the instruction after that same branch.
+    Value = Target.getConstant();
+
+    const char *FixupDiagnostic = reasonForFixupRelaxation(Fixup, Value);
+    if (FixupDiagnostic) {
+      Ctx.reportError(Fixup.getLoc(), FixupDiagnostic);
+      return 0;
+    }
+    uint32_t out = ((Value >> 2) & 1) << 17;
+    return swapHalfWords(out, Endian == support::little);
+  }
+  case ARM::fixup_wls:
+  case ARM::fixup_le: {
+    const char *FixupDiagnostic = reasonForFixupRelaxation(Fixup, Value);
+    if (FixupDiagnostic) {
+      Ctx.reportError(Fixup.getLoc(), FixupDiagnostic);
+      return 0;
+    }
+    uint64_t real_value = Value - 4;
+    uint32_t out = 0;
+    if (Kind == ARM::fixup_le)
+      real_value = -real_value;
+    out |= ((real_value >> 1) & 0x1) << 11;
+    out |= ((real_value >> 1) & 0x7fe);
+    return swapHalfWords(out, Endian == support::little);
   }
   }
 }
@@ -743,7 +871,9 @@ bool ARMAsmBackend::shouldForceRelocation(const MCAssembler &Asm,
   const MCSymbolRefExpr *A = Target.getSymA();
   const MCSymbol *Sym = A ? &A->getSymbol() : nullptr;
   const unsigned FixupKind = Fixup.getKind() ;
-  if ((unsigned)Fixup.getKind() == ARM::fixup_arm_thumb_bl) {
+  if (FixupKind == FK_NONE)
+    return true;
+  if (FixupKind == ARM::fixup_arm_thumb_bl) {
     assert(Sym && "How did we resolve this?");
 
     // If the symbol is external the linker will handle it.
@@ -757,7 +887,7 @@ bool ARMAsmBackend::shouldForceRelocation(const MCAssembler &Asm,
   // Create relocations for unconditional branches to function symbols with
   // different execution mode in ELF binaries.
   if (Sym && Sym->isELF()) {
-    unsigned Type = dyn_cast<MCSymbolELF>(Sym)->getType();
+    unsigned Type = cast<MCSymbolELF>(Sym)->getType();
     if ((Type == ELF::STT_FUNC || Type == ELF::STT_GNU_IFUNC)) {
       if (Asm.isThumbFunc(Sym) && (FixupKind == ARM::fixup_arm_uncondbranch))
         return true;
@@ -784,6 +914,9 @@ static unsigned getFixupKindNumBytes(unsigned Kind) {
   switch (Kind) {
   default:
     llvm_unreachable("Unknown fixup kind!");
+
+  case FK_NONE:
+    return 0;
 
   case FK_Data_1:
   case ARM::fixup_arm_thumb_bcc:
@@ -823,6 +956,13 @@ static unsigned getFixupKindNumBytes(unsigned Kind) {
   case ARM::fixup_t2_movt_hi16:
   case ARM::fixup_t2_movw_lo16:
   case ARM::fixup_t2_so_imm:
+  case ARM::fixup_bf_branch:
+  case ARM::fixup_bf_target:
+  case ARM::fixup_bfl_target:
+  case ARM::fixup_bfc_target:
+  case ARM::fixup_bfcsel_else_target:
+  case ARM::fixup_wls:
+  case ARM::fixup_le:
     return 4;
 
   case FK_SecRel_2:
@@ -838,6 +978,9 @@ static unsigned getFixupKindContainerSizeBytes(unsigned Kind) {
   switch (Kind) {
   default:
     llvm_unreachable("Unknown fixup kind!");
+
+  case FK_NONE:
+    return 0;
 
   case FK_Data_1:
     return 1;
@@ -857,6 +1000,7 @@ static unsigned getFixupKindContainerSizeBytes(unsigned Kind) {
   case ARM::fixup_arm_pcrel_10_unscaled:
   case ARM::fixup_arm_ldst_pcrel_12:
   case ARM::fixup_arm_pcrel_10:
+  case ARM::fixup_arm_pcrel_9:
   case ARM::fixup_arm_adr_pcrel_12:
   case ARM::fixup_arm_uncondbl:
   case ARM::fixup_arm_condbl:
@@ -876,6 +1020,13 @@ static unsigned getFixupKindContainerSizeBytes(unsigned Kind) {
   case ARM::fixup_t2_movw_lo16:
   case ARM::fixup_arm_mod_imm:
   case ARM::fixup_t2_so_imm:
+  case ARM::fixup_bf_branch:
+  case ARM::fixup_bf_target:
+  case ARM::fixup_bfl_target:
+  case ARM::fixup_bfc_target:
+  case ARM::fixup_bfcsel_else_target:
+  case ARM::fixup_wls:
+  case ARM::fixup_le:
     // Instruction size is 4 bytes.
     return 4;
   }
@@ -884,11 +1035,11 @@ static unsigned getFixupKindContainerSizeBytes(unsigned Kind) {
 void ARMAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
                                const MCValue &Target,
                                MutableArrayRef<char> Data, uint64_t Value,
-                               bool IsResolved) const {
+                               bool IsResolved,
+                               const MCSubtargetInfo* STI) const {
   unsigned NumBytes = getFixupKindNumBytes(Fixup.getKind());
   MCContext &Ctx = Asm.getContext();
-  Value = adjustFixupValue(Asm, Fixup, Target, Value, IsResolved, Ctx,
-                           IsLittleEndian);
+  Value = adjustFixupValue(Asm, Fixup, Target, Value, IsResolved, Ctx, STI);
   if (!Value)
     return; // Doesn't change encoding.
 
@@ -897,7 +1048,7 @@ void ARMAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
 
   // Used to point to big endian bytes.
   unsigned FullSizeBytes;
-  if (!IsLittleEndian) {
+  if (Endian == support::big) {
     FullSizeBytes = getFixupKindContainerSizeBytes(Fixup.getKind());
     assert((Offset + FullSizeBytes) <= Data.size() && "Invalid fixup size!");
     assert(NumBytes <= FullSizeBytes && "Invalid fixup size!");
@@ -907,14 +1058,14 @@ void ARMAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
   // the fixup value. The Value has been "split up" into the appropriate
   // bitfields above.
   for (unsigned i = 0; i != NumBytes; ++i) {
-    unsigned Idx = IsLittleEndian ? i : (FullSizeBytes - 1 - i);
+    unsigned Idx = Endian == support::little ? i : (FullSizeBytes - 1 - i);
     Data[Offset + Idx] |= uint8_t((Value >> (i * 8)) & 0xff);
   }
 }
 
 namespace CU {
 
-/// \brief Compact unwind encoding values.
+/// Compact unwind encoding values.
 enum CompactUnwindEncodings {
   UNWIND_ARM_MODE_MASK                         = 0x0F000000,
   UNWIND_ARM_MODE_FRAME                        = 0x01000000,
@@ -1127,80 +1278,67 @@ uint32_t ARMAsmBackendDarwin::generateCompactUnwindEncoding(
 }
 
 static MachO::CPUSubTypeARM getMachOSubTypeFromArch(StringRef Arch) {
-  unsigned AK = ARM::parseArch(Arch);
+  ARM::ArchKind AK = ARM::parseArch(Arch);
   switch (AK) {
   default:
     return MachO::CPU_SUBTYPE_ARM_V7;
-  case ARM::AK_ARMV4T:
+  case ARM::ArchKind::ARMV4T:
     return MachO::CPU_SUBTYPE_ARM_V4T;
-  case ARM::AK_ARMV5T:
-  case ARM::AK_ARMV5TE:
-  case ARM::AK_ARMV5TEJ:
+  case ARM::ArchKind::ARMV5T:
+  case ARM::ArchKind::ARMV5TE:
+  case ARM::ArchKind::ARMV5TEJ:
     return MachO::CPU_SUBTYPE_ARM_V5;
-  case ARM::AK_ARMV6:
-  case ARM::AK_ARMV6K:
+  case ARM::ArchKind::ARMV6:
+  case ARM::ArchKind::ARMV6K:
     return MachO::CPU_SUBTYPE_ARM_V6;
-  case ARM::AK_ARMV7A:
+  case ARM::ArchKind::ARMV7A:
     return MachO::CPU_SUBTYPE_ARM_V7;
-  case ARM::AK_ARMV7S:
+  case ARM::ArchKind::ARMV7S:
     return MachO::CPU_SUBTYPE_ARM_V7S;
-  case ARM::AK_ARMV7K:
+  case ARM::ArchKind::ARMV7K:
     return MachO::CPU_SUBTYPE_ARM_V7K;
-  case ARM::AK_ARMV6M:
+  case ARM::ArchKind::ARMV6M:
     return MachO::CPU_SUBTYPE_ARM_V6M;
-  case ARM::AK_ARMV7M:
+  case ARM::ArchKind::ARMV7M:
     return MachO::CPU_SUBTYPE_ARM_V7M;
-  case ARM::AK_ARMV7EM:
+  case ARM::ArchKind::ARMV7EM:
     return MachO::CPU_SUBTYPE_ARM_V7EM;
   }
 }
 
-MCAsmBackend *llvm::createARMAsmBackend(const Target &T,
-                                        const MCRegisterInfo &MRI,
-                                        const Triple &TheTriple, StringRef CPU,
-                                        const MCTargetOptions &Options,
-                                        bool isLittle) {
+static MCAsmBackend *createARMAsmBackend(const Target &T,
+                                         const MCSubtargetInfo &STI,
+                                         const MCRegisterInfo &MRI,
+                                         const MCTargetOptions &Options,
+                                         support::endianness Endian) {
+  const Triple &TheTriple = STI.getTargetTriple();
   switch (TheTriple.getObjectFormat()) {
   default:
     llvm_unreachable("unsupported object format");
   case Triple::MachO: {
     MachO::CPUSubTypeARM CS = getMachOSubTypeFromArch(TheTriple.getArchName());
-    return new ARMAsmBackendDarwin(T, TheTriple, MRI, CS);
+    return new ARMAsmBackendDarwin(T, STI, MRI, CS);
   }
   case Triple::COFF:
     assert(TheTriple.isOSWindows() && "non-Windows ARM COFF is not supported");
-    return new ARMAsmBackendWinCOFF(T, TheTriple);
+    return new ARMAsmBackendWinCOFF(T, STI);
   case Triple::ELF:
     assert(TheTriple.isOSBinFormatELF() && "using ELF for non-ELF target");
     uint8_t OSABI = MCELFObjectTargetWriter::getOSABI(TheTriple.getOS());
-    return new ARMAsmBackendELF(T, TheTriple, OSABI, isLittle);
+    return new ARMAsmBackendELF(T, STI, OSABI, Endian);
   }
 }
 
 MCAsmBackend *llvm::createARMLEAsmBackend(const Target &T,
+                                          const MCSubtargetInfo &STI,
                                           const MCRegisterInfo &MRI,
-                                          const Triple &TT, StringRef CPU,
                                           const MCTargetOptions &Options) {
-  return createARMAsmBackend(T, MRI, TT, CPU, Options, true);
+  return createARMAsmBackend(T, STI, MRI, Options, support::little);
 }
 
 MCAsmBackend *llvm::createARMBEAsmBackend(const Target &T,
+                                          const MCSubtargetInfo &STI,
                                           const MCRegisterInfo &MRI,
-                                          const Triple &TT, StringRef CPU,
                                           const MCTargetOptions &Options) {
-  return createARMAsmBackend(T, MRI, TT, CPU, Options, false);
-}
-
-MCAsmBackend *llvm::createThumbLEAsmBackend(const Target &T,
-                                            const MCRegisterInfo &MRI,
-                                            const Triple &TT, StringRef CPU,
-                                            const MCTargetOptions &Options) {
-  return createARMAsmBackend(T, MRI, TT, CPU, Options, true);
-}
-
-MCAsmBackend *llvm::createThumbBEAsmBackend(const Target &T,
-                                            const MCRegisterInfo &MRI,
-                                            const Triple &TT, StringRef CPU,
-                                            const MCTargetOptions &Options) {
-  return createARMAsmBackend(T, MRI, TT, CPU, Options, false);
+  return createARMAsmBackend(T, STI, MRI, Options, support::big);
 }

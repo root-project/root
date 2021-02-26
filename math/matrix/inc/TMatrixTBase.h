@@ -224,6 +224,8 @@ template<class Element> Element TMatrixTBase<Element>::SetTol(Element newTol)
    return oldTol;
 }
 
+inline namespace TMatrixTAutoloadOps {
+
 template<class Element> Bool_t  operator==   (const TMatrixTBase<Element>  &m1,const TMatrixTBase<Element>  &m2);
 template<class Element> Element E2Norm       (const TMatrixTBase<Element>  &m1,const TMatrixTBase<Element>  &m2);
 template<class Element1,class Element2>
@@ -246,4 +248,5 @@ template<class Element> Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> 
 template<class Element> Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
                                                                            { return VerifyMatrixIdentity(m1,m2,1,Element(0.)); }
 
+} // inline namespace TMatrixTAutoloadOps
 #endif

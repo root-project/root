@@ -33,8 +33,8 @@ class TVirtualStreamerInfo;
 class TStreamerElement : public TNamed {
 
 private:
-   TStreamerElement(const TStreamerElement &);          // Not implemented
-   TStreamerElement&operator=(const TStreamerElement&); // Not implemented
+   TStreamerElement(const TStreamerElement &) = delete;
+   TStreamerElement&operator=(const TStreamerElement&) = delete;
 
 protected:
    Int_t            fType;            //element type
@@ -151,8 +151,8 @@ public:
 class TStreamerBase : public TStreamerElement {
 
 private:
-   TStreamerBase(const TStreamerBase &);          // Not implemented
-   TStreamerBase&operator=(const TStreamerBase&); // Not implemented
+   TStreamerBase(const TStreamerBase &) = delete;
+   TStreamerBase&operator=(const TStreamerBase&) = delete;
 
 protected:
    Int_t             fBaseVersion;    //version number of the base class (used during memberwise streaming)
@@ -199,8 +199,8 @@ public:
 class TStreamerBasicPointer : public TStreamerElement {
 
 private:
-   TStreamerBasicPointer(const TStreamerBasicPointer &);          // Not implemented
-   TStreamerBasicPointer&operator=(const TStreamerBasicPointer&); // Not implemented
+   TStreamerBasicPointer(const TStreamerBasicPointer &) = delete;
+   TStreamerBasicPointer&operator=(const TStreamerBasicPointer&) = delete;
 
 protected:
    Int_t               fCountVersion;   //version number of the class with the counter
@@ -214,7 +214,7 @@ public:
    TStreamerBasicPointer(const char *name, const char *title, Int_t offset, Int_t dtype,
                          const char *countName, const char *countClass, Int_t version, const char *typeName);
    virtual       ~TStreamerBasicPointer();
-   TClass        *GetClassPointer() const { return 0; }
+   TClass        *GetClassPointer() const { return nullptr; }
    const char    *GetCountClass()   const {return fCountClass.Data();}
    const char    *GetCountName()    const {return fCountName.Data();}
    Int_t          GetCountVersion() const {return fCountVersion;}
@@ -236,8 +236,8 @@ public:
 class TStreamerLoop : public TStreamerElement {
 
 private:
-   TStreamerLoop(const TStreamerLoop&);          // Not implemented
-   TStreamerLoop&operator=(const TStreamerLoop&); // Not implemented
+   TStreamerLoop(const TStreamerLoop&) = delete;
+   TStreamerLoop&operator=(const TStreamerLoop&) = delete;
 
 protected:
    Int_t               fCountVersion;   //version number of the class with the counter
@@ -256,7 +256,7 @@ public:
    const char    *GetInclude() const;
    ULong_t        GetMethod() const;
    Int_t          GetSize() const;
-   virtual void   Init(TVirtualStreamerInfo *obj=0);
+   virtual void   Init(TVirtualStreamerInfo *obj = nullptr);
    virtual Bool_t IsaPointer() const                {return kTRUE;         }
    virtual Bool_t HasCounter() const                {return fCounter!=0;   }
    void           SetCountClass(const char *clname) {fCountClass = clname; }
@@ -270,8 +270,8 @@ public:
 class TStreamerBasicType : public TStreamerElement {
 
 private:
-   TStreamerBasicType(const TStreamerBasicType&);          // Not implemented
-   TStreamerBasicType&operator=(const TStreamerBasicType&); // Not implemented
+   TStreamerBasicType(const TStreamerBasicType&) = delete;
+   TStreamerBasicType&operator=(const TStreamerBasicType&) = delete;
 
 protected:
    Int_t             fCounter;     //!value of data member when referenced by an array
@@ -281,7 +281,7 @@ public:
    TStreamerBasicType();
    TStreamerBasicType(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName);
    virtual       ~TStreamerBasicType();
-   TClass        *GetClassPointer() const { return 0; }
+   TClass        *GetClassPointer() const { return nullptr; }
    Int_t          GetCounter() const {return fCounter;}
    ULong_t        GetMethod() const;
    Int_t          GetSize() const;
@@ -294,8 +294,8 @@ public:
 class TStreamerObject : public TStreamerElement {
 
 private:
-   TStreamerObject(const TStreamerObject&);          // Not implemented
-   TStreamerObject&operator=(const TStreamerObject&); // Not implemented
+   TStreamerObject(const TStreamerObject&) = delete;
+   TStreamerObject&operator=(const TStreamerObject&) = delete;
 
 public:
 
@@ -304,7 +304,7 @@ public:
    virtual       ~TStreamerObject();
    const char    *GetInclude() const;
    Int_t          GetSize() const;
-   virtual void   Init(TVirtualStreamerInfo *obj=0);
+   virtual void   Init(TVirtualStreamerInfo *obj = nullptr);
 
    ClassDef(TStreamerObject,2)  //Streamer element of type object
 };
@@ -313,8 +313,8 @@ public:
 class TStreamerObjectAny : public TStreamerElement {
 
 private:
-   TStreamerObjectAny(const TStreamerObjectAny&);          // Not implemented
-   TStreamerObjectAny&operator=(const TStreamerObjectAny&); // Not implemented
+   TStreamerObjectAny(const TStreamerObjectAny&) = delete;
+   TStreamerObjectAny&operator=(const TStreamerObjectAny&) = delete;
 
 public:
 
@@ -332,8 +332,8 @@ public:
 class TStreamerObjectPointer : public TStreamerElement {
 
 private:
-   TStreamerObjectPointer(const TStreamerObjectPointer&);          // Not implemented
-   TStreamerObjectPointer&operator=(const TStreamerObjectPointer&); // Not implemented
+   TStreamerObjectPointer(const TStreamerObjectPointer&) = delete;
+   TStreamerObjectPointer&operator=(const TStreamerObjectPointer&) = delete;
 
 public:
 
@@ -342,7 +342,7 @@ public:
    virtual       ~TStreamerObjectPointer();
    const char    *GetInclude() const;
    Int_t          GetSize() const;
-   virtual void   Init(TVirtualStreamerInfo *obj=0);
+   virtual void   Init(TVirtualStreamerInfo *obj = nullptr);
    virtual Bool_t IsaPointer() const {return kTRUE;}
    virtual void   SetArrayDim(Int_t dim);
 
@@ -353,8 +353,8 @@ public:
 class TStreamerObjectAnyPointer : public TStreamerElement {
 
 private:
-   TStreamerObjectAnyPointer(const TStreamerObjectAnyPointer&);          // Not implemented
-   TStreamerObjectAnyPointer&operator=(const TStreamerObjectAnyPointer&); // Not implemented
+   TStreamerObjectAnyPointer(const TStreamerObjectAnyPointer&) = delete;
+   TStreamerObjectAnyPointer&operator=(const TStreamerObjectAnyPointer&) = delete;
 
 public:
 
@@ -363,7 +363,7 @@ public:
    virtual       ~TStreamerObjectAnyPointer();
    const char    *GetInclude() const;
    Int_t          GetSize() const;
-   virtual void   Init(TVirtualStreamerInfo *obj=0);
+   virtual void   Init(TVirtualStreamerInfo *obj = nullptr);
    virtual Bool_t IsaPointer() const {return kTRUE;}
    virtual void   SetArrayDim(Int_t dim);
 
@@ -374,8 +374,8 @@ public:
 class TStreamerString : public TStreamerElement {
 
 private:
-   TStreamerString(const TStreamerString&);          // Not implemented
-   TStreamerString&operator=(const TStreamerString&); // Not implemented
+   TStreamerString(const TStreamerString&) = delete;
+   TStreamerString&operator=(const TStreamerString&) = delete;
 
 public:
 
@@ -392,8 +392,8 @@ public:
 class TStreamerSTL : public TStreamerElement {
 
 private:
-   TStreamerSTL(const TStreamerSTL&);          // Not implemented
-   TStreamerSTL&operator=(const TStreamerSTL&); // Not implemented
+   TStreamerSTL(const TStreamerSTL&) = delete;
+   TStreamerSTL&operator=(const TStreamerSTL&) = delete;
 
 protected:
    Int_t       fSTLtype;       //type of STL vector
@@ -426,8 +426,8 @@ public:
 class TStreamerSTLstring : public TStreamerSTL {
 
 private:
-   TStreamerSTLstring(const TStreamerSTLstring&);          // Not implemented
-   TStreamerSTLstring&operator=(const TStreamerSTLstring&); // Not implemented
+   TStreamerSTLstring(const TStreamerSTLstring&) = delete;
+   TStreamerSTLstring&operator=(const TStreamerSTLstring&) = delete;
 
 public:
 
@@ -449,8 +449,8 @@ class TBuffer;
 //________________________________________________________________________
 class TStreamerArtificial : public TStreamerElement {
 private:
-   TStreamerArtificial(const TStreamerArtificial&);          // Not implemented
-   TStreamerArtificial&operator=(const TStreamerArtificial&); // Not implemented
+   TStreamerArtificial(const TStreamerArtificial&) = delete;
+   TStreamerArtificial&operator=(const TStreamerArtificial&) = delete;
 
 protected:
    ROOT::TSchemaRule::ReadFuncPtr_t     fReadFunc;    //!

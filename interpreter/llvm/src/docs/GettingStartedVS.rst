@@ -39,13 +39,13 @@ and software you will need.
 
 Hardware
 --------
-Any system that can adequately run Visual Studio 2015 is fine. The LLVM
+Any system that can adequately run Visual Studio 2017 is fine. The LLVM
 source tree and object files, libraries and executables will consume
 approximately 3GB.
 
 Software
 --------
-You will need Visual Studio 2015 or higher, with the latest Update installed.
+You will need Visual Studio 2017 or higher, with the latest Update installed.
 
 You will also need the `CMake <http://www.cmake.org/>`_ build system since it
 generates the project files you will use to build with.
@@ -75,6 +75,11 @@ Here's the short story for getting up and running quickly with LLVM:
       3. ``cd llvm``
 
    * With anonymous Subversion access:
+
+     *Note:* some regression tests require Unix-style line ending (``\n``). To
+     pass all regression tests, please add two lines *enable-auto-props = yes*
+     and *\* = svn:mime-type=application/octet-stream* to
+     ``C:\Users\<username>\AppData\Roaming\Subversion\config``.
 
       1. ``cd <where-you-want-llvm-to-live>``
       2. ``svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm``

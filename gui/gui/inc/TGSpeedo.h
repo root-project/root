@@ -61,6 +61,9 @@ protected:
    Bool_t           fThresholdActive;     // kTRUE if glowing threhsholds are active
    Bool_t           fPeakMark;            // kTRUE if peak mark is active
    Bool_t           fMeanMark;            // kTRUE if mean mark is active
+   Int_t            fBufferSize;          // circular buffer size
+   Int_t            fBufferCount;         // circular buffer count
+   std::vector<Float_t> fBuffer;          // circular buffer for mean calculation
 
    virtual void     DoRedraw();
            void     DrawNeedle();
@@ -79,10 +82,12 @@ public:
 
    const TGPicture     *GetPicture() const { return fBase; }
    TImage              *GetImage() const { return fImage; }
+   Int_t                GetOdoVal() const { return fCounter; }
    Float_t              GetPeakVal() const { return fPeakVal; }
    Float_t              GetScaleMin() const { return fScaleMin; }
    Float_t              GetScaleMax() const { return fScaleMax; }
    Bool_t               IsThresholdActive() { return fThresholdActive; }
+   Float_t              GetMean();
 
    void Build();
    void Glow(EGlowColor col = kGreen);
@@ -105,6 +110,7 @@ public:
    void DisableMeanMark() { fMeanMark = kFALSE; }
    void ResetPeakVal() { fPeakVal = fValue; fClient->NeedRedraw(this); }
    void SetMeanValue(Float_t mean) { fMeanVal = mean; fClient->NeedRedraw(this); }
+   void SetBufferSize(Int_t size);
 
    void OdoClicked() { Emit("OdoClicked()"); }   // *SIGNAL*
    void LedClicked() { Emit("LedClicked()"); }   // *SIGNAL*

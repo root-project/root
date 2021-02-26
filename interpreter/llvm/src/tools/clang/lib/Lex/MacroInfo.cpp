@@ -1,9 +1,8 @@
-//===--- MacroInfo.cpp - Information about #defined identifiers -----------===//
+//===- MacroInfo.cpp - Information about #defined identifiers -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,25 +11,29 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Lex/MacroInfo.h"
+#include "clang/Basic/IdentifierTable.h"
+#include "clang/Basic/LLVM.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
+#include "clang/Basic/TokenKinds.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/Token.h"
+#include "llvm/ADT/Optional.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/Compiler.h"
+#include "llvm/Support/raw_ostream.h"
+#include <cassert>
+#include <utility>
+
 using namespace clang;
 
 MacroInfo::MacroInfo(SourceLocation DefLoc)
-  : Location(DefLoc),
-    ParameterList(nullptr),
-    NumParameters(0),
-    IsDefinitionLengthCached(false),
-    IsFunctionLike(false),
-    IsC99Varargs(false),
-    IsGNUVarargs(false),
-    IsBuiltinMacro(false),
-    HasCommaPasting(false),
-    IsDisabled(false),
-    IsUsed(false),
-    IsAllowRedefinitionsWithoutWarning(false),
-    IsWarnIfUnused(false),
-    UsedForHeaderGuard(false) {
-}
+    : Location(DefLoc), IsDefinitionLengthCached(false), IsFunctionLike(false),
+      IsC99Varargs(false), IsGNUVarargs(false), IsBuiltinMacro(false),
+      HasCommaPasting(false), IsDisabled(false), IsUsed(false),
+      IsAllowRedefinitionsWithoutWarning(false), IsWarnIfUnused(false),
+      UsedForHeaderGuard(false) {}
 
 unsigned MacroInfo::getDefinitionLengthSlow(const SourceManager &SM) const {
   assert(!IsDefinitionLengthCached);
@@ -61,7 +64,7 @@ unsigned MacroInfo::getDefinitionLengthSlow(const SourceManager &SM) const {
   return DefinitionLength;
 }
 
-/// \brief Return true if the specified macro definition is equal to
+/// Return true if the specified macro definition is equal to
 /// this macro in spelling, arguments, and whitespace.
 ///
 /// \param Syntactically if true, the macro definitions can be identical even
@@ -196,7 +199,8 @@ MacroDirective::DefInfo MacroDirective::getDefinition() {
 }
 
 const MacroDirective::DefInfo
-MacroDirective::findDirectiveAtLoc(SourceLocation L, SourceManager &SM) const {
+MacroDirective::findDirectiveAtLoc(SourceLocation L,
+                                   const SourceManager &SM) const {
   assert(L.isValid() && "SourceLocation is invalid.");
   for (DefInfo Def = getDefinition(); Def; Def = Def.getPreviousDefinition()) {
     if (Def.getLocation().isInvalid() ||  // For macros defined on the command line.

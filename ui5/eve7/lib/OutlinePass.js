@@ -139,42 +139,50 @@ THREE.OutlinePass = function ( resolution, scene, camera ) {
 
 };
 
-THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype ), {
+THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype), {
 
 	constructor: THREE.OutlinePass,
 
-	parseAtts: function(object, groups){
-		let found = false;
-		// loop over groups
-		for (let z = 0; z < groups.length; ++z){
-			// loop over all the elements of a group
-			//for (let w = 0; w < groups[z].length; ++w)
+	parseAtts: function (object, groups) {
+		try {
+			let found = false;
+			// loop over groups
+			for (let z = 0; z < groups.length; ++z) {
+				// loop over all the elements of a group
+				//for (let w = 0; w < groups[z].length; ++w)
 
-			const w = 0; // check only the first element of the group!
-			{
-				let pass = (object.type === "Points") ? (groups[z][w].material.size === object.material.size) : true;
-				
-				if( pass ){
-					// final check
-					if( groups[z][w]["vertShader"] === object["vertShader"]	&&
-						groups[z][w]["fragShader"] === object["fragShader"] &&
-						groups[z][w].visibleEdgeColor === object.visibleEdgeColor &&
-						groups[z][w].hiddenEdgeColor === object.hiddenEdgeColor
-					) { 
-						groups[z].push(object);
-						found = true;
-						break; 
+				const w = 0; // check only the first element of the group!
+				{
+					let pass = (object.type === "Points") ? (groups[z][w].material.size === object.material.size) : true;
+
+					if (pass) {
+						// final check
+						if (groups[z][w]["vertShader"] === object["vertShader"] &&
+							groups[z][w]["fragShader"] === object["fragShader"] &&
+							groups[z][w].visibleEdgeColor === object.visibleEdgeColor &&
+							groups[z][w].hiddenEdgeColor === object.hiddenEdgeColor
+						) {
+							groups[z].push(object);
+							found = true;
+							break;
+						}
 					}
 				}
-			}
-			if(found)
-				break;
-		}
 
-		if(!found){
-			groups.push([object]);
+				if (found)
+					break;
+			}
+
+			if (!found) {
+				groups.push([object]);
+			}
 		}
-	},
+		catch (e) {
+			console.error("TREE.OutlinePass.parseAtts ", e);
+		}
+		finally {
+		}
+		},
 
 	checkForCustomAtts: function(){
 		/*

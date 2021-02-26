@@ -1,9 +1,8 @@
 //===--- raw_ostream.h - Raw output stream ----------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -33,7 +32,9 @@ class FormattedBytes;
 
 namespace sys {
 namespace fs {
+enum FileAccess : unsigned;
 enum OpenFlags : unsigned;
+enum CreationDisposition : unsigned;
 } // end namespace fs
 } // end namespace sys
 
@@ -213,8 +214,12 @@ public:
   /// Output \p N in hexadecimal, without any prefix or padding.
   raw_ostream &write_hex(unsigned long long N);
 
+  /// Output a formatted UUID with dash separators.
+  using uuid_t = uint8_t[16];
+  raw_ostream &write_uuid(const uuid_t UUID);
+
   /// Output \p Str, turning '\\', '\t', '\n', '"', and anything that doesn't
-  /// satisfy std::isprint into an escape sequence.
+  /// satisfy llvm::isPrint into an escape sequence.
   raw_ostream &write_escaped(StringRef Str, bool UseHexEscapes = false);
 
   raw_ostream &write(unsigned char C);
@@ -237,6 +242,9 @@ public:
 
   /// indent - Insert 'NumSpaces' spaces.
   raw_ostream &indent(unsigned NumSpaces);
+
+  /// write_zeros - Insert 'NumZeros' nulls.
+  raw_ostream &write_zeros(unsigned NumZeros);
 
   /// Changes the foreground color of text that will be output from this point
   /// forward.
@@ -289,9 +297,6 @@ private:
   /// \invariant { Size > 0 }
   virtual void write_impl(const char *Ptr, size_t Size) = 0;
 
-  // An out of line virtual method to provide a home for the class vtable.
-  virtual void handle();
-
   /// Return the current position within the stream, not counting the bytes
   /// currently in the buffer.
   virtual uint64_t current_pos() const = 0;
@@ -325,6 +330,8 @@ private:
   /// Copy data into the buffer. Size must not be greater than the number of
   /// unused bytes in the buffer.
   void copy_to_buffer(const char *Ptr, size_t Size);
+
+  virtual void anchor();
 };
 
 /// An abstract base class for streams implementations that also support a
@@ -332,12 +339,13 @@ private:
 /// but needs to patch in a header that needs to know the output size.
 class raw_pwrite_stream : public raw_ostream {
   virtual void pwrite_impl(const char *Ptr, size_t Size, uint64_t Offset) = 0;
+  void anchor() override;
 
 public:
   explicit raw_pwrite_stream(bool Unbuffered = false)
       : raw_ostream(Unbuffered) {}
   void pwrite(const char *Ptr, size_t Size, uint64_t Offset) {
-#ifndef NDBEBUG
+#ifndef NDEBUG
     uint64_t Pos = tell();
     // /dev/null always reports a pos of 0, so we cannot perform this check
     // in that case.
@@ -358,13 +366,17 @@ class raw_fd_ostream : public raw_pwrite_stream {
   int FD;
   bool ShouldClose;
 
-  /// Error This flag is true if an error of any kind has been detected.
-  ///
-  bool Error;
+  bool SupportsSeeking;
+
+#ifdef _WIN32
+  /// True if this fd refers to a Windows console device. Mintty and other
+  /// terminal emulators are TTYs, but they are not consoles.
+  bool IsWindowsConsole = false;
+#endif
+
+  std::error_code EC;
 
   uint64_t pos;
-
-  bool SupportsSeeking;
 
   /// See raw_ostream::write_impl.
   void write_impl(const char *Ptr, size_t Size) override;
@@ -379,7 +391,9 @@ class raw_fd_ostream : public raw_pwrite_stream {
   size_t preferred_buffer_size() const override;
 
   /// Set the flag indicating that an output error has been encountered.
-  void error_detected() { Error = true; }
+  void error_detected(std::error_code EC) { this->EC = EC; }
+
+  void anchor() override;
 
 public:
   /// Open the specified file for writing. If an error occurs, information
@@ -388,15 +402,22 @@ public:
   /// \p Flags allows optional flags to control how the file will be opened.
   ///
   /// As a special case, if Filename is "-", then the stream will use
-  /// STDOUT_FILENO instead of opening a file. Note that it will still consider
-  /// itself to own the file descriptor. In particular, it will close the
-  /// file descriptor when it is done (this is necessary to detect
-  /// output errors).
+  /// STDOUT_FILENO instead of opening a file. This will not close the stdout
+  /// descriptor.
+  raw_fd_ostream(StringRef Filename, std::error_code &EC);
   raw_fd_ostream(StringRef Filename, std::error_code &EC,
+                 sys::fs::CreationDisposition Disp);
+  raw_fd_ostream(StringRef Filename, std::error_code &EC,
+                 sys::fs::FileAccess Access);
+  raw_fd_ostream(StringRef Filename, std::error_code &EC,
+                 sys::fs::OpenFlags Flags);
+  raw_fd_ostream(StringRef Filename, std::error_code &EC,
+                 sys::fs::CreationDisposition Disp, sys::fs::FileAccess Access,
                  sys::fs::OpenFlags Flags);
 
   /// FD is the file descriptor that this writes to.  If ShouldClose is true,
-  /// this closes the file when the stream is destroyed.
+  /// this closes the file when the stream is destroyed. If FD is for stdout or
+  /// stderr, it will not be closed.
   raw_fd_ostream(int fd, bool shouldClose, bool unbuffered=false);
 
   ~raw_fd_ostream() override;
@@ -421,13 +442,13 @@ public:
 
   bool has_colors() const override;
 
+  std::error_code error() const { return EC; }
+
   /// Return the value of the flag in this raw_fd_ostream indicating whether an
   /// output error has been encountered.
   /// This doesn't implicitly flush any pending output.  Also, it doesn't
   /// guarantee to detect all errors unless the stream has been closed.
-  bool has_error() const {
-    return Error;
-  }
+  bool has_error() const { return bool(EC); }
 
   /// Set the flag read by has_error() to false. If the error flag is set at the
   /// time when this raw_ostream's destructor is called, report_fatal_error is
@@ -438,9 +459,7 @@ public:
   ///    Unless explicitly silenced."
   ///      - from The Zen of Python, by Tim Peters
   ///
-  void clear_error() {
-    Error = false;
-  }
+  void clear_error() { EC = std::error_code(); }
 };
 
 /// This returns a reference to a raw_ostream for standard output. Use it like:
@@ -533,6 +552,8 @@ public:
 class buffer_ostream : public raw_svector_ostream {
   raw_ostream &OS;
   SmallVector<char, 0> Buffer;
+
+  virtual void anchor() override;
 
 public:
   buffer_ostream(raw_ostream &OS) : raw_svector_ostream(Buffer), OS(OS) {}

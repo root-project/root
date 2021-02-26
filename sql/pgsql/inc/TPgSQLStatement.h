@@ -41,7 +41,7 @@ private:
    Bool_t      IsSetParsMode() const { return fWorkingMode==1; }
    Bool_t      IsResultSetMode() const { return fWorkingMode==2; }
 
-   Bool_t      SetSQLParamType(Int_t npar, int sqltype, bool sig, int sqlsize = 0);
+   Bool_t      SetSQLParamType(Int_t npar, Bool_t isbinary = kFALSE, Int_t param_len = 0, Int_t maxsize = 0);
 
    long double ConvertToNumeric(Int_t npar);
    const char *ConvertToString(Int_t npar);

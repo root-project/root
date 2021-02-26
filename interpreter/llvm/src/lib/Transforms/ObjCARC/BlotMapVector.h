@@ -1,36 +1,34 @@
-//===- BlotMapVector.h - A MapVector with the blot operation -*- C++ -*----===//
+//===- BlotMapVector.h - A MapVector with the blot operation ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
+#ifndef LLVM_LIB_TRANSFORMS_OBJCARC_BLOTMAPVECTOR_H
+#define LLVM_LIB_TRANSFORMS_OBJCARC_BLOTMAPVECTOR_H
+
 #include "llvm/ADT/DenseMap.h"
-#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <utility>
 #include <vector>
 
 namespace llvm {
-/// \brief An associative container with fast insertion-order (deterministic)
+
+/// An associative container with fast insertion-order (deterministic)
 /// iteration over its elements. Plus the special blot operation.
 template <class KeyT, class ValueT> class BlotMapVector {
   /// Map keys to indices in Vector.
-  typedef DenseMap<KeyT, size_t> MapTy;
+  using MapTy = DenseMap<KeyT, size_t>;
   MapTy Map;
 
-  typedef std::vector<std::pair<KeyT, ValueT>> VectorTy;
   /// Keys and values.
+  using VectorTy = std::vector<std::pair<KeyT, ValueT>>;
   VectorTy Vector;
 
 public:
-  typedef typename VectorTy::iterator iterator;
-  typedef typename VectorTy::const_iterator const_iterator;
-  iterator begin() { return Vector.begin(); }
-  iterator end() { return Vector.end(); }
-  const_iterator begin() const { return Vector.begin(); }
-  const_iterator end() const { return Vector.end(); }
-
 #ifdef EXPENSIVE_CHECKS
   ~BlotMapVector() {
     assert(Vector.size() >= Map.size()); // May differ due to blotting.
@@ -45,6 +43,14 @@ public:
                            Map[I->first] == size_t(I - Vector.begin())));
   }
 #endif
+
+  using iterator = typename VectorTy::iterator;
+  using const_iterator = typename VectorTy::const_iterator;
+
+  iterator begin() { return Vector.begin(); }
+  iterator end() { return Vector.end(); }
+  const_iterator begin() const { return Vector.begin(); }
+  const_iterator end() const { return Vector.end(); }
 
   ValueT &operator[](const KeyT &Arg) {
     std::pair<typename MapTy::iterator, bool> Pair =
@@ -105,4 +111,7 @@ public:
     return Map.empty();
   }
 };
-} //
+
+} // end namespace llvm
+
+#endif // LLVM_LIB_TRANSFORMS_OBJCARC_BLOTMAPVECTOR_H

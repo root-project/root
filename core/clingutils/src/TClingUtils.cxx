@@ -1572,7 +1572,7 @@ long ROOT::TMetaUtils::GetLineNumber(const clang::Decl *decl)
    }
 
    if (!sourceLocation.isFileID()) {
-      sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+      sourceLocation = sourceManager.getExpansionRange(sourceLocation).getEnd();
    }
 
    if (sourceLocation.isValid() && sourceLocation.isFileID()) {
@@ -3328,7 +3328,7 @@ getFinalSpellingLoc(clang::SourceManager& sourceManager,
                     clang::SourceLocation sourceLoc) {
    // Follow macro expansion until we hit a source file.
    if (!sourceLoc.isFileID()) {
-      return sourceManager.getExpansionRange(sourceLoc).second;
+      return sourceManager.getExpansionRange(sourceLoc).getEnd();
    }
    return sourceLoc;
 }
@@ -3394,7 +3394,8 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                 true /*isAngled*/, 0/*FromDir*/, foundDir,
                                 ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                 0/*Searchpath*/, 0/*RelPath*/,
-                                0/*IsMapped*/, 0/*RequestingModule*/, 0/*SuggestedModule*/,
+                                0/*SuggestedModule*/, 0/*RequestingModule*/,
+                                0/*IsMapped*/, nullptr /*IsFrameworkFound*/,
                                 false /*SkipCache*/,
                                 false /*BuildSystemModule*/,
                                 false /*OpenFile*/, true /*CacheFailures*/);
@@ -3448,8 +3449,9 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       FELong = HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                     true /*isAngled*/, 0/*FromDir*/, FoundDir,
                                     ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
-                                    0/*IsMapped*/, 0/*Searchpath*/, 0/*RelPath*/,
-                                    0/*RequestingModule*/, 0/*SuggestedModule*/);
+                                    0/*Searchpath*/, 0/*RelPath*/,
+                                    0/*SuggestedModule*/, 0/*RequestingModule*/,
+                                    0/*IsMapped*/, nullptr /*IsFrameworkFound*/);
    }
 
    if (!FELong) {
@@ -3473,10 +3475,9 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       if (HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                true /*isAngled*/, 0/*FromDir*/, FoundDir,
                                ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
-                               0/*IsMapped*/,
-                               0/*Searchpath*/,
-                               0/*RelPath*/,
-                               0/*RequestingModule*/, 0 /*SuggestedModule*/) == FELong) {
+                               0/*Searchpath*/, 0/*RelPath*/,
+                               0/*SuggestedModule*/, 0/*RequestingModule*/,
+                               0/*IsMapped*/, nullptr /*IsFrameworkFound*/) == FELong) {
          return trailingPart;
       }
    }
@@ -4184,10 +4185,10 @@ int dumpDeclForAssert(const clang::Decl& D, const char* commentStart) {
 llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::SourceLocation *loc)
 {
    clang::SourceManager& sourceManager = decl.getASTContext().getSourceManager();
-   clang::SourceLocation sourceLocation = decl.getLocEnd();
+   clang::SourceLocation sourceLocation = decl.getEndLoc();
 
    // If the location is a macro get the expansion location.
-   sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+   sourceLocation = sourceManager.getExpansionRange(sourceLocation).getEnd();
    // FIXME: We should optimize this routine instead making it do the wrong thing
    // returning an empty comment if the decl came from the AST.
    // In order to do that we need to: check if the decl has an attribute and
@@ -4218,7 +4219,7 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
       } else if (FD->doesThisDeclarationHaveABody()) {
          // commentStart is at body's '}'
          // But we might end up e.g. at the ')' of a CPP macro
-         assert((decl.getLocEnd() != sourceLocation || *commentStart == '}'
+         assert((decl.getEndLoc() != sourceLocation || *commentStart == '}'
                  || dumpDeclForAssert(*FD, commentStart))
                 && "Expected macro or end of body at '}'");
          if (*commentStart) ++commentStart;
@@ -5326,6 +5327,48 @@ static int TreatSingleTemplateArg(const clang::TemplateArgument& arg,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Convert a tmplt decl to its fwd decl
+
+int ROOT::TMetaUtils::AST2SourceTools::FwdDeclIfTmplSpec(const clang::RecordDecl& recordDecl,
+                                                         const cling::Interpreter& interpreter,
+                                                         std::string& defString,
+                                                         const std::string &normalizedName)
+{
+   // If this is an explicit specialization, inject it into cling, too, such that it can have
+   // externalLexicalStorage, see TCling.cxx's ExtVisibleStorageAdder::VisitClassTemplateSpecializationDecl.
+   if (auto tmplSpecDeclPtr = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&recordDecl)) {
+      if (const auto *specDef = tmplSpecDeclPtr->getDefinition()) {
+         if (specDef->getTemplateSpecializationKind() != clang::TSK_ExplicitSpecialization)
+            return 0;
+         // normalizedName contains scope, no need to enclose in namespace!
+         if (GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo)
+            std::cout << " Forward declaring template spec " << normalizedName << ":\n";
+         for (auto arg : tmplSpecDeclPtr->getTemplateArgs().asArray()) {
+            std::string argFwdDecl;
+            int retCode = TreatSingleTemplateArg(arg, argFwdDecl, interpreter, /*acceptStl=*/false);
+            if (GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
+               std::cout << " o Template argument ";
+               if (retCode == 0) {
+                  std::cout << "successfully treated. Arg fwd decl: " << argFwdDecl << std::endl;
+               } else {
+                  std::cout << "could not be treated. Abort fwd declaration generation.\n";
+               }
+            }
+
+            if (retCode != 0) { // A sign we must bail out
+               return retCode;
+            }
+            defString += argFwdDecl + '\n';
+         }
+         defString += "template <> class " + normalizedName + ';';
+         return 0;
+      }
+   }
+
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Convert a rcd decl to its fwd decl
 /// If this is a template specialisation, treat in the proper way.
 /// If it is contained in a class, just fwd declare the class.
@@ -5503,8 +5546,9 @@ int ROOT::TMetaUtils::AST2SourceTools::GetDefArg(const clang::ParmVarDecl& par,
 
    // The value is an integer
    if (defArgType->isIntegerType()){
-      llvm::APSInt result;
-      defArgExprPtr->EvaluateAsInt(result,ctxt);
+      clang::Expr::EvalResult evalResult;
+      defArgExprPtr->EvaluateAsInt(evalResult, ctxt);
+      llvm::APSInt result = evalResult.Val.getInt();
       auto uintVal = *result.getRawData();
       if (result.isNegative()){
          long long int intVal=uintVal*-1;

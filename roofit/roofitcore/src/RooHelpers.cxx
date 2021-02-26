@@ -144,4 +144,30 @@ void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_lis
   }
 }
 
+
+/// Get the lower and upper bound of parameter range if arg can be casted to RooAbsRealLValue.
+/// If no range with rangeName is defined for the argument, this will check if a binning of the
+/// same name exists and return the interval covered by the binning.
+/// Returns `{-infinity, infinity}` if agument can't be casted to RooAbsRealLValue* or if no
+/// range or binning with the requested name exists.
+/// \param[in] arg RooAbsArg for which to get the range.
+/// \param[in] rangeName The name of the range.
+std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const char* rangeName) {
+  auto rlv = dynamic_cast<RooAbsRealLValue const*>(arg);
+  if (rlv) {
+    const RooAbsBinning* binning = rlv->getBinningPtr(rangeName);
+    if (rangeName && rlv->hasRange(rangeName)) {
+      return {rlv->getMin(rangeName), rlv->getMax(rangeName)};
+    } else if (binning) {
+      if (!binning->isParameterized()) {
+        return {binning->lowBound(), binning->highBound()};
+      } else {
+        return {binning->lowBoundFunc()->getVal(), binning->highBoundFunc()->getVal()};
+      }
+    }
+  }
+  return {-std::numeric_limits<double>::infinity(), +std::numeric_limits<double>::infinity()};
+}
+
+
 }

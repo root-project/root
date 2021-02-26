@@ -35,6 +35,7 @@ discrete dimensions.
 #include "RooCategory.h"
 #include "RooWorkspace.h"
 #include "RooGlobalFunc.h"
+#include "RooHelpers.h"
 
 #include "TError.h"
 #include "TBuffer.h"
@@ -317,7 +318,6 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return integral identified by 'code'. The actual integration
 /// is deferred to RooDataHist::sum() which implements partial
@@ -342,22 +342,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
       intSet.add(*ha);
     }
     if (!(code & 1)) {
-      RooAbsRealLValue* rlv = dynamic_cast<RooAbsRealLValue*>(pa);
-      if (rlv) {
-        const RooAbsBinning* binning = rlv->getBinningPtr(rangeName);
-        if (rangeName && rlv->hasRange(rangeName)) {
-          ranges[ha] = std::make_pair(
-              rlv->getMin(rangeName), rlv->getMax(rangeName));
-        } else if (binning) {
-          if (!binning->isParameterized()) {
-            ranges[ha] = std::make_pair(
-                binning->lowBound(), binning->highBound());
-          } else {
-            ranges[ha] = std::make_pair(
-                binning->lowBoundFunc()->getVal(), binning->highBoundFunc()->getVal());
-          }
-        }
-      }
+      ranges[ha] = RooHelpers::getRangeOrBinningInterval(pa, rangeName);
     }
     // WVE must sync hist slice list values to pdf slice list
     // Transfer values from

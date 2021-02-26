@@ -54,7 +54,7 @@ public:
       const std::string &GetName() const { return name; }
    };
 
-   static std::string GetClassIcon(const ClassArg &);
+   static std::string GetClassIcon(const ClassArg &, bool = false);
    static bool CanHaveChilds(const ClassArg &);
    static bool CanDraw6(const ClassArg &);
    static bool CanDraw7(const ClassArg &);

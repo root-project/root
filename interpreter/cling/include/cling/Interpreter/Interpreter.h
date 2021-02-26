@@ -693,6 +693,10 @@ namespace cling {
     clang::Sema& getSema() const;
     clang::DiagnosticsEngine& getDiagnostics() const;
 
+    IncrementalCUDADeviceCompiler* getCUDACompiler() const {
+      return m_CUDACompiler.get();
+    }
+
     ///\brief Create suitable default compilation options.
     CompilationOptions makeDefaultCompilationOpts() const;
 

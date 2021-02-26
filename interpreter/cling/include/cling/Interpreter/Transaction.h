@@ -150,7 +150,7 @@ namespace cling {
 
     ///\brief The llvm Module containing the information that we will revert
     ///
-    std::shared_ptr<llvm::Module> m_Module;
+    std::unique_ptr<llvm::Module> m_Module;
 
     ///\brief The Executor to use m_ExeUnload on.
     ///
@@ -185,7 +185,7 @@ namespace cling {
     /// TransactionPool needs direct access to m_State as setState asserts
     friend class TransactionPool;
 
-    void Initialize(clang::Sema& S);
+    void Initialize();
 
   public:
     enum State {
@@ -466,7 +466,11 @@ namespace cling {
         m_NestedTransactions->clear();
     }
 
-    std::shared_ptr<llvm::Module> getModule() const { return m_Module; }
+    llvm::Module* getModule() const { return m_Module.get(); }
+    std::unique_ptr<llvm::Module> takeModule () {
+      assert(getModule());
+      return std::move(m_Module);
+    }
     void setModule(std::unique_ptr<llvm::Module> M) { m_Module = std::move(M); }
 
     IncrementalExecutor* getExecutor() const { return m_Exe; }

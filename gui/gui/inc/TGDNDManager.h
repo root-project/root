@@ -2,7 +2,7 @@
 // Author: Bertrand Bellenot   19/04/07
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -64,11 +64,11 @@ public:
 
 class TDNDData : public TObject {
 private:
-   TDNDData(const TDNDData&);            // Not implemented
-   TDNDData& operator=(const TDNDData&); // Not implemented
+   TDNDData(const TDNDData&) = delete;
+   TDNDData& operator=(const TDNDData&) = delete;
 
 public:
-   TDNDData(Atom_t dt = kNone, void *d = 0, Int_t len = 0, Atom_t act = kNone) :
+   TDNDData(Atom_t dt = kNone, void *d = nullptr, Int_t len = 0, Atom_t act = kNone) :
       fDataType(dt), fAction(act), fData(d), fDataLength(len) {}
    ~TDNDData() {}
 
@@ -85,8 +85,8 @@ public:
 class TGDNDManager : public TObject {
 
 private:
-   TGDNDManager(const TGDNDManager&);            // Not implemented
-   TGDNDManager& operator=(const TGDNDManager&); // Not implemented
+   TGDNDManager(const TGDNDManager&) = delete;
+   TGDNDManager& operator=(const TGDNDManager&) = delete;
 
 protected:
    TGFrame       *fMain;                         // pointer on TGMainFrame

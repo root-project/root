@@ -1,9 +1,8 @@
 //===--- BuiltinsPPC.def - PowerPC Builtin function database ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -58,7 +57,7 @@ BUILTIN(__builtin_altivec_vctuxs, "V4UiV4fIi", "")
 
 BUILTIN(__builtin_altivec_dss, "vUi", "")
 BUILTIN(__builtin_altivec_dssall, "v", "")
-BUILTIN(__builtin_altivec_dst, "vvC*iUi", "") 
+BUILTIN(__builtin_altivec_dst, "vvC*iUi", "")
 BUILTIN(__builtin_altivec_dstt, "vvC*iUi", "")
 BUILTIN(__builtin_altivec_dstst, "vvC*iUi", "")
 BUILTIN(__builtin_altivec_dststt, "vvC*iUi", "")
@@ -423,6 +422,17 @@ BUILTIN(__builtin_vsx_extractuword, "V2ULLiV16UcIi", "")
 BUILTIN(__builtin_vsx_xxpermdi, "v.", "t")
 BUILTIN(__builtin_vsx_xxsldwi, "v.", "t")
 
+// Float 128 built-ins
+BUILTIN(__builtin_sqrtf128_round_to_odd, "LLdLLd", "")
+BUILTIN(__builtin_addf128_round_to_odd, "LLdLLdLLd", "")
+BUILTIN(__builtin_subf128_round_to_odd, "LLdLLdLLd", "")
+BUILTIN(__builtin_mulf128_round_to_odd, "LLdLLdLLd", "")
+BUILTIN(__builtin_divf128_round_to_odd, "LLdLLdLLd", "")
+BUILTIN(__builtin_fmaf128_round_to_odd, "LLdLLdLLdLLd", "")
+BUILTIN(__builtin_truncf128_round_to_odd, "dLLd", "")
+BUILTIN(__builtin_vsx_scalar_extract_expq, "ULLiLLd", "")
+BUILTIN(__builtin_vsx_scalar_insert_exp_qp, "LLdLLdULLi", "")
+
 // HTM builtins
 BUILTIN(__builtin_tbegin, "UiUIi", "")
 BUILTIN(__builtin_tend, "UiUIi", "")
@@ -460,6 +470,16 @@ BUILTIN(__builtin_divweu, "UiUiUi", "")
 BUILTIN(__builtin_divde, "SLLiSLLiSLLi", "")
 BUILTIN(__builtin_divdeu, "ULLiULLiULLi", "")
 BUILTIN(__builtin_bpermd, "SLLiSLLiSLLi", "")
+
+// Vector int128 (un)pack
+BUILTIN(__builtin_unpack_vector_int128, "ULLiV1LLLii", "")
+BUILTIN(__builtin_pack_vector_int128, "V1LLLiULLiULLi", "")
+
+// Set the floating point rounding mode
+BUILTIN(__builtin_setrnd, "di", "")
+
+// Cache built-ins
+BUILTIN(__builtin_dcbf, "vvC*", "")
 
 // FIXME: Obviously incomplete.
 

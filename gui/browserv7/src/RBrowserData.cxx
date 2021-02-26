@@ -1,3 +1,7 @@
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2019-10-14
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+
 /*************************************************************************
  * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -26,6 +30,12 @@ ROOT::Experimental::RLogChannel &ROOT::Experimental::BrowserLog() {
 }
 
 
+/** \class ROOT::Experimental::RBrowserData
+\ingroup rbrowser
+\brief Way to browse (hopefully) everything in %ROOT
+*/
+
+
 /////////////////////////////////////////////////////////////////////
 /// set top element for browsing
 
@@ -33,17 +43,7 @@ void RBrowserData::SetTopElement(std::shared_ptr<Browsable::RElement> elem)
 {
    fTopElement = elem;
 
-   SetWorkingDirectory("");
-}
-
-/////////////////////////////////////////////////////////////////////
-/// set working directory relative to top element
-
-void RBrowserData::SetWorkingDirectory(const std::string &strpath)
-{
-   auto path = DecomposePath(strpath, false);
-
-   SetWorkingPath(path);
+   SetWorkingPath({});
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -53,20 +53,22 @@ void RBrowserData::SetWorkingPath(const Browsable::RElementPath_t &path)
 {
    fWorkingPath = path;
 
-   ResetLastRequest();
+   ResetLastRequestData(true);
 }
 
 /////////////////////////////////////////////////////////////////////
 /// Reset all data correspondent to last request
 
-void RBrowserData::ResetLastRequest()
+void RBrowserData::ResetLastRequestData(bool with_element)
 {
    fLastAllChilds = false;
    fLastSortedItems.clear();
    fLastSortMethod.clear();
    fLastItems.clear();
-   fLastPath.clear();
-   fLastElement.reset();
+   if (with_element) {
+      fLastPath.clear();
+      fLastElement.reset();
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -82,22 +84,8 @@ Browsable::RElementPath_t RBrowserData::DecomposePath(const std::string &strpath
    if (strpath.empty())
       return arr;
 
-   std::string slash = "/";
-
-   std::string::size_type previous = 0;
-   if (strpath[0] == slash[0]) previous++;
-
-   auto current = strpath.find(slash, previous);
-   while (current != std::string::npos) {
-      if (current > previous)
-         arr.emplace_back(strpath.substr(previous, current - previous));
-      previous = current + 1;
-      current = strpath.find(slash, previous);
-   }
-
-   if (previous < strpath.length())
-      arr.emplace_back(strpath.substr(previous));
-
+   auto arr2 = Browsable::RElement::ParsePath(strpath);
+   arr.insert(arr.end(), arr2.begin(), arr2.end());
    return arr;
 }
 
@@ -106,21 +94,22 @@ Browsable::RElementPath_t RBrowserData::DecomposePath(const std::string &strpath
 
 bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply)
 {
-   if (gDebug > 0)
-      printf("REQ: Do decompose path '%s'\n",request.path.c_str());
-
-   auto path = DecomposePath(request.path, true);
+   auto path = fWorkingPath;
+   path.insert(path.end(), request.path.begin(), request.path.end());
 
    if ((path != fLastPath) || !fLastElement) {
 
       auto elem = GetSubElement(path);
       if (!elem) return false;
 
-      ResetLastRequest();
+      ResetLastRequestData(true);
 
       fLastPath = path;
       fLastElement = std::move(elem);
-}
+   } else if (request.reload) {
+      // only reload items from element, not need to reset element itself
+      ResetLastRequestData(false);
+   }
 
    // when request childs, always try to make elements
    if (fLastItems.empty()) {
@@ -248,9 +237,21 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable
    }
 
    while (pos < (int) path.size()) {
+      std::string subname = path[pos];
+      int indx = Browsable::RElement::ExtractItemIndex(subname);
+
       auto iter = elem->GetChildsIter();
-      if (!iter || !iter->Find(path[pos]))
+      if (!iter)
          return nullptr;
+
+      if (!iter->Find(subname, indx)) {
+         if (indx < 0)
+            return nullptr;
+         iter = elem->GetChildsIter();
+         if (!iter || !iter->Find(subname))
+            return nullptr;
+      }
+
       elem = iter->GetElement();
 
       if (!elem)

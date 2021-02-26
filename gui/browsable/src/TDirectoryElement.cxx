@@ -77,17 +77,18 @@ public:
 
    std::string GetItemName() const override { return fCurrentName; }
 
-   int GetNumItemChilds() const override
+   bool CanItemHaveChilds() const override
    {
-      return RProvider::CanHaveChilds(fKey->GetClassName()) ? -1 : 0;
+      return RProvider::CanHaveChilds(fKey->GetClassName());
    }
 
    /** Create element for the browser */
    std::unique_ptr<RItem> CreateItem() override
    {
-      auto item = std::make_unique<TKeyItem>(GetItemName(), GetNumItemChilds());
+      auto item = std::make_unique<TKeyItem>(GetItemName(), CanItemHaveChilds() ? -1 : 0);
       item->SetClassName(fKey->GetClassName());
       item->SetIcon(RProvider::GetClassIcon(fKey->GetClassName()));
+      item->SetTitle(fKey->GetTitle());
       return item;
    }
 
@@ -198,6 +199,7 @@ public:
 
       std::string clname = fKey->GetClassName();
       if (clname.empty()) return kActNone;
+      if (clname == "TGeoManager") return kActGeom;
       if (RProvider::CanDraw6(clname)) return kActDraw6;
       if (RProvider::CanDraw7(clname)) return kActDraw7;
       if (RProvider::CanHaveChilds(clname)) return kActBrowse;
@@ -219,7 +221,7 @@ public:
          case kActImage:
          case kActDraw6: return RProvider::CanDraw6(clname); // if can draw in TCanvas, can produce image
          case kActDraw7: return RProvider::CanDraw7(clname);
-         case kActGeom: return false;  // TODO
+         case kActGeom: return (clname == "TGeoManager");
          default: return false;
       }
 

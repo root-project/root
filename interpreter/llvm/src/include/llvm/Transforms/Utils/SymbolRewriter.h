@@ -1,9 +1,8 @@
-//===-- SymbolRewriter.h - Symbol Rewriting Pass ----------------*- C++ -*-===//
+//===- SymbolRewriter.h - Symbol Rewriting Pass -----------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -33,7 +32,6 @@
 #ifndef LLVM_TRANSFORMS_UTILS_SYMBOLREWRITER_H
 #define LLVM_TRANSFORMS_UTILS_SYMBOLREWRITER_H
 
-#include "llvm/IR/Module.h"
 #include "llvm/IR/PassManager.h"
 #include <list>
 #include <memory>
@@ -42,6 +40,8 @@
 namespace llvm {
 
 class MemoryBuffer;
+class Module;
+class ModulePass;
 
 namespace yaml {
 
@@ -89,7 +89,7 @@ private:
   const Type Kind;
 };
 
-typedef std::list<std::unique_ptr<RewriteDescriptor>> RewriteDescriptorList;
+using RewriteDescriptorList = std::list<std::unique_ptr<RewriteDescriptor>>;
 
 class RewriteMapParser {
 public:
@@ -120,6 +120,7 @@ ModulePass *createRewriteSymbolsPass(SymbolRewriter::RewriteDescriptorList &);
 class RewriteSymbolPass : public PassInfoMixin<RewriteSymbolPass> {
 public:
   RewriteSymbolPass() { loadAndParseMapFiles(); }
+
   RewriteSymbolPass(SymbolRewriter::RewriteDescriptorList &DL) {
     Descriptors.splice(Descriptors.begin(), DL);
   }
@@ -132,7 +133,7 @@ public:
 private:
   void loadAndParseMapFiles();
 
-  SymbolRewriter::RewriteDescriptorList Descriptors;  
+  SymbolRewriter::RewriteDescriptorList Descriptors;
 };
 
 } // end namespace llvm

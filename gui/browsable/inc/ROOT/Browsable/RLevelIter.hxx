@@ -37,14 +37,15 @@ public:
    /** Returns current entry name  */
    virtual std::string GetItemName() const = 0;
 
-   virtual int GetNumItemChilds() const;
+   /** Returns true if current item can have childs */
+   virtual bool CanItemHaveChilds() const { return false; }
 
    /** Create RElement for current entry - may take much time to load object or open file */
    virtual std::shared_ptr<RElement> GetElement() = 0;
 
    virtual std::unique_ptr<RItem> CreateItem();
 
-   virtual bool Find(const std::string &name);
+   virtual bool Find(const std::string &name, int indx = -1);
 
 };
 

@@ -1,9 +1,8 @@
 //===- llvm/Support/Chrono.h - Utilities for Timing Manipulation-*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -34,22 +33,44 @@ template <typename D = std::chrono::nanoseconds>
 using TimePoint = std::chrono::time_point<std::chrono::system_clock, D>;
 
 /// Convert a TimePoint to std::time_t
-LLVM_ATTRIBUTE_ALWAYS_INLINE inline std::time_t toTimeT(TimePoint<> TP) {
+inline std::time_t toTimeT(TimePoint<> TP) {
   using namespace std::chrono;
   return system_clock::to_time_t(
       time_point_cast<system_clock::time_point::duration>(TP));
 }
 
 /// Convert a std::time_t to a TimePoint
-LLVM_ATTRIBUTE_ALWAYS_INLINE inline TimePoint<std::chrono::seconds>
+inline TimePoint<std::chrono::seconds>
 toTimePoint(std::time_t T) {
   using namespace std::chrono;
   return time_point_cast<seconds>(system_clock::from_time_t(T));
 }
 
+/// Convert a std::time_t + nanoseconds to a TimePoint
+inline TimePoint<>
+toTimePoint(std::time_t T, uint32_t nsec) {
+  using namespace std::chrono;
+  return time_point_cast<nanoseconds>(system_clock::from_time_t(T))
+    + nanoseconds(nsec);
+}
+
 } // namespace sys
 
 raw_ostream &operator<<(raw_ostream &OS, sys::TimePoint<> TP);
+
+/// Format provider for TimePoint<>
+///
+/// The options string is a strftime format string, with extensions:
+///   - %L is millis: 000-999
+///   - %f is micros: 000000-999999
+///   - %N is nanos: 000000000 - 999999999
+///
+/// If no options are given, the default format is "%Y-%m-%d %H:%M:%S.%N".
+template <>
+struct format_provider<sys::TimePoint<>> {
+  static void format(const sys::TimePoint<> &TP, llvm::raw_ostream &OS,
+                     StringRef Style);
+};
 
 /// Implementation of format_provider<T> for duration types.
 ///

@@ -1,8 +1,12 @@
-//////////////////////////
-//TRInterface_Binding.h://
-// Copyright (C) 2015   //
-//Omar Zapata for ROOTR //
-//////////////////////////
+// Author: Omar Zapata   2015
+
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_R_TRInterface_Binding
 #define ROOT_R_TRInterface_Binding

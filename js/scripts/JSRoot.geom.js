@@ -7,6 +7,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
    JSROOT.loadScript('$$$style/JSRoot.geom');
 
+   const _ENTIRE_SCENE = 0, _BLOOM_SCENE = 1;
+
    // ============================================================================================
 
    function Toolbar(container, bright) {
@@ -62,9 +64,10 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
    //////////////////////
 
-   function GeoDrawingControl(mesh) {
+   function GeoDrawingControl(mesh, bloom) {
       jsrp.InteractiveControl.call(this);
       this.mesh = (mesh && mesh.material) ? mesh : null;
+      this.bloom = bloom;
    }
 
    GeoDrawingControl.prototype = Object.create(jsrp.InteractiveControl.prototype);
@@ -81,20 +84,32 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          if (!c.origin)
             c.origin = {
               color: c.material.color,
+              emissive: c.material.emissive,
               opacity: c.material.opacity,
               width: c.material.linewidth,
               size: c.material.size
            };
-         c.material.color = new THREE.Color( col );
-         c.material.opacity = 1.;
+         if (this.bloom) {
+            c.layers.enable(_BLOOM_SCENE);
+            c.material.emissive = new THREE.Color(0x00ff00);
+         } else {
+            c.material.color = new THREE.Color( col );
+            c.material.opacity = 1.;
+         }
+
          if (c.hightlightWidthScale && !JSROOT.browser.isWin)
             c.material.linewidth = c.origin.width * c.hightlightWidthScale;
          if (c.highlightScale)
             c.material.size = c.origin.size * c.highlightScale;
          return true;
       } else if (c.origin) {
-         c.material.color = c.origin.color;
-         c.material.opacity = c.origin.opacity;
+         if (this.bloom) {
+            c.material.emissive = c.origin.emissive;
+            c.layers.enable(_ENTIRE_SCENE);
+         } else {
+            c.material.color = c.origin.color;
+            c.material.opacity = c.origin.opacity;
+         }
          if (c.hightlightWidthScale)
             c.material.linewidth = c.origin.width;
          if (c.highlightScale)
@@ -135,6 +150,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          clipIntersect: true,
          clip: [{ name:"x", enabled: false, value: 0, min: -100, max: 100}, { name:"y", enabled: false, value: 0, min: -100, max: 100}, { name:"z", enabled: false, value: 0, min: -100, max: 100}],
          ssao: { enabled: false, output: THREE.SSAOPass.OUTPUT.Default, kernelRadius: 0, minDistance: 0.001, maxDistance: 0.1 },
+         bloom: { enabled: true, strength: 1.5 },
          info: { num_meshes: 0, num_faces: 0, num_shapes: 0 },
          highlight: false,
          highlight_scene: false,
@@ -143,7 +159,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          select_in_view: false,
          update_browser: true,
          light: { kind: "points", top: false, bottom: false, left: false, right: false, front: false, specular: true, power: 1 },
-         trans_radial: 0, trans_z: 0
+         trans_radial: 0,
+         trans_z: 0
       };
 
       this.ctrl.depthMethodItems = [
@@ -420,7 +437,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                    use_worker: false, show_controls: false,
                    highlight: false, highlight_scene: false, no_screen: false,
                    project: '', is_main: false, tracks: false, showtop: false, can_rotate: true, ortho_camera: false,
-                   clipx: false, clipy: false, clipz: false, usessao: false, outline: false,
+                   clipx: false, clipy: false, clipz: false, usessao: false, usebloom: true, outline: false,
                    script_name: "", transparency: 0, rotate: false, background: '#FFFFFF',
                    depthMethod: "dflt", mouse_tmout: 50, trans_radial: 0, trans_z: 0 };
 
@@ -515,6 +532,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       if (d.check("DFLT_COLORS") || d.check("DFLT")) res.dflt_colors = true;
       if (d.check("SSAO")) res.usessao = true;
+      if (d.check("NOBLOOM")) res.usebloom = false;
+      if (d.check("BLOOM")) res.usebloom = true;
       if (d.check("OUTLINE")) res.outline = true;
 
       if (d.check("NOWORKER")) res.use_worker = -1;
@@ -601,7 +620,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
                let m1 = mesh.matrixWorld, flip;
 
-               if (m1.equals(m2)) return true
+               if (m1.equals(m2)) return true;
                if ((m1.determinant()>0) && (m2.determinant()<-0.9)) {
                   flip = THREE.Vector3(1,1,-1);
                   m2 = m2.clone().scale(flip);
@@ -774,7 +793,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       }
    }
 
-   /** @summary Method should be called when SSAO configuration changed */
+   /** @summary Method called when SSAO configuration changed via GUI */
    TGeoPainter.prototype.changedSSAO = function() {
       if (!this.ctrl.ssao.enabled) {
          this.removeSSAO();
@@ -788,6 +807,12 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       }
 
       this.updateClipping();
+
+      if (this._slave_painters)
+         this._slave_painters.forEach(p => {
+            JSROOT.extend(p.ctrl.ssao, this.ctrl.ssao);
+            p.changedSSAO();
+         });
    }
 
    /** @summary Display control GUI */
@@ -956,6 +981,54 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       ssaofolder.add( this.ctrl.ssao, 'maxDistance', 0.01, 0.3)
                 .listen().onChange(ssao_handler);
+
+      let blooming = this._datgui.addFolder('Unreal Bloom');
+      let bloom_handler = this.changedBloomSettings.bind(this);
+
+      blooming.add(this.ctrl.bloom, 'enabled').name('Enable Blooming')
+                .listen().onChange(bloom_handler);
+
+      blooming.add( this.ctrl.bloom, 'strength', 0.0, 3.0).name("Strength")
+            .listen().onChange(bloom_handler);
+   }
+
+   /** @summary Method called when bloom configuration changed via GUI */
+   TGeoPainter.prototype.changedBloomSettings = function() {
+      if (this.ctrl.bloom.enabled) {
+         this.createBloom();
+         this._bloomPass.strength = this.ctrl.bloom.strength;
+      } else {
+         this.removeBloom();
+      }
+
+      if (this._slave_painters)
+         this._slave_painters.forEach(p => {
+            JSROOT.extend(p.ctrl.bloom, this.ctrl.bloom);
+            p.changedBloomSettings();
+         });
+   }
+
+   TGeoPainter.prototype.createBloom = function() {
+      if (this._bloomPass) return;
+
+      this._camera.layers.enable( _BLOOM_SCENE );
+      this._bloomComposer = new THREE.EffectComposer( this._renderer );
+      this._bloomComposer.addPass( new THREE.RenderPass( this._scene, this._camera ) );
+      this._bloomPass = new THREE.UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
+      this._bloomPass.threshold = 0;
+      this._bloomPass.strength = this.ctrl.bloom.strength;
+      this._bloomPass.radius = 0;
+      this._bloomPass.renderToScreen = true;
+      this._bloomComposer.addPass( this._bloomPass );
+      this._renderer.autoClear = false;
+   }
+
+   TGeoPainter.prototype.removeBloom = function() {
+      if (!this._bloomPass) return;
+      delete this._bloomPass;
+      delete this._bloomComposer;
+      this._renderer.autoClear = true;
+      this._camera.layers.disable( _BLOOM_SCENE );
    }
 
    TGeoPainter.prototype.removeSSAO = function() {
@@ -1085,17 +1158,14 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                if (!this._geom_viewer)
                menu.add("Hide", n, function(indx) {
                   let resolve = menu.painter._clones.resolveStack(intersects[indx].object.stack);
-
-                  if (resolve.obj && (resolve.node.kind === 0) && resolve.obj.fVolume) {
+                  const kindGeo = 0, kindEve = 1;
+                  if (resolve.obj && (resolve.node.kind === kindGeo) && resolve.obj.fVolume) {
                      geo.SetBit(resolve.obj.fVolume, geo.BITS.kVisThis, false);
                      geo.updateBrowserIcons(resolve.obj.fVolume, this._hpainter);
-                  } else
-                  if (resolve.obj && (resolve.node.kind === 1)) {
+                  } else if (resolve.obj && (resolve.node.kind === kindEve)) {
                      resolve.obj.fRnrSelf = false;
                      geo.updateBrowserIcons(resolve.obj, this._hpainter);
                   }
-                  // intersects[arg].object.visible = false;
-                  // this.render3D();
 
                   this.testGeomChanges();// while many volumes may disappear, recheck all of them
                });
@@ -1236,13 +1306,13 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          let lst = this._highlight_handlers || (!this._main_painter ? this._slave_painters : this._main_painter._slave_painters.concat([this._main_painter]));
 
          for (let k=0;k<lst.length;++k)
-            if (lst[k]!==this) lst[k].highlightMesh(null, color, geo_object, geo_index, geo_stack, true);
+            if (lst[k] !== this) lst[k].highlightMesh(null, color, geo_object, geo_index, geo_stack, true);
       }
 
       let curr_mesh = this._selected_mesh;
 
-      function get_ctrl(mesh) {
-         return mesh.get_ctrl ? mesh.get_ctrl() : new GeoDrawingControl(mesh);
+      let get_ctrl = mesh => {
+         return mesh.get_ctrl ? mesh.get_ctrl() : new GeoDrawingControl(mesh, this.ctrl.bloom.enabled);
       }
 
       // check if selections are the same
@@ -1257,14 +1327,14 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       if (same) return !!curr_mesh;
 
       if (curr_mesh)
-         for (let k=0;k<curr_mesh.length;++k)
+         for (let k = 0; k < curr_mesh.length; ++k)
             get_ctrl(curr_mesh[k]).setHighlight();
 
       this._selected_mesh = active_mesh;
 
       if (active_mesh)
-         for (let k=0;k<active_mesh.length;++k)
-            get_ctrl(active_mesh[k]).setHighlight(color || 0xffaa33, geo_index);
+         for (let k = 0; k < active_mesh.length; ++k)
+            get_ctrl(active_mesh[k]).setHighlight(color || 0x00ff00, geo_index);
 
       this.render3D(0);
 
@@ -1721,21 +1791,28 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          if (entry.stack[0]===1) entry.custom_color = "blue";
       }
 
-      let mesh,
-          prop = this._clones.getDrawEntryProperties(entry),
+      let mesh, prop = this._clones.getDrawEntryProperties(entry),
           obj3d = this._clones.createObject3D(entry.stack, toplevel, this.ctrl);
 
       prop.material.wireframe = this.ctrl.wireframe;
 
       prop.material.side = this.ctrl.bothSides ? THREE.DoubleSide : THREE.FrontSide;
 
-      if (obj3d.matrixWorld.determinant() > -0.9) {
+      let matrix = obj3d.absMatrix || obj3d.matrixWorld;
+
+      if (matrix.determinant() > -0.9) {
          mesh = new THREE.Mesh( shape.geom, prop.material );
       } else {
          mesh = geo.createFlippedMesh(shape, prop.material);
       }
 
       obj3d.add(mesh);
+
+      if (obj3d.absMatrix) {
+         mesh.matrix.copy(obj3d.absMatrix);
+         mesh.matrix.decompose( mesh.position, mesh.quaternion, mesh.scale );
+         mesh.updateMatrixWorld();
+      }
 
       // keep full stack of nodes
       mesh.stack = entry.stack;
@@ -1846,6 +1923,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    }
 
 
+   /** @summary Create geometry projection */
    TGeoPainter.prototype.doProjection = function() {
       let toplevel = this.getProjectionSource();
 
@@ -1869,7 +1947,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       toplevel.traverse(mesh => {
          if (!(mesh instanceof THREE.Mesh) || !mesh.stack) return;
 
-         let geom2 = geo.projectGeometry(mesh.geometry, mesh.parent.matrixWorld, this.ctrl.project, this.ctrl.projectPos, mesh._flippedMesh);
+         let geom2 = geo.projectGeometry(mesh.geometry, mesh.parent.absMatrix || mesh.parent.matrixWorld, this.ctrl.project, this.ctrl.projectPos, mesh._flippedMesh);
 
          if (!geom2) return;
 
@@ -1993,7 +2071,6 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                            new THREE.Plane(new THREE.Vector3(0, this.ctrl._yup ? -1 : 1, 0), 0),
                            new THREE.Plane(new THREE.Vector3(0, 0, this.ctrl._yup ? 1 : -1), 0) ];
 
-
       // Light - add default point light, adjust later
 
       let light = new THREE.PointLight(0xefefef, 1);
@@ -2012,6 +2089,10 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          } else if (this.ctrl.ssao.enabled) {
             this.createSSAO();
          }
+      }
+
+      if (this._webgl && this.ctrl.bloom.enabled) {
+         this.createBloom();
       }
 
       if (this._fit_main_area && !this._webgl) {
@@ -3150,7 +3231,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                this.render3D(-1);
                this._last_render_meshes = this.ctrl.info.num_meshes;
             }
-            if (res !== 2) setTimeout(this.continueDraw.bind(this), (res === 1) ? 100 : 1);
+            if (res !== 2) setTimeout(() => this.continueDraw(), (res === 1) ? 100 : 1);
 
             return;
          }
@@ -3158,7 +3239,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       let take_time = now - this._startm;
 
-      if (this._first_drawing)
+      if (this._first_drawing || this._full_redrawing)
          console.log(`Create tm = ${take_time} meshes ${this.ctrl.info.num_meshes} faces ${this.ctrl.info.num_faces}`);
 
       if (take_time > 300) {
@@ -3224,6 +3305,13 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       // its needed for outlinePass - do rendering, most consuming time
       if (this._webgl && this._effectComposer && (this._effectComposer.passes.length > 0)) {
          this._effectComposer.render();
+      } else if (this._webgl && this._bloomComposer && (this._bloomComposer.passes.length > 0)) {
+         this._renderer.clear();
+         this._camera.layers.set( _BLOOM_SCENE );
+         this._bloomComposer.render();
+         this._renderer.clearDepth();
+         this._camera.layers.set( _ENTIRE_SCENE );
+         this._renderer.render(this._scene, this._camera);
       } else {
     //     this._renderer.logarithmicDepthBuffer = true;
          this._renderer.render(this._scene, this._camera);
@@ -3699,6 +3787,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       }
 
       if (this._full_redrawing) {
+         this.adjustCameraPosition(true);
          this._full_redrawing = false;
          full_redraw = true;
          this.changedDepthMethod("norender");
@@ -3948,6 +4037,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
          if (this._effectComposer)
             this._effectComposer.setSize( this._scene_width, this._scene_height );
+         if (this._bloomComposer)
+            this._bloomComposer.setSize( this._scene_width, this._scene_height );
 
          if (!this.drawing_stage) this.render3D();
       }
@@ -4024,6 +4115,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       delete this._extraObjects;
       delete this._clipCfg;
 
+      // only remove all childs from top level object
       jsrp.disposeThreejsObject(this._toplevel, true);
 
       this._full_redrawing = true;
@@ -4064,6 +4156,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       JSROOT.extend(painter.ctrl, painter.options);
 
       painter.ctrl.ssao.enabled = painter.options.usessao;
+      painter.ctrl.bloom.enabled = painter.options.usebloom;
 
       // special handling for array of clips
       painter.ctrl.clip[0].enabled = painter.options.clipx;

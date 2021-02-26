@@ -1171,7 +1171,14 @@ template <typename T>
 void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &outputTree, const std::string &inName,
                        const std::string &outName, TBranch *&branch, void *&branchAddress, RVec<T> *ab)
 {
-   auto *const inputBranch = inputTree ? inputTree->GetBranch(inName.c_str()) : nullptr;
+   TBranch *inputBranch = nullptr;
+   if (inputTree) {
+      inputBranch = inputTree->GetBranch(inName.c_str());
+      if (!inputBranch) {
+         // try harder
+         inputBranch = inputTree->FindBranch(inName.c_str());
+      }
+   }
    const bool isTClonesArray = inputBranch != nullptr && std::string(inputBranch->GetClassName()) == "TClonesArray";
    const auto mustWriteStdVec = !inputBranch || isTClonesArray ||
                                 ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
@@ -1188,7 +1195,7 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
                  "be written out as a std::vector instead of a TClonesArray. Specify that the type of the branch is "
                  "TClonesArray as a Snapshot template parameter to write out a TClonesArray instead.", inName.c_str());
       }
-      outputTree.Branch(outName.c_str(), &ab->AsVector());
+      outputTree.Branch(outName.c_str(), &(ab->fData));
       return;
    }
 
@@ -1270,12 +1277,8 @@ public:
 
    void InitTask(TTreeReader *r, unsigned int /* slot */)
    {
-      if (!r) // empty source, nothing to do
-         return;
-      fInputTree = r->GetTree();
-      // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
-      // addresses of the branch values
-      fInputTree->AddClone(fOutputTree.get());
+      if (r)
+         fInputTree = r->GetTree();
    }
 
    void Exec(unsigned int /* slot */, ColTypes &... values)
@@ -1285,6 +1288,10 @@ public:
          UpdateCArraysPtrs(values..., ind_t{});
       } else {
          SetBranches(values..., ind_t{});
+         // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
+         // addresses of the branch values
+         if (fInputTree != nullptr)
+            fInputTree->AddClone(fOutputTree.get());
          fIsFirstEvent = false;
       }
       UpdateBoolArrays(values..., ind_t{});

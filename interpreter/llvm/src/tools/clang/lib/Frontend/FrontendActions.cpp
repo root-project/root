@@ -1,9 +1,8 @@
 //===--- FrontendActions.cpp ----------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -15,19 +14,39 @@
 #include "clang/Frontend/FrontendDiagnostic.h"
 #include "clang/Frontend/MultiplexConsumer.h"
 #include "clang/Frontend/Utils.h"
+#include "clang/Lex/DependencyDirectivesSourceMinimizer.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/PreprocessorOptions.h"
+#include "clang/Sema/TemplateInstCallback.h"
 #include "clang/Serialization/ASTReader.h"
 #include "clang/Serialization/ASTWriter.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/YAMLTraits.h"
 #include "llvm/Support/raw_ostream.h"
 #include <memory>
 #include <system_error>
 
 using namespace clang;
+
+namespace {
+CodeCompleteConsumer *GetCodeCompletionConsumer(CompilerInstance &CI) {
+  return CI.hasCodeCompletionConsumer() ? &CI.getCodeCompletionConsumer()
+                                        : nullptr;
+}
+
+void EnsureSemaIsCreated(CompilerInstance &CI, FrontendAction &Action) {
+  if (Action.hasCodeCompletionSupport() &&
+      !CI.getFrontendOpts().CodeCompletionAt.FileName.empty())
+    CI.createCodeCompletionConsumer();
+
+  if (!CI.hasSema())
+    CI.createSema(Action.getTranslationUnitKind(),
+                  GetCodeCompletionConsumer(CI));
+}
+} // namespace
 
 //===----------------------------------------------------------------------===//
 // Custom Actions
@@ -55,10 +74,10 @@ ASTPrintAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {
 
 std::unique_ptr<ASTConsumer>
 ASTDumpAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {
-  return CreateASTDumper(CI.getFrontendOpts().ASTDumpFilter,
-                         CI.getFrontendOpts().ASTDumpDecls,
-                         CI.getFrontendOpts().ASTDumpAll,
-                         CI.getFrontendOpts().ASTDumpLookups);
+  const FrontendOptions &Opts = CI.getFrontendOpts();
+  return CreateASTDumper(nullptr /*Dump to stdout.*/, Opts.ASTDumpFilter,
+                         Opts.ASTDumpDecls, Opts.ASTDumpAll,
+                         Opts.ASTDumpLookups, Opts.ASTDumpFormat);
 }
 
 std::unique_ptr<ASTConsumer>
@@ -72,55 +91,55 @@ ASTViewAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {
 }
 
 std::unique_ptr<ASTConsumer>
-DeclContextPrintAction::CreateASTConsumer(CompilerInstance &CI,
-                                          StringRef InFile) {
-  return CreateDeclContextPrinter();
-}
-
-std::unique_ptr<ASTConsumer>
 GeneratePCHAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {
   std::string Sysroot;
+  if (!ComputeASTConsumerArguments(CI, /*ref*/ Sysroot))
+    return nullptr;
+
   std::string OutputFile;
   std::unique_ptr<raw_pwrite_stream> OS =
-      ComputeASTConsumerArguments(CI, InFile, Sysroot, OutputFile);
+      CreateOutputFile(CI, InFile, /*ref*/ OutputFile);
   if (!OS)
     return nullptr;
 
   if (!CI.getFrontendOpts().RelocatablePCH)
     Sysroot.clear();
 
+  const auto &FrontendOpts = CI.getFrontendOpts();
   auto Buffer = std::make_shared<PCHBuffer>();
   std::vector<std::unique_ptr<ASTConsumer>> Consumers;
   Consumers.push_back(llvm::make_unique<PCHGenerator>(
-                        CI.getPreprocessor(), OutputFile, Sysroot,
-                        Buffer, CI.getFrontendOpts().ModuleFileExtensions,
-      /*AllowASTWithErrors*/CI.getPreprocessorOpts().AllowPCHWithCompilerErrors,
-                        /*IncludeTimestamps*/
-                          +CI.getFrontendOpts().IncludeTimestamps));
+      CI.getPreprocessor(), CI.getModuleCache(), OutputFile, Sysroot, Buffer,
+      FrontendOpts.ModuleFileExtensions,
+      CI.getPreprocessorOpts().AllowPCHWithCompilerErrors,
+      FrontendOpts.IncludeTimestamps, +CI.getLangOpts().CacheGeneratedPCH));
   Consumers.push_back(CI.getPCHContainerWriter().CreatePCHContainerGenerator(
       CI, InFile, OutputFile, std::move(OS), Buffer));
 
   return llvm::make_unique<MultiplexConsumer>(std::move(Consumers));
 }
 
-std::unique_ptr<raw_pwrite_stream>
-GeneratePCHAction::ComputeASTConsumerArguments(CompilerInstance &CI,
-                                               StringRef InFile,
-                                               std::string &Sysroot,
-                                               std::string &OutputFile) {
+bool GeneratePCHAction::ComputeASTConsumerArguments(CompilerInstance &CI,
+                                                    std::string &Sysroot) {
   Sysroot = CI.getHeaderSearchOpts().Sysroot;
   if (CI.getFrontendOpts().RelocatablePCH && Sysroot.empty()) {
     CI.getDiagnostics().Report(diag::err_relocatable_without_isysroot);
-    return nullptr;
+    return false;
   }
 
+  return true;
+}
+
+std::unique_ptr<llvm::raw_pwrite_stream>
+GeneratePCHAction::CreateOutputFile(CompilerInstance &CI, StringRef InFile,
+                                    std::string &OutputFile) {
   // We use createOutputFile here because this is exposed via libclang, and we
   // must disable the RemoveFileOnSignal behavior.
   // We use a temporary to avoid race conditions.
   std::unique_ptr<raw_pwrite_stream> OS =
       CI.createOutputFile(CI.getFrontendOpts().OutputFile, /*Binary=*/true,
                           /*RemoveFileOnSignal=*/false, InFile,
-                          /*Extension=*/"", /*useTemporary=*/true);
+                          /*Extension=*/"", /*UseTemporary=*/true);
   if (!OS)
     return nullptr;
 
@@ -153,11 +172,13 @@ GenerateModuleAction::CreateASTConsumer(CompilerInstance &CI,
   std::vector<std::unique_ptr<ASTConsumer>> Consumers;
 
   Consumers.push_back(llvm::make_unique<PCHGenerator>(
-                        CI.getPreprocessor(), OutputFile, Sysroot,
-                        Buffer, CI.getFrontendOpts().ModuleFileExtensions,
-                        /*AllowASTWithErrors=*/false,
-                        /*IncludeTimestamps=*/
-                          +CI.getFrontendOpts().BuildingImplicitModule));
+      CI.getPreprocessor(), CI.getModuleCache(), OutputFile, Sysroot, Buffer,
+      CI.getFrontendOpts().ModuleFileExtensions,
+      /*AllowASTWithErrors=*/false,
+      /*IncludeTimestamps=*/
+      +CI.getFrontendOpts().BuildingImplicitModule,
+      /*ShouldCacheASTInMemory=*/
+      +CI.getFrontendOpts().BuildingImplicitModule));
   Consumers.push_back(CI.getPCHContainerWriter().CreatePCHContainerGenerator(
       CI, InFile, OutputFile, std::move(OS), Buffer));
   return llvm::make_unique<MultiplexConsumer>(std::move(Consumers));
@@ -185,8 +206,8 @@ GenerateModuleFromModuleMapAction::CreateOutputFile(CompilerInstance &CI,
 
     HeaderSearch &HS = CI.getPreprocessor().getHeaderSearchInfo();
     CI.getFrontendOpts().OutputFile =
-        HS.getModuleFileName(CI.getLangOpts().CurrentModule, ModuleMapFile,
-                             /*UsePrebuiltPath=*/false);
+        HS.getCachedModuleFileName(CI.getLangOpts().CurrentModule,
+                                   ModuleMapFile);
   }
 
   // We use createOutputFile here because this is exposed via libclang, and we
@@ -194,14 +215,14 @@ GenerateModuleFromModuleMapAction::CreateOutputFile(CompilerInstance &CI,
   // We use a temporary to avoid race conditions.
   return CI.createOutputFile(CI.getFrontendOpts().OutputFile, /*Binary=*/true,
                              /*RemoveFileOnSignal=*/false, InFile,
-                             /*Extension=*/"", /*useTemporary=*/true,
+                             /*Extension=*/"", /*UseTemporary=*/true,
                              /*CreateMissingDirectories=*/true);
 }
 
 bool GenerateModuleInterfaceAction::BeginSourceFileAction(
     CompilerInstance &CI) {
-  if (!CI.getLangOpts().ModulesTS) {
-    CI.getDiagnostics().Report(diag::err_module_interface_requires_modules_ts);
+  if (!CI.getLangOpts().ModulesTS && !CI.getLangOpts().CPlusPlusModules) {
+    CI.getDiagnostics().Report(diag::err_module_interface_requires_cpp_modules);
     return false;
   }
 
@@ -213,6 +234,76 @@ bool GenerateModuleInterfaceAction::BeginSourceFileAction(
 std::unique_ptr<raw_pwrite_stream>
 GenerateModuleInterfaceAction::CreateOutputFile(CompilerInstance &CI,
                                                 StringRef InFile) {
+  return CI.createDefaultOutputFile(/*Binary=*/true, InFile, "pcm");
+}
+
+bool GenerateHeaderModuleAction::PrepareToExecuteAction(
+    CompilerInstance &CI) {
+  if (!CI.getLangOpts().Modules) {
+    CI.getDiagnostics().Report(diag::err_header_module_requires_modules);
+    return false;
+  }
+
+  auto &Inputs = CI.getFrontendOpts().Inputs;
+  if (Inputs.empty())
+    return GenerateModuleAction::BeginInvocation(CI);
+
+  auto Kind = Inputs[0].getKind();
+
+  // Convert the header file inputs into a single module input buffer.
+  SmallString<256> HeaderContents;
+  ModuleHeaders.reserve(Inputs.size());
+  for (const FrontendInputFile &FIF : Inputs) {
+    // FIXME: We should support re-compiling from an AST file.
+    if (FIF.getKind().getFormat() != InputKind::Source || !FIF.isFile()) {
+      CI.getDiagnostics().Report(diag::err_module_header_file_not_found)
+          << (FIF.isFile() ? FIF.getFile()
+                           : FIF.getBuffer()->getBufferIdentifier());
+      return true;
+    }
+
+    HeaderContents += "#include \"";
+    HeaderContents += FIF.getFile();
+    HeaderContents += "\"\n";
+    ModuleHeaders.push_back(FIF.getFile());
+  }
+  Buffer = llvm::MemoryBuffer::getMemBufferCopy(
+      HeaderContents, Module::getModuleInputBufferName());
+
+  // Set that buffer up as our "real" input.
+  Inputs.clear();
+  Inputs.push_back(FrontendInputFile(Buffer.get(), Kind, /*IsSystem*/false));
+
+  return GenerateModuleAction::PrepareToExecuteAction(CI);
+}
+
+bool GenerateHeaderModuleAction::BeginSourceFileAction(
+    CompilerInstance &CI) {
+  CI.getLangOpts().setCompilingModule(LangOptions::CMK_HeaderModule);
+
+  // Synthesize a Module object for the given headers.
+  auto &HS = CI.getPreprocessor().getHeaderSearchInfo();
+  SmallVector<Module::Header, 16> Headers;
+  for (StringRef Name : ModuleHeaders) {
+    const DirectoryLookup *CurDir = nullptr;
+    const FileEntry *FE = HS.LookupFile(
+        Name, SourceLocation(), /*Angled*/ false, nullptr, CurDir,
+        None, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+    if (!FE) {
+      CI.getDiagnostics().Report(diag::err_module_header_file_not_found)
+        << Name;
+      continue;
+    }
+    Headers.push_back({Name, FE});
+  }
+  HS.getModuleMap().createHeaderModule(CI.getLangOpts().CurrentModule, Headers);
+
+  return GenerateModuleAction::BeginSourceFileAction(CI);
+}
+
+std::unique_ptr<raw_pwrite_stream>
+GenerateHeaderModuleAction::CreateOutputFile(CompilerInstance &CI,
+                                             StringRef InFile) {
   return CI.createDefaultOutputFile(/*Binary=*/true, InFile, "pcm");
 }
 
@@ -240,8 +331,8 @@ void VerifyPCHAction::ExecuteAction() {
   bool Preamble = CI.getPreprocessorOpts().PrecompiledPreambleBytes.first != 0;
   const std::string &Sysroot = CI.getHeaderSearchOpts().Sysroot;
   std::unique_ptr<ASTReader> Reader(new ASTReader(
-      CI.getPreprocessor(), &CI.getASTContext(), CI.getPCHContainerReader(),
-      CI.getFrontendOpts().ModuleFileExtensions,
+      CI.getPreprocessor(), CI.getModuleCache(), &CI.getASTContext(),
+      CI.getPCHContainerReader(), CI.getFrontendOpts().ModuleFileExtensions,
       Sysroot.empty() ? "" : Sysroot.c_str(),
       /*DisableValidation*/ false,
       /*AllowPCHWithCompilerErrors*/ false,
@@ -256,7 +347,143 @@ void VerifyPCHAction::ExecuteAction() {
 }
 
 namespace {
-  /// \brief AST reader listener that dumps module information for a module
+struct TemplightEntry {
+  std::string Name;
+  std::string Kind;
+  std::string Event;
+  std::string DefinitionLocation;
+  std::string PointOfInstantiation;
+};
+} // namespace
+
+namespace llvm {
+namespace yaml {
+template <> struct MappingTraits<TemplightEntry> {
+  static void mapping(IO &io, TemplightEntry &fields) {
+    io.mapRequired("name", fields.Name);
+    io.mapRequired("kind", fields.Kind);
+    io.mapRequired("event", fields.Event);
+    io.mapRequired("orig", fields.DefinitionLocation);
+    io.mapRequired("poi", fields.PointOfInstantiation);
+  }
+};
+} // namespace yaml
+} // namespace llvm
+
+namespace {
+class DefaultTemplateInstCallback : public TemplateInstantiationCallback {
+  using CodeSynthesisContext = Sema::CodeSynthesisContext;
+
+public:
+  void initialize(const Sema &) override {}
+
+  void finalize(const Sema &) override {}
+
+  void atTemplateBegin(const Sema &TheSema,
+                       const CodeSynthesisContext &Inst) override {
+    displayTemplightEntry<true>(llvm::outs(), TheSema, Inst);
+  }
+
+  void atTemplateEnd(const Sema &TheSema,
+                     const CodeSynthesisContext &Inst) override {
+    displayTemplightEntry<false>(llvm::outs(), TheSema, Inst);
+  }
+
+private:
+  static std::string toString(CodeSynthesisContext::SynthesisKind Kind) {
+    switch (Kind) {
+    case CodeSynthesisContext::TemplateInstantiation:
+      return "TemplateInstantiation";
+    case CodeSynthesisContext::DefaultTemplateArgumentInstantiation:
+      return "DefaultTemplateArgumentInstantiation";
+    case CodeSynthesisContext::DefaultFunctionArgumentInstantiation:
+      return "DefaultFunctionArgumentInstantiation";
+    case CodeSynthesisContext::ExplicitTemplateArgumentSubstitution:
+      return "ExplicitTemplateArgumentSubstitution";
+    case CodeSynthesisContext::DeducedTemplateArgumentSubstitution:
+      return "DeducedTemplateArgumentSubstitution";
+    case CodeSynthesisContext::PriorTemplateArgumentSubstitution:
+      return "PriorTemplateArgumentSubstitution";
+    case CodeSynthesisContext::DefaultTemplateArgumentChecking:
+      return "DefaultTemplateArgumentChecking";
+    case CodeSynthesisContext::ExceptionSpecEvaluation:
+      return "ExceptionSpecEvaluation";
+    case CodeSynthesisContext::ExceptionSpecInstantiation:
+      return "ExceptionSpecInstantiation";
+    case CodeSynthesisContext::DeclaringSpecialMember:
+      return "DeclaringSpecialMember";
+    case CodeSynthesisContext::DefiningSynthesizedFunction:
+      return "DefiningSynthesizedFunction";
+    case CodeSynthesisContext::Memoization:
+      return "Memoization";
+    }
+    return "";
+  }
+
+  template <bool BeginInstantiation>
+  static void displayTemplightEntry(llvm::raw_ostream &Out, const Sema &TheSema,
+                                    const CodeSynthesisContext &Inst) {
+    std::string YAML;
+    {
+      llvm::raw_string_ostream OS(YAML);
+      llvm::yaml::Output YO(OS);
+      TemplightEntry Entry =
+          getTemplightEntry<BeginInstantiation>(TheSema, Inst);
+      llvm::yaml::EmptyContext Context;
+      llvm::yaml::yamlize(YO, Entry, true, Context);
+    }
+    Out << "---" << YAML << "\n";
+  }
+
+  template <bool BeginInstantiation>
+  static TemplightEntry getTemplightEntry(const Sema &TheSema,
+                                          const CodeSynthesisContext &Inst) {
+    TemplightEntry Entry;
+    Entry.Kind = toString(Inst.Kind);
+    Entry.Event = BeginInstantiation ? "Begin" : "End";
+    if (auto *NamedTemplate = dyn_cast_or_null<NamedDecl>(Inst.Entity)) {
+      llvm::raw_string_ostream OS(Entry.Name);
+      NamedTemplate->getNameForDiagnostic(OS, TheSema.getLangOpts(), true);
+      const PresumedLoc DefLoc =
+        TheSema.getSourceManager().getPresumedLoc(Inst.Entity->getLocation());
+      if(!DefLoc.isInvalid())
+        Entry.DefinitionLocation = std::string(DefLoc.getFilename()) + ":" +
+                                   std::to_string(DefLoc.getLine()) + ":" +
+                                   std::to_string(DefLoc.getColumn());
+    }
+    const PresumedLoc PoiLoc =
+        TheSema.getSourceManager().getPresumedLoc(Inst.PointOfInstantiation);
+    if (!PoiLoc.isInvalid()) {
+      Entry.PointOfInstantiation = std::string(PoiLoc.getFilename()) + ":" +
+                                   std::to_string(PoiLoc.getLine()) + ":" +
+                                   std::to_string(PoiLoc.getColumn());
+    }
+    return Entry;
+  }
+};
+} // namespace
+
+std::unique_ptr<ASTConsumer>
+TemplightDumpAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {
+  return llvm::make_unique<ASTConsumer>();
+}
+
+void TemplightDumpAction::ExecuteAction() {
+  CompilerInstance &CI = getCompilerInstance();
+
+  // This part is normally done by ASTFrontEndAction, but needs to happen
+  // before Templight observers can be created
+  // FIXME: Move the truncation aspect of this into Sema, we delayed this till
+  // here so the source manager would be initialized.
+  EnsureSemaIsCreated(CI, *this);
+
+  CI.getSema().TemplateInstCallbacks.push_back(
+      llvm::make_unique<DefaultTemplateInstCallback>());
+  ASTFrontendAction::ExecuteAction();
+}
+
+namespace {
+  /// AST reader listener that dumps module information for a module
   /// file.
   class DumpModuleInfoListener : public ASTReaderListener {
     llvm::raw_ostream &Out;
@@ -439,6 +666,17 @@ namespace {
 
       return true;
     }
+
+    /// Returns true if this \c ASTReaderListener wants to receive the
+    /// imports of the AST file via \c visitImport, false otherwise.
+    bool needsImportVisitation() const override { return true; }
+
+    /// If needsImportVisitation returns \c true, this is called for each
+    /// AST file imported by this AST file.
+    void visitImport(StringRef ModuleName, StringRef Filename) override {
+      Out.indent(2) << "Imports module '" << ModuleName
+                    << "': " << Filename.str() << "\n";
+    }
 #undef DUMP_BOOLEAN
   };
 }
@@ -513,16 +751,6 @@ void DumpTokensAction::ExecuteAction() {
   } while (Tok.isNot(tok::eof));
 }
 
-void GeneratePTHAction::ExecuteAction() {
-  CompilerInstance &CI = getCompilerInstance();
-  std::unique_ptr<raw_pwrite_stream> OS =
-      CI.createDefaultOutputFile(true, getCurrentFile());
-  if (!OS)
-    return;
-
-  CacheTokens(CI.getPreprocessor(), OS.get());
-}
-
 void PreprocessOnlyAction::ExecuteAction() {
   Preprocessor &PP = getCompilerInstance().getPreprocessor();
 
@@ -549,13 +777,13 @@ void PrintPreprocessedAction::ExecuteAction() {
   // the input format has inconsistent line endings.
   //
   // This should be a relatively fast operation since most files won't have
-  // all of their source code on a single line. However, that is still a 
+  // all of their source code on a single line. However, that is still a
   // concern, so if we scan for too long, we'll just assume the file should
   // be opened in binary mode.
   bool BinaryMode = true;
   bool InvalidFile = false;
   const SourceManager& SM = CI.getSourceManager();
-  const llvm::MemoryBuffer *Buffer = SM.getBuffer(SM.getMainFileID(), 
+  const llvm::MemoryBuffer *Buffer = SM.getBuffer(SM.getMainFileID(),
                                                      &InvalidFile);
   if (!InvalidFile) {
     const char *cur = Buffer->getBufferStart();
@@ -563,7 +791,7 @@ void PrintPreprocessedAction::ExecuteAction() {
     const char *next = (cur != end) ? cur + 1 : end;
 
     // Limit ourselves to only scanning 256 characters into the source
-    // file.  This is mostly a sanity check in case the file has no 
+    // file.  This is mostly a sanity check in case the file has no
     // newlines whatsoever.
     if (end - cur > 256) end = cur + 256;
 
@@ -582,7 +810,7 @@ void PrintPreprocessedAction::ExecuteAction() {
   }
 
   std::unique_ptr<raw_ostream> OS =
-      CI.createDefaultOutputFile(BinaryMode, getCurrentFile());
+      CI.createDefaultOutputFile(BinaryMode, getCurrentFileOrBufferName());
   if (!OS) return;
 
   // If we're preprocessing a module map, start by dumping the contents of the
@@ -594,8 +822,6 @@ void PrintPreprocessedAction::ExecuteAction() {
       OS->write_escaped(Input.getFile());
       (*OS) << "\"\n";
     }
-    // FIXME: Include additional information here so that we don't need the
-    // original source files to exist on disk.
     getCurrentModule()->print(*OS);
     (*OS) << "#pragma clang module contents\n";
   }
@@ -612,8 +838,9 @@ void PrintPreambleAction::ExecuteAction() {
   case InputKind::ObjCXX:
   case InputKind::OpenCL:
   case InputKind::CUDA:
+  case InputKind::HIP:
     break;
-      
+
   case InputKind::Unknown:
   case InputKind::Asm:
   case InputKind::LLVM_IR:
@@ -630,7 +857,85 @@ void PrintPreambleAction::ExecuteAction() {
   auto Buffer = CI.getFileManager().getBufferForFile(getCurrentFile());
   if (Buffer) {
     unsigned Preamble =
-        Lexer::ComputePreamble((*Buffer)->getBuffer(), CI.getLangOpts()).first;
+        Lexer::ComputePreamble((*Buffer)->getBuffer(), CI.getLangOpts()).Size;
     llvm::outs().write((*Buffer)->getBufferStart(), Preamble);
   }
+}
+
+void DumpCompilerOptionsAction::ExecuteAction() {
+  CompilerInstance &CI = getCompilerInstance();
+  std::unique_ptr<raw_ostream> OSP =
+      CI.createDefaultOutputFile(false, getCurrentFile());
+  if (!OSP)
+    return;
+
+  raw_ostream &OS = *OSP;
+  const Preprocessor &PP = CI.getPreprocessor();
+  const LangOptions &LangOpts = PP.getLangOpts();
+
+  // FIXME: Rather than manually format the JSON (which is awkward due to
+  // needing to remove trailing commas), this should make use of a JSON library.
+  // FIXME: Instead of printing enums as an integral value and specifying the
+  // type as a separate field, use introspection to print the enumerator.
+
+  OS << "{\n";
+  OS << "\n\"features\" : [\n";
+  {
+    llvm::SmallString<128> Str;
+#define FEATURE(Name, Predicate)                                               \
+  ("\t{\"" #Name "\" : " + llvm::Twine(Predicate ? "true" : "false") + "},\n") \
+      .toVector(Str);
+#include "clang/Basic/Features.def"
+#undef FEATURE
+    // Remove the newline and comma from the last entry to ensure this remains
+    // valid JSON.
+    OS << Str.substr(0, Str.size() - 2);
+  }
+  OS << "\n],\n";
+
+  OS << "\n\"extensions\" : [\n";
+  {
+    llvm::SmallString<128> Str;
+#define EXTENSION(Name, Predicate)                                             \
+  ("\t{\"" #Name "\" : " + llvm::Twine(Predicate ? "true" : "false") + "},\n") \
+      .toVector(Str);
+#include "clang/Basic/Features.def"
+#undef EXTENSION
+    // Remove the newline and comma from the last entry to ensure this remains
+    // valid JSON.
+    OS << Str.substr(0, Str.size() - 2);
+  }
+  OS << "\n]\n";
+
+  OS << "}";
+}
+
+void PrintDependencyDirectivesSourceMinimizerAction::ExecuteAction() {
+  CompilerInstance &CI = getCompilerInstance();
+  SourceManager &SM = CI.getPreprocessor().getSourceManager();
+  const llvm::MemoryBuffer *FromFile = SM.getBuffer(SM.getMainFileID());
+
+  llvm::SmallString<1024> Output;
+  llvm::SmallVector<minimize_source_to_dependency_directives::Token, 32> Toks;
+  if (minimizeSourceToDependencyDirectives(
+          FromFile->getBuffer(), Output, Toks, &CI.getDiagnostics(),
+          SM.getLocForStartOfFile(SM.getMainFileID()))) {
+    assert(CI.getDiagnostics().hasErrorOccurred() &&
+           "no errors reported for failure");
+
+    // Preprocess the source when verifying the diagnostics to capture the
+    // 'expected' comments.
+    if (CI.getDiagnosticOpts().VerifyDiagnostics) {
+      // Make sure we don't emit new diagnostics!
+      CI.getDiagnostics().setSuppressAllDiagnostics();
+      Preprocessor &PP = getCompilerInstance().getPreprocessor();
+      PP.EnterMainSourceFile();
+      Token Tok;
+      do {
+        PP.Lex(Tok);
+      } while (Tok.isNot(tok::eof));
+    }
+    return;
+  }
+  llvm::outs() << Output;
 }

@@ -44,15 +44,35 @@
 #include <utility>
 #include <tuple>
 
+// TODO remove when fData is removed (6.26)
+#include <map>
+#include <string>
+
 #ifdef R__HAS_VDT
 #include <vdt/vdtMath.h>
 #endif
 
 
+// TODO remove when fData is removed (6.26)
+class TTree;
+class TBranch;
+
 namespace ROOT {
+
 namespace VecOps {
 template<typename T>
 class RVec;
+}
+
+// TODO remove when fData is removed (6.26)
+namespace Internal {
+namespace RDF {
+class BoolArray;
+using BoolArrayMap = std::map<std::string, BoolArray>;
+template <typename T>
+void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &outputTree, const std::string &inName,
+                       const std::string &outName, TBranch *&branch, void *&branchAddress, ROOT::VecOps::RVec<T> *ab);
+}
 }
 
 namespace Detail {
@@ -272,6 +292,12 @@ hpt->Draw();
 // clang-format on
 template <typename T>
 class RVec {
+   // TODO remove this friendship in 6.26, when fData is removed
+   friend void ::ROOT::Internal::RDF::SetBranchesHelper<T>(ROOT::Internal::RDF::BoolArrayMap &boolArrays,
+                                                           TTree *inputTree, TTree &outputTree,
+                                                           const std::string &inName, const std::string &outName,
+                                                           TBranch *&branch, void *&branchAddress, RVec<T> *ab);
+
    // Here we check if T is a bool. This is done in order to decide what type
    // to use as a storage. If T is anything but bool, we use a vector<T, RAdoptAllocator<T>>.
    // If T is a bool, we opt for a plain vector<bool> otherwise we'll not be able
@@ -347,8 +373,12 @@ public:
       return ret;
    }
 
+   R__DEPRECATED(6, 26, "Please use `std::vector<T>(rvec.begin(), rvec.end())` instead.")
    const Impl_t &AsVector() const { return fData; }
-   Impl_t &AsVector() { return fData; }
+   R__DEPRECATED(6, 26, "Please use `std::vector<T>(rvec.begin(), rvec.end())` instead.") Impl_t &AsVector()
+   {
+      return fData;
+   }
 
    // accessors
    reference at(size_type pos) { return fData.at(pos); }
@@ -1423,11 +1453,8 @@ RVec<Common_t> Concatenate(const RVec<T0> &v0, const RVec<T1> &v1)
 {
    RVec<Common_t> res;
    res.reserve(v0.size() + v1.size());
-   auto &resAsVect = res.AsVector();
-   auto &v0AsVect = v0.AsVector();
-   auto &v1AsVect = v1.AsVector();
-   resAsVect.insert(resAsVect.begin(), v0AsVect.begin(), v0AsVect.end());
-   resAsVect.insert(resAsVect.end(), v1AsVect.begin(), v1AsVect.end());
+   std::copy(v0.begin(), v0.end(), std::back_inserter(res));
+   std::copy(v1.begin(), v1.end(), std::back_inserter(res));
    return res;
 }
 

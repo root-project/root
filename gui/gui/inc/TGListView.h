@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -54,8 +54,8 @@ class TGHeaderFrame;
 class TGLVEntry : public TGFrame {
 
 private:
-   TGLVEntry(const TGLVEntry&); // Not implemented
-   TGLVEntry& operator=(const TGLVEntry&); // Not implemented
+   TGLVEntry(const TGLVEntry&) = delete;
+   TGLVEntry& operator=(const TGLVEntry&) = delete;
 
 protected:
    TGString           *fItemName;    // name of item
@@ -86,15 +86,15 @@ protected:
    static const TGGC   &GetDefaultGC();
 
 public:
-   TGLVEntry(const TGWindow *p = 0,
-             const TGPicture *bigpic = 0, const TGPicture *smallpic = 0,
-             TGString *name = 0, TGString **subnames = 0,
+   TGLVEntry(const TGWindow *p = nullptr,
+             const TGPicture *bigpic = nullptr, const TGPicture *smallpic = nullptr,
+             TGString *name = nullptr, TGString **subnames = nullptr,
              EListViewMode ViewMode = kLVDetails,
              UInt_t options = kChildFrame,
              Pixel_t back = GetWhitePixel());
 
    TGLVEntry(const TGLVContainer *p,
-             const TString& name, const TString& cname, TGString **subnames = 0,
+             const TString& name, const TString& cname, TGString **subnames = nullptr,
              UInt_t options = kChildFrame, Pixel_t back = GetWhitePixel());
 
    virtual ~TGLVEntry();
@@ -133,8 +133,8 @@ public:
 class TGListView : public TGCanvas {
 
 private:
-   TGListView(const TGListView&); // Not implemented
-   TGListView& operator=(const TGListView&); // Not implemented
+   TGListView(const TGListView&) = delete;
+   TGListView& operator=(const TGListView&) = delete;
 
 protected:
    Int_t                 fNColumns;      // number of columns
@@ -196,8 +196,8 @@ public:
 class TGLVContainer : public TGContainer {
 
 private:
-   TGLVContainer(const TGLVContainer&); // Not implemented
-   TGLVContainer& operator=(const TGLVContainer&); // Not implemented
+   TGLVContainer(const TGLVContainer&) = delete;
+   TGLVContainer& operator=(const TGLVContainer&) = delete;
 
 protected:
    TGLayoutHints     *fItemLayout;    // item layout hints

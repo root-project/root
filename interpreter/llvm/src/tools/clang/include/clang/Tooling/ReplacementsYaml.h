@@ -1,14 +1,13 @@
 //===-- ReplacementsYaml.h -- Serialiazation for Replacements ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file defines the structure of a YAML document for serializing
+/// This file defines the structure of a YAML document for serializing
 /// replacements.
 ///
 //===----------------------------------------------------------------------===//
@@ -25,10 +24,10 @@ LLVM_YAML_IS_SEQUENCE_VECTOR(clang::tooling::Replacement)
 namespace llvm {
 namespace yaml {
 
-/// \brief Specialized MappingTraits to describe how a Replacement is
+/// Specialized MappingTraits to describe how a Replacement is
 /// (de)serialized.
 template <> struct MappingTraits<clang::tooling::Replacement> {
-  /// \brief Helper to (de)serialize a Replacement since we don't have direct
+  /// Helper to (de)serialize a Replacement since we don't have direct
   /// access to its data members.
   struct NormalizedReplacement {
     NormalizedReplacement(const IO &)
@@ -36,7 +35,13 @@ template <> struct MappingTraits<clang::tooling::Replacement> {
 
     NormalizedReplacement(const IO &, const clang::tooling::Replacement &R)
         : FilePath(R.getFilePath()), Offset(R.getOffset()),
-          Length(R.getLength()), ReplacementText(R.getReplacementText()) {}
+          Length(R.getLength()), ReplacementText(R.getReplacementText()) {
+      size_t lineBreakPos = ReplacementText.find('\n');
+      while (lineBreakPos != std::string::npos) {
+        ReplacementText.replace(lineBreakPos, 1, "\n\n");
+        lineBreakPos = ReplacementText.find('\n', lineBreakPos + 2);
+      }
+    }
 
     clang::tooling::Replacement denormalize(const IO &) {
       return clang::tooling::Replacement(FilePath, Offset, Length,
@@ -59,7 +64,7 @@ template <> struct MappingTraits<clang::tooling::Replacement> {
   }
 };
 
-/// \brief Specialized MappingTraits to describe how a
+/// Specialized MappingTraits to describe how a
 /// TranslationUnitReplacements is (de)serialized.
 template <> struct MappingTraits<clang::tooling::TranslationUnitReplacements> {
   static void mapping(IO &Io,

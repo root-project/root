@@ -1067,14 +1067,14 @@ TEST(RDFSnapshotMore, SetMaxTreeSizeMT)
 {
    // Set TTree max size to a low number. Normally this would trigger the
    // behaviour of TTree::ChangeFile, but not within RDataFrame.
-   auto old_maxtreesize{TTree::GetMaxTreeSize()};
+   const auto old_maxtreesize = TTree::GetMaxTreeSize();
    TTree::SetMaxTreeSize(1000);
 
    // Create TTree, fill it and Snapshot (should create one single file).
    {
       TTree t{"T", "SetMaxTreeSize(1000)"};
       int x{};
-      auto nentries{20000};
+      const int nentries = 20000;
 
       t.Branch("x", &x, "x/I");
 

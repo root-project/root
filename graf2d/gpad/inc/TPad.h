@@ -119,18 +119,18 @@ protected:
    TVirtualViewer3D *fViewer3D;     ///<! Current 3D viewer
 
    void          DestroyExternalViewer3D();
-   virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   Int_t         DistancetoPrimitive(Int_t px, Int_t py) override;
+   void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void  HideToolTip(Int_t event);
    void          PaintBorder(Color_t color, Bool_t tops);
-   virtual void  PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t bmode,Int_t bsize,Int_t dark,Int_t light);
+   void          PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t bmode,Int_t bsize,Int_t dark,Int_t light) override;
    void          PaintDate();
-   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void  SetBatch(Bool_t batch=kTRUE);
+   void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void          SetBatch(Bool_t batch=kTRUE) override;
 
 private:
-   TPad(const TPad &pad);  // cannot copy pads, use TObject::Clone()
-   TPad &operator=(const TPad &rhs);  // idem
+   TPad(const TPad &pad) = delete;
+   TPad &operator=(const TPad &rhs) = delete;
 
    void CopyBackgroundPixmap(Int_t x, Int_t y);
    void CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y);
@@ -160,253 +160,253 @@ public:
         Double_t ylow, Double_t xup, Double_t yup,
         Color_t color=-1, Short_t bordersize=-1, Short_t bordermode=-2);
    virtual ~TPad();
-   void              AbsCoordinates(Bool_t set) { fAbsCoord = set; }
-   Double_t          AbsPixeltoX(Int_t px) {return fAbsPixeltoXk + px*fPixeltoX;}
-   Double_t          AbsPixeltoY(Int_t py) {return fAbsPixeltoYk + py*fPixeltoY;}
+   void              AbsCoordinates(Bool_t set) override { fAbsCoord = set; }
+   Double_t          AbsPixeltoX(Int_t px) override { return fAbsPixeltoXk + px*fPixeltoX; }
+   Double_t          AbsPixeltoY(Int_t py) override { return fAbsPixeltoYk + py*fPixeltoY; }
    virtual void      AbsPixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y);
-   virtual void      AddExec(const char *name, const char *command);
+   void              AddExec(const char *name, const char *command) override;
    virtual void      AutoExec();
-   virtual void      Browse(TBrowser *b);
-   virtual TLegend  *BuildLegend(Double_t x1=0.3, Double_t y1=0.21, Double_t x2=0.3, Double_t y2=0.21, const char *title="", Option_t *option = ""); // *MENU*
-   TVirtualPad*      cd(Int_t subpadnumber=0); // *MENU*
-   void              Clear(Option_t *option="");
+   void              Browse(TBrowser *b) override;
+   TLegend          *BuildLegend(Double_t x1=0.3, Double_t y1=0.21, Double_t x2=0.3, Double_t y2=0.21, const char *title="", Option_t *option = "") override; // *MENU*
+   TVirtualPad      *cd(Int_t subpadnumber=0) override; // *MENU*
+   void              Clear(Option_t *option="") override;
    virtual Int_t     Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt);
-   virtual Int_t     Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt);
+   Int_t             Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt) override;
    virtual Int_t     ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, Double_t xcl2, Double_t ycl2);
    virtual Int_t     ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *xc, Double_t *yc, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt);
-   virtual void      Close(Option_t *option="");
+   void              Close(Option_t *option="") override;
    virtual void      Closed() { Emit("Closed()"); } // *SIGNAL*
-   virtual void      CopyPixmap();
-   virtual void      CopyPixmaps();
-   virtual void      DeleteExec(const char *name);
-   virtual void      Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0); // *MENU*
+   void              CopyPixmap() override;
+   void              CopyPixmaps() override;
+   void              DeleteExec(const char *name) override;
+   void              Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0) override; // *MENU*
    virtual void      DivideSquare(Int_t n, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0);
-   virtual void      Draw(Option_t *option="");
-   virtual void      DrawClassObject(const TObject *obj, Option_t *option="");
+   void              Draw(Option_t *option="") override;
+   void              DrawClassObject(const TObject *obj, Option_t *option="") override;
    static  void      DrawColorTable();
    virtual void      DrawCrosshair();
-   TH1F             *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="");
-   virtual void      ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis);
-   virtual TObject  *FindObject(const char *name) const;
-   virtual TObject  *FindObject(const TObject *obj) const;
-   virtual void      UseCurrentStyle();  // *MENU*
-   virtual Short_t   GetBorderMode() const { return fBorderMode;}
-   virtual Short_t   GetBorderSize() const { return fBorderSize;}
+   TH1F             *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="") override;
+   void              ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis) override;
+   TObject          *FindObject(const char *name) const override;
+   TObject          *FindObject(const TObject *obj) const override;
+   void              UseCurrentStyle() override;  // *MENU*
+   Short_t           GetBorderMode() const override { return fBorderMode;}
+   Short_t           GetBorderSize() const override { return fBorderSize;}
    Int_t             GetCrosshair() const;
-   virtual Int_t     GetCanvasID() const;
-   virtual TCanvasImp *GetCanvasImp() const;
-   TFrame           *GetFrame();
-   virtual Int_t     GetEvent() const;
-   virtual Int_t     GetEventX() const;
-   virtual Int_t     GetEventY() const;
-   virtual Color_t   GetHighLightColor() const;
-   virtual void      GetRange(Double_t &x1, Double_t &y1, Double_t &x2, Double_t &y2);
-   virtual void      GetRangeAxis(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
-   virtual void      GetPadPar(Double_t &xlow, Double_t &ylow, Double_t &xup, Double_t &yup);
-   Double_t          GetXlowNDC() const {return fXlowNDC;}
-   Double_t          GetYlowNDC() const {return fYlowNDC;}
+   Int_t             GetCanvasID() const override;
+   TCanvasImp       *GetCanvasImp() const override;
+   TFrame           *GetFrame() override;
+   Int_t             GetEvent() const override;
+   Int_t             GetEventX() const override;
+   Int_t             GetEventY() const override;
+   Color_t           GetHighLightColor() const override;
+   void              GetRange(Double_t &x1, Double_t &y1, Double_t &x2, Double_t &y2) override;
+   void              GetRangeAxis(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) override;
+   void              GetPadPar(Double_t &xlow, Double_t &ylow, Double_t &xup, Double_t &yup) override;
+   Double_t          GetXlowNDC() const override { return fXlowNDC; }
+   Double_t          GetYlowNDC() const override { return fYlowNDC; }
    /// Get width of pad along X in Normalized Coordinates (NDC)
-   Double_t          GetWNDC() const {return fWNDC;}
+   Double_t          GetWNDC() const override { return fWNDC; }
    /// Get height of pad along Y in Normalized Coordinates (NDC)
-   Double_t          GetHNDC() const {return fHNDC;}
-   virtual UInt_t    GetWw() const;
-   virtual UInt_t    GetWh() const;
-   Double_t          GetAbsXlowNDC() const {return fAbsXlowNDC;}
-   Double_t          GetAbsYlowNDC() const {return fAbsYlowNDC;}
-   Double_t          GetAbsWNDC() const {return fAbsWNDC;}
-   Double_t          GetAbsHNDC() const {return fAbsHNDC;}
-   Double_t          GetAspectRatio() const { return fAspectRatio; }
-   Double_t          GetPhi() const   {return fPhi;}
-   Double_t          GetTheta() const {return fTheta;}
+   Double_t          GetHNDC() const override { return fHNDC; }
+   UInt_t            GetWw() const override;
+   UInt_t            GetWh() const override;
+   Double_t          GetAbsXlowNDC() const override { return fAbsXlowNDC; }
+   Double_t          GetAbsYlowNDC() const override { return fAbsYlowNDC; }
+   Double_t          GetAbsWNDC() const override { return fAbsWNDC; }
+   Double_t          GetAbsHNDC() const override { return fAbsHNDC; }
+   Double_t          GetAspectRatio() const override { return fAspectRatio; }
+   Double_t          GetPhi() const override { return fPhi; }
+   Double_t          GetTheta() const override { return fTheta; }
    ///Returns the minimum x-coordinate value visible on the pad. If log axis the returned value is in decades.
-   Double_t          GetUxmin() const {return fUxmin;}
+   Double_t          GetUxmin() const override { return fUxmin; }
    ///Returns the minimum y-coordinate value visible on the pad. If log axis the returned value is in decades.
-   Double_t          GetUymin() const {return fUymin;}
+   Double_t          GetUymin() const override { return fUymin; }
    ///Returns the maximum x-coordinate value visible on the pad. If log axis the returned value is in decades.
-   Double_t          GetUxmax() const {return fUxmax;}
+   Double_t          GetUxmax() const override { return fUxmax; }
    ///Returns the maximum y-coordinate value visible on the pad. If log axis the returned value is in decades.
-   Double_t          GetUymax() const {return fUymax;}
-   Bool_t            GetGridx() const {return fGridx;}
-   Bool_t            GetGridy() const {return fGridy;}
-   Int_t             GetNumber() const {return fNumber;}
-   Int_t             GetTickx() const {return fTickx;}
-   Int_t             GetTicky() const {return fTicky;}
-   Double_t          GetX1() const { return fX1; }
-   Double_t          GetX2() const { return fX2; }
-   Double_t          GetY1() const { return fY1; }
-   Double_t          GetY2() const { return fY2; }
+   Double_t          GetUymax() const override { return fUymax; }
+   Bool_t            GetGridx() const override { return fGridx; }
+   Bool_t            GetGridy() const override { return fGridy; }
+   Int_t             GetNumber() const override { return fNumber; }
+   Int_t             GetTickx() const override { return fTickx; }
+   Int_t             GetTicky() const override { return fTicky; }
+   Double_t          GetX1() const override { return fX1; }
+   Double_t          GetX2() const override { return fX2; }
+   Double_t          GetY1() const override { return fY1; }
+   Double_t          GetY2() const override { return fY2; }
    static Int_t      GetMaxPickDistance();
-   TList            *GetListOfPrimitives() const {return fPrimitives;}
-   TList            *GetListOfExecs() const {return fExecs;}
-   virtual TObject  *GetPrimitive(const char *name) const;  //obsolete, use FindObject instead
-   virtual TObject  *GetSelected() const;
-   virtual TVirtualPad  *GetPad(Int_t subpadnumber) const;
-   virtual TObject  *GetPadPointer() const {return fPadPointer;}
-   TVirtualPad      *GetPadSave() const;
-   TVirtualPad      *GetSelectedPad() const;
-   Int_t             GetGLDevice();
-   TView            *GetView() const {return fView;}
-   TObject          *GetView3D() const {return fPadView3D;}// Return 3D View of this TPad
-   Int_t             GetLogx() const {return fLogx;}
-   Int_t             GetLogy() const {return fLogy;}
-   Int_t             GetLogz() const {return fLogz;}
-   virtual TVirtualPad *GetMother() const {return fMother;}
-   const char       *GetName() const {return fName.Data();}
-   const char       *GetTitle() const {return fTitle.Data();}
-   virtual TCanvas  *GetCanvas() const { return fCanvas; }
-   virtual TVirtualPad *GetVirtCanvas() const ;
-   virtual TVirtualPadPainter *GetPainter();
-   Int_t             GetPadPaint() const {return fPadPaint;}
-   Int_t             GetPixmapID() const {return fPixmapID;}
-   ULong_t           Hash() const { return fName.Hash(); }
-   virtual Bool_t    HasCrosshair() const;
-   void              HighLight(Color_t col=kRed, Bool_t set=kTRUE);
-   Bool_t            HasFixedAspectRatio() const { return fFixedAspectRatio; }
-   virtual Bool_t    IsBatch() const;
-   virtual Bool_t    IsEditable() const {return fEditable;}
-   Bool_t            IsFolder() const {return kTRUE;}
-   Bool_t            IsModified() const {return fModified;}
-   virtual Bool_t    IsRetained() const;
-   virtual Bool_t    IsVertical() const {return !TestBit(kHori);}
-   virtual void      ls(Option_t *option="") const;
-   void              Modified(Bool_t flag=1);  // *SIGNAL*
-   virtual Bool_t    OpaqueMoving() const;
-   virtual Bool_t    OpaqueResizing() const;
-   Double_t          PadtoX(Double_t x) const;
-   Double_t          PadtoY(Double_t y) const;
-   virtual void      Paint(Option_t *option="");
-   void              PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option="");
-   void              PaintFillArea(Int_t n, Float_t *x, Float_t *y, Option_t *option=""); // Obsolete
-   void              PaintFillArea(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-   void              PaintFillAreaNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
+   TList            *GetListOfPrimitives() const override { return fPrimitives; }
+   TList            *GetListOfExecs() const override { return fExecs; }
+   TObject          *GetPrimitive(const char *name) const override;  //obsolete, use FindObject instead
+   TObject          *GetSelected() const override;
+   TVirtualPad      *GetPad(Int_t subpadnumber) const override;
+   TObject          *GetPadPointer() const override { return fPadPointer; }
+   TVirtualPad      *GetPadSave() const override;
+   TVirtualPad      *GetSelectedPad() const override;
+   Int_t             GetGLDevice() override;
+   TView            *GetView() const override { return fView; }
+   TObject          *GetView3D() const override { return fPadView3D; }// Return 3D View of this TPad
+   Int_t             GetLogx() const override { return fLogx; }
+   Int_t             GetLogy() const override { return fLogy; }
+   Int_t             GetLogz() const override { return fLogz; }
+   TVirtualPad      *GetMother() const override { return fMother; }
+   const char       *GetName() const override { return fName.Data(); }
+   const char       *GetTitle() const override { return fTitle.Data(); }
+   TCanvas          *GetCanvas() const override { return fCanvas; }
+   TVirtualPad      *GetVirtCanvas() const override;
+   TVirtualPadPainter *GetPainter() override;
+   Int_t             GetPadPaint() const override { return fPadPaint; }
+   Int_t             GetPixmapID() const override { return fPixmapID; }
+   ULong_t           Hash() const override { return fName.Hash(); }
+   Bool_t            HasCrosshair() const override;
+   void              HighLight(Color_t col=kRed, Bool_t set=kTRUE) override;
+   Bool_t            HasFixedAspectRatio() const override { return fFixedAspectRatio; }
+   Bool_t            IsBatch() const override;
+   virtual Bool_t    IsEditable() const override { return fEditable; }
+   Bool_t            IsFolder() const override { return kTRUE; }
+   Bool_t            IsModified() const override { return fModified; }
+   Bool_t            IsRetained() const override;
+   Bool_t            IsVertical() const override { return !TestBit(kHori); }
+   void              ls(Option_t *option="") const override;
+   void              Modified(Bool_t flag=1) override;  // *SIGNAL*
+   Bool_t            OpaqueMoving() const override;
+   Bool_t            OpaqueResizing() const override;
+   Double_t          PadtoX(Double_t x) const override;
+   Double_t          PadtoY(Double_t y) const override;
+   void              Paint(Option_t *option="") override;
+   void              PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option="") override;
+   void              PaintFillArea(Int_t n, Float_t *x, Float_t *y, Option_t *option="") override; // Obsolete
+   void              PaintFillArea(Int_t n, Double_t *x, Double_t *y, Option_t *option="") override;
+   void              PaintFillAreaNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="") override;
    void              PaintFillAreaHatches(Int_t n, Double_t *x, Double_t *y, Int_t FillStyle);
    void              PaintHatches(Double_t dy, Double_t angle, Int_t nn, Double_t *xx, Double_t *yy);
-   void              PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
-   void              PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
-   void              PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2);
-   void              PaintLine3D(Float_t *p1, Float_t *p2);
-   void              PaintLine3D(Double_t *p1, Double_t *p2);
-   void              PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
-   void              PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-   void              PaintPolyLine3D(Int_t n, Double_t *p);
-   void              PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-   void              PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
-   void              PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-   virtual void      PaintModified();
-   void              PaintText(Double_t x, Double_t y, const char *text);
-   void              PaintText(Double_t x, Double_t y, const wchar_t *text);
-   void              PaintTextNDC(Double_t u, Double_t v, const char *text);
-   void              PaintTextNDC(Double_t u, Double_t v, const wchar_t *text);
+   void              PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) override;
+   void              PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override;
+   void              PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2) override;
+   void              PaintLine3D(Float_t *p1, Float_t *p2) override;
+   void              PaintLine3D(Double_t *p1, Double_t *p2) override;
+   void              PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option="") override;
+   void              PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="") override;
+   void              PaintPolyLine3D(Int_t n, Double_t *p) override;
+   void              PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="") override;
+   void              PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option="") override;
+   void              PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="") override;
+   void              PaintModified() override;
+   void              PaintText(Double_t x, Double_t y, const char *text) override;
+   void              PaintText(Double_t x, Double_t y, const wchar_t *text) override;
+   void              PaintTextNDC(Double_t u, Double_t v, const char *text) override;
+   void              PaintTextNDC(Double_t u, Double_t v, const wchar_t *text) override;
    virtual TPad     *Pick(Int_t px, Int_t py, TObjLink *&pickobj);
-   Double_t          PixeltoX(Int_t px);
-   Double_t          PixeltoY(Int_t py);
+   Double_t          PixeltoX(Int_t px) override;
+   Double_t          PixeltoY(Int_t py) override;
    virtual void      PixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y);
-   virtual void      Pop();  // *MENU*
-   virtual void      Print(const char *filename="") const;
-   virtual void      Print(const char *filename, Option_t *option);
-   virtual void      Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2); // *MENU* *ARGS={x1=>fX1,y1=>fY1,x2=>fX2,y2=>fY2}
+   void              Pop() override;  // *MENU*
+   void              Print(const char *filename="") const override;
+   void              Print(const char *filename, Option_t *option) override;
+   void              Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override; // *MENU* *ARGS={x1=>fX1,y1=>fY1,x2=>fX2,y2=>fY2}
    virtual void      RangeChanged() { Emit("RangeChanged()"); } // *SIGNAL*
-   virtual void      RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
+   void              RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) override;
    virtual void      RangeAxisChanged() { Emit("RangeAxisChanged()"); } // *SIGNAL*
-   virtual void      RecursiveRemove(TObject *obj);
-   virtual void      RedrawAxis(Option_t *option="");
-   virtual void      ResetView3D(TObject *view=0){fPadView3D=view;}
-   virtual void      ResizePad(Option_t *option="");
+   void              RecursiveRemove(TObject *obj) override;
+   void              RedrawAxis(Option_t *option="") override;
+   void              ResetView3D(TObject *view=nullptr) override { fPadView3D=view; }
+   void              ResizePad(Option_t *option="") override;
    virtual void      Resized() { Emit("Resized()"); } // *SIGNAL*
-   virtual void      SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
-   virtual void      SetBorderMode(Short_t bordermode) {fBorderMode = bordermode; Modified();} // *MENU*
-   virtual void      SetBorderSize(Short_t bordersize) {fBorderSize = bordersize; Modified();} // *MENU*
-   void              SetCanvas(TCanvas *c) { fCanvas = c; }
-   virtual void      SetCanvasSize(UInt_t ww, UInt_t wh);
-   virtual void      SetCrosshair(Int_t crhair=1); // *TOGGLE*
-   virtual void      SetCursor(ECursor cursor);
-   virtual void      SetDoubleBuffer(Int_t mode=1);
-   virtual void      SetDrawOption(Option_t *option="");
-   virtual void      SetEditable(Bool_t mode=kTRUE); // *TOGGLE*
-   virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
-   virtual void      SetGrid(Int_t valuex = 1, Int_t valuey = 1) {fGridx = valuex; fGridy = valuey; Modified();}
-   virtual void      SetGridx(Int_t value = 1) {fGridx = value; Modified();} // *TOGGLE*
-   virtual void      SetGridy(Int_t value = 1) {fGridy = value; Modified();} // *TOGGLE*
-   virtual void      SetFillStyle(Style_t fstyle);
-   virtual void      SetLogx(Int_t value = 1); // *TOGGLE*
-   virtual void      SetLogy(Int_t value = 1); // *TOGGLE*
-   virtual void      SetLogz(Int_t value = 1); // *TOGGLE*
-   virtual void      SetNumber(Int_t number) {fNumber = number;}
-   virtual void      SetPad(const char *name, const char *title,
+   void              SaveAs(const char *filename="",Option_t *option="") const override; // *MENU*
+   void              SetBorderMode(Short_t bordermode) override { fBorderMode = bordermode; Modified(); } // *MENU*
+   void              SetBorderSize(Short_t bordersize) override { fBorderSize = bordersize; Modified(); } // *MENU*
+   void              SetCanvas(TCanvas *c) override { fCanvas = c; }
+   void              SetCanvasSize(UInt_t ww, UInt_t wh) override;
+   void              SetCrosshair(Int_t crhair=1) override; // *TOGGLE*
+   void              SetCursor(ECursor cursor) override;
+   void              SetDoubleBuffer(Int_t mode=1) override;
+   void              SetDrawOption(Option_t *option="") override;
+   void              SetEditable(Bool_t mode=kTRUE) override; // *TOGGLE*
+   void              SetFixedAspectRatio(Bool_t fixed = kTRUE) override;  // *TOGGLE*
+   void              SetGrid(Int_t valuex = 1, Int_t valuey = 1) override { fGridx = valuex; fGridy = valuey; Modified(); }
+   void              SetGridx(Int_t value = 1) override { fGridx = value; Modified(); } // *TOGGLE*
+   void              SetGridy(Int_t value = 1) override { fGridy = value; Modified(); } // *TOGGLE*
+   void              SetFillStyle(Style_t fstyle) override;
+   void              SetLogx(Int_t value = 1) override; // *TOGGLE*
+   void              SetLogy(Int_t value = 1) override; // *TOGGLE*
+   void              SetLogz(Int_t value = 1) override; // *TOGGLE*
+   virtual void      SetNumber(Int_t number) { fNumber = number; }
+   void              SetPad(const char *name, const char *title,
                            Double_t xlow, Double_t ylow, Double_t xup,
                            Double_t yup, Color_t color=35,
-                           Short_t bordersize=5, Short_t bordermode=-1);
-   virtual void      SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup);
-   virtual void      SetAttFillPS(Color_t color, Style_t style);
-   virtual void      SetAttLinePS(Color_t color, Style_t style, Width_t lwidth);
-   virtual void      SetAttMarkerPS(Color_t color, Style_t style, Size_t msize);
-   virtual void      SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize);
+                           Short_t bordersize=5, Short_t bordermode=-1) override;
+   void              SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup) override;
+   void              SetAttFillPS(Color_t color, Style_t style) override;
+   void              SetAttLinePS(Color_t color, Style_t style, Width_t lwidth) override;
+   void              SetAttMarkerPS(Color_t color, Style_t style, Size_t msize) override;
+   void              SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize) override;
    static  void      SetMaxPickDistance(Int_t maxPick=5);
-   virtual void      SetName(const char *name) {fName = name;} // *MENU*
-   virtual void      SetSelected(TObject *obj);
-   virtual void      SetTicks(Int_t valuex = 1, Int_t valuey = 1) {fTickx = valuex; fTicky = valuey; Modified();}
-   virtual void      SetTickx(Int_t value = 1) {fTickx = value; Modified();} // *TOGGLE*
-   virtual void      SetTicky(Int_t value = 1) {fTicky = value; Modified();} // *TOGGLE*
-   virtual void      SetTitle(const char *title="") {fTitle = title;}
-   virtual void      SetTheta(Double_t theta=30) {fTheta = theta; Modified();}
-   virtual void      SetPhi(Double_t phi=30) {fPhi = phi; Modified();}
-   virtual void      SetToolTipText(const char *text, Long_t delayms = 1000);
-   virtual void      SetVertical(Bool_t vert=kTRUE);
-   virtual void      SetView(TView *view = 0);
-   virtual void      SetViewer3D(TVirtualViewer3D *viewer3d) {fViewer3D = viewer3d;}
+   void              SetName(const char *name) override { fName = name; } // *MENU*
+   void              SetSelected(TObject *obj) override;
+   void              SetTicks(Int_t valuex = 1, Int_t valuey = 1) override { fTickx = valuex; fTicky = valuey; Modified(); }
+   void              SetTickx(Int_t value = 1) override { fTickx = value; Modified(); } // *TOGGLE*
+   void              SetTicky(Int_t value = 1) override { fTicky = value; Modified(); } // *TOGGLE*
+   void              SetTitle(const char *title="") override { fTitle = title; }
+   void              SetTheta(Double_t theta=30) override { fTheta = theta; Modified(); }
+   void              SetPhi(Double_t phi=30) override { fPhi = phi; Modified(); }
+   void              SetToolTipText(const char *text, Long_t delayms = 1000) override;
+   void              SetVertical(Bool_t vert=kTRUE) override;
+   void              SetView(TView *view = nullptr) override;
+   void              SetViewer3D(TVirtualViewer3D *viewer3d) override { fViewer3D = viewer3d; }
 
    virtual void      SetGLDevice(Int_t dev) {fGLDevice = dev;}
-   virtual void      SetCopyGLDevice(Bool_t copy) {fCopyGLDevice = copy;}
+   void              SetCopyGLDevice(Bool_t copy) override { fCopyGLDevice = copy; }
 
-   virtual void      ShowGuidelines(TObject *object, const Int_t event, const char mode = 'i', const bool cling = true);
-   virtual void      Update();
-   Int_t             UtoAbsPixel(Double_t u) const {return Int_t(fUtoAbsPixelk + u*fUtoPixel);}
-   Int_t             VtoAbsPixel(Double_t v) const {return Int_t(fVtoAbsPixelk + v*fVtoPixel);}
-   Int_t             UtoPixel(Double_t u) const;
-   Int_t             VtoPixel(Double_t v) const;
-   virtual TObject  *WaitPrimitive(const char *pname="", const char *emode="");
-   Int_t             XtoAbsPixel(Double_t x) const;
-   Int_t             YtoAbsPixel(Double_t y) const;
-   Double_t          XtoPad(Double_t x) const;
-   Double_t          YtoPad(Double_t y) const;
-   Int_t             XtoPixel(Double_t x) const;
-   Int_t             YtoPixel(Double_t y) const;
+   void              ShowGuidelines(TObject *object, const Int_t event, const char mode = 'i', const bool cling = true) override;
+   void              Update() override;
+   Int_t             UtoAbsPixel(Double_t u) const override { return Int_t(fUtoAbsPixelk + u*fUtoPixel); }
+   Int_t             VtoAbsPixel(Double_t v) const override { return Int_t(fVtoAbsPixelk + v*fVtoPixel); }
+   Int_t             UtoPixel(Double_t u) const override;
+   Int_t             VtoPixel(Double_t v) const override;
+   TObject          *WaitPrimitive(const char *pname="", const char *emode="") override;
+   Int_t             XtoAbsPixel(Double_t x) const override;
+   Int_t             YtoAbsPixel(Double_t y) const override;
+   Double_t          XtoPad(Double_t x) const override;
+   Double_t          YtoPad(Double_t y) const override;
+   Int_t             XtoPixel(Double_t x) const override;
+   Int_t             YtoPixel(Double_t y) const override;
    virtual void      XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const;
    virtual void      XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const;
 
-   virtual TObject  *CreateToolTip(const TBox *b, const char *text, Long_t delayms);
-   virtual void      DeleteToolTip(TObject *tip);
-   virtual void      ResetToolTip(TObject *tip);
-   virtual void      CloseToolTip(TObject *tip);
+   TObject          *CreateToolTip(const TBox *b, const char *text, Long_t delayms) override;
+   void              DeleteToolTip(TObject *tip) override;
+   void              ResetToolTip(TObject *tip) override;
+   void              CloseToolTip(TObject *tip) override;
 
-   Int_t             IncrementPaletteColor(Int_t i, TString opt);
-   Int_t             NextPaletteColor();
+   Int_t             IncrementPaletteColor(Int_t i, TString opt) override;
+   Int_t             NextPaletteColor() override;
 
    void              DrawCollideGrid();
-   Bool_t            PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb);
+   Bool_t            PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb) override;
 
    virtual void      x3d(Option_t *type=""); // Depreciated
 
-   virtual TVirtualViewer3D *GetViewer3D(Option_t * type = "");
-   virtual Bool_t            HasViewer3D() const { return (fViewer3D); }
-   virtual void              ReleaseViewer3D(Option_t * type = "");
+   TVirtualViewer3D *GetViewer3D(Option_t * type = "") override;
+   Bool_t            HasViewer3D() const override { return fViewer3D != nullptr; }
+   void              ReleaseViewer3D(Option_t * type = "") override;
 
-   virtual Rectangle_t  GetBBox();
-   virtual TPoint       GetBBoxCenter();
-   virtual void         SetBBoxCenter(const TPoint &p);
-   virtual void         SetBBoxCenterX(const Int_t x);
-   virtual void         SetBBoxCenterY(const Int_t y);
-   virtual void         SetBBoxX1(const Int_t x);
-   virtual void         SetBBoxX2(const Int_t x);
-   virtual void         SetBBoxY1(const Int_t y);
-   virtual void         SetBBoxY2(const Int_t y);
+   Rectangle_t       GetBBox() override;
+   TPoint            GetBBoxCenter() override;
+   void              SetBBoxCenter(const TPoint &p) override;
+   void              SetBBoxCenterX(const Int_t x) override;
+   void              SetBBoxCenterY(const Int_t y) override;
+   void              SetBBoxX1(const Int_t x) override;
+   void              SetBBoxX2(const Int_t x) override;
+   void              SetBBoxY1(const Int_t y) override;
+   void              SetBBoxY2(const Int_t y) override;
 
    virtual void      RecordPave(const TObject *obj);              // *SIGNAL*
    virtual void      RecordLatex(const TObject *obj);             // *SIGNAL*
    virtual void      EventPave() { Emit("EventPave()"); }         // *SIGNAL*
    virtual void      StartEditing() { Emit("StartEditing()"); }   // *SIGNAL*
 
-   ClassDef(TPad,13)  //A Graphics pad
+   ClassDefOverride(TPad,13)  //A Graphics pad
 };
 
 

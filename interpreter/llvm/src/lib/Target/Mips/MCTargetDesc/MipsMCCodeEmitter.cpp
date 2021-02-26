@@ -1,9 +1,8 @@
 //===-- MipsMCCodeEmitter.cpp - Convert Mips Code to Machine Code ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -86,45 +85,6 @@ static void LowerLargeShift(MCInst& Inst) {
   case Mips::DROTR:
     Inst.setOpcode(Mips::DROTR32);
     return;
-  case Mips::DSLL_MM64R6:
-    Inst.setOpcode(Mips::DSLL32_MM64R6);
-    return;
-  case Mips::DSRL_MM64R6:
-    Inst.setOpcode(Mips::DSRL32_MM64R6);
-    return;
-  case Mips::DSRA_MM64R6:
-    Inst.setOpcode(Mips::DSRA32_MM64R6);
-    return;
-  case Mips::DROTR_MM64R6:
-    Inst.setOpcode(Mips::DROTR32_MM64R6);
-    return;
-  }
-}
-
-// Pick a DINS instruction variant based on the pos and size operands
-static void LowerDins(MCInst& InstIn) {
-  assert(InstIn.getNumOperands() == 5 &&
-         "Invalid no. of machine operands for DINS!");
-
-  assert(InstIn.getOperand(2).isImm());
-  int64_t pos = InstIn.getOperand(2).getImm();
-  assert(InstIn.getOperand(3).isImm());
-  int64_t size = InstIn.getOperand(3).getImm();
-
-  assert((pos + size) <= 64 &&
-         "DINS cannot have position plus size over 64");
-  if (pos < 32) {
-    if ((pos + size) > 0 && (pos + size) <= 32)
-      return; // DINS, do nothing
-    else if ((pos + size) > 32) {
-      //DINSM
-      InstIn.getOperand(3).setImm(size - 32);
-      InstIn.setOpcode(Mips::DINSM);
-    }
-  } else if ((pos + size) > 32 && (pos + size) <= 64) {
-    // DINSU
-    InstIn.getOperand(2).setImm(pos - 32);
-    InstIn.setOpcode(Mips::DINSU);
   }
 }
 
@@ -205,15 +165,7 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
   case Mips::DSRL:
   case Mips::DSRA:
   case Mips::DROTR:
-  case Mips::DSLL_MM64R6:
-  case Mips::DSRL_MM64R6:
-  case Mips::DSRA_MM64R6:
-  case Mips::DROTR_MM64R6:
     LowerLargeShift(TmpInst);
-    break;
-    // Double extract instruction is chosen by pos and size operands
-  case Mips::DINS:
-    LowerDins(TmpInst);
     break;
   // Compact branches, enforce encoding restrictions.
   case Mips::BEQC:
@@ -233,9 +185,9 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
   // Check for unimplemented opcodes.
   // Unfortunately in MIPS both NOP and SLL will come in with Binary == 0
   // so we have to special check for them.
-  unsigned Opcode = TmpInst.getOpcode();
+  const unsigned Opcode = TmpInst.getOpcode();
   if ((Opcode != Mips::NOP) && (Opcode != Mips::SLL) &&
-      (Opcode != Mips::SLL_MM) && !Binary)
+      (Opcode != Mips::SLL_MM) && (Opcode != Mips::SLL_MMR6) && !Binary)
     llvm_unreachable("unimplemented opcode in encodeInstruction()");
 
   int NewOpcode = -1;
@@ -256,9 +208,14 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
       if (Fixups.size() > N)
         Fixups.pop_back();
 
-      Opcode = NewOpcode;
       TmpInst.setOpcode (NewOpcode);
       Binary = getBinaryCodeForInstr(TmpInst, Fixups, STI);
+    }
+
+    if (((MI.getOpcode() == Mips::MOVEP_MM) ||
+         (MI.getOpcode() == Mips::MOVEP_MMR6))) {
+      unsigned RegPair = getMovePRegPairOpValue(MI, 0, Fixups, STI);
+      Binary = (Binary & 0xFFFFFC7F) | (RegPair << 7);
     }
   }
 
@@ -654,6 +611,10 @@ getExprOpValue(const MCExpr *Expr, SmallVectorImpl<MCFixup> &Fixups,
     case MipsMCExpr::MEK_Special:
       llvm_unreachable("Unhandled fixup kind!");
       break;
+    case MipsMCExpr::MEK_DTPREL:
+      // MEK_DTPREL is used for marking TLS DIEExpr only
+      // and contains a regular sub-expression.
+      return getExprOpValue(MipsExpr->getSubExpr(), Fixups, STI);
     case MipsMCExpr::MEK_CALL_HI16:
       FixupKind = Mips::fixup_Mips_CALL_HI16;
       break;
@@ -703,27 +664,29 @@ getExprOpValue(const MCExpr *Expr, SmallVectorImpl<MCFixup> &Fixups,
       break;
     case MipsMCExpr::MEK_LO:
       // Check for %lo(%neg(%gp_rel(X)))
-      if (MipsExpr->isGpOff()) {
-        FixupKind = Mips::fixup_Mips_GPOFF_LO;
-        break;
-      }
-      FixupKind = isMicroMips(STI) ? Mips::fixup_MICROMIPS_LO16
-                                   : Mips::fixup_Mips_LO16;
+      if (MipsExpr->isGpOff())
+        FixupKind = isMicroMips(STI) ? Mips::fixup_MICROMIPS_GPOFF_LO
+                                     : Mips::fixup_Mips_GPOFF_LO;
+      else
+        FixupKind = isMicroMips(STI) ? Mips::fixup_MICROMIPS_LO16
+                                     : Mips::fixup_Mips_LO16;
       break;
     case MipsMCExpr::MEK_HIGHEST:
-      FixupKind = Mips::fixup_Mips_HIGHEST;
+      FixupKind = isMicroMips(STI) ? Mips::fixup_MICROMIPS_HIGHEST
+                                   : Mips::fixup_Mips_HIGHEST;
       break;
     case MipsMCExpr::MEK_HIGHER:
-      FixupKind = Mips::fixup_Mips_HIGHER;
+      FixupKind = isMicroMips(STI) ? Mips::fixup_MICROMIPS_HIGHER
+                                   : Mips::fixup_Mips_HIGHER;
       break;
     case MipsMCExpr::MEK_HI:
       // Check for %hi(%neg(%gp_rel(X)))
-      if (MipsExpr->isGpOff()) {
-        FixupKind = Mips::fixup_Mips_GPOFF_HI;
-        break;
-      }
-      FixupKind = isMicroMips(STI) ? Mips::fixup_MICROMIPS_HI16
-                                   : Mips::fixup_Mips_HI16;
+      if (MipsExpr->isGpOff())
+        FixupKind = isMicroMips(STI) ? Mips::fixup_MICROMIPS_GPOFF_HI
+                                     : Mips::fixup_Mips_GPOFF_HI;
+      else
+        FixupKind = isMicroMips(STI) ? Mips::fixup_MICROMIPS_HI16
+                                     : Mips::fixup_Mips_HI16;
       break;
     case MipsMCExpr::MEK_PCREL_HI16:
       FixupKind = Mips::fixup_MIPS_PCHI16;
@@ -1105,13 +1068,6 @@ MipsMCCodeEmitter::getRegisterListOpValue16(const MCInst &MI, unsigned OpNo,
 }
 
 unsigned
-MipsMCCodeEmitter::getRegisterPairOpValue(const MCInst &MI, unsigned OpNo,
-                                          SmallVectorImpl<MCFixup> &Fixups,
-                                          const MCSubtargetInfo &STI) const {
-  return getMachineOpValue(MI, MI.getOperand(OpNo), Fixups, STI);
-}
-
-unsigned
 MipsMCCodeEmitter::getMovePRegPairOpValue(const MCInst &MI, unsigned OpNo,
                                           SmallVectorImpl<MCFixup> &Fixups,
                                           const MCSubtargetInfo &STI) const {
@@ -1143,6 +1099,29 @@ MipsMCCodeEmitter::getMovePRegPairOpValue(const MCInst &MI, unsigned OpNo,
     res = 7;
 
   return res;
+}
+
+unsigned
+MipsMCCodeEmitter::getMovePRegSingleOpValue(const MCInst &MI, unsigned OpNo,
+                                            SmallVectorImpl<MCFixup> &Fixups,
+                                            const MCSubtargetInfo &STI) const {
+  assert(((OpNo == 2) || (OpNo == 3)) &&
+         "Unexpected OpNo for movep operand encoding!");
+
+  MCOperand Op = MI.getOperand(OpNo);
+  assert(Op.isReg() && "Operand of movep is not a register!");
+  switch (Op.getReg()) {
+  default:
+    llvm_unreachable("Unknown register for movep!");
+  case Mips::ZERO:  return 0;
+  case Mips::S1:    return 1;
+  case Mips::V0:    return 2;
+  case Mips::V1:    return 3;
+  case Mips::S0:    return 4;
+  case Mips::S2:    return 5;
+  case Mips::S3:    return 6;
+  case Mips::S4:    return 7;
+  }
 }
 
 unsigned

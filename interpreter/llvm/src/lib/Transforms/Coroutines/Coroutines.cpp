@@ -1,23 +1,43 @@
-//===-- Coroutines.cpp ----------------------------------------------------===//
+//===- Coroutines.cpp -----------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+//
 // This file implements the common infrastructure for Coroutine Passes.
+//
 //===----------------------------------------------------------------------===//
 
+#include "llvm/Transforms/Coroutines.h"
+#include "llvm-c/Transforms/Coroutines.h"
+#include "CoroInstr.h"
 #include "CoroInternal.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Analysis/CallGraph.h"
 #include "llvm/Analysis/CallGraphSCCPass.h"
+#include "llvm/Transforms/Utils/Local.h"
+#include "llvm/IR/Attributes.h"
+#include "llvm/IR/CallSite.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
 #include "llvm/IR/InstIterator.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/LegacyPassManager.h"
-#include "llvm/IR/Verifier.h"
-#include "llvm/InitializePasses.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Transforms/IPO.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
-#include "llvm/Transforms/Utils/Local.h"
+#include <cassert>
+#include <cstddef>
+#include <utility>
 
 using namespace llvm;
 
@@ -105,9 +125,10 @@ static bool isCoroutineIntrinsicName(StringRef Name) {
   static const char *const CoroIntrinsics[] = {
       "llvm.coro.alloc",   "llvm.coro.begin",   "llvm.coro.destroy",
       "llvm.coro.done",    "llvm.coro.end",     "llvm.coro.frame",
-      "llvm.coro.free",    "llvm.coro.id",      "llvm.coro.param",
-      "llvm.coro.promise", "llvm.coro.resume",  "llvm.coro.save",
-      "llvm.coro.size",    "llvm.coro.subfn.addr", "llvm.coro.suspend",
+      "llvm.coro.free",    "llvm.coro.id",      "llvm.coro.noop",
+      "llvm.coro.param",   "llvm.coro.promise", "llvm.coro.resume",
+      "llvm.coro.save",    "llvm.coro.size",    "llvm.coro.subfn.addr",
+      "llvm.coro.suspend",
   };
   return Intrinsic::lookupLLVMIntrinsicByName(CoroIntrinsics, Name) != -1;
 }
@@ -117,7 +138,6 @@ static bool isCoroutineIntrinsicName(StringRef Name) {
 // that names are intrinsic names.
 bool coro::declaresIntrinsics(Module &M,
                               std::initializer_list<StringRef> List) {
-
   for (StringRef Name : List) {
     assert(isCoroutineIntrinsicName(Name) && "not a coroutine intrinsic");
     if (M.getNamedValue(Name))
@@ -156,15 +176,15 @@ static void buildCGN(CallGraph &CG, CallGraphNode *Node) {
 
   // Look for calls by this function.
   for (Instruction &I : instructions(F))
-    if (CallSite CS = CallSite(cast<Value>(&I))) {
-      const Function *Callee = CS.getCalledFunction();
+    if (auto *Call = dyn_cast<CallBase>(&I)) {
+      const Function *Callee = Call->getCalledFunction();
       if (!Callee || !Intrinsic::isLeaf(Callee->getIntrinsicID()))
         // Indirect calls of intrinsics are not allowed so no need to check.
         // We can be more precise here by using TargetArg returned by
         // Intrinsic::isLeaf.
-        Node->addCalledFunction(CS, CG.getCallsExternalNode());
+        Node->addCalledFunction(Call, CG.getCallsExternalNode());
       else if (!Callee->isIntrinsic())
-        Node->addCalledFunction(CS, CG.getOrInsertFunction(Callee));
+        Node->addCalledFunction(Call, CG.getOrInsertFunction(Callee));
     }
 }
 
@@ -323,4 +343,20 @@ void coro::Shape::buildFrom(Function &F) {
   // Remove orphaned coro.saves.
   for (CoroSaveInst *CoroSave : UnusedCoroSaves)
     CoroSave->eraseFromParent();
+}
+
+void LLVMAddCoroEarlyPass(LLVMPassManagerRef PM) {
+  unwrap(PM)->add(createCoroEarlyPass());
+}
+
+void LLVMAddCoroSplitPass(LLVMPassManagerRef PM) {
+  unwrap(PM)->add(createCoroSplitPass());
+}
+
+void LLVMAddCoroElidePass(LLVMPassManagerRef PM) {
+  unwrap(PM)->add(createCoroElidePass());
+}
+
+void LLVMAddCoroCleanupPass(LLVMPassManagerRef PM) {
+  unwrap(PM)->add(createCoroCleanupPass());
 }

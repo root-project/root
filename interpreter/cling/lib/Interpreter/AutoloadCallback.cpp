@@ -124,7 +124,8 @@ namespace cling {
           FE = m_PP->LookupFile(fileNameLoc, FileName, isAngled,
                                 FromDir, FromFile, CurDir, /*SearchPath*/0,
                                 /*RelativePath*/ 0, /*suggestedModule*/0,
-                                /*IsMapped*/0, /*SkipCache*/ false,
+                                /*IsMapped*/0, /*IsFrameworkFound*/ nullptr,
+                                /*SkipCache*/ false,
                                 /*OpenFile*/ false, /*CacheFail*/ true);
           needCacheUpdate = true;
         }
@@ -324,15 +325,16 @@ namespace cling {
     }
   };
 
-  void AutoloadCallback::InclusionDirective(clang::SourceLocation HashLoc,
-                          const clang::Token &IncludeTok,
-                          llvm::StringRef FileName,
-                          bool IsAngled,
-                          clang::CharSourceRange FilenameRange,
-                          const clang::FileEntry *File,
-                          llvm::StringRef SearchPath,
-                          llvm::StringRef RelativePath,
-                          const clang::Module *Imported) {
+  void AutoloadCallback::InclusionDirective(clang::SourceLocation /*HashLoc*/,
+                                            const clang::Token &/*IncludeTok*/,
+                                            llvm::StringRef /*FileName*/,
+                                            bool /*IsAngled*/,
+                                       clang::CharSourceRange /*FilenameRange*/,
+                                            const clang::FileEntry *File,
+                                            llvm::StringRef /*SearchPath*/,
+                                            llvm::StringRef /*RelativePath*/,
+                                            const clang::Module */*Imported*/,
+                               clang::SrcMgr::CharacteristicKind /*FileType*/) {
     // If File is 0 this means that the #included file doesn't exist.
     if (!File)
       return;

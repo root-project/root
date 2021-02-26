@@ -1,9 +1,8 @@
 #!/usr/bin/env perl
 #
-#                     The LLVM Compiler Infrastructure
-#
-# This file is distributed under the University of Illinois Open Source
-# License. See LICENSE.TXT for details.
+# Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+# See https://llvm.org/LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #
 ##===----------------------------------------------------------------------===##
 #
@@ -243,11 +242,6 @@ sub Analyze {
       push @Args, "-Xclang", $arg;
     }
 
-    # Display Ubiviz graph?
-    if (defined $ENV{'CCC_UBI'}) {
-      push @Args, "-Xclang", "-analyzer-viz-egraph-ubigraph";
-    }
-
     if (defined $AnalyzerTarget) {
       push @Args, "-target", $AnalyzerTarget;
     }
@@ -419,7 +413,7 @@ my %LangMap = (
   'cc'  => 'c++',
   'C'   => 'c++',
   'ii'  => 'c++-cpp-output',
-  'i'   => $IsCXX ? 'c++-cpp-output' : 'c-cpp-output',
+  'i'   => $IsCXX ? 'c++-cpp-output' : 'cpp-output',
   'm'   => 'objective-c',
   'mi'  => 'objective-c-cpp-output',
   'mm'  => 'objective-c++',
@@ -439,7 +433,7 @@ my %LangsAccepted = (
   "c" => 1,
   "c++" => 1,
   "objective-c++" => 1,
-  "c-cpp-output" => 1,
+  "cpp-output" => 1,
   "objective-c-cpp-output" => 1,
   "c++-cpp-output" => 1
 );
@@ -751,9 +745,10 @@ if ($Action eq 'compile' or $Action eq 'link') {
 
     if (defined $OutputFormat) {
       push @AnalyzeArgs, "-analyzer-output=" . $OutputFormat;
-      if ($OutputFormat =~ /plist/) {
+      if ($OutputFormat =~ /plist/ || $OutputFormat =~ /sarif/) {
         # Change "Output" to be a file.
-        my ($h, $f) = tempfile("report-XXXXXX", SUFFIX => ".plist",
+        my $Suffix = $OutputFormat =~ /plist/ ? ".plist" : ".sarif";
+        my ($h, $f) = tempfile("report-XXXXXX", SUFFIX => $Suffix,
                                DIR => $HtmlDir);
         $ResultFile = $f;
         # If the HtmlDir is not set, we should clean up the plist files.

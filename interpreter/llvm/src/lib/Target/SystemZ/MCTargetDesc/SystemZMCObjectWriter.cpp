@@ -1,9 +1,8 @@
 //===-- SystemZMCObjectWriter.cpp - SystemZ ELF writer --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -13,6 +12,7 @@
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCFixup.h"
+#include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCValue.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <cassert>
@@ -36,8 +36,8 @@ protected:
 } // end anonymous namespace
 
 SystemZObjectWriter::SystemZObjectWriter(uint8_t OSABI)
-  : MCELFObjectTargetWriter(/*Is64Bit=*/true, OSABI, ELF::EM_S390,
-                            /*HasRelocationAddend=*/ true) {}
+  : MCELFObjectTargetWriter(/*Is64Bit_=*/true, OSABI, ELF::EM_S390,
+                            /*HasRelocationAddend_=*/ true) {}
 
 // Return the relocation type for an absolute value of MCFixupKind Kind.
 static unsigned getAbsoluteReloc(unsigned Kind) {
@@ -160,8 +160,7 @@ unsigned SystemZObjectWriter::getRelocType(MCContext &Ctx,
   }
 }
 
-MCObjectWriter *llvm::createSystemZObjectWriter(raw_pwrite_stream &OS,
-                                                uint8_t OSABI) {
-  MCELFObjectTargetWriter *MOTW = new SystemZObjectWriter(OSABI);
-  return createELFObjectWriter(MOTW, OS, /*IsLittleEndian=*/false);
+std::unique_ptr<MCObjectTargetWriter>
+llvm::createSystemZObjectWriter(uint8_t OSABI) {
+  return llvm::make_unique<SystemZObjectWriter>(OSABI);
 }

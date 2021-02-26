@@ -1,14 +1,13 @@
 //===-- WebAssemblyCallIndirectFixup.cpp - Fix call_indirects -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file converts pseudo call_indirect instructions into real
+/// This file converts pseudo call_indirect instructions into real
 /// call_indirects.
 ///
 /// The order of arguments for a call_indirect is the arguments to the function
@@ -27,7 +26,7 @@
 #include "WebAssemblyMachineFunctionInfo.h"
 #include "WebAssemblySubtarget.h"
 #include "llvm/Analysis/AliasAnalysis.h"
-#include "llvm/CodeGen/LiveIntervalAnalysis.h"
+#include "llvm/CodeGen/LiveIntervals.h"
 #include "llvm/CodeGen/MachineBlockFrequencyInfo.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
@@ -54,34 +53,55 @@ public:
 } // end anonymous namespace
 
 char WebAssemblyCallIndirectFixup::ID = 0;
+INITIALIZE_PASS(WebAssemblyCallIndirectFixup, DEBUG_TYPE,
+                "Rewrite call_indirect argument orderings", false, false)
+
 FunctionPass *llvm::createWebAssemblyCallIndirectFixup() {
   return new WebAssemblyCallIndirectFixup();
 }
 
-static unsigned GetNonPseudoCallIndirectOpcode(const MachineInstr &MI) {
+static unsigned getNonPseudoCallIndirectOpcode(const MachineInstr &MI) {
   switch (MI.getOpcode()) {
     using namespace WebAssembly;
-  case PCALL_INDIRECT_VOID: return CALL_INDIRECT_VOID;
-  case PCALL_INDIRECT_I32: return CALL_INDIRECT_I32;
-  case PCALL_INDIRECT_I64: return CALL_INDIRECT_I64;
-  case PCALL_INDIRECT_F32: return CALL_INDIRECT_F32;
-  case PCALL_INDIRECT_F64: return CALL_INDIRECT_F64;
-  case PCALL_INDIRECT_v16i8: return CALL_INDIRECT_v16i8;
-  case PCALL_INDIRECT_v8i16: return CALL_INDIRECT_v8i16;
-  case PCALL_INDIRECT_v4i32: return CALL_INDIRECT_v4i32;
-  case PCALL_INDIRECT_v4f32: return CALL_INDIRECT_v4f32;
-  default: return INSTRUCTION_LIST_END;
+  case PCALL_INDIRECT_VOID:
+    return CALL_INDIRECT_VOID;
+  case PCALL_INDIRECT_i32:
+    return CALL_INDIRECT_i32;
+  case PCALL_INDIRECT_i64:
+    return CALL_INDIRECT_i64;
+  case PCALL_INDIRECT_f32:
+    return CALL_INDIRECT_f32;
+  case PCALL_INDIRECT_f64:
+    return CALL_INDIRECT_f64;
+  case PCALL_INDIRECT_v16i8:
+    return CALL_INDIRECT_v16i8;
+  case PCALL_INDIRECT_v8i16:
+    return CALL_INDIRECT_v8i16;
+  case PCALL_INDIRECT_v4i32:
+    return CALL_INDIRECT_v4i32;
+  case PCALL_INDIRECT_v2i64:
+    return CALL_INDIRECT_v2i64;
+  case PCALL_INDIRECT_v4f32:
+    return CALL_INDIRECT_v4f32;
+  case PCALL_INDIRECT_v2f64:
+    return CALL_INDIRECT_v2f64;
+  case PCALL_INDIRECT_exnref:
+    return CALL_INDIRECT_exnref;
+  case PRET_CALL_INDIRECT:
+    return RET_CALL_INDIRECT;
+  default:
+    return INSTRUCTION_LIST_END;
   }
 }
 
-static bool IsPseudoCallIndirect(const MachineInstr &MI) {
-  return GetNonPseudoCallIndirectOpcode(MI) !=
+static bool isPseudoCallIndirect(const MachineInstr &MI) {
+  return getNonPseudoCallIndirectOpcode(MI) !=
          WebAssembly::INSTRUCTION_LIST_END;
 }
 
 bool WebAssemblyCallIndirectFixup::runOnMachineFunction(MachineFunction &MF) {
-  DEBUG(dbgs() << "********** Fixing up CALL_INDIRECTs **********\n"
-               << MF.getName() << '\n');
+  LLVM_DEBUG(dbgs() << "********** Fixing up CALL_INDIRECTs **********\n"
+                    << "********** Function: " << MF.getName() << '\n');
 
   bool Changed = false;
   const WebAssemblyInstrInfo *TII =
@@ -89,11 +109,11 @@ bool WebAssemblyCallIndirectFixup::runOnMachineFunction(MachineFunction &MF) {
 
   for (MachineBasicBlock &MBB : MF) {
     for (MachineInstr &MI : MBB) {
-      if (IsPseudoCallIndirect(MI)) {
-        DEBUG(dbgs() << "Found call_indirect: " << MI << '\n');
+      if (isPseudoCallIndirect(MI)) {
+        LLVM_DEBUG(dbgs() << "Found call_indirect: " << MI << '\n');
 
         // Rewrite pseudo to non-pseudo
-        const MCInstrDesc &Desc = TII->get(GetNonPseudoCallIndirectOpcode(MI));
+        const MCInstrDesc &Desc = TII->get(getNonPseudoCallIndirectOpcode(MI));
         MI.setDesc(Desc);
 
         // Rewrite argument order
@@ -107,10 +127,8 @@ bool WebAssemblyCallIndirectFixup::runOnMachineFunction(MachineFunction &MF) {
         Ops.push_back(MachineOperand::CreateImm(0));
 
         for (const MachineOperand &MO :
-                 make_range(MI.operands_begin() +
-                                MI.getDesc().getNumDefs() + 1,
-                            MI.operands_begin() +
-                                MI.getNumExplicitOperands()))
+             make_range(MI.operands_begin() + MI.getDesc().getNumDefs() + 1,
+                        MI.operands_begin() + MI.getNumExplicitOperands()))
           Ops.push_back(MO);
         Ops.push_back(MI.getOperand(MI.getDesc().getNumDefs()));
 
@@ -120,14 +138,13 @@ bool WebAssemblyCallIndirectFixup::runOnMachineFunction(MachineFunction &MF) {
         for (const MachineOperand &MO : Ops)
           MI.addOperand(MO);
 
-        DEBUG(dbgs() << "  After transform: " << MI);
+        LLVM_DEBUG(dbgs() << "  After transform: " << MI);
         Changed = true;
       }
     }
   }
 
-  DEBUG(dbgs() << "\nDone fixing up CALL_INDIRECTs\n\n");
+  LLVM_DEBUG(dbgs() << "\nDone fixing up CALL_INDIRECTs\n\n");
 
   return Changed;
 }
-

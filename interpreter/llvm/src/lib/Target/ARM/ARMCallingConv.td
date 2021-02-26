@@ -1,9 +1,8 @@
 //===-- ARMCallingConv.td - Calling Conventions for ARM ----*- tablegen -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 // This describes the calling conventions for ARM architecture.
@@ -16,6 +15,7 @@ class CCIfAlign<string Align, CCAction A>:
 //===----------------------------------------------------------------------===//
 // ARM APCS Calling Convention
 //===----------------------------------------------------------------------===//
+let Entry = 1 in
 def CC_ARM_APCS : CallingConv<[
 
   // Handles byval parameters.
@@ -30,8 +30,8 @@ def CC_ARM_APCS : CallingConv<[
   CCIfSwiftError<CCIfType<[i32], CCAssignToReg<[R8]>>>,
 
   // Handle all vector types as either f64 or v2f64.
-  CCIfType<[v1i64, v2i32, v4i16, v8i8, v2f32], CCBitConvertToType<f64>>,
-  CCIfType<[v2i64, v4i32, v8i16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
+  CCIfType<[v1i64, v2i32, v4i16, v4f16, v8i8, v2f32], CCBitConvertToType<f64>>,
+  CCIfType<[v2i64, v4i32, v8i16, v8f16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
 
   // f64 and v2f64 are passed in adjacent GPRs, possibly split onto the stack
   CCIfType<[f64, v2f64], CCCustom<"CC_ARM_APCS_Custom_f64">>,
@@ -44,6 +44,7 @@ def CC_ARM_APCS : CallingConv<[
   CCIfType<[v2f64], CCAssignToStack<16, 4>>
 ]>;
 
+let Entry = 1 in
 def RetCC_ARM_APCS : CallingConv<[
   CCIfType<[i1, i8, i16], CCPromoteToType<i32>>,
   CCIfType<[f32], CCBitConvertToType<i32>>,
@@ -55,8 +56,8 @@ def RetCC_ARM_APCS : CallingConv<[
   CCIfSwiftError<CCIfType<[i32], CCAssignToReg<[R8]>>>,
 
   // Handle all vector types as either f64 or v2f64.
-  CCIfType<[v1i64, v2i32, v4i16, v8i8, v2f32], CCBitConvertToType<f64>>,
-  CCIfType<[v2i64, v4i32, v8i16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
+  CCIfType<[v1i64, v2i32, v4i16, v4f16, v8i8, v2f32], CCBitConvertToType<f64>>,
+  CCIfType<[v2i64, v4i32, v8i16, v8f16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
 
   CCIfType<[f64, v2f64], CCCustom<"RetCC_ARM_APCS_Custom_f64">>,
 
@@ -67,10 +68,11 @@ def RetCC_ARM_APCS : CallingConv<[
 //===----------------------------------------------------------------------===//
 // ARM APCS Calling Convention for FastCC (when VFP2 or later is available)
 //===----------------------------------------------------------------------===//
+let Entry = 1 in
 def FastCC_ARM_APCS : CallingConv<[
   // Handle all vector types as either f64 or v2f64.
-  CCIfType<[v1i64, v2i32, v4i16, v8i8, v2f32], CCBitConvertToType<f64>>,
-  CCIfType<[v2i64, v4i32, v8i16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
+  CCIfType<[v1i64, v2i32, v4i16, v4f16, v8i8, v2f32], CCBitConvertToType<f64>>,
+  CCIfType<[v2i64, v4i32, v8i16, v8f16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
 
   CCIfType<[v2f64], CCAssignToReg<[Q0, Q1, Q2, Q3]>>,
   CCIfType<[f64], CCAssignToReg<[D0, D1, D2, D3, D4, D5, D6, D7]>>,
@@ -86,10 +88,11 @@ def FastCC_ARM_APCS : CallingConv<[
   CCDelegateTo<CC_ARM_APCS>
 ]>;
 
+let Entry = 1 in
 def RetFastCC_ARM_APCS : CallingConv<[
   // Handle all vector types as either f64 or v2f64.
-  CCIfType<[v1i64, v2i32, v4i16, v8i8, v2f32], CCBitConvertToType<f64>>,
-  CCIfType<[v2i64, v4i32, v8i16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
+  CCIfType<[v1i64, v2i32, v4i16, v4f16, v8i8, v2f32], CCBitConvertToType<f64>>,
+  CCIfType<[v2i64, v4i32, v8i16, v8f16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
 
   CCIfType<[v2f64], CCAssignToReg<[Q0, Q1, Q2, Q3]>>,
   CCIfType<[f64], CCAssignToReg<[D0, D1, D2, D3, D4, D5, D6, D7]>>,
@@ -102,10 +105,11 @@ def RetFastCC_ARM_APCS : CallingConv<[
 // ARM APCS Calling Convention for GHC
 //===----------------------------------------------------------------------===//
 
+let Entry = 1 in
 def CC_ARM_APCS_GHC : CallingConv<[
   // Handle all vector types as either f64 or v2f64.
-  CCIfType<[v1i64, v2i32, v4i16, v8i8, v2f32], CCBitConvertToType<f64>>,
-  CCIfType<[v2i64, v4i32, v8i16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
+  CCIfType<[v1i64, v2i32, v4i16, v4f16, v8i8, v2f32], CCBitConvertToType<f64>>,
+  CCIfType<[v2i64, v4i32, v8i16, v8f16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
 
   CCIfType<[v2f64], CCAssignToReg<[Q4, Q5]>>,
   CCIfType<[f64], CCAssignToReg<[D8, D9, D10, D11]>>,
@@ -152,6 +156,7 @@ def RetCC_ARM_AAPCS_Common : CallingConv<[
 // ARM AAPCS (EABI) Calling Convention
 //===----------------------------------------------------------------------===//
 
+let Entry = 1 in
 def CC_ARM_AAPCS : CallingConv<[
   // Handles byval parameters.
   CCIfByVal<CCPassByVal<4, 4>>,
@@ -160,8 +165,8 @@ def CC_ARM_AAPCS : CallingConv<[
   CCIfNest<CCAssignToReg<[R12]>>,
 
   // Handle all vector types as either f64 or v2f64.
-  CCIfType<[v1i64, v2i32, v4i16, v8i8, v2f32], CCBitConvertToType<f64>>,
-  CCIfType<[v2i64, v4i32, v8i16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
+  CCIfType<[v1i64, v2i32, v4i16, v4f16, v4f16, v8i8, v2f32], CCBitConvertToType<f64>>,
+  CCIfType<[v2i64, v4i32, v8i16, v8f16, v8f16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
 
   // Pass SwiftSelf in a callee saved register.
   CCIfSwiftSelf<CCIfType<[i32], CCAssignToReg<[R10]>>>,
@@ -174,10 +179,11 @@ def CC_ARM_AAPCS : CallingConv<[
   CCDelegateTo<CC_ARM_AAPCS_Common>
 ]>;
 
+let Entry = 1 in
 def RetCC_ARM_AAPCS : CallingConv<[
   // Handle all vector types as either f64 or v2f64.
-  CCIfType<[v1i64, v2i32, v4i16, v8i8, v2f32], CCBitConvertToType<f64>>,
-  CCIfType<[v2i64, v4i32, v8i16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
+  CCIfType<[v1i64, v2i32, v4i16, v4f16, v4f16, v8i8, v2f32], CCBitConvertToType<f64>>,
+  CCIfType<[v2i64, v4i32, v8i16, v8f16, v8f16,v16i8, v4f32], CCBitConvertToType<v2f64>>,
 
   // Pass SwiftSelf in a callee saved register.
   CCIfSwiftSelf<CCIfType<[i32], CCAssignToReg<[R10]>>>,
@@ -187,6 +193,7 @@ def RetCC_ARM_AAPCS : CallingConv<[
 
   CCIfType<[f64, v2f64], CCCustom<"RetCC_ARM_AAPCS_Custom_f64">>,
   CCIfType<[f32], CCBitConvertToType<i32>>,
+
   CCDelegateTo<RetCC_ARM_AAPCS_Common>
 ]>;
 
@@ -195,13 +202,14 @@ def RetCC_ARM_AAPCS : CallingConv<[
 // Also used for FastCC (when VFP2 or later is available)
 //===----------------------------------------------------------------------===//
 
+let Entry = 1 in
 def CC_ARM_AAPCS_VFP : CallingConv<[
   // Handles byval parameters.
   CCIfByVal<CCPassByVal<4, 4>>,
 
   // Handle all vector types as either f64 or v2f64.
-  CCIfType<[v1i64, v2i32, v4i16, v8i8, v2f32], CCBitConvertToType<f64>>,
-  CCIfType<[v2i64, v4i32, v8i16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
+  CCIfType<[v1i64, v2i32, v4i16, v4f16, v4f16, v8i8, v2f32], CCBitConvertToType<f64>>,
+  CCIfType<[v2i64, v4i32, v8i16, v8f16, v8f16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
 
   // Pass SwiftSelf in a callee saved register.
   CCIfSwiftSelf<CCIfType<[i32], CCAssignToReg<[R10]>>>,
@@ -219,10 +227,11 @@ def CC_ARM_AAPCS_VFP : CallingConv<[
   CCDelegateTo<CC_ARM_AAPCS_Common>
 ]>;
 
+let Entry = 1 in
 def RetCC_ARM_AAPCS_VFP : CallingConv<[
   // Handle all vector types as either f64 or v2f64.
-  CCIfType<[v1i64, v2i32, v4i16, v8i8, v2f32], CCBitConvertToType<f64>>,
-  CCIfType<[v2i64, v4i32, v8i16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
+  CCIfType<[v1i64, v2i32, v4i16, v4f16, v4f16, v8i8, v2f32], CCBitConvertToType<f64>>,
+  CCIfType<[v2i64, v4i32, v8i16, v8f16, v8f16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
 
   // Pass SwiftSelf in a callee saved register.
   CCIfSwiftSelf<CCIfType<[i32], CCAssignToReg<[R10]>>>,
@@ -233,7 +242,7 @@ def RetCC_ARM_AAPCS_VFP : CallingConv<[
   CCIfType<[v2f64], CCAssignToReg<[Q0, Q1, Q2, Q3]>>,
   CCIfType<[f64], CCAssignToReg<[D0, D1, D2, D3, D4, D5, D6, D7]>>,
   CCIfType<[f32], CCAssignToReg<[S0, S1, S2, S3, S4, S5, S6, S7, S8,
-                                 S9, S10, S11, S12, S13, S14, S15]>>,
+                                      S9, S10, S11, S12, S13, S14, S15]>>,
   CCDelegateTo<RetCC_ARM_AAPCS_Common>
 ]>;
 
@@ -247,6 +256,9 @@ def CSR_FPRegs : CalleeSavedRegs<(add (sequence "D%u", 0, 31))>;
 def CSR_AAPCS : CalleeSavedRegs<(add LR, R11, R10, R9, R8, R7, R6, R5, R4,
                                      (sequence "D%u", 15, 8))>;
 
+// R8 is used to pass swifterror, remove it from CSR.
+def CSR_AAPCS_SwiftError : CalleeSavedRegs<(sub CSR_AAPCS, R8)>;
+
 // The order of callee-saved registers needs to match the order we actually push
 // them in FrameLowering, because this order is what's used by
 // PrologEpilogInserter to allocate frame index slots. So when R7 is the frame
@@ -254,6 +266,10 @@ def CSR_AAPCS : CalleeSavedRegs<(add LR, R11, R10, R9, R8, R7, R6, R5, R4,
 def CSR_AAPCS_SplitPush : CalleeSavedRegs<(add LR, R7, R6, R5, R4,
                                                R11, R10, R9, R8,
                                                (sequence "D%u", 15, 8))>;
+
+// R8 is used to pass swifterror, remove it from CSR.
+def CSR_AAPCS_SplitPush_SwiftError : CalleeSavedRegs<(sub CSR_AAPCS_SplitPush,
+                                                      R8)>;
 
 // Constructors and destructors return 'this' in the ARM C++ ABI; since 'this'
 // and the pointer return value are both passed in R0 in these cases, this can
