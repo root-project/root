@@ -1130,7 +1130,7 @@ void TBasket::Update(Int_t offset, Int_t skipped)
 
 Int_t TBasket::WriteBuffer()
 {
-   const Int_t kWrite = 1;
+   constexpr Int_t kWrite = 1;
 
    TFile *file = fBranch->GetFile(kWrite);
    if (!file) return 0;
@@ -1204,9 +1204,9 @@ Int_t TBasket::WriteBuffer()
       }
    }
 
-   Int_t lbuf, nout, noutot, bufmax, nzip;
-   lbuf       = fBufferRef->Length();
-   fObjlen    = lbuf - fKeylen;
+   Int_t nout, noutot, bufmax, nzip;
+
+   fObjlen = fBufferRef->Length() - fKeylen;
 
    fHeaderOnly = kTRUE;
    fCycle = fBranch->GetWriteBasket();
