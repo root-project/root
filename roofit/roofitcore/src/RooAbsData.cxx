@@ -143,25 +143,21 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
    claimVars(this);
 
    // clone the fundamentals of the given data set into internal buffer
-   TIterator *iter = vars.createIterator();
-   RooAbsArg *var;
-   while ((0 != (var = (RooAbsArg *)iter->Next()))) {
+   for (const auto var : vars) {
       if (!var->isFundamental()) {
          coutE(InputArguments) << "RooAbsDataStore::initialize(" << GetName()
                                << "): Data set cannot contain non-fundamental types, ignoring " << var->GetName()
                                << endl;
+         throw std::invalid_argument(std::string("Only fundamental variables can be placed into datasets. This is violated for ") + var->GetName());
       } else {
          _vars.addClone(*var);
       }
    }
-   delete iter;
 
    // reconnect any parameterized ranges to internal dataset observables
-   iter = _vars.createIterator();
-   while ((0 != (var = (RooAbsArg *)iter->Next()))) {
+   for (auto var : _vars) {
       var->attachDataSet(*this);
    }
-   delete iter;
 
    RooTrace::create(this);
 }
