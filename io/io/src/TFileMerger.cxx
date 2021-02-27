@@ -473,7 +473,8 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       if (!obj && key) {
          obj = key->ReadObj();
          ownobj = kTRUE;
-      } else if (obj && info.fIsFirst && current_sourcedir != target) {
+      } else if (obj && info.fIsFirst && current_sourcedir != target
+                 && !cl->InheritsFrom( TDirectory::Class() )) {
          R__ASSERT(cl->IsTObject());
          TDirectory::TContext ctxt(current_sourcedir);
          obj = obj->Clone();
@@ -708,7 +709,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       // and we are in incremental mode (because it will be reused
       // and has not been written to disk (for performance reason).
       // coverity[var_deref_model] the IsA()->InheritsFrom guarantees that the dynamic_cast will succeed.
-      if (!(type & kIncremental) || dirobj->GetFile() != target) {
+      if (ownobj && (!(type & kIncremental) || dirobj->GetFile() != target)) {
          dirobj->ResetBit(kMustCleanup);
          delete dirobj;
       }
