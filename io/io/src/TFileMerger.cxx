@@ -500,6 +500,18 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    }
    Bool_t canBeMerged = kTRUE;
 
+   TList dirtodelete;
+   auto getDirectory = [&dirtodelete](TDirectory *parent, const char *name, const TString &pathname)
+   {
+      TDirectory *result = dynamic_cast<TDirectory*>(parent->GetList()->FindObject(name));
+      if (!result)
+         result = parent->GetDirectory(pathname);
+      else
+         dirtodelete.Add(result);
+
+      return result;
+   };
+
    if ( cl->InheritsFrom( TDirectory::Class() ) ) {
       // it's a subdirectory
 
@@ -562,7 +574,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       } else {
          do {
             // make sure we are at the correct directory level by cd'ing to path
-            TDirectory *ndir = nextsource->GetDirectory(path);
+            TDirectory *ndir = getDirectory(nextsource, target->GetName(), path);
             if (ndir) {
                // For consistency (and persformance), we reset the MustCleanup be also for those
                // 'key' retrieved indirectly.
@@ -645,7 +657,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
          } else {
             while (nextsource) {
                // make sure we are at the correct directory level by cd'ing to path
-               TDirectory *ndir = nextsource->GetDirectory(path);
+               TDirectory *ndir = getDirectory(nextsource, target->GetName(), path);
                if (ndir) {
                   ndir->cd();
                   TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(keyname);
@@ -716,16 +728,12 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       // Let's also delete the directory from the other source (thanks to the 'allNames'
       // mechanism above we will not process the directories when tranversing the next
       // files).
-      TFile *nextsource = current_file ? (TFile *)sourcelist->After(current_file) : (TFile *)sourcelist->First();
-      while (nextsource) {
-         TDirectory *ndir = nextsource->GetDirectory(dirpath);
+      TIter deliter(&dirtodelete);
+      while(TObject *ndir = deliter()) {
          // For consistency (and performance), we reset the MustCleanup be also for those
          // 'key' retrieved indirectly.
-         if (ndir) {
-            ndir->ResetBit(kMustCleanup);
-            delete ndir;
-         }
-         nextsource = (TFile *)sourcelist->After(nextsource);
+         ndir->ResetBit(kMustCleanup);
+         delete ndir;
       }
    } else if (cl->InheritsFrom(TCollection::Class())) {
       // Don't overwrite, if the object were not merged.
