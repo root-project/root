@@ -1525,8 +1525,14 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   sliceOnlySet.remove(sumSet,kTRUE,kTRUE) ;
 
   _vars = sliceOnlySet;
-  const std::vector<double>& pbinv = calculatePartialBinVolume(sliceOnlySet);
-  
+  std::vector<double> const * pbinv = nullptr;
+
+  if(correctForBinSize && inverseBinCor) {
+     pbinv = &calculatePartialBinVolume(sliceOnlySet);
+  } else if(correctForBinSize && !inverseBinCor) {
+     pbinv = &calculatePartialBinVolume(sumSet);
+  }
+
   // Calculate mask and refence plot bins for non-iterating variables
   Bool_t* mask = new Bool_t[_vars.getSize()] ;
   Int_t*  refBin = new Int_t[_vars.getSize()] ;
@@ -1559,7 +1565,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
     }
     
     if (!skip) {
-      const double theBinVolume = correctForBinSize ? (inverseBinCor ? 1/pbinv[_vars.size()] : pbinv[_vars.size()] ) : 1.0 ;
+      const double theBinVolume = correctForBinSize ? (inverseBinCor ? 1/(*pbinv)[ibin] : (*pbinv)[ibin] ) : 1.0 ;
       total += get_wgt(ibin) * theBinVolume;
     }
   }
@@ -1642,25 +1648,37 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
 
     if (skip) continue;
 
-    // work out bin volume
-    Double_t theBinVolume = 1.;
+    // Work out bin volume
+    // It's not necessary to figure out the bin volume for the slice-only set explicitely here.
+    // We need to loop over the sumSet anyway to get the partial bin containment correction,
+    // so we can get the slice-only set volume later by dividing _binv[ibin] / binVolumeSumSetFull.
+    Double_t binVolumeSumSetFull = 1.;
+    Double_t binVolumeSumSetInRange = 1.;
     for (Int_t ivar = 0, tmp = ibin; ivar < (int)_vars.size(); ++ivar) {
       const Int_t idx = tmp / _idxMult[ivar];
       tmp -= idx*_idxMult[ivar];
+
+      // If the current variable is not in the sumSet, it should not be considered for the bin volume
+      const auto arg = _vars[ivar];
+      if (!sumSet.find(*arg)) {
+          continue;
+      }
+
       if (_binbounds[ivar].empty()) continue;
       const Double_t binLo = _binbounds[ivar][2 * idx];
       const Double_t binHi = _binbounds[ivar][2 * idx + 1];
       if (binHi < rangeLo[ivar] || binLo > rangeHi[ivar]) {
         // bin is outside of allowed range - effective bin volume is zero
-        theBinVolume = 0.;
+        binVolumeSumSetInRange = 0.;
         break;
       }
-      theBinVolume *= 
-          (std::min(rangeHi[ivar], binHi) - std::max(rangeLo[ivar], binLo));
+
+      binVolumeSumSetFull *= binHi - binLo;
+      binVolumeSumSetInRange *= std::min(rangeHi[ivar], binHi) - std::max(rangeLo[ivar], binLo);
     }
-    const Double_t corrPartial = theBinVolume / _binv[ibin];
+    const Double_t corrPartial = binVolumeSumSetInRange / binVolumeSumSetFull;
     if (0. == corrPartial) continue;
-    const Double_t corr = correctForBinSize ? (inverseBinCor ? 1. / _binv[ibin] : _binv[ibin] ) : 1.0;
+    const Double_t corr = correctForBinSize ? (inverseBinCor ? binVolumeSumSetFull / _binv[ibin] : binVolumeSumSetFull ) : 1.0;
     const Double_t y = getBinScale(ibin)*(get_wgt(ibin) * corr * corrPartial) - carry;
     const Double_t t = total + y;
     carry = (t - total) - y;
