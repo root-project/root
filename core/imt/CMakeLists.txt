@@ -43,7 +43,7 @@ if(imt)
     DEPENDENCIES
       Core
       Thread
-      MultiProc
+      ${MULTIPROC_LIB}
     BUILTINS
       TBB
   )
@@ -69,7 +69,7 @@ else()
       Imt
     DEPENDENCIES
       Core
-      MultiProc
+      ${MULTIPROC_LIB}
   )
 endif()
 
