@@ -743,11 +743,10 @@ void THtml::TFileSysDB::Fill()
 /** \class THtml
 \brief Legacy ROOT documentation system.
 
-> **Important Note:**
-> We keep THtml for those who still need it for legacy use cases.
-> ROOT has since several years moved to doxygen as documentation generator.
-> THtml is legacy code, and people should use doxygen instead.
-
+\deprecated
+We keep THtml for those who still need it for legacy use cases.
+ROOT has since several years moved to [doxygen](https://www.doxygen.nl) as documentation generator.
+THtml is legacy code, and people should use [doxygen](https://www.doxygen.nl) instead.
 
 <p>The THtml class is designed to easily document
 classes, code, and code related text files (like change logs). It generates HTML
