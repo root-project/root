@@ -513,12 +513,10 @@ sap.ui.define([], function() {
       let lastChild = scenes.childs.length -1;
 
       if (scenes.childs[lastChild].fElementId == msg.fSceneId)
-      {
-         for (let i = 0; i < this.controllers.length; ++i)
-         {
-            this.controllers[i]["OnEveManagerInit"]();
-         }
-      }
+         this.controllers.forEach(ctrl => {
+            if (ctrl.onEveManagerInit) 
+               ctrl.onEveManagerInit();
+         });
    },
 
    //------------------------------------------------------------------------------
