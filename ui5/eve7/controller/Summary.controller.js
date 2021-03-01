@@ -122,7 +122,7 @@ sap.ui.define([
          this.selected = {}; // container of selected objects
       },
 
-      OnEveManagerInit: function() {
+      onEveManagerInit: function() {
          var model = this.getView().getModel("treeModel");
          model.setData(this.createModel());
          model.refresh();
