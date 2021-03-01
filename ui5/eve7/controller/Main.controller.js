@@ -137,7 +137,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      OnEveManagerInit: function() {
+      onEveManagerInit: function() {
          console.log("manager updated");
          this.UpdateCommandsButtons(this.mgr.commands);
          this.updateViewers();

@@ -115,7 +115,7 @@ sap.ui.define([
          this.checkViewReady();
       },
 
-      OnEveManagerInit: function()
+      onEveManagerInit: function()
       {
          // called when manager was updated, need only in standalone modes to detect own element id
          if (!this.standalone) return;
