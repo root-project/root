@@ -1492,17 +1492,23 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   double scale=gPad->GetWw()*gPad->GetWNDC();
                   if (scale>0.0) toffset = TMath::Max(toffset,(double)w/scale);
                }
+               strncpy(chtemp, fAxis->GetBinLabel(i), 255);
+               if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, textaxis, chtemp);
                textaxis->PaintLatex(xmin + s*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                     fAxis->GetBinCenter(i),
                                     0,
                                     textaxis->GetTextSize(),
-                                    fAxis->GetBinLabel(i));
+                                    chtemp);
+               if (fNModLabs) ResetLabelAttributes(textaxis);
             } else {
+               strncpy(chtemp, fAxis->GetBinLabel(i), 255);
+               if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, textaxis, chtemp);
                textaxis->PaintLatex(xmin - 3*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                     ymin +(i-0.5)*(ymax-ymin)/nl,
                                     0,
                                     textaxis->GetTextSize(),
-                                    fAxis->GetBinLabel(i));
+                                    chtemp);
+               if (fNModLabs) ResetLabelAttributes(textaxis);
             }
          }
       }
@@ -1989,11 +1995,14 @@ L110:
                            typolabel.Data());
                      if (fNModLabs) ResetLabelAttributes(textaxis);
                   } else  {
+                     strncpy(chtemp, fAxis->GetBinLabel(k+fAxis->GetFirst()), 255);
+                     if (fNModLabs) ChangeLabelAttributes(k+fAxis->GetFirst(), fAxis->GetLabels()->GetSize()-1, textaxis, chtemp);
                      if (optionText == 1) textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                                                    gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                                                    0,
                                                    textaxis->GetTextSize(),
-                                                   fAxis->GetBinLabel(k+fAxis->GetFirst()));
+                                                   chtemp);
+                     if (fNModLabs) ResetLabelAttributes(textaxis);
                   }
                } else {
 
