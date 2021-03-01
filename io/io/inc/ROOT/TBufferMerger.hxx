@@ -99,7 +99,7 @@ public:
     */
    void SetMergeOptions(const TString& options);
 
-   /** Indicates that the file will not contain any TTree objects
+   /** Indicates that any TTree objects in the file should be skipped
     * and thus that steps that are specific to TTree can be skipped */
    void SetNotrees(Bool_t notrees=kFALSE)
    {

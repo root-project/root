@@ -956,9 +956,18 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
    } else {
       // Close or write is required so the file is complete.
       if (in_type & kIncremental) {
+         // In the case of 'kDelayWrite' the caller want to avoid having to
+         // write the output objects once for every input file and instead
+         // write it only once at the end of the process.
          if (!(in_type & kDelayWrite))
             fOutputFile->Write("",TObject::kOverwrite);
       } else {
+         // If in_type is not incremental but type is incremental we are now in
+         // the case where the user "explicitly" request a non-incremental merge
+         // but we still have internally an incremental merge. Because the user
+         // did not request the incremental merge they also probably do not to a
+         // final Write of the file and thus not doing the write here would lead
+         // to data loss ...
          if (type & kIncremental)
             fOutputFile->Write("",TObject::kOverwrite);
          gROOT->GetListOfFiles()->Remove(fOutputFile);
