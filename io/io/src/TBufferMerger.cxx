@@ -50,6 +50,9 @@ TBufferMerger::~TBufferMerger()
    if (!fQueue.empty())
       Merge();
 
+   // Since we support purely incremental merging, Merge does not write the target objects
+   // that are attached to the file (TTree and histograms) and thus we need to write them
+   // now.
    if (TFile *out = fMerger.GetOutputFile())
       out->Write("",TObject::kOverwrite);
 }
