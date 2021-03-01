@@ -433,9 +433,10 @@ namespace cling {
         cling::errs()
           << "cling::MetaProcessor: No curly at claimed position of opening curly!\n"
           << "in " << llvm::sys::path::filename(filename) << "\n"
-          << "content[" << posOpenCurly << "] = "
+          << "content[" << posOpenCurly << "] = \'"
           << content[posOpenCurly]
-          << "\n";
+          << "\'\n";
+          << "content = \"" << content << "\"\n";
         assert(content[posOpenCurly] == '{');
       }
       // hide the curly brace:
