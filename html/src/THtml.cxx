@@ -119,7 +119,7 @@ bool THtml::TModuleDefinition::GetModule(TClass* cl, TFileSysEntry* fse,
    TString tok;
    Ssiz_t start = 0;
    // For -Idir/sub and A.h in dir/sub/A.h, use sub as module name if
-   // it would eb empty otehrwise.
+   // it would eb empty otherwise.
    TString trailingInclude;
    while (inputdir.Tokenize(tok, start, THtml::GetDirDelimiter())) {
       if (filename.BeginsWith(tok)) {
@@ -503,7 +503,7 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine the path to look for macros (see TDocMacroDirective) for
-/// classes from a given module. If the path was sucessfully determined return true.
+/// classes from a given module. If the path was successfully determined return true.
 /// For ROOT, this directory is the "doc/macros" subdirectory of the module
 /// directory; the path returned is GetDocDir(module) + "/macros".
 ///
@@ -532,7 +532,7 @@ bool THtml::TPathDefinition::GetMacroPath(const TString& module, TString& out_di
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine the module's documentation directory. If module is empty,
 /// set doc_dir to the product's documentation directory.
-/// If the path was sucessfuly determined return true.
+/// If the path was successfully determined return true.
 /// For ROOT, this directory is the subdir "doc/" in the
 /// module's path; the directory returned is module + "/doc".
 ///
@@ -740,8 +740,14 @@ void THtml::TFileSysDB::Fill()
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/* BEGIN_HTML
+/** \class THtml
+\brief Legacy ROOT documentation system.
+
+\deprecated
+We keep THtml for those who still need it for legacy use cases.
+ROOT has since several years moved to [doxygen](https://www.doxygen.nl) as documentation generator.
+THtml is not developed nor supported anymore; please migrate to [doxygen](https://www.doxygen.nl) instead.
+
 <p>The THtml class is designed to easily document
 classes, code, and code related text files (like change logs). It generates HTML
 pages conforming to the XHTML 1.0 transitional specifications; an example of
@@ -951,7 +957,7 @@ If the header is not generated for a class, they will be replaced by "".</p>
 <p>Root's footer starts with the tag &lt;!--SIGNATURE--&gt;. It includes the
 author(s), last update, copyright, the links to the Root home page, to the
 user home page, to the index file (ClassIndex.html), to the top of the page
-and <tt>this page is automatically generated</tt> infomation. It ends with the
+and <tt>this page is automatically generated</tt> information. It ends with the
 tags <tt>&lt;/body&gt;&lt;/html&gt;</tt>. If you want to replace it,
 <a href="http://root.cern.ch/root/html/THtml.html">THtml</a> will search for some
 tags in your footer: Occurrences of the strings <tt>%AUTHOR%</tt>, <tt>%UPDATE%</tt>, and
@@ -1018,7 +1024,7 @@ as a valid class description block.</p>
 
 <p>All classes to be documented will have an entry in the ClassIndex.html,
 showing their name with a link to their documentation page and a miniature
-description. This discription for e.g. the class MyClass has to be given
+description. This description for e.g. the class MyClass has to be given
 in MyClass's header as a comment right after ClassDef(MyClass, n).</p>
 
 <h4><a name="syntax:meth">III.3 Method documentation</a></h4>
@@ -1157,7 +1163,7 @@ demand by calling <a href="#THtml:CreateAuxiliaryFiles">CreateAuxiliaryFiles()</
 
 <h3><a name="charts">VII. Class Charts</a></h3>
 THtml can generate a number of graphical representations for a class, which
-are displayed as a tabbed set of imaged ontop of the class description.
+are displayed as a tabbed set of imaged on-top of the class description.
 It can show the inheritance, inherited and hidden members, directly and
 indirectly included files, and library dependencies.
 
@@ -1185,7 +1191,7 @@ You can set them in your .rootrc file, see
   Root.Html.Footer       (default: ) - location of user defined footer
   Root.Html.Root         (default: ) - URL of Root's class documentation
   Root.Html.SearchEngine (default: ) - link to the search engine
-  Root.Html.Search       (defualt: ) - link to search by replacing "%s" with user input
+  Root.Html.Search       (default: ) - link to search by replacing "%s" with user input
   Root.Html.ViewCVS      (default: ) - URL of ViewCVS base
   Root.Html.XWho         (default: http://consult.cern.ch/xwho/people?) - URL of CERN's xWho
   Root.Html.Charset      (default: ISO-8859-1) - HTML character set
@@ -1202,7 +1208,8 @@ object parse the sources, which in turn invokes objects deriving from
 <a href="http://root.cern.ch/root/html/TDocDirective.html">TDocDirective</a>
 to process directives.</p>
 
-END_HTML */
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(THtml);
@@ -2470,7 +2477,7 @@ void THtml::SetInputDir(const char *dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the directory where the HTML pages shuold be written to.
+/// Set the directory where the HTML pages should be written to.
 /// If the directory does not exist it will be created when needed.
 
 void THtml::SetOutputDir(const char *dir)
