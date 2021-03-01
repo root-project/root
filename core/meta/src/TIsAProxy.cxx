@@ -135,7 +135,7 @@ TClass* TIsAProxy::operator()(const void *obj)
    }
    fLasts[next].store(last);
 
-   return last == nullptr ? nullptr : last->second;
+   return last ? last->second : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

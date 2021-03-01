@@ -740,10 +740,11 @@ void TTreeCloner::WriteBaskets()
             if (fFileCache && j >= notCached) {
                notCached = FillCache(notCached);
             }
-            if (from->GetBasketBytes()[index] == 0) {
-               from->GetBasketBytes()[index] = basket->ReadBasketBytes(pos, fromfile);
-            }
             Int_t len = from->GetBasketBytes()[index];
+            if (len == 0) {
+               len = basket->ReadBasketBytes(pos, fromfile);
+               from->GetBasketBytes()[index] = len;
+            }
 
             basket->LoadBasketBuffers(pos,len,fromfile,fFromTree);
             basket->IncrementPidOffset(fPidOffset);
