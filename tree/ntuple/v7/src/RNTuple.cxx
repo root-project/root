@@ -37,6 +37,7 @@
 #include <utility>
 
 
+#ifdef R__USE_IMT
 void ROOT::Experimental::RNTupleImtTaskScheduler::Reset()
 {
    fTaskGroup = std::make_unique<TTaskGroup>();
@@ -53,6 +54,7 @@ void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
 {
    fTaskGroup->Wait();
 }
+#endif
 
 
 //------------------------------------------------------------------------------
@@ -74,7 +76,8 @@ void ROOT::Experimental::RNTupleReader::InitPageSource()
 {
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled()) {
-      fSource->SetTaskScheduler(&fUnzipTasks);
+      fUnzipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+      fSource->SetTaskScheduler(fUnzipTasks.get());
    }
 #endif
    fSource->Attach();
