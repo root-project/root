@@ -1124,7 +1124,6 @@ Double_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
    Double_t stats[kNstat];
    GetStats(stats);
    Double_t sumw   = stats[0];
-   Double_t sumw2  = stats[1];
    Double_t sumwx  = stats[2];
    Double_t sumwx2 = stats[3];
    Double_t sumwy  = stats[4];
@@ -1137,22 +1136,22 @@ Double_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
 
    if (sumw == 0) return 0;
    if (axis1 == 1 && axis2 == 1) {
-      return TMath::Abs(sumwx2/sumw - sumwx*sumwx/sumw2);
+      return TMath::Abs(sumwx2/sumw - sumwx*sumwx/(sumw*sumw));
    }
    if (axis1 == 2 && axis2 == 2) {
-      return TMath::Abs(sumwy2/sumw - sumwy*sumwy/sumw2);
+      return TMath::Abs(sumwy2/sumw - sumwy*sumwy/(sumw*sumw));
    }
    if (axis1 == 3 && axis2 == 3) {
-      return TMath::Abs(sumwz2/sumw - sumwz*sumwz/sumw2);
+      return TMath::Abs(sumwz2/sumw - sumwz*sumwz/(sumw*sumw));
    }
    if ((axis1 == 1 && axis2 == 2) || (axis1 == 2 && axis2 == 1)) {
-      return sumwxy/sumw - sumwx/sumw*sumwy/sumw;
+      return sumwxy/sumw - sumwx*sumwy/(sumw*sumw);
    }
    if ((axis1 == 1 && axis2 == 3) || (axis1 == 3 && axis2 == 1)) {
-      return sumwxz/sumw - sumwx/sumw*sumwz/sumw;
+      return sumwxz/sumw - sumwx*sumwz/(sumw*sumw);
    }
    if ((axis1 == 2 && axis2 == 3) || (axis1 == 3 && axis2 == 2)) {
-      return sumwyz/sumw - sumwy/sumw*sumwz/sumw;
+      return sumwyz/sumw - sumwy*sumwz/(sumw*sumw);
    }
    return 0;
 }
