@@ -61,7 +61,6 @@ sap.ui.define([
          GlViewer.prototype.cleanup.call(this);
       },
 
-
       //==============================================================================
 
       make_object: function(name) {

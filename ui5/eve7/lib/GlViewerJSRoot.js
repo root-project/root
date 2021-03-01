@@ -27,6 +27,15 @@ sap.ui.define([
          this.createGeoPainter();
       },
 
+      cleanup: function() {
+         if (this.geo_painter) {
+            this.geo_painter.cleanup();
+            delete this.geo_painter;
+         }
+
+         GlViewer.prototype.cleanup.call(this);
+      },
+
       //==============================================================================
 
       make_object: function(name)
