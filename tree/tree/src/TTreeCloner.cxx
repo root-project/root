@@ -110,7 +110,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.  In place cloning.
 //// This object would transfer the data from
-/// 'from' the original location to 'to' the new directory
+/// 'from' the original location to 'newdirectory' the new directory
 /// using the sorting method indicated in method.
 /// It updates the 'from' TTree with the new information.
 /// See TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options)
