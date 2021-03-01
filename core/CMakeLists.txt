@@ -177,7 +177,12 @@ endif()
 # Inclusion of `complex.h` causes havoc: `complex` and `I` become CPP macros.
 # Darwin's complex.h does not implement C11's __STDC_NO_COMPLEX__, use the
 # header guard instead. This prevents inclusion of complex.h in Darwin.pcm.
-target_compile_definitions(Core PRIVATE __STDC_NO_COMPLEX__ __COMPLEX_H__)
+# GCC <=5 has _COMPLEX_H but none of the others.
+target_compile_definitions(Core PRIVATE
+  __STDC_NO_COMPLEX__
+  __COMPLEX_H__
+  _COMPLEX_H
+ )
 
 #while basic libs do not depend on Core, we have to add includes directly
 
