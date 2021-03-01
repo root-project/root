@@ -63,6 +63,7 @@ public:
    /// The interface of a task scheduler to schedule page (de)compression tasks
    class RTaskScheduler {
    public:
+      virtual ~RTaskScheduler() = default;
       /// Start a new set of tasks
       virtual void Reset() = 0;
       /// Take a callable that represents a task
