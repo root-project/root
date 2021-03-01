@@ -122,7 +122,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    /** method insert all objects into three.js container */
    EveScene.prototype.redrawScene = function()
    {
-      if ( ! this.glctrl) return;
+      if (!this.glctrl) return;
 
       let res3d = this.create3DObjects(true);
       if ( ! res3d.length && this.first_time) return;
@@ -138,6 +138,17 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       this.applySelectionOnSceneCreate(this.mgr.global_highlight_id);
 
       this.first_time = false;
+   }
+
+   EveScene.prototype.removeScene = function()
+   {
+      if (!this.glctrl) return;
+
+      let cont = this.glctrl.getSceneContainer("scene" + this.id);
+      while (cont.children.length > 0)
+         cont.remove(cont.children[0]);
+
+      this.first_time = true;
    }
 
    EveScene.prototype.update3DObjectsVisibility = function(arr, all_ancestor_children_visible)
