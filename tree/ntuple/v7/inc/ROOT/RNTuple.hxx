@@ -37,7 +37,6 @@ namespace Experimental {
 
 class REntry;
 class RNTupleModel;
-class TTaskGroup;
 
 namespace Detail {
 class RPageSink;
@@ -63,6 +62,8 @@ enum class ENTupleShowFormat {
 };
 
 
+#ifdef R__USE_IMT
+class TTaskGroup;
 class RNTupleImtTaskScheduler : public Detail::RPageStorage::RTaskScheduler {
 private:
    std::unique_ptr<TTaskGroup> fTaskGroup;
@@ -71,6 +72,7 @@ public:
    void AddTask(const std::function<void(void)> &taskFunc) final;
    void Wait() final;
 };
+#endif
 
 // clang-format off
 /**
@@ -88,7 +90,7 @@ class RNTupleReader {
 private:
    /// Set as the page source's scheduler for parallel page decompression if IMT is on
    /// Needs to be destructed after the pages source is destructed (an thus be declared before)
-   RNTupleImtTaskScheduler fUnzipTasks;
+   std::unique_ptr<Detail::RPageStorage::RTaskScheduler> fUnzipTasks;
 
    std::unique_ptr<Detail::RPageSource> fSource;
    /// Needs to be destructed before fSource
