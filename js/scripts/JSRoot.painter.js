@@ -14,6 +14,11 @@ JSROOT.define(['d3'], (d3) => {
    else if (d3.version !== '6.1.1')
       console.log(`Reuse existing d3.js version ${d3.version}, expected 6.1.1`);
 
+
+   function isPromise(obj) {
+      return obj && (typeof obj == 'object') && (typeof obj.then == 'function');
+   }
+
    // ==========================================================================================
 
    /** @summary Draw options interpreter
@@ -2262,33 +2267,41 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary indicate that redraw was invoked via interactive action (like context menu or zooming)
      * @desc Use to catch such action by GED and by server-side
+     * @returns {Promise} when completed
      * @private */
    ObjectPainter.prototype.interactiveRedraw = function(arg, info, subelem) {
 
-      let reason;
+      let reason, res;
       if ((typeof info == "string") && (info.indexOf("exec:") != 0)) reason = info;
       if (arg == "pad")
-         this.redrawPad(reason);
+         res = this.redrawPad(reason);
       else if (arg !== false)
-         this.redraw(reason);
+         res = this.redraw(reason);
 
-      // inform GED that something changes
-      let canp = this.getCanvPainter();
+      if (!isPromise(res)) res = Promise.resolve(false);
 
-      if (canp && (typeof canp.producePadEvent == 'function'))
-         canp.producePadEvent("redraw", this.getPadPainter(), this, null, subelem);
+      return res.then(() => {
+         // inform GED that something changes
+         let canp = this.getCanvPainter();
 
-      // inform server that drawopt changes
-      if (canp && (typeof canp.processChanges == 'function'))
-         canp.processChanges(info, this, subelem);
+         if (canp && (typeof canp.producePadEvent == 'function'))
+            canp.producePadEvent("redraw", this.getPadPainter(), this, null, subelem);
+
+         // inform server that drawopt changes
+         if (canp && (typeof canp.processChanges == 'function'))
+            canp.processChanges(info, this, subelem);
+
+         return this;
+      });
    }
 
    /** @summary Redraw all objects in the current pad
      * @param {string} [reason] - like 'resize' or 'zoom'
+     * @returns {Promise} when pad redraw completed
      * @protected */
    ObjectPainter.prototype.redrawPad = function(reason) {
       let pp = this.getPadPainter();
-      if (pp) pp.redraw(reason);
+      return pp ? pp.redrawPad(reason) : Promise.resolve(false);
    }
 
    /** @summary execute selected menu command, either locally or remotely
@@ -3599,10 +3612,6 @@ JSROOT.define(['d3'], (d3) => {
          }
 
          return Promise.reject(Error(`Function not specified to draw object ${type_info}`));
-      }
-
-      function isPromise(obj) {
-         return obj && (typeof obj == 'object') && (typeof obj.then == 'function');
       }
 
       function performDraw() {

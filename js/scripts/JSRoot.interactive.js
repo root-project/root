@@ -1036,11 +1036,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let kind = "xyz";
          if (!valid_x) kind = this.swap_xy ? "x" : "y"; else
          if (!valid_y) kind = this.swap_xy ? "y" : "x";
-         if (this.unzoom(kind)) return;
-
-         let pp = this.getPadPainter();
-         let rect = this.getFrameRect();
-         if (pp) pp.selectObjectPainter(pp, { x: m[0] + rect.x, y: m[1] + rect.y, dbl: true });
+         this.unzoom(kind).then(changed => {
+            if (changed) return;
+            let pp = this.getPadPainter(), rect = this.getFrameRect();
+            if (pp) pp.selectObjectPainter(pp, { x: m[0] + rect.x, y: m[1] + rect.y, dbl: true });
+         });
       },
 
       startTouchZoom: function(evnt) {

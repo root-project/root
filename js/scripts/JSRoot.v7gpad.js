@@ -1921,8 +1921,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           w = Math.round(rect.width * (this.fX2NDC - this.fX1NDC)),
           tm = Math.round(rect.height * (1 - this.fY2NDC)),
           h = Math.round(rect.height * (this.fY2NDC - this.fY1NDC)),
-          rotate = false, fixpos = false,
-          trans = "translate(" + lm + "," + tm + ")";
+          rotate = false, fixpos = false, trans = `translate(${lm},${tm})`;
 
       if (pp && pp.options) {
          if (pp.options.RotateFrame) rotate = true;
@@ -1930,7 +1929,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (rotate) {
-         trans += " rotate(-90) " + "translate(" + -h + ",0)";
+         trans += ` rotate(-90) translate(${-h},0)`;
          let d = w; w = h; h = d;
       }
 
@@ -2063,11 +2062,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary function can be used for zooming into specified range
-     * @desc if both limits for each axis 0 (like xmin==xmax==0), axis will be unzoomed */
+     * @desc if both limits for each axis 0 (like xmin==xmax==0), axis will be unzoomed
+    * @returns {Promise} with boolean flag if zoom operation was performed */
    RFramePainter.prototype.zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
 
       // disable zooming when axis conversion is enabled
-      if (this.projection) return false;
+      if (this.projection) return Promise.resolve(false);
 
       if (xmin==="x") { xmin = xmax; xmax = ymin; ymin = undefined; } else
       if (xmin==="y") { ymax = ymin; ymin = xmax; xmin = xmax = undefined; } else
@@ -2178,10 +2178,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // this.v7SendAttrChanges(changes);
 
-      if (changed)
-         this.interactiveRedraw("pad", "zoom" + r_x + r_y + r_z);
+      if (!changed) return Promise.resolve(false);
 
-      return changed;
+      return this.interactiveRedraw("pad", "zoom" + r_x + r_y + r_z).then(() => true);
    }
 
    /** @summary Checks if specified axis zoomed */
@@ -2189,20 +2188,22 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return this['zoom_'+axis+'min'] !== this['zoom_'+axis+'max'];
    }
 
-   /** @summary Unzoom specified axes */
+   /** @summary Unzoom specified axes
+     * @returns {Promise} with boolean flag if zoom is changed */
    RFramePainter.prototype.unzoom = function(dox, doy, doz) {
       if (typeof dox === 'undefined') { dox = doy = doz = true; } else
       if (typeof dox === 'string') { doz = dox.indexOf("z") >= 0; doy = dox.indexOf("y") >= 0; dox = dox.indexOf("x") >= 0; }
 
-      let changed = this.zoom(dox ? 0 : undefined, dox ? 0 : undefined,
-                              doy ? 0 : undefined, doy ? 0 : undefined,
-                              doz ? 0 : undefined, doz ? 0 : undefined);
+      return this.zoom(dox ? 0 : undefined, dox ? 0 : undefined,
+                       doy ? 0 : undefined, doy ? 0 : undefined,
+                       doz ? 0 : undefined, doz ? 0 : undefined).then(changed => {
 
-      if (changed && dox) this.zoomChangedInteractive("x", "unzoom");
-      if (changed && doy) this.zoomChangedInteractive("y", "unzoom");
-      if (changed && doz) this.zoomChangedInteractive("z", "unzoom");
+         if (changed && dox) this.zoomChangedInteractive("x", "unzoom");
+         if (changed && doy) this.zoomChangedInteractive("y", "unzoom");
+         if (changed && doz) this.zoomChangedInteractive("z", "unzoom");
 
-      return changed;
+         return changed;
+      });
    }
 
    /** @summary Mark/check if zoom for specific axis was changed interactively
