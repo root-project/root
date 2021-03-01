@@ -392,7 +392,7 @@ TFormula::TFormula()
    fReadyToExecute = false;
    fClingInitialized = false;
    fAllParametersSetted = false;
-   fMethod = 0;
+
    fNdim = 0;
    fNpar = 0;
    fNumber = 0;
@@ -421,9 +421,6 @@ TFormula::~TFormula()
       gROOT->GetListOfFunctions()->Remove(this);
    }
 
-   if (fMethod) {
-      fMethod->Delete();
-   }
    int nLinParts = fLinearParts.size();
    if (nLinParts > 0) {
       for (int i = 0; i < nLinParts; ++i) delete fLinearParts[i];
@@ -437,11 +434,9 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList, bo
 {
    fReadyToExecute = false;
    fClingInitialized = false;
-   fMethod = 0;
    fNdim = 0;
    fNpar = 0;
    fNumber = 0;
-   fMethod = 0;
    fLambdaPtr = nullptr;
    fVectorized = vectorize;
 #ifndef R__HAS_VECCORE
@@ -526,7 +521,7 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
 
 ////////////////////////////////////////////////////////////////////////////////
 TFormula::TFormula(const TFormula &formula) :
-   TNamed(formula.GetName(),formula.GetTitle()), fMethod(nullptr)
+  TNamed(formula.GetName(),formula.GetTitle())
 {
    formula.Copy(*this);
 
@@ -701,18 +696,12 @@ void TFormula::Copy(TObject &obj) const
          fnew.fReadyToExecute = false;
       }
    }
-   else if (fMethod) {
-      if (fnew.fMethod) delete fnew.fMethod;
-      // use copy-constructor of TMethodCall
-      TMethodCall *m = new TMethodCall(*fMethod);
-      fnew.fMethod  = m;
-   }
-
-   if (fGradMethod) {
-      // use copy-constructor of TMethodCall
-      TMethodCall *m = new TMethodCall(*fGradMethod);
-      fnew.fGradMethod.reset(m);
-   }
+   // use copy-constructor of TMethodCall
+   // if c++-14 could use std::make_unique
+   TMethodCall *m = (fMethod) ? new TMethodCall(*fMethod) : nullptr;
+   fnew.fMethod.reset(m);
+   TMethodCall *gm = (fGradMethod) ? new TMethodCall(*fGradMethod) : nullptr;
+   fnew.fGradMethod.reset(gm);
 
    fnew.fFuncPtr = fFuncPtr;
    fnew.fGradGenerationInput = fGradGenerationInput;
@@ -733,8 +722,8 @@ void TFormula::Clear(Option_t * )
    fClingName = "";
 
 
-   if(fMethod) fMethod->Delete();
-   fMethod = nullptr;
+   fMethod.reset();
+   fGradMethod.reset();
 
    fClingVariables.clear();
    fClingParameters.clear();
@@ -793,10 +782,9 @@ prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
    return Method;
 }
 
-static TInterpreter::CallFuncIFacePtr_t::Generic_t
-prepareFuncPtr(TMethodCall *Method) {
-   if (!Method) return nullptr;
-   CallFunc_t *callfunc = Method->GetCallFunc();
+static TInterpreter::CallFuncIFacePtr_t::Generic_t  prepareFuncPtr(TMethodCall *method) {
+  if (!method) return nullptr;
+  CallFunc_t *callfunc = method->GetCallFunc();
 
    if (!gCling->CallFunc_IsValid(callfunc)) {
       Error("prepareFuncPtr", "Callfunc retuned from Cling is not valid");
@@ -823,10 +811,9 @@ bool TFormula::PrepareEvalMethod()
    if (!fMethod) {
       Bool_t hasParameters = (fNpar > 0);
       Bool_t hasVariables = (fNdim > 0);
-      fMethod = prepareMethod(hasParameters, hasVariables, fClingName,
-                              fVectorized).release();
+      fMethod = prepareMethod(hasParameters, hasVariables, fClingName,fVectorized);
       if (!fMethod) return false; 
-      fFuncPtr = prepareFuncPtr(fMethod);
+      fFuncPtr = prepareFuncPtr(fMethod.get());
    }
    return fFuncPtr;
 }
@@ -3085,9 +3072,8 @@ void TFormula::SetVectorized(Bool_t vectorized)
       fClingName = "";
       fClingInput = fFormula;
 
-      if (fMethod)
-         fMethod->Delete();
-      fMethod = nullptr;
+      fMethod.reset();
+      // should I add fGradMethod.reset() ?
 
       FillVecFunctionsShurtCuts();   // to replace with the right vectorized signature (e.g. sin  -> vecCore::math::Sin)
       PreProcessFormula(fFormula);
@@ -3434,10 +3420,7 @@ void TFormula::ReInitializeEvalMethod() {
       fLazyInitialization = false;
       return;
    }
-   if (fMethod) {
-      fMethod->Delete();
-      fMethod = nullptr;
-   }
+   fMethod.reset();
    if (!fLazyInitialization)   Warning("ReInitializeEvalMethod", "Formula is NOT properly initialized - try calling again TFormula::PrepareEvalMethod");
    //else  Info("ReInitializeEvalMethod", "Compile now the formula expression using Cling");
 
