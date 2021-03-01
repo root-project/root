@@ -4042,7 +4042,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
           low_p = pp.findPainterFor(ratio.fLowerPad, "lower_pad", "TPad"),
           low_main = low_p ? low_p.getMainPainter() : null,
           low_fp = low_p ? low_p.getFramePainter() : null,
-          lbl_size = 20;
+          lbl_size = 20, promise_up = Promise.resolve(true);
 
       if (up_p && up_main && up_fp && low_fp && !up_p._ratio_configured) {
          up_p._ratio_configured = true;
@@ -4053,74 +4053,79 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
          let h = up_main.getHisto();
          h.fXaxis.fLabelSize = 0; // do not draw X axis labels
-         h.fXaxis.fTitle = ""; // do not draw X axis labels
+         h.fXaxis.fTitle = ""; // do not draw X axis title
          h.fYaxis.fLabelSize = lbl_size;
          h.fYaxis.fTitleSize = lbl_size;
 
          up_p.getRootPad().fTicky = 1;
-         up_p.redraw();
 
-         up_fp.o_zoom = up_fp.zoom;
-         up_fp._ratio_low_fp = low_fp;
-         up_fp.zoom = function(xmin,xmax,ymin,ymax,zmin,zmax) {
-            this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax);
-            this._ratio_low_fp.o_zoom(xmin,xmax);
-         }
+         promise_up = up_p.redrawPad().then(() => {
+            up_fp.o_zoom = up_fp.zoom;
+            up_fp._ratio_low_fp = low_fp;
+            up_fp.zoom = function(xmin,xmax,ymin,ymax,zmin,zmax) {
+               this._ratio_low_fp.o_zoom(xmin,xmax);
+               return this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax);
+            }
 
-         up_fp.o_sizeChanged = up_fp.sizeChanged;
-         up_fp.sizeChanged = function() {
-            this.o_sizeChanged();
-            this._ratio_low_fp.fX1NDC = this.fX1NDC;
-            this._ratio_low_fp.fX2NDC = this.fX2NDC;
-            this._ratio_low_fp.o_sizeChanged();
-         }
-      }
-
-      if (low_p && low_main && low_fp && up_fp && !low_p._ratio_configured) {
-         low_p._ratio_configured = true;
-         low_main.options.Axis = 0; // draw both axes
-         let h = low_main.getHisto();
-         h.fXaxis.fTitle = "x"; // do not draw X axis labels
-         h.fXaxis.fLabelSize = lbl_size;
-         h.fXaxis.fTitleSize = lbl_size;
-         h.fYaxis.fLabelSize = lbl_size;
-         h.fYaxis.fTitleSize = lbl_size;
-         low_p.getRootPad().fTicky = 1;
-
-         low_p.forEachPainterInPad(objp => {
-            if (typeof objp.testEditable == 'function')
-               objp.testEditable(false);
+            up_fp.o_sizeChanged = up_fp.sizeChanged;
+            up_fp.sizeChanged = function() {
+               this.o_sizeChanged();
+               this._ratio_low_fp.fX1NDC = this.fX1NDC;
+               this._ratio_low_fp.fX2NDC = this.fX2NDC;
+               this._ratio_low_fp.o_sizeChanged();
+            }
+            return true;
          });
-
-         low_fp.zoom(up_fp.scale_xmin,  up_fp.scale_xmax);
-
-         low_fp.o_zoom = low_fp.zoom;
-         low_fp._ratio_up_fp = up_fp;
-
-         low_fp.zoom = function(xmin,xmax,ymin,ymax,zmin,zmax) {
-            this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax);
-            this._ratio_up_fp.o_zoom(xmin,xmax);
-         }
-
-         low_fp.o_sizeChanged = low_fp.sizeChanged;
-         low_fp.sizeChanged = function() {
-            this.o_sizeChanged();
-            this._ratio_up_fp.fX1NDC = this.fX1NDC;
-            this._ratio_up_fp.fX2NDC = this.fX2NDC;
-            this._ratio_up_fp.o_sizeChanged();
-         }
       }
+
+      return promise_up.then(() => {
+
+         if (low_p && low_main && low_fp && up_fp && !low_p._ratio_configured) {
+            low_p._ratio_configured = true;
+            low_main.options.Axis = 0; // draw both axes
+            let h = low_main.getHisto();
+            h.fXaxis.fTitle = "x";
+            h.fXaxis.fLabelSize = lbl_size;
+            h.fXaxis.fTitleSize = lbl_size;
+            h.fYaxis.fLabelSize = lbl_size;
+            h.fYaxis.fTitleSize = lbl_size;
+            low_p.getRootPad().fTicky = 1;
+
+            low_p.forEachPainterInPad(objp => {
+               if (typeof objp.testEditable == 'function')
+                  objp.testEditable(false);
+            });
+
+            return low_fp.zoom(up_fp.scale_xmin,  up_fp.scale_xmax).then(() => {
+
+               low_fp.o_zoom = low_fp.zoom;
+               low_fp._ratio_up_fp = up_fp;
+
+               low_fp.zoom = function(xmin,xmax,ymin,ymax,zmin,zmax) {
+                  this._ratio_up_fp.o_zoom(xmin,xmax);
+                  return this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax);
+               }
+
+               low_fp.o_sizeChanged = low_fp.sizeChanged;
+               low_fp.sizeChanged = function() {
+                  this.o_sizeChanged();
+                  this._ratio_up_fp.fX1NDC = this.fX1NDC;
+                  this._ratio_up_fp.fX2NDC = this.fX2NDC;
+                  this._ratio_up_fp.o_sizeChanged();
+               }
+
+               return this;
+            });
+         }
+
+         return this;
+      });
    }
 
    let drawRatioPlot = (divid, ratio, opt) => {
       let painter = new TRatioPlotPainter(divid, ratio, opt);
 
-      return jsrp.ensureTCanvas(painter, false).then(() => {
-
-         painter.redraw();
-
-         return painter;
-      });
+      return jsrp.ensureTCanvas(painter, false).then(() => painter.redraw());
 
    }
 

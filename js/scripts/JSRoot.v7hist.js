@@ -2723,7 +2723,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return cmd;
    }
 
-   RH2Painter.prototype.DrawPolyBinsColor = function() {
+   /** @summary draw TH2Poly as color
+     * @private */
+   RH2Painter.prototype.drawPolyBinsColor = function() {
       let histo = this.getHisto(),
           pmain = this.getFramePainter(),
           colPaths = [], textbins = [],
@@ -3307,7 +3309,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       // if (this.lineatt.color == 'none') this.lineatt.color = 'cyan';
 
       if (this.isRH2Poly()) {
-         handle = this.DrawPolyBinsColor();
+         handle = this.drawPolyBinsColor();
       } else {
          if (this.options.Scat)
             handle = this.drawBinsScatter();
@@ -3442,8 +3444,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          // process tooltips from TH2Poly
 
          let pmain = this.getFramePainter(), foundindx = -1, bin;
-         const realx = (pmain.grx === pmain.x) ? pmain.x.invert(pnt.x) : undefined,
-               realy = (pmain.gry === pmain.y) ? pmain.y.invert(pnt.y) : undefined;
+         const realx = pmain.revertAxis("x", pnt.x),
+               realy = pmain.revertAxis("y", pnt.y);
 
          if ((realx!==undefined) && (realy!==undefined)) {
             const len = histo.fBins.arr.length;

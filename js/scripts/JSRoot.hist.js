@@ -1279,8 +1279,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return false;
    }
 
+   /** @summary redraw pave object */
    TPavePainter.prototype.redraw = function() {
-      this.drawPave();
+      return this.drawPave();
    }
 
    TPavePainter.prototype.cleanup = function() {
@@ -5490,7 +5491,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return cmd;
    }
 
-   TH2Painter.prototype.DrawPolyBinsColor = function() {
+   /** @summary draw TH2Poly as color
+     * @private */
+   TH2Painter.prototype.drawPolyBinsColor = function() {
       let histo = this.getObject(),
           pmain = this.getFramePainter(),
           h = pmain.getFrameHeight(),
@@ -6094,7 +6097,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       let handle = null;
 
       if (this.isTH2Poly()) {
-         handle = this.DrawPolyBinsColor();
+         handle = this.drawPolyBinsColor();
       } else {
          if (this.options.Scat)
             handle = this.drawBinsScatter();
@@ -6224,8 +6227,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          // process tooltips from TH2Poly
 
          let pmain = this.getFramePainter(), foundindx = -1, bin;
-         const realx = (pmain.grx === pmain.x) ? pmain.x.invert(pnt.x) : undefined,
-               realy = (pmain.gry === pmain.y) ? pmain.y.invert(pnt.y) : undefined;
+         const realx = pmain.revertAxis("x", pnt.x),
+               realy = pmain.revertAxis("y", pnt.y);
 
          if ((realx!==undefined) && (realy!==undefined)) {
             const len = histo.fBins.arr.length;
