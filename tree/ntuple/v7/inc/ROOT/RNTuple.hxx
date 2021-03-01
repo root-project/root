@@ -68,6 +68,7 @@ class RNTupleImtTaskScheduler : public Detail::RPageStorage::RTaskScheduler {
 private:
    std::unique_ptr<TTaskGroup> fTaskGroup;
 public:
+   virtual ~RNTupleImtTaskScheduler() = default;
    void Reset() final;
    void AddTask(const std::function<void(void)> &taskFunc) final;
    void Wait() final;
