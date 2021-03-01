@@ -80,7 +80,7 @@ ClassImp(RooResolutionModel);
 /// The convolution variable needs to be convertable to real values, and be able
 /// to give information about its range. This is supported by e.g. RooRealVar or RooLinearVar, which
 /// accepts offsetting and scaling an observable.
-RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& _x) :
+RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooAbsReal& _x) :
   RooAbsPdf(name,title), 
   x("x","Dependent or convolution variable",this,_x),
   _basisCode(0), _basis(0), 

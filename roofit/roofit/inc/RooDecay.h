@@ -26,7 +26,7 @@ public:
 
   // Constructors, assignment etc
   inline RooDecay() { }
-  RooDecay(const char *name, const char *title, RooRealVar& t,
+  RooDecay(const char *name, const char *title, RooAbsReal& t,
       RooAbsReal& tau, const RooResolutionModel& model, DecayType type) ;
   RooDecay(const RooDecay& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooDecay(*this,newname) ; }

@@ -28,7 +28,7 @@ public:
 
   // Constructors, assignment etc
   inline RooResolutionModel() : _basis(0) { }
-  RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& x) ;
+  RooResolutionModel(const char *name, const char *title, RooAbsReal& x) ;
   RooResolutionModel(const RooResolutionModel& other, const char* name=0);
   virtual TObject* clone(const char* newname) const = 0 ;
   virtual ~RooResolutionModel();
@@ -40,7 +40,7 @@ public:
   Double_t getValV(const RooArgSet* nset=0) const ;
   virtual RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const ;
   /// Return the convolution variable of the resolution model.
-  RooAbsRealLValue& convVar() const {return *x;}
+  RooAbsReal& convVar() const {return *x;}
   const RooRealVar& basisConvVar() const ;
 
   inline Bool_t isBasisSupported(const char* name) const { return basisCode(name)?kTRUE:kFALSE ; }
@@ -62,7 +62,7 @@ protected:
 
   friend class RooConvGenContext ;
   friend class RooAddModel ;
-  RooTemplateProxy<RooAbsRealLValue> x;                   // Dependent/convolution variable
+  RooTemplateProxy<RooAbsReal> x;                   // Dependent/convolution variable
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 //  Bool_t traceEvalHook(Double_t value) const ;

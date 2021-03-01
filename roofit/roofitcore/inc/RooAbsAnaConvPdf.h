@@ -27,7 +27,6 @@ class TIterator  ;
 #include "RooAbsCacheElement.h"
 
 class RooResolutionModel ;
-class RooRealVar ;
 class RooAbsGenContext ;
 class RooConvGenContext ;
 
@@ -38,7 +37,7 @@ public:
   RooAbsAnaConvPdf() ;
   RooAbsAnaConvPdf(const char *name, const char *title, 
 		   const RooResolutionModel& model, 
-		   RooRealVar& convVar) ;
+		   RooAbsReal& convVar) ;
 
   RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* name=0);
   virtual ~RooAbsAnaConvPdf();
@@ -76,9 +75,9 @@ public:
   virtual Bool_t changeModel(const RooResolutionModel& newModel) ;
 
   /// Retrieve the convolution variable.
-  RooAbsRealLValue* convVar();
+  RooAbsReal* convVar();
   /// Retrieve the convolution variable.
-  const RooAbsRealLValue* convVar() const {
+  const RooAbsReal* convVar() const {
     return const_cast<RooAbsAnaConvPdf*>(this)->convVar();
   }
 

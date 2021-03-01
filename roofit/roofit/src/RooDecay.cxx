@@ -32,7 +32,6 @@ for the analytical convolution with a RooResolutionModel. See RooAbsAnaConvPdf.
 #include "RooDecay.h"
 
 #include "RooFit.h"
-#include "RooRealVar.h"
 #include "RooRandom.h"
 
 #include "TError.h"
@@ -50,7 +49,7 @@ ClassImp(RooDecay);
 /// \param[in] model Resolution model for the convolution.
 /// \param[in] type One of the decays types `SingleSided, Flipped, DoubleSided`
 RooDecay::RooDecay(const char *name, const char *title,
-         RooRealVar& t, RooAbsReal& tau,
+         RooAbsReal& t, RooAbsReal& tau,
          const RooResolutionModel& model, DecayType type) :
   RooAbsAnaConvPdf(name,title,model,t),
   _t("t","time",this,t),

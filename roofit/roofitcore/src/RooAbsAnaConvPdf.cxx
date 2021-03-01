@@ -66,7 +66,6 @@
 #include "RooMsgService.h"
 #include "Riostream.h"
 #include "RooResolutionModel.h"
-#include "RooRealVar.h"
 #include "RooFormulaVar.h"
 #include "RooConvGenContext.h"
 #include "RooGenContext.h"
@@ -94,7 +93,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
 /// convoluted variable as this physics model ('convVar')
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title, 
-				   const RooResolutionModel& model, RooRealVar& cVar) :
+				   const RooResolutionModel& model, RooAbsReal& cVar) :
   RooAbsPdf(name,title), _isCopy(kFALSE),
   _model("!model","Original resolution model",this,(RooResolutionModel&)model,kFALSE,kFALSE),
   _convVar("!convVar","Convolution variable",this,cVar,kFALSE,kFALSE),
@@ -309,7 +308,7 @@ Bool_t RooAbsAnaConvPdf::isDirectGenSafe(const RooAbsArg& arg) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to the convolution variable instance used in the resolution model
 
-RooAbsRealLValue* RooAbsAnaConvPdf::convVar()
+RooAbsReal* RooAbsAnaConvPdf::convVar()
 {
   RooResolutionModel* conv = (RooResolutionModel*) _convSet.at(0) ;
   if (!conv) return 0 ;  

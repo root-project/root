@@ -38,7 +38,7 @@ ClassImp(RooGaussModel);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLValue& xIn,
+RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsReal& xIn,
               RooAbsReal& _mean, RooAbsReal& _sigma) :
   RooResolutionModel(name,title,xIn),
   _flatSFInt(kFALSE),
@@ -52,7 +52,7 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLVal
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLValue& xIn,
+RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsReal& xIn,
               RooAbsReal& _mean, RooAbsReal& _sigma,
               RooAbsReal& _msSF) :
   RooResolutionModel(name,title,xIn),
@@ -67,7 +67,7 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLVal
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLValue& xIn,
+RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsReal& xIn,
               RooAbsReal& _mean, RooAbsReal& _sigma,
               RooAbsReal& _meanSF, RooAbsReal& _sigmaSF) :
   RooResolutionModel(name,title,xIn),

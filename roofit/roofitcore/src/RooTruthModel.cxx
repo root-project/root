@@ -46,7 +46,7 @@ ClassImp(RooTruthModel);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a truth resolution model, i.e. a delta function in observable 'xIn'
 
-RooTruthModel::RooTruthModel(const char *name, const char *title, RooAbsRealLValue& xIn) :
+RooTruthModel::RooTruthModel(const char *name, const char *title, RooAbsReal& xIn) :
   RooResolutionModel(name,title,xIn)
 {  
 }
