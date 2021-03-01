@@ -55,6 +55,13 @@ sap.ui.define([
          this.controller.glViewerInitDone();
       },
 
+      cleanup: function() {
+         if (this.controller) this.controller.removeScenes();
+         this.destroyThreejsRenderer();
+         GlViewer.prototype.cleanup.call(this);
+      },
+
+
       //==============================================================================
 
       make_object: function(name) {
@@ -70,10 +77,9 @@ sap.ui.define([
       //==============================================================================
 
       createThreejsRenderer: function() {
-         var w = this.get_width();
-         var h = this.get_height();
+         var w = this.get_width(), h = this.get_height();
 
-         // console.log("createThreejsRenderer", this.kind, "w=", w, "h=", h);
+         // console.log("createThreejsRenderer", this.controller.kind, "w=", w, "h=", h);
 
          this.scene = new THREE.Scene();
          // this.scene.fog = new THREE.FogExp2( 0xaaaaaa, 0.05 );
@@ -135,6 +141,15 @@ sap.ui.define([
          this.fxaa_pass.renderToScreen = true;
 
          this.composer.addPass(this.fxaa_pass);
+      },
+
+      destroyThreejsRenderer: function() {
+         if (this.renderer)
+            this.get_view().getDomRef().removeChild(this.renderer.domElement);
+
+         delete this.renderer;
+         delete this.scene;
+         delete this.composer;
       },
 
       setupThreejsDomAndEventHandlers: function() {
@@ -449,8 +464,7 @@ sap.ui.define([
             this.ttip.style.top = null;
          }
 
-         // show tooltip only in static mode
-         if (this.handle.kind != "file") this.ttip.style.display = "block";
+         this.ttip.style.display = "block";
       },
       remoteToolTip: function(msg) {
          this.ttip_text.innerHTML = msg;

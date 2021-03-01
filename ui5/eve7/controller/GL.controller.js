@@ -49,11 +49,9 @@ sap.ui.define([
       {
          let args = oEvent.getParameter("arguments");
 
-         console.log('ON MATCHED', args.viewName);
-
-         console.log('MORE DATA', JSROOT.$eve7tmp);
-
-         console.log('COMPONENT DATA', Component.getOwnerComponentFor(this.getView()).getComponentData());
+         // console.log('ON MATCHED', args.viewName);
+         // console.log('MORE DATA', JSROOT.$eve7tmp);
+         // console.log('COMPONENT DATA', Component.getOwnerComponentFor(this.getView()).getComponentData());
 
          this.setupManagerAndViewType(Component.getOwnerComponentFor(this.getView()).getComponentData(),
                                       args.viewName, JSROOT.$eve7tmp);
@@ -66,6 +64,13 @@ sap.ui.define([
       // Initialization that can be done immediately onInit or later through UI5 bootstrap callbacks.
       setupManagerAndViewType: function(data, viewName, moredata)
       {
+         delete this.standalone;
+         delete this.viewer_class;
+         if (this.viewer) {
+            this.viewer.cleanup();
+            delete this.viewer;
+         }
+
          if (viewName)
          {
             data.standalone = viewName;
@@ -80,7 +85,6 @@ sap.ui.define([
             this.eveViewerId  = moredata.eveViewerId;
             this.kind       = moredata.kind;
             this.standalone = viewName;
-
             this.checkViewReady();
          }
          else if (data.standalone && data.conn_handle)
@@ -212,10 +216,18 @@ sap.ui.define([
 
       redrawScenes: function()
       {
+         if (!this.created_scenes) return;
+
          for (let s of this.created_scenes)
-         {
             s.redrawScene();
-         }
+      },
+
+      removeScenes: function() {
+         if (!this.created_scenes) return;
+
+         for (let s of this.created_scenes)
+            s.removeScene();
+         delete this.created_scenes;
       },
 
       /// invoked from ResizeHandler
