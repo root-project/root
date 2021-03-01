@@ -1624,27 +1624,23 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
 
   // Terminate call if this node was already processed (tree structure may be cyclical)
   // LM : RooLinkedList::findArg looks by name and not but by object pointer,
-  //  should one use RooLinkedList::FindObject (look byt pointer) instead of findArg when tree contains nodes with the same name ?
-  // Now add a warning if different nodes exist with same name
-  /*
-    // this code does not work,  crashes.. t.b.i
-  auto obj = processedNodes.findArg(this);
-  if (obj) {
-     if (obj == this)
-        return;
-      else {
-         // disable warning, happens in too many cases
-        // cxcoutI(Optimization) << "RooAbsArg::optimizeCacheMode(" << GetName()
-        //                       << " node " << this << " exists already as " << obj << " but with the SAME name !" << endl;
-      }
-  }
+  //  should one use RooLinkedList::FindObject (look byt pointer) instead of findArg when
+  // tree contains nodes with the same name ?
+  // Add an info message if the require node does not exist but a different node already exists with same name
 
-  assert(processedNodes.FindObject(this) == nullptr);
-  */
   if (processedNodes.FindObject(this))
      return;
 
-  processedNodes.Add(this) ;
+  // check if findArgs returns something different (i.e. a different node with same name) when
+  // this node has not been processed (FindObject returns a null pointer)
+  auto obj = processedNodes.findArg(this);
+  assert(obj != this); // obj == this cannot happen
+  if (obj)
+     // here for nodes with duplicate names
+     cxcoutI(Optimization) << "RooAbsArg::optimizeCacheMode(" << GetName()
+                           << " node " << this << " exists already as " << obj << " but with the SAME name !" << endl;
+
+  processedNodes.Add(this);
 
   // Set cache mode operator to 'AlwaysDirty' if we depend on any of the given observables
   if (dependsOnValue(observables)) {
