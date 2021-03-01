@@ -165,8 +165,12 @@ TGraph::TGraph(const TGraph &gr)
    fMaxSize = gr.fMaxSize;
    if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
    else fFunctions = new TList;
-   if (gr.fHistogram) fHistogram = (TH1F*)gr.fHistogram->Clone();
-   else fHistogram = 0;
+   if (gr.fHistogram) {
+      fHistogram = (TH1F*)gr.fHistogram->Clone();
+      fHistogram->SetDirectory(nullptr);
+   } else {
+      fHistogram = nullptr;
+   }
    fMinimum = gr.fMinimum;
    fMaximum = gr.fMaximum;
    if (!fMaxSize) {
@@ -216,8 +220,12 @@ TGraph& TGraph::operator=(const TGraph &gr)
       else fFunctions = new TList;
 
       if (fHistogram) delete fHistogram;
-      if (gr.fHistogram) fHistogram = new TH1F(*(gr.fHistogram));
-      else fHistogram = 0;
+      if (gr.fHistogram) {
+         fHistogram = new TH1F(*(gr.fHistogram));
+         fHistogram->SetDirectory(nullptr);
+      } else {
+         fHistogram = nullptr;
+      }
 
       fMinimum = gr.fMinimum;
       fMaximum = gr.fMaximum;
