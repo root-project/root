@@ -50,8 +50,7 @@ TBufferMerger::~TBufferMerger()
    if (!fQueue.empty())
       Merge();
 
-   TFile *out = fMerger.GetOutputFile();
-   if (out)
+   if (TFile *out = fMerger.GetOutputFile())
       out->Write("",TObject::kOverwrite);
 }
 
@@ -132,18 +131,14 @@ void TBufferMerger::MergeImpl()
 
 bool TBufferMerger::TryMerge(ROOT::Experimental::TBufferMergerFile *memfile)
 {
-   if (fMergeMutex.try_lock())
-   {
+   if (fMergeMutex.try_lock()) {
       memfile->WriteStreamerInfo();
       fMerger.AddFile(memfile);
       MergeImpl();
       fMergeMutex.unlock();
       return true;
    } else
-   {
       return false;
-   }
-
 }
 
 } // namespace Experimental
