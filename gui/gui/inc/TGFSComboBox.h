@@ -24,7 +24,8 @@
 
 #include "TGComboBox.h"
 
-
+#include <vector>
+#include <string>
 
 class TGPicture;
 class TGSelectedPicture;
@@ -73,6 +74,18 @@ public:
 
 
 class TGFSComboBox : public TGComboBox {
+   struct Lbc_t {
+      std::string fName;        // root prefix name
+      std::string fPath;        // path
+      std::string fPixmap;      // picture file
+      Int_t       fId{0};       // widget id
+      Int_t       fIndent{0};   // identification level
+      Int_t       fFlags{0};    // flag
+      Lbc_t(const char *name, const char *path, const char *pixmap, Int_t indent) :
+         fName(name), fPath(path), fPixmap(pixmap), fIndent(indent) { }
+   };
+
+   std::vector<Lbc_t> fLbc; ///<!  list of default entries
 
 public:
    TGFSComboBox(const TGWindow *p = 0, Int_t id = -1,
