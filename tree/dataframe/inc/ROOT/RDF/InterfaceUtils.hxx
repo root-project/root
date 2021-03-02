@@ -277,7 +277,7 @@ void CheckFilter(Filter &)
                  "filter expression returns a type that is not convertible to bool");
 }
 
-void CheckDefine(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
+void CheckDefine(const std::string &where, std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
                  const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &dataSourceColumns);
 
 std::string PrettyPrintAddr(const void *const addr);
