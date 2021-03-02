@@ -406,9 +406,9 @@ void stress3()
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
 #ifdef R__HAS_CLOUDFLARE_ZLIB
-   constexpr Long64_t lastgood = 52027;
+   constexpr Long64_t lastgood = 52290;
 #else
-   constexpr Long64_t lastgood = 51886;
+   constexpr Long64_t lastgood = 52116;
 #endif
    constexpr Long64_t tolerance = 150;
 #ifdef R__HAS_DEFAULT_LZ4
