@@ -278,7 +278,7 @@ void CheckFilter(Filter &)
 }
 
 void CheckDefine(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
-                       const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &dataSourceColumns);
+                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &dataSourceColumns);
 
 std::string PrettyPrintAddr(const void *const addr);
 
