@@ -30,6 +30,86 @@
 namespace RooFit {
 namespace TestStatistics {
 
+std::unique_ptr<RooSubsidiaryL> build_constraints(RooAbsPdf *pdf, RooAbsData *data,
+                                                  ConstrainedParameters constrained_parameters, ExternalConstraints external_constraints,
+                                                  GlobalObservables global_observables, std::string global_observables_tag)
+{
+   // BEGIN CONSTRAINT COLLECTION; copied from RooAbsPdf::createNLL
+
+   Bool_t doStripDisconnected = kFALSE;
+   // If no explicit list of parameters to be constrained is specified apply default algorithm
+   // All terms of RooProdPdfs that do not contain observables and share a parameters with one or more
+   // terms that do contain observables are added as constraints.
+#ifndef NDEBUG
+   bool did_default_constraint_algo = false;
+   std::size_t N_default_constraints = 0;
+#endif
+   if (constrained_parameters.set.getSize() == 0) {
+      std::unique_ptr<RooArgSet> default_constraints{pdf->getParameters(*data, kFALSE)};
+      constrained_parameters.set.add(*default_constraints);
+      doStripDisconnected = kTRUE;
+#ifndef NDEBUG
+      did_default_constraint_algo = true;
+      N_default_constraints = default_constraints->getSize();
+#endif
+   }
+#ifndef NDEBUG
+   if (did_default_constraint_algo) {
+      assert(N_default_constraints == constrained_parameters.set.getSize());
+   }
+#endif
+
+   // Collect internal and external constraint specifications
+   RooArgSet allConstraints;
+
+   if (!global_observables_tag.empty()) {
+      std::cout << "DEBUG: global_observables_tag > 0" << std::endl;
+      if (global_observables.set.getSize() > 0) {
+         global_observables.set.removeAll();
+      }
+      std::unique_ptr<RooArgSet> allVars {pdf->getVariables()};
+      global_observables.set.add(*dynamic_cast<RooArgSet *>(allVars->selectByAttrib(global_observables_tag.c_str(), kTRUE)));
+      oocoutI((TObject*)nullptr, Minimization) << "User-defined specification of global observables definition with tag named '" <<  global_observables_tag << "'" << std::endl;
+   } else if (global_observables.set.getSize() == 0) {
+      // neither global_observables nor global_observables_tag was given - try if a default tag is defined in the head node
+      const char* defGlobObsTag = pdf->getStringAttribute("DefaultGlobalObservablesTag");
+      if (defGlobObsTag) {
+         oocoutI((TObject*)nullptr, Minimization) << "p.d.f. provides built-in specification of global observables definition with tag named '" <<  defGlobObsTag << "'" << std::endl;
+         std::unique_ptr<RooArgSet> allVars {pdf->getVariables()};
+         global_observables.set.add(*dynamic_cast<RooArgSet *>(allVars->selectByAttrib(defGlobObsTag, kTRUE)));
+      }
+   }
+
+   // EGP: removed workspace (RooAbsPdf::_myws) based stuff for now; TODO: reconnect this class to workspaces
+
+   if (constrained_parameters.set.getSize() > 0) {
+      std::unique_ptr<RooArgSet> constraints{pdf->getAllConstraints(*data->get(), constrained_parameters.set, doStripDisconnected)};
+      allConstraints.add(*constraints);
+   }
+   if (external_constraints.set.getSize() > 0) {
+      allConstraints.add(external_constraints.set);
+   }
+
+   std::unique_ptr<RooSubsidiaryL> subsidiary_likelihood;
+   // Include constraints, if any, in likelihood
+   if (allConstraints.getSize() > 0) {
+
+      oocoutI((TObject*) nullptr, Minimization) << " Including the following contraint terms in minimization: " << allConstraints << std::endl;
+      if (global_observables.set.getSize() > 0) {
+         oocoutI((TObject*) nullptr, Minimization) << "The following global observables have been defined: " << global_observables.set << std::endl;
+      }
+      std::string name("likelihood for pdf ");
+      name += pdf->GetName();
+      subsidiary_likelihood = std::make_unique<RooSubsidiaryL>(name, allConstraints,
+                                                               (global_observables.set.getSize() > 0) ? global_observables.set : constrained_parameters.set);
+   }
+
+   // END CONSTRAINT COLLECTION; copied from RooAbsPdf::createNLL
+
+   return subsidiary_likelihood;
+}
+
+
 std::shared_ptr<RooAbsL> build_simultaneous_likelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended,
                                                        ConstrainedParameters constrained_parameters, ExternalConstraints external_constraints,
                                                        GlobalObservables global_observables, std::string global_observables_tag) {
@@ -171,77 +251,10 @@ std::shared_ptr<RooAbsL> build_simultaneous_likelihood(RooAbsPdf *pdf, RooAbsDat
    }
    oocoutI((TObject *)nullptr, Fitting) << "RooSumL: created " << n << " slave calculators." << std::endl;
 
-   // BEGIN CONSTRAINT COLLECTION; copied from RooAbsPdf::createNLL
-
-   Bool_t doStripDisconnected = kFALSE;
-   // If no explicit list of parameters to be constrained is specified apply default algorithm
-   // All terms of RooProdPdfs that do not contain observables and share a parameters with one or more
-   // terms that do contain observables are added as constraints.
-#ifndef NDEBUG
-   bool did_default_constraint_algo = false;
-   std::size_t N_default_constraints = 0;
-#endif
-   if (constrained_parameters.set.getSize() == 0) {
-      std::unique_ptr<RooArgSet> default_constraints{pdf->getParameters(*data, kFALSE)};
-      constrained_parameters.set.add(*default_constraints);
-      doStripDisconnected = kTRUE;
-#ifndef NDEBUG
-      did_default_constraint_algo = true;
-      N_default_constraints = default_constraints->getSize();
-#endif
+   std::unique_ptr<RooAbsL> subsidiary = build_constraints(pdf, data, constrained_parameters, external_constraints, global_observables, global_observables_tag);
+   if (subsidiary) {
+      components.push_back(std::move(subsidiary));
    }
-#ifndef NDEBUG
-   if (did_default_constraint_algo) {
-      assert(N_default_constraints == constrained_parameters.set.getSize());
-   }
-#endif
-
-   // Collect internal and external constraint specifications
-   RooArgSet allConstraints;
-
-   if (!global_observables_tag.empty()) {
-      std::cout << "DEBUG: global_observables_tag > 0" << std::endl;
-      if (global_observables.set.getSize() > 0) {
-         global_observables.set.removeAll();
-      }
-      std::unique_ptr<RooArgSet> allVars {pdf->getVariables()};
-      global_observables.set.add(*dynamic_cast<RooArgSet *>(allVars->selectByAttrib(global_observables_tag.c_str(), kTRUE)));
-      oocoutI((TObject*)nullptr, Minimization) << "User-defined specification of global observables definition with tag named '" <<  global_observables_tag << "'" << std::endl;
-   } else if (global_observables.set.getSize() == 0) {
-      // neither global_observables nor global_observables_tag was given - try if a default tag is defined in the head node
-      const char* defGlobObsTag = pdf->getStringAttribute("DefaultGlobalObservablesTag");
-      if (defGlobObsTag) {
-         oocoutI((TObject*)nullptr, Minimization) << "p.d.f. provides built-in specification of global observables definition with tag named '" <<  defGlobObsTag << "'" << std::endl;
-         std::unique_ptr<RooArgSet> allVars {pdf->getVariables()};
-         global_observables.set.add(*dynamic_cast<RooArgSet *>(allVars->selectByAttrib(defGlobObsTag, kTRUE)));
-      }
-   }
-
-   // EGP: removed workspace (RooAbsPdf::_myws) based stuff for now; TODO: reconnect this class to workspaces
-
-   if (constrained_parameters.set.getSize() > 0) {
-      std::unique_ptr<RooArgSet> constraints{pdf->getAllConstraints(*data->get(), constrained_parameters.set, doStripDisconnected)};
-      allConstraints.add(*constraints);
-   }
-   if (external_constraints.set.getSize() > 0) {
-      allConstraints.add(external_constraints.set);
-   }
-
-   // Include constraints, if any, in likelihood
-   if (allConstraints.getSize() > 0) {
-
-      oocoutI((TObject*) nullptr, Minimization) << " Including the following contraint terms in minimization: " << allConstraints << std::endl;
-      if (global_observables.set.getSize() > 0) {
-         oocoutI((TObject*) nullptr, Minimization) << "The following global observables have been defined: " << global_observables.set << std::endl;
-      }
-      std::string name("likelihood for pdf ");
-      name += pdf->GetName();
-      components.push_back(std::make_unique<RooSubsidiaryL>(name, allConstraints,
-                                                            (global_observables.set.getSize() > 0) ? global_observables.set : constrained_parameters.set));
-      ++N_components;
-   }
-
-   // END CONSTRAINT COLLECTION; copied from RooAbsPdf::createNLL
 
    return std::make_shared<RooSumL>(pdf, data, std::move(components), extended);
 }
@@ -264,85 +277,6 @@ std::shared_ptr<RooAbsL> build_simultaneous_likelihood(RooAbsPdf* pdf, RooAbsDat
    return build_simultaneous_likelihood(pdf, data, RooAbsL::Extended::Auto, {}, {}, {}, global_observables_tag);
 }
 
-
-std::unique_ptr<RooSubsidiaryL> build_constraints(RooAbsPdf *pdf, RooAbsData *data,
-                                                  ConstrainedParameters constrained_parameters, ExternalConstraints external_constraints,
-                                                  GlobalObservables global_observables, std::string global_observables_tag)
-{
-   // BEGIN CONSTRAINT COLLECTION; copied from RooAbsPdf::createNLL
-
-   Bool_t doStripDisconnected = kFALSE;
-   // If no explicit list of parameters to be constrained is specified apply default algorithm
-   // All terms of RooProdPdfs that do not contain observables and share a parameters with one or more
-   // terms that do contain observables are added as constraints.
-#ifndef NDEBUG
-   bool did_default_constraint_algo = false;
-   std::size_t N_default_constraints = 0;
-#endif
-   if (constrained_parameters.set.getSize() == 0) {
-      std::unique_ptr<RooArgSet> default_constraints{pdf->getParameters(*data, kFALSE)};
-      constrained_parameters.set.add(*default_constraints);
-      doStripDisconnected = kTRUE;
-#ifndef NDEBUG
-      did_default_constraint_algo = true;
-      N_default_constraints = default_constraints->getSize();
-#endif
-   }
-#ifndef NDEBUG
-   if (did_default_constraint_algo) {
-      assert(N_default_constraints == constrained_parameters.set.getSize());
-   }
-#endif
-
-   // Collect internal and external constraint specifications
-   RooArgSet allConstraints;
-
-   if (!global_observables_tag.empty()) {
-      std::cout << "DEBUG: global_observables_tag > 0" << std::endl;
-      if (global_observables.set.getSize() > 0) {
-         global_observables.set.removeAll();
-      }
-      std::unique_ptr<RooArgSet> allVars {pdf->getVariables()};
-      global_observables.set.add(*dynamic_cast<RooArgSet *>(allVars->selectByAttrib(global_observables_tag.c_str(), kTRUE)));
-      oocoutI((TObject*)nullptr, Minimization) << "User-defined specification of global observables definition with tag named '" <<  global_observables_tag << "'" << std::endl;
-   } else if (global_observables.set.getSize() == 0) {
-      // neither global_observables nor global_observables_tag was given - try if a default tag is defined in the head node
-      const char* defGlobObsTag = pdf->getStringAttribute("DefaultGlobalObservablesTag");
-      if (defGlobObsTag) {
-         oocoutI((TObject*)nullptr, Minimization) << "p.d.f. provides built-in specification of global observables definition with tag named '" <<  defGlobObsTag << "'" << std::endl;
-         std::unique_ptr<RooArgSet> allVars {pdf->getVariables()};
-         global_observables.set.add(*dynamic_cast<RooArgSet *>(allVars->selectByAttrib(defGlobObsTag, kTRUE)));
-      }
-   }
-
-   // EGP: removed workspace (RooAbsPdf::_myws) based stuff for now; TODO: reconnect this class to workspaces
-
-   if (constrained_parameters.set.getSize() > 0) {
-      std::unique_ptr<RooArgSet> constraints{pdf->getAllConstraints(*data->get(), constrained_parameters.set, doStripDisconnected)};
-      allConstraints.add(*constraints);
-   }
-   if (external_constraints.set.getSize() > 0) {
-      allConstraints.add(external_constraints.set);
-   }
-
-   std::unique_ptr<RooSubsidiaryL> subsidiary_likelihood;
-   // Include constraints, if any, in likelihood
-   if (allConstraints.getSize() > 0) {
-
-      oocoutI((TObject*) nullptr, Minimization) << " Including the following contraint terms in minimization: " << allConstraints << std::endl;
-      if (global_observables.set.getSize() > 0) {
-         oocoutI((TObject*) nullptr, Minimization) << "The following global observables have been defined: " << global_observables.set << std::endl;
-      }
-      std::string name("likelihood for pdf ");
-      name += pdf->GetName();
-      subsidiary_likelihood = std::make_unique<RooSubsidiaryL>(name, allConstraints,
-                                                               (global_observables.set.getSize() > 0) ? global_observables.set : constrained_parameters.set);
-   }
-
-   // END CONSTRAINT COLLECTION; copied from RooAbsPdf::createNLL
-
-   return subsidiary_likelihood;
-}
 
 std::shared_ptr<RooAbsL> build_unbinned_constrained_likelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended,
                                                                ConstrainedParameters constrained_parameters, ExternalConstraints external_constraints,
