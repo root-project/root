@@ -182,7 +182,15 @@ if ((typeof document === "undefined") || (typeof window === "undefined")) {
      _redirects.push(["redraw", divid, obj, opt, call_back]);
    }
 
+   tmpJSROOT.connectWebWindow = function(arg) {
+      if (JSROOT !== tmpJSROOT)
+         return JSROOT.connectWebWindow(arg);
+      return new Promise(resolve => _redirects.push([resolve, "connectWebWindow", arg]));
+   }
+
    // until real JSROOT is loaded, provide minimal functions
    globalThis.JSROOT = tmpJSROOT;
+
+   console.warn("Do not use JSRootCore.js, please replace with JSRoot.core.js")
 
 })();
