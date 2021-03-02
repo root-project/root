@@ -61,6 +61,7 @@ TEST(RDataFrameInterface, CreateAliases)
    EXPECT_ANY_THROW(aliased_tdf.Alias("c4", "c")) << "No exception thrown when trying to alias a non-existing column.";
    EXPECT_ANY_THROW(aliased_tdf.Alias("c0", "c2")) << "No exception thrown when specifying an alias name which is the name of a column.";
    EXPECT_ANY_THROW(aliased_tdf.Alias("c2", "c1")) << "No exception thrown when re-using an alias for a different column.";
+   EXPECT_ANY_THROW(aliased_tdf.Alias("a-b", "c1")) << "No exception thrown when the alias is not a valid C++ variable name.";
 }
 
 TEST(RDataFrameInterface, CheckAliasesPerChain)
