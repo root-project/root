@@ -263,7 +263,7 @@ protected:
    std::unique_ptr<TF1FunctorPointer>  fFunctor; //! Functor object to wrap any C++ callable object 
    std::unique_ptr<TFormula>   fFormula;        //Pointer to TFormula in case when user define formula 
    std::unique_ptr<TF1Parameters> fParams;   //Pointer to Function parameters object (exists only for not-formula functions)
-   std::unique_ptr<TF1AbsComposition> fComposition; //! Pointer to composition (NSUM or CONV)
+   std::unique_ptr<TF1AbsComposition> fComposition; // Pointer to composition (NSUM or CONV)
 
    /// General constructor for TF1. Most of the other constructors delegate on it
    TF1(EFType functionType, const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList, TF1Parameters *params = nullptr, TF1FunctorPointer * functor = nullptr):
