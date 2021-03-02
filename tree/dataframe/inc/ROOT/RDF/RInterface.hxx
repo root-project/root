@@ -2480,7 +2480,7 @@ protected:
    void CheckAndFillDSColumns(ColumnNames_t validCols, TTraits::TypeList<ColumnTypes...> typeList)
    {
       if (fDataSource != nullptr)
-         RDFInternal::AddDSColumns(validCols, *fLoopManager, *fDataSource, typeList);
+         RDFInternal::AddDSColumns(validCols, *fLoopManager, *fDataSource, typeList, fDefines);
    }
 };
 
