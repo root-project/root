@@ -291,7 +291,7 @@ TEST(RNTupleShow, Collections)
     }
 
    auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
-   //ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON);
+   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON);
    ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary);
    ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails);
 }

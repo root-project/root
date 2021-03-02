@@ -72,7 +72,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 // clang-format on
 class RFieldBase {
    friend class ROOT::Experimental::Detail::RFieldFuse; // to connect the columns to a page storage
-   friend class ROOT::Experimental::RCollectionField; // to change the field names when collections are attached
+   friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
 
 private:
    /// The field name relative to its parent field
@@ -85,6 +85,10 @@ private:
    std::size_t fNRepetitions;
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
+   /// When the columns are connected to a page source or page sink, the field represents a field id in the
+   /// corresponding RNTuple descriptor. This on-disk ID is set in RPageSink::Create() for writing and by
+   /// RFieldDescriptor::CreateField() when recreating a field / model from the stored descriptor.
+   DescriptorId_t fOnDiskId = kInvalidDescriptorId;
 
 protected:
    /// Collections and classes own sub fields
@@ -224,6 +228,13 @@ public:
    std::vector<const RFieldBase *> GetSubFields() const;
    bool IsSimple() const { return fIsSimple; }
 
+   DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
+   void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
+
+   /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
+   /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
+   void ConnectPageStorage(RPageStorage &pageStorage);
+
    /// Indicates an evolution of the mapping scheme from C++ type to columns
    virtual RNTupleVersion GetFieldVersion() const { return RNTupleVersion(); }
    /// Indicates an evolution of the C++ type itself
@@ -233,23 +244,6 @@ public:
    RSchemaIterator end();
 
    virtual void AcceptVisitor(RFieldVisitor &visitor) const;
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::RFieldFuse
-\ingroup NTuple
-\brief A friend of RFieldBase responsible for connecting a field's columns to the physical page storage
-
-Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
-can be read or written.
-*/
-// clang-format on
-class RFieldFuse {
-public:
-   static void Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field);
-   /// Connect the field columns and all sub field columns
-   static void ConnectRecursively(DescriptorId_t fieldId, RPageSource &pageSource, RFieldBase &field);
 };
 
 } // namespace Detail
@@ -303,7 +297,7 @@ public:
 };
 
 /// The field for an untyped record. The subfields are stored consequitively in a memory block, i.e.
-/// the memory layout is identical to one that a named C++ struct would have
+/// the memory layout is identical to one that a C++ struct would have
 class RRecordField : public Detail::RFieldBase {
 private:
    std::size_t fMaxAlignment = 1;
@@ -1007,7 +1001,8 @@ public:
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
-   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
+   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
 };

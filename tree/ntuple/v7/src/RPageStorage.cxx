@@ -27,7 +27,6 @@
 #include <Compression.h>
 #include <TError.h>
 
-#include <unordered_map>
 #include <utility>
 
 
@@ -134,25 +133,25 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), "undefined author",
                                 model.GetVersion(), model.GetUuid());
 
-   std::unordered_map<const RFieldBase *, DescriptorId_t> fieldPtr2Id; // necessary to find parent field ids
-   const auto &fieldZero = *model.GetFieldZero();
+   auto &fieldZero = *model.GetFieldZero();
    fDescriptorBuilder.AddField(
       RDanglingFieldDescriptor::FromField(fieldZero)
          .FieldId(fLastFieldId)
          .MakeDescriptor()
          .Unwrap()
    );
-   fieldPtr2Id[&fieldZero] = fLastFieldId++;
+   fieldZero.SetOnDiskId(fLastFieldId);
    for (auto& f : *model.GetFieldZero()) {
+      fLastFieldId++;
       fDescriptorBuilder.AddField(
          RDanglingFieldDescriptor::FromField(f)
             .FieldId(fLastFieldId)
             .MakeDescriptor()
             .Unwrap()
       );
-      fDescriptorBuilder.AddFieldLink(fieldPtr2Id[f.GetParent()], fLastFieldId);
-      Detail::RFieldFuse::Connect(fLastFieldId, *this, f); // issues in turn one or several calls to AddColumn()
-      fieldPtr2Id[&f] = fLastFieldId++;
+      fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fLastFieldId);
+      f.SetOnDiskId(fLastFieldId);
+      f.ConnectPageStorage(*this); // issues in turn one or several calls to AddColumn()
    }
 
    auto nColumns = fLastColumnId;

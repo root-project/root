@@ -61,14 +61,15 @@ void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
 
 
 void ROOT::Experimental::RNTupleReader::ConnectModel(const RNTupleModel &model) {
-   std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> fieldPtr2Id;
-   fieldPtr2Id[model.GetFieldZero()] = fSource->GetDescriptor().GetFieldZeroId();
+   const auto &desc = fSource->GetDescriptor();
+   model.GetFieldZero()->SetOnDiskId(desc.GetFieldZeroId());
    for (auto &field : *model.GetFieldZero()) {
-      auto parentId = fieldPtr2Id[field.GetParent()];
-      auto fieldId = fSource->GetDescriptor().FindFieldId(field.GetName(), parentId);
-      R__ASSERT(fieldId != kInvalidDescriptorId);
-      fieldPtr2Id[&field] = fieldId;
-      Detail::RFieldFuse::Connect(fieldId, *fSource, field);
+      // If the model has been created from the descritor, the on-disk IDs are already set.
+      // User-provided models instead need to find their corresponding IDs in the descriptor.
+      if (field.GetOnDiskId() == kInvalidDescriptorId) {
+         field.SetOnDiskId(desc.FindFieldId(field.GetName(), field.GetParent()->GetOnDiskId()));
+      }
+      field.ConnectPageStorage(*fSource);
    }
 }
 
