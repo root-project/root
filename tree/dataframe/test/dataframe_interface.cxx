@@ -280,12 +280,12 @@ TEST(RDataFrameInterface, InvalidDefine)
    try {
       df.Define("1", [] { return true; });
    } catch (const std::runtime_error &e) {
-      EXPECT_STREQ("Cannot define column \"1\": not a valid C++ variable name.", e.what());
+      EXPECT_STREQ("RDataFrame::Define: cannot define column \"1\". Not a valid C++ variable name.", e.what());
    }
    try {
       df.Define("a-b", "true");
    } catch (const std::runtime_error &e) {
-      EXPECT_STREQ("Cannot define column \"a-b\": not a valid C++ variable name.", e.what());
+      EXPECT_STREQ("RDataFrame::Define: cannot define column \"a-b\". Not a valid C++ variable name.", e.what());
    }
 }
 

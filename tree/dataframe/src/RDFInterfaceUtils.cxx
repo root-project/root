@@ -415,42 +415,43 @@ ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnName
    return selectedColumns;
 }
 
-void CheckDefine(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
-                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &dataSourceColumns)
+void CheckDefine(const std::string &where, std::string_view definedColView, TTree *treePtr,
+                 const ColumnNames_t &customCols, const std::map<std::string, std::string> &aliasMap,
+                 const ColumnNames_t &dataSourceColumns)
 {
-   const std::string definedColStr(definedCol);
+   const std::string definedCol(definedColView); // convert to std::string
+   auto msg = "RDataFrame::" + where + ": cannot define column \"" + definedCol + "\". ";
 
-   if (!IsValidCppVarName(definedColStr)) {
-      const auto msg = "Cannot define column \"" + definedColStr + "\": not a valid C++ variable name.";
+   if (!IsValidCppVarName(definedCol)) {
+      msg += "Not a valid C++ variable name.";
       throw std::runtime_error(msg);
    }
 
    if (treePtr != nullptr) {
       // check if definedCol is already present in TTree
-      const auto branch = treePtr->GetBranch(definedColStr.c_str());
+      const auto branch = treePtr->GetBranch(definedCol.c_str());
       if (branch != nullptr) {
-         const auto msg = "branch \"" + definedColStr + "\" already present in TTree";
+         msg += "A branch with that name is already present in the input TTree/TChain.";
          throw std::runtime_error(msg);
       }
    }
    // check if definedCol has already been `Define`d in the functional graph
    if (std::find(customCols.begin(), customCols.end(), definedCol) != customCols.end()) {
-      const auto msg = "Redefinition of column \"" + definedColStr + "\"";
+      msg += "A column with that name has already been Define'd.";
       throw std::runtime_error(msg);
    }
 
    // Check if the definedCol is an alias
-   const auto aliasColNameIt = aliasMap.find(definedColStr);
+   const auto aliasColNameIt = aliasMap.find(definedCol);
    if (aliasColNameIt != aliasMap.end()) {
-      const auto msg = "An alias with name " + definedColStr + " pointing to column " +
-      aliasColNameIt->second + " is already existing.";
+      msg += "An alias with that name, pointing to column \"" + aliasColNameIt->second + "\", already exists.";
       throw std::runtime_error(msg);
    }
 
    // check if definedCol is already present in the DataSource (but has not yet been `Define`d)
    if (!dataSourceColumns.empty()) {
       if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end()) {
-         const auto msg = "Redefinition of column \"" + definedColStr + "\" already present in the data-source";
+         msg += "A column with that name is already present in the input data source.";
          throw std::runtime_error(msg);
       }
    }
