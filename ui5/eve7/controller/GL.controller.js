@@ -245,8 +245,7 @@ sap.ui.define([
       onResizeTimeout: function()
       {
          delete this.resize_tmout;
-
-         this.viewer.onResizeTimeout();
+         if (this.viewer) this.viewer.onResizeTimeout();
       },
 
       /** Called from JSROOT context menu when object selected for browsing */
