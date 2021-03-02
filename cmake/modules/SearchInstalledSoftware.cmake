@@ -251,6 +251,25 @@ if(builtin_lzma)
   endif()
 endif()
 
+#---Check for xxHash-----------------------------------------------------------------
+if(NOT builtin_xxhash)
+  message(STATUS "Looking for xxHash")
+  if(fail-on-missing)
+    find_package(xxHash REQUIRED)
+  else()
+    find_package(xxHash)
+    if(NOT xxHash_FOUND)
+      message(STATUS "xxHash not found. Switching on builtin_xxhash option")
+      set(builtin_xxhash ON CACHE BOOL "Enabled because xxHash not found (${builtin_xxhash_description})" FORCE)
+    endif()
+  endif()
+endif()
+
+if(builtin_xxhash)
+  list(APPEND ROOT_BUILTINS xxHash)
+  add_subdirectory(builtins/xxhash)
+endif()
+
 #---Check for ZSTD-------------------------------------------------------------------
 if(NOT builtin_zstd)
   message(STATUS "Looking for ZSTD")
@@ -277,25 +296,6 @@ endif()
 if(builtin_zstd)
   list(APPEND ROOT_BUILTINS ZSTD)
   add_subdirectory(builtins/zstd)
-endif()
-
-#---Check for xxHash-----------------------------------------------------------------
-if(NOT builtin_xxhash)
-  message(STATUS "Looking for xxHash")
-  if(fail-on-missing)
-    find_package(xxHash REQUIRED)
-  else()
-    find_package(xxHash)
-    if(NOT xxHash_FOUND)
-      message(STATUS "xxHash not found. Switching on builtin_xxhash option")
-      set(builtin_xxhash ON CACHE BOOL "Enabled because xxHash not found (${builtin_xxhash_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-if(builtin_xxhash)
-  list(APPEND ROOT_BUILTINS xxHash)
-  add_subdirectory(builtins/xxhash)
 endif()
 
 #---Check for LZ4--------------------------------------------------------------------
