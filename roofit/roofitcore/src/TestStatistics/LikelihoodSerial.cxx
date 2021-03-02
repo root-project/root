@@ -22,7 +22,7 @@
 #include <TestStatistics/RooUnbinnedL.h>
 #include <TestStatistics/RooBinnedL.h>
 #include <TestStatistics/RooSubsidiaryL.h>
-#include <TestStatistics/RooSimultaneousL.h>
+#include <TestStatistics/RooSumL.h>
 
 #include "RooRealVar.h"
 #include <ROOT/RMakeUnique.hxx>
@@ -40,8 +40,8 @@ LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::sha
       likelihood_type = LikelihoodType::unbinned;
    } else if (dynamic_cast<RooBinnedL *>(likelihood_.get()) != nullptr) {
       likelihood_type = LikelihoodType::binned;
-   } else if (dynamic_cast<RooSimultaneousL *>(likelihood_.get()) != nullptr) {
-      likelihood_type = LikelihoodType::simultaneous;
+   } else if (dynamic_cast<RooSumL *>(likelihood_.get()) != nullptr) {
+      likelihood_type = LikelihoodType::sum;
    } else if (dynamic_cast<RooSubsidiaryL *>(likelihood_.get()) != nullptr) {
       likelihood_type = LikelihoodType::subsidiary;
    } else {
@@ -99,7 +99,7 @@ void LikelihoodSerial::evaluate() {
       carry = likelihood_->get_carry();
       break;
    }
-   case LikelihoodType::simultaneous: {
+   case LikelihoodType::sum: {
       result = likelihood_->evaluate_partition({0, 1}, 0, likelihood_->get_N_components());
       carry = likelihood_->get_carry();
       // TODO: this normalization part below came from RooOptTestStatistic::evaluate, probably this just means you need to do the normalization on master only when doing parallel calculation. Make sure of this! In any case, it is currently not relevant, because the norm term is 1 by default and is only overridden for the RooDataWeightAverage class.

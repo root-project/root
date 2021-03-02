@@ -35,7 +35,7 @@ enum class LikelihoodType {
    unbinned,
    binned,
    subsidiary,
-   simultaneous
+   sum
 };
 
 class LikelihoodWrapper {

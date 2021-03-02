@@ -33,6 +33,29 @@
 namespace RooFit {
 namespace TestStatistics {
 
+// static function
+bool RooAbsL::is_extended(RooAbsPdf* pdf, Extended extended)
+{
+   bool return_value;
+   switch (extended) {
+   case RooAbsL::Extended::No: {
+      return_value = false;
+      break;
+   }
+   case RooAbsL::Extended::Yes: {
+      return_value = true;
+      break;
+   }
+   case RooAbsL::Extended::Auto: {
+      return_value = ((pdf->extendMode() == RooAbsPdf::CanBeExtended || pdf->extendMode() == RooAbsPdf::MustBeExtended))
+                        ? true
+                        : false;
+      break;
+   }
+   }
+   return return_value;
+}
+
 // private ctor
 RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> data,
                  std::size_t N_events, std::size_t N_components, Extended extended)
@@ -40,11 +63,8 @@ RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> dat
 {
    //   std::unique_ptr<RooArgSet> obs {pdf->getObservables(*data)};
    //   data->attachBuffers(*obs);
-   // Process automatic extended option
+   extended_ = is_extended(pdf_.get(), extended);
    if (extended == Extended::Auto) {
-      extended_ = ((pdf_->extendMode() == RooAbsPdf::CanBeExtended || pdf_->extendMode() == RooAbsPdf::MustBeExtended))
-                  ? true
-                  : false;
       if (extended_) {
          oocoutI((TObject *)nullptr, Minimization)
             << "in RooAbsL ctor: p.d.f. provides expected number of events, including extended term in likelihood."
@@ -113,7 +133,7 @@ void RooAbsL::init_clones(RooAbsPdf &inpdf, RooAbsData &indata)
    //      delete projDataDeps ;
    //   }
 
-   // TODO: do we need this here? Or in RooSimultaneousL?
+   // TODO: do we need this here? Or in RooSumL?
    //   // If PDF is a RooProdPdf (with possible constraint terms)
    //   // analyze pdf for actual parameters (i.e those in unconnected constraint terms should be
    //   // ignored as here so that the test statistic will not be recalculated if those

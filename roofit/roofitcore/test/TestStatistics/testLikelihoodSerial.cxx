@@ -29,8 +29,9 @@
 #include <TestStatistics/LikelihoodSerial.h>
 #include <TestStatistics/RooUnbinnedL.h>
 #include <TestStatistics/RooBinnedL.h>
-#include <TestStatistics/RooSimultaneousL.h>
+#include <TestStatistics/RooSumL.h>
 #include <TestStatistics/optional_parameter_types.h>
+#include <TestStatistics/likelihood_builders.h>
 #include <RooFit/MultiProcess/JobManager.h>
 #include <RooFit/MultiProcess/ProcessManager.h> // need to complete type for debugging
 #include <RooNLLVar.h>
@@ -224,7 +225,7 @@ TEST_F(LikelihoodSerialTest, SimBinned)
 
    nll.reset(pdf->createNLL(*data));
 
-   likelihood = std::make_shared<RooFit::TestStatistics::RooSimultaneousL>(pdf, data);
+   likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data);
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
 
    auto nll0 = nll->getVal();
@@ -274,7 +275,8 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
    likelihood =
 //      std::make_shared<RooFit::TestStatistics::RooBinnedL>(pdf, data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs")));
 //      std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
-      std::make_shared<RooFit::TestStatistics::RooSimultaneousL>(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs")}));
+//      std::make_shared<RooFit::TestStatistics::RooSumL>(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs")}));
+      RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs")}));
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
 
    nll_ts.evaluate();
@@ -301,8 +303,7 @@ TEST_F(LikelihoodSerialTest, SimUnbinned)
 
    auto nll0 = nll->getVal();
 
-   likelihood =
-      std::make_shared<RooFit::TestStatistics::RooSimultaneousL>(pdf, data);
+   likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data);
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
 
    nll_ts.evaluate();
@@ -333,8 +334,7 @@ TEST_F(LikelihoodSerialTest, SimUnbinnedNonExtended)
 
    nll.reset(pdf->createNLL(*data));
 
-   likelihood =
-      std::make_shared<RooFit::TestStatistics::RooSimultaneousL>(pdf, data);
+   likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data);
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
 
    auto nll0 = nll->getVal();
@@ -394,8 +394,9 @@ TEST_F(LikelihoodSerialTest, SimBinnedConstrained)
    auto nll0 = nll->getVal();
 
    likelihood =
-//      std::make_shared<RooFit::TestStatistics::RooSimultaneousL>(pdf, data, RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_A"),*w.var("alpha_bkg_obs_B"))));
-      std::make_shared<RooFit::TestStatistics::RooSimultaneousL>(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"),*w.var("alpha_bkg_obs_B")}));
+//      std::make_shared<RooFit::TestStatistics::RooSumL>(pdf, data, RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_A"),*w.var("alpha_bkg_obs_B"))));
+//      std::make_shared<RooFit::TestStatistics::RooSumL>(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"),*w.var("alpha_bkg_obs_B")}));
+      RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"),*w.var("alpha_bkg_obs_B")}));
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
 
    nll_ts.evaluate();

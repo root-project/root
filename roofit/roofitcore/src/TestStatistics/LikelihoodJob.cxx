@@ -21,7 +21,7 @@
 #include <TestStatistics/RooUnbinnedL.h>
 #include <TestStatistics/RooBinnedL.h>
 #include <TestStatistics/RooSubsidiaryL.h>
-#include <TestStatistics/RooSimultaneousL.h>
+#include <TestStatistics/RooSumL.h>
 
 #include "RooRealVar.h"
 #include <ROOT/RMakeUnique.hxx>
@@ -39,8 +39,8 @@ LikelihoodJob::LikelihoodJob(std::shared_ptr<RooAbsL> likelihood, std::shared_pt
       likelihood_type = LikelihoodType::unbinned;
    } else if (dynamic_cast<RooBinnedL*>(likelihood_.get()) != nullptr) {
       likelihood_type = LikelihoodType::binned;
-   } else if (dynamic_cast<RooSimultaneousL*>(likelihood_.get()) != nullptr) {
-      likelihood_type = LikelihoodType::simultaneous;
+   } else if (dynamic_cast<RooSumL *>(likelihood_.get()) != nullptr) {
+      likelihood_type = LikelihoodType::sum;
    } else if (dynamic_cast<RooSubsidiaryL*>(likelihood_.get()) != nullptr) {
       likelihood_type = LikelihoodType::subsidiary;
    } else {

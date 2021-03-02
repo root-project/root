@@ -21,7 +21,7 @@
 namespace RooFit {
 namespace TestStatistics {
 
-/// Gathers all subsidiary PDF terms from the component PDFs of RooSimultaneousL likelihoods.
+/// Gathers all subsidiary PDF terms from the component PDFs of RooSumL likelihoods.
 /// These are summed separately for increased numerical stability, since these terms are often
 /// small and cause numerical variances in their original PDFs, whereas by summing as one
 /// separate subsidiary collective term, it is numerically very stable.

@@ -31,6 +31,7 @@ public:
    enum class Extended {
       Auto, Yes, No
    };
+   static bool is_extended(RooAbsPdf* pdf, Extended extended);
 
    /// wrapper class used to distinguish ctors
    struct ClonePdfData {
@@ -111,7 +112,7 @@ protected:
    // Note: pdf_ and data_ can be constructed in two ways, one of which implies ownership and the other does not.
    // Inspired by this: https://stackoverflow.com/a/61227865/1199693.
    // The owning variant is used for classes that need a pdf/data clone (RooBinnedL and RooUnbinnedL), whereas the
-   // non-owning version is used for when a reference to the external pdf/dataset is good enough (RooSimultaneousL).
+   // non-owning version is used for when a reference to the external pdf/dataset is good enough (RooSumL).
    // This means that pdf_ and data_ are not meant to actually be shared! If there were a unique_ptr with optional
    // ownership, we would have used that instead.
    std::shared_ptr<RooAbsPdf> pdf_;
