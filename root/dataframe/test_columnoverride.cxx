@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <string>
 
-
 int main()
 {
    auto exceptionCount = 0u;
