@@ -21,7 +21,11 @@ void RBookedDefines::AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &co
 
 void RBookedDefines::AddName(std::string_view name)
 {
-   auto newColsNames = std::make_shared<ColumnNames_t>(GetNames());
+   const auto &names = GetNames();
+   if (std::find(names.begin(), names.end(), name) != names.end())
+      return; // must be a Redefine of an existing column. Nothing to do.
+
+   auto newColsNames = std::make_shared<ColumnNames_t>(names);
    newColsNames->emplace_back(std::string(name));
    fDefinesNames = newColsNames;
 }
