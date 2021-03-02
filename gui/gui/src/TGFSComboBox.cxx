@@ -47,15 +47,15 @@ TGGC         *TGTreeLBEntry::fgDefaultGC = nullptr;
 //--- this is temp here...
 
 struct Lbc_t {
-   const char *fName;   // root prefix name
-   const char *fPath;   // path
-   const char *fPixmap; // picture file
-   Int_t       fId;     // widget id
-   Int_t       fIndent; // identification level
-   Int_t       fFlags;  // flag
+   const char *fName{nullptr};   // root prefix name
+   const char *fPath{nullptr};   // path
+   const char *fPixmap{nullptr}; // picture file
+   Int_t       fId{0};           // widget id
+   Int_t       fIndent{0};       // identification level
+   Int_t       fFlags{0};        // flag
 };
 
-static struct Lbc_t gLbc[32];
+static struct Lbc_t gLbc[32] = { {} };
 
 ClassImp(TGTreeLBEntry);
 ClassImp(TGFSComboBox);
@@ -232,6 +232,13 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
    // const char *rootSys = ROOTPREFIX;
 #endif
 
+   // cleanup previously created static entries
+   for (i = 0; gLbc[i].fPath != nullptr; ++i) {
+      delete [] gLbc[i].fName; gLbc[i].fName = nullptr;
+      delete [] gLbc[i].fPath; gLbc[i].fPath = nullptr;
+      delete [] gLbc[i].fPixmap; gLbc[i].fPixmap = nullptr;
+   }
+
    Int_t idx = 0;
    TList *volumes = gSystem->GetVolumes("all");
    TList *curvol  = gSystem->GetVolumes("cur");
@@ -339,14 +346,14 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
       delete volumes;
       delete curvol;
    }
-   gLbc[idx].fName   = 0;
-   gLbc[idx].fPath   = 0;
-   gLbc[idx].fPixmap = 0;
+   gLbc[idx].fName   = nullptr;
+   gLbc[idx].fPath   = nullptr;
+   gLbc[idx].fPixmap = nullptr;
    gLbc[idx].fId     = (idx+1) * 1000;
    gLbc[idx].fIndent = 0;
    gLbc[idx].fFlags  = 0;
 
-   for (i = 0; gLbc[i].fPath != 0; ++i) {
+   for (i = 0; gLbc[i].fPath != nullptr; ++i) {
       if (strstr(gLbc[i].fPath, "$HOME") != 0) {
          if (homeDir) {
             int hlen = strlen(homeDir);
