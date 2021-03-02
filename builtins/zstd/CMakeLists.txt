@@ -1,11 +1,10 @@
 project(zstd LANGUAGES C)
 
+find_package(xxHash REQUIRED)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(AddZstdCompilationFlags)
 ADD_ZSTD_COMPILATION_FLAGS()
-
-# Always hide XXHash symbols
-add_definitions(-DXXH_NAMESPACE=ZSTD_)
 
 file(READ zstd.h CONTENT)
 string(REGEX MATCH ".*define ZSTD_VERSION_MAJOR *([0-9]+).*define ZSTD_VERSION_MINOR *([0-9]+).*define ZSTD_VERSION_RELEASE *([0-9]+)" VERSION_REGEX "${CONTENT}")
@@ -87,8 +86,10 @@ set(ZSTD_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
 set(ZSTD_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
 
 add_library(zstd STATIC ${ZSTDHEADERS} ${ZSTD_SOURCES})
+target_compile_definitions(zstd PRIVATE "XXH_NAMESPACE=ZSTD_")
 set_target_properties(zstd PROPERTIES COMPILE_DEFINITIONS "ZSTD_HEAPMODE=0;_CRT_SECURE_NO_WARNINGS" C_VISIBILITY_PRESET hidden)
 target_include_directories(zstd PRIVATE ${ZSTD_INCLUDE_DIR} INTERFACE $<BUILD_INTERFACE:${ZSTD_INCLUDE_DIR}>)
+target_link_libraries(zstd PRIVATE xxHash::xxHash)
 if(NOT MSVC)
   target_compile_options(zstd PRIVATE -fPIC -Wno-unused-variable -O3)
 endif()
