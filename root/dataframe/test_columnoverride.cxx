@@ -18,7 +18,8 @@ int main()
       auto c = d.Define("x", [] { return 2; }).Count();
    } catch (const std::runtime_error &e) {
       std::string msg(e.what());
-      const auto expected_msg = "branch \"x\" already present in TTree";
+      const auto expected_msg = "RDataFrame::Define: cannot define column \"x\". A branch with that name is already "
+                                "present in the input TTree/TChain.";
       if (msg.find(expected_msg) == std::string::npos)
          throw;
       exceptionCount++;
@@ -29,7 +30,8 @@ int main()
       auto c = d.Define("x", "2").Count();
    } catch (const std::runtime_error &e) {
       std::string msg(e.what());
-      const auto expected_msg = "branch \"x\" already present in TTree";
+      const auto expected_msg = "RDataFrame::Define: cannot define column \"x\". A branch with that name is already "
+                                "present in the input TTree/TChain.";
       if (msg.find(expected_msg) == std::string::npos)
          throw;
       exceptionCount++;
@@ -40,7 +42,8 @@ int main()
       auto c = d.Define("y", [] { return 0; }).Define("y", [] { return 1; }).Count();
    } catch (const std::runtime_error &e) {
       std::string msg(e.what());
-      const auto expected_msg = "Redefinition of column \"y\"";
+      const auto expected_msg = "RDataFrame::Define: cannot define column \"y\". A column with that name has already "
+                                "been Define'd.";
       if (msg.find(expected_msg) == std::string::npos)
          throw;
       exceptionCount++;
@@ -51,7 +54,8 @@ int main()
       auto c = d.Define("y", [] { return 0; }).Define("y", "1").Count();
    } catch (const std::runtime_error &e) {
       std::string msg(e.what());
-      const auto expected_msg = "Redefinition of column \"y\"";
+      const auto expected_msg = "RDataFrame::Define: cannot define column \"y\". A column with that name has already "
+                                "been Define'd.";
       if (msg.find(expected_msg) == std::string::npos)
          throw;
       exceptionCount++;
