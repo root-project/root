@@ -2550,7 +2550,9 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          {
             std::string code;
             std::string codeline;
-            std::ifstream in(fname);
+            // Windows requires std::ifstream::binary to properly handle
+            // CRLF and LF line endings
+            std::ifstream in(fname, std::ifstream::binary);
             while (in) {
                std::getline(in, codeline);
                code += codeline + "\n";
