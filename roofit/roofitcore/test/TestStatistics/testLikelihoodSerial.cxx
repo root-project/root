@@ -276,7 +276,7 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
 //      std::make_shared<RooFit::TestStatistics::RooBinnedL>(pdf, data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs")));
 //      std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
 //      std::make_shared<RooFit::TestStatistics::RooSumL>(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs")}));
-      RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs")}));
+      RooFit::TestStatistics::build_unbinned_constrained_likelihood(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs")}));
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
 
    nll_ts.evaluate();
