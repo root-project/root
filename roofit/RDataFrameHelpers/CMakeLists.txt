@@ -26,3 +26,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitRDataFrameHelpers
     RooFitCore
 )
 
+ROOT_ADD_TEST_SUBDIRECTORY(test)
+
+
