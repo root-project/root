@@ -37,7 +37,6 @@
 #include <exception>
 #include <iostream>
 #include <type_traits>
-#include <unordered_map>
 
 namespace {
 
@@ -114,28 +113,6 @@ std::string GetNormalizedType(const std::string &typeName) {
 }
 
 } // anonymous namespace
-
-void ROOT::Experimental::Detail::RFieldFuse::Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field)
-{
-   if (field.fColumns.empty())
-      field.GenerateColumnsImpl();
-   for (auto& column : field.fColumns)
-      column->Connect(fieldId, &pageStorage);
-}
-
-
-void ROOT::Experimental::Detail::RFieldFuse::ConnectRecursively(
-   DescriptorId_t fieldId, RPageSource &pageSource, RFieldBase &field)
-{
-   Connect(fieldId, pageSource, field);
-   std::unordered_map<const RFieldBase *, DescriptorId_t> field2Id;
-   field2Id[&field] = fieldId;
-   for (auto &f : field) {
-      auto subFieldId = pageSource.GetDescriptor().FindFieldId(f.GetName(), field2Id[f.GetParent()]);
-      Detail::RFieldFuse::Connect(subFieldId, pageSource, f);
-      field2Id[&f] = subFieldId;
-   }
-}
 
 
 //------------------------------------------------------------------------------
@@ -290,6 +267,15 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
    for (auto& column : fColumns) {
       column->Flush();
    }
+}
+
+
+void ROOT::Experimental::Detail::RFieldBase::ConnectPageStorage(RPageStorage &pageStorage)
+{
+   if (fColumns.empty())
+      GenerateColumnsImpl();
+   for (auto& column : fColumns)
+      column->Connect(fOnDiskId, &pageStorage);
 }
 
 

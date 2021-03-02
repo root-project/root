@@ -164,7 +164,13 @@ private:
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName()), fValue(fField.GenerateValue())
    {
-      Detail::RFieldFuse::ConnectRecursively(fieldId, *pageSource, fField);
+      fField.SetOnDiskId(fieldId);
+      fField.ConnectPageStorage(*pageSource);
+      for (auto &f : fField) {
+         auto subFieldId = pageSource->GetDescriptor().FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId());
+         f.SetOnDiskId(subFieldId);
+         f.ConnectPageStorage(*pageSource);
+      }
    }
 
 public:
