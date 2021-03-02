@@ -515,10 +515,15 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       }
       auto recordField = std::make_unique<RRecordField>("_0", memberFields);
       auto collectionField = std::make_unique<RVectorField>(GetFieldName(), std::move(recordField));
+      collectionField->SetOnDiskId(fFieldId);
       return collectionField;
    }
 
-   return Detail::RFieldBase::Create(GetFieldName(), GetTypeName()).Unwrap();
+   auto field = Detail::RFieldBase::Create(GetFieldName(), GetTypeName()).Unwrap();
+   field->SetOnDiskId(fFieldId);
+   for (auto &f : *field)
+      f.SetOnDiskId(ntplDesc.FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId()));
+   return field;
 }
 
 
@@ -782,6 +787,7 @@ ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterI
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
 {
    auto model = std::make_unique<RNTupleModel>();
+   model->GetFieldZero()->SetOnDiskId(GetFieldZeroId());
    for (const auto &topDesc : GetTopLevelFields())
       model->AddField(topDesc.CreateField(*this));
    return model;

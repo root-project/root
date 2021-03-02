@@ -47,9 +47,10 @@ class RNTupleColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
       const auto &descriptor = source.GetDescriptor();
       const auto fieldId = descriptor.FindFieldId(colName);
       const auto &fieldDescriptor = descriptor.GetFieldDescriptor(fieldId);
-      const auto typeName = fieldDescriptor.GetTypeName();
-      auto fieldBasePtr = Detail::RFieldBase::Create(fieldDescriptor.GetFieldName(), typeName).Unwrap();
-      Detail::RFieldFuse::ConnectRecursively(fieldId, source, *fieldBasePtr);
+      auto fieldBasePtr = fieldDescriptor.CreateField(descriptor);
+      fieldBasePtr->ConnectPageStorage(source);
+      for (auto &f : *fieldBasePtr)
+         f.ConnectPageStorage(source);
       return fieldBasePtr;
    }
 
