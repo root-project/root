@@ -258,10 +258,13 @@ public:
   }
 };
 
-DefaultMMapper DefaultMMapperInstance;
+DefaultMMapper &getDefaultMMapperInstance() {
+  static DefaultMMapper Mapper;
+  return Mapper;
+};
 } // namespace
 
 SectionMemoryManager::SectionMemoryManager(MemoryMapper *MM)
-    : MMapper(MM ? *MM : DefaultMMapperInstance) {}
+    : MMapper(MM ? *MM : getDefaultMMapperInstance()) {}
 
 } // namespace llvm
