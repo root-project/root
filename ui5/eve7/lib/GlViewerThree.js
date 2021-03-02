@@ -156,6 +156,10 @@ sap.ui.define([
          delete this.renderer;
          delete this.scene;
          delete this.composer;
+         if (this.controls) {
+            this.controls.dispose();
+            delete this.controls;
+         }
       },
 
       mouseMoveHandler: function(event) {
