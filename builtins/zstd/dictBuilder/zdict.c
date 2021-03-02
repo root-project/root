@@ -42,7 +42,7 @@
 #define HUF_STATIC_LINKING_ONLY
 #include "../common/huf.h"           /* HUF_buildCTable, HUF_writeCTable */
 #include "../common/zstd_internal.h" /* includes zstd.h */
-#include "../common/xxhash.h"        /* XXH64 */
+#include "xxhash.h"        /* XXH64 */
 #include "divsufsort.h"
 #ifndef ZDICT_STATIC_LINKING_ONLY
 #  define ZDICT_STATIC_LINKING_ONLY
