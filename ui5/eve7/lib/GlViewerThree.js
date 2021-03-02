@@ -153,6 +153,7 @@ sap.ui.define([
          }
 
          this.removeMouseupListener();
+         this.removeMouseMoveTimeout();
          delete this.renderer;
          delete this.scene;
          delete this.composer;
@@ -182,15 +183,12 @@ sap.ui.define([
          this.removeMouseupListener();
       },
 
-      mouseUpHandler: function(event) {
+      mouseUpHandler: function(e0_buttons, event) {
          this.removeMouseupListener();
 
-         if (event.buttons == 1) // Selection on mouseup without move
-         {
+         if (e0_buttons == 1) {// Selection on mouseup without move
             this.handleMouseSelect(event);
-         }
-         else if (event.buttons == 2) // Context menu on delay without move
-         {
+         } else if (e0_buttons == 2) { // Context menu on delay without move
             // Was needed for "on press with timeout"
             // this.controls.resetMouseDown(event);
 
@@ -202,10 +200,10 @@ sap.ui.define([
          if (event.buttons != 1 && event.buttons != 2) this.clearHighlight();
          this.removeMouseupListener();
 
-         // console.log("GLC::mousedown", this, glc, event, event.offsetX, event.offsetY);
-
-         this.mouseup_listener = this.mouseUpHandler.bind(this);
-         window.addEventListener('mouseup', this.mouseup_listener);
+         if ((event.buttons == 1) && this.renderer) {
+            this.mouseup_listener = this.mouseUpHandler.bind(this, event.buttons);
+            this.renderer.domElement.addEventListener('mouseup', this.mouseup_listener);
+         }
       },
 
       dblClickHandler: function(/* event */) {
@@ -513,7 +511,8 @@ sap.ui.define([
 
       removeMouseupListener: function() {
          if (this.mouseup_listener) {
-            window.removeEventListener('mouseup', this.mouseup_listener);
+            if (this.render)
+               this.renderer.domElement.removeEventListener('mouseup', this.mouseup_listener);
             delete this.mouseup_listener;
          }
       },
