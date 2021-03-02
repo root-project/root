@@ -143,13 +143,116 @@ sap.ui.define([
       },
 
       destroyThreejsRenderer: function() {
-         if (this.renderer)
+         if (this.renderer) {
             this.get_view().getDomRef().removeChild(this.renderer.domElement);
+            this.renderer.domElement.removeEventListener('mousemove', this.mousemove_func);
+            this.renderer.domElement.removeEventListener('mouseleave', this.mouseleave_func);
+            this.renderer.domElement.removeEventListener('mousedown', this.mousedown_func);
+            this.renderer.domElement.removeEventListener('dblclick', this.dblclick_func);
+            window.removeEventListener('keydown', this.keydown_func);
+         }
 
+         this.removeMouseupListener();
          delete this.renderer;
          delete this.scene;
          delete this.composer;
       },
+
+      mouseMoveHandler: function(event) {
+         if (event.movementX == 0 && event.movementY == 0)
+            return;
+
+         this.removeMouseupListener();
+
+         if (event.buttons === 0) {
+            this.removeMouseMoveTimeout();
+            this.mousemove_timeout = setTimeout(this.onMouseMoveTimeout.bind(this, event.offsetX, event.offsetY), this.controller.htimeout);
+         } else {
+            this.clearHighlight();
+         }
+      },
+
+      mouseLeaveHandler: function(/* event */) {
+         this.removeMouseMoveTimeout();
+         this.clearHighlight();
+         this.removeMouseupListener();
+      },
+
+      mouseUpHandler: function(event) {
+         this.removeMouseupListener();
+
+         if (event.buttons == 1) // Selection on mouseup without move
+         {
+            this.handleMouseSelect(event);
+         }
+         else if (event.buttons == 2) // Context menu on delay without move
+         {
+            // Was needed for "on press with timeout"
+            // this.controls.resetMouseDown(event);
+
+         }
+      },
+
+      mouseDownHandler: function(event) {
+         this.removeMouseMoveTimeout();
+         if (event.buttons != 1 && event.buttons != 2) this.clearHighlight();
+         this.removeMouseupListener();
+
+         // console.log("GLC::mousedown", this, glc, event, event.offsetX, event.offsetY);
+
+         this.mouseup_listener = this.mouseUpHandler.bind(this);
+         window.addEventListener('mouseup', this.mouseup_listener);
+      },
+
+      dblClickHandler: function(/* event */) {
+         if (this.controller.dblclick_action == "Reset")
+            this.resetThreejsRenderer();
+      },
+
+      keyDownHandler: function(event) {
+         let handled = true;
+
+         if (event.key == "t") {
+            this.scene.traverse(function(node) {
+
+               if (node.material && node.material.linewidth) {
+                  if (!node.material.linewidth_orig) node.material.linewidth_orig = node.material.linewidth;
+
+                  node.material.linewidth *= 1.2;
+               }
+            });
+         }
+         else if (event.key == "e") {
+            this.scene.traverse(function(node) {
+
+               if (node.material && node.material.linewidth) {
+                  if (!node.material.linewidth_orig) node.material.linewidth_orig = node.material.linewidth;
+
+                  node.material.linewidth *= 0.8;
+               }
+            });
+         }
+         else if (event.key == "r") {
+            this.scene.traverse(function(node) {
+
+               if (node.material && node.material.linewidth && node.material.linewidth_orig) {
+                  node.material.linewidth = node.material.linewidth_orig;
+               }
+            });
+         }
+         else {
+            handled = false;
+         }
+
+         if (handled) {
+            // // // event.stopPropagation();
+            // event.preventDefault();
+            // event.stopImmediatePropagation();
+
+            this.render();
+         }
+      },
+
 
       setupThreejsDomAndEventHandlers: function() {
          this.get_view().getDomRef().appendChild(this.renderer.domElement);
@@ -167,109 +270,19 @@ sap.ui.define([
          this.controls.addEventListener('change', this.render.bind(this));
 
          // Setup some event pre-handlers
-         var glc = this;
+         this.mousemove_func = this.mouseMoveHandler.bind(this);
+         this.mouseleave_func = this.mouseLeaveHandler.bind(this);
+         this.mousedown_func = this.mouseDownHandler.bind(this);
+         this.dblclick_func = this.dblClickHandler.bind(this);
+         this.keydown_func = this.keyDownHandler.bind(this);
 
-         this.renderer.domElement.addEventListener('mousemove', function(event) {
-
-            if (event.movementX == 0 && event.movementY == 0)
-               return;
-
-            glc.removeMouseupListener();
-
-            if (event.buttons === 0) {
-               glc.removeMouseMoveTimeout();
-               glc.mousemove_timeout = setTimeout(glc.onMouseMoveTimeout.bind(glc, event.offsetX, event.offsetY), glc.controller.htimeout);
-            } else {
-               glc.clearHighlight();
-            }
-         });
-
-         this.renderer.domElement.addEventListener('mouseleave', function(event) {
-
-            glc.removeMouseMoveTimeout();
-            glc.clearHighlight();
-            glc.removeMouseupListener();
-         });
-
-         this.renderer.domElement.addEventListener('mousedown', function(event) {
-
-            glc.removeMouseMoveTimeout();
-            if (event.buttons != 1 && event.buttons != 2) glc.clearHighlight();
-            glc.removeMouseupListener();
-
-            // console.log("GLC::mousedown", this, glc, event, event.offsetX, event.offsetY);
-
-            glc.mouseup_listener = function(event2) {
-               this.removeEventListener('mouseup', glc.mouseup_listener);
-
-               if (event.buttons == 1) // Selection on mouseup without move
-               {
-                  glc.handleMouseSelect(event2);
-               }
-               else if (event.buttons == 2) // Context menu on delay without move
-               {
-                  // Was needed for "on press with timeout"
-                  // glc.controls.resetMouseDown(event);
-
-               }
-            }
-
-            this.addEventListener('mouseup', glc.mouseup_listener);
-         });
-
-         this.renderer.domElement.addEventListener('dblclick', function(event) {
-            if (glc.controller.dblclick_action == "Reset")
-               glc.resetThreejsRenderer();
-         });
+         this.renderer.domElement.addEventListener('mousemove', this.mousemove_func);
+         this.renderer.domElement.addEventListener('mouseleave', this.mouseleave_func);
+         this.renderer.domElement.addEventListener('mousedown', this.mousedown_func);
+         this.renderer.domElement.addEventListener('dblclick', this.dblclick_func);
 
          // Key-handlers go on window ...
-
-         window.addEventListener('keydown', function(event) {
-
-            // console.log("GLC::keydown", event.key, event.code, event);
-
-            let handled = true;
-
-            if (event.key == "t") {
-               glc.scene.traverse(function(node) {
-
-                  if (node.material && node.material.linewidth) {
-                     if (!node.material.linewidth_orig) node.material.linewidth_orig = node.material.linewidth;
-
-                     node.material.linewidth *= 1.2;
-                  }
-               });
-            }
-            else if (event.key == "e") {
-               glc.scene.traverse(function(node) {
-
-                  if (node.material && node.material.linewidth) {
-                     if (!node.material.linewidth_orig) node.material.linewidth_orig = node.material.linewidth;
-
-                     node.material.linewidth *= 0.8;
-                  }
-               });
-            }
-            else if (event.key == "r") {
-               glc.scene.traverse(function(node) {
-
-                  if (node.material && node.material.linewidth && node.material.linewidth_orig) {
-                     node.material.linewidth = node.material.linewidth_orig;
-                  }
-               });
-            }
-            else {
-               handled = false;
-            }
-
-            if (handled) {
-               // // // event.stopPropagation();
-               // event.preventDefault();
-               // event.stopImmediatePropagation();
-
-               glc.render();
-            }
-         });
+         window.addEventListener('keydown', this.keydown_func);
 
          // This will also call render().
          this.resetThreejsRenderer();
@@ -496,8 +509,8 @@ sap.ui.define([
 
       removeMouseupListener: function() {
          if (this.mouseup_listener) {
-            this.renderer.domElement.removeEventListener('mouseup', this.mouseup_listener);
-            this.mouseup_listener = 0;
+            window.removeEventListener('mouseup', this.mouseup_listener);
+            delete this.mouseup_listener;
          }
       },
 
