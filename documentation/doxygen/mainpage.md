@@ -18,4 +18,4 @@ If you have suggestions about how to improve this documentation, you can let us 
 
 - With a [PR](https://github.com/root-project/root)
 - On the [ROOT Forum](https://root-forum.cern.ch)
-- On [our tracker](https://sft.its.cern.ch/jira/projects/ROOT/)
+- On [our tracker](https://github.com/root-project/root/issues)
