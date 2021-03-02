@@ -107,54 +107,6 @@ TEST(RDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
 }
-/* //- TODO
-TEST(RDataFrameUtils, CheckNonExistingDefineNullTree)
-{
-   // CheckDefine(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
-   //                   const ColumnNames_t &dataSourceColumns)
-   RDFInt::CheckDefine("Bla", nullptr, {"a", "b"}, {});
-}
-
-TEST(RDataFrameUtils, CheckExistingDefineNullTree)
-{
-   int ret = 1;
-   try {
-      RDFInt::CheckDefine("a", nullptr, {"a", "b"}, {});
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
-}
-
-TEST(RDataFrameUtils, CheckExistingDefine)
-{
-   int i;
-   TTree t("t", "t");
-   t.Branch("a", &i);
-
-   int ret = 1;
-   try {
-      RDFInt::CheckDefine("a", &t, {"b"}, {});
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
-}
-
-TEST(RDataFrameUtils, CheckExistingDefineDataSource)
-{
-   int i;
-   TTree t("t", "t");
-   t.Branch("a", &i);
-
-   int ret = 1;
-   try {
-      RDFInt::CheckDefine("c", &t, {"b"}, {"c"});
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
-}*/
 
 TEST(RDataFrameUtils, CheckTypesAndPars)
 {
