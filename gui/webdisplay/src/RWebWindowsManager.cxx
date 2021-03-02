@@ -67,11 +67,27 @@ static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true when called from main process
 /// Main process recognized at the moment when library is loaded
+/// It supposed to be a thread where gApplication->Run() will be called
+/// If application runs in separate thread, one have to use AssignMainThrd() method
+/// to let RWebWindowsManager correctly recognize such situation
 
 bool RWebWindowsManager::IsMainThrd()
 {
    return std::this_thread::get_id() == gWebWinMainThrd;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Re-assigns main thread id
+/// Normally main thread id recognized at the moment when library is loaded
+/// It supposed to be a thread where gApplication->Run() will be called
+/// If application runs in separate thread, one have to call this method
+/// to let RWebWindowsManager correctly recognize such situation
+
+void RWebWindowsManager::AssignMainThrd()
+{
+   gWebWinMainThrd = std::this_thread::get_id();
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager constructor

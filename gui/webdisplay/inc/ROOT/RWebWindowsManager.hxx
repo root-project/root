@@ -57,8 +57,6 @@ private:
 
    int WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed = false, double tm = -1);
 
-   static bool IsMainThrd();
-
    std::string GetUrl(const RWebWindow &win, bool remote = false);
 
    bool CreateServer(bool with_http = false);
@@ -79,6 +77,9 @@ public:
    std::shared_ptr<RWebWindow> CreateWindow();
 
    void Terminate();
+
+   static bool IsMainThrd();
+   static void AssignMainThrd();
 };
 
 } // namespace Experimental
