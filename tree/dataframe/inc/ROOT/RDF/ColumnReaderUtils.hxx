@@ -43,7 +43,9 @@ MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader 
 {
    using Ret_t = std::unique_ptr<RDFDetail::RColumnReaderBase>;
 
-   if (define != nullptr) // it's a Define'd column
+   // this check must come first!
+   // so that Redefine'd columns have precedence over the original columns
+   if (define != nullptr)
       return Ret_t(new RDefineReader(slot, *define, typeid(T)));
 
    if (DSValuePtrsPtr != nullptr) {
