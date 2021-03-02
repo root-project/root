@@ -369,8 +369,8 @@ public:
    RInterface<Proxied, DS_t> Define(std::string_view name, std::string_view expression)
    {
       // this check must be done before jitting lest we throw exceptions in jitted code
-      RDFInternal::CheckDefine("Define", name, fLoopManager->GetTree(), fDefines.GetNames(),
-                               fLoopManager->GetAliasMap(),
+      RDFInternal::CheckDefine("Define", name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                               fLoopManager->GetBranchNames(),
                                fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
@@ -407,8 +407,8 @@ public:
       auto &dsColumnNames = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
 
       // If the alias name is a column name, there is a problem
-      RDFInternal::CheckDefine("Alias", alias, fLoopManager->GetTree(), fDefines.GetNames(),
-                               fLoopManager->GetAliasMap(), dsColumnNames);
+      RDFInternal::CheckDefine("Alias", alias, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                               fLoopManager->GetBranchNames(), dsColumnNames);
 
       const auto validColumnName = GetValidatedColumnNames(1, {std::string(columnName)})[0];
 
@@ -2323,8 +2323,8 @@ private:
    typename std::enable_if<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>::type
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns)
    {
-      RDFInternal::CheckDefine("Define", name, fLoopManager->GetTree(), fDefines.GetNames(),
-                               fLoopManager->GetAliasMap(),
+      RDFInternal::CheckDefine("Define", name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                               fLoopManager->GetBranchNames(),
                                fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;

@@ -415,8 +415,8 @@ ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnName
    return selectedColumns;
 }
 
-void CheckDefine(const std::string &where, std::string_view definedColView, TTree *treePtr,
-                 const ColumnNames_t &customCols, const std::map<std::string, std::string> &aliasMap,
+void CheckDefine(const std::string &where, std::string_view definedColView, const ColumnNames_t &customCols,
+                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &treeColumns,
                  const ColumnNames_t &dataSourceColumns)
 {
    const std::string definedCol(definedColView); // convert to std::string
@@ -427,33 +427,31 @@ void CheckDefine(const std::string &where, std::string_view definedColView, TTre
       throw std::runtime_error(msg);
    }
 
-   if (treePtr != nullptr) {
-      // check if definedCol is already present in TTree
-      const auto branch = treePtr->GetBranch(definedCol.c_str());
-      if (branch != nullptr) {
-         msg += "A branch with that name is already present in the input TTree/TChain.";
-         throw std::runtime_error(msg);
-      }
-   }
    // check if definedCol has already been `Define`d in the functional graph
    if (std::find(customCols.begin(), customCols.end(), definedCol) != customCols.end()) {
       msg += "A column with that name has already been Define'd.";
       throw std::runtime_error(msg);
    }
 
-   // Check if the definedCol is an alias
+   // check if definedCol is an alias
    const auto aliasColNameIt = aliasMap.find(definedCol);
    if (aliasColNameIt != aliasMap.end()) {
       msg += "An alias with that name, pointing to column \"" + aliasColNameIt->second + "\", already exists.";
       throw std::runtime_error(msg);
    }
 
-   // check if definedCol is already present in the DataSource (but has not yet been `Define`d)
-   if (!dataSourceColumns.empty()) {
-      if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end()) {
-         msg += "A column with that name is already present in the input data source.";
-         throw std::runtime_error(msg);
-      }
+   // check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
+   // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
+   // got it right when we collected the list of available branches.
+   if (std::find(treeColumns.begin(), treeColumns.end(), definedCol) != treeColumns.end()) {
+      msg += "A branch with that name is already present in the input TTree/TChain.";
+      throw std::runtime_error(msg);
+   }
+
+   // check if definedCol is already present in the data source (but has not yet been `Define`d)
+   if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end()) {
+      msg += "A column with that name is already present in the input data source.";
+      throw std::runtime_error(msg);
    }
 }
 
