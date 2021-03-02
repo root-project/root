@@ -8,7 +8,8 @@
 
 auto filename("test_branchoverwrite.root");
 
-int main() {
+int main()
+{
    {
       TFile wf(filename, "RECREATE");
       TTree t("emptyTree", "emptyTree");
@@ -21,9 +22,9 @@ int main() {
    d.Define("b", []() { return 8; });
    try {
       auto c = d.Define("a", []() { return 42; });
-   } catch (const std::runtime_error& e) {
+   } catch (const std::runtime_error &e) {
       std::cout << "Exception caught: " << e.what() << std::endl;
    }
-   
+
    return 0;
 }
