@@ -78,7 +78,7 @@ CCFLAGS         = @CFLAGS@  @MMX_CFLAGS@
 EXTRA_DEFINES	= @DEFINE_XLOCALE@
 
 RANLIB		= @RANLIB@
-AR		= ar clq
+AR		= ar cq
 CP		= @CP@
 MV		= @MV@
 RM		= @RM@
