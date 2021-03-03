@@ -186,6 +186,7 @@ private:
   MemoryGroup CodeMem;
   MemoryGroup RWDataMem;
   MemoryGroup RODataMem;
+  std::unique_ptr<MemoryMapper> DefMMapper;
   MemoryMapper &MMapper;
 };
 
