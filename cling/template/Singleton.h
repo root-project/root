@@ -11,8 +11,8 @@ class Singleton
   static Singleton<T>* instance;
   Singleton() {}
  public:
-#if defined(__CINT__) || defined(_MSC_VER)
-  void DoIt(bool output) { if (output) cout<<"Singleton's DoIt for " << typeid(T).name() <<endl;}
+#ifdef _MSC_VER
+  void DoIt(bool output) { if (output) cout<<__FUNCSIG__<<endl;}
 #else
   void DoIt(bool output) { if (output) cout<<__PRETTY_FUNCTION__<<endl;}
 #endif
