@@ -119,7 +119,6 @@ if(MSVC)
       ??_V@YAXPAX@Z
       ??_V@YAXPAXI@Z
       ??_7type_info@@6B@
-      ?__type_info_root_node@@3U__type_info_node@@A
       ?nothrow@std@@3Unothrow_t@1@B
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@M@Z
