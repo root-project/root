@@ -47,14 +47,14 @@ sourcecode = """#ifndef ROOT_RVersion
 #endif
 """.format(versionline, datenow, timenow, major, minor, patch, vers_code)
 
-with open('core/base/inc/RVersion.h', 'w') as file:
+with open('core/foundation/inc/RVersion.h', 'w') as file:
   file.write(sourcecode)
 
 subprocess.check_call("build/unix/coreteam.sh rootx/src/rootcoreteam.h", shell = True)
 
 print("Committing changes.")
 subprocess.check_call(['git', 'commit',
-  'core/base/inc/RVersion.h', 'rootx/src/rootcoreteam.h',
+  'core/foundation/inc/RVersion.h', 'rootx/src/rootcoreteam.h',
   'build/version_number', 'documentation/doxygen/Doxyfile',
   '-m', '"Update ROOT version files to v{}."'.format(versionline)])
 
