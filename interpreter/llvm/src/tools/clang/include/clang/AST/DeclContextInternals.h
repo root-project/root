@@ -33,7 +33,7 @@ class DependentDiagnostic;
 /// one entry.
 struct StoredDeclsList {
   /// When in vector form, this is what the Data pointer points to.
-  using DeclsTy = SmallVector<NamedDecl *, 32>;
+  using DeclsTy = SmallVector<NamedDecl *, 8>;
 
   /// A collection of declarations, with a flag to indicate if we have
   /// further external declarations.

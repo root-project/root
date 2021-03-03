@@ -3230,7 +3230,9 @@ IsInitializerListConstructorConversion(Sema &S, Expr *From, QualType ToType,
                                        OverloadCandidateSet &CandidateSet,
                                        bool AllowExplicit) {
   CandidateSet.clear(OverloadCandidateSet::CSK_InitByUserDefinedConversion);
-  for (auto *D : S.LookupConstructors(To)) {
+  llvm::SmallVector<NamedDecl*, 4> Ctors;
+  S.LookupConstructors(To, Ctors);
+  for (auto *D : Ctors) {
     auto Info = getConstructorInfo(D);
     if (!Info)
       continue;
@@ -3353,7 +3355,9 @@ IsUserDefinedConversion(Sema &S, Expr *From, QualType ToType,
         ListInitializing = true;
       }
 
-      for (auto *D : S.LookupConstructors(ToRecordDecl)) {
+      llvm::SmallVector<NamedDecl*, 4> Ctors;
+      S.LookupConstructors(ToRecordDecl, Ctors);
+      for (auto *D : Ctors) {
         auto Info = getConstructorInfo(D);
         if (!Info)
           continue;
