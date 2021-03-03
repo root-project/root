@@ -54,7 +54,6 @@ class RNTupleModel;
 
 namespace Detail {
 
-class RFieldFuse;
 class RFieldVisitor;
 class RPageStorage;
 
@@ -71,7 +70,6 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 */
 // clang-format on
 class RFieldBase {
-   friend class ROOT::Experimental::Detail::RFieldFuse; // to connect the columns to a page storage
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
 
 private:
