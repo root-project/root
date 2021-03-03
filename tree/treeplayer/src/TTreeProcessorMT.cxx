@@ -637,25 +637,11 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
 }
 
 ////////////////////////////////////////////////////////////////////////
-/// \brief This function is deprecated in favor of GetTasksPerWorkerHint().
-unsigned int TTreeProcessorMT::GetMaxTasksPerFilePerWorker()
-{
-   return fgMaxTasksPerFilePerWorker;
-}
-
-////////////////////////////////////////////////////////////////////////
 /// \brief Retrieve the current value for the desired number of tasks per worker.
 /// \return The desired number of tasks to be created per worker. TTreeProcessorMT uses this value as an hint.
 unsigned int TTreeProcessorMT::GetTasksPerWorkerHint()
 {
    return fgTasksPerWorkerHint;
-}
-
-////////////////////////////////////////////////////////////////////////
-/// \brief This function is deprecated in favor of SetTasksPerWorkerHint().
-void TTreeProcessorMT::SetMaxTasksPerFilePerWorker(unsigned int maxTasksPerFile)
-{
-   fgMaxTasksPerFilePerWorker = maxTasksPerFile;
 }
 
 ////////////////////////////////////////////////////////////////////////
