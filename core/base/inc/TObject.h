@@ -90,7 +90,7 @@ public:
    };
 
 protected:
-   enum DeprectatedWriteOpions {
+   enum { // DeprectatedWriteOptions
       ///< Used to request that the class specific implementation of `TObject::Write`
       ///< just prepare the objects to be ready to be written but do not actually write
       ///< them into the TBuffer. This is just for example by TBufferMerger to request
