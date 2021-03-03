@@ -257,14 +257,9 @@ public:
     return sys::Memory::releaseMappedMemory(M);
   }
 };
-
-DefaultMMapper &getDefaultMMapperInstance() {
-  static DefaultMMapper Mapper;
-  return Mapper;
-};
 } // namespace
 
 SectionMemoryManager::SectionMemoryManager(MemoryMapper *MM)
-    : MMapper(MM ? *MM : getDefaultMMapperInstance()) {}
+  : DefMMapper(MM ? nullptr : new DefaultMMapper), MMapper(MM ? *MM : *DefMMapper) {}
 
 } // namespace llvm
