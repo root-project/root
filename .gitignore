@@ -46,6 +46,7 @@ AutoDict_*.cxx
 
 # /
 /root_version
+/build
 
 # /cling/cintex/
 /cling/cintex/data.root
