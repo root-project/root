@@ -291,7 +291,25 @@ TEST(RNTupleShow, Collections)
     }
 
    auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
-   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON);
-   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary);
-   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails);
+   std::ostringstream osData;
+   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, osData);
+   std::string outputData{ std::string("")
+      + "{\n"
+      + "  \"collection\": [{\"myInt\": 0, \"myFloat\": 10}, {\"myInt\": 1, \"myFloat\": 20}]\n"
+      + "}\n" };
+   EXPECT_EQ(outputData, osData.str());
+
+   std::ostringstream osFields;
+   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
+   std::string outputFields{ std::string("")
+      + "************************************ NTUPLE ************************************\n"
+      + "* N-Tuple : Collections                                                        *\n"
+      + "* Entries : 1                                                                  *\n"
+      + "********************************************************************************\n"
+      + "* Field 1           : collection (std::vector<>)                               *\n"
+      + "*   Field 1.1       : _0 ()                                                    *\n"
+      + "*     Field 1.1.1   : myInt (std::int32_t)                                     *\n"
+      + "*     Field 1.1.2   : myFloat (float)                                          *\n"
+      + "********************************************************************************\n" };
+   EXPECT_EQ(outputFields, osFields.str());
 }
