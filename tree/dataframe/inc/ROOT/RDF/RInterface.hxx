@@ -2716,8 +2716,6 @@ protected:
 
    const std::shared_ptr<Proxied> &GetProxiedPtr() const { return fProxiedPtr; }
 
-   /// Prepare the call to the GetValidatedColumnNames routine, making sure that GetBranchNames,
-   /// which is expensive in terms of runtime, is called at most once.
    ColumnNames_t GetValidatedColumnNames(const unsigned int nColumns, const ColumnNames_t &columns)
    {
       return RDFInternal::GetValidatedColumnNames(*fLoopManager, nColumns, columns, fDefines.GetNames(), fDataSource);
