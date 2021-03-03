@@ -81,7 +81,7 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
    fTHeight = max_ascent + max_descent;
    Resize(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
    fEnabled = kTRUE;
-   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask | kButtonReleaseMask |
+   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |
                          kPointerMotionMask, kNone, kNone);
 }
 
@@ -137,11 +137,7 @@ Bool_t TGTabElement::HandleButton(Event_t *event)
    if (event->fCode == kButton4 || event->fCode == kButton5) { //scroll wheel events
       if (fParent) {
          TGTab* main = (TGTab*)fParent;
-         #if defined(R__WIN32)
          if (main->IsScrollingEnabled())
-         #else
-         if (main->IsScrollingEnabled() && event->fType == kButtonPress)
-         #endif
          {
             if (event->fCode == kButton4) { //scroll up = move left, as in Firefox
                for (Int_t c = main->GetCurrent() - 1; c >= 0; --c) {
