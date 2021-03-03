@@ -5212,7 +5212,9 @@ QualType Sema::ProduceConstructorSignatureHelp(Scope *S, QualType Type,
 
   OverloadCandidateSet CandidateSet(Loc, OverloadCandidateSet::CSK_Normal);
 
-  for (NamedDecl *C : LookupConstructors(RD)) {
+  llvm::SmallVector<NamedDecl*, 4> Ctors;
+  LookupConstructors(RD, Ctors);
+  for (NamedDecl *C : Ctors) {
     if (auto *FD = dyn_cast<FunctionDecl>(C)) {
       AddOverloadCandidate(FD, DeclAccessPair::make(FD, C->getAccess()), Args,
                            CandidateSet,
