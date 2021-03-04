@@ -437,6 +437,7 @@ public:
       RegisterTObject("TProfile", "sap-icon://vertical-bar-chart");
       RegisterTObject("TGraph", "sap-icon://line-chart");
       RegisterTObject("TCanvas", "sap-icon://business-objects-experience", false, 1); // only can use TWebCanvas
+      RegisterTObject("TASImage", "sap-icon://picture", false, 1); // only can use TWebCanvas
 
       RegisterTObject("THStack", "sap-icon://multiple-bar-chart");
       RegisterTObject("TMultiGraph", "sap-icon://multiple-line-chart");
