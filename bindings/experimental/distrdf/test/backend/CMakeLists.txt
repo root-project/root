@@ -19,11 +19,8 @@ ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_common test_common.py)
 ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_dist test_dist.py)
 
 # pyspark is required to run this test
-if(NOT (DEFINED ENV{ROOTTEST_IGNORE_PYSPARK_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2) AND
-   NOT (DEFINED ENV{ROOTTEST_IGNORE_PYSPARK_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
-
+if(dataframe_distpyspark)
     ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_spark test_spark.py)
-
 endif()
 
 endif()
