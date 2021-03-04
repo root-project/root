@@ -22,6 +22,24 @@
 The RooDataHist is a container class to hold N-dimensional binned data. Each bin's central
 coordinates in N-dimensional space are represented by a RooArgSet containing RooRealVar, RooCategory
 or RooStringVar objects, thus data can be binned in real and/or discrete dimensions.
+
+There is an unbinned equivalent, RooDataSet.
+
+### Inspecting a datahist
+Inspect a datahist using Print() to get the coordinates and `weight()` to get the bin contents:
+```
+datahist->Print("V");
+datahist->get(0)->Print("V"); std::cout << "w=" << datahist->weight(0) << std::endl;
+datahist->get(1)->Print("V"); std::cout << "w=" << datahist->weight(1) << std::endl;
+...
+```
+
+### Plotting data.
+See RooAbsData::plotOn().
+
+### Creating a datahist using RDataFrame
+\see RooAbsDataHelper, rf408_RDataFrameToRooFit.C
+
 **/
 
 #include "RooDataHist.h"
