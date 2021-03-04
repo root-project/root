@@ -44,7 +44,7 @@
               <menu>
                 <Menu itemSelected="onViewMenuAction" id="menuViewId">
                   <items>
-                    <MenuItem text="New Viewer" >
+                    <MenuItem text="New Viewer" enabled="false">
                       <items>
                         <MenuItem text="3D"  enabled="false"/>
                         <MenuItem text="RhoZ" enabled="false" />
