@@ -176,8 +176,10 @@ Bool_t TPython::Import(const char *mod_name)
 
    // allow finding to prevent creation of a python proxy for the C++ proxy
    Py_INCREF(mod);
-   if (!CPyCppyy::gThisModule)
+   if (!CPyCppyy::gThisModule) {
+      std::cerr << "Error: import ROOT failed, check your PYTHONPATH environmental variable." << std::endl;
       return kFALSE;
+   }
    PyModule_AddObject(CPyCppyy::gThisModule, mod_name, mod);
 
    // force creation of the module as a namespace
