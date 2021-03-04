@@ -230,6 +230,14 @@ namespace ROOT {
          return *this;
        }
 
+       /// Add `arg` into accumulator. Does not vectorise.
+       template<typename U>
+       KahanSum& operator+=(const KahanSum<U>& arg) {
+         Add(arg.Sum());
+         fCarry[0] += arg.Carry();
+         return *this;
+       }
+
      private:
        T fSum[N];
        T fCarry[N];
