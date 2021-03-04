@@ -91,6 +91,12 @@ if(NOT sqlite)
     # RDF+SQlite tutorials
     list(APPEND dataframe_veto dataframe/*SQlite*)
 endif()
+if(NOT davix)
+    list(APPEND dataframe_veto dataframe/df027_SQliteDependencyOverVersion.C)
+    list(APPEND dataframe_veto dataframe/df028_SQliteIPLocation.C)
+    list(APPEND dataframe_veto dataframe/df029_SQlitePlatformDistribution.C)
+    list(APPEND dataframe_veto dataframe/df030_SQliteVersionsOfROOT.C)
+endif()
 
 if(MACOSX_VERSION VERSION_EQUAL 10.13)
    list(APPEND dataframe_veto dataframe/df103_NanoAODHiggsAnalysis.*)
