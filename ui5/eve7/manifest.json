@@ -43,6 +43,10 @@
                 "name": "View",
                 "pattern": "view/:viewName:",
                 "target": ["GL"]
+            }, {
+                "name": "Table",
+                "pattern": "table/:viewName:",
+                "target": ["Table"]
             }],
             "targets": {
                 "Main": {
@@ -54,6 +58,11 @@
                     "transition": "slide",
                     "clearAggregation": false,
                     "viewName": "GL"
+                },
+                "Table": {
+                    "transition": "slide",
+                    "clearAggregation": false,
+                    "viewName": "EveTable"
                 }
             }
         }
