@@ -6047,7 +6047,7 @@ Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
    params.width = 0;
    params.height = 0 ;
    params.filter = SCL_DO_ALL;
-   params.gamma = 0;
+   params.gamma = 1;
    params.gamma_table = 0;
    params.compression = 0;
    params.format = ASA_ASImage;
