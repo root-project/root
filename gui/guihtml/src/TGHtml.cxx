@@ -46,6 +46,7 @@
 #include "TGText.h"
 #include "TGComboBox.h"
 #include "TGListBox.h"
+#include "TGFileDialog.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
 #include "snprintf.h"
@@ -1364,6 +1365,17 @@ Bool_t TGHtml::HandleButton(Event_t *event)
             MouseDown(uri);
             //!!delete[] uri;
          }
+      }
+   } else if ((event->fType == kButtonPress) && (event->fCode == kButton3)) {
+      TGFileInfo fi;
+      const char *inputFileTypes[] = {
+          "HTML files",   "*.html",
+                     0,          0 };
+      fi.fFileTypes = inputFileTypes;
+      new TGFileDialog(gClient->GetRoot(), this, kFDSave, &fi);
+      if (fi.fFilename) {
+         TGText txt(GetText());
+         txt.Save(fi.fFilename);
       }
    } else if (event->fCode == kButton4) {
       ScrollToPosition(TGLongPosition(fVisible.fX, fVisible.fY / fScrollVal.fY - amount));
