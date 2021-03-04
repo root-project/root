@@ -62,6 +62,7 @@ points for its contents and provides an iterator over its elements
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
+#include "Math/Util.h"
 
 
 using namespace std;
@@ -883,15 +884,15 @@ Double_t RooAbsData::moment(const RooRealVar& var, Double_t order, Double_t offs
 
 
   // Calculate requested moment
-  Double_t sum(0);
-  const RooArgSet* vars ;
+  ROOT::Math::KahanSum<double> sum;
   for(Int_t index= 0; index < numEntries(); index++) {
-    vars = get(index) ;
+    const RooArgSet* vars = get(index) ;
     if (select && select->eval()==0) continue ;
     if (cutRange && vars->allInRange(cutRange)) continue ;
 
-    sum+= weight() * TMath::Power(varPtr->getVal() - offset,order);
+    sum += weight() * TMath::Power(varPtr->getVal() - offset,order);
   }
+
   return sum/sumEntries(cutSpec, cutRange);
 }
 
