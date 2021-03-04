@@ -1865,3 +1865,23 @@ if(NOT ROOT_HAVE_CXX_ATOMICS_WITHOUT_LIB)
     set(ROOT_ATOMIC_LIBS ${ROOT_ATOMIC_LIB})
   endif()
 endif()
+
+#------------------------------------------------------------------------------------
+# Check if the pyspark package is installed on the system.
+# The distributed RDataFrame module has been tested on pyspark version 2.4 and above.
+if(dataframe_distpyspark)
+  message(STATUS "Looking for PySpark")
+
+  if(fail-on-missing)
+    find_package(PySpark 2.4 REQUIRED)
+  else()
+
+    find_package(PySpark 2.4)
+    if(NOT PySpark_FOUND)
+      message(STATUS "Switching OFF 'dataframe_distpyspark' option")
+      set(dataframe_distpyspark OFF CACHE BOOL "Disabled because PySpark not found" FORCE)
+    endif()
+
+  endif()
+
+endif()

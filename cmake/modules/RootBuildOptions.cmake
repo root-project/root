@@ -117,6 +117,7 @@ ROOT_BUILD_OPTION(cuda OFF "Enable support for CUDA (requires CUDA toolkit >= 7.
 ROOT_BUILD_OPTION(cudnn ON "Enable support for cuDNN (default when Cuda is enabled)")
 ROOT_BUILD_OPTION(cxxmodules OFF "Enable support for C++ modules")
 ROOT_BUILD_OPTION(dataframe ON "Enable ROOT RDataFrame")
+ROOT_BUILD_OPTION(dataframe_distpyspark ON "Enable distributed RDataFrame pyspark python module")
 ROOT_BUILD_OPTION(davix ON "Enable support for Davix (HTTP/WebDAV access)")
 ROOT_BUILD_OPTION(dcache OFF "Enable support for dCache (requires libdcap from DESY)")
 ROOT_BUILD_OPTION(dev OFF "Enable recommended developer compilation flags, reduce exposed includes")
@@ -221,6 +222,7 @@ if(all)
  set(clad_defvalue ON)
  set(cuda_defvalue ON)
  set(dataframe_defvalue ON)
+ set(dataframe_distpyspark_defvalue ON)
  set(davix_defvalue ON)
  set(dcache_defvalue ON)
  set(fftw3_defvalue ON)
@@ -481,4 +483,14 @@ elseif(Python3_Interpreter_Development_FOUND AND Python2_Interpreter_Development
   elseif(pyroot)
     message(STATUS "PyROOT will be built for version ${PYTHON_VERSION_STRING_Development_Main}")
   endif()
+endif()
+
+#---distributed RDataFrame requires both dataframe and pyroot----------------------------------
+if(dataframe_distpyspark AND (NOT dataframe OR NOT pyroot))
+
+  message(STATUS "Distributed RDataFrame requires both RDataFrame and PyROOT to be enabled")
+  message(STATUS "    Switching it OFF because either pyroot or dataframe option is disabled")
+  message(STATUS "    pyroot is set to ${pyroot} and dataframe is set to ${dataframe}")
+  set(dataframe_distpyspark OFF CACHE BOOL "Disabled because either dataframe or pyroot were disabled" FORCE)
+
 endif()
