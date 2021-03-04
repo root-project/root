@@ -1632,7 +1632,12 @@ Long64_t TChain::LoadTree(Long64_t entry)
          if (t->GetTree() && t->GetTree()->GetTreeIndex()) {
             t->GetTree()->GetTreeIndex()->UpdateFormulaLeaves(GetTree());
          }
-         t->LoadTreeFriend(entry, this);
+         if (treeReadEntry == -2) {
+            // an entry after the end of the chain was requested (it usually happens when GetEntries is called)
+            t->LoadTree(entry);
+         } else {
+            t->LoadTreeFriend(entry, this);
+         }
          TTree* friend_t = t->GetTree();
          if (friend_t) {
             auto localfe = fTree->AddFriend(t, fe->GetName());
