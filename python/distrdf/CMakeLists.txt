@@ -4,9 +4,7 @@
 # * pyspark is installed on that label for that python version
 if (ROOT_dataframe_FOUND AND
     ROOT_pyroot_FOUND AND
-    NOT (DEFINED ENV{ROOTTEST_IGNORE_PYSPARK_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2) AND
-    NOT (DEFINED ENV{ROOTTEST_IGNORE_PYSPARK_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3) AND
-    NOT MSVC)
+    ROOT_dataframe_distpyspark_FOUND)
 
 file(COPY test_headers DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY test_shared_libraries DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
