@@ -298,7 +298,7 @@ static std::string RetTypeOfLambda(const std::string &lambdaName)
 }
 
 static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
-                                       std::set<TTree *> &analysedTrees)
+                                       std::set<TTree *> &analysedTrees, const std::string friendName = "")
 {
    if (!analysedTrees.insert(&t).second) {
       return;
@@ -307,9 +307,16 @@ static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesRe
    auto branches = t.GetListOfBranches();
    if (branches) {
       for (auto branchObj : *branches) {
-         auto name = branchObj->GetName();
+         const auto name = branchObj->GetName();
          if (bNamesReg.insert(name).second) {
             bNames.emplace_back(name);
+         } else if (!friendName.empty()) {
+            // If this is a friend and the branch name has already been inserted, it might be because the friend
+            // has a branch with the same name as a branch in the main tree. Let's add it as <friendname>.<branchname>.
+            // If used for a Snapshot, this name will become <friendname>_<branchname> (with an underscore).
+            const auto longName = friendName + "." + name;
+            if (bNamesReg.insert(longName).second)
+               bNames.emplace_back(longName);
          }
       }
    }
@@ -320,8 +327,10 @@ static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesRe
       return;
 
    for (auto friendTreeObj : *friendTrees) {
-      auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
-      GetTopLevelBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees);
+      auto friendElement = static_cast<TFriendElement *>(friendTreeObj);
+      auto friendTree = friendElement->GetTree();
+      const std::string frName(friendElement->GetName()); // this gets us the TTree name or the friend alias if any
+      GetTopLevelBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName);
    }
 }
 
