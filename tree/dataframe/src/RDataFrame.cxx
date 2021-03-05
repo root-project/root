@@ -52,10 +52,10 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
 - [Crash course](#crash-course)
 - [Working with collections](#collections)
 - [Efficient analysis in Python](#python)
-- [More features](#more-features)
 - [Transformations](#transformations) -- manipulating data
 - [Actions](#actions) -- getting results
 - [Performance tips and parallel execution](#parallel-execution) -- how to use it and common pitfalls
+- [More features](#more-features)
 - [Class reference](#reference) -- most methods are implemented in the [RInterface](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html) base class
 
 ## <a name="cheatsheet"></a>Cheat sheet
@@ -479,6 +479,152 @@ cols = df.Filter("x > 10").AsNumpy(["x", "y"])
 print(cols["x"], cols["y"])
 ~~~
 
+##  <a name="transformations"></a>Transformations
+### <a name="Filters"></a> Filters
+A filter is defined through a call to `Filter(f, columnList)`. `f` can be a function, a lambda expression, a functor
+class, or any other callable object. It must return a `bool` signalling whether the event has passed the selection
+(`true`) or not (`false`). It must perform "read-only" actions on the columns, and should not have side-effects (e.g.
+modification of an external or static variable) to ensure correct results when implicit multi-threading is active.
+
+`RDataFrame` only evaluates filters when necessary: if multiple filters are chained one after another, they are executed
+in order and the first one returning `false` causes the event to be discarded and triggers the processing of the next
+entry. If multiple actions or transformations depend on the same filter, that filter is not executed multiple times for
+each entry: after the first access it simply serves a cached result.
+
+#### <a name="named-filters-and-cutflow-reports"></a>Named filters and cutflow reports
+An optional string parameter `name` can be passed to the `Filter` method to create a **named filter**. Named filters
+work as usual, but also keep track of how many entries they accept and reject.
+
+Statistics are retrieved through a call to the `Report` method:
+
+- when `Report` is called on the main `RDataFrame` object, it returns a RResultPtr<RCutFlowReport> relative to all
+named filters declared up to that point
+- when called on a specific node (e.g. the result of a `Define` or `Filter`), it returns a RResultPtr<RCutFlowReport>
+relative all named filters in the section of the chain between the main `RDataFrame` and that node (included).
+
+Stats are stored in the same order as named filters have been added to the graph, and *refer to the latest event-loop*
+that has been run using the relevant `RDataFrame`.
+
+### <a name="ranges"></a>Ranges
+When `RDataFrame` is not being used in a multi-thread environment (i.e. no call to `EnableImplicitMT` was made),
+`Range` transformations are available. These act very much like filters but instead of basing their decision on
+a filter expression, they rely on `begin`,`end` and `stride` parameters.
+
+- `begin`: initial entry number considered for this range.
+- `end`: final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
+- `stride`: process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
+
+The actual number of entries processed downstream of a `Range` node will be `(end - begin)/stride` (or less if less
+entries than that are available).
+
+Note that ranges act "locally", not based on the global entry count: `Range(10,50)` means "skip the first 10 entries
+*that reach this node*, let the next 40 entries pass, then stop processing". If a range node hangs from a filter node,
+and the range has a `begin` parameter of 10, that means the range will skip the first 10 entries *that pass the
+preceding filter*.
+
+Ranges allow "early quitting": if all branches of execution of a functional graph reached their `end` value of
+processed entries, the event-loop is immediately interrupted. This is useful for debugging and quick data explorations.
+
+### <a name="custom-columns"></a> Custom columns
+Custom columns are created by invoking `Define(name, f, columnList)`. As usual, `f` can be any callable object
+(function, lambda expression, functor class...); it takes the values of the columns listed in `columnList` (a list of
+strings) as parameters, in the same order as they are listed in `columnList`. `f` must return the value that will be
+assigned to the temporary column.
+
+A new variable is created called `name`, accessible as if it was contained in the dataset from subsequent
+transformations/actions.
+
+Use cases include:
+- caching the results of complex calculations for easy and efficient multiple access
+- extraction of quantities of interest from complex objects
+- branch aliasing, i.e. changing the name of a branch
+
+An exception is thrown if the `name` of the new column/branch is already in use for another branch in the `TTree`.
+
+It is also possible to specify the quantity to be stored in the new temporary column as a C++ expression with the method
+`Define(name, expression)`. For example this invocation
+
+~~~{.cpp}
+tdf.Define("pt", "sqrt(px*px + py*py)");
+~~~
+
+will create a new column called "pt" the value of which is calculated starting from the columns px and py. The system
+builds a just-in-time compiled function starting from the expression after having deduced the list of necessary branches
+from the names of the variables specified by the user.
+
+#### Custom columns as function of slot and entry number
+
+It is possible to create custom columns also as a function of the processing slot and entry numbers. The methods that can
+be invoked are:
+- `DefineSlot(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, T1, T2, ...)`: the
+first parameter is the slot number which ranges from 0 to ROOT::GetThreadPoolSize() - 1.
+- `DefineSlotEntry(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, ULong64_t,
+T1, T2, ...)`: the first parameter is the slot number while the second one the number of the entry being processed.
+
+##  <a name="actions"></a>Actions
+### Instant and lazy actions
+Actions can be **instant** or **lazy**. Instant actions are executed as soon as they are called, while lazy actions are
+executed whenever the object they return is accessed for the first time. As a rule of thumb, actions with a return value
+are lazy, the others are instant.
+
+##  <a name="parallel-execution"></a>Performance tips and parallel execution
+As pointed out before in this document, `RDataFrame` can transparently perform multi-threaded event loops to speed up
+the execution of its actions. Users have to call `ROOT::EnableImplicitMT()` *before* constructing the `RDataFrame`
+object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct
+subset of entries**, and their partial results are merged before returning the final values to the user.
+More specifically, the dataset will be divided in batches of entries, and threads will divide among themselves the
+processing of these batches. There are no guarantees on the order the batches are processed, i.e. no guarantees in the
+order entries of the dataset are processed. Note that this in turn means that, for multi-thread event loops, there is no
+guarantee on the order in which `Snapshot` will _write_ entries: they could be scrambled with respect to the input dataset.
+
+\warning RDataFrame will by default start as many threads as the hardware supports, using up **all** the resources on
+a machine. On a worker node of *e.g.* a batch cluster, this might not be desired if the machine is shared with other
+users. Therefore, **when running on shared computing resources**, use
+```
+ROOT::EnableImplicitMT(i)
+```
+replacing `i` with the number of CPUs/slots that were allocated for this job.
+
+### Thread-safety of user-defined expressions
+RDataFrame operations such as `Histo1D` or `Snapshot` are guaranteed to work correctly in multi-thread event loops.
+User-defined expressions, such as strings or lambdas passed to `Filter`, `Define`, `Foreach`, `Reduce` or `Aggregate`
+will have to be thread-safe, i.e. it should be possible to call them concurrently from different threads.
+
+Note that simple `Filter` and `Define` transformations will inherently satisfy this requirement: `Filter`/`Define`
+expressions will often be *pure* in the functional programming sense (no side-effects, no dependency on external state),
+which eliminates all risks of race conditions.
+
+In order to facilitate writing of thread-safe operations, some RDataFrame features such as `Foreach`, `Define` or `OnPartialResult`
+offer thread-aware counterparts (`ForeachSlot`, `DefineSlot`, `OnPartialResultSlot`): their only difference is that they
+will pass an extra `slot` argument (an unsigned integer) to the user-defined expression. When calling user-defined code
+concurrently, `RDataFrame` guarantees that different threads will employ different values of the `slot` parameter,
+where `slot` will be a number between 0 and `ROOT::GetThreadPoolSize() - 1`.
+In other words, within a slot, computation runs sequentially and events are processed sequentially.
+Note that the same slot might be associated to different threads over the course of a single event loop, but two threads
+will never receive the same slot at the same time.
+This extra parameter might facilitate writing safe parallel code by having each thread write/modify a different
+*processing slot*, e.g. a different element of a list. See [here](#generic-actions) for an example usage of `ForeachSlot`.
+
+### Parallel execution of multiple `RDataFrame` event loops
+A complex analysis may require multiple `RDatFrame` objects to compute all desired results. This poses the challenge that the
+event loops of each `RDataFrame` graph can be parallelized but run sequentially one after another. In the case of many threads
+you may encounter the problem that you run out of data to serve all available resources. To improve this scenario, the helper
+`ROOT::RDF::RunGraphs` allows you to process multiple `RDataFrame` graphs concurrently, which may improve the resource usage.
+~~~{.cpp}
+ROOT::EnableImplicitMT();
+ROOT::RDataFrame df1("tree1", "f1.root");
+ROOT::RDataFrame df2("tree2", "f2.root");
+auto histo1 = df1.Histo1D("x");
+auto histo2 = df2.Histo1D("y");
+
+// just accessing result pointers, the event loops of separate RDataFrames run one after the other
+histo1->Draw(); // runs first multi-thread event loop
+histo2->Draw(); // runs second multi-thread event loop
+
+// with ROOT::RDF::RunGraphs, event loops for separate computation graphs can run concurrently
+ROOT::RDF::RunGraphs({histo1, histo2});
+~~~
+
 ##  <a name="more-features"></a>More features
 Here is a list of the most important features that have been omitted in the "Crash course" for brevity.
 You don't need to read all these to start using `RDataFrame`, but they are useful to save typing time and runtime.
@@ -745,151 +891,6 @@ type of the result of the action.
 
 Read more on this topic [here](https://root.cern.ch/doc/master/classROOT_1_1RDF_1_1RInterface.html#a6909f04c05723de79f97a14b092318b1).
 
-##  <a name="transformations"></a>Transformations
-### <a name="Filters"></a> Filters
-A filter is defined through a call to `Filter(f, columnList)`. `f` can be a function, a lambda expression, a functor
-class, or any other callable object. It must return a `bool` signalling whether the event has passed the selection
-(`true`) or not (`false`). It must perform "read-only" actions on the columns, and should not have side-effects (e.g.
-modification of an external or static variable) to ensure correct results when implicit multi-threading is active.
-
-`RDataFrame` only evaluates filters when necessary: if multiple filters are chained one after another, they are executed
-in order and the first one returning `false` causes the event to be discarded and triggers the processing of the next
-entry. If multiple actions or transformations depend on the same filter, that filter is not executed multiple times for
-each entry: after the first access it simply serves a cached result.
-
-#### <a name="named-filters-and-cutflow-reports"></a>Named filters and cutflow reports
-An optional string parameter `name` can be passed to the `Filter` method to create a **named filter**. Named filters
-work as usual, but also keep track of how many entries they accept and reject.
-
-Statistics are retrieved through a call to the `Report` method:
-
-- when `Report` is called on the main `RDataFrame` object, it returns a RResultPtr<RCutFlowReport> relative to all
-named filters declared up to that point
-- when called on a specific node (e.g. the result of a `Define` or `Filter`), it returns a RResultPtr<RCutFlowReport>
-relative all named filters in the section of the chain between the main `RDataFrame` and that node (included).
-
-Stats are stored in the same order as named filters have been added to the graph, and *refer to the latest event-loop*
-that has been run using the relevant `RDataFrame`.
-
-### <a name="ranges"></a>Ranges
-When `RDataFrame` is not being used in a multi-thread environment (i.e. no call to `EnableImplicitMT` was made),
-`Range` transformations are available. These act very much like filters but instead of basing their decision on
-a filter expression, they rely on `begin`,`end` and `stride` parameters.
-
-- `begin`: initial entry number considered for this range.
-- `end`: final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
-- `stride`: process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
-
-The actual number of entries processed downstream of a `Range` node will be `(end - begin)/stride` (or less if less
-entries than that are available).
-
-Note that ranges act "locally", not based on the global entry count: `Range(10,50)` means "skip the first 10 entries
-*that reach this node*, let the next 40 entries pass, then stop processing". If a range node hangs from a filter node,
-and the range has a `begin` parameter of 10, that means the range will skip the first 10 entries *that pass the
-preceding filter*.
-
-Ranges allow "early quitting": if all branches of execution of a functional graph reached their `end` value of
-processed entries, the event-loop is immediately interrupted. This is useful for debugging and quick data explorations.
-
-### <a name="custom-columns"></a> Custom columns
-Custom columns are created by invoking `Define(name, f, columnList)`. As usual, `f` can be any callable object
-(function, lambda expression, functor class...); it takes the values of the columns listed in `columnList` (a list of
-strings) as parameters, in the same order as they are listed in `columnList`. `f` must return the value that will be
-assigned to the temporary column.
-
-A new variable is created called `name`, accessible as if it was contained in the dataset from subsequent
-transformations/actions.
-
-Use cases include:
-- caching the results of complex calculations for easy and efficient multiple access
-- extraction of quantities of interest from complex objects
-- branch aliasing, i.e. changing the name of a branch
-
-An exception is thrown if the `name` of the new column/branch is already in use for another branch in the `TTree`.
-
-It is also possible to specify the quantity to be stored in the new temporary column as a C++ expression with the method
-`Define(name, expression)`. For example this invocation
-
-~~~{.cpp}
-tdf.Define("pt", "sqrt(px*px + py*py)");
-~~~
-
-will create a new column called "pt" the value of which is calculated starting from the columns px and py. The system
-builds a just-in-time compiled function starting from the expression after having deduced the list of necessary branches
-from the names of the variables specified by the user.
-
-#### Custom columns as function of slot and entry number
-
-It is possible to create custom columns also as a function of the processing slot and entry numbers. The methods that can
-be invoked are:
-- `DefineSlot(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, T1, T2, ...)`: the
-first parameter is the slot number which ranges from 0 to ROOT::GetThreadPoolSize() - 1.
-- `DefineSlotEntry(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, ULong64_t,
-T1, T2, ...)`: the first parameter is the slot number while the second one the number of the entry being processed.
-
-##  <a name="actions"></a>Actions
-### Instant and lazy actions
-Actions can be **instant** or **lazy**. Instant actions are executed as soon as they are called, while lazy actions are
-executed whenever the object they return is accessed for the first time. As a rule of thumb, actions with a return value
-are lazy, the others are instant.
-
-##  <a name="parallel-execution"></a>Performance tips and parallel execution
-As pointed out before in this document, `RDataFrame` can transparently perform multi-threaded event loops to speed up
-the execution of its actions. Users have to call `ROOT::EnableImplicitMT()` *before* constructing the `RDataFrame`
-object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct
-subset of entries**, and their partial results are merged before returning the final values to the user.
-More specifically, the dataset will be divided in batches of entries, and threads will divide among themselves the
-processing of these batches. There are no guarantees on the order the batches are processed, i.e. no guarantees in the
-order entries of the dataset are processed. Note that this in turn means that, for multi-thread event loops, there is no
-guarantee on the order in which `Snapshot` will _write_ entries: they could be scrambled with respect to the input dataset.
-
-\warning RDataFrame will by default start as many threads as the hardware supports, using up **all** the resources on
-a machine. On a worker node of *e.g.* a batch cluster, this might not be desired if the machine is shared with other
-users. Therefore, **when running on shared computing resources**, use
-```
-ROOT::EnableImplicitMT(i)
-```
-replacing `i` with the number of CPUs/slots that were allocated for this job.
-
-### Thread-safety of user-defined expressions
-RDataFrame operations such as `Histo1D` or `Snapshot` are guaranteed to work correctly in multi-thread event loops.
-User-defined expressions, such as strings or lambdas passed to `Filter`, `Define`, `Foreach`, `Reduce` or `Aggregate`
-will have to be thread-safe, i.e. it should be possible to call them concurrently from different threads.
-
-Note that simple `Filter` and `Define` transformations will inherently satisfy this requirement: `Filter`/`Define`
-expressions will often be *pure* in the functional programming sense (no side-effects, no dependency on external state),
-which eliminates all risks of race conditions.
-
-In order to facilitate writing of thread-safe operations, some RDataFrame features such as `Foreach`, `Define` or `OnPartialResult`
-offer thread-aware counterparts (`ForeachSlot`, `DefineSlot`, `OnPartialResultSlot`): their only difference is that they
-will pass an extra `slot` argument (an unsigned integer) to the user-defined expression. When calling user-defined code
-concurrently, `RDataFrame` guarantees that different threads will employ different values of the `slot` parameter,
-where `slot` will be a number between 0 and `ROOT::GetThreadPoolSize() - 1`.
-In other words, within a slot, computation runs sequentially and events are processed sequentially.
-Note that the same slot might be associated to different threads over the course of a single event loop, but two threads
-will never receive the same slot at the same time.
-This extra parameter might facilitate writing safe parallel code by having each thread write/modify a different
-*processing slot*, e.g. a different element of a list. See [here](#generic-actions) for an example usage of `ForeachSlot`.
-
-### Parallel execution of multiple `RDataFrame` event loops
-A complex analysis may require multiple `RDatFrame` objects to compute all desired results. This poses the challenge that the
-event loops of each `RDataFrame` graph can be parallelized but run sequentially one after another. In the case of many threads
-you may encounter the problem that you run out of data to serve all available resources. To improve this scenario, the helper
-`ROOT::RDF::RunGraphs` allows you to process multiple `RDataFrame` graphs concurrently, which may improve the resource usage.
-~~~{.cpp}
-ROOT::EnableImplicitMT();
-ROOT::RDataFrame df1("tree1", "f1.root");
-ROOT::RDataFrame df2("tree2", "f2.root");
-auto histo1 = df1.Histo1D("x");
-auto histo2 = df2.Histo1D("y");
-
-// just accessing result pointers, the event loops of separate RDataFrames run one after the other
-histo1->Draw(); // runs first multi-thread event loop
-histo2->Draw(); // runs second multi-thread event loop
-
-// with ROOT::RDF::RunGraphs, event loops for separate computation graphs can run concurrently
-ROOT::RDF::RunGraphs({histo1, histo2});
-~~~
 <a name="reference"></a>
 */
 // clang-format on
