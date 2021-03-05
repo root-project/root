@@ -44,7 +44,7 @@ alt="DOI"></a>
 \endhtmlonly
 
 ## For the impatient user
-You can directly see RDataFrame in action through its [code examples](https://root.cern.ch/doc/master/group__tutorial__dataframe.html), both in C++ and Python.
+You can directly see RDataFrame in action in our [tutorials](https://root.cern.ch/doc/master/group__tutorial__dataframe.html), in C++ or Python.
 
 ## Table of Contents
 - [Cheat sheet](#cheatsheet)
