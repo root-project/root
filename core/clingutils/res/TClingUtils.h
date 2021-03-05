@@ -855,7 +855,7 @@ namespace AST2SourceTools {
 //______________________________________________________________________________
 const std::string Decls2FwdDecls(const std::vector<const clang::Decl*> &decls,
                                  bool (*ignoreFiles)(const clang::PresumedLoc&) ,
-                                 const cling::Interpreter& interp);
+                                 const cling::Interpreter& interp, std::string *logs);
 
 //______________________________________________________________________________
 int PrepareArgsForFwdDecl(std::string& templateArgs,
