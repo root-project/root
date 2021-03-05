@@ -59,6 +59,8 @@ public:
    virtual TFile      *GetFile();
    virtual TTree      *GetParentTree() const {return fParentTree;}
    virtual TTree      *GetTree();
+   /// Get the actual TTree name of the friend.
+   /// If an alias is present, it can be retrieved with GetName().
    virtual const char *GetTreeName() const {return fTreeName.Data();}
    virtual void        ls(Option_t *option="") const;
            void        Reset() { fTree = nullptr; fFile = nullptr; }
