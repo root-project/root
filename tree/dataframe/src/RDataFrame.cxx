@@ -568,18 +568,16 @@ executed whenever the object they return is accessed for the first time. As a ru
 are lazy, the others are instant.
 
 ##  <a name="parallel-execution"></a>Performance tips and parallel execution
-As pointed out before in this document, `RDataFrame` can transparently perform multi-threaded event loops to speed up
-the execution of its actions. Users have to call `ROOT::EnableImplicitMT()` *before* constructing the `RDataFrame`
+As pointed out before in this document, RDataFrame can transparently perform multi-threaded event loops to speed up
+the execution of its actions. Users have to call ROOT::EnableImplicitMT() *before* constructing the `RDataFrame`
 object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct
 subset of entries**, and their partial results are merged before returning the final values to the user.
-More specifically, the dataset will be divided in batches of entries, and threads will divide among themselves the
-processing of these batches. There are no guarantees on the order the batches are processed, i.e. no guarantees in the
-order entries of the dataset are processed. Note that this in turn means that, for multi-thread event loops, there is no
+There are no guarantees on the order in which threads will process the batches of entries.
+In particular, note that this means that, for multi-thread event loops, there is no
 guarantee on the order in which `Snapshot` will _write_ entries: they could be scrambled with respect to the input dataset.
 
-\warning RDataFrame will by default start as many threads as the hardware supports, using up **all** the resources on
-a machine. On a worker node of *e.g.* a batch cluster, this might not be desired if the machine is shared with other
-users. Therefore, **when running on shared computing resources**, use
+\warning By default, RDataFrame will use as many threads as the hardware supports, using up **all** the resources on
+a machine. This might be undesirable on shared computing resources such as a batch cluster. Therefore, when running on shared computing resources, use
 ```
 ROOT::EnableImplicitMT(i)
 ```
@@ -606,10 +604,10 @@ This extra parameter might facilitate writing safe parallel code by having each 
 *processing slot*, e.g. a different element of a list. See [here](#generic-actions) for an example usage of `ForeachSlot`.
 
 ### Parallel execution of multiple `RDataFrame` event loops
-A complex analysis may require multiple `RDatFrame` objects to compute all desired results. This poses the challenge that the
-event loops of each `RDataFrame` graph can be parallelized but run sequentially one after another. In the case of many threads
-you may encounter the problem that you run out of data to serve all available resources. To improve this scenario, the helper
-`ROOT::RDF::RunGraphs` allows you to process multiple `RDataFrame` graphs concurrently, which may improve the resource usage.
+A complex analysis may require multiple separate `RDatFrame` computation graphs to produce all desired results. This poses the challenge that the
+event loops of each computation graph can be parallelized, but the different loops run sequentially, one after the other.
+On many-core architectures it might be desirable to run different event loops concurrently to improve resource usage.
+ROOT::RDF::RunGraphs() allows running multiple `RDataFrame` event loops concurrently:
 ~~~{.cpp}
 ROOT::EnableImplicitMT();
 ROOT::RDataFrame df1("tree1", "f1.root");
@@ -625,8 +623,31 @@ histo2->Draw(); // runs second multi-thread event loop
 ROOT::RDF::RunGraphs({histo1, histo2});
 ~~~
 
+### Performance profiling of RDataFrame applications
+
+To obtain the maximum performance out of RDataFrame, make sure to avoid just-in-time compiled versions of transformations and actions if at all possible.
+For instance, `Filter("x > 0")` requires just-in-time compilation of the corresponding C++ logic, while the equivalent `Filter([] { return x > 0; }, {"x"})` does not.
+Similarly, `Histo1D("x")` requires just-in-time compilation after the type of `x` is retrieved from the dataset, while `Histo1D<float>("x")` does not; the latter spelling
+should be preferred for performance-critical applications.
+
+Python applications cannot easily specify template parameters or pass C++ callables to RDataFrame.
+See [Efficient analysis in Python](#python) for possible ways to speed up hot paths in this case.
+
+Just-in-time compilation happens once, right before starting an event loop. To reduce the runtime cost of this step, make sure to book all operations *for all RDataFrame computation graphs*
+before the first event loop is triggered: just-in-time compilation will happen once for all code required to be generated up to that point, also across different computation graphs.
+
+Also make sure not to count the just-in-time compilation time (which happens once before the event loop and does not depend on the size of the dataset) as part of the event loop runtime (which scales with the size of the dataset). RDataFrame has an experimental logging feature that simplifies measuring the time spent in just-in-time compilation and in the event loop (as well as providing some more interesting information). It is activated like follows:
+~~~{.cpp}
+auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel.kInfo);
+~~~
+
+### Memory usage
+
+There are two reasons why RDataFrame may consume more memory than expected. Firstly, each result is duplicated for each worker thread, which e.g. in case of many (possibly multi-dimensional) histograms with fine binning can result in visible memory consumption during the event loop. The thread-local copies of the results are destroyed when the final result is produced.
+Secondly, just-in-time compilation of string expressions or non-templated actions (see the previous paragraph) causes Cling, ROOT's C++ interpreter, to allocate some memory for the generated code that is only released at the end of the application. This commonly results in memory usage creep in long-running applications that create many RDataFrames one after the other. Possible mitigations include creating and running each RDataFrame event loop in a sub-process, or booking all operations for all different RDataFrame computation graphs before the first event loop is triggerred, so that the interpreter is invoked only once for all computation graphs.
+
 ##  <a name="more-features"></a>More features
-Here is a list of the most important features that have been omitted in the "Crash course" for brevity.
+Here is a list of the most important features that have been omitted in the "Crash course" for brevity[.
 You don't need to read all these to start using `RDataFrame`, but they are useful to save typing time and runtime.
 
 ### Programmatically get the list of column names
