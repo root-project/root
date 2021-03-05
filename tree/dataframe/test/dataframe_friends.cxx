@@ -7,9 +7,15 @@
 #include "TTree.h"
 #include "gtest/gtest.h"
 
-#include <algorithm> // std::equal
+#include <algorithm> // std::equal, std::sort
+#include <string>
+#include <vector>
 
-// fixture that creates two files with two trees of 10 events each. One has branch `x`, the other branch `y`, both ints.
+// fixture that creates 5 ROOT files:
+// - kFile1 contains `t` with branch `x` (few datapoints)
+// - kFile2 contains `t2` with branch `y` (few datapoints)
+// - kFile3 contains `t3` with branch `arr` (few datapoints, array branch)
+// - kFile{4,5} are the same as kFile{1,2} but with more events
 class RDFAndFriends : public ::testing::Test {
 protected:
    constexpr static auto kFile1 = "test_tdfandfriends.root";
@@ -150,6 +156,45 @@ TEST_F(RDFAndFriends, FromJittedDefine)
 
    auto m = d.Define("yy", "y * y").Mean("yy");
    EXPECT_DOUBLE_EQ(*m, 4.);
+}
+
+// make sure we also Snapshot the branches in friend trees...
+TEST_F(RDFAndFriends, Snapshot) {
+   const auto outfile = "RDFAndFriends_Snapshot.root";
+
+   TFile f1(kFile1);
+   auto t1 = f1.Get<TTree>("t");
+   t1->AddFriend("t2", kFile2);
+
+   auto outdf = ROOT::RDataFrame(*t1).Snapshot("t", outfile);
+
+   auto outCols = outdf->GetColumnNames();
+   std::sort(outCols.begin(), outCols.end());
+   const std::vector<std::string> expected = {"x", "y"};
+   EXPECT_EQ(outCols, expected);
+
+   gSystem->Unlink(outfile);
+}
+
+// ...even if they have the same name as a branch in the main tree
+// this tests #7181
+TEST_F(RDFAndFriends, SnapshotWithSameNames) {
+   const auto outfile = "RDFAndFriends_SnapshotWithSameNames.root";
+
+   TFile f1(kFile1);
+   auto t1 = f1.Get<TTree>("t");
+   TFile f2(kFile1); // we open the same file twice
+   auto t2 = f2.Get<TTree>("t");
+   t1->AddFriend(t2, "t2");
+
+   auto outdf = ROOT::RDataFrame(*t1).Snapshot("t", outfile);
+
+   auto outCols = outdf->GetColumnNames();
+   std::sort(outCols.begin(), outCols.end());
+   const std::vector<std::string> expected = {"t2_x", "x"};
+   EXPECT_EQ(outCols, expected);
+
+   gSystem->Unlink(outfile);
 }
 
 // NOW MT!-------------
