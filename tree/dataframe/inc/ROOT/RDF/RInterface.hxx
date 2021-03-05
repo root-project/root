@@ -264,7 +264,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function.
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
@@ -300,7 +300,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column with a value dependent on the processing slot.
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding the slot number).
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
@@ -329,7 +329,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column with a value dependent on the processing slot and the current entry.
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
@@ -359,7 +359,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression An expression in C++ which represents the temporary value
+   /// \param[in] expression An expression in C++ which represents the defined value
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
    /// The expression is just-in-time compiled and used to produce the column entries.
