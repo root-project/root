@@ -425,7 +425,7 @@ To perform more complex operations in the `RDataFrame` graph, e.g., in `Filter` 
 fit into a simple expression string, you can just-in-time compile such functions directly in the Python script
 via the C++ interpreter cling. This approach has the advantage that you get the efficiency of compiled C++ code
 combined with the convenient workflow of a Python script. See the following snippet for an example of how to
-use a jitted C++ function from Python.
+use a just-in-time-compiled C++ function from Python.
 
 ~~~{.python}
 ROOT.gInterpreter.Declare("""
@@ -439,7 +439,7 @@ sum = df.Filter("myFilter(x)").Sum("y")
 print(sum.GetValue())
 ~~~
 
-To increase the performance even further, you can also precompile a C++ library with full code optimizations
+To increase the performance even further, you can also pre-compile a C++ library with full code optimizations
 and load the function into the `RDataFrame` computation as follows.
 
 ~~~{.python}
@@ -644,7 +644,7 @@ auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFL
 ### Memory usage
 
 There are two reasons why RDataFrame may consume more memory than expected. Firstly, each result is duplicated for each worker thread, which e.g. in case of many (possibly multi-dimensional) histograms with fine binning can result in visible memory consumption during the event loop. The thread-local copies of the results are destroyed when the final result is produced.
-Secondly, just-in-time compilation of string expressions or non-templated actions (see the previous paragraph) causes Cling, ROOT's C++ interpreter, to allocate some memory for the generated code that is only released at the end of the application. This commonly results in memory usage creep in long-running applications that create many RDataFrames one after the other. Possible mitigations include creating and running each RDataFrame event loop in a sub-process, or booking all operations for all different RDataFrame computation graphs before the first event loop is triggerred, so that the interpreter is invoked only once for all computation graphs.
+Secondly, just-in-time compilation of string expressions or non-templated actions (see the previous paragraph) causes Cling, ROOT's C++ interpreter, to allocate some memory for the generated code that is only released at the end of the application. This commonly results in memory usage creep in long-running applications that create many RDataFrames one after the other. Possible mitigations include creating and running each RDataFrame event loop in a sub-process, or booking all operations for all different RDataFrame computation graphs before the first event loop is triggered, so that the interpreter is invoked only once for all computation graphs.
 
 ##  <a name="more-features"></a>More features
 Here is a list of the most important features that have been omitted in the "Crash course" for brevity[.
