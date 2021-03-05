@@ -58,36 +58,35 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
 - [Class reference](#reference) -- most methods are implemented in the [RInterface](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html) base class
 
 ## <a name="cheatsheet"></a>Cheat sheet
-These are the operations which can be performed with RDataFrame
+These are the operations which can be performed with RDataFrame.
 
 ### Transformations
 Transformations are a way to manipulate the data.
 
 | **Transformation** | **Description** |
 |------------------|--------------------|
-| [Define](classROOT_1_1RDF_1_1RInterface.html#a7d48eb23b4378e99ebccb35e94ad025a) | Creates a new column in the dataset. |
+| [Define](classROOT_1_1RDF_1_1RInterface.html#a7d48eb23b4378e99ebccb35e94ad025a) | Creates a new column in the dataset. Example usages include adding a column that contains the invariant mass of a particle, or a selection of elements of an array (e.g. only the `pt`s of "good" muons). |
 | [DefineSlot](classROOT_1_1RDF_1_1RInterface.html#acaacf727b8a41d27c6bb4513348ac892) | Same as `Define`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Define` transformation when using `RDataFrame` after `ROOT::EnableImplicitMT()`. `DefineSlot` works just as well with single-thread execution: in that case `slot` will always be `0`.  |
 | [DefineSlotEntry](classROOT_1_1RDF_1_1RInterface.html#a4f17074d5771916e3df18f8458186de7) | Same as `DefineSlot`, but the entry number is passed in addition to the slot number. This is meant as a helper in case some dependency on the entry number needs to be honoured. |
-| [Filter](classROOT_1_1RDF_1_1RInterface.html#a70284a3bedc72b19610aaa91b5007ebd) | Filter the rows of the dataset. |
-| [Range](classROOT_1_1RDF_1_1RInterface.html#a1b36b7868831de2375e061bb06cfc225) | Creates a node that filters entries based on range of entries |
+| [Filter](classROOT_1_1RDF_1_1RInterface.html#a70284a3bedc72b19610aaa91b5007ebd) | Filter rows based on user-defined conditions. |
+| [Range](classROOT_1_1RDF_1_1RInterface.html#a1b36b7868831de2375e061bb06cfc225) | Filter rows based on entry number (single-thread only). |
 
 ### Actions
-Actions are a way to produce a result out of the data. Each one is described in more detail in the reference guide.
+Actions aggregate data into a result. Each one is described in more detail in the reference guide.
 
-In the following, whenever we say an action "returns" something, we always mean it returns a smart pointer to it. Also
-note that all actions are only executed for events that pass all preceding filters.
+In the following, whenever we say an action "returns" something, we always mean it returns a smart pointer to it. Actions only act on events that pass all preceding filters.
 
 Lazy actions only trigger the event loop when one of the results is accessed for the first time, making it easy to
-produce several different results in one event loop. Instant actions trigger the event loop instantly.
+produce many different results in one event loop. Instant actions trigger the event loop instantly.
 
 
 | **Lazy action** | **Description** |
 |------------------|-----------------|
 | [Aggregate](classROOT_1_1RDF_1_1RInterface.html#ae540b00addc441f9b504cbae0ef0a24d) | Execute a user-defined accumulation operation on the processed column values. |
-| [Book](classROOT_1_1RDF_1_1RInterface.html#a9b2f61f3333d1669e57055b9ae8be9d9) | Book execution of a custom action using a user-defined helper object. |
+| [Book](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a9ed8313806398d106bfc2390301c0408) | Book execution of a custom action using a user-defined helper object. |
 | [Cache](classROOT_1_1RDF_1_1RInterface.html#aaaa0a7bb8eb21315d8daa08c3e25f6c9) | Caches in contiguous memory columns' entries. Custom columns can be cached as well, filtered entries are not cached. Users can specify which columns to save (default is all). |
-| [Count](classROOT_1_1RDF_1_1RInterface.html#a37f9e00c2ece7f53fae50b740adc1456) | Return the number of events processed. |
-| [Display](classROOT_1_1RDF_1_1RInterface.html#aee68f4411f16f00a1d46eccb6d296f01) | Obtains the events in the dataset for the requested columns. The method returns a [RDisplay](classROOT_1_1RDF_1_1RDisplay.html) instance which can be queried to get a compressed tabular representation on the standard output or a complete representation as a string. |
+| [Count](classROOT_1_1RDF_1_1RInterface.html#a37f9e00c2ece7f53fae50b740adc1456) | Return the number of events processed. Useful e.g. to get a quick count of the number of events passing a Filter. |
+| [Display](classROOT_1_1RDF_1_1RInterface.html#aee68f4411f16f00a1d46eccb6d296f01) | Provides a printable representation of the dataset contents. The method returns a [RDisplay](classROOT_1_1RDF_1_1RDisplay.html) instance which can be queried to get a compressed tabular representation on the standard output or a complete representation as a string. |
 | [Fill](classROOT_1_1RDF_1_1RInterface.html#a0cac4d08297c23d16de81ff25545440a) | Fill a user-defined object with the values of the specified columns, as if by calling `Obj.Fill(col1, col2, ...). |
 | [Graph](classROOT_1_1RDF_1_1RInterface.html#a804b466ebdbddef5c7e3400cc6b89301) | Fills a TGraph with the two columns provided. If Multithread is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
 | [Histo{1D,2D,3D}](classROOT_1_1RDF_1_1RInterface.html#a247ca3aeb7ce5b95015b7fae72983055) | Fill a {one,two,three}-dimensional histogram with the processed column values. |
@@ -119,8 +118,7 @@ produce several different results in one event loop. Instant actions trigger the
 | [GetColumnType](classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8) | Return the type of a given column as a string. |
 | [GetColumnTypeNamesList](classROOT_1_1RDF_1_1RInterface.html#a951fe60b74d3a9fda37df59fd1dac186) | Return the list of type names of columns in the dataset. |
 | [GetFilterNames](classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2) | Get all the filters defined. If called on a root node, all filters will be returned. For any other node, only the filters upstream of that node. |
-| [Display](classROOT_1_1RDF_1_1RInterface.html#a652f9ab3e8d2da9335b347b540a9a941) | Provides an ASCII representation of the columns types and contents of the dataset printable by the user. |
-| [SaveGraph](namespaceROOT_1_1RDF.html#adc17882b283c3d3ba85b1a236197c533) | Store the computation graph of an RDataFrame in graphviz format for easy inspection. |
+| [SaveGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a366b19a07428c69801020e2edba117dd) | Store the computation graph of an RDataFrame in graphviz format for easy inspection. |
 | [GetNRuns](classROOT_1_1RDF_1_1RInterface.html#adfb0562a9f7732c3afb123aefa07e0df) | Get the number of event loops run by this RDataFrame instance. |
 
 
