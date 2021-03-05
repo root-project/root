@@ -75,11 +75,17 @@ TModuleGenerator::TModuleGenerator(CompilerInstance *CI,
    // .pcm -> .pch
    if (IsPCH()) fModuleFileName[fModuleFileName.length() - 1] = 'h';
 
-   // Add a random string to the filename to avoid races
-   llvm::SmallString<10> resultPath("%%%%%%%%%%");
-   llvm::sys::fs::createUniqueFile(resultPath.str(), resultPath);
-   fUmbrellaName = fModuleDirName + fDictionaryName + resultPath.c_str() + "_dictUmbrella.h";
-   fContentName = fModuleDirName + fDictionaryName + resultPath.c_str() + "_dictContent.h";
+   // Add a random string to the filename to avoid races.
+   auto makeTempFile = [&](const char *suffix) {
+      llvm::SmallString<64> resultPath;
+      std::string pattern = fModuleDirName + fDictionaryName + "%%%%%%%%%%" + suffix;
+      llvm::sys::fs::createUniqueFile(pattern, resultPath); // NOTE: this creates the (empty) file
+      // Return the full buffer, so caller can use `.c_str()` on the temporary.
+      return resultPath;
+   };
+
+   fUmbrellaName = makeTempFile("_dictUmbrella.h").c_str();
+   fContentName = makeTempFile("_dictContent.h").c_str();
 }
 
 TModuleGenerator::~TModuleGenerator()
