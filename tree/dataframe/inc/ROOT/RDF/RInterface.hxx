@@ -386,18 +386,45 @@ public:
       return newInterface;
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function.
+   /// \return the first node of the computation graph for which the new quantity is defined.
+   /// See Define() for more information.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    RInterface<Proxied, DS_t> Redefine(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns, "Redefine");
    }
 
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column, possibly overriding an existing one with the same name.
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot).
+   /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// See DefineSlot() for more information.
+   // clang-format on
    template <typename F>
    RInterface<Proxied, DS_t> RedefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, RDFDetail::CustomColExtraArgs::Slot>(name, std::move(expression), columns, "RedefineSlot");
    }
 
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column, possibly overriding an existing one with the same name.
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
+   /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// See DefineSlotEntry() for more information.
+   // clang-format on
    template <typename F>
    RInterface<Proxied, DS_t> RedefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
@@ -405,6 +432,17 @@ public:
                                                                         "RedefineSlotEntry");
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column, overriding an existing one with the same name.
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression An expression in C++ which represents the defined value
+   /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// The expression is just-in-time compiled and used to produce the column entries.
+   /// It must be valid C++ syntax in which variable names are substituted with the names
+   /// of branches/columns.
+   ///
+   /// Aliases cannot be overridden. See also Define().
    RInterface<Proxied, DS_t> Redefine(std::string_view name, std::string_view expression)
    {
       RDFInternal::CheckForRedefinition("Redefine", name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
