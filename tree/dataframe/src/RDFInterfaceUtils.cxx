@@ -297,11 +297,9 @@ static std::string RetTypeOfLambda(const std::string &lambdaName)
    return type;
 }
 
-
 static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
                                        std::set<TTree *> &analysedTrees)
 {
-
    if (!analysedTrees.insert(&t).second) {
       return;
    }
