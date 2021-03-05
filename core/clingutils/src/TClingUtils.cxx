@@ -5105,7 +5105,10 @@ bool ROOT::TMetaUtils::IsHeaderName(const std::string &filename)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls, cling::Interpreter::IgnoreFilesFunc_t ignoreFiles, const cling::Interpreter &interp)
+const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls,
+                                                                    cling::Interpreter::IgnoreFilesFunc_t ignoreFiles,
+                                                                    const cling::Interpreter &interp,
+                                                                    std::string *logs)
 {
    clang::Sema &sema = interp.getSema();
    cling::Transaction theTransaction(sema);
@@ -5117,8 +5120,15 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::v
    }
    std::string newFwdDecl;
    llvm::raw_string_ostream llvmOstr(newFwdDecl);
-   interp.forwardDeclare(theTransaction, sema.getPreprocessor(), sema.getASTContext(), llvmOstr, true, nullptr, ignoreFiles);
+
+   std::string locallogs;
+   llvm::raw_string_ostream llvmLogStr(locallogs);
+   interp.forwardDeclare(theTransaction, sema.getPreprocessor(), sema.getASTContext(), llvmOstr, true,
+                         logs ? &llvmLogStr : nullptr, ignoreFiles);
    llvmOstr.flush();
+   llvmLogStr.flush();
+   if (logs)
+      logs->swap(locallogs);
    return newFwdDecl;
 }
 
