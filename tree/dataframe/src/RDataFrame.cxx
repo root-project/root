@@ -50,6 +50,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
 - [Cheat sheet](#cheatsheet)
 - [Introduction](#introduction)
 - [Crash course](#crash-course)
+- [Working with collections](#collections)
 - [Efficient analysis in Python](#python)
 - [More features](#more-features)
 - [Transformations](#transformations) -- manipulating data
@@ -388,6 +389,24 @@ ROOT::EnableImplicitMT();
 ~~~
 Simple as that. More details are given [below](#parallel-execution).
 
+## <a name="collections"></a> Working with collections
+
+RDataFrame reads collections as the special type RVec (e.g. a branch containing an array of floating point numbers can
+be read as a `RVec<float>`). C-style arrays (with variable or static size), `std::vector`s and most other collection
+types can be read this way. When reading ROOT data, column values of type `RVec<T>` perform no copy of the underlying array.
+
+RVec is a container similar to `std::vector` but it offers a rich interface to operate on the array elements in a
+vectorised fashion, similar to Python's NumPy arrays.
+
+For example, to fill a histogram with the `pt` of selected particles for each event, Define() can be used to create
+a column that contains the desired array elements as follows:
+
+~~~{.cpp}
+# h is filled with all the elements of `good_pts`, for each event
+h = df.Define("good_pts", "pt[pt > 0]").Histo1D("good_pts")
+~~~
+
+Learn more on [RVec](https://root.cern/doc/master/classROOT_1_1VecOps_1_1RVec.html).
 
 ##  <a name="python"></a>Efficient analysis in Python
 
@@ -470,21 +489,6 @@ The `GetColumnsNames()` method returns the list of valid column names for the da
 RDataFrame d("myTree", "file.root");
 std::vector<std::string> colNames = d.GetColumnNames();
 ~~~
-
-### Reading and manipulating collections
-When using RDataFrame to read data from a ROOT file, users can specify that the type of a branch is `RVec<T>`
-to indicate the branch is a c-style array, a `std::vector` or any other collection type associated to a
-contiguous storage in memory.
-
-Column values of type `RVec<T>` perform no copy of the underlying array data
-and offer a rich interface to operate on the array elements in a vectorised fashion.
-
-The `RVec<T>` type signals to RDataFrame that a special behaviour needs to be adopted when snapshotting
-a dataset on disk. Indeed, if columns which are variable size C arrays are treated via the `RVec<T>`,
-RDataFrame will correctly persistify them - if anything else is adopted, for example `std::span`, only
-the first element of the array will be written.
-
-Learn more on [RVec](https://root.cern/doc/master/classROOT_1_1VecOps_1_1RVec.html).
 
 ### Callbacks
 It's possible to schedule execution of arbitrary functions (callbacks) during the event loop.
