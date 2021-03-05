@@ -4227,6 +4227,8 @@ int RootClingMain(int argc,
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Rtypes.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_C.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_Stage1_NoRTTI.pcm").str().c_str());
+      } else if (moduleName == "MathCore") {
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "Vc.pcm").str().c_str());
       }
 
       // Set the C++ modules output directory to the directory where we generate
