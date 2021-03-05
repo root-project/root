@@ -2865,9 +2865,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    if (mode==kDefault) {
       TString rootbuild = ROOTBUILD;
       if (rootbuild.Index("debug",0,TString::kIgnoreCase)==kNPOS) {
-         mode |= kOpt;
+         mode = kOpt;
       } else {
-         mode |= kDebug;
+         mode = kDebug;
       }
    }
    UInt_t verboseLevel = verbose ? 7 : gDebug;
