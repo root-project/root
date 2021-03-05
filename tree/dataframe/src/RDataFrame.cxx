@@ -30,8 +30,8 @@ In a nutshell:
 ~~~{.cpp}
 ROOT::EnableImplicitMT(); // Tell ROOT you want to go parallel
 ROOT::RDataFrame d("myTree", "file_*.root"); // Interface to TTree and TChain
-auto myHisto = d.Histo1D("Branch_A"); // This happens in parallel!
-myHisto->Draw();
+auto myHisto = d.Histo1D("Branch_A"); // This books the (lazy) filling of a histogram
+myHisto->Draw(); // Event loop is run here, upon first access to a result
 ~~~
 
 Calculations are expressed in terms of a type-safe *functional chain of actions and transformations*, `RDataFrame` takes
@@ -137,6 +137,8 @@ at the same time, users can just as easily specify custom code that will be exec
    1.  **filter** (e.g. apply some cuts) or
    2.  **define** a new column (e.g. the result of an expensive computation on columns)
 3. **apply actions** to the transformed data to produce results (e.g. fill a histogram)
+
+Make sure to book all transformations and actions before you access the contents of any of the results: this lets RDataFrame accumulate work and then produce all results at the same time, upon first access to any of them.
 
 The following table shows how analyses based on `TTreeReader` and `TTree::Draw` translate to `RDataFrame`. Follow the
 [crash course](#crash-course) to discover more idiomatic and flexible ways to express analyses with `RDataFrame`.
@@ -254,8 +256,8 @@ possible [actions](#overview), and all their results are wrapped in smart pointe
 Let's say we want to cut over the value of branch "MET" and count how many events pass this cut. This is one way to do it:
 ~~~{.cpp}
 RDataFrame d("myTree", "file.root");
-auto c = d.Filter("MET > 4.").Count();
-std::cout << *c << std::endl;
+auto c = d.Filter("MET > 4.").Count(); // computations booked, not run
+std::cout << *c << std::endl; // computations run here, upon first access to the result
 ~~~
 The filter string (which must contain a valid c++ expression) is applied to the specified branches for each event;
 the name and types of the columns are inferred automatically. The string expression is required to return a `bool`
