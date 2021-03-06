@@ -1049,7 +1049,6 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
       ::Info("TCling::__LoadModule", "Preloading module %s. \n",
              ModuleName.c_str());
 
-   cling::Interpreter::PushTransactionRAII deserRAII(&interp);
    return interp.loadModule(ModuleName, /*Complain=*/true);
 }
 
@@ -1191,10 +1190,14 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
 {
    if (!clingInterp.getCI()->getLangOpts().Modules)
       return;
-      // Setup core C++ modules if we have any to setup.
 
-      // Load libc and stl first.
-      // Load vcruntime module for windows
+   // Loading of a module might deserialize.
+   cling::Interpreter::PushTransactionRAII deserRAII(&clingInterp);
+
+   // Setup core C++ modules if we have any to setup.
+
+   // Load libc and stl first.
+   // Load vcruntime module for windows
 #ifdef R__WIN32
    LoadModule("vcruntime", clingInterp);
    LoadModule("services", clingInterp);
@@ -2277,6 +2280,7 @@ void TCling::RegisterModule(const char* modulename,
 
       // FIXME: We should only complain for modules which we know to exist. For example, we should not complain about
       // modules such as GenVector32 because it needs to fall back to GenVector.
+      cling::Interpreter::PushTransactionRAII deserRAII(GetInterpreterImpl());
       ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter);
       if (!ModuleWasSuccessfullyLoaded) {
          // Only report if we found the module in the modulemap.
