@@ -219,7 +219,7 @@ namespace cling {
       WrapperDC->addDecl(FD);
     }
 
-    return hasNoErrors ? FD : nullptr;
+    return hasNoErrors ? FD : false;
   }
 
   void DeclExtractor::createUniqueName(std::string& out) {
