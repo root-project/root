@@ -473,6 +473,8 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 /// \return Tuple with (Kahan sum of probabilities, carry of kahan sum, sum of weights)
 std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const
 {
+  const auto nEvents = lastEvent - firstEvent;
+
   if (stepSize != 1) {
     throw std::invalid_argument(std::string("Error in ") + __FILE__ + ": Step size for batch computations can only be 1.");
   }
@@ -486,7 +488,7 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     _evalData.reset(new RooBatchCompute::RunContext);
   }
   _evalData->clear();
-  _dataClone->getBatches(*_evalData, firstEvent, lastEvent-firstEvent);
+  _dataClone->getBatches(*_evalData, firstEvent, nEvents);
 
   auto results = pdfClone->getLogProbabilities(*_evalData, _normSet);
 
@@ -515,33 +517,32 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
 
 
   // Compute sum of event weights. First check if we need squared weights
-  const RooSpan<const double> eventWeights = _dataClone->getWeightBatch(firstEvent, lastEvent-firstEvent);
+  const RooSpan<const double> eventWeights = _dataClone->getWeightBatch(firstEvent, nEvents);
   //Capture member for lambda:
   const bool retrieveSquaredWeights = _weightSq;
   auto retrieveWeight = [&eventWeights, retrieveSquaredWeights](std::size_t i) {
-    if (retrieveSquaredWeights)
-      return eventWeights[i] * eventWeights[i];
-    else
-      return eventWeights[i];
+    return retrieveSquaredWeights ? eventWeights[i] * eventWeights[i] : eventWeights[i];
   };
 
   //Sum the event weights and probabilities
   ROOT::Math::KahanSum<double, 4u> kahanProb;
-  ROOT::Math::KahanSum<double, 4u> kahanWeight;
+  double uniformSingleEventWeight{0.0};
+  double sumOfWeights;
   if (eventWeights.empty()) {
-    for (std::size_t i = 0; i < lastEvent - firstEvent; ++i) {
-      _dataClone->get(firstEvent + i); //side effect on weight()
-      const double weight = _dataClone->weight();
-      kahanProb   += -weight * results[i];
-      kahanWeight += weight;
+    uniformSingleEventWeight = retrieveSquaredWeights ? _dataClone->weightSquared() : _dataClone->weight();
+    sumOfWeights = nEvents * uniformSingleEventWeight;
+    for (std::size_t i = 0; i < results.size(); ++i) { //CHECK_VECTORISE
+      kahanProb.AddIndexed(-uniformSingleEventWeight * results[i], i);
     }
   } else {
     assert(results.size() == eventWeights.size());
+    ROOT::Math::KahanSum<double, 4u> kahanWeight;
     for (std::size_t i = 0; i < results.size(); ++i) { //CHECK_VECTORISE
       const double weight = retrieveWeight(i);
       kahanProb.AddIndexed(-weight * results[i], i);
       kahanWeight.AddIndexed(weight, i);
     }
+    sumOfWeights = kahanWeight.Sum();
   }
 
   if (std::isnan(kahanProb.Sum())) {
@@ -550,13 +551,7 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     ROOT::Math::KahanSum<double, 4u> kahanSanitised;
     RooNaNPacker nanPacker;
     for (std::size_t i = 0; i < results.size(); ++i) {
-      double weight;
-      if (eventWeights.empty()) {
-        _dataClone->get(firstEvent + i); // //side effect on weight()
-        weight = _dataClone->weight();
-      } else {
-        weight = retrieveWeight(i);
-      }
+      double weight = eventWeights.empty() ? uniformSingleEventWeight : retrieveWeight(i);
 
       if (weight == 0.)
         continue;
@@ -570,13 +565,13 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
 
     // Some events with evaluation errors. Return "badness" of errors.
     if (nanPacker.getPayload() > 0.) {
-      return std::tuple<double, double, double>{nanPacker.getNaNWithPayload(), 0., kahanWeight.Sum()};
+      return std::tuple<double, double, double>{nanPacker.getNaNWithPayload(), 0., sumOfWeights};
     } else {
-      return std::tuple<double, double, double>{kahanSanitised.Sum(), kahanSanitised.Carry(), kahanWeight.Sum()};
+      return std::tuple<double, double, double>{kahanSanitised.Sum(), kahanSanitised.Carry(), sumOfWeights};
     }
   }
 
-  return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};
+  return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), sumOfWeights};
 }
 
 
