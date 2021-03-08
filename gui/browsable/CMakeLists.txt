@@ -100,3 +100,12 @@ ROOT_LINKER_LIBRARY(ROOTLeafDraw7Provider
      ROOTGpadv7
 )
 
+# provider for browsing of RNTuple
+
+ROOT_LINKER_LIBRARY(ROOTNTupleBrowseProvider
+     src/RNTupleProvider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
+)
+
