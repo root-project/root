@@ -219,7 +219,7 @@ void RooMomentMorph::initialize()
 
 RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) const
 {
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(nullptr,nullptr) ;
+  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(nullptr,static_cast<RooArgSet*>(nullptr)) ;
   if (cache) {
     return cache ;
   }

@@ -420,7 +420,7 @@ void RooMomentMorphND::Grid::addPdf(const RooAbsPdf &pdf, vector<int> bins)
 //_____________________________________________________________________________
 RooMomentMorphND::CacheElem *RooMomentMorphND::getCache(const RooArgSet * /*nset*/) const
 {
-   CacheElem *cache = static_cast<CacheElem *>(_cacheMgr.getObj(nullptr, nullptr));
+   CacheElem *cache = static_cast<CacheElem *>(_cacheMgr.getObj(nullptr, static_cast<RooArgSet*>(nullptr)));
    if (cache) {
       return cache;
    }
