@@ -18,52 +18,56 @@ RooBatchCompute::RooBatchComputeInterface* RooBatchCompute::dispatch=nullptr;
 namespace {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/// Inspect cpu capabilities, and load the optimal library for RooFit computations.
-void loadComputeLibrary() {
-
-  std::string libName="libRooBatchCompute_GENERIC";
-
-#ifdef R__RF_ARCHITECTURE_SPECIFIC_LIBS
-  
-  __builtin_cpu_init();
-  if (gEnv->GetValue("RooFit.LoadOptimisedComputationLibrary", 1) == 0) {
-    if (gDebug>0) {
-      std::cout << "In roofitcore/InitUtils.cxx:loadComputeLibrary(): RooFit.LoadOptimisedComputationLibrary is set to 0, using generic RooBatchCompute library." << std::endl;
-    }
-  }
-  
-  #if __GNUC__ > 5 || defined(__clang__)
-  //skylake-avx512 support
-  else if (__builtin_cpu_supports("avx512cd") && __builtin_cpu_supports("avx512vl") && __builtin_cpu_supports("avx512bw") && __builtin_cpu_supports("avx512dq"))  {
-    libName = "libRooBatchCompute_AVX512";
-  }
-  #endif 
-  
-  else if (__builtin_cpu_supports("avx2")) {
-    libName = "libRooBatchCompute_AVX2";
-  } else if (__builtin_cpu_supports("avx")) {
-    libName = "libRooBatchCompute_AVX";
-  } else if (__builtin_cpu_supports("sse4.1")) {
-    libName = "libRooBatchCompute_SSE4.1";
-  }
-
-#else //R__RF_ARCHITECTURE_SPECIFIC_LIBS not defined
-
-  if (gDebug>0) {
-    std::cout << "In roofitcore/InitUtils.cxx:loadComputeLibrary(): Architecture specifics libraries not supported." << std::endl;
-  }
-
-#endif //R__RF_ARCHITECTURE_SPECIFIC_LIBS
-
+/// Dynamically load a library and throw exception in case of failure
+void loadWithErrorChecking(const std::string& libName)
+{
   const auto returnValue = gSystem->Load(libName.c_str());
   if (returnValue == -1 || returnValue == -2) {
     throw std::runtime_error("RooFit was unable to load its computation library " + libName);
   } else if (returnValue == 1) {
     // Library should not have been loaded before we tried to do it.
     throw std::logic_error("RooFit computation library " + libName + " was loaded before RooFit initialisation began.");
-  } else if (gDebug>0) {
-    std::cout << "In roofitcore/InitUtils.cxx:loadComputeLibrary(): Library " + libName + " was loaded successfully" << std::endl;
+  } 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Inspect hardware capabilities, and load the optimal library for RooFit computations.
+void loadComputeLibrary() {
+
+#ifdef R__RF_ARCHITECTURE_SPECIFIC_LIBS
+
+  // Check if user has requested a specific library architecture in .rootrc
+  const std::string userChoice = gEnv->GetValue("RooFit.ComputationLibraryArch","auto");
+  if (userChoice!="auto" && userChoice!="avx512" && userChoice!="avx2" && userChoice!="avx" && userChoice!="sse4.1" && userChoice!="generic")
+    throw std::invalid_argument("Supported options for `RooFit.ComputationLibraryArch` are `auto`, `avx512`, `avx2`, `avx`, `sse4.1`, `generic`.");
+  
+  __builtin_cpu_init();
+#if __GNUC__ > 5 || defined(__clang__)
+  if (__builtin_cpu_supports("avx512cd") && __builtin_cpu_supports("avx512vl") && __builtin_cpu_supports("avx512bw") && __builtin_cpu_supports("avx512dq")
+  && (userChoice=="avx512" || userChoice=="auto") )  {
+    loadWithErrorChecking("libRooBatchCompute_AVX512");
+    return;
+  } else
+#endif
+  if (__builtin_cpu_supports("avx2") && (userChoice=="avx2" || userChoice=="auto")) {
+    loadWithErrorChecking("libRooBatchCompute_AVX2");
+    return;
+  } else if (__builtin_cpu_supports("avx") && (userChoice=="avx" || userChoice=="auto")) {
+    loadWithErrorChecking("libRooBatchCompute_AVX");
+    return;
+  } else if (__builtin_cpu_supports("sse4.1") && (userChoice=="sse4.1" || userChoice=="auto")) {
+    loadWithErrorChecking("libRooBatchCompute_SSE4.1");
+    return;
   }
+  
+#endif //R__RF_ARCHITECTURE_SPECIFIC_LIBS
+
+  if (gDebug>0) {
+    std::cout << "In " << __func__ << "(), " << __FILE__ << ":" << __LINE__ << ": Vector instruction sets not supported, using generic implementation." << std::endl;
+  }
+  loadWithErrorChecking("libRooBatchCompute_GENERIC");
+
 }
 
 } //end anonymous namespace
