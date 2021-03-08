@@ -62,6 +62,7 @@ public:
    static bool IsFileFormatSupported(const std::string &extension);
    static std::shared_ptr<RElement> OpenFile(const std::string &extension, const std::string &fullname);
    static std::shared_ptr<RElement> Browse(std::unique_ptr<RHolder> &obj);
+   static std::shared_ptr<RElement> BrowseNTuple(const std::string &tuplename, const std::string &filename);
    static bool Draw6(TVirtualPad *subpad, std::unique_ptr<RHolder> &obj, const std::string &opt = "");
    static bool Draw7(std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt = "");
 
@@ -69,6 +70,7 @@ protected:
 
    using FileFunc_t = std::function<std::shared_ptr<RElement>(const std::string &)>;
    using BrowseFunc_t = std::function<std::shared_ptr<RElement>(std::unique_ptr<RHolder> &)>;
+   using BrowseNTupleFunc_t = std::function<std::shared_ptr<RElement>(const std::string &, const std::string &)>;
    using Draw6Func_t = std::function<bool(TVirtualPad *, std::unique_ptr<RHolder> &, const std::string &)>;
    using Draw7Func_t = std::function<bool(std::shared_ptr<ROOT::Experimental::RPadBase> &, std::unique_ptr<RHolder> &, const std::string &)>;
 
@@ -81,6 +83,7 @@ protected:
                       const std::string &browselib = "",
                       const std::string &draw6lib = "",
                       const std::string &draw7lib = "");
+   void RegisterNTupleFunc(BrowseNTupleFunc_t func);
 
 private:
 
@@ -106,6 +109,7 @@ private:
    static BrowseMap_t &GetBrowseMap();
    static Draw6Map_t &GetDraw6Map();
    static Draw7Map_t &GetDraw7Map();
+   static BrowseNTupleFunc_t gNTupleFunc;
 
    static const StructClass &GetClassEntry(const ClassArg &);
 

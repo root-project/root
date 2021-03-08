@@ -238,6 +238,9 @@ public:
 
 std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
 {
+   if ("ROOT::Experimental::RNTuple"s == fKey->ClassName())
+      return RProvider::BrowseNTuple(fKey->GetName(), fDir->GetFile()->GetName());
+
    return std::make_shared<TKeyElement>(fDir, fKey);
 }
 
