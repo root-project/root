@@ -370,7 +370,7 @@ TGeoVolume *TGeoHype::Divide(TGeoVolume * /*voldiv*/, const char *divname, Int_t
                              Double_t /*start*/, Double_t /*step*/)
 {
    Error("Divide", "Hyperboloids cannot be divided. Division volume %s not created", divname);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -421,17 +421,17 @@ void TGeoHype::GetBoundingCylinder(Double_t *param) const
 
 TGeoShape *TGeoHype::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return nullptr;
    Double_t dz;
    Double_t zmin,zmax;
    dz = fDz;
    if (fDz<0) {
       mother->GetAxisRange(3,zmin,zmax);
-      if (zmax<0) return 0;
+      if (zmax<0) return nullptr;
       dz=zmax;
    } else {
       Error("GetMakeRuntimeShape", "Shape %s does not have negative Z range", GetName());
-      return 0;
+      return nullptr;
    }
    TGeoShape *hype = new TGeoHype(GetName(), dz, fRmax, fStOut, fRmin, fStIn);
    return hype;

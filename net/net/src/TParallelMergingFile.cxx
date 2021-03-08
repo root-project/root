@@ -34,7 +34,7 @@
 
 TParallelMergingFile::TParallelMergingFile(const char *filename, Option_t *option /* = "" */,
                                            const char *ftitle /* = "" */, Int_t compress /* = 1 */) :
-   TMemFile(filename,option,ftitle,compress),fSocket(0),fServerIdx(-1),fServerVersion(0),fClassSent(0),fMessage(kMESS_OBJECT)
+   TMemFile(filename,option,ftitle,compress),fSocket(nullptr),fServerIdx(-1),fServerVersion(0),fClassSent(nullptr),fMessage(kMESS_OBJECT)
 {
    TString serverurl = strstr(fUrl.GetOptions(),"pmerge=");
    if (serverurl.Length()) {
@@ -66,7 +66,7 @@ void TParallelMergingFile::Close(Option_t *option)
       fSocket->Close();
       delete fSocket;
    }
-   fSocket = 0;
+   fSocket = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,10 +76,10 @@ void TParallelMergingFile::Close(Option_t *option)
 Bool_t TParallelMergingFile::UploadAndReset()
 {
    // Open connection to server
-   if (fSocket == 0) {
+   if (fSocket == nullptr) {
       const char *host = fServerLocation.GetHost();
       Int_t port = fServerLocation.GetPort();
-      if (host == 0 || host[0] == '\0') {
+      if (host == nullptr || host[0] == '\0') {
          host = "localhost";
       }
       if (port <= 0) {
@@ -89,7 +89,7 @@ Bool_t TParallelMergingFile::UploadAndReset()
       if (!fSocket->IsValid()) {
          Error("UploadAndReset","Could not contact the server %s:%d\n",host,port);
          delete fSocket;
-         fSocket = 0;
+         fSocket = nullptr;
          return kFALSE;
       }
       // Wait till we get the start message
@@ -101,7 +101,7 @@ Bool_t TParallelMergingFile::UploadAndReset()
       {
          Error("UploadAndReset","Unexpected server message: kind=%d idx=%d\n",kind,fServerIdx);
          delete fSocket;
-         fSocket = 0;
+         fSocket = nullptr;
          return kTRUE;
       }
       n = fSocket->Recv(fServerVersion, kind);
@@ -125,7 +125,7 @@ Bool_t TParallelMergingFile::UploadAndReset()
    if ((error = fSocket->Send(fMessage)) <= 0) {
       Error("UploadAndReset","Upload to the merging server failed with %d\n",error);
       delete fSocket;
-      fSocket = 0;
+      fSocket = nullptr;
       return kFALSE;
    }
 
@@ -143,7 +143,7 @@ Bool_t TParallelMergingFile::UploadAndReset()
          fClassSent->fArray[c] = 1;
       }
    }
-   ResetAfterMerge(0);
+   ResetAfterMerge(nullptr);
 
    return kTRUE;
 }
@@ -164,7 +164,7 @@ Bool_t TParallelMergingFile::UploadAndReset()
 
 Int_t TParallelMergingFile::Write(const char *, Int_t opt, Int_t bufsiz)
 {
-   Int_t nbytes = TMemFile::Write(0,opt,bufsiz);
+   Int_t nbytes = TMemFile::Write(nullptr,opt,bufsiz);
    if (nbytes) {
       UploadAndReset();
    }

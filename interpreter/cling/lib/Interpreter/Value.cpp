@@ -100,7 +100,7 @@ namespace {
     char* getPayload() { return m_Payload; }
 
     static unsigned getPayloadOffset() {
-      static const AllocatedValue Dummy(0,0,0);
+      static const AllocatedValue Dummy(nullptr,0,0);
       return Dummy.m_Payload - (const char*)&Dummy;
     }
 
@@ -240,7 +240,7 @@ namespace cling {
 
   void Value::ManagedAllocate() {
     assert(needsManagedAllocation() && "Does not need managed allocation");
-    void* dtorFunc = 0;
+    void* dtorFunc = nullptr;
     clang::QualType DtorType = getType();
     // For arrays we destruct the elements.
     if (const clang::ConstantArrayType* ArrTy

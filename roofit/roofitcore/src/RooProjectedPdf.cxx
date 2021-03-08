@@ -92,7 +92,7 @@ Double_t RooProjectedPdf::evaluate() const
 {
   // Calculate current unnormalized value of object
   int code ;
-  const RooAbsReal* proj = getProjection(&intobs, _normSet, 0, code);
+  const RooAbsReal* proj = getProjection(&intobs, _normSet, nullptr, code);
   
   return proj->getVal() ;
 }
@@ -121,7 +121,7 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
   if (iset) {
     nset2->add(*iset) ;
   }
-  RooAbsReal* proj = intpdf.arg().createIntegral(iset?*iset:RooArgSet(),nset2,0,rangeName) ;
+  RooAbsReal* proj = intpdf.arg().createIntegral(iset?*iset:RooArgSet(),nset2,nullptr,rangeName) ;
   delete nset2 ;
 
   cache = new CacheElem ;

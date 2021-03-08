@@ -53,14 +53,14 @@ ClassImp(RooRealBinding);
 /// range.
 
 RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid, const TNamed* rangeName) :
-  RooAbsFunc(vars.getSize()), _func(&func), _vars(), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName), _funcSave(0)
+  RooAbsFunc(vars.getSize()), _func(&func), _vars(), _nset(nset), _clipInvalid(clipInvalid), _xsave(nullptr), _rangeName(rangeName), _funcSave(0)
 {
   // check that all of the arguments are real valued and store them
   for (unsigned int index=0; index < vars.size(); ++index) {
     RooAbsArg* var = vars[index];
     _vars.push_back(dynamic_cast<RooAbsRealLValue*>(var));
     if(_vars.back() == nullptr) {
-      oocoutE((TObject*)0,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName()
+      oocoutE((TObject*)nullptr,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName()
           << ". Variables need to be assignable, e.g. instances of RooRealVar." << endl ;
       _valid= kFALSE;
     }
@@ -86,7 +86,7 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
 
 RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nset) :
   RooAbsFunc(other), _func(other._func), _vars(other._vars), _nset(nset?nset:other._nset), _xvecValid(other._xvecValid),
-  _clipInvalid(other._clipInvalid), _xsave(0), _rangeName(other._rangeName), _funcSave(other._funcSave)
+  _clipInvalid(other._clipInvalid), _xsave(nullptr), _rangeName(other._rangeName), _funcSave(other._funcSave)
 {
 
 }

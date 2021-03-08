@@ -75,7 +75,7 @@ Example:
 TPolyMarker3D::TPolyMarker3D()
 {
    fN = 0;
-   fP = 0;
+   fP = nullptr;
    fLastPoint = -1;
    fName = "TPolyMarker3D";
 }
@@ -92,7 +92,7 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Marker_t marker, Option_t *option)
    fLastPoint = -1;
    if (n <= 0) {
       fN = 0;
-      fP = 0;
+      fP = nullptr;
       return;
    }
 
@@ -114,7 +114,7 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Float_t *p, Marker_t marker,
    fLastPoint = -1;
    if (n <= 0) {
       fN = 0;
-      fP = 0;
+      fP = nullptr;
       return;
    }
 
@@ -142,7 +142,7 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
    fLastPoint = -1;
    if (n <= 0) {
       fN = 0;
-      fP = 0;
+      fP = nullptr;
       return;
    }
 
@@ -191,7 +191,7 @@ TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &p) :
    TObject(p), TAttMarker(p), TAtt3D(p)
 {
    fN = 0;
-   fP = 0;
+   fP = nullptr;
    fLastPoint = -1;
    p.Copy(*this);
 }
@@ -207,7 +207,7 @@ void TPolyMarker3D::Copy(TObject &obj) const
       ((TPolyMarker3D&)obj).fP = new Float_t [kDimension*fN];
       for (Int_t i = 0; i < kDimension*fN; i++)  ((TPolyMarker3D&)obj).fP[i] = fP[i];
    } else {
-      ((TPolyMarker3D&)obj).fP = 0;
+      ((TPolyMarker3D&)obj).fP = nullptr;
    }
    ((TPolyMarker3D&)obj).SetMarkerStyle(GetMarkerStyle());
    ((TPolyMarker3D&)obj).fOption = fOption;
@@ -440,7 +440,7 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       gPad->Range(-1,-1,1,1);
-      view = TView::CreateView(1,0,0);
+      view = TView::CreateView(1,nullptr,nullptr);
       if (!view) return;
    }
    view->SetRange(xaxis->GetBinLowEdge(xaxis->GetFirst()),
@@ -588,7 +588,7 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;
@@ -618,7 +618,7 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;

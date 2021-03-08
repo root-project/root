@@ -134,9 +134,9 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
    fWidgetId    = id;
    fWidgetFlags = kWidgetWantFocus;
    fMsgWindow   = p;
-   fUserData    = 0;
-   fTip         = 0;
-   fGroup       = 0;
+   fUserData    = nullptr;
+   fTip         = nullptr;
+   fGroup       = nullptr;
    fStyle       = 0;
    fTWidth = fTHeight = 0;
 
@@ -176,7 +176,7 @@ TGButton::~TGButton()
    // remove from button group
    if (fGroup) {
       fGroup->Remove(this);
-      fGroup = 0;
+      fGroup = nullptr;
    }
 
    if (fTip) delete fTip;
@@ -399,7 +399,7 @@ void TGButton::SetToolTipText(const char *text, Long_t delayms)
 {
    if (fTip) {
       delete fTip;
-      fTip = 0;
+      fTip = nullptr;
    }
 
    if (text && strlen(text))
@@ -915,7 +915,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
       Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
-   fPicD = 0;
+   fPicD = nullptr;
    fOwnDisabledPic = kFALSE;
    SetWindowName();
 }
@@ -947,7 +947,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
       Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
-   fPicD = 0;
+   fPicD = nullptr;
    fOwnDisabledPic = kFALSE;
    SetWindowName();
 }
@@ -972,7 +972,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
       Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
-   fPicD = 0;
+   fPicD = nullptr;
    fOwnDisabledPic = kFALSE;
    SetWindowName();
 }
@@ -1002,7 +1002,7 @@ void TGPictureButton::SetPicture(const TGPicture *new_pic)
 
    if (fState == kButtonDisabled) {
       fClient->FreePicture(fPicD);
-      fPicD = 0;
+      fPicD = nullptr;
    }
 
    fTWidth  = fPic->GetWidth();
@@ -2142,7 +2142,7 @@ TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
    fHeighestLabel = "";
 
    // Find and set the correct size for the menu and the button.
-   TGMenuEntry *entry = 0;
+   TGMenuEntry *entry = nullptr;
    TGHotString lstring(*fMenuLabel);
    TGHotString hstring(*fMenuLabel);
    const TList *list = fPopMenu->GetListOfEntries();
@@ -2161,7 +2161,7 @@ TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
 
    TIter iter(list);
    entry = (TGMenuEntry *)iter.Next();
-   while (entry != 0) {
+   while (entry != nullptr) {
       if (entry->GetType() == kMenuEntry) {
          const TGHotString string(*(entry->GetLabel()));
          if (font) font->ComputeTextLayout(string, string.GetLength(),
@@ -2531,7 +2531,7 @@ void TGSplitButton::SetMenuState(Bool_t state)
 
       if (fSplit) {
          Int_t n_entries = 0;
-         TGMenuEntry *entry = 0;
+         TGMenuEntry *entry = nullptr;
          TIter next(fPopMenu->GetListOfEntries());
 
          while ((entry = (TGMenuEntry *) next())) {
@@ -2684,7 +2684,7 @@ void TGSplitButton::BindKeys(Bool_t on)
 
 void TGSplitButton::BindMenuKeys(Bool_t on)
 {
-   TGMenuEntry *e = 0;
+   TGMenuEntry *e = nullptr;
    TIter next(fPopMenu->GetListOfEntries());
 
    while ((e = (TGMenuEntry*)next())) {
@@ -2747,7 +2747,7 @@ void TGSplitButton::SetText(TGHotString *new_label)
       new_label->Resize(fWidestLabel.GetLength());
    } else if (new_label->GetLength() <= fWidestLabel.GetLength() && longlabeltip) {
       if (fTip) delete fTip;
-      fTip = 0;
+      fTip = nullptr;
       longlabeltip = kFALSE;
    }
 
@@ -3010,7 +3010,7 @@ Bool_t TGSplitButton::HandleKey(Event_t *event)
             SetMenuState(kTRUE);
             gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
                                    kPointerMotionMask, kNone, fDefaultCursor);
-            TGMenuEntry *entry = 0;
+            TGMenuEntry *entry = nullptr;
             TIter next(fPopMenu->GetListOfEntries());
 
             while ((entry = (TGMenuEntry *) next())) {
@@ -3037,7 +3037,7 @@ Bool_t TGSplitButton::HandleKey(Event_t *event)
 
          gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
 
-         TGMenuEntry *ce = 0;
+         TGMenuEntry *ce = nullptr;
          TIter next(fPopMenu->GetListOfEntries());
 
          while ((ce = (TGMenuEntry*)next())) {

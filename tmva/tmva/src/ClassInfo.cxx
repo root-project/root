@@ -50,7 +50,7 @@ TMVA::ClassInfo::ClassInfo( const TString& name )
      fWeight( "" ),
      fCut( "" ),
      fNumber( 0 ),
-     fCorrMatrix( 0 ),
+     fCorrMatrix( nullptr ),
      fLogger( new MsgLogger("ClassInfo", kINFO) )
 {
 }

@@ -60,7 +60,7 @@ static const char *R__GetDeclSourceFileName(const clang::Decl* D)
 
 static bool R__match_filename(const char *srcname,const char *filename)
 {
-   if (srcname==0) {
+   if (srcname==nullptr) {
       return false;
    }
    if((strcmp(srcname,filename)==0)) {
@@ -90,7 +90,7 @@ static bool R__match_filename(const char *srcname,const char *filename)
 }
 
 BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp, const char* selFileName, long lineno)
-   : fIndex(index),fLineNumber(lineno),fSelFileName(selFileName),fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp)
+   : fIndex(index),fLineNumber(lineno),fSelFileName(selFileName),fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(nullptr),fRequestedType(nullptr),fInterp(&interp)
 {
    fAttributes.insert(AttributesMap_t::value_type(attributeName, attributeValue));
 }
@@ -217,7 +217,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
                                   ROOT::TMetaUtils::GetUnderlyingRecordDecl(typedefNameDecl->getUnderlyingType());
       }
 
-   if (! isTypedefNametoRecordDecl && fCXXRecordDecl !=0 && fCXXRecordDecl != (void*)-1) {
+   if (! isTypedefNametoRecordDecl && fCXXRecordDecl !=nullptr && fCXXRecordDecl != (void*)-1) {
       const clang::CXXRecordDecl *target = fCXXRecordDecl;
       if ( target && D && target == D ) {
          //               fprintf(stderr,"DECL MATCH: %s %s\n",name_value.c_str(),name.c_str());
@@ -234,7 +234,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          // set or we already took the expensive path and found nothing (-1).
          const clang::CXXRecordDecl *target
             = fHasFromTypedefAttribute ? nullptr : ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp,
-                                                   true /*diagnose*/, 0);
+                                                   true /*diagnose*/, nullptr);
 
          if ( target ) {
             const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;

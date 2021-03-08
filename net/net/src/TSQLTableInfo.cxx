@@ -35,7 +35,7 @@ ClassImp(TSQLTableInfo);
 
 TSQLTableInfo::TSQLTableInfo() :
    TNamed(),
-   fColumns(0),
+   fColumns(nullptr),
    fEngine(),
    fCreateTime(),
    fUpdateTime()
@@ -64,10 +64,10 @@ TSQLTableInfo::TSQLTableInfo(const char* tablename,
 
 TSQLTableInfo::~TSQLTableInfo()
 {
-   if (fColumns!=0) {
+   if (fColumns!=nullptr) {
       fColumns->Delete();
       delete fColumns;
-      fColumns = 0;
+      fColumns = nullptr;
    }
 }
 
@@ -79,7 +79,7 @@ void TSQLTableInfo::Print(Option_t*) const
    TROOT::IndentLevel();
    std::cout << "Table:" << GetName();
 
-   if ((GetTitle()!=0) && (strlen(GetTitle())!=0))
+   if ((GetTitle()!=nullptr) && (strlen(GetTitle())!=0))
       std::cout << " comm:'" << GetTitle() << "'";
 
    if (fEngine.Length()>0)
@@ -94,7 +94,7 @@ void TSQLTableInfo::Print(Option_t*) const
    std::cout << std::endl;
 
    TROOT::IncreaseDirLevel();
-   if (fColumns!=0)
+   if (fColumns!=nullptr)
       fColumns->Print("*");
    TROOT::DecreaseDirLevel();
 }
@@ -104,7 +104,7 @@ void TSQLTableInfo::Print(Option_t*) const
 
 TSQLColumnInfo* TSQLTableInfo::FindColumn(const char* columnname)
 {
-   if ((columnname==0) || (fColumns==0)) return 0;
+   if ((columnname==nullptr) || (fColumns==nullptr)) return nullptr;
 
    return dynamic_cast<TSQLColumnInfo*> (fColumns->FindObject(columnname));
 

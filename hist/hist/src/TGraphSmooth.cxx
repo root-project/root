@@ -42,8 +42,8 @@ TGraphSmooth::TGraphSmooth(): TNamed()
 {
    fNin  = 0;
    fNout = 0;
-   fGin  = 0;
-   fGout = 0;
+   fGin  = nullptr;
+   fGout = nullptr;
    fMinX = 0;
    fMaxX = 0;
 }
@@ -55,8 +55,8 @@ TGraphSmooth::TGraphSmooth(const char *name): TNamed(name,"")
 {
    fNin  = 0;
    fNout = 0;
-   fGin  = 0;
-   fGout = 0;
+   fGin  = nullptr;
+   fGout = nullptr;
    fMinX = 0;
    fMaxX = 0;
 }
@@ -67,8 +67,8 @@ TGraphSmooth::TGraphSmooth(const char *name): TNamed(name,"")
 TGraphSmooth::~TGraphSmooth()
 {
    if (fGout) delete fGout;
-   fGin  = 0;
-   fGout = 0;
+   fGin  = nullptr;
+   fGout = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +76,7 @@ TGraphSmooth::~TGraphSmooth()
 
 void TGraphSmooth::Smoothin(TGraph *grin)
 {
-   if (fGout) {delete fGout; fGout = 0;}
+   if (fGout) {delete fGout; fGout = nullptr;}
    fGin = grin;
 
    fNin = fGin->GetN();
@@ -125,8 +125,8 @@ TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option,
    Smoothin(grin);
 
    Double_t delta = 0;
-   Int_t *index = 0;
-   if (xout == 0) {
+   Int_t *index = nullptr;
+   if (xout == nullptr) {
       fNout = TMath::Max(nout, fNin);
       delta = (fMaxX - fMinX)/(fNout - 1);
    } else {
@@ -137,14 +137,14 @@ TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option,
 
    fGout = new TGraph(fNout);
    for (Int_t i=0;i<fNout;i++) {
-      if (xout == 0) fGout->SetPoint(i,fMinX + i*delta, 0);
+      if (xout == nullptr) fGout->SetPoint(i,fMinX + i*delta, 0);
       else           fGout->SetPoint(i,xout[index[i]], 0);
    }
 
    BDRksmooth(fGin->GetX(), fGin->GetY(), fNin, fGout->GetX(),
                  fGout->GetY(), fNout, kernel, bandwidth);
 
-   if (index) {delete [] index; index = 0;}
+   if (index) {delete [] index; index = nullptr;}
 
    return fGout;
 }
@@ -484,7 +484,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
 {
    if (span < 0 || span > 1) {
       std::cout << "Error: Span must be between 0 and 1" << std::endl;
-      return 0;
+      return nullptr;
    }
 
    Smoothin(grin);
@@ -494,7 +494,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
       iper = 2;
       if (fMinX < 0 || fMaxX > 1) {
          std::cout << "Error: x must be between 0 and 1 for periodic smooth" << std::endl;
-         return 0;
+         return nullptr;
       }
    }
 
@@ -509,7 +509,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
 // weights
    Double_t *weight = new Double_t[fNin];
    for (i=0; i<fNin; i++) {
-      if (w == 0) weight[i] = 1;
+      if (w == nullptr) weight[i] = 1;
       else        weight[i] = w[i];
    }
 
@@ -859,7 +859,7 @@ void TGraphSmooth::BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w,
 void TGraphSmooth::Approxin(TGraph *grin, Int_t /*iKind*/, Double_t &ylow,
      Double_t &yhigh, Int_t rule, Int_t iTies)
 {
-   if (fGout) {delete fGout; fGout = 0;}
+   if (fGout) {delete fGout; fGout = nullptr;}
    fGin = grin;
 
    fNin = fGin->GetN();
@@ -1006,7 +1006,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
 
    if (f < 0 || f > 1) {
       std::cout << "Error: Invalid f value" << std::endl;
-      return 0;
+      return nullptr;
    }
 
    opt = ties;
@@ -1022,7 +1022,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
       iTies = 3;
    } else {
       std::cout << "Error: Method not known: " << ties << std::endl;
-      return 0;
+      return nullptr;
    }
 
 // input X, Y
@@ -1033,7 +1033,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
 // output X, Y
    Double_t delta = 0;
    fNout = nout;
-   if (xout == 0) {
+   if (xout == nullptr) {
       fNout = TMath::Max(nout, fNin);
       delta = (fMaxX - fMinX)/(fNout - 1);
    }
@@ -1042,7 +1042,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
 
    Double_t x;
    for (Int_t i=0;i<fNout;i++) {
-      if (xout == 0) x = fMinX + i*delta;
+      if (xout == nullptr) x = fMinX + i*delta;
       else           x = xout[i];
       Double_t yout = Approx1(x, f, fGin->GetX(), fGin->GetY(), fNin, iKind, ylow, yhigh);
       fGout->SetPoint(i,x, yout);

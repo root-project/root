@@ -153,7 +153,7 @@ RooArgSet* RooBDecay::coefVars(Int_t basisIndex) const
       return _f3.arg().getVariables();
     }
 
-  return 0 ;
+  return nullptr ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

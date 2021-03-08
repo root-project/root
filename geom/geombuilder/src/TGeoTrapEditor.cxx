@@ -46,7 +46,7 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape   = nullptr;
    fH1i = fBl1i = fTl1i = fDzi = fAlpha1i = fThetai = fPhii = fSci = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -235,7 +235,7 @@ void TGeoTrapEditor::ConnectSignals2Slots()
 
 void TGeoTrapEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoTrap::Class())) {
+   if (obj == nullptr || (obj->IsA()!=TGeoTrap::Class())) {
       SetActive(kFALSE);
       return;
    }
@@ -556,7 +556,7 @@ TGeoGtraEditor::~TGeoGtraEditor()
 
 void TGeoGtraEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoGtra::Class())) {
+   if (obj == nullptr || (obj->IsA()!=TGeoGtra::Class())) {
       SetActive(kFALSE);
       return;
    }

@@ -137,16 +137,16 @@ TMVA::MethodFisher::MethodFisher( const TString& jobName,
                                   DataSetInfo& dsi,
                                   const TString& theOption ) :
    MethodBase( jobName, Types::kFisher, methodTitle, dsi, theOption),
-   fMeanMatx     ( 0 ),
+   fMeanMatx     ( nullptr ),
    fTheMethod    ( "Fisher" ),
    fFisherMethod ( kFisher ),
-   fBetw         ( 0 ),
-   fWith         ( 0 ),
-   fCov          ( 0 ),
+   fBetw         ( nullptr ),
+   fWith         ( nullptr ),
+   fCov          ( nullptr ),
    fSumOfWeightsS( 0 ),
    fSumOfWeightsB( 0 ),
-   fDiscrimPow   ( 0 ),
-   fFisherCoeff  ( 0 ),
+   fDiscrimPow   ( nullptr ),
+   fFisherCoeff  ( nullptr ),
    fF0           ( 0 )
 {
 }
@@ -157,16 +157,16 @@ TMVA::MethodFisher::MethodFisher( const TString& jobName,
 TMVA::MethodFisher::MethodFisher( DataSetInfo& dsi,
                                   const TString& theWeightFile) :
    MethodBase( Types::kFisher, dsi, theWeightFile),
-   fMeanMatx     ( 0 ),
+   fMeanMatx     ( nullptr ),
    fTheMethod    ( "Fisher" ),
    fFisherMethod ( kFisher ),
-   fBetw         ( 0 ),
-   fWith         ( 0 ),
-   fCov          ( 0 ),
+   fBetw         ( nullptr ),
+   fWith         ( nullptr ),
+   fCov          ( nullptr ),
    fSumOfWeightsS( 0 ),
    fSumOfWeightsB( 0 ),
-   fDiscrimPow   ( 0 ),
-   fFisherCoeff  ( 0 ),
+   fDiscrimPow   ( nullptr ),
+   fFisherCoeff  ( nullptr ),
    fF0           ( 0 )
 {
 }
@@ -215,11 +215,11 @@ void TMVA::MethodFisher::ProcessOptions()
 
 TMVA::MethodFisher::~MethodFisher( void )
 {
-   if (fBetw       ) { delete fBetw; fBetw = 0; }
-   if (fWith       ) { delete fWith; fWith = 0; }
-   if (fCov        ) { delete fCov;  fCov = 0; }
-   if (fDiscrimPow ) { delete fDiscrimPow; fDiscrimPow = 0; }
-   if (fFisherCoeff) { delete fFisherCoeff; fFisherCoeff = 0; }
+   if (fBetw       ) { delete fBetw; fBetw = nullptr; }
+   if (fWith       ) { delete fWith; fWith = nullptr; }
+   if (fCov        ) { delete fCov;  fCov = nullptr; }
+   if (fDiscrimPow ) { delete fDiscrimPow; fDiscrimPow = nullptr; }
+   if (fFisherCoeff) { delete fFisherCoeff; fFisherCoeff = nullptr; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -460,7 +460,7 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
    assert( fSumOfWeightsS > 0 && fSumOfWeightsB > 0);
 
    // invert covariance matrix
-   TMatrixD* theMat = 0;
+   TMatrixD* theMat = nullptr;
    switch (GetFisherMethod()) {
    case kFisher:
       theMat = fWith;

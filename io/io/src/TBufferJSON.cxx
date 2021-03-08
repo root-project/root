@@ -664,7 +664,7 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t comp
          return TString();
 
       Int_t arraylen = -1;
-      if (member->GetArrayIndex() != 0) {
+      if (member->GetArrayIndex() != nullptr) {
          TRealData *idata = clActual->GetRealData(member->GetArrayIndex());
          TDataMember *imember = idata ? idata->GetDataMember() : nullptr;
          if (imember && (strcmp(imember->GetTrueTypeName(), "int") == 0)) {
@@ -767,7 +767,7 @@ Int_t TBufferJSON::ExportToFile(const char *filename, const TObject *obj, const 
       const char *objbuf = json.Data();
       Long_t objlen = json.Length();
 
-      unsigned long objcrc = R__crc32(0, NULL, 0);
+      unsigned long objcrc = R__crc32(0, nullptr, 0);
       objcrc = R__crc32(objcrc, (const unsigned char *)objbuf, objlen);
 
       // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
@@ -847,7 +847,7 @@ Int_t TBufferJSON::ExportToFile(const char *filename, const void *obj, const TCl
       const char *objbuf = json.Data();
       Long_t objlen = json.Length();
 
-      unsigned long objcrc = R__crc32(0, NULL, 0);
+      unsigned long objcrc = R__crc32(0, nullptr, 0);
       objcrc = R__crc32(objcrc, (const unsigned char *)objbuf, objlen);
 
       // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
@@ -2188,7 +2188,7 @@ void TBufferJSON::ClassBegin(const TClass *cl, Version_t)
 
 void TBufferJSON::ClassEnd(const TClass *)
 {
-   DecrementLevel(0);
+   DecrementLevel(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

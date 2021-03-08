@@ -691,11 +691,11 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
    fTitle       = "";
    fTimeFormat  = "";
    fFunctionName= "";
-   fFunction    = 0;
-   fAxis        = 0;
+   fFunction    = nullptr;
+   fAxis        = nullptr;
    fNdiv        = 0;
    fNModLabs    = 0;
-   fModLabs     = 0;
+   fModLabs     = nullptr;
    fWmin        = 0.;
    fWmax        = 0.;
 }
@@ -713,7 +713,7 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fWmax        = wmax;
    fNdiv        = ndiv;
    fNModLabs    = 0;
-   fModLabs     = 0;
+   fModLabs     = nullptr;
    fGridLength  = gridlength;
    fLabelOffset = 0.005;
    fLabelSize   = 0.040;
@@ -727,8 +727,8 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fTitle       = "";
    fTimeFormat  = "";
    fFunctionName= "";
-   fFunction    = 0;
-   fAxis        = 0;
+   fFunction    = nullptr;
+   fAxis        = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -752,7 +752,7 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fFunctionName= funcname;
    fNdiv        = ndiv;
    fNModLabs    = 0;
-   fModLabs     = 0;
+   fModLabs     = nullptr;
    fGridLength  = gridlength;
    fLabelOffset = 0.005;
    fLabelSize   = 0.040;
@@ -765,7 +765,7 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fName        = "";
    fTitle       = "";
    fTimeFormat  = "";
-   fAxis        = 0;
+   fAxis        = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1030,7 +1030,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t rwma = wmax;
    chtemp = &kchtemp[0];
    label  = &chlabel[0];
-   linegrid  = 0;
+   linegrid  = nullptr;
 
    fFunction = (TF1*)gROOT->GetFunction(fFunctionName.Data());
 
@@ -1088,7 +1088,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          fModLabs = ml;
          fNModLabs = fModLabs->GetSize();
       } else {
-         fModLabs  = 0;
+         fModLabs  = nullptr;
          fNModLabs = 0;
       }
    }
@@ -2520,7 +2520,7 @@ void TGaxis::SetFunction(const char *funcname)
 {
    fFunctionName = funcname;
    if (!funcname[0]) {
-      fFunction = 0;
+      fFunction = nullptr;
       return;
    }
    fFunction = (TF1*)gROOT->GetFunction(funcname);
@@ -2579,7 +2579,7 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
    // Reset the list of modified labels.
    if (labNum == 0) {
       delete fModLabs;
-      fModLabs  = 0;
+      fModLabs  = nullptr;
       fNModLabs = 0;
       return;
    }

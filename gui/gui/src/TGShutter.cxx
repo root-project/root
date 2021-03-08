@@ -37,19 +37,19 @@ ClassImp(TGShutter);
 TGShutter::TGShutter(const TGWindow *p, UInt_t options) :
    TGCompositeFrame(p, 10, 10, options)
 {
-   fSelectedItem        = 0;
-   fClosingItem         = 0;
+   fSelectedItem        = nullptr;
+   fClosingItem         = nullptr;
    fHeightIncrement     = 1;
    fClosingHeight       = 0;
    fClosingHadScrollbar = kFALSE;
-   fTimer               = 0;
+   fTimer               = nullptr;
    fTrash               = new TList;
 
    fDefWidth = fDefHeight = 0;
 
    // layout manager is not used
    delete fLayoutManager;
-   fLayoutManager = 0;
+   fLayoutManager = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ TGShutter::~TGShutter()
       fTrash->Delete();
    }
    delete fTrash;
-   fTrash = 0;
+   fTrash = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,7 +159,7 @@ Bool_t TGShutter::ProcessMessage(Long_t /*msg*/, Long_t parm1, Long_t /*parm2*/)
    if (!fList) return kFALSE;
 
    TGFrameElement *el;
-   TGShutterItem  *child, *item = 0;
+   TGShutterItem  *child, *item = nullptr;
 
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
@@ -202,7 +202,7 @@ Bool_t TGShutter::HandleTimer(TTimer *)
    if (fClosingHeight > 0) {
       fTimer->Reset();
    } else {
-      fClosingItem   = 0;
+      fClosingItem   = nullptr;
       fClosingHeight = 0;
       fTimer->TurnOff();
    }
@@ -301,7 +301,7 @@ void TGShutter::EnableItem(const char *name, Bool_t on)
 TGShutterItem *TGShutter::GetItem(const char *name)
 {
    TGFrameElement *el;
-   TGShutterItem  *item = 0;
+   TGShutterItem  *item = nullptr;
 
    TIter next(fList);
 

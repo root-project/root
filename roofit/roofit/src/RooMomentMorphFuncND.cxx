@@ -39,7 +39,7 @@ ClassImp(RooMomentMorphFuncND)
 
    //_____________________________________________________________________________
    RooMomentMorphFuncND::RooMomentMorphFuncND()
-   : _curNormSet(0), _M(0), _MSqr(0), _setting(RooMomentMorphFuncND::Linear), _useHorizMorph(true)
+   : _curNormSet(nullptr), _M(nullptr), _MSqr(nullptr), _setting(RooMomentMorphFuncND::Linear), _useHorizMorph(true)
 {
    _parItr = _parList.createIterator();
    _obsItr = _obsList.createIterator();
@@ -162,9 +162,9 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
 
 //_____________________________________________________________________________
 RooMomentMorphFuncND::RooMomentMorphFuncND(const RooMomentMorphFuncND &other, const char *name)
-   : RooAbsReal(other, name), _cacheMgr(other._cacheMgr, this), _curNormSet(0),
+   : RooAbsReal(other, name), _cacheMgr(other._cacheMgr, this), _curNormSet(nullptr),
      _parList("parList", this, other._parList), _obsList("obsList", this, other._obsList),
-     _referenceGrid(other._referenceGrid), _pdfList("pdfList", this, other._pdfList), _M(0), _MSqr(0),
+     _referenceGrid(other._referenceGrid), _pdfList("pdfList", this, other._pdfList), _M(nullptr), _MSqr(nullptr),
      _setting(other._setting), _useHorizMorph(other._useHorizMorph)
 {
    _parItr = _parList.createIterator();
@@ -420,7 +420,7 @@ void RooMomentMorphFuncND::Grid2::addPdf(const RooAbsReal &pdf, vector<int> bins
 //_____________________________________________________________________________
 RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet * /*nset*/) const
 {
-   CacheElem *cache = static_cast<CacheElem *>(_cacheMgr.getObj(0, (RooArgSet *)0));
+   CacheElem *cache = static_cast<CacheElem *>(_cacheMgr.getObj(nullptr, nullptr));
    if (cache) {
       return cache;
    }
@@ -430,7 +430,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
 
    TIterator *pdfItr = _pdfList.createIterator();
 
-   RooAbsReal *null = 0;
+   RooAbsReal *null = nullptr;
    vector<RooAbsReal *> meanrv(nPdf * nObs, null);
    vector<RooAbsReal *> sigmarv(nPdf * nObs, null);
    vector<RooAbsReal *> myrms(nObs, null);
@@ -463,7 +463,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
       ownedComps.add(*(RooRealVar *)(fracl.at(i)));
    }
 
-   RooRealSumFunc *theSumFunc = 0;
+   RooRealSumFunc *theSumFunc = nullptr;
    string sumfuncName = Form("%s_sumfunc", GetName());
 
    if (_useHorizMorph) {
@@ -559,7 +559,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
 
    // Store it in the cache
    cache = new CacheElem(*theSumFunc, *tracker, fracl);
-   _cacheMgr.setObj(0, 0, cache, 0);
+   _cacheMgr.setObj(nullptr, nullptr, cache, nullptr);
 
    return cache;
 }

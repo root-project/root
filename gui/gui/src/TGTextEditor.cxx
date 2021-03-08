@@ -191,7 +191,7 @@ const char *ed_filetypes[] = {
    "Source files", "*.cxx",
    "Text files",   "*.txt",
    "All files",    "*",
-   0, 0
+   nullptr, nullptr
 };
 
 enum ETextEditorCommands {
@@ -203,34 +203,34 @@ enum ETextEditorCommands {
 };
 
 ToolBarData_t fTbData[] = {
-  { "ed_new.png",       "New File",         kFALSE, kM_FILE_NEW,         0 },
-  { "ed_open.png",      "Open File",        kFALSE, kM_FILE_OPEN,        0 },
-  { "ed_save.png",      "Save File",        kFALSE, kM_FILE_SAVE,        0 },
-  { "ed_saveas.png",    "Save File As...",  kFALSE, kM_FILE_SAVEAS,      0 },
-  { "",                 0,                  0,      -1,                  0 },
-  { "ed_print.png",     "Print",            kFALSE, kM_FILE_PRINT,       0 },
-  { "",                 0,                  0,      -1,                  0 },
-  { "ed_cut.png",       "Cut selection",    kFALSE, kM_EDIT_CUT,         0 },
-  { "ed_copy.png",      "Copy selection",   kFALSE, kM_EDIT_COPY,        0 },
-  { "ed_paste.png",     "Paste selection",  kFALSE, kM_EDIT_PASTE,       0 },
-  { "ed_delete.png",    "Delete selection", kFALSE, kM_EDIT_DELETE,      0 },
-  { "",                 0,                  0,      -1,                  0 },
-  { "ed_find.png",      "Find...",          kFALSE, kM_SEARCH_FIND,      0 },
-  { "ed_findnext.png",  "Find next",        kFALSE, kM_SEARCH_FINDNEXT,  0 },
-  { "ed_goto.png",      "Goto...",          kFALSE, kM_SEARCH_GOTO,      0 },
-  { "",                 0,                  0,      -1,                  0 },
-  { "ed_compile.png",   "Compile Macro",    kFALSE, kM_TOOLS_COMPILE,    0 },
-  { "ed_execute.png",   "Execute Macro",    kFALSE, kM_TOOLS_EXECUTE,    0 },
-  { "ed_interrupt.png", "Interrupt",        kFALSE, kM_TOOLS_INTERRUPT,  0 },
-  { "",                 0,                  0,      -1,                  0 },
-  { "ed_help.png",      "Help Contents",    kFALSE, kM_HELP_CONTENTS,    0 },
-  { "",                 0,                  0,      -1,                  0 },
-  { "ed_quit.png",      "Close Editor",     kFALSE, kM_FILE_EXIT,        0 },
-  {  0,                 0,                  0,      0,                   0 }
+  { "ed_new.png",       "New File",         kFALSE, kM_FILE_NEW,         nullptr },
+  { "ed_open.png",      "Open File",        kFALSE, kM_FILE_OPEN,        nullptr },
+  { "ed_save.png",      "Save File",        kFALSE, kM_FILE_SAVE,        nullptr },
+  { "ed_saveas.png",    "Save File As...",  kFALSE, kM_FILE_SAVEAS,      nullptr },
+  { "",                 nullptr,                  0,      -1,                  nullptr },
+  { "ed_print.png",     "Print",            kFALSE, kM_FILE_PRINT,       nullptr },
+  { "",                 nullptr,                  0,      -1,                  nullptr },
+  { "ed_cut.png",       "Cut selection",    kFALSE, kM_EDIT_CUT,         nullptr },
+  { "ed_copy.png",      "Copy selection",   kFALSE, kM_EDIT_COPY,        nullptr },
+  { "ed_paste.png",     "Paste selection",  kFALSE, kM_EDIT_PASTE,       nullptr },
+  { "ed_delete.png",    "Delete selection", kFALSE, kM_EDIT_DELETE,      nullptr },
+  { "",                 nullptr,                  0,      -1,                  nullptr },
+  { "ed_find.png",      "Find...",          kFALSE, kM_SEARCH_FIND,      nullptr },
+  { "ed_findnext.png",  "Find next",        kFALSE, kM_SEARCH_FINDNEXT,  nullptr },
+  { "ed_goto.png",      "Goto...",          kFALSE, kM_SEARCH_GOTO,      nullptr },
+  { "",                 nullptr,                  0,      -1,                  nullptr },
+  { "ed_compile.png",   "Compile Macro",    kFALSE, kM_TOOLS_COMPILE,    nullptr },
+  { "ed_execute.png",   "Execute Macro",    kFALSE, kM_TOOLS_EXECUTE,    nullptr },
+  { "ed_interrupt.png", "Interrupt",        kFALSE, kM_TOOLS_INTERRUPT,  nullptr },
+  { "",                 nullptr,                  0,      -1,                  nullptr },
+  { "ed_help.png",      "Help Contents",    kFALSE, kM_HELP_CONTENTS,    nullptr },
+  { "",                 nullptr,                  0,      -1,                  nullptr },
+  { "ed_quit.png",      "Close Editor",     kFALSE, kM_FILE_EXIT,        nullptr },
+  {  nullptr,                 nullptr,                  0,      0,                   nullptr }
 };
 
-static char *gEPrinter      = 0;
-static char *gEPrintCommand = 0;
+static char *gEPrinter      = nullptr;
+static char *gEPrintCommand = nullptr;
 
 ClassImp(TGTextEditor);
 
@@ -312,12 +312,12 @@ TGTextEditor::~TGTextEditor()
 void TGTextEditor::DeleteWindow()
 {
    gApplication->Disconnect("Terminate(Int_t)");
-   delete fTimer; fTimer = 0;
-   delete fMenuFile; fMenuFile = 0;
-   delete fMenuEdit; fMenuEdit = 0;
-   delete fMenuSearch; fMenuSearch = 0;
-   delete fMenuTools; fMenuTools = 0;
-   delete fMenuHelp; fMenuHelp = 0;
+   delete fTimer; fTimer = nullptr;
+   delete fMenuFile; fMenuFile = nullptr;
+   delete fMenuEdit; fMenuEdit = nullptr;
+   delete fMenuSearch; fMenuSearch = nullptr;
+   delete fMenuTools; fMenuTools = nullptr;
+   delete fMenuHelp; fMenuHelp = nullptr;
    Cleanup();
    TGMainFrame::DeleteWindow();
 }
@@ -444,7 +444,7 @@ void TGTextEditor::Build()
    SetClassHints("ROOT", "TGTextEditor");
    SetWindowName("Untitled - TGTextEditor");
 
-   fMacro = 0;
+   fMacro = nullptr;
    fFilename = "Untitled";
    fStatusBar->SetText(fFilename.Data(), 0);
 
@@ -523,7 +523,7 @@ void TGTextEditor::LoadFile(const char *fname)
       default:
          return;
    }
-   if (fname == 0) {
+   if (fname == nullptr) {
       new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen, &fi);
       if (fi.fFilename && strlen(fi.fFilename)) {
          fname = fi.fFilename;
@@ -560,7 +560,7 @@ void TGTextEditor::SaveFile(const char *fname)
                    tmp.Data(), kMBIconExclamation, kMBOk);
       return;
    }
-   if ((p = (char *)strrchr(fname, '/')) == 0) {
+   if ((p = (char *)strrchr(fname, '/')) == nullptr) {
       p = (char *)fname;
    } else {
       ++p;
@@ -734,7 +734,7 @@ Bool_t TGTextEditor::HandleKey(Event_t *event)
 void TGTextEditor::ClearText()
 {
    fTextEdit->Clear();
-   fMacro = 0;
+   fMacro = nullptr;
    fFilename = "Untitled";
    SetWindowName("Untitled - TGTextEditor");
    fStatusBar->SetText("New File", 0);

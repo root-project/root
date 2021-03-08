@@ -70,7 +70,7 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
 
 
    if (!reuse) {
-      delete fNllNull ; fNllNull = NULL ;
+      delete fNllNull ; fNllNull = nullptr ;
    }
    delete attachedSet;
 
@@ -97,7 +97,7 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
 
 
    if (!reuse) {
-      delete fNllAlt ; fNllAlt = NULL ;
+      delete fNllAlt ; fNllAlt = nullptr ;
    }
    delete attachedSet;
 

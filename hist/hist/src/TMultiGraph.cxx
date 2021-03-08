@@ -357,9 +357,9 @@ End_Macro
 
 TMultiGraph::TMultiGraph(): TNamed()
 {
-   fGraphs    = 0;
-   fFunctions = 0;
-   fHistogram = 0;
+   fGraphs    = nullptr;
+   fFunctions = nullptr;
+   fHistogram = nullptr;
    fMaximum   = -1111;
    fMinimum   = -1111;
 }
@@ -371,9 +371,9 @@ TMultiGraph::TMultiGraph(): TNamed()
 TMultiGraph::TMultiGraph(const char *name, const char *title)
        : TNamed(name,title)
 {
-   fGraphs    = 0;
-   fFunctions = 0;
-   fHistogram = 0;
+   fGraphs    = nullptr;
+   fFunctions = nullptr;
+   fHistogram = nullptr;
    fMaximum   = -1111;
    fMinimum   = -1111;
 }
@@ -423,9 +423,9 @@ TMultiGraph::~TMultiGraph()
    }
    fGraphs->Delete();
    delete fGraphs;
-   fGraphs = 0;
+   fGraphs = nullptr;
    delete fHistogram;
-   fHistogram = 0;
+   fHistogram = nullptr;
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
       //special logic to support the case where the same object is
@@ -472,7 +472,7 @@ void TMultiGraph::Add(TMultiGraph *multigraph, Option_t *chopt)
    if (!fGraphs) fGraphs = new TList();
 
    TObjOptLink *lnk = (TObjOptLink*)graphlist->FirstLink();
-   TObject *obj = 0;
+   TObject *obj = nullptr;
 
    while (lnk) {
       obj = lnk->GetObject();
@@ -1087,12 +1087,12 @@ TH1F *TMultiGraph::GetHistogram()
    rwymin = rwymin - dy;
    rwymax = rwymax + dy;
    fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
-   if (!fHistogram) return 0;
+   if (!fHistogram) return nullptr;
    fHistogram->SetMinimum(rwymin);
    fHistogram->SetBit(TH1::kNoStats);
    fHistogram->SetMaximum(rwymax);
    fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
-   fHistogram->SetDirectory(0);
+   fHistogram->SetDirectory(nullptr);
    return fHistogram;
 }
 
@@ -1105,7 +1105,7 @@ TH1F *TMultiGraph::GetHistogram()
 
 TF1 *TMultiGraph::GetFunction(const char *name) const
 {
-   if (!fFunctions) return 0;
+   if (!fFunctions) return nullptr;
    return (TF1*)fFunctions->FindObject(name);
 }
 
@@ -1127,7 +1127,7 @@ TList *TMultiGraph::GetListOfFunctions()
 TAxis *TMultiGraph::GetXaxis()
 {
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetXaxis();
 }
 
@@ -1139,7 +1139,7 @@ TAxis *TMultiGraph::GetXaxis()
 TAxis *TMultiGraph::GetYaxis()
 {
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetYaxis();
 }
 
@@ -1220,12 +1220,12 @@ void TMultiGraph::Paint(Option_t *choptin)
       rwxmax    = gPad->GetUxmax();
       rwymin    = gPad->GetUymin();
       rwymax    = gPad->GetUymax();
-      char *xtitle = 0;
-      char *ytitle = 0;
+      char *xtitle = nullptr;
+      char *ytitle = nullptr;
       Int_t firstx = 0;
       Int_t lastx  = 0;
       Bool_t timedisplay = kFALSE;
-      char *timeformat = 0;
+      char *timeformat = nullptr;
 
       if (fHistogram) {
          //cleanup in case of a previous unzoom and in case one of the TGraph has changed
@@ -1258,7 +1258,7 @@ void TMultiGraph::Paint(Option_t *choptin)
               strlcpy(timeformat,fHistogram->GetXaxis()->GetTimeFormat(),nch+1);
             }
             delete fHistogram;
-            fHistogram = 0;
+            fHistogram = nullptr;
          }
       }
       if (fHistogram) {
@@ -1342,7 +1342,7 @@ void TMultiGraph::Paint(Option_t *choptin)
          fHistogram->SetBit(TH1::kNoStats);
          fHistogram->SetMaximum(rwymax);
          fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
-         fHistogram->SetDirectory(0);
+         fHistogram->SetDirectory(nullptr);
          if (xtitle) {fHistogram->GetXaxis()->SetTitle(xtitle); delete [] xtitle;}
          if (ytitle) {fHistogram->GetYaxis()->SetTitle(ytitle); delete [] ytitle;}
          if (firstx != lastx) fHistogram->GetXaxis()->SetRange(firstx,lastx);
@@ -1355,7 +1355,7 @@ void TMultiGraph::Paint(Option_t *choptin)
    TGraph *gfit = nullptr;
    if (fGraphs) {
       TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
-      TObject *obj = 0;
+      TObject *obj = nullptr;
 
       chopt.ReplaceAll("A","");
 
@@ -1428,7 +1428,7 @@ void TMultiGraph::PaintPads(Option_t *option)
    TGraph *g;
 
    TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
-   obj = 0;
+   obj = nullptr;
 
    while (lnk) {
       g = (TGraph*)lnk->GetObject();
@@ -1611,7 +1611,7 @@ void TMultiGraph::RecursiveRemove(TObject *obj)
    if (!fGraphs) return;
    TObject *objr = fGraphs->Remove(obj);
    if (!objr) return;
-   delete fHistogram; fHistogram = 0;
+   delete fHistogram; fHistogram = nullptr;
    if (gPad) gPad->Modified();
 }
 

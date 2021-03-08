@@ -59,8 +59,8 @@ TGuiBldHintsManager::TGuiBldHintsManager(const TGWindow *p, TGuiBldEditor *e,
 {
    fEditDisabled = kEditDisable;
    SetCleanup(kDeepCleanup);
-   fRows = 0;
-   fColumns = 0;
+   fRows = nullptr;
+   fColumns = nullptr;
 
    //-----check button to layout subframes was moved to HintsEditor to be generalized ------
 
@@ -106,7 +106,7 @@ TGuiBldHintsManager::TGuiBldHintsManager(const TGWindow *p, TGuiBldEditor *e,
 
 void TGuiBldHintsManager::ChangeSelected(TGFrame *frame)
 {
-   fMatrix = 0;
+   fMatrix = nullptr;
 
    if (!frame) {
       UnmapWindow();

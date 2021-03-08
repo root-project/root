@@ -87,7 +87,7 @@ void TViewPubFunctions::Delete(Option_t * /*option="" */)
 
 TObject *TViewPubFunctions::FindObject(const char * name) const
 {
-   if (name==0 || name[0]==0) return 0;
+   if (name==nullptr || name[0]==0) return nullptr;
 
    TIter next(&fClasses);
    while (TClass *cl = (TClass*)next()) {
@@ -98,7 +98,7 @@ TObject *TViewPubFunctions::FindObject(const char * name) const
              && strncmp(p->GetName(),name,strlen(p->GetName())) == 0)
             return p;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +113,7 @@ TObject *TViewPubFunctions::FindObject(const TObject * obj) const
       TObject *result = cl->GetListOfMethods(kFALSE)->FindObject(obj);
       if (result) return result;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,7 +221,7 @@ TObject  *TViewPubFunctions::At(Int_t idx) const
          }
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,7 +231,7 @@ TObject  *TViewPubFunctions::At(Int_t idx) const
 TObject  *TViewPubFunctions::After(const TObject * /* obj */) const
 {
    ::Error("TViewPubFunctions::After","Operation not allowed on a view.");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,7 +241,7 @@ TObject  *TViewPubFunctions::After(const TObject * /* obj */) const
 TObject  *TViewPubFunctions::Before(const TObject * /* obj */) const
 {
    ::Error("TViewPubFunctions::Before","Operation not allowed on a view.");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -251,7 +251,7 @@ TObject  *TViewPubFunctions::Before(const TObject * /* obj */) const
 TObject  *TViewPubFunctions::First() const
 {
    ::Error("TViewPubFunctions::First","Operation not allowed on a view.");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -261,7 +261,7 @@ TObject  *TViewPubFunctions::First() const
 TObjLink *TViewPubFunctions::FirstLink() const
 {
    ::Error("TViewPubFunctions::FirstLink","Operation not allowed on a view.");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -271,7 +271,7 @@ TObjLink *TViewPubFunctions::FirstLink() const
 TObject **TViewPubFunctions::GetObjectRef(const TObject * /* obj */) const
 {
    ::Error("TViewPubFunctions::GetObjectRef","Operation not yet allowed on a view.");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -310,7 +310,7 @@ void TViewPubFunctions::Load()
 TObject  *TViewPubFunctions::Last() const
 {
    ::Error("TViewPubFunctions::Last","Operation not allowed on a view.");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -320,7 +320,7 @@ TObject  *TViewPubFunctions::Last() const
 TObjLink *TViewPubFunctions::LastLink() const
 {
    ::Error("TViewPubFunctions::LastLink","Operation not allowed on a view.");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,7 +339,7 @@ void TViewPubFunctions::RecursiveRemove(TObject * /* obj */)
 TObject   *TViewPubFunctions::Remove(TObject * /* obj */)
 {
    ::Error("TViewPubFunctions::Remove","Operation not allowed on a view.");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -349,7 +349,7 @@ TObject   *TViewPubFunctions::Remove(TObject * /* obj */)
 TObject   *TViewPubFunctions::Remove(TObjLink * /* lnk */)
 {
    ::Error("TViewPubFunctions::Remove","Operation not allowed on a view.");
-   return 0;
+   return nullptr;
 }
 
 /** \class TViewPubFunctionsIter
@@ -363,7 +363,7 @@ Iterator of over the view's content
 /// is kIterForward. To go backward use kIterBackward.
 
 TViewPubFunctionsIter::TViewPubFunctionsIter(const TViewPubFunctions *l, Bool_t dir)
-: fView(l),fClassIter(l->GetListOfClasses(),dir), fFuncIter((TCollection *)0),
+: fView(l),fClassIter(l->GetListOfClasses(),dir), fFuncIter((TCollection *)nullptr),
   fStarted(kFALSE), fDirection(dir)
 {
 }
@@ -414,7 +414,7 @@ TViewPubFunctionsIter &TViewPubFunctionsIter::operator=(const TViewPubFunctionsI
 
 TObject *TViewPubFunctionsIter::Next()
 {
-   if (!fView) return 0;
+   if (!fView) return nullptr;
 
    if (!fStarted) {
       TClass *current = (TClass*)fClassIter();
@@ -423,7 +423,7 @@ TObject *TViewPubFunctionsIter::Next()
          fFuncIter.~TIter();
          new (&(fFuncIter)) TIter(current->GetListOfMethods(kFALSE),fDirection);
       } else {
-         return 0;
+         return nullptr;
       }
    }
 
@@ -438,7 +438,7 @@ TObject *TViewPubFunctionsIter::Next()
             new (&(fFuncIter)) TIter(current->GetListOfMethods(kFALSE),fDirection);
             continue;
          } else {
-            return 0;
+            return nullptr;
          }
       } else if (func->Property() & kIsPublic) {
          // If it is public we found the next one.
@@ -447,7 +447,7 @@ TObject *TViewPubFunctionsIter::Next()
 
    }
    // Not reachable.
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

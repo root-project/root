@@ -96,7 +96,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 		       const RooCmdArg& arg7,const RooCmdArg& arg8,const RooCmdArg& arg9) :
   RooAbsOptTestStatistic(name,title,func,hdata,_emptySet,
 			 RooCmdConfig::decodeStringOnTheFly("RooChi2Var::RooChi2Var","RangeWithName",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9).c_str(),
-			 /*addCoefRangeName=*/0,
+			 /*addCoefRangeName=*/nullptr,
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooFit::Interleave,
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),

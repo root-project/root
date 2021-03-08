@@ -47,7 +47,7 @@ ClassImp(RooProfileLL);
    _obs("paramOfInterest","Parameters of interest",this), 
    _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE), 
    _startFromMin(kTRUE), 
-   _minimizer(0), 
+   _minimizer(nullptr), 
    _absMinValid(kFALSE), 
    _absMin(0),
    _neval(0)
@@ -70,7 +70,7 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
   _obs("paramOfInterest","Parameters of interest",this),
   _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE),
   _startFromMin(kTRUE),
-  _minimizer(0),
+  _minimizer(nullptr),
   _absMinValid(kFALSE),
   _absMin(0),
   _neval(0)
@@ -100,7 +100,7 @@ RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
   _obs("obs",this,other._obs),
   _par("par",this,other._par),
   _startFromMin(other._startFromMin),
-  _minimizer(0),
+  _minimizer(nullptr),
   _absMinValid(kFALSE),
   _absMin(0),
   _paramFixed(other._paramFixed),
@@ -340,7 +340,7 @@ Bool_t RooProfileLL::redirectServersHook(const RooAbsCollection& /*newServerList
 { 
   if (_minimizer) {
     delete _minimizer ;
-    _minimizer = 0 ;
+    _minimizer = nullptr ;
   }
   return kFALSE ;
 } 

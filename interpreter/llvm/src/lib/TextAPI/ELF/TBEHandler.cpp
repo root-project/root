@@ -153,7 +153,7 @@ Expected<std::unique_ptr<ELFStub>> elfabi::readTBEFromBuffer(StringRef Buf) {
 }
 
 Error elfabi::writeTBEToOutputStream(raw_ostream &OS, const ELFStub &Stub) {
-  yaml::Output YamlOut(OS, NULL, /*WrapColumn =*/0);
+  yaml::Output YamlOut(OS, nullptr, /*WrapColumn =*/0);
 
   YamlOut << const_cast<ELFStub &>(Stub);
   return Error::success();

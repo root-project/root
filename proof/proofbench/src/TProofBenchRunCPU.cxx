@@ -59,11 +59,11 @@ TProofBenchRunCPU::TProofBenchRunCPU(TPBHistType *histtype, Int_t nhists,
                     fHistType(histtype), fNHists(nhists),
                     fNEvents(nevents), fNTries(ntries), fStart(start), fStop(stop),
                     fStep(step), fDraw(draw), fDebug(debug), fDirProofBench(dirproofbench),
-                    fNodes(nodes), fListPerfPlots(0),
-                    fCanvas(0), fProfile_perfstat_event(0), fHist_perfstat_event(0),
-                    fProfile_perfstat_evtmax(0), fNorm_perfstat_evtmax(0),
-                    fProfile_queryresult_event(0), fNorm_queryresult_event(0), fProfile_cpu_eff(0),
-                    fProfLegend(0), fNormLegend(0), fName(0)
+                    fNodes(nodes), fListPerfPlots(nullptr),
+                    fCanvas(nullptr), fProfile_perfstat_event(nullptr), fHist_perfstat_event(nullptr),
+                    fProfile_perfstat_evtmax(nullptr), fNorm_perfstat_evtmax(nullptr),
+                    fProfile_queryresult_event(nullptr), fNorm_queryresult_event(nullptr), fProfile_cpu_eff(nullptr),
+                    fProfLegend(nullptr), fNormLegend(nullptr), fName(0)
 {
    if (TestBit(kInvalidObject)) {
       Error("TProofBenchRunCPU", "problems validating PROOF session or enabling selector PAR");
@@ -87,8 +87,8 @@ TProofBenchRunCPU::TProofBenchRunCPU(TPBHistType *histtype, Int_t nhists,
 
 TProofBenchRunCPU::~TProofBenchRunCPU()
 {
-   fProof=0;
-   fDirProofBench=0;
+   fProof=nullptr;
+   fDirProofBench=nullptr;
    SafeDelete(fListPerfPlots);
    SafeDelete(fCanvas);
    SafeDelete(fNodes);
@@ -101,7 +101,7 @@ TProofBenchRunCPU::~TProofBenchRunCPU()
 
 void TProofBenchRunCPU::BuildHistos(Int_t start, Int_t stop, Int_t step, Bool_t nx)
 {
-   TObject *o = 0;
+   TObject *o = nullptr;
    Int_t quotient = (stop - start) / step;
    Int_t ndiv = quotient + 1;
    Double_t ns_min = start - step/2.;
@@ -384,7 +384,7 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
          TList *l = fProof->GetOutputList();
 
          // Save perfstats
-         TTree *t = 0;
+         TTree *t = nullptr;
          if (l) t = dynamic_cast<TTree*>(l->FindObject(perfstats_name.Data()));
          if (t) {
 
@@ -527,7 +527,7 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
       if (!fDirProofBench->GetDirectory(dirn))
          fDirProofBench->mkdir(dirn, "RunCPU results");
       if (fDirProofBench->cd(dirn)) {
-         fListPerfPlots->Write(0, kOverwrite);
+         fListPerfPlots->Write(nullptr, kOverwrite);
          fListPerfPlots->SetOwner(kFALSE);
          fListPerfPlots->Clear();
       } else {
@@ -636,7 +636,7 @@ void TProofBenchRunCPU::DrawPerfPlots()
 
    Int_t npad=1;
    TIter nxt(fListPerfPlots);
-   TProfile* profile=0;
+   TProfile* profile=nullptr;
    while ((profile=(TProfile*)(nxt()))){
       fCanvas->cd(npad++);
       profile->Draw();

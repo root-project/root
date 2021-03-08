@@ -86,7 +86,7 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
 
   // Construct component iterators
   _curIter = 0 ;
-  _curItem = 0 ;
+  _curItem = nullptr ;
   TIterator* cIter = _catList.createIterator() ;
   RooAbsCategoryLValue* cat ;
   while((cat=(RooAbsCategoryLValue*)cIter->Next())) {
@@ -127,7 +127,7 @@ RooMultiCatIter::~RooMultiCatIter()
 const TCollection* RooMultiCatIter::GetCollection() const 
 {
   //return &_catList.getCollection() ;
-  return 0 ;
+  return nullptr ;
 }
 
 
@@ -162,8 +162,8 @@ TObject* RooMultiCatIter::Next()
 {
   // Check for end
   if (_curIter==_nIter) {
-    _curItem = 0;
-    return 0 ;
+    _curItem = nullptr;
+    return nullptr ;
   }
 
   RooCatType* next = (RooCatType*) _iterList[_curIter]->Next() ;

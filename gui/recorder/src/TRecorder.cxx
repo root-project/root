@@ -190,7 +190,7 @@ public:
    virtual ~TGCursorWindow();
 };
 
-static TGCursorWindow *gCursorWin = 0;
+static TGCursorWindow *gCursorWin = nullptr;
 static Int_t gDecorWidth  = 0;
 static Int_t gDecorHeight = 0;
 
@@ -370,22 +370,22 @@ ClassImp(TRecorderReplaying);
 
 TRecorderReplaying::TRecorderReplaying(const char *filename)
 {
-   fCanv = 0;
-   fCmdTree = 0;
+   fCanv = nullptr;
+   fCmdTree = nullptr;
    fCmdTreeCounter = 0;
    fEventReplayed = kTRUE;
-   fExtraTree = 0;
+   fExtraTree = nullptr;
    fExtraTreeCounter = 0;
    fFilterStatusBar = kFALSE;
-   fGuiTree = 0;
+   fGuiTree = nullptr;
    fGuiTreeCounter = 0;
-   fNextEvent = 0;
-   fRecorder = 0;
+   fNextEvent = nullptr;
+   fRecorder = nullptr;
    fRegWinCounter = 0;
    fShowMouseCursor = kTRUE;
    fWaitingForWindow = kFALSE;
    fWin = 0;
-   fWinTree = 0;
+   fWinTree = nullptr;
    fWinTreeEntries = 0;
    fFile       = TFile::Open(filename);
    fCmdEvent   = new TRecCmdEvent();
@@ -423,7 +423,7 @@ TRecorderReplaying::~TRecorderReplaying()
    delete fMutex;
    if (gCursorWin)
       gCursorWin->DeleteWindow();
-   gCursorWin = 0;
+   gCursorWin = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -442,7 +442,7 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor,
    fCmdTreeCounter   = 0;
    fExtraTreeCounter = 0;
    fRegWinCounter    = 0;
-   fRecorder         = 0;
+   fRecorder         = nullptr;
 
    fFilterStatusBar  = kFALSE;
 
@@ -520,7 +520,7 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor,
       f->Close();
    }
 
-   gPad = 0;
+   gPad = nullptr;
    // Starts replaying
    fTimer->Connect("Timeout()","TRecorderReplaying",this,"ReplayRealtime()");
    fTimer->Start(0);
@@ -724,10 +724,10 @@ Bool_t TRecorderReplaying::FilterEvent(TRecGuiEvent *e)
 
 Bool_t TRecorderReplaying::PrepareNextEvent()
 {
-   fCmdEvent   =  0;
-   fGuiEvent   =  0;
-   fExtraEvent =  0;
-   fNextEvent  =  0;
+   fCmdEvent   =  nullptr;
+   fGuiEvent   =  nullptr;
+   fExtraEvent =  nullptr;
+   fNextEvent  =  nullptr;
 
    // Reads the next unreplayed commandline event to fCmdEvent
    if (fCmdTree->GetEntries() > fCmdTreeCounter)
@@ -787,7 +787,7 @@ Bool_t TRecorderReplaying::PrepareNextEvent()
 
    // Nor commandline neither event to replay
    else if (!fCmdEvent && !fGuiEvent && !fExtraEvent)
-      fNextEvent = 0;
+      fNextEvent = nullptr;
    // Only GUI event to replay
    else if (fGuiEvent)
       fNextEvent = fGuiEvent;
@@ -798,7 +798,7 @@ Bool_t TRecorderReplaying::PrepareNextEvent()
       fNextEvent = fExtraEvent;
 
    // Nothing to replay
-   if (fNextEvent == 0)
+   if (fNextEvent == nullptr)
       return kFALSE;
 
    // Commandline event to replay
@@ -816,7 +816,7 @@ Bool_t TRecorderReplaying::PrepareNextEvent()
          fGuiTreeCounter++;
       // We do not have it yet (waiting for registraion)
       else
-         fNextEvent = 0;
+         fNextEvent = nullptr;
    }
    return kTRUE;
 }
@@ -1964,7 +1964,7 @@ void TGRecorder::Update()
 void TGRecorder::StartStop()
 {
    static const char *gFiletypes[] = {
-      "All files", "*", "Text files", "*.txt", "ROOT files", "*.root", 0, 0
+      "All files", "*", "Text files", "*.txt", "ROOT files", "*.root", nullptr, nullptr
    };
    TGFileInfo fi;
 
@@ -2180,7 +2180,7 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
        e->fFormat < kOtherEvent) {
       e->fType = (EGEventType)e->fFormat;
       if (gDragManager)
-         gDragManager->HandleTimerEvent(e, 0);
+         gDragManager->HandleTimerEvent(e, nullptr);
       delete e;
       return;
    }

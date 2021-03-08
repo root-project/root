@@ -63,7 +63,7 @@ namespace ROOT {
 
 
    TMatrixDSym covMatrix(npar);
-   if (covmat == 0) {
+   if (covmat == nullptr) {
       // with ROOT implicit MT there is no global TVirtualFitter
       if (ROOT::IsImplicitMTEnabled()) {
          Error("TF1Helper::IntegralError", "ROOT has enabled implicit MT. There is no existing lobal fitter, as shown in the documentation a pointer to the covariance matrix"
@@ -73,7 +73,7 @@ namespace ROOT {
       // use matrix from last fit (needs to be a TBackCompFitter)
       TVirtualFitter * vfitter = TVirtualFitter::GetFitter();
       TBackCompFitter * fitter = dynamic_cast<TBackCompFitter*> (vfitter);
-      if (fitter == 0) {
+      if (fitter == nullptr) {
          Error("TF1Helper::IntegralError","No existing fitter can be used for computing the integral error");
          return 0;
       }

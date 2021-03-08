@@ -204,7 +204,7 @@ void TGraphBentErrors::Apply(TF1 *f)
 
    if (fHistogram) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
    }
    for (Int_t i=0;i<GetN();i++) {
       GetPoint(i,x,y);
@@ -304,7 +304,7 @@ void TGraphBentErrors::CopyAndRelease(Double_t **newarrays,
 Bool_t TGraphBentErrors::CopyPoints(Double_t **arrays,
                                     Int_t ibegin, Int_t iend, Int_t obegin)
 {
-   if (TGraph::CopyPoints(arrays ? arrays+8 : 0, ibegin, iend, obegin)) {
+   if (TGraph::CopyPoints(arrays ? arrays+8 : nullptr, ibegin, iend, obegin)) {
       Int_t n = (iend - ibegin)*sizeof(Double_t);
       if (arrays) {
          memmove(&arrays[0][obegin], &fEXlow[ibegin], n);
@@ -338,8 +338,8 @@ Bool_t TGraphBentErrors::CopyPoints(Double_t **arrays,
 Bool_t TGraphBentErrors::CtorAllocate(void)
 {
    if (!fNpoints) {
-      fEXlow = fEYlow = fEXhigh = fEYhigh = 0;
-      fEXlowd = fEYlowd = fEXhighd = fEYhighd = 0;
+      fEXlow = fEYlow = fEXhigh = fEYhigh = nullptr;
+      fEXlowd = fEYlowd = fEXhighd = fEYhighd = nullptr;
       return kFALSE;
    }
    fEXlow = new Double_t[fMaxSize];
@@ -370,8 +370,8 @@ Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
    Double_t * eyld = g->GetEYlowd();
    Double_t * eyhd = g->GetEYhighd();
 
-   if (exl == 0 || exh == 0 || eyl == 0 || eyh == 0 ||
-       exld == 0 || exhd == 0 || eyld == 0 || eyhd == 0) {
+   if (exl == nullptr || exh == nullptr || eyl == nullptr || eyh == nullptr ||
+       exld == nullptr || exhd == nullptr || eyld == nullptr || eyhd == nullptr) {
       if (g->IsA() != TGraph::Class() )
          Warning("DoMerge","Merging a %s is not compatible with a TGraphBentErrors - errors will be ignored",g->IsA()->GetName());
       return TGraph::DoMerge(g);

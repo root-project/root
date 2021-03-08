@@ -42,7 +42,7 @@ ClassImp(TLockGuard);
 // of other (preferably local) mutexes. Note that in this
 // concept gGlobalMutex must be used in TStorage to prevent
 // lockup of the system (see TMutex::Factory)
-TVirtualMutex *gGlobalMutex = 0;
+TVirtualMutex *gGlobalMutex = nullptr;
 
 // From TVirtualRWMutex.h:
 ROOT::TVirtualRWMutex::State::~State() = default;

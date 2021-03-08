@@ -34,7 +34,7 @@ ClassImp(RooMomentMorph);
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]
 
-RooMomentMorph::RooMomentMorph() : _curNormSet(0), _mref(0), _M(0), _useHorizMorph(true)
+RooMomentMorph::RooMomentMorph() : _curNormSet(nullptr), _mref(nullptr), _M(nullptr), _useHorizMorph(true)
 {
   _varItr    = _varList.createIterator() ;
   _pdfItr    = _pdfList.createIterator() ;
@@ -158,7 +158,7 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
 RooMomentMorph::RooMomentMorph(const RooMomentMorph& other, const char* name) :
   RooAbsPdf(other,name),
   _cacheMgr(other._cacheMgr,this),
-  _curNormSet(0),
+  _curNormSet(nullptr),
   m("m",this,other.m),
   _varList("varList",this,other._varList),
   _pdfList("pdfList",this,other._pdfList),
@@ -219,14 +219,14 @@ void RooMomentMorph::initialize()
 
 RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) const
 {
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(0,(RooArgSet*)0) ;
+  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(nullptr,nullptr) ;
   if (cache) {
     return cache ;
   }
   Int_t nVar = _varList.getSize();
   Int_t nPdf = _pdfList.getSize();
 
-  RooAbsReal* null = 0 ;
+  RooAbsReal* null = nullptr ;
   vector<RooAbsReal*> meanrv(nPdf*nVar,null);
   vector<RooAbsReal*> sigmarv(nPdf*nVar,null);
   vector<RooAbsReal*> myrms(nVar,null);
@@ -254,7 +254,7 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
     ownedComps.add(*(RooRealVar*)(fracl.at(i))) ;
   }
 
-  RooAddPdf* theSumPdf = 0;
+  RooAddPdf* theSumPdf = nullptr;
   std::string sumpdfName = Form("%s_sumpdf",GetName());
 
   if (_useHorizMorph) {
@@ -351,7 +351,7 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
 
   // Store it in the cache
   cache = new CacheElem(*theSumPdf,*tracker,fracl) ;
-  _cacheMgr.setObj(0,0,cache,0) ;
+  _cacheMgr.setObj(nullptr,nullptr,cache,nullptr) ;
 
   cache->calculateFractions(*this, kFALSE);
   return cache ;

@@ -31,7 +31,7 @@ void TMVA::paracoor(TString dataset, TString fin , Bool_t useTMVAStyle )
    vector<TString> mvas;   
    for (Int_t iar=0; iar<leafList->GetSize(); iar++) {
       TLeaf* leaf = (TLeaf*)leafList->At(iar);
-      if (leaf != 0) {
+      if (leaf != nullptr) {
          TString leafName = leaf->GetName();
          if (leafName != "type" && leafName != "weight"  && leafName != "boostweight" &&
              leafName != "class" && leafName != "className" && leafName != "classID" && 

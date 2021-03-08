@@ -27,7 +27,7 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
    // find directory from input variable transformation and extract class names
    TIter keys_dir = file->GetDirectory(dataset.Data())->GetListOfKeys();
    TKey *key;
-   TDirectory *tempdir = 0;
+   TDirectory *tempdir = nullptr;
    while ((key = (TKey *)keys_dir())) {
       TString name = key->GetName();
       if (name.BeginsWith("InputVariables_")) {
@@ -44,14 +44,14 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
    const Int_t width = 600;   // size of canvas
 
    // this defines how many canvases we need
-   TCanvas *c = 0;
+   TCanvas *c = nullptr;
 
    // counter variables
    Int_t countCanvas = 0;
 
    // search for the right histograms in full list of keys
    TIter next(file->GetDirectory(dataset.Data())->GetListOfKeys());
-   key = 0;
+   key = nullptr;
    while ((key = (TKey*)next())) {
 
       if (!TString(key->GetName()).BeginsWith("Method_")) continue;
@@ -82,7 +82,7 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
                TString name(hname+"_Test_"+ classnames.at(icls)
                             + "_prob_for_" + *classiter);
                TH1 *hist = (TH1*)titDir->Get(name);
-               if (hist==0){
+               if (hist==nullptr){
                   cout << ":\t mva distribution not available (this is normal for Cut classifier)" << endl;
                   continue;
                }
@@ -172,7 +172,7 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
                   TString name(hname+"_Train_"+ classnames.at(icls)
                                + "_prob_for_" + *classiter);
                   TH1 *hist = (TH1*)titDir->Get(name);
-                  if (hist==0){
+                  if (hist==nullptr){
                      cout << ":\t comparison histogram for overtraining check not available!" << endl;
                      continue;
                   }

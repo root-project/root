@@ -56,8 +56,8 @@ ClassImp(RooDataProjBinding);
 
 RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data, 
 				       const RooArgSet &vars, const RooArgSet* nset) :
-  RooRealBinding(real,vars,0), _first(kTRUE), _real(&real), _data(&data), _nset(nset), 
-  _superCat(0), _catTable(0)
+  RooRealBinding(real,vars,nullptr), _first(kTRUE), _real(&real), _data(&data), _nset(nset), 
+  _superCat(nullptr), _catTable(nullptr)
 {  
   // Determine if dataset contains only categories
   TIterator* iter = data.get()->createIterator() ;

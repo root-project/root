@@ -280,7 +280,7 @@ RooFFTConvPdf::PdfCacheElem* RooFFTConvPdf::createCache(const RooArgSet* nset) c
 
 RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooArgSet* nsetIn) : 
   PdfCacheElem(self,nsetIn),
-  fftr2c1(0),fftr2c2(0),fftc2r(0) 
+  fftr2c1(nullptr),fftr2c2(nullptr),fftc2r(nullptr) 
 {
   RooAbsPdf* clonePdf1 = (RooAbsPdf*) self._pdf1.arg().cloneTree() ;
   RooAbsPdf* clonePdf2 = (RooAbsPdf*) self._pdf2.arg().cloneTree() ;

@@ -65,16 +65,16 @@ static MarkerDescription_t  gMarkers[] = {
    {"marker28.xpm", "28", 28},
    {"marker29.xpm", "29", 29},
    {"marker30.xpm", "30", 30},
-   {0, 0, 0},
+   {nullptr, nullptr, 0},
 };
 
 static MarkerDescription_t* GetMarkerByNumber(Int_t number)
 {
-   for (Int_t i = 0; gMarkers[i].fFilename != 0; i++) {
+   for (Int_t i = 0; gMarkers[i].fFilename != nullptr; i++) {
       if (gMarkers[i].fNumber == number)
          return &gMarkers[i];
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +93,7 @@ TGedMarkerPopup::TGedMarkerPopup(const TGWindow *p, const TGWindow *m, Style_t m
 
    SetLayoutManager(new TGTileLayout(this, 1));
 
-   for (int i = 0; gMarkers[i].fFilename != 0; i++) {
+   for (int i = 0; gMarkers[i].fFilename != nullptr; i++) {
       AddFrame(b = new TGPictureButton(this, gMarkers[i].fFilename,
                gMarkers[i].fNumber, TGButton::GetDefaultGC()(), kSunkenFrame),
                new TGLayoutHints(kLHintsLeft, 14, 14, 14, 14));
@@ -141,7 +141,7 @@ Bool_t TGedMarkerPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 TGedMarkerSelect::TGedMarkerSelect(const TGWindow *p, Style_t markerStyle, Int_t id)
    : TGedSelect(p, id)
 {
-   fPicture = 0;
+   fPicture = nullptr;
    SetPopup(new TGedMarkerPopup(gClient->GetDefaultRoot(), this, markerStyle));
    SetMarkerStyle(markerStyle);
 
@@ -184,7 +184,7 @@ void TGedMarkerSelect::DoRedraw()
       }
       gVirtualX->DrawRectangle(fId, GetShadowGC()(), x, y, w - 1, h - 1);
 
-      if (fPicture != 0) fPicture->Draw(fId, fDrawGC->GetGC(), x + 1, y + 1);
+      if (fPicture != nullptr) fPicture->Draw(fId, fDrawGC->GetGC(), x + 1, y + 1);
    } else { // sunken rectangle
       x = fBorderWidth + 2;
       y = fBorderWidth + 2;  // 1;
@@ -204,7 +204,7 @@ void TGedMarkerSelect::SetMarkerStyle(Style_t markerStyle)
 
    if (fPicture) {
       gClient->FreePicture(fPicture);
-      fPicture = 0;
+      fPicture = nullptr;
    }
 
    MarkerDescription_t *md = GetMarkerByNumber(fMarkerStyle);

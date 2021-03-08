@@ -74,10 +74,10 @@ ClassImp(TMVA::MethodLD);
                              const TString& theOption ) :
    MethodBase( jobName, Types::kLD, methodTitle, dsi, theOption),
    fNRegOut   ( 0 ),
-   fSumMatx   ( 0 ),
-   fSumValMatx( 0 ),
-   fCoeffMatx ( 0 ),
-   fLDCoeff   ( 0 )
+   fSumMatx   ( nullptr ),
+   fSumValMatx( nullptr ),
+   fCoeffMatx ( nullptr ),
+   fLDCoeff   ( nullptr )
 {
 }
 
@@ -87,10 +87,10 @@ ClassImp(TMVA::MethodLD);
 TMVA::MethodLD::MethodLD( DataSetInfo& theData, const TString& theWeightFile)
    : MethodBase( Types::kLD, theData, theWeightFile),
      fNRegOut   ( 0 ),
-     fSumMatx   ( 0 ),
-     fSumValMatx( 0 ),
-     fCoeffMatx ( 0 ),
-     fLDCoeff   ( 0 )
+     fSumMatx   ( nullptr ),
+     fSumValMatx( nullptr ),
+     fCoeffMatx ( nullptr ),
+     fLDCoeff   ( nullptr )
 {
 }
 
@@ -116,14 +116,14 @@ void TMVA::MethodLD::Init( void )
 
 TMVA::MethodLD::~MethodLD( void )
 {
-   if (fSumMatx)    { delete fSumMatx;    fSumMatx    = 0; }
-   if (fSumValMatx) { delete fSumValMatx; fSumValMatx = 0; }
-   if (fCoeffMatx)  { delete fCoeffMatx;  fCoeffMatx  = 0; }
+   if (fSumMatx)    { delete fSumMatx;    fSumMatx    = nullptr; }
+   if (fSumValMatx) { delete fSumValMatx; fSumValMatx = nullptr; }
+   if (fCoeffMatx)  { delete fCoeffMatx;  fCoeffMatx  = nullptr; }
    if (fLDCoeff) {
       for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); ++vi){
          if (*vi) { delete *vi; *vi = 0; }
       }
-      delete fLDCoeff; fLDCoeff = 0;
+      delete fLDCoeff; fLDCoeff = nullptr;
    }
 }
 
@@ -167,7 +167,7 @@ Double_t TMVA::MethodLD::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    const Event* ev = GetEvent();
 
-   if (fRegressionReturnVal == NULL) fRegressionReturnVal = new vector< Float_t >();
+   if (fRegressionReturnVal == nullptr) fRegressionReturnVal = new vector< Float_t >();
    fRegressionReturnVal->resize( fNRegOut );
 
    for (Int_t iout = 0; iout<fNRegOut; iout++) {
@@ -192,7 +192,7 @@ const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
 {
    const Event* ev = GetEvent();
 
-   if (fRegressionReturnVal == NULL) fRegressionReturnVal = new vector< Float_t >();
+   if (fRegressionReturnVal == nullptr) fRegressionReturnVal = new vector< Float_t >();
    fRegressionReturnVal->resize( fNRegOut );
 
    for (Int_t iout = 0; iout<fNRegOut; iout++) {
@@ -392,7 +392,7 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
       for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); ++vi){
          if (*vi) { delete *vi; *vi = 0; }
       }
-      delete fLDCoeff; fLDCoeff = 0;
+      delete fLDCoeff; fLDCoeff = nullptr;
    }
    fLDCoeff = new vector< vector< Double_t >* >(fNRegOut);
    for (Int_t ivar = 0; ivar<fNRegOut; ivar++) (*fLDCoeff)[ivar] = new std::vector<Double_t>( ncoeff );

@@ -98,8 +98,8 @@ ClassImp(TCutG);
 
 TCutG::TCutG() : TGraph()
 {
-   fObjectX  = 0;
-   fObjectY  = 0;
+   fObjectX  = nullptr;
+   fObjectY  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,8 +120,8 @@ TCutG::TCutG(const TCutG &cutg)
 TCutG::TCutG(const char *name, Int_t n)
       :TGraph(n)
 {
-   fObjectX  = 0;
-   fObjectY  = 0;
+   fObjectX  = nullptr;
+   fObjectY  = nullptr;
    SetName(name);
    delete gROOT->GetListOfSpecials()->FindObject(name);
    gROOT->GetListOfSpecials()->Add(this);
@@ -161,8 +161,8 @@ TCutG::TCutG(const char *name, Int_t n)
 TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
       :TGraph(n,x,y)
 {
-   fObjectX  = 0;
-   fObjectY  = 0;
+   fObjectX  = nullptr;
+   fObjectY  = nullptr;
    SetName(name);
    delete gROOT->GetListOfSpecials()->FindObject(name);
    gROOT->GetListOfSpecials()->Add(this);
@@ -202,8 +202,8 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
 TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
       :TGraph(n,x,y)
 {
-   fObjectX  = 0;
-   fObjectY  = 0;
+   fObjectX  = nullptr;
+   fObjectY  = nullptr;
    SetName(name);
    delete gROOT->GetListOfSpecials()->FindObject(name);
    gROOT->GetListOfSpecials()->Add(this);
@@ -403,7 +403,7 @@ void TCutG::SetVarX(const char *varx)
 {
    fVarX = varx;
    delete fObjectX;
-   fObjectX = 0;
+   fObjectX = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -413,7 +413,7 @@ void TCutG::SetVarY(const char *vary)
 {
    fVarY = vary;
    delete fObjectY;
-   fObjectY = 0;
+   fObjectY = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

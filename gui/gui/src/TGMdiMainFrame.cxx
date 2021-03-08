@@ -70,8 +70,8 @@ TGMdiMainFrame::TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menuBar,
 
    fNumberOfFrames = 0;
    fMenuBar = menuBar;
-   fChildren = 0;
-   fCurrent = 0;
+   fChildren = nullptr;
+   fCurrent = nullptr;
    fArrangementMode = 0;
 
    const TGResourcePool *res = GetResourcePool();
@@ -199,7 +199,7 @@ void TGMdiMainFrame::AddMdiFrame(TGMdiFrame *frame)
    travel = new TGMdiFrameList;
    travel->SetCyclePrev(travel);
    travel->SetCycleNext(travel);
-   travel->SetPrev(0);
+   travel->SetPrev(nullptr);
    if (fChildren) fChildren->SetPrev(travel);
    travel->SetNext(fChildren);
    fChildren = travel;
@@ -243,7 +243,7 @@ Bool_t TGMdiMainFrame::RemoveMdiFrame(TGMdiFrame *frame)
       travel = travel->GetNext();
    if (!travel) return kFALSE;
 
-   if (travel == fCurrent) fCurrent = 0;
+   if (travel == fCurrent) fCurrent = nullptr;
 
    // unlink the element from the fCycle list
    travel->GetCyclePrev()->SetCycleNext(travel->GetCycleNext());
@@ -448,7 +448,7 @@ TGMdiDecorFrame *TGMdiMainFrame::GetDecorFrame(TGMdiFrame *frame) const
    TGMdiFrameList *travel = fChildren;
    while (travel && (travel->GetDecorFrame()->GetMdiFrame() != frame))
       travel = travel->GetNext();
-   if (!travel) return 0;
+   if (!travel) return nullptr;
    return travel->GetDecorFrame();
 }
 
@@ -459,7 +459,7 @@ TGMdiDecorFrame *TGMdiMainFrame::GetDecorFrame(UInt_t id) const
 {
    TGMdiFrameList *travel = fChildren;
    while (travel && (travel->GetDecorFrame()->GetId() != id)) travel = travel->GetNext();
-   if (!travel) return 0;
+   if (!travel) return nullptr;
    return travel->GetDecorFrame();
 }
 
@@ -469,7 +469,7 @@ TGMdiDecorFrame *TGMdiMainFrame::GetDecorFrame(UInt_t id) const
 TGMdiFrame *TGMdiMainFrame::GetMdiFrame(UInt_t id) const
 {
    TGMdiDecorFrame *frame = GetDecorFrame(id);
-   if (!frame) return 0;
+   if (!frame) return nullptr;
    return frame->GetMdiFrame();
 }
 
@@ -547,8 +547,8 @@ void TGMdiMainFrame::UpdateWinListMenu()
       if (travel->GetDecorFrame()->GetMdiButtons() & kMdiMenu)
          pic = travel->GetDecorFrame()->GetWindowIcon();
       else
-         pic = 0;
-      fWinListMenu->AddEntry(new TGHotString(buf.Data()), travel->GetDecorFrame()->GetId(), 0, pic);
+         pic = nullptr;
+      fWinListMenu->AddEntry(new TGHotString(buf.Data()), travel->GetDecorFrame()->GetId(), nullptr, pic);
    }
 
    if (fCurrent)
@@ -699,7 +699,7 @@ void TGMdiMainFrame::ArrangeMinimized()
       travel->GetDecorFrame()->SetMinUserPlacement();
 
    do {
-      closest = 0;
+      closest = nullptr;
       Int_t cdist = 0;
       for (travel = fChildren; travel; travel = travel->GetNext()) {
          if (travel->GetDecorFrame()->IsMinimized()) {
@@ -1049,7 +1049,7 @@ TGMdiFrame *TGMdiMainFrame::GetCurrent() const
    if (fCurrent)
       return fCurrent->GetDecorFrame()->GetMdiFrame();
    else
-      return 0;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

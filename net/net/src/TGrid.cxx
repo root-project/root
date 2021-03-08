@@ -30,7 +30,7 @@
 #include "TPluginManager.h"
 #include "TError.h"
 
-TGrid *gGrid = 0;
+TGrid *gGrid = nullptr;
 
 
 ClassImp(TGrid);
@@ -50,11 +50,11 @@ TGrid *TGrid::Connect(const char *grid, const char *uid, const char *pw,
                       const char *options)
 {
    TPluginHandler *h;
-   TGrid *g = 0;
+   TGrid *g = nullptr;
 
    if (!grid) {
       ::Error("TGrid::Connect", "no grid specified");
-      return 0;
+      return nullptr;
    }
    if (!uid)
       uid = "";
@@ -65,7 +65,7 @@ TGrid *TGrid::Connect(const char *grid, const char *uid, const char *pw,
 
    if ((h = gROOT->GetPluginManager()->FindHandler("TGrid", grid))) {
       if (h->LoadPlugin() == -1)
-         return 0;
+         return nullptr;
       g = (TGrid *) h->ExecPlugin(4, grid, uid, pw, options);
    }
 

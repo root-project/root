@@ -57,7 +57,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
 
        if( fDetailedOutputEnabled && fDetailedOutput ) {
           delete fDetailedOutput;
-          fDetailedOutput = 0;
+          fDetailedOutput = nullptr;
        }
        if( fDetailedOutputEnabled && !fDetailedOutput ) {
           fDetailedOutput = new RooArgSet();
@@ -84,7 +84,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        Bool_t reuse=(fReuseNll || fgAlwaysReuseNll) ;
 
        Bool_t created(kFALSE) ;
-       if (!reuse || fNll==0) {
+       if (!reuse || fNll==nullptr) {
           RooArgSet* allParams = fPdf->getParameters(data);
           RooStats::RemoveConstantParameters(allParams);
 
@@ -132,7 +132,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        double uncondML = 0;
        double fit_favored_mu = 0;
        int statusD = 0;
-       RooArgSet * detOutput = 0;
+       RooArgSet * detOutput = nullptr;
        if (type != 2) {
           // minimize and count eval errors
           fNll->clearEvalErrorLog();
@@ -187,7 +187,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
 
           // set the POI to constant
           RooLinkedListIter it = paramsOfInterest.iterator();
-          RooRealVar* tmpPar = NULL, *tmpParA=NULL;
+          RooRealVar* tmpPar = nullptr, *tmpParA=nullptr;
           while((tmpPar = (RooRealVar*)it.Next())){
              tmpParA =  dynamic_cast<RooRealVar*>( attachedSet->find(tmpPar->GetName()));
              if (tmpParA) tmpParA->setConstant();
@@ -281,7 +281,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
 
        if (!reuse) {
     delete fNll;
-    fNll = 0;
+    fNll = nullptr;
        }
 
        RooMsgService::instance().setGlobalKillBelow(msglevel);

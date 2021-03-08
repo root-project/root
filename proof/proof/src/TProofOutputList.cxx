@@ -57,7 +57,7 @@ void TProofOutputList::AttachList(TList *alist)
    if (GetSize() > 0) Clear();
 
    TIter nxo(alist);
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    while ((obj = nxo())) { Add(obj); }
    SetOwner(kFALSE);
 }
@@ -74,13 +74,13 @@ void TProofOutputList::ls(Option_t *option) const
       TList::ls(opt);
    } else {
       TIter nxos(fDontShow);
-      TObjString *os = 0;
+      TObjString *os = nullptr;
       TList doShow;
       doShow.SetOwner(kFALSE);
 
       Bool_t hasmissing = kFALSE;
       TIter nxo(this);
-      TObject *obj = 0;
+      TObject *obj = nullptr;
       while ((obj = nxo())) {
          TString s = obj->GetName();
          if (s == kPROOF_MissingFiles) {
@@ -121,13 +121,13 @@ void TProofOutputList::Print(Option_t *option) const
       TList::Print(opt);
    } else {
       TIter nxos(fDontShow);
-      TObjString *os = 0;
+      TObjString *os = nullptr;
       TList doShow;
       doShow.SetOwner(kFALSE);
 
       Bool_t hasmissing = kFALSE;
       TIter nxo(this);
-      TObject *obj = 0;
+      TObject *obj = nullptr;
       while ((obj = nxo())) {
          TString s = obj->GetName();
          if (s == kPROOF_MissingFiles) {

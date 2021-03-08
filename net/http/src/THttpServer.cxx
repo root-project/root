@@ -182,7 +182,7 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
    // start timer
    SetTimer(20, kTRUE);
 
-   if (strchr(engine, ';') == 0) {
+   if (strchr(engine, ';') == nullptr) {
       CreateEngine(engine);
    } else {
       TObjArray *lst = TString(engine).Tokenize(";");
@@ -503,7 +503,7 @@ Bool_t THttpServer::VerifyFilePath(const char *fname)
 
       // find next slash or backslash
       const char *next = strpbrk(fname, "/\\");
-      if (next == 0)
+      if (next == nullptr)
          return kTRUE;
 
       // most important - change to parent dir
@@ -1224,7 +1224,7 @@ Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, con
 
 Bool_t THttpServer::Hide(const char *foldername, Bool_t hide)
 {
-   return SetItemField(foldername, "_hidden", hide ? "true" : (const char *)0);
+   return SetItemField(foldername, "_hidden", hide ? "true" : (const char *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1318,11 +1318,11 @@ const char *THttpServer::GetMimeType(const char *path)
                              {".ttf", 4, "application/x-font-ttf"},
                              {".woff", 5, "font/woff"},
                              {".woff2", 6, "font/woff2"},
-                             {NULL, 0, NULL}};
+                             {nullptr, 0, nullptr}};
 
    int path_len = strlen(path);
 
-   for (int i = 0; builtin_mime_types[i].extension != NULL; i++) {
+   for (int i = 0; builtin_mime_types[i].extension != nullptr; i++) {
       if (path_len <= builtin_mime_types[i].ext_len)
          continue;
       const char *ext = path + (path_len - builtin_mime_types[i].ext_len);

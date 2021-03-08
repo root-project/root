@@ -62,8 +62,8 @@ ClassImp(TDSet);
 
 TDSetElement::TDSetElement() : TNamed("",""),
                                fDirectory(), fFirst(0), fNum(0), fMsd(),
-                               fTDSetOffset(0), fEntryList(0), fValid(kFALSE),
-                               fEntries(0), fFriends(0), fDataSet(), fAssocObjList(0),
+                               fTDSetOffset(0), fEntryList(nullptr), fValid(kFALSE),
+                               fEntries(0), fFriends(nullptr), fDataSet(), fAssocObjList(nullptr),
                                fMaxProcTime(-1)
 {
    ResetBit(kWriteV3);
@@ -96,12 +96,12 @@ TDSetElement::TDSetElement(const char *file, const char *objname, const char *di
    }
    fMsd         = msd;
    fTDSetOffset = 0;
-   fEntryList   = 0;
-   fFriends     = 0;
+   fEntryList   = nullptr;
+   fFriends     = nullptr;
    fValid       = kFALSE;
    fEntries     = -1;
    fDataSet     = dataset;
-   fAssocObjList = 0;
+   fAssocObjList = nullptr;
    if (dir)
       fDirectory = dir;
    fMaxProcTime = -1.;
@@ -125,12 +125,12 @@ TDSetElement::TDSetElement(const TDSetElement& elem)
    fNum = elem.fNum;
    fMsd = elem.fMsd;
    fTDSetOffset = elem.fTDSetOffset;
-   fEntryList = 0;
+   fEntryList = nullptr;
    fValid = elem.fValid;
    fEntries = elem.fEntries;
-   fFriends = 0;
+   fFriends = nullptr;
    fDataSet = elem.fDataSet;
-   fAssocObjList = 0;
+   fAssocObjList = nullptr;
    fMaxProcTime = elem.fMaxProcTime;
    ResetBit(kWriteV3);
    ResetBit(kHasBeenLookedUp);
@@ -160,7 +160,7 @@ void TDSetElement::Reset()
    fFirst = 0;
    fNum   = -1;
    fTDSetOffset = 0;
-   fEntryList   = 0;
+   fEntryList   = nullptr;
    fValid       = kFALSE;
    fEntries     = -1;
    fMaxProcTime = -1.;
@@ -231,7 +231,7 @@ Int_t TDSetElement::MergeElement(TDSetElement *elem)
 TFileInfo *TDSetElement::GetFileInfo(const char *type)
 {
    // Create the TFileInfoMeta object
-   TFileInfoMeta *meta = 0;
+   TFileInfoMeta *meta = nullptr;
    Long64_t entries = (fEntries < 0 && fNum > 0) ? fNum : fEntries;
    Printf("entries: %lld (%lld)", entries, fNum);
    if (!strcmp(type, "TTree")) {
@@ -241,7 +241,7 @@ TFileInfo *TDSetElement::GetFileInfo(const char *type)
       meta = new TFileInfoMeta(GetTitle(), fDirectory, type, entries, fFirst,
                                 fFirst + entries - 1);
    }
-   TFileInfo *fi = new TFileInfo(GetName(), 0, 0, 0, meta);
+   TFileInfo *fi = new TFileInfo(GetName(), 0, nullptr, nullptr, meta);
    if (!fDataSet.IsNull()) fi->SetTitle(fDataSet.Data());
    if (TestBit(TDSetElement::kCorrupted)) fi->SetBit(TFileInfo::kCorrupted);
    return fi;
@@ -404,7 +404,7 @@ void TDSetElement::DeleteFriends()
 
    fFriends->SetOwner(kTRUE);
    delete fFriends;
-   fFriends = 0;
+   fFriends = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -448,7 +448,7 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
    if (gPerfStats)
       gPerfStats->FileOpenEvent(file, GetName(), start);
 
-   if (file == 0) {
+   if (file == nullptr) {
       ::SysError("TDSetElement::GetEntries",
                  "cannot open file %s (type: %d, pfx: %s)", GetName(), typ, pfx.Data());
       return -1;
@@ -483,7 +483,7 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
          TRegexp re(sreg);
          if (dir->GetListOfKeys()) {
             TIter nxk(dir->GetListOfKeys());
-            TKey *k = 0;
+            TKey *k = nullptr;
             Bool_t notfound = kTRUE;
             while ((k = (TKey *) nxk())) {
                if (!strcmp(k->GetClassName(), "TTree")) {
@@ -503,14 +503,14 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
       }
 
       TKey *key = dir->GetKey(on);
-      if (key == 0) {
+      if (key == nullptr) {
          Error("GetEntries", "cannot find tree \"%s\" in %s",
                GetTitle(), GetName());
          delete file;
          return -1;
       }
       TTree *tree = (TTree *) key->ReadObj();
-      if (tree == 0) {
+      if (tree == nullptr) {
          // Error always reported?
          delete file;
          return -1;
@@ -534,7 +534,7 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
 Int_t TDSetElement::Lookup(Bool_t force)
 {
    static Int_t xNetPluginOK = -1;
-   static TFileStager *xStager = 0;
+   static TFileStager *xStager = nullptr;
    Int_t retVal = 0;
 
    // Check if required
@@ -552,7 +552,7 @@ Int_t TDSetElement::Lookup(Bool_t force)
    Bool_t doit = kFALSE;
    TFile::EFileType type = TFile::GetType(name, "");
    if (type == TFile::kNet) {
-      TPluginHandler *h = 0;
+      TPluginHandler *h = nullptr;
       // Network files via XROOTD
       if (xNetPluginOK == -1) {
          // Check the plugin the first time
@@ -600,12 +600,12 @@ void TDSetElement::SetEntryList(TObject *aList, Long64_t first, Long64_t num)
 {
    if (!aList) {
       // Nothing to do, except making sure to disable any previous setting
-      fEntryList = 0;
+      fEntryList = nullptr;
       return;
    }
 
    // Link the proper object
-   TEventList *evl = 0;
+   TEventList *evl = nullptr;
    TEntryList *enl = dynamic_cast<TEntryList*>(aList);
    if (!enl)
       evl = dynamic_cast<TEventList*>(aList);
@@ -651,7 +651,7 @@ void TDSetElement::AddAssocObj(TObject *assocobj)
 
 TObject *TDSetElement::GetAssocObj(Long64_t i, Bool_t isentry)
 {
-   TObject *o = 0;
+   TObject *o = nullptr;
    if (!fAssocObjList || fAssocObjList->GetSize() <= 0) return o;
 
    TString s;
@@ -706,12 +706,12 @@ TDSet::TDSet()
    fElements = new THashList;
    fElements->SetOwner();
    fIsTree    = kFALSE;
-   fIterator  = 0;
-   fCurrent   = 0;
-   fEntryList = 0;
-   fProofChain = 0;
-   fSrvMaps = 0;
-   fSrvMapsIter = 0;
+   fIterator  = nullptr;
+   fCurrent   = nullptr;
+   fEntryList = nullptr;
+   fProofChain = nullptr;
+   fSrvMaps = nullptr;
+   fSrvMapsIter = nullptr;
    ResetBit(kWriteV3);
    ResetBit(kEmpty);
    ResetBit(kValidityChecked);
@@ -743,12 +743,12 @@ TDSet::TDSet(const char *name,
 {
    fElements = new THashList;
    fElements->SetOwner();
-   fIterator = 0;
-   fCurrent  = 0;
-   fEntryList = 0;
-   fProofChain = 0;
-   fSrvMaps = 0;
-   fSrvMapsIter = 0;
+   fIterator = nullptr;
+   fCurrent  = nullptr;
+   fEntryList = nullptr;
+   fProofChain = nullptr;
+   fSrvMaps = nullptr;
+   fSrvMapsIter = nullptr;
    ResetBit(kWriteV3);
    ResetBit(kEmpty);
    ResetBit(kValidityChecked);
@@ -756,7 +756,7 @@ TDSet::TDSet(const char *name,
    ResetBit(kMultiDSet);
 
    fType = "TTree";
-   TClass *c = 0;
+   TClass *c = nullptr;
    // Check name
    if (name && strlen(name) > 0) {
       // In the old constructor signature it was the 'type'
@@ -812,12 +812,12 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
 {
    fElements = new THashList;
    fElements->SetOwner();
-   fIterator = 0;
-   fCurrent  = 0;
-   fEntryList = 0;
-   fProofChain = 0;
-   fSrvMaps = 0;
-   fSrvMapsIter = 0;
+   fIterator = nullptr;
+   fCurrent  = nullptr;
+   fEntryList = nullptr;
+   fProofChain = nullptr;
+   fSrvMaps = nullptr;
+   fSrvMapsIter = nullptr;
    ResetBit(kWriteV3);
    ResetBit(kEmpty);
    ResetBit(kValidityChecked);
@@ -831,7 +831,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
 
    // First fill elements without friends()
    TIter next(chain.GetListOfFiles());
-   TChainElement *elem = 0;
+   TChainElement *elem = nullptr;
    TString key;
    while ((elem = (TChainElement *)next())) {
       TString file(elem->GetTitle());
@@ -857,7 +857,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
       }
       Long64_t nent = (elem->GetEntries() > 0 &&
                        elem->GetEntries() != TTree::kMaxEntries) ? elem->GetEntries() : -1;
-      if (Add(file, tree, dir, 0, nent, ((msd.IsNull()) ? 0 : msd.Data()))) {
+      if (Add(file, tree, dir, 0, nent, ((msd.IsNull()) ? nullptr : msd.Data()))) {
          if (elem->HasBeenLookedUp()) {
             // Save lookup information, if any
             TDSetElement *dse = (TDSetElement *) fElements->Last();
@@ -865,7 +865,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
          }
       }
    }
-   SetDirectory(0);
+   SetDirectory(nullptr);
 
    // Add friends now, if requested
    if (withfriends) {
@@ -903,8 +903,8 @@ TDSet::~TDSet()
    SafeDelete(fElements);
    SafeDelete(fIterator);
    SafeDelete(fProofChain);
-   fSrvMaps = 0;
-   fSrvMapsIter = 0;
+   fSrvMaps = nullptr;
+   fSrvMapsIter = nullptr;
 
    gROOT->GetListOfDataSets()->Remove(this);
 }
@@ -989,7 +989,7 @@ TObject *TDSet::GetOutput(const char *name)
 {
    if (gProof)
       return gProof->GetOutput(name);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -999,7 +999,7 @@ TList *TDSet::GetOutputList()
 {
    if (gProof)
       return gProof->GetOutputList();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1109,7 +1109,7 @@ Bool_t TDSet::Add(TDSet *dset)
 
    TDSetElement *el;
    TIter next(dset->fElements);
-   TObject *last = (dset == this) ? fElements->Last() : 0;
+   TObject *last = (dset == this) ? fElements->Last() : nullptr;
    while ((el = (TDSetElement*) next())) {
       Add(el->GetFileName(), el->GetObjName(), el->GetDirectory(),
           el->GetFirst(), el->GetNum(), el->GetMsd());
@@ -1135,7 +1135,7 @@ Bool_t TDSet::Add(TCollection *filelist, const char *meta, Bool_t availableOnly,
    if (!filelist)
       return kFALSE;
 
-   TObject *o = 0;
+   TObject *o = nullptr;
    TIter next(filelist);
    while ((o = next())) {
       TString cn(o->ClassName());
@@ -1213,9 +1213,9 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
    // If more than one metadata info require the specification of the objpath;
    // the order in which they appear is not guaranteed and the error may be
    // very difficult to find.
-   TFileInfoMeta *m = 0;
+   TFileInfoMeta *m = nullptr;
    if (!meta || strlen(meta) <= 0 || !strcmp(meta, "/")) {
-      TList *fil = 0;
+      TList *fil = nullptr;
       if ((fil = fi->GetMetaDataList()) && fil->GetSize() > 1) {
          msg.Form("\n  Object name unspecified and several objects available.\n");
          msg += "  Please choose one from the list below:\n";
@@ -1238,8 +1238,8 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
    m = fi->GetMetaData(meta);
 
    // Create the element
-   const char *objname = 0;
-   const char *dir = 0;
+   const char *objname = nullptr;
+   const char *dir = nullptr;
    Long64_t first = 0;
    Long64_t num = -1;
    if (!m) {
@@ -1251,9 +1251,9 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
       first = m->GetFirst();
       num = m->GetEntries();
    }
-   const char *dataset = 0;
+   const char *dataset = nullptr;
    if (strcmp(fi->GetTitle(), "TFileInfo")) dataset = fi->GetTitle();
-   TDSetElement *el = new TDSetElement(file, objname, dir, first, -1, 0, dataset);
+   TDSetElement *el = new TDSetElement(file, objname, dir, first, -1, nullptr, dataset);
    el->SetEntries(num);
 
    // Set looked-up bit
@@ -1297,7 +1297,7 @@ Int_t TDSet::ExportFileList(const char *fpath, Option_t *opt)
    TList *fileinfo = new TList;
    fileinfo->SetOwner();
 
-   TDSetElement *dse = 0;
+   TDSetElement *dse = nullptr;
    TIter next(fElements);
    while ((dse = (TDSetElement *) next())) {
       TFileInfoMeta *m = new TFileInfoMeta(dse->GetTitle(), dse->GetDirectory(), GetType(),
@@ -1352,7 +1352,7 @@ void TDSet::AddFriend(TDSet *friendset, const char* alias)
    }
    TIter next(thisList);
    TIter next2(friendsList);
-   TDSetElement *friendElem = 0;
+   TDSetElement *friendElem = nullptr;
    if (friendsList->GetSize() == 1)
       friendElem = dynamic_cast<TDSetElement*> (friendsList->First());
    while(TDSetElement* e = dynamic_cast<TDSetElement*> (next())) {
@@ -1399,7 +1399,7 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
    if (gPerfStats)
       gPerfStats->FileOpenEvent(file, filename, start);
 
-   if (file == 0) {
+   if (file == nullptr) {
       ::SysError("TDSet::GetEntries",
                  "cannot open file %s (type: %d, pfx: %s)", filename, typ, pfx.Data());
       return -1;
@@ -1432,7 +1432,7 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
          TRegexp re(sreg);
          if (dir->GetListOfKeys()) {
             TIter nxk(dir->GetListOfKeys());
-            TKey *k = 0;
+            TKey *k = nullptr;
             Bool_t notfound = kTRUE;
             while ((k = (TKey *) nxk())) {
                if (!strcmp(k->GetClassName(), "TTree")) {
@@ -1452,14 +1452,14 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
       }
 
       TKey *key = dir->GetKey(on);
-      if (key == 0) {
+      if (key == nullptr) {
          ::Error("TDSet::GetEntries", "cannot find tree \"%s\" in %s",
                  objname.Data(), filename);
          delete file;
          return -1;
       }
       TTree *tree = (TTree *) key->ReadObj();
-      if (tree == 0) {
+      if (tree == nullptr) {
          // Error always reported?
          delete file;
          return -1;
@@ -1783,7 +1783,7 @@ void TDSetElement::Streamer(TBuffer &R__b)
          R__b << fNum;
          R__b << fMsd;
          R__b << fTDSetOffset;
-         R__b << (TEventList *)0;
+         R__b << (TEventList *)nullptr;
          R__b << fValid;
          R__b << fEntries;
 
@@ -1791,7 +1791,7 @@ void TDSetElement::Streamer(TBuffer &R__b)
          FriendsList_t *friends = new FriendsList_t;
          if (fFriends) {
             TIter nxf(fFriends);
-            TPair *p = 0;
+            TPair *p = nullptr;
             while ((p = (TPair *)nxf()))
                friends->push_back(std::make_pair((TDSetElement *)p->Key(),
                                    TString(((TObjString *)p->Value())->GetName())));
@@ -1832,13 +1832,13 @@ void TDSet::Streamer(TBuffer &R__b)
          if (elems.GetSize() > 0) {
             fElements = new THashList;
             fElements->SetOwner();
-            TDSetElement *e = 0;
+            TDSetElement *e = nullptr;
             TIter nxe(&elems);
             while ((e = (TDSetElement *)nxe())) {
                fElements->Add(e);
             }
          } else {
-            fElements = 0;
+            fElements = nullptr;
          }
          R__b >> fIsTree;
       }
@@ -1854,7 +1854,7 @@ void TDSet::Streamer(TBuffer &R__b)
          if (fElements) {
             elems.SetOwner(kFALSE);
             if (fElements->GetSize() > 0) {
-               TDSetElement *e = 0;
+               TDSetElement *e = nullptr;
                TIter nxe(fElements);
                while ((e = (TDSetElement *)nxe()))
                   elems.Add(e);
@@ -1880,7 +1880,7 @@ void TDSet::SetWriteV3(Bool_t on)
       ResetBit(TDSet::kWriteV3);
    // Loop over dataset elements
    TIter nxe(GetListOfElements());
-   TObject *o = 0;
+   TObject *o = nullptr;
    while ((o = nxe()))
       if (on)
          o->SetBit(TDSetElement::kWriteV3);
@@ -1895,11 +1895,11 @@ void TDSet::SetEntryList(TObject *aList)
 {
    if (!aList) {
       // Nothing to do, except making sure to disable any previous setting
-      fEntryList = 0;
+      fEntryList = nullptr;
       // Reset the element lists
       // TEntryList
       TIter next(fElements);
-      TDSetElement *el=0;
+      TDSetElement *el=nullptr;
       while ((el=(TDSetElement*)next())){
          el->SetEntryList(aList);
          el->Reset();
@@ -1911,14 +1911,14 @@ void TDSet::SetEntryList(TObject *aList)
 
       // Global entry list for all the datasets
       TIter nxds(fElements);
-      TDSet *ds = 0;
+      TDSet *ds = nullptr;
       while ((ds = (TDSet *) nxds()))
          ds->SetEntryList(aList);
 
    } else {
 
       // Link the proper object
-      TEventList *evl = 0;
+      TEventList *evl = nullptr;
       TEntryList *enl = dynamic_cast<TEntryList*>(aList);
       if (!enl)
          evl = dynamic_cast<TEventList*>(aList);
@@ -1944,7 +1944,7 @@ void TDSet::SplitEntryList()
    if (TestBit(TDSet::kMultiDSet)) {
       // Global entry list for all the datasets
       TIter nxds(fElements);
-      TDSet *ds = 0;
+      TDSet *ds = nullptr;
       while ((ds = (TDSet *) nxds()))
          ds->SplitEntryList();
       // Done
@@ -1962,8 +1962,8 @@ void TDSet::SplitEntryList()
    if (enl) {
       // TEntryList
       TIter next(fElements);
-      TDSetElement *el=0;
-      TEntryList *sublist = 0;
+      TDSetElement *el=nullptr;
+      TEntryList *sublist = nullptr;
       while ((el=(TDSetElement*)next())){
          sublist = enl->GetEntryList(el->GetObjName(), el->GetFileName());
          if (sublist){
@@ -1991,7 +1991,7 @@ void TDSet::SplitEntryList()
          do {
             el = dynamic_cast<TDSetElement*> (next());
             // kMaxLong64 means infinity
-            high = (el == 0) ? kMaxLong64 : el->GetTDSetOffset();
+            high = (el == nullptr) ? kMaxLong64 : el->GetTDSetOffset();
 #ifdef DEBUG
             while (currPos < evl->GetN() && evl->GetEntry(currPos) < low) {
                Error("SplitEntryList",
@@ -2023,7 +2023,7 @@ Int_t TDSet::GetNumOfFiles()
       nf = 0;
       if (TestBit(TDSet::kMultiDSet)) {
          TIter nxds(fElements);
-         TDSet *ds = 0;
+         TDSet *ds = nullptr;
          while ((ds = (TDSet *) nxds()))
             if (ds->GetListOfElements()) nf += ds->GetListOfElements()->GetSize();
       } else {

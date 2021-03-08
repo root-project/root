@@ -364,10 +364,10 @@ IncrementalJIT::IncrementalJIT(IncrementalExecutor& exe,
     = llvm::sys::DynamicLibrary::SO_LoadedLast;
 
   // Enable JIT symbol resolution from the binary.
-  llvm::sys::DynamicLibrary::LoadLibraryPermanently(0, 0);
+  llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr, nullptr);
 
   // Make debug symbols available.
-  m_GDBListener = 0; // JITEventListener::createGDBRegistrationListener();
+  m_GDBListener = nullptr; // JITEventListener::createGDBRegistrationListener();
 
 // #if MCJIT
 //   llvm::EngineBuilder builder(std::move(m));

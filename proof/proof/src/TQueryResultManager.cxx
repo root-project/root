@@ -50,7 +50,7 @@ TQueryResultManager::TQueryResultManager(const char *qdir, const char *stag,
    fDrawQueries     = 0;
    fKeptQueries     = 0;
    fQueries         = new TList;
-   fPreviousQueries = 0;
+   fPreviousQueries = nullptr;
    fLock            = lck;
    fLogFile         = (logfile) ? logfile : stdout;
 }
@@ -120,7 +120,7 @@ Int_t TQueryResultManager::CleanupQueriesDir()
                                   strlen(kPROOF_QueryDir));
    void *dirs = gSystem->OpenDirectory(queriesdir);
    if (dirs) {
-      char *sess = 0;
+      char *sess = nullptr;
       while ((sess = (char *) gSystem->GetDirEntry(dirs))) {
 
          // We are interested only in "session-..." subdirs
@@ -164,7 +164,7 @@ void TQueryResultManager::ScanPreviousQueries(const char *dir)
 
    // Loop over session dirs
    void *dirs = gSystem->OpenDirectory(dir);
-   char *sess = 0;
+   char *sess = nullptr;
    while ((sess = (char *) gSystem->GetDirEntry(dirs))) {
 
       // We are interested only in "session-..." subdirs
@@ -177,7 +177,7 @@ void TQueryResultManager::ScanPreviousQueries(const char *dir)
 
       // Loop over query dirs
       void *dirq = gSystem->OpenDirectory(Form("%s/%s", dir, sess));
-      char *qry = 0;
+      char *qry = nullptr;
       while ((qry = (char *) gSystem->GetDirEntry(dirq))) {
 
          // We are interested only in "n/" subdirs
@@ -190,8 +190,8 @@ void TQueryResultManager::ScanPreviousQueries(const char *dir)
          if (f) {
             f->ReadKeys();
             TIter nxk(f->GetListOfKeys());
-            TKey *k =  0;
-            TProofQueryResult *pqr = 0;
+            TKey *k =  nullptr;
+            TProofQueryResult *pqr = nullptr;
             while ((k = (TKey *)nxk())) {
                if (!strcmp(k->GetClassName(), "TProofQueryResult")) {
                   pqr = (TProofQueryResult *) f->Get(k->GetName());
@@ -205,7 +205,7 @@ void TQueryResultManager::ScanPreviousQueries(const char *dir)
                         } else {
                            // (For the time being) remove a non completed
                            // query if not owned by anybody
-                           TProofLockPath *lck = 0;
+                           TProofLockPath *lck = nullptr;
                            if (LockSession(qr->GetTitle(), &lck) == 0) {
                               RemoveQuery(qr);
                               // Unlock and remove the lock file
@@ -256,7 +256,7 @@ Int_t TQueryResultManager::ApplyMaxQueries(Int_t mxq)
    if (idx != kNPOS)
       dir.Remove(idx);
    void *dirs = gSystem->OpenDirectory(dir);
-   char *sess = 0;
+   char *sess = nullptr;
    while ((sess = (char *) gSystem->GetDirEntry(dirs))) {
 
       // We are interested only in "session-..." subdirs
@@ -270,7 +270,7 @@ Int_t TQueryResultManager::ApplyMaxQueries(Int_t mxq)
       // Loop over query dirs
       Int_t nq = 0;
       void *dirq = gSystem->OpenDirectory(Form("%s/%s", dir.Data(), sess));
-      char *qry = 0;
+      char *qry = nullptr;
       while ((qry = (char *) gSystem->GetDirEntry(dirq))) {
 
          // We are interested only in "n/" subdirs
@@ -306,7 +306,7 @@ Int_t TQueryResultManager::ApplyMaxQueries(Int_t mxq)
    // Now we apply the quota
    TIter nxq(sl, kIterBackward);
    Int_t nqkept = 0;
-   TObjString *os = 0;
+   TObjString *os = nullptr;
    while ((os = (TObjString *)nxq())) {
       if (nqkept < mxq) {
          // Keep this and go to the next
@@ -355,7 +355,7 @@ Int_t TQueryResultManager::LockSession(const char *sessiontag, TProofLockPath **
       Error("LockSession","locker space undefined");
       return -1;
    }
-   *lck = 0;
+   *lck = nullptr;
 
    // Check the format
    TString stag = sessiontag;
@@ -422,7 +422,7 @@ Int_t TQueryResultManager::CleanupSession(const char *sessiontag)
       return -1;
    }
 
-   TProofLockPath *lck = 0;
+   TProofLockPath *lck = nullptr;
    if (LockSession(sessiontag, &lck) == 0) {
 
       // Cleanup now
@@ -493,7 +493,7 @@ void TQueryResultManager::RemoveQuery(const char *queryref, TList *otherlist)
       } else
          fPreviousQueries->Remove(pqr);
       delete pqr;
-      pqr = 0;
+      pqr = nullptr;
    }
 
    // Remove the directory
@@ -548,7 +548,7 @@ void TQueryResultManager::RemoveQuery(TQueryResult *qr, Bool_t soft)
 
 TProofQueryResult *TQueryResultManager::LocateQuery(TString queryref, Int_t &qry, TString &qdir)
 {
-   TProofQueryResult *pqr = 0;
+   TProofQueryResult *pqr = nullptr;
 
    // Find out if the request is a for a local query or for a
    // previously processed one
@@ -614,7 +614,7 @@ Bool_t TQueryResultManager::FinalizeQuery(TProofQueryResult *pq,
 {
    if (!pq || !proof || !player) {
       Warning("FinalizeQuery", "bad inputs: query = %p, proof = %p, player: %p ",
-              pq ? pq : 0, proof ? proof : 0, player ? player : 0);
+              pq ? pq : nullptr, proof ? proof : nullptr, player ? player : nullptr);
       return kFALSE;
    }
 
@@ -639,7 +639,7 @@ Bool_t TQueryResultManager::FinalizeQuery(TProofQueryResult *pq,
    case TVirtualProofPlayer::kAborted:
       PDB(kGlobal, 1)
          Info("FinalizeQuery", "query %d has been ABORTED <====", qn);
-      out = 0;
+      out = nullptr;
       save = kFALSE;
       break;
    case TVirtualProofPlayer::kStopped:
@@ -686,10 +686,10 @@ void TQueryResultManager::SaveQuery(TProofQueryResult *pq, Int_t mxq)
    if (mxq > -1) {
       if (fQueries && fKeptQueries >= mxq) {
          // Find oldest completed and archived query
-         TQueryResult *fcom = 0;
-         TQueryResult *farc = 0;
+         TQueryResult *fcom = nullptr;
+         TQueryResult *farc = nullptr;
          TIter nxq(fQueries);
-         TQueryResult *qr = 0;
+         TQueryResult *qr = nullptr;
          while (fKeptQueries >= mxq) {
             while ((qr = (TQueryResult *) nxq())) {
                if (qr->IsArchived()) {
@@ -706,11 +706,11 @@ void TQueryResultManager::SaveQuery(TProofQueryResult *pq, Int_t mxq)
             } else if (farc) {
                RemoveQuery(farc, kTRUE);
                fKeptQueries--;
-               farc = 0;
+               farc = nullptr;
             } else if (fcom) {
                RemoveQuery(fcom);
                fKeptQueries--;
-               fcom = 0;
+               fcom = nullptr;
             }
          }
       }

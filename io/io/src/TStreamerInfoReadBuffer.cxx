@@ -34,7 +34,7 @@ static TStreamerElement* &CurrentElement()
    //Pointer to current TStreamerElement
    //Thread local storage.
 
-   TTHREAD_TLS(TStreamerElement*) fgElement(0);
+   TTHREAD_TLS(TStreamerElement*) fgElement(nullptr);
 
    return fgElement;
 }
@@ -540,7 +540,7 @@ Int_t TStreamerInfo::ReadBufferArtificial(TBuffer &b, const T &arr,
    ROOT::TSchemaRule::ReadFuncPtr_t readfunc = artElement->GetReadFunc();
    // Process the result
    if (readfunc) {
-      TVirtualObject obj(0);
+      TVirtualObject obj(nullptr);
       TVirtualArray *objarr = ((TBufferFile&)b).PeekDataCache();
       if (objarr) {
          obj.fClass = objarr->fClass;
@@ -549,7 +549,7 @@ Int_t TStreamerInfo::ReadBufferArtificial(TBuffer &b, const T &arr,
             obj.fObject = objarr->GetObjectAt(k);
             readfunc(arr[k]+eoffset, &obj);
          }
-         obj.fObject = 0; // Prevent auto deletion
+         obj.fObject = nullptr; // Prevent auto deletion
       } else {
          for(Int_t k=0; k<narr; ++k) {
             readfunc(arr[k]+eoffset, &obj);
@@ -614,7 +614,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  const TCompInfo *
                b >> pidf;
                pidf += b.GetPidOffset();
                TProcessID *pid = b.ReadProcessID(pidf);
-               if (pid!=0) {
+               if (pid!=nullptr) {
                   TObject *obj = (TObject*)(arr[k]+eoffset);
                   UInt_t gpid = pid->GetUniqueID();
                   UInt_t uid;
@@ -767,9 +767,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
    static const int kHaveLoop = 1024;
    const Int_t typeOffset = arrayMode ? kHaveLoop : 0;
 
-   TClass     *cle      = 0;
-   TClass     *newCle   = 0;
-   TMemberStreamer *pstreamer=0;
+   TClass     *cle      = nullptr;
+   TClass     *newCle   = nullptr;
+   TMemberStreamer *pstreamer=nullptr;
    Int_t isPreAlloc = 0;
    for (Int_t i=first;i<last;i++) {
       TStreamerElement * aElement  = (TStreamerElement*)compinfo[i]->fElem;
@@ -781,7 +781,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
 
       if (R__TestUseCache<T>(aElement)) {
          Int_t bufpos = b.Length();
-         if (((TBufferFile&)b).PeekDataCache()==0) {
+         if (((TBufferFile&)b).PeekDataCache()==nullptr) {
             Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",thisVar->GetName(),aElement->GetName());
             thisVar->ReadBufferSkip(b,arr,compinfo[i],compinfo[i]->fType+TStreamerInfo::kSkip,aElement,narr,eoffset);
          } else {
@@ -934,7 +934,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
             int j;
             for(j=0;j<compinfo[i]->fLength;j++) {
                delete [] f[j];
-               f[j] = 0; if (*l <=0) continue;
+               f[j] = nullptr; if (*l <=0) continue;
                f[j] = new Float_t[*l];
                b.ReadFastArrayFloat16(f[j],*l,aElement);
             }
@@ -949,7 +949,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
             int j;
             for(j=0;j<compinfo[i]->fLength;j++) {
                delete [] f[j];
-               f[j] = 0; if (*l <=0) continue;
+               f[j] = nullptr; if (*l <=0) continue;
                f[j] = new Double_t[*l];
                b.ReadFastArrayDouble32(f[j],*l,aElement);
             }
@@ -979,7 +979,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                int j;
                for(j=0;j<compinfo[i]->fLength;j++) {
                   delete [] f[j];
-                  f[j] = 0; if (*l <=0) continue;
+                  f[j] = nullptr; if (*l <=0) continue;
                   f[j] = new Float_t[*l];
                   b.ReadFastArrayFloat16(f[j],*l,aElement);
                }
@@ -996,7 +996,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                int j;
                for(j=0;j<compinfo[i]->fLength;j++) {
                   delete [] f[j];
-                  f[j] = 0; if (*l <=0) continue;
+                  f[j] = nullptr; if (*l <=0) continue;
                   f[j] = new Double_t[*l];
                   b.ReadFastArrayDouble32(f[j],*l,aElement);
                }
@@ -1025,7 +1025,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                   b >> pidf;
                   pidf += b.GetPidOffset();
                   TProcessID *pid = b.ReadProcessID(pidf);
-                  if (pid!=0) {
+                  if (pid!=nullptr) {
                      TObject *obj = (TObject*)(arr[k]+eoffset);
                      UInt_t gpid = pid->GetUniqueID();
                      UInt_t uid;
@@ -1153,9 +1153,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                      vClVersion = b.ReadVersionForMemberWise( cle->GetCollectionProxy()->GetValueClass() );
                   }
 
-                  TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : 0);
+                  TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : nullptr);
                   TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
-                  TStreamerInfo *subinfo = 0;
+                  TStreamerInfo *subinfo = nullptr;
 
                   if( newProxy ) {
                      // coverity[dereference] oldProxy->GetValueClass() can not be null since this was streamed memberwise.
@@ -1171,7 +1171,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                         int j;
                         for(j=0;j<compinfo[i]->fLength;j++) {
                            void *cont = contp[j];
-                           if (cont==0) {
+                           if (cont==nullptr) {
                               contp[j] = cle->New();
                               cont = contp[j];
                            }
@@ -1187,13 +1187,13 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                   b.CheckByteCount(start,count,aElement->GetFullName());
                   continue;
                }
-               if (pstreamer == 0) {
+               if (pstreamer == nullptr) {
                   DOLOOP {
                      void **contp = (void**)(arr[k]+ioffset);
                      int j;
                      for(j=0;j<compinfo[i]->fLength;j++) {
                         void *cont = contp[j];
-                        if (cont==0) {
+                        if (cont==nullptr) {
                            // int R__n;
                            // b >> R__n;
                            // b.SetOffset(b.GetOffset()-4); // rewind to the start of the int
@@ -1230,13 +1230,13 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                      continue;
                   }
                   TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
-                  TClass *valueClass = oldProxy ? oldProxy->GetValueClass() : 0;
+                  TClass *valueClass = oldProxy ? oldProxy->GetValueClass() : nullptr;
                   Version_t vClVersion = 0; // For vers less than 8, we have to use the current version.
                   if( vers >= 8 ) {
                      vClVersion = b.ReadVersionForMemberWise( valueClass );
                   }
 
-                  if (valueClass == 0) {
+                  if (valueClass == nullptr) {
                      // MemberWise streaming applies to only collection of classes, and hence
                      // valueClass can only be null if we are reading without the original library
                      // and the collection is always empty,
@@ -1246,8 +1246,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                      continue;
                   }
 
-                  TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : 0);
-                  TStreamerInfo *subinfo = 0;
+                  TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : nullptr);
+                  TStreamerInfo *subinfo = nullptr;
 
                   if( newProxy ) {
                      // coverity[dereference] oldProxy->GetValueClass() can not be null since this was streamed memberwise.
@@ -1284,13 +1284,13 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                      b.SetBufferOffset(start);  //there is no byte count
                   }
                }
-               if (pstreamer == 0) {
+               if (pstreamer == nullptr) {
                   if( !newCle ) {
                      newCle = cle;
-                     cle = 0;
+                     cle = nullptr;
                   }
                   DOLOOP {
-                     b.ReadFastArray((void*)(arr[k]+ioffset),newCle,compinfo[i]->fLength,(TMemberStreamer*)0, cle );
+                     b.ReadFastArray((void*)(arr[k]+ioffset),newCle,compinfo[i]->fLength,(TMemberStreamer*)nullptr, cle );
                   }
                } else {
                   DOLOOP {(*pstreamer)(b,arr[k]+ioffset,compinfo[i]->fLength);}
@@ -1387,7 +1387,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                   continue;
                }
             }
-            if (pstreamer == 0) {
+            if (pstreamer == nullptr) {
                Error("ReadBuffer","Streamer for %s is null\n",aElement->GetName());
                if (gDebug > 0) {
                   aElement->ls(); continue;
@@ -1413,7 +1413,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
             // Get the class of the data member.
             TClass* cl = compinfo[i]->fClass;
             // Which are we, an array of objects or an array of pointers to objects?
-            Bool_t isPtrPtr = (strstr(aElement->GetTypeName(), "**") != 0);
+            Bool_t isPtrPtr = (strstr(aElement->GetTypeName(), "**") != nullptr);
             // Check for a private streamer.
             if (pstreamer) {
                // -- We have a private streamer.
@@ -1469,7 +1469,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                      // Delete any memory at pp[ndx].
                      if (!isPtrPtr) {
                         cl->DeleteArray(pp[ndx]);
-                        pp[ndx] = 0;
+                        pp[ndx] = nullptr;
                      } else {
                         // Using vlen is wrong here because it has already
                         // been overwritten with the value needed to read
@@ -1490,7 +1490,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                         //   }
                         //}
                         delete[] pp[ndx];
-                        pp[ndx] = 0;
+                        pp[ndx] = nullptr;
                      }
                      if (!vlen) {
                         continue;
@@ -1520,11 +1520,11 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                      }
                      if (!isPtrPtr) {
                         // -- We are a varying-length array of objects.
-                        b.ReadFastArray(pp[ndx], cl, vlen, 0);
+                        b.ReadFastArray(pp[ndx], cl, vlen, nullptr);
                      }
                      else {
                         // -- We are a varying-length array of object pointers.
-                        b.ReadFastArray((void**) pp[ndx], cl, vlen, kFALSE, 0);
+                        b.ReadFastArray((void**) pp[ndx], cl, vlen, kFALSE, nullptr);
                      } // isPtrPtr
                   } // ndx
                } // k
@@ -1555,7 +1555,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                      // Delete any memory at pp[ndx].
                      if (!isPtrPtr) {
                         cl->DeleteArray(pp[ndx]);
-                        pp[ndx] = 0;
+                        pp[ndx] = nullptr;
                      } else {
                         // Using vlen is wrong here because it has already
                         // been overwritten with the value needed to read
@@ -1576,7 +1576,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                         //   }
                         //}
                         delete[] pp[ndx];
-                        pp[ndx] = 0;
+                        pp[ndx] = nullptr;
                      }
                      if (!vlen) {
                         continue;
@@ -1745,6 +1745,6 @@ Int_t TStreamerInfo::ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont,
 Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones,
                                       Int_t nc, Int_t first, Int_t eoffset)
 {
-   char **arr = (char **)clones->GetObjectRef(0);
+   char **arr = (char **)clones->GetObjectRef(nullptr);
    return ReadBuffer(b,arr,fCompFull,first==-1?0:first,first==-1?fNfulldata:first+1,nc,eoffset,1);
 }

@@ -203,10 +203,10 @@ Bool_t TString::Gets(FILE *fp, Bool_t chop)
    Clobber(256);
 
    do {
-      if (fgets(buf, sizeof(buf), fp) == 0) break;
+      if (fgets(buf, sizeof(buf), fp) == nullptr) break;
       *this += buf;
       r = kTRUE;
-   } while (!ferror(fp) && !feof(fp) && strchr(buf,'\n') == 0);
+   } while (!ferror(fp) && !feof(fp) && strchr(buf,'\n') == nullptr);
 
    if (chop && EndsWith("\n")) {
       Chop();

@@ -74,7 +74,7 @@ TMVA::PDEFoamKernelTrivial::PDEFoamKernelTrivial(const PDEFoamKernelTrivial &oth
 
 Float_t TMVA::PDEFoamKernelTrivial::Estimate(PDEFoam *foam, std::vector<Float_t> &txvec, ECellValue cv)
 {
-   if (foam == NULL)
+   if (foam == nullptr)
       Log() << kFATAL << "<PDEFoamKernelTrivial::Estimate>: PDEFoam not set!" << Endl;
 
    return foam->GetCellValue(foam->FindCell(txvec), cv);

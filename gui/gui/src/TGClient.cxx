@@ -126,13 +126,13 @@ ClassImp(TGClient);
 
 TGClient::TGClient(const char *dpyName)
 {
-   fRoot         = 0;
-   fPicturePool  = 0;
-   fMimeTypeList = 0;
-   fWlist        = 0;
-   fPlist        = 0;
-   fUWHandlers   = 0;
-   fIdleHandlers = 0;
+   fRoot         = nullptr;
+   fPicturePool  = nullptr;
+   fMimeTypeList = nullptr;
+   fWlist        = nullptr;
+   fPlist        = nullptr;
+   fUWHandlers   = nullptr;
+   fIdleHandlers = nullptr;
 
    if (gClientGlobal) {
       Error("TGClient", "only one instance of TGClient allowed");
@@ -614,7 +614,7 @@ TGWindow *TGClient::GetWindowByName(const char *name) const
          return (TGWindow*)obj;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -827,7 +827,7 @@ Bool_t TGClient::HandleEvent(Event_t *event)
    }
 
    // Find window where event happened
-   if ((w = GetWindowById(event->fWindow)) == 0) {
+   if ((w = GetWindowById(event->fWindow)) == nullptr) {
       if (fUWHandlers && fUWHandlers->GetSize() > 0) {
          TGUnknownWindowHandler *unkwh;
          TListIter it(fUWHandlers);
@@ -858,7 +858,7 @@ Bool_t TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
 {
    TGWindow *w, *ptr, *pop;
 
-   if ((w = GetWindowById(event->fWindow)) == 0) return kFALSE;
+   if ((w = GetWindowById(event->fWindow)) == nullptr) return kFALSE;
 
    // Emit signal for event recorder(s)
    if (event->fType != kConfigureNotify) {
@@ -868,7 +868,7 @@ Bool_t TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
    // This breaks class member protection, but TGClient is a friend of
    // TGWindow and _should_ know what to do and what *not* to do...
 
-   for (ptr = w; ptr->fParent != 0; ptr = (TGWindow *) ptr->fParent) {
+   for (ptr = w; ptr->fParent != nullptr; ptr = (TGWindow *) ptr->fParent) {
       if ((ptr->fId == wid) ||
           ((event->fType != kButtonPress) &&
            (event->fType != kButtonRelease) &&
@@ -885,7 +885,7 @@ Bool_t TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
    // check if this is a popup menu
    TIter next(fPlist);
    while ((pop = (TGWindow *) next())) {
-      for (ptr = w; ptr->fParent != 0; ptr = (TGWindow *) ptr->fParent) {
+      for (ptr = w; ptr->fParent != nullptr; ptr = (TGWindow *) ptr->fParent) {
          if ((ptr->fId == pop->fId) &&
              ((event->fType == kButtonPress) ||
               (event->fType == kButtonRelease) ||

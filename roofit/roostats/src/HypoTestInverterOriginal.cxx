@@ -48,9 +48,9 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 HypoTestInverterOriginal::HypoTestInverterOriginal( ) :
-   fCalculator0(0),
-   fScannedVariable(0),
-   fResults(0),
+   fCalculator0(nullptr),
+   fScannedVariable(nullptr),
+   fResults(nullptr),
    fUseCLs(false),
    fSize(0)
 {
@@ -64,7 +64,7 @@ HypoTestInverterOriginal::HypoTestInverterOriginal( HypoTestCalculator& myhc0,
    TNamed( ),
    fCalculator0(&myhc0),
    fScannedVariable(&scannedVariable),
-   fResults(0),
+   fResults(nullptr),
    fUseCLs(false),
    fSize(size)
 {
@@ -74,7 +74,7 @@ HypoTestInverterOriginal::HypoTestInverterOriginal( HypoTestCalculator& myhc0,
 
 
    HybridCalculatorOriginal * hc = dynamic_cast<HybridCalculatorOriginal *> (fCalculator0);
-   if (hc == 0) {
+   if (hc == nullptr) {
       Fatal("HypoTestInverterOriginal","Using non HybridCalculatorOriginal class IS NOT SUPPORTED");
    }
 
@@ -94,7 +94,7 @@ HypoTestInverterOriginal::~HypoTestInverterOriginal()
 
 void  HypoTestInverterOriginal::CreateResults() {
   // create a new HypoTestInverterResult to hold all computed results
-   if (fResults == 0) {
+   if (fResults == nullptr) {
       TString results_name = this->GetName();
       results_name += "_results";
       fResults = new HypoTestInverterResult(results_name,*fScannedVariable,ConfidenceLevel());

@@ -381,7 +381,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    const TGPicture *printerPicture = fClient->GetPicture("printer_s.xpm");
    if (!printerPicture) {
       Error("TGPrintDialog", "printer_s.xpm not found");
-      fPrinterIcon = 0;
+      fPrinterIcon = nullptr;
    } else {
       fPrinterIcon = new TGIcon(fF5, printerPicture, 32, 32);
       fF5->AddFrame(fPrinterIcon, fL7);
@@ -445,7 +445,7 @@ void TGPrintDialog::GetPrinters()
    if (gVirtualX->InheritsFrom("TGX11") || gVirtualX->InheritsFrom("TGCocoa")) {
       char *lpstat = gSystem->Which(gSystem->Getenv("PATH"), "lpstat",
                                     kExecutePermission);
-      if (lpstat == 0) return;
+      if (lpstat == nullptr) return;
       TString defaultprinter = gSystem->GetFromPipe("lpstat -d");
       TString printerlist = gSystem->GetFromPipe("lpstat -v");
       TObjArray *tokens = printerlist.Tokenize("\n");

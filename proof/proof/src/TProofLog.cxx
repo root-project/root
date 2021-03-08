@@ -32,7 +32,7 @@ TProofLog::TProofLog(const char *stag, const char *url, TProofMgr *mgr)
           : TNamed(stag, url)
 {
    SetLogToBox();
-   fFILE = 0;
+   fFILE = nullptr;
    fElem = new TList;
    fElem->SetOwner();
    fMgr = mgr;
@@ -96,7 +96,7 @@ Int_t TProofLog::Retrieve(const char *ord, TProofLog::ERetrieveOpt opt,
    Int_t nel = (ord[0] == '*') ? fElem->GetSize() : 1;
    // Iterate over the elements
    TIter nxe(fElem);
-   TProofLogElem *ple = 0;
+   TProofLogElem *ple = nullptr;
    Int_t nd = 0, nb = 0;
    TString msg;
    while ((ple = (TProofLogElem *) nxe())) {
@@ -142,7 +142,7 @@ void TProofLog::Display(const char *ord, Int_t from, Int_t to)
    }
    // Iterate over the elements
    TIter nxe(fElem);
-   TProofLogElem *ple = 0;
+   TProofLogElem *ple = nullptr;
    while ((ple = (TProofLogElem *) nxe())) {
       if (ord[0] == '*' || !strcmp(ord, ple->GetName()))
          ple->Display(from, to);
@@ -167,7 +167,7 @@ void TProofLog::Print(Option_t *opt) const
 
    // Iterate over the elements
    TIter nxe(fElem);
-   TProofLogElem *ple = 0;
+   TProofLogElem *ple = nullptr;
    while ((ple = (TProofLogElem *) nxe()))
       ple->Print(opt);
 
@@ -210,7 +210,7 @@ Int_t TProofLog::Save(const char *ord, const char *fname, Option_t *opt)
    // Check, if the option is to append
    TString option = opt;
    option.ToLower();
-   FILE *fout=0;
+   FILE *fout=nullptr;
    if (option.Contains("a")){
       fout = fopen(fname, "a");
    } else {
@@ -235,7 +235,7 @@ Int_t TProofLog::Save(const char *ord, const char *fname, Option_t *opt)
 
    // Iterate over the elements
    TIter nxe(fElem);
-   TProofLogElem *ple = 0;
+   TProofLogElem *ple = nullptr;
    while ((ple = (TProofLogElem *) nxe())) {
       if (ord[0] == '*' || !strcmp(ord, ple->GetName()))
          ple->Display(0);
@@ -248,7 +248,7 @@ Int_t TProofLog::Save(const char *ord, const char *fname, Option_t *opt)
 
    // Close file
    fclose(fout);
-   fFILE = 0;
+   fFILE = nullptr;
 
    // Done
    return 0;
@@ -282,7 +282,7 @@ Int_t TProofLog::Grep(const char *txt, Int_t from)
 
    // Iterate over the elements
    TIter nxe(fElem);
-   TProofLogElem *ple = 0;
+   TProofLogElem *ple = nullptr;
    while ((ple = (TProofLogElem *) nxe())) {
       TString res;
       Int_t nf = ple->Grep(txt, res, from);
@@ -422,7 +422,7 @@ Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
    Long64_t len = (fTo > fFrom) ? fTo - fFrom : -1;
 
    // Readout the buffer
-   TObjString *os = 0;
+   TObjString *os = nullptr;
    if (fLogger->fMgr) {
       TString fileName = GetTitle();
       if (fileName.Contains("__igprof.pp__")) {
@@ -509,7 +509,7 @@ void TProofLogElem::Display(Int_t from, Int_t to)
    msg = "";
    if (fMacro->GetListOfLines()) {
       TIter nxl(fMacro->GetListOfLines());
-      TObjString *os = 0;
+      TObjString *os = nullptr;
       Int_t kk = 0;
       while ((os = (TObjString *) nxl())) {
          kk++;

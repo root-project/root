@@ -114,7 +114,7 @@ TMonitor::TMonitor(Bool_t mainloop) : TObject() , TQObject()
    fDeActive  = new TList;
    fMainLoop  = mainloop;
    fInterrupt = kFALSE;
-   fReady     = 0;
+   fReady     = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ TMonitor::TMonitor(Bool_t mainloop) : TObject() , TQObject()
 
 TMonitor::TMonitor(const TMonitor &m) : TObject() , TQObject()
 {
-   TSocketHandler *sh = 0;
+   TSocketHandler *sh = nullptr;
    // Active list
    fActive   = new TList;
    TIter nxa(m.fActive);
@@ -144,7 +144,7 @@ TMonitor::TMonitor(const TMonitor &m) : TObject() , TQObject()
    // Other members
    fMainLoop = m.fMainLoop;
    fInterrupt = m.fInterrupt;
-   fReady = 0;
+   fReady = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +179,7 @@ void TMonitor::Add(TSocket *sock, Int_t interest)
 
 void TMonitor::SetInterest(TSocket *sock, Int_t interest)
 {
-   TSocketHandler *s = 0;
+   TSocketHandler *s = nullptr;
 
    if (!interest)
       interest = kRead;
@@ -321,7 +321,7 @@ void TMonitor::DeActivateAll()
 
 TSocket *TMonitor::Select()
 {
-   fReady = 0;
+   fReady = nullptr;
 
    while (!fReady && !fInterrupt)
       gSystem->InnerLoop();
@@ -329,7 +329,7 @@ TSocket *TMonitor::Select()
    // Notify interrupts
    if (fInterrupt) {
       fInterrupt = kFALSE;
-      fReady = 0;
+      fReady = nullptr;
       Info("Select","*** interrupt occured ***");
    }
 
@@ -350,7 +350,7 @@ TSocket *TMonitor::Select(Long_t timeout)
    if (timeout < 0)
       return TMonitor::Select();
 
-   fReady = 0;
+   fReady = nullptr;
 
    TTimeOutTimer t(this, timeout);
 
@@ -360,7 +360,7 @@ TSocket *TMonitor::Select(Long_t timeout)
    // Notify interrupts
    if (fInterrupt) {
       fInterrupt = kFALSE;
-      fReady = 0;
+      fReady = nullptr;
       Info("Select","*** interrupt occured ***");
    }
 
@@ -378,7 +378,7 @@ Int_t TMonitor::Select(TList *rdready, TList *wrready, Long_t timeout)
 {
    Int_t nr = -2;
 
-   TSocketHandler *h = 0;
+   TSocketHandler *h = nullptr;
    Int_t ns = fActive->GetSize();
    if (ns == 1) {
       // Avoid additional loops inside

@@ -17,7 +17,7 @@ void TMVA::BDTControlPlots(TString dataset, TString fin , Bool_t useTMVAStyle  )
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
    
-   if (file == NULL) {
+   if (file == nullptr) {
       cout << "Problems with input file, tried to open " << fin << " but somehow did not succeed .." << endl;
       return;
    }
@@ -95,7 +95,7 @@ void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
    }
    
    
-   TCanvas *c2 = NULL;
+   TCanvas *c2 = nullptr;
    if (BoostMonitorIsDone){
       sprintf( cn2, "cv2_%s", titName.Data() );
       c2 = new TCanvas( cn2,  Form( "%s BoostWeights", titName.Data() ),
@@ -137,7 +137,7 @@ void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
       TMVAGlob::imgconv( c2, fname );
    }
 
-   TCanvas *c3 = NULL;
+   TCanvas *c3 = nullptr;
    if (BoostMonitorIsDone){
       sprintf( cn2, "cv3_%s", titName.Data() );
       c3 = new TCanvas( cn2,  Form( "%s Variables", titName.Data() ),

@@ -58,14 +58,14 @@ static const char *gParTypes[] = {
 static const char *gDatasetTypes[] = {
    "ROOT files",    "*.root",
    "All files",     "*",
-   0,               0
+   nullptr,               nullptr
 };
 
 static const char *gFileTypes[] = {
    "C files",       "*.[C|c]*",
    "ROOT files",    "*.root",
    "All files",     "*",
-   0,               0
+   nullptr,               nullptr
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -209,8 +209,8 @@ void TNewChainDlg::OnElementClicked(TGLVEntry *entry, Int_t)
 
 void TNewChainDlg::UpdateList()
 {
-   TGLVEntry *item=0;
-   TObject *obj = 0;
+   TGLVEntry *item=nullptr;
+   TObject *obj = nullptr;
    fChains = gROOT->GetListOfDataSets();
    fLVContainer->RemoveAll();
    if (!fChains) return;
@@ -218,7 +218,7 @@ void TNewChainDlg::UpdateList()
    // loop on the list of chains/datasets in memory,
    // and fill the associated listview
    while ((obj = (TObject *)next())) {
-      item = 0;
+      item = nullptr;
       if (obj->IsA() == TChain::Class()) {
          const char *title = ((TChain *)obj)->GetTitle();
          if (!title[0])
@@ -298,7 +298,7 @@ Bool_t TNewChainDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case 1:
                      // Close button
-                     fChain = 0;
+                     fChain = nullptr;
                      DeleteWindow();
                      break;
                }
@@ -349,7 +349,7 @@ TNewQueryDlg::TNewQueryDlg(TSessionViewer *gui, Int_t Width, Int_t Height,
    Int_t  ax, ay;
    fEditMode = editmode;
    fModified = kFALSE;
-   fChain = 0;
+   fChain = nullptr;
    fQuery = query;
    if (fQuery && fQuery->fChain) {
       fChain = fQuery->fChain;
@@ -412,14 +412,14 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "Query Name :"),
          new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 0, 5, 4, 0));
    fFrmNewQuery->AddFrame(fTxtQueryName = new TGTextEntry(fFrmNewQuery,
-         (const char *)0, 1), new TGTableLayoutHints(1, 2, 0, 1,
+         (const char *)nullptr, 1), new TGTableLayoutHints(1, 2, 0, 1,
          kLHintsCenterY, 5, 5, 4, 0));
 
    // add "TChain" label and text entry
    fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "TChain :"),
          new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 0, 5, 4, 0));
    fFrmNewQuery->AddFrame(fTxtChain = new TGTextEntry(fFrmNewQuery,
-         (const char *)0, 2), new TGTableLayoutHints(1, 2, 1, 2,
+         (const char *)nullptr, 2), new TGTableLayoutHints(1, 2, 1, 2,
          kLHintsCenterY, 5, 5, 4, 0));
    fTxtChain->SetToolTipText("Specify TChain or TDSet from memory or file");
    fTxtChain->SetEnabled(kFALSE);
@@ -432,7 +432,7 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "Selector :"),
          new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 0, 5, 0, 0));
    fFrmNewQuery->AddFrame(fTxtSelector = new TGTextEntry(fFrmNewQuery,
-         (const char *)0, 3), new TGTableLayoutHints(1, 2, 2, 3,
+         (const char *)nullptr, 3), new TGTableLayoutHints(1, 2, 2, 3,
          kLHintsCenterY, 5, 5, 0, 0));
    // add "Browse" button
    fFrmNewQuery->AddFrame(btnTmp = new TGTextButton(fFrmNewQuery, "Browse..."),
@@ -456,7 +456,7 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Options :"),
          new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 0, 5, 0, 0));
    fFrmMore->AddFrame(fTxtOptions = new TGTextEntry(fFrmMore,
-         (const char *)0, 4), new TGTableLayoutHints(1, 2, 0, 1, 0, 22,
+         (const char *)nullptr, 4), new TGTableLayoutHints(1, 2, 0, 1, 0, 22,
          0, 0, 8));
    fTxtOptions->SetText("ASYN");
 
@@ -481,7 +481,7 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Event list :"),
          new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 0, 5, 0, 0));
    fFrmMore->AddFrame(fTxtEventList = new TGTextEntry(fFrmMore,
-         (const char *)0, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 22,
+         (const char *)nullptr, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 22,
          5, 0, 0));
    // add "Browse" button
    fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
@@ -625,14 +625,14 @@ void TNewQueryDlg::OnBtnSaveClicked()
    }
    else {
       newquery->fTDSetString = "";
-      newquery->fChain       = 0;
+      newquery->fChain       = nullptr;
    }
    newquery->fQueryName      = fTxtQueryName->GetText();
    newquery->fOptions.Form("%s",fTxtOptions->GetText());
    newquery->fNoEntries      = fNumEntries->GetIntNumber();
    newquery->fFirstEntry     = fNumFirstEntry->GetIntNumber();
    newquery->fNbFiles        = 0;
-   newquery->fResult         = 0;
+   newquery->fResult         = nullptr;
 
    if (newquery->fChain) {
       if (newquery->fChain->IsA() == TChain::Class())
@@ -643,7 +643,7 @@ void TNewQueryDlg::OnBtnSaveClicked()
    if (!fEditMode) {
       // if not in editor mode, create a new list tree item
       // and set user data to the newly created query description
-      newquery->fResult = 0;
+      newquery->fResult = nullptr;
       newquery->fStatus = TQueryDescription::kSessionQueryCreated;
 
       TQueryDescription *fquery;
@@ -714,7 +714,7 @@ void TNewQueryDlg::OnBtnCloseClicked()
    Int_t result = kMBNo;
    if (fModified) {
       new TGMsgBox(fClient->GetRoot(), this, "Modified Settings",
-                   "Do you wish to SAVE changes ?", 0,
+                   "Do you wish to SAVE changes ?", nullptr,
                    kMBYes | kMBNo | kMBCancel, &result);
       if (result == kMBYes) {
          OnBtnSaveClicked();
@@ -1258,7 +1258,7 @@ void TUploadDataSetDlg::UploadDataSet()
    fUploadButton->SetState(kButtonDisabled);
    fCloseDlgButton->SetState(kButtonDisabled);
 
-   if (strlen(destination) < 2) destination = 0;
+   if (strlen(destination) < 2) destination = nullptr;
 
    // GG 17/8/2012 -- BEGIN
    // NB: UploadDataSet is obsolete; these changes are the minimal ones to make

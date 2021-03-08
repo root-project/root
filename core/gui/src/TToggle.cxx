@@ -46,10 +46,10 @@ TToggle::TToggle()
    fOnValue     =  1;
    fOffValue    =  0;
    fInitialized =  0;
-   fObject      =  0;
-   fGetter      =  0;
-   fSetter      =  0;
-   fTglVariable =  0;
+   fObject      =  nullptr;
+   fGetter      =  nullptr;
+   fSetter      =  nullptr;
+   fTglVariable =  nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

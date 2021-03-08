@@ -312,7 +312,7 @@ Bool_t RooAbsAnaConvPdf::isDirectGenSafe(const RooAbsArg& arg) const
 RooAbsRealLValue* RooAbsAnaConvPdf::convVar()
 {
   RooResolutionModel* conv = (RooResolutionModel*) _convSet.at(0) ;
-  if (!conv) return 0 ;  
+  if (!conv) return nullptr ;  
   return &conv->convVar() ;
 }
 
@@ -333,11 +333,11 @@ Double_t RooAbsAnaConvPdf::evaluate() const
     auto conv = static_cast<RooAbsPdf*>(convArg);
     Double_t coef = coefficient(index++) ;
     if (coef!=0.) {
-      Double_t c = conv->getVal(0) ;
+      Double_t c = conv->getVal(nullptr) ;
       Double_t r = coef ;
       cxcoutD(Eval) << "RooAbsAnaConvPdf::evaluate(" << GetName() << ") val += coef*conv [" << index-1 << "/" 
 		    << _convSet.getSize() << "] coef = " << r << " conv = " << c << endl ;
-      result += conv->getVal(0)*coef ;
+      result += conv->getVal(nullptr)*coef ;
     } else {
       cxcoutD(Eval) << "RooAbsAnaConvPdf::evaluate(" << GetName() << ") [" << index-1 << "/" << _convSet.getSize() << "] coef = 0" << endl ;
     }
@@ -371,7 +371,7 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
 
   // Select subset of allVars that are actual dependents
   RooArgSet* allDeps = getObservables(allVars) ;
-  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : 0 ;
+  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : nullptr ;
 
   RooAbsArg *arg ;
   RooResolutionModel *conv ;
@@ -404,7 +404,7 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   // Split normSetAll in coef/conv parts
   RooArgSet* normCoefSet = new RooArgSet("normCoefSet") ;  
   RooArgSet* normConvSet = new RooArgSet("normConvSet") ;
-  RooArgSet* normSetAll = normSet ? (new RooArgSet(*normSet,"normSetAll")) : 0 ;
+  RooArgSet* normSetAll = normSet ? (new RooArgSet(*normSet,"normSetAll")) : nullptr ;
   if (normSetAll) {
     varIter  =  normSetAll->createIterator() ;
     while(((arg=(RooAbsArg*) varIter->Next()))) {
@@ -426,16 +426,16 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   delete convIter ;
 
   if (intCoefSet->getSize()==0) {
-    delete intCoefSet ; intCoefSet=0 ;
+    delete intCoefSet ; intCoefSet=nullptr ;
   }
   if (intConvSet->getSize()==0) {
-    delete intConvSet ; intConvSet=0 ;
+    delete intConvSet ; intConvSet=nullptr ;
   }
   if (normCoefSet->getSize()==0) {
-    delete normCoefSet ; normCoefSet=0 ;
+    delete normCoefSet ; normCoefSet=nullptr ;
   }
   if (normConvSet->getSize()==0) {
-    delete normConvSet ; normConvSet=0 ;
+    delete normConvSet ; normConvSet=nullptr ;
   }
 
 
@@ -502,7 +502,7 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
   Int_t index(0) ;
   Double_t answer(0) ;
 
-  if (normCoefSet==0&&normConvSet==0) {
+  if (normCoefSet==nullptr&&normConvSet==nullptr) {
 
     // Integral over unnormalized function
     Double_t integral(0) ;
@@ -512,7 +512,7 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
       Double_t coef = getCoefNorm(index++,intCoefSet,_rangeName) ; 
       //cout << "coefInt[" << index << "] = " << coef << " " ; intCoefSet->Print("1") ; 
       if (coef!=0) {
-	integral += coef*(_rangeName ? conv->getNormObj(0,intConvSet,_rangeName)->getVal() :  conv->getNorm(intConvSet) ) ;       
+	integral += coef*(_rangeName ? conv->getNormObj(nullptr,intConvSet,_rangeName)->getVal() :  conv->getNorm(intConvSet) ) ;       
 	cxcoutD(Eval) << "RooAbsAnaConv::aiWN(" << GetName() << ") [" << index-1 << "] integral += " << conv->getNorm(intConvSet) << endl ;
       }
 
@@ -531,7 +531,7 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
       Double_t coefInt = getCoefNorm(index,intCoefSet,_rangeName) ;
       //cout << "coefInt[" << index << "] = " << coefInt << "*" << term << " " << (intCoefSet?*intCoefSet:RooArgSet()) << endl ;
       if (coefInt!=0) {
-	Double_t term = (_rangeName ? conv->getNormObj(0,intConvSet,_rangeName)->getVal() : conv->getNorm(intConvSet) ) ;
+	Double_t term = (_rangeName ? conv->getNormObj(nullptr,intConvSet,_rangeName)->getVal() : conv->getNorm(intConvSet) ) ;
 	integral += coefInt*term ;
       }
 
@@ -603,9 +603,9 @@ Bool_t RooAbsAnaConvPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const
 
 Double_t RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const 
 {
-  if (nset==0) return coefficient(coefIdx) ;
+  if (nset==nullptr) return coefficient(coefIdx) ;
 
-  CacheElem* cache = (CacheElem*) _coefNormMgr.getObj(nset,0,0,rangeName) ;
+  CacheElem* cache = (CacheElem*) _coefNormMgr.getObj(nset,nullptr,nullptr,rangeName) ;
   if (!cache) {
 
     cache = new CacheElem ;
@@ -619,7 +619,7 @@ Double_t RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, con
       cache->_normList.addOwned(*coefInt) ;      
     }  
 
-    _coefNormMgr.setObj(nset,0,cache,rangeName) ;
+    _coefNormMgr.setObj(nset,nullptr,cache,rangeName) ;
   }
 
   return ((RooAbsReal*)cache->_normList.at(coefIdx))->getVal() ;
@@ -648,7 +648,7 @@ void RooAbsAnaConvPdf::makeCoefVarList(RooArgList& varList) const
 
 RooArgSet* RooAbsAnaConvPdf::coefVars(Int_t /*coefIdx*/) const 
 {
-  RooArgSet* cVars = getParameters((RooArgSet*)0) ;
+  RooArgSet* cVars = getParameters((RooArgSet*)nullptr) ;
   std::vector<RooAbsArg*> tmp;
   for (auto arg : *cVars) {
     for (auto convSetArg : _convSet) {

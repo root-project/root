@@ -61,7 +61,7 @@ ClassImp(TQpSolverBase);
 
 TQpSolverBase::TQpSolverBase()
 {
-   fSys = 0;
+   fSys = nullptr;
 
    fDnorm = 0.;
 
@@ -100,12 +100,12 @@ TQpSolverBase::TQpSolverBase(const TQpSolverBase &another) : TObject(another)
 
 TQpSolverBase::~TQpSolverBase()
 {
-   if (fSys) { delete fSys; fSys = 0; }
+   if (fSys) { delete fSys; fSys = nullptr; }
 
-   if (fMu_history) { delete [] fMu_history;      fMu_history      = 0; }
-   if (fRnorm_history) { delete [] fRnorm_history;   fRnorm_history   = 0; }
-   if (fPhi_history) { delete [] fPhi_history;     fPhi_history     = 0; }
-   if (fPhi_min_history) { delete [] fPhi_min_history; fPhi_min_history = 0; }
+   if (fMu_history) { delete [] fMu_history;      fMu_history      = nullptr; }
+   if (fRnorm_history) { delete [] fRnorm_history;   fRnorm_history   = nullptr; }
+   if (fPhi_history) { delete [] fPhi_history;     fPhi_history     = nullptr; }
+   if (fPhi_min_history) { delete [] fPhi_min_history; fPhi_min_history = nullptr; }
 }
 
 

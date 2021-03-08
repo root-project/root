@@ -73,106 +73,106 @@ struct SgEsc_t {
 // by adding entries to this table.
 
 static struct SgEsc_t gEscSequences[] = {
-   { "quot",      "\"",    0 },
-   { "amp",       "&",     0 },
-   { "lt",        "<",     0 },
-   { "gt",        ">",     0 },
-   { "nbsp",      " ",     0 },
-   { "iexcl",     "\241",  0 },
-   { "cent",      "\242",  0 },
-   { "pound",     "\243",  0 },
-   { "curren",    "\244",  0 },
-   { "yen",       "\245",  0 },
-   { "brvbar",    "\246",  0 },
-   { "sect",      "\247",  0 },
-   { "uml",       "\250",  0 },
-   { "copy",      "\251",  0 },
-   { "ordf",      "\252",  0 },
-   { "laquo",     "\253",  0 },
-   { "not",       "\254",  0 },
-   { "shy",       "\255",  0 },
-   { "reg",       "\256",  0 },
-   { "macr",      "\257",  0 },
-   { "deg",       "\260",  0 },
-   { "plusmn",    "\261",  0 },
-   { "sup2",      "\262",  0 },
-   { "sup3",      "\263",  0 },
-   { "acute",     "\264",  0 },
-   { "micro",     "\265",  0 },
-   { "para",      "\266",  0 },
-   { "middot",    "\267",  0 },
-   { "cedil",     "\270",  0 },
-   { "sup1",      "\271",  0 },
-   { "ordm",      "\272",  0 },
-   { "raquo",     "\273",  0 },
-   { "frac14",    "\274",  0 },
-   { "frac12",    "\275",  0 },
-   { "frac34",    "\276",  0 },
-   { "iquest",    "\277",  0 },
-   { "Agrave",    "\300",  0 },
-   { "Aacute",    "\301",  0 },
-   { "Acirc",     "\302",  0 },
-   { "Atilde",    "\303",  0 },
-   { "Auml",      "\304",  0 },
-   { "Aring",     "\305",  0 },
-   { "AElig",     "\306",  0 },
-   { "Ccedil",    "\307",  0 },
-   { "Egrave",    "\310",  0 },
-   { "Eacute",    "\311",  0 },
-   { "Ecirc",     "\312",  0 },
-   { "Euml",      "\313",  0 },
-   { "Igrave",    "\314",  0 },
-   { "Iacute",    "\315",  0 },
-   { "Icirc",     "\316",  0 },
-   { "Iuml",      "\317",  0 },
-   { "ETH",       "\320",  0 },
-   { "Ntilde",    "\321",  0 },
-   { "Ograve",    "\322",  0 },
-   { "Oacute",    "\323",  0 },
-   { "Ocirc",     "\324",  0 },
-   { "Otilde",    "\325",  0 },
-   { "Ouml",      "\326",  0 },
-   { "times",     "\327",  0 },
-   { "Oslash",    "\330",  0 },
-   { "Ugrave",    "\331",  0 },
-   { "Uacute",    "\332",  0 },
-   { "Ucirc",     "\333",  0 },
-   { "Uuml",      "\334",  0 },
-   { "Yacute",    "\335",  0 },
-   { "THORN",     "\336",  0 },
-   { "szlig",     "\337",  0 },
-   { "agrave",    "\340",  0 },
-   { "aacute",    "\341",  0 },
-   { "acirc",     "\342",  0 },
-   { "atilde",    "\343",  0 },
-   { "auml",      "\344",  0 },
-   { "aring",     "\345",  0 },
-   { "aelig",     "\346",  0 },
-   { "ccedil",    "\347",  0 },
-   { "egrave",    "\350",  0 },
-   { "eacute",    "\351",  0 },
-   { "ecirc",     "\352",  0 },
-   { "euml",      "\353",  0 },
-   { "igrave",    "\354",  0 },
-   { "iacute",    "\355",  0 },
-   { "icirc",     "\356",  0 },
-   { "iuml",      "\357",  0 },
-   { "eth",       "\360",  0 },
-   { "ntilde",    "\361",  0 },
-   { "ograve",    "\362",  0 },
-   { "oacute",    "\363",  0 },
-   { "ocirc",     "\364",  0 },
-   { "otilde",    "\365",  0 },
-   { "ouml",      "\366",  0 },
-   { "divide",    "\367",  0 },
-   { "oslash",    "\370",  0 },
-   { "ugrave",    "\371",  0 },
-   { "uacute",    "\372",  0 },
-   { "ucirc",     "\373",  0 },
-   { "uuml",      "\374",  0 },
-   { "yacute",    "\375",  0 },
-   { "thorn",     "\376",  0 },
-   { "yuml",      "\377",  0 },
+   { "quot",      "\"",    nullptr },
+   { "amp",       "&",     nullptr },
+   { "lt",        "<",     nullptr },
+   { "gt",        ">",     nullptr },
+   { "nbsp",      " ",     nullptr },
+   { "iexcl",     "\241",  nullptr },
+   { "cent",      "\242",  nullptr },
+   { "pound",     "\243",  nullptr },
+   { "curren",    "\244",  nullptr },
+   { "yen",       "\245",  nullptr },
+   { "brvbar",    "\246",  nullptr },
+   { "sect",      "\247",  nullptr },
+   { "uml",       "\250",  nullptr },
+   { "copy",      "\251",  nullptr },
+   { "ordf",      "\252",  nullptr },
+   { "laquo",     "\253",  nullptr },
+   { "not",       "\254",  nullptr },
+   { "shy",       "\255",  nullptr },
+   { "reg",       "\256",  nullptr },
+   { "macr",      "\257",  nullptr },
+   { "deg",       "\260",  nullptr },
+   { "plusmn",    "\261",  nullptr },
+   { "sup2",      "\262",  nullptr },
+   { "sup3",      "\263",  nullptr },
+   { "acute",     "\264",  nullptr },
+   { "micro",     "\265",  nullptr },
+   { "para",      "\266",  nullptr },
+   { "middot",    "\267",  nullptr },
+   { "cedil",     "\270",  nullptr },
+   { "sup1",      "\271",  nullptr },
+   { "ordm",      "\272",  nullptr },
+   { "raquo",     "\273",  nullptr },
+   { "frac14",    "\274",  nullptr },
+   { "frac12",    "\275",  nullptr },
+   { "frac34",    "\276",  nullptr },
+   { "iquest",    "\277",  nullptr },
+   { "Agrave",    "\300",  nullptr },
+   { "Aacute",    "\301",  nullptr },
+   { "Acirc",     "\302",  nullptr },
+   { "Atilde",    "\303",  nullptr },
+   { "Auml",      "\304",  nullptr },
+   { "Aring",     "\305",  nullptr },
+   { "AElig",     "\306",  nullptr },
+   { "Ccedil",    "\307",  nullptr },
+   { "Egrave",    "\310",  nullptr },
+   { "Eacute",    "\311",  nullptr },
+   { "Ecirc",     "\312",  nullptr },
+   { "Euml",      "\313",  nullptr },
+   { "Igrave",    "\314",  nullptr },
+   { "Iacute",    "\315",  nullptr },
+   { "Icirc",     "\316",  nullptr },
+   { "Iuml",      "\317",  nullptr },
+   { "ETH",       "\320",  nullptr },
+   { "Ntilde",    "\321",  nullptr },
+   { "Ograve",    "\322",  nullptr },
+   { "Oacute",    "\323",  nullptr },
+   { "Ocirc",     "\324",  nullptr },
+   { "Otilde",    "\325",  nullptr },
+   { "Ouml",      "\326",  nullptr },
+   { "times",     "\327",  nullptr },
+   { "Oslash",    "\330",  nullptr },
+   { "Ugrave",    "\331",  nullptr },
+   { "Uacute",    "\332",  nullptr },
+   { "Ucirc",     "\333",  nullptr },
+   { "Uuml",      "\334",  nullptr },
+   { "Yacute",    "\335",  nullptr },
+   { "THORN",     "\336",  nullptr },
+   { "szlig",     "\337",  nullptr },
+   { "agrave",    "\340",  nullptr },
+   { "aacute",    "\341",  nullptr },
+   { "acirc",     "\342",  nullptr },
+   { "atilde",    "\343",  nullptr },
+   { "auml",      "\344",  nullptr },
+   { "aring",     "\345",  nullptr },
+   { "aelig",     "\346",  nullptr },
+   { "ccedil",    "\347",  nullptr },
+   { "egrave",    "\350",  nullptr },
+   { "eacute",    "\351",  nullptr },
+   { "ecirc",     "\352",  nullptr },
+   { "euml",      "\353",  nullptr },
+   { "igrave",    "\354",  nullptr },
+   { "iacute",    "\355",  nullptr },
+   { "icirc",     "\356",  nullptr },
+   { "iuml",      "\357",  nullptr },
+   { "eth",       "\360",  nullptr },
+   { "ntilde",    "\361",  nullptr },
+   { "ograve",    "\362",  nullptr },
+   { "oacute",    "\363",  nullptr },
+   { "ocirc",     "\364",  nullptr },
+   { "otilde",    "\365",  nullptr },
+   { "ouml",      "\366",  nullptr },
+   { "divide",    "\367",  nullptr },
+   { "oslash",    "\370",  nullptr },
+   { "ugrave",    "\371",  nullptr },
+   { "uacute",    "\372",  nullptr },
+   { "ucirc",     "\373",  nullptr },
+   { "uuml",      "\374",  nullptr },
+   { "yacute",    "\375",  nullptr },
+   { "thorn",     "\376",  nullptr },
+   { "yuml",      "\377",  nullptr },
 };
 
 
@@ -479,9 +479,9 @@ static void HtmlHashInit(void){
 
 void TGHtml::AppendElement(TGHtmlElement *pElem)
 {
-   pElem->fPNext = 0;
+   pElem->fPNext = nullptr;
    pElem->fPPrev = fPLast;
-   if (fPFirst == 0) {
+   if (fPFirst == nullptr) {
       fPFirst = pElem;
    } else {
       fPLast->fPNext = pElem;
@@ -591,7 +591,7 @@ int TGHtml::Tokenize()
    z = fZText;
    if (inpCol < 0) return n;   // Prevents recursion
    fICol = -1;
-   pElem = 0;
+   pElem = nullptr;
 
    while ((c = z[n]) != 0) {
 
@@ -640,7 +640,7 @@ int TGHtml::Tokenize()
                strncasecmp(&z[i], zEnd, nEnd) == 0) {
                if (zEnd[3] == 'c' && ((sqcnt % 2) == 1)) continue;
                pScr->fNScript = i - n;
-               fPScript = 0;
+               fPScript = nullptr;
                n = i + nEnd;
                break;
             }
@@ -707,7 +707,7 @@ int TGHtml::Tokenize()
          }
 #endif
          pElem = new TGHtmlSpaceElement;
-         if (pElem == 0) goto incomplete;
+         if (pElem == nullptr) goto incomplete;
          ((TGHtmlSpaceElement *)pElem)->fW = 0;
          pElem->fOffs = n;
          pElem->fElId = ++fIdind;
@@ -763,7 +763,7 @@ int TGHtml::Tokenize()
             }
          }
          pElem = new TGHtmlTextElement(i);
-         if (pElem == 0) goto incomplete;
+         if (pElem == nullptr) goto incomplete;
          TGHtmlTextElement *tpElem = (TGHtmlTextElement *) pElem;
          tpElem->fElId = ++fIdind;
          tpElem->fOffs = n;
@@ -786,7 +786,7 @@ int TGHtml::Tokenize()
          if (z[n+i] == 0) goto incomplete;
 
          pElem = new TGHtmlTextElement(i);
-         if (pElem == 0) goto incomplete;
+         if (pElem == nullptr) goto incomplete;
          TGHtmlTextElement *tpElem = (TGHtmlTextElement *) pElem;
          tpElem->fType = Html_COMMENT;
          tpElem->fElId = ++fIdind;
@@ -797,7 +797,7 @@ int TGHtml::Tokenize()
          AppendElement(pElem);
 
          pElem = new TGHtmlElement(Html_EndCOMMENT);
-         AppToken(pElem, 0, n+4);
+         AppToken(pElem, nullptr, n+4);
 
          for (j = 0; j < i+3; j++) {
            inpCol = NextColumn(inpCol, z[n+j]);
@@ -894,13 +894,13 @@ doMarkup:
             if (strcasecmp(pMap->fZName, argv[0]) == 0) break;
          }
          argv[0][arglen[0]] = c;
-         if (pMap == 0) continue;  // Ignore unknown markup
+         if (pMap == nullptr) continue;  // Ignore unknown markup
 
 makeMarkupEntry:
          // Construct a TGHtmlMarkupElement object for this markup.
 
          pElem = MakeMarkupEntry(pMap->fObjType, pMap->fType, argc, arglen, argv);
-         if (pElem == 0) goto incomplete;
+         if (pElem == nullptr) goto incomplete;
 
          pElem->fElId = ++fIdind;
          pElem->fOffs = n;
@@ -918,7 +918,7 @@ makeMarkupEntry:
             // pointer to change, so renew our copy of that pointer.
 
             z = fZText;
-            if (z == 0) {
+            if (z == nullptr) {
                n = 0;
                inpCol = 0;
                goto incomplete;
@@ -965,7 +965,7 @@ makeMarkupEntry:
             case Html_LI:
                if (!fAddEndTags) break;
                if (inLi) {
-                  TGHtmlElement *e = new TGHtmlMarkupElement(Html_EndLI, 1, 0, 0);
+                  TGHtmlElement *e = new TGHtmlMarkupElement(Html_EndLI, 1, nullptr, nullptr);
                   AppToken(e, pElem, n);
                } else {
                   inLi = 1;
@@ -980,7 +980,7 @@ makeMarkupEntry:
             case Html_EndUL:
                if (!fAddEndTags) break;
                if (inLi) {
-                  TGHtmlElement *e = new TGHtmlMarkupElement(Html_EndLI, 1, 0, 0);
+                  TGHtmlElement *e = new TGHtmlMarkupElement(Html_EndLI, 1, nullptr, nullptr);
                   AppToken(e, pElem, n);
                } else {
                   inLi = 0;
@@ -1097,7 +1097,7 @@ void TGHtml::TokenizerAppend(const char *text)
       fZText = tmp;
    }
 
-   if (fZText == 0) {
+   if (fZText == nullptr) {
       fNText = 0;
       UNTESTED;
       return;
@@ -1141,7 +1141,7 @@ TGHtmlElement *TGHtml::InsertToken(TGHtmlElement *pToken,
 
    if (strcmp(zType, "Text") == 0) {
       pElem = new TGHtmlTextElement(zArgs ? strlen(zArgs) : 0);
-      if (pElem == 0) return 0;
+      if (pElem == nullptr) return nullptr;
       if (zArgs) {
          // coverity[secure_coding]
          strcpy (((TGHtmlTextElement *)pElem)->fZText, zArgs);
@@ -1149,18 +1149,18 @@ TGHtmlElement *TGHtml::InsertToken(TGHtmlElement *pToken,
       }
    } else if (!strcmp(zType, "Space")) {
       pElem = new TGHtmlSpaceElement();
-      if (pElem == 0) return 0;
+      if (pElem == nullptr) return nullptr;
    } else {
       h = HtmlHash(zType);
       for (pMap = gApMap[h]; pMap; pMap = pMap->fPCollide) {
          if (strcasecmp(pMap->fZName, zType) == 0) break;
       }
-      if (pMap == 0) return 0;
-      if (zArgs == 0 || *zArgs == 0) {
+      if (pMap == nullptr) return nullptr;
+      if (zArgs == nullptr || *zArgs == 0) {
          // Special case of no arguments. This is a lot easier...
          // well... now its the same thing!
-         pElem = MakeMarkupEntry(pMap->fObjType, pMap->fType, 1, 0, 0);
-         if (pElem == 0) return 0;
+         pElem = MakeMarkupEntry(pMap->fObjType, pMap->fType, 1, nullptr, nullptr);
+         if (pElem == nullptr) return nullptr;
       } else {
          // The general case. There are arguments that need to be parsed
          // up. This is slower, but we gotta do it.
@@ -1179,7 +1179,7 @@ TGHtmlElement *TGHtml::InsertToken(TGHtmlElement *pToken,
       while (--argc >= 0) if (argv[argc]) delete[] argv[argc];
       delete[] argv;
 #else
-         return 0;
+         return nullptr;
 #endif
       }
    }
@@ -1343,7 +1343,7 @@ char *TGHtml::DumpToken(TGHtmlElement *p)
    int j;
    const char *zName;
 
-   if (p == 0) {
+   if (p == nullptr) {
       snprintf(zBuf, 200, "NULL");
       return zBuf;
    }
@@ -1428,7 +1428,7 @@ char *TGHtml::GetTokenName(TGHtmlElement *p)
    const char *zName;
 
    zBuf[0] = 0;
-   if (p == 0) {
+   if (p == nullptr) {
       // coverity[secure_coding]: zBuf is large enough
       strcpy(zBuf, "NULL");
       return zBuf;
@@ -1530,7 +1530,7 @@ void TGHtml::PrintList(TGHtmlElement *first, TGHtmlElement *last)
          TGHtmlBlock *block = (TGHtmlBlock *) p;
          const char *z = block->fZ;
          int n = block->fN;
-         if (n == 0 || z == 0) {
+         if (n == 0 || z == nullptr) {
             n = 1;
             z = "";
          }

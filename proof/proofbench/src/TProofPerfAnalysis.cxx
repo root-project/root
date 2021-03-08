@@ -46,7 +46,7 @@ public:
    TWrkInfo(const char *ord, const char *name) :
       TNamed(ord, name), fPackets(0), fRemotePackets(0), fEventsProcessed(0),
       fBytesRead(0), fLatency(0), fProcTime(0), fCpuTime(0), fStart(0), fStop(-1),
-      fRateT(0), fRateRemoteT(0), fMBRateT(0), fMBRateRemoteT(0), fLatencyT(0) { }
+      fRateT(nullptr), fRateRemoteT(nullptr), fMBRateT(nullptr), fMBRateRemoteT(nullptr), fLatencyT(nullptr) { }
    virtual ~TWrkInfo() { SafeDelete(fRateT); SafeDelete(fRateRemoteT);
                          SafeDelete(fMBRateT); SafeDelete(fMBRateRemoteT);
                          SafeDelete(fLatencyT); }
@@ -127,7 +127,7 @@ public:
          Printf(" Worker: %s,\t%d packet(s) from file: %s", GetName(), fPackets.GetSize(), GetTitle());
       }
       TIter nxp(&fPackets);
-      TObject *o = 0;
+      TObject *o = nullptr;
       while ((o = nxp())) { o->Print("S"); }
    }
 };
@@ -149,8 +149,8 @@ public:
    TFileInfo(const char *name, const char *srv) :
       TNamed(name, srv), fPackets(0), fRPackets(0), fStart(0), fStop(-1),
       fSizeAvg(0), fSizeMax(-1.), fSizeMin(-1.),
-      fMBRateAvg(0), fMBRateMax(-1.), fMBRateMin(-1.), fSizeP(0),
-      fRateP(0), fRatePRemote(0), fMBRateP(0), fMBRatePRemote(0) { }
+      fMBRateAvg(0), fMBRateMax(-1.), fMBRateMin(-1.), fSizeP(nullptr),
+      fRateP(nullptr), fRatePRemote(nullptr), fMBRateP(nullptr), fMBRatePRemote(nullptr) { }
    virtual ~TFileInfo() {SafeDelete(fSizeP);
                          SafeDelete(fRateP); SafeDelete(fRatePRemote);
                          SafeDelete(fMBRateP); SafeDelete(fMBRatePRemote);
@@ -217,11 +217,11 @@ Bool_t TProofPerfAnalysis::fgDebug = kTRUE;
 
 TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
                                const char *title, const char *treename)
-               : TNamed(perffile, title), fFile(0), fTreeName(treename), fTree(0),
+               : TNamed(perffile, title), fFile(nullptr), fTreeName(treename), fTree(nullptr),
                  fInitTime(-1.), fMergeTime(-1.), fMaxTime(-1.),
-                 fEvents(0), fPackets(0),
+                 fEvents(nullptr), fPackets(nullptr),
                  fEvtRateMax(-1.), fMBRateMax(-1.), fLatencyMax(-1.),
-                 fEvtRate(0), fEvtRateRun(0), fMBRate(0), fMBRateRun(0),
+                 fEvtRate(nullptr), fEvtRateRun(nullptr), fMBRate(nullptr), fMBRateRun(nullptr),
                  fEvtRateAvgMax(-1.), fMBRateAvgMax(-1.),
                  fEvtRateAvg(-1.), fMBRateAvg(0),
                  fFileResult(""), fSaveResult(kFALSE),
@@ -230,7 +230,7 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
    // Use default title, if not specified
    if (!title) SetTitle("PROOF Performance Analysis");
 
-   fTree = 0;
+   fTree = nullptr;
    fFile = TFile::Open(perffile);
    if (!fFile || (fFile && fFile->IsZombie())) {
       SafeDelete(fFile);
@@ -288,11 +288,11 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
 /// Constructor: open the file and attach to the tree
 
 TProofPerfAnalysis::TProofPerfAnalysis(TTree *tree, const char *title)
-               : TNamed("", title), fFile(0), fTree(0),
+               : TNamed("", title), fFile(nullptr), fTree(nullptr),
                  fInitTime(-1.), fMergeTime(-1.), fMaxTime(-1.),
-                 fEvents(0), fPackets(0),
+                 fEvents(nullptr), fPackets(nullptr),
                  fEvtRateMax(-1.), fMBRateMax(-1.), fLatencyMax(-1.),
-                 fEvtRate(0), fEvtRateRun(0), fMBRate(0), fMBRateRun(0),
+                 fEvtRate(nullptr), fEvtRateRun(nullptr), fMBRate(nullptr), fMBRateRun(nullptr),
                  fEvtRateAvgMax(-1.), fMBRateAvgMax(-1.),
                  fEvtRateAvg(-1.), fMBRateAvg(0),
                  fDebug(0)
@@ -363,7 +363,7 @@ TString TProofPerfAnalysis::GetCanvasTitle(const char *t)
 
 void TProofPerfAnalysis::LoadTree(TDirectory *dir)
 {
-   fTree = 0;
+   fTree = nullptr;
    if (!dir) return;
 
    // Try first the full name in the top directory
@@ -372,7 +372,7 @@ void TProofPerfAnalysis::LoadTree(TDirectory *dir)
    TRegexp re(fTreeName);
    // Now look inside: iter on the list of keys first
    TIter nxk(dir->GetListOfKeys());
-   TKey *k = 0;
+   TKey *k = nullptr;
    while ((k = (TKey *) nxk())) {
       if (!strcmp(k->GetClassName(), "TDirectoryFile")) {
          TDirectory *kdir = (TDirectory *) dir->Get(k->GetName());
@@ -415,7 +415,7 @@ void TProofPerfAnalysis::FileDist(Bool_t writedet)
    // Fill the worker-data server mapping
    TIter nxs(srvList);
    TIter nxw(wrkList);
-   TNamed *sn = 0, *wn = 0;
+   TNamed *sn = nullptr, *wn = nullptr;
    while ((sn = (TNamed *)nxs())) {
       nxw.Reset();
       while ((wn = (TNamed *) nxw())) {
@@ -431,7 +431,7 @@ void TProofPerfAnalysis::FileDist(Bool_t writedet)
    nxw.Reset();
    while ((wn = (TNamed *) nxw())) {
       TIter nnxw(nwl);
-      TNamed *nwn = 0;
+      TNamed *nwn = nullptr;
       while ((nwn = (TNamed *) nnxw())) {
          if (CompareOrd(wn->GetName(), nwn->GetName()) < 0) {
             nwl->AddBefore(nwn, wn);
@@ -444,7 +444,7 @@ void TProofPerfAnalysis::FileDist(Bool_t writedet)
       while ((sn = (TNamed *)nxs())) {
          if (!strcmp(sn->GetTitle(), wn->GetName())) {
             TIter nnxs(nsl);
-            TNamed *nsn = 0;
+            TNamed *nsn = nullptr;
             while ((nsn = (TNamed *) nnxs())) {
                if (CompareOrd(sn->GetTitle(), nsn->GetTitle()) < 0) {
                   nsl->AddBefore(nsn, sn);
@@ -486,7 +486,7 @@ void TProofPerfAnalysis::FileDist(Bool_t writedet)
       // Create a 1D histo for cross packets
       TH1F *hxpak = new TH1F("hxpak", "MBytes / Worker",
                                     wrkList->GetSize(), 0., (Double_t)wrkList->GetSize());
-      hxpak->SetDirectory(0);
+      hxpak->SetDirectory(nullptr);
       hxpak->SetMinimum(0.);
       hxpak->GetXaxis()->SetTitle("Worker");
 
@@ -512,19 +512,19 @@ void TProofPerfAnalysis::FileDist(Bool_t writedet)
       // Create a 1D histo for file distribution
       TH1F *hfdis = new TH1F("hfdis", "Packet dist",
                            srvList->GetSize(), 0., (Double_t)srvList->GetSize());
-      hfdis->SetDirectory(0);
+      hfdis->SetDirectory(nullptr);
       hfdis->SetMinimum(0);
       hfdis->GetXaxis()->SetTitle("Server");
       TH1F *hbdis = new TH1F("hbdis", "MBytes dist",
                            srvList->GetSize(), 0., (Double_t)srvList->GetSize());
-      hbdis->SetDirectory(0);
+      hbdis->SetDirectory(nullptr);
       hbdis->SetMinimum(0);
       hbdis->GetXaxis()->SetTitle("Server");
       // Create a 2D histo for cross packets
       TH2F *hxpak = new TH2F("hxpak", "MBytes / {Worker,Server}",
                                     srvList->GetSize(), 0., (Double_t)srvList->GetSize(),
                                     wrkList->GetSize(), 0., (Double_t)wrkList->GetSize());
-      hxpak->SetDirectory(0);
+      hxpak->SetDirectory(nullptr);
       hxpak->GetYaxis()->SetTitle("Worker");
       hxpak->GetXaxis()->SetTitle("Server");
       hxpak->GetXaxis()->SetTitleOffset(1.4);
@@ -592,7 +592,7 @@ void TProofPerfAnalysis::GetWrkFileList(TList *wl, TList *sl)
    TPerfEvent* pep = &pe;
    fTree->SetBranchAddress("PerfEvents", &pep);
    Long64_t entries = fTree->GetEntries();
-   TNamed *wn = 0, *sn = 0;
+   TNamed *wn = nullptr, *sn = nullptr;
    for (Long64_t k=0; k<entries; k++) {
       fTree->GetEntry(k);
       // Analyse only packets
@@ -665,7 +665,7 @@ void TProofPerfAnalysis::FillFileDist(TH1F *hf, TH1F *hb, TH2F *hx, Bool_t wdet)
    if (!hf || !hb || !hx) return;
 
    TString fnout;
-   FILE *fout = 0;
+   FILE *fout = nullptr;
    if (wdet) {
       fnout.Form("%s-FileDist-Details.txt", GetName());
       if (!(fout = fopen(fnout.Data(), "w"))) {
@@ -716,7 +716,7 @@ void TProofPerfAnalysis::FillFileDistOneSrv(TH1F *hx, Bool_t wdet)
    if (!hx) return;
 
    TString fnout;
-   FILE *fout = 0;
+   FILE *fout = nullptr;
    if (wdet) {
       fnout.Form("%s-FileDist-Details.txt", GetName());
       if (!(fout = fopen(fnout.Data(), "w"))) {
@@ -772,7 +772,7 @@ void TProofPerfAnalysis::WorkerActivity()
       return;
    }
 
-   TObject *o = 0;
+   TObject *o = nullptr;
    // Create the histograms with activity vs time
    if ((o = gDirectory->FindObject("act10"))) delete o;
    Float_t t0 = fMergeTime - 2.* (fMaxTime - fMergeTime);
@@ -793,7 +793,7 @@ void TProofPerfAnalysis::WorkerActivity()
 
    // Create the sorted list
    TIter nxw(&fWrksInfo);
-   TWrkInfo *wi = 0;
+   TWrkInfo *wi = nullptr;
    while ((wi = (TWrkInfo *)nxw())) {
       Int_t j = 0;
       for (j = 1; j < hact10->GetNbinsX()+1 ; j++) {
@@ -840,7 +840,7 @@ void TProofPerfAnalysis::PrintWrkInfo(Int_t showlast)
    // Create the sorted list
    Int_t k = fWrksInfo.GetSize();
    TIter nxw(&fWrksInfo);
-   TWrkInfo *wi = 0;
+   TWrkInfo *wi = nullptr;
    while ((wi = (TWrkInfo *)nxw())) {
       // Print info about slowest workers
       k--;
@@ -891,14 +891,14 @@ void TProofPerfAnalysis::PrintFileInfo(Int_t showlast, const char *opt, const ch
    // Create the sorted list
    Int_t k = fFilesInfo.GetSize();
    TIter nxf(&fFilesInfo);
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    while ((fi = (TFileInfo *)nxf())) {
       // Print info about files processed last
       k--;
       if (showlast < 0 || k < showlast) fi->Print(opt);
    }
 
-   if (out && strlen(out) > 0) gSystem->RedirectOutput(0, 0, &rh);
+   if (out && strlen(out) > 0) gSystem->RedirectOutput(nullptr, nullptr, &rh);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -934,7 +934,7 @@ void TProofPerfAnalysis::PrintFileInfo(const char *fn, const char *opt, const ch
       }
    }
 
-   if (out && strlen(out) > 0) gSystem->RedirectOutput(0, 0, &rh);
+   if (out && strlen(out) > 0) gSystem->RedirectOutput(nullptr, nullptr, &rh);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -995,7 +995,7 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
 
    // Create the global histograms
    Int_t nbin = nbins - 1;
-   TObject *o = 0;
+   TObject *o = nullptr;
    if ((o = gDirectory->FindObject("gEvtRate"))) delete o;
    fEvtRate = new TH1F("gEvtRate", "Total event processing rate (evt/s)", nbin, xbins);
    fEvtRate->SetMinimum(0.);
@@ -1024,10 +1024,10 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
    delete [] xbins;
 
    THashList gBins;
-   TList *gwl = 0, *gbl = 0;
+   TList *gwl = nullptr, *gbl = nullptr;
 
    // Extract the worker info now
-   TWrkInfo *wi = 0;
+   TWrkInfo *wi = nullptr;
    for (Long64_t k=0; k<entries; k++) {
       fTree->GetEntry(k);
       // Analyse only packets
@@ -1124,14 +1124,14 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
    }
 
    TIter nxb(&gBins);
-   gbl = 0;
+   gbl = nullptr;
    while ((gbl = (TList *) nxb())) {
-      gwl = 0;
+      gwl = nullptr;
       TIter nxw(gbl);
       while ((gwl = (TList *) nxw())) {
          Double_t er = 0, br = 0, pt = 0, xx = 0;
          TIter nxp(gwl);
-         TWrkEntry *we = 0;
+         TWrkEntry *we = nullptr;
          while ((we = (TWrkEntry *) nxp())) {
             if (we->fProcTime > 0) {
                er += we->fEvtRate * we->fProcTime;
@@ -1209,9 +1209,9 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
    SafeDelete(fEvents);
    SafeDelete(fPackets);
    fEvents = new TH1F("hevents", "Events per worker", fWrksInfo.GetSize(), -.5, fWrksInfo.GetSize()-.5);
-   fEvents->SetDirectory(0);
+   fEvents->SetDirectory(nullptr);
    fPackets = new TH1F("hpackets", "Packets per worker", fWrksInfo.GetSize(), -.5, fWrksInfo.GetSize()-.5);
-   fPackets->SetDirectory(0);
+   fPackets->SetDirectory(nullptr);
    Int_t j = 0;
    TIter nxwi(&fWrksInfo);
    while ((wi = (TWrkInfo *)nxwi())) {
@@ -1262,7 +1262,7 @@ void TProofPerfAnalysis::Summary(Option_t *opt, const char *out)
       Printf(" +++ Max processing rates: %.4f evts/s, %.4f MB/s", fEvtRateAvgMax, fMBRateAvgMax);
    }
 
-   if (!o.IsNull()) gSystem->RedirectOutput(0, 0, &rh);
+   if (!o.IsNull()) gSystem->RedirectOutput(nullptr, nullptr, &rh);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1283,7 +1283,7 @@ void TProofPerfAnalysis::FillFileInfo(Bool_t force)
    TPerfEvent* pep = &pe;
    fTree->SetBranchAddress("PerfEvents",&pep);
    Long64_t entries = fTree->GetEntries();
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    for (Long64_t k=0; k<entries; k++) {
       fTree->GetEntry(k);
       // Analyse only packets
@@ -1341,7 +1341,7 @@ void TProofPerfAnalysis::FillFileInfo(Bool_t force)
          // Packet info
          TPackInfo *pi = new TPackInfo(pe.fSlave, pe.fSlaveName, start, stop, pe.fEventsProcessed, brt);
          fi->fPackList.Add(pi);
-         TWrkInfoFile *wif = 0;
+         TWrkInfoFile *wif = nullptr;
          if (!(wif = (TWrkInfoFile *) fi->fWrkList.FindObject(pe.fSlave))) {
             wif = new TWrkInfoFile(pe.fSlave, uf.GetFile());
             fi->fWrkList.Add(wif);
@@ -1411,7 +1411,7 @@ void TProofPerfAnalysis::DoDraw(TObject *o, Option_t *opt, const char *name)
       TDirectory *curdir = gDirectory;
       TFile *f = TFile::Open(fFileResult, "UPDATE");
       if (f && !f->IsZombie()) {
-         const char *n = (name && strlen(name) > 0) ? name : 0;
+         const char *n = (name && strlen(name) > 0) ? name : nullptr;
          o->Write(n);
          f->Close();
       }
@@ -1505,13 +1505,13 @@ void TProofPerfAnalysis::RatePlot(const char *wrks)
 {
    Bool_t global = (wrks && !strcmp(wrks, "global")) ? kTRUE : kFALSE;
 
-   TH1F *hrt1 = 0, *hrt2 = 0;
+   TH1F *hrt1 = nullptr, *hrt2 = nullptr;
    if (global) {
       hrt1 = fEvtRate;
       hrt2 = fMBRate;
    } else {
       // Create the histograms
-      TObject *o = 0;
+      TObject *o = nullptr;
       if ((o = gDirectory->FindObject("rt1"))) delete o;
       hrt1 = new TH1F("rt1", "Evt processing rate (evt/s)", 100, 0., fMaxTime);
       hrt1->SetMinimum(0.);
@@ -1544,7 +1544,7 @@ void TProofPerfAnalysis::RatePlot(const char *wrks)
    if (global) return;
 
    // Which workers?
-   THashList *wl = 0;
+   THashList *wl = nullptr;
    TString ww(wrks);
    if (!ww.IsNull() && ww != "*" && ww != "all") {
       TString w;
@@ -1558,7 +1558,7 @@ void TProofPerfAnalysis::RatePlot(const char *wrks)
    // Now plot the graphs per worker
    Int_t ci = 40, cir = 30, ic = 0;
    TIter nxw(&fWrksInfo);
-   TWrkInfo *wi = 0;
+   TWrkInfo *wi = nullptr;
    while ((wi = (TWrkInfo *) nxw())) {
       if (wl && !wl->FindObject(wi->GetName())) continue;
       if (wi->fRateT && wi->fRateT->GetN() > 0) {
@@ -1605,7 +1605,7 @@ void TProofPerfAnalysis::RatePlot(const char *wrks)
 
 void TProofPerfAnalysis::LatencyPlot(const char *wrks)
 {
-   TObject *o = 0;
+   TObject *o = nullptr;
    if ((o = gDirectory->FindObject("lt1"))) delete o;
    TH1F *hlt1 = new TH1F("lt1", "Packet retrieval latency", 100, 0., fMaxTime);
    hlt1->SetMinimum(0.);
@@ -1621,7 +1621,7 @@ void TProofPerfAnalysis::LatencyPlot(const char *wrks)
    c1->Update();
 
    // Which workers?
-   THashList *wl = 0;
+   THashList *wl = nullptr;
    TString ww(wrks);
    if (!ww.IsNull() && ww != "*" && ww != "all") {
       TString w;
@@ -1635,7 +1635,7 @@ void TProofPerfAnalysis::LatencyPlot(const char *wrks)
    // Now plot the graphs per worker
    Int_t ci = 40, ic = 0;
    TIter nxw(&fWrksInfo);
-   TWrkInfo *wi = 0;
+   TWrkInfo *wi = nullptr;
    while ((wi = (TWrkInfo *) nxw())) {
       if (wl && !wl->FindObject(wi->GetName())) continue;
       if (wi->fLatencyT) {
@@ -1687,7 +1687,7 @@ void TProofPerfAnalysis::FileProcPlot(const char *fn, const char *out)
    Int_t nbins = fi->fPackList.GetSize() * 2;
    Double_t *xraw = new Double_t[nbins];
    Int_t jj = 0;
-   TPackInfo *pi = 0;
+   TPackInfo *pi = nullptr;
    TIter nxp(&(fi->fPackList));
    while ((pi = (TPackInfo *) nxp())) {
       // Bins
@@ -1707,7 +1707,7 @@ void TProofPerfAnalysis::FileProcPlot(const char *fn, const char *out)
 
    // Create the histograms
    Int_t nbin = nbins - 1;
-   TObject *o = 0;
+   TObject *o = nullptr;
    if ((o = gDirectory->FindObject("rt1"))) delete o;
    TH1F *hrt1 = new TH1F("rt1", "Total processing rate (MB/s)", nbins - 1, xbins);
    hrt1->SetMinimum(0.);
@@ -1740,7 +1740,7 @@ void TProofPerfAnalysis::FileProcPlot(const char *fn, const char *out)
       Double_t mx = mi + wd;
       Double_t xx = hrt1->GetBinCenter(ii);
       fprintf(fo, " Bin: %d/%d [%f, %f]\n", ii, nbin, mi, mx);
-      pi = 0;
+      pi = nullptr;
       kk = 0;
       nxp.Reset();
       while ((pi = (TPackInfo *) nxp())) {
@@ -1781,7 +1781,7 @@ void TProofPerfAnalysis::FileProcPlot(const char *fn, const char *out)
 void TProofPerfAnalysis::FileRatePlot(const char *fns)
 {
    // Create the histograms
-   TObject *o = 0;
+   TObject *o = nullptr;
    if ((o = gDirectory->FindObject("rt1"))) delete o;
    TH1F *hrt1 = new TH1F("rt1", "Event processing rate per packet (evt/s)", 100, 0., fMaxTime);
    hrt1->SetMinimum(0.);
@@ -1808,7 +1808,7 @@ void TProofPerfAnalysis::FileRatePlot(const char *fns)
    c1->Update();
 
    // Which workers?
-   THashList *fl = 0;
+   THashList *fl = nullptr;
    TString fw(fns);
    if (!fw.IsNull() && fw != "*" && fw != "all") {
       TString w;
@@ -1822,7 +1822,7 @@ void TProofPerfAnalysis::FileRatePlot(const char *fns)
    // Now plot the graphs per worker
    Int_t ci = 40, cir = 30, ic = 0;
    TIter nxf(&fFilesInfo);
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    while ((fi = (TFileInfo *) nxf())) {
       if (fl && !fl->FindObject(fi->GetName())) continue;
       if (fi->fRateP && fi->fRateP->GetN() > 0) {

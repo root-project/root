@@ -44,7 +44,7 @@
 /// members must be done _after_ forking by each of the children processes.
 TMPWorkerTree::TMPWorkerTree()
    : TMPWorker(), fFileNames(), fTreeName(), fTree(nullptr), fFile(nullptr), fEntryList(nullptr), fFirstEntry(0),
-     fTreeCache(0), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE), fCacheSize(-1)
+     fTreeCache(nullptr), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE), fCacheSize(-1)
 {
    Setup();
 }
@@ -52,7 +52,7 @@ TMPWorkerTree::TMPWorkerTree()
 TMPWorkerTree::TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryList *entries,
                              const std::string &treeName, UInt_t nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
    : TMPWorker(nWorkers, maxEntries), fFileNames(fileNames), fTreeName(treeName), fTree(nullptr), fFile(nullptr),
-     fEntryList(entries), fFirstEntry(firstEntry), fTreeCache(0), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE),
+     fEntryList(entries), fFirstEntry(firstEntry), fTreeCache(nullptr), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE),
      fCacheSize(-1)
 {
    Setup();
@@ -61,7 +61,7 @@ TMPWorkerTree::TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryLi
 TMPWorkerTree::TMPWorkerTree(TTree *tree, TEntryList *entries, UInt_t nWorkers, ULong64_t maxEntries,
                              ULong64_t firstEntry)
    : TMPWorker(nWorkers, maxEntries), fTree(tree), fFile(nullptr), fEntryList(entries), fFirstEntry(firstEntry),
-     fTreeCache(0), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE), fCacheSize(-1)
+     fTreeCache(nullptr), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE), fCacheSize(-1)
 {
    Setup();
 }
@@ -88,9 +88,9 @@ void TMPWorkerTree::CloseFile()
 {
    // Avoid destroying the cache; must be placed before deleting the trees
    if (fFile) {
-      if (fTree) fFile->SetCacheRead(0, fTree);
+      if (fTree) fFile->SetCacheRead(nullptr, fTree);
       delete fFile ;
-      fFile = 0;
+      fFile = nullptr;
    }
 }
 
@@ -240,7 +240,7 @@ void TMPWorkerTreeSel::Process(UInt_t code, MPCodeBufPair &msg)
 
    Long64_t start = 0;
    Long64_t finish = 0;
-   TEntryList *enl = 0;
+   TEntryList *enl = nullptr;
    std::string errmsg;
    if (LoadTree(code, msg, start, finish, &enl, errmsg) != 0) {
       SendError(errmsg);
@@ -285,7 +285,7 @@ Int_t TMPWorkerTree::LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, 
 
    std::string mgroot = "[S" + std::to_string(GetNWorker()) + "]: ";
 
-   TTree *tree = 0;
+   TTree *tree = nullptr;
    if (code ==  MPCode::kProcTree) {
 
       mgroot += "MPCode::kProcTree: ";

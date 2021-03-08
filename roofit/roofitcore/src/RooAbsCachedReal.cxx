@@ -137,7 +137,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 {
   // Check if this configuration was created becfore
   Int_t sterileIdx(-1) ;
-  FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx) ;
+  FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,nullptr,&sterileIdx) ;
   if (cache) {
     if (cache->paramTracker()->hasChanged(kTRUE)) {
       ccoutD(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cached function " 
@@ -152,7 +152,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 
   // Set cache function data to ADirty since function will need update every time in cache update process
   RooFIter iarg( cache->hist()->get()->fwdIterator() );
-  RooAbsArg *arg(0);
+  RooAbsArg *arg(nullptr);
   while ( (arg=iarg.next()) ) {
     arg->setOperMode(ADirty);
   }
@@ -175,7 +175,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   } 
 
   // Store this cache configuration
-  Int_t code = _cacheMgr.setObj(nset,0,((RooAbsCacheElement*)cache),0) ;
+  Int_t code = _cacheMgr.setObj(nset,nullptr,((RooAbsCacheElement*)cache),nullptr) ;
   ccoutD(Caching) << "RooAbsCachedReal("<<this<<")::getCache(" << GetName() << ") creating new cache " << cache->func()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code << endl ;
   
   return cache ;
@@ -195,7 +195,7 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
 {
   // Disable source caching by default
   _cacheSource = kFALSE ;
-  _sourceClone = 0 ;
+  _sourceClone = nullptr ;
 
   RooArgSet* nset2 = self.actualObservables(nset?*nset:RooArgSet()) ;
 

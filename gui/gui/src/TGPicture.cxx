@@ -95,7 +95,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    TGPicture *pic = (TGPicture *)fPicList->FindObject(pname);
    if (pic && !pic->IsScaled()) {
       if (pic->fPic == kNone)
-         return 0;
+         return nullptr;
       pic->AddReference();
       return pic;
    }
@@ -107,7 +107,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
       pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
       fPicList->Add(pic);
-      return 0;
+      return nullptr;
    }
 
    TImage *img = TImage::Open(picnam);
@@ -118,7 +118,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
       fPicList->Add(pic);
       delete [] picnam;
-      return 0;
+      return nullptr;
    }
 
    pic = new TGPicture(pname, img->GetPixmap(), img->GetMask());
@@ -153,7 +153,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    TGPicture *pic = (TGPicture *)fPicList->FindObject(hname);
    if (pic && pic->GetWidth() == new_width && pic->GetHeight() == new_height) {
       if (pic->fPic == kNone)
-         return 0;
+         return nullptr;
       pic->AddReference();
       return pic;
    }
@@ -167,7 +167,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       pic->fAttributes.fWidth  = new_width;
       pic->fAttributes.fHeight = new_height;
       fPicList->Add(pic);
-      return 0;
+      return nullptr;
    }
 
    TImage *img = TImage::Open(picnam);
@@ -180,7 +180,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       pic->fAttributes.fHeight = new_height;
       fPicList->Add(pic);
       delete [] picnam;
-      return 0;
+      return nullptr;
    }
 
    img->Scale(new_width, new_height);
@@ -232,7 +232,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name, char **xpm)
    UInt_t w, h;
 
    if (!xpm || !*xpm) {
-      return 0;
+      return nullptr;
    }
 
    if (!fPicList) {
@@ -261,7 +261,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name, char **xpm)
       pic->fAttributes.fWidth  = w;
       pic->fAttributes.fHeight = h;
       fPicList->Add(pic);
-      return 0;
+      return nullptr;
    }
 
    pic = new TGPicture(hname, img->GetPixmap(), img->GetMask());
@@ -324,7 +324,7 @@ TGPicture::TGPicture(const char *name, Pixmap_t pxmap, Pixmap_t mask)
    fAttributes.fColormap  = gClient->GetDefaultColormap();
    fAttributes.fCloseness = 40000; // Allow for "similar" colors
    fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
-   fAttributes.fPixels    = 0;
+   fAttributes.fPixels    = nullptr;
    fAttributes.fDepth     = 0;
    fAttributes.fNpixels   = 0;
    fAttributes.fXHotspot  = 0;

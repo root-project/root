@@ -312,7 +312,7 @@ TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          break;
       default:
          Error("Divide", "Wrong axis type for division");
-         return 0;
+         return nullptr;
    }
    vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
    vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -766,12 +766,12 @@ Int_t TGeoBBox::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
 
 TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const
 {
-   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return nullptr;
    Double_t dx, dy, dz;
    Int_t ierr = mother->GetFittingBox(this, mat, dx, dy, dz);
    if (ierr) {
       Error("GetMakeRuntimeShape", "cannot fit this to mother");
-      return 0;
+      return nullptr;
    }
    return (new TGeoBBox(dx, dy, dz));
 }

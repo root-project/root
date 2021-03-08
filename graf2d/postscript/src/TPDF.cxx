@@ -104,7 +104,7 @@ ClassImp(TPDF);
 
 TPDF::TPDF() : TVirtualPS()
 {
-   fStream          = 0;
+   fStream          = nullptr;
    fCompress        = kFALSE;
    fPageNotEmpty    = kFALSE;
    gVirtualPS       = this;
@@ -120,7 +120,7 @@ TPDF::TPDF() : TVirtualPS()
    fStartStream     = 0;
    fLineScale       = 0.;
    fObjPosSize      = 0;
-   fObjPos          = 0;
+   fObjPos          = nullptr;
    fNbObj           = 0;
    fNbPage          = 0;
    fRange           = kFALSE;
@@ -138,7 +138,7 @@ TPDF::TPDF() : TVirtualPS()
 
 TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   fStream          = 0;
+   fStream          = nullptr;
    fCompress        = kFALSE;
    fPageNotEmpty    = kFALSE;
    fRed             = 0.;
@@ -342,9 +342,9 @@ void TPDF::Close(Option_t *)
    PrintStr("%%EOF@");
 
    // Close file stream
-   if (fStream) { fStream->close(); delete fStream; fStream = 0;}
+   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
 
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1628,7 +1628,7 @@ void TPDF::NewPage()
 
 void TPDF::Off()
 {
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1691,9 +1691,9 @@ void TPDF::Open(const char *fname, Int_t wtype)
 #else
       fStream->open(fname, std::ofstream::out);
 #endif
-   if (fStream == 0 || !fStream->good()) {
+   if (fStream == nullptr || !fStream->good()) {
       printf("ERROR in TPDF::Open: Cannot open file:%s\n",fname);
-      if (fStream == 0) return;
+      if (fStream == nullptr) return;
    }
 
    gVirtualPS = this;
@@ -1722,7 +1722,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    // Set a default range
    Range(fXsize, fYsize);
 
-   fObjPos = 0;
+   fObjPos = nullptr;
    fObjPosSize = 0;
    fNbObj = 0;
    fNbPage = 0;
@@ -2298,7 +2298,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    Bool_t kerning;
    if (wa0-wa1 != 0) kerning = kTRUE;
    else              kerning = kFALSE;
-   Int_t *charDeltas = 0;
+   Int_t *charDeltas = nullptr;
    if (kerning) {
         charDeltas = new Int_t[len];
         for (Int_t i = 0;i < len;i++) {
@@ -2430,9 +2430,9 @@ void TPDF::WriteCompressedBuffer()
    stream.avail_in  = (uInt)fLenBuffer;
    stream.next_out  = (Bytef*)out;
    stream.avail_out = (uInt)2*fLenBuffer;
-   stream.zalloc    = (alloc_func)0;
-   stream.zfree     = (free_func)0;
-   stream.opaque    = (voidpf)0;
+   stream.zalloc    = (alloc_func)nullptr;
+   stream.zfree     = (free_func)nullptr;
+   stream.opaque    = (voidpf)nullptr;
 
    err = deflateInit(&stream, Z_DEFAULT_COMPRESSION);
    if (err != Z_OK) {

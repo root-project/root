@@ -70,7 +70,7 @@ Double_t UniformProposal::GetProposalDensity(RooArgSet& /* x1 */,
    Double_t volume = 1.0;
    TIterator* it = x2.createIterator();
    RooRealVar* var;
-   while ((var = (RooRealVar*)it->Next()) != NULL)
+   while ((var = (RooRealVar*)it->Next()) != nullptr)
       volume *= (var->getMax() - var->getMin());
    delete it;
    return 1.0 / volume;

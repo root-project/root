@@ -110,7 +110,7 @@ void TGeoBoolNode::CreateThreadData(Int_t nthreads)
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
    for (Int_t tid=0; tid<nthreads; tid++) {
-      if (fThreadData[tid] == 0) {
+      if (fThreadData[tid] == nullptr) {
          fThreadData[tid] = new ThreadData_t;
       }
    }

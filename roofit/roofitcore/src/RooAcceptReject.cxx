@@ -78,7 +78,7 @@ void RooAcceptReject::registerSampler(RooNumGenFactory& fact)
 /// cloned and so will not be disturbed during the generation process.
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose, const RooAbsReal* maxFuncVal) :
-  RooAbsNumGenerator(func,genVars,verbose,maxFuncVal), _nextCatVar(0), _nextRealVar(0)
+  RooAbsNumGenerator(func,genVars,verbose,maxFuncVal), _nextCatVar(nullptr), _nextRealVar(nullptr)
 {
   _minTrialsArray[0] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial0D")) ;
   _minTrialsArray[1] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial1D")) ;
@@ -148,7 +148,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   // create iterators for the new sets
   _nextCatVar= _catVars.createIterator();
   _nextRealVar= _realVars.createIterator();
-  assert(0 != _nextCatVar && 0 != _nextRealVar);
+  assert(nullptr != _nextCatVar && nullptr != _nextRealVar);
 
   // initialize our statistics
   _maxFuncVal= 0;
@@ -198,9 +198,9 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, Double_t& resa
       }
     }
     
-    event= 0;
+    event= nullptr;
     Double_t oldMax2(_maxFuncVal);
-    while(0 == event) {
+    while(nullptr == event) {
       // Use any cached events first
       if (_maxFuncVal>oldMax2) {
 	cxcoutD(Generation) << "RooAcceptReject::generateEvent maxFuncVal has changed, need to resample already accepted events by factor" 
@@ -217,7 +217,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, Double_t& resa
       // Always generate at least one more event so we don't get stuck.
       if(_totalEvents*_maxFuncVal <= 0) {
 	coutE(Generation) << "RooAcceptReject::generateEvent: cannot estimate efficiency...giving up" << endl;
-	return 0;
+	return nullptr;
       }
 
       Double_t eff= _funcSum/(_totalEvents*_maxFuncVal);
@@ -246,8 +246,8 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, Double_t& resa
     _maxFuncVal = _funcMaxVal->getVal() ;
     
     // Generate enough trials to produce a single accepted event
-    event = 0 ;
-    while(0==event) {
+    event = nullptr ;
+    while(nullptr==event) {
       addEventToCache() ;
       event = nextAcceptedEvent() ;
     }
@@ -267,7 +267,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, Double_t& resa
 
 const RooArgSet *RooAcceptReject::nextAcceptedEvent() 
 {
-  const RooArgSet *event = 0;
+  const RooArgSet *event = nullptr;
   while((event= _cache->get(_eventsUsed))) {    
     _eventsUsed++ ;
     // accept this cached event?
@@ -298,12 +298,12 @@ void RooAcceptReject::addEventToCache()
 {
   // randomize each discrete argument
   _nextCatVar->Reset();
-  RooCategory *cat = 0;
+  RooCategory *cat = nullptr;
   while((cat= (RooCategory*)_nextCatVar->Next())) cat->randomize();
 
   // randomize each real argument
   _nextRealVar->Reset();
-  RooRealVar *real = 0;
+  RooRealVar *real = nullptr;
   while((real= (RooRealVar*)_nextRealVar->Next())) real->randomize();
 
   // calculate and store our function value at this new point

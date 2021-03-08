@@ -70,9 +70,9 @@ TParticlePDG::TParticlePDG()
    fY            = 0;
    fX            = 0;
    fStable       = 0;
-   fDecayList    = 0;
+   fDecayList    = nullptr;
    fTrackingCode = 0;
-   fAntiParticle = 0;
+   fAntiParticle = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,9 +105,9 @@ TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t aMass,
    fParticleClass = aParticleClass;
    fPdgCode       = aPdgCode;
    fTrackingCode  = aTrackingCode;
-   fDecayList     = NULL;
+   fDecayList     = nullptr;
    if (Anti) fAntiParticle = this;
-   else      fAntiParticle = 0;
+   else      fAntiParticle = nullptr;
 
    const Double_t kHbar = 6.58211889e-25; // GeV s
    if (fWidth != 0.) fLifetime = kHbar / fWidth;

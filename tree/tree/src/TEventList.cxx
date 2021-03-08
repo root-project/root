@@ -63,8 +63,8 @@ TEventList::TEventList(): TNamed()
    fN          = 0;
    fSize       = 100;
    fDelta      = 100;
-   fList       = 0;
-   fDirectory  = 0;
+   fList       = nullptr;
+   fDirectory  = nullptr;
    fReapply    = kFALSE;
 }
 
@@ -81,7 +81,7 @@ TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_
    else                fSize  = 100;
    if (delta > 100)    fDelta = delta;
    else                fDelta = 100;
-   fList       = 0;
+   fList       = nullptr;
    fDirectory  = gDirectory;
    if (fDirectory) fDirectory->Append(this);
 }
@@ -98,7 +98,7 @@ TEventList::TEventList(const TEventList &list) : TNamed(list)
    for (Int_t i=0; i<fN; i++)
       fList[i] = list.fList[i];
    fReapply = list.fReapply;
-   fDirectory = 0;
+   fDirectory = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,9 +106,9 @@ TEventList::TEventList(const TEventList &list) : TNamed(list)
 
 TEventList::~TEventList()
 {
-   delete [] fList;  fList = 0;
+   delete [] fList;  fList = nullptr;
    if (fDirectory) fDirectory->Remove(this);
-   fDirectory  = 0;
+   fDirectory  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -400,7 +400,7 @@ void TEventList::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      fDirectory = 0;
+      fDirectory = nullptr;
       if (R__v > 1) {
          b.ReadClassBuffer(TEventList::Class(), this, R__v, R__s, R__c);
          ResetBit(kMustCleanup);

@@ -301,7 +301,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
 
       // Initializing loop variables
       Bool_t isLineToBeSkipped = kFALSE ; //empty and ill-formed lines
-      char * token = NULL ;
+      char * token = nullptr ;
       TString token_str = "" ;
       Int_t token_idx = 0 ;
       Double_t * value = new Double_t [4] ; //x,y,ex,ey buffers
@@ -318,7 +318,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
                line.erase(line.end() - 1, line.end()) ;
             }
             token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, &rest);
-            while (token != NULL && value_idx < ntokensToBeSaved) {
+            while (token != nullptr && value_idx < ntokensToBeSaved) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
                   token_str.ReplaceAll("\t", "") ;
@@ -330,7 +330,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
                      value_idx++ ;
                   }
                }
-               token = R__STRTOK_R(NULL, option, &rest); // next token
+               token = R__STRTOK_R(nullptr, option, &rest); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx > 1) { //i.e. 2,3 or 4
@@ -344,7 +344,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
             }
          }
          isLineToBeSkipped = kFALSE ;
-         token = NULL ;
+         token = nullptr ;
          token_idx = 0 ;
          value_idx = 0 ;
       }
@@ -388,7 +388,7 @@ void TGraphErrors::Apply(TF1 *f)
 
    if (fHistogram) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
    }
    for (Int_t i = 0; i < GetN(); i++) {
       GetPoint(i, x, y);
@@ -419,7 +419,7 @@ void TGraphErrors::ApplyX(TF1 *f)
 
    if (fHistogram) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
    }
    for (Int_t i = 0; i < GetN(); i++) {
       GetPoint(i, x, y);
@@ -522,7 +522,7 @@ void TGraphErrors::CopyAndRelease(Double_t **newarrays,
 Bool_t TGraphErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
                                 Int_t obegin)
 {
-   if (TGraph::CopyPoints(arrays ? arrays + 2 : 0, ibegin, iend, obegin)) {
+   if (TGraph::CopyPoints(arrays ? arrays + 2 : nullptr, ibegin, iend, obegin)) {
       Int_t n = (iend - ibegin) * sizeof(Double_t);
       if (arrays) {
          memmove(&arrays[0][obegin], &fEX[ibegin], n);
@@ -547,7 +547,7 @@ Bool_t TGraphErrors::CtorAllocate()
 {
 
    if (!fNpoints) {
-      fEX = fEY = 0;
+      fEX = fEY = nullptr;
       return kFALSE;
    } else {
       fEX = new Double_t[fMaxSize];
@@ -565,7 +565,7 @@ Bool_t TGraphErrors::DoMerge(const TGraph *g)
 
    Double_t * ex = g->GetEX();
    Double_t * ey = g->GetEY();
-   if (ex == 0 || ey == 0 ) {
+   if (ex == nullptr || ey == nullptr ) {
       if (g->IsA() != TGraph::Class() )
          Warning("DoMerge","Merging a %s is not compatible with a TGraphErrors - errors will be ignored",g->IsA()->GetName());
       return TGraph::DoMerge(g);

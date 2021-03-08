@@ -28,7 +28,7 @@ TPieSliceEditor::TPieSliceEditor(const TGWindow *p,
                   UInt_t options, Pixel_t back)
                   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fPieSlice = 0;
+   fPieSlice = nullptr;
 
    // start initializing the window components
    MakeTitle("Title");

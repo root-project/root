@@ -178,7 +178,7 @@ static int aux_rand()
    }
    printf("+++ERROR+++ : aux_rand: neither /dev/urandom nor /dev/random are available or readable!\n");
    struct timeval tv;
-   if (gettimeofday(&tv,0) == 0) {
+   if (gettimeofday(&tv,nullptr) == 0) {
       int t1, t2;
       memcpy((void *)&t1, (void *)&tv.tv_sec, sizeof(int));
       memcpy((void *)&t2, (void *)&tv.tv_usec, sizeof(int));
@@ -1023,7 +1023,7 @@ void init_rnd()
       if (read(fd, &seed, sizeof(seed))) {;}
       close(fd);
    } else {
-      seed = (unsigned int)time(0);   //better use times() + win32 equivalent
+      seed = (unsigned int)time(nullptr);   //better use times() + win32 equivalent
    }
    srand( seed );
 }

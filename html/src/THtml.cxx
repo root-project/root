@@ -36,7 +36,7 @@
 #include <set>
 #include <fstream>
 
-THtml *gHtml = 0;
+THtml *gHtml = nullptr;
 
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -311,7 +311,7 @@ TString THtml::TFileDefinition::MatchFileSysName(TString& filename, TFileSysEntr
    TString filesysname;
    if (bucket) {
       TIter iFS(bucket);
-      TFileSysEntry* fsentry = 0;
+      TFileSysEntry* fsentry = nullptr;
       while ((fsentry = (TFileSysEntry*) iFS())) {
          if (!filename.EndsWith(fsentry->GetName()))
             continue;
@@ -631,7 +631,7 @@ bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TStrin
    TString alldir = gSystem->GetDirName(included);
    TObjArray* arrSubDirs = alldir.Tokenize("/");
    TIter iEntry(bucket);
-   TFileSysEntry* entry = 0;
+   TFileSysEntry* entry = nullptr;
    while ((entry = (TFileSysEntry*) iEntry())) {
       if (incBase != entry->GetName()) continue;
       // find entry with matching enclosing directory
@@ -642,7 +642,7 @@ bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TStrin
             continue;
          if (subdir == parent->GetName())
             parent = parent->GetParent();
-         else parent = 0;
+         else parent = nullptr;
       }
       if (parent) {
          // entry found!
@@ -666,7 +666,7 @@ void THtml::TFileSysDir::Recurse(TFileSysDB* db, const char* path)
    TPMERegexp regexp(db->GetIgnore());
    dir += "/";
    void* hDir = gSystem->OpenDirectory(dir);
-   const char* direntry = 0;
+   const char* direntry = nullptr;
    while ((direntry = gSystem->GetDirEntry(hDir))) {
       if (!direntry[0] || direntry[0] == '.' || regexp.Match(direntry)) continue;
       TString entryPath(dir + direntry);
@@ -722,7 +722,7 @@ void THtml::TFileSysDB::Fill()
       if (!gSystem->GetPathInfo(dir, buf) && R_ISDIR(buf.fMode)) {
 #ifndef R__WIN32
          TFileSysRoot* prevroot = (TFileSysRoot*) (Long_t)GetMapIno().GetValue(buf.fIno);
-         if (prevroot != 0) {
+         if (prevroot != nullptr) {
             Warning("Fill", "InputPath \"%s\" already present as \"%s\"!", dir.Data(), prevroot->GetName());
             continue;
          }
@@ -1221,9 +1221,9 @@ ClassImp(THtml);
 THtml::THtml():
    fCounterFormat("%12s %5s %s"),
    fProductName("(UNKNOWN PRODUCT)"),
-   fThreadedClassIter(0), fThreadedClassCount(0), fMakeClassMutex(0),
-   fGClient(0), fPathDef(0), fModuleDef(0), fFileDef(0),
-   fLocalFiles(0), fBatch(kFALSE)
+   fThreadedClassIter(nullptr), fThreadedClassCount(0), fMakeClassMutex(nullptr),
+   fGClient(nullptr), fPathDef(nullptr), fModuleDef(nullptr), fFileDef(nullptr),
+   fLocalFiles(nullptr), fBatch(kFALSE)
 {
    // check for source directory
    fPathInfo.fInputPath = gEnv->GetValue("Root.Html.SourceDir", "./:src/:include/");
@@ -1266,7 +1266,7 @@ THtml::~THtml()
    fDocEntityInfo.fModules.Clear();
    if (gHtml == this) {
       gROOT->GetListOfSpecials()->Remove(gHtml);
-      gHtml = 0;
+      gHtml = nullptr;
    }
    delete fPathDef;
    delete fModuleDef;
@@ -1368,17 +1368,17 @@ const char* THtml::GetEtcDir() const
 
 TClassDocInfo *THtml::GetNextClass()
 {
-   if (!fThreadedClassIter) return 0;
+   if (!fThreadedClassIter) return nullptr;
 
    R__LOCKGUARD(GetMakeClassMutex());
 
-   TClassDocInfo* classinfo = 0;
+   TClassDocInfo* classinfo = nullptr;
    while ((classinfo = (TClassDocInfo*)(*fThreadedClassIter)())
           && !classinfo->IsSelected()) { }
 
    if (!classinfo) {
       delete fThreadedClassIter;
-      fThreadedClassIter = 0;
+      fThreadedClassIter = nullptr;
    }
 
    fCounter.Form("%5d", fDocEntityInfo.fClasses.GetSize() - fThreadedClassCount++);
@@ -1440,7 +1440,7 @@ void THtml::HelperDeleted(THtml::THelperBase* who)
    THelperBase* helpers[3] = {fPathDef, fModuleDef, fFileDef};
    for (int i = 0; who && i < 3; ++i)
       if (who == helpers[i])
-         helpers[i] = who = 0;
+         helpers[i] = who = nullptr;
 }
 
 
@@ -1583,7 +1583,7 @@ void THtml::CreateListOfClasses(const char* filter)
    for (Int_t i = -1; i < totalNumberOfClasses; i++) {
 
       // get class name
-      const char *cname = 0;
+      const char *cname = nullptr;
       if (i < 0) cname = "TObject";
       else cname = gClassTable->Next();
       if (!cname)
@@ -1618,7 +1618,7 @@ void THtml::CreateListOfClasses(const char* filter)
       TString src;
       TString srcFS;
       TString htmlfilename;
-      TFileSysEntry* fse = 0;
+      TFileSysEntry* fse = nullptr;
 
       TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cname);
       if (cdi) {
@@ -1689,9 +1689,9 @@ void THtml::CreateListOfClasses(const char* filter)
                   { "ColorStruct_t", "CpuInfo_t", "Event_t", "FileStat_t", "GCValues_t", "MemInfo_t",
                      "PictureAttributes_t", "Point_t", "ProcInfo_t", "ROOT", "ROOT::Fit",
                      "Rectangle_t", "RedirectHandle_t", "Segment_t", "SetWindowAttributes_t",
-                     "SysInfo_t", "TCint", "UserGroup_t", "WindowAttributes_t", "timespec", 0};
+                     "SysInfo_t", "TCint", "UserGroup_t", "WindowAttributes_t", "timespec", nullptr};
                   static const char* rootClassStemsToIgnore[] =
-                  { "ROOT::Math", "TKDTree", "TMatrixT", "TParameter", "vector", 0 };
+                  { "ROOT::Math", "TKDTree", "TMatrixT", "TParameter", "vector", nullptr };
                   static size_t rootClassStemsToIgnoreLen[] = {0, 0, 0, 0, 0};
                   static std::set<std::string> setRootClassesToIgnore;
                   if (setRootClassesToIgnore.empty()) {
@@ -1723,7 +1723,7 @@ void THtml::CreateListOfClasses(const char* filter)
 
       Bool_t haveSource = (srcFS.Length());
       if (!haveSource)
-         haveSource = GetFileDefinition().GetImplFileName(classPtr, src, srcFS, fse ? 0 : &fse);
+         haveSource = GetFileDefinition().GetImplFileName(classPtr, src, srcFS, fse ? nullptr : &fse);
 
       if (!haveSource) {
          classesImplFileNotFound.AddLast(classPtr);
@@ -1798,7 +1798,7 @@ void THtml::CreateListOfClasses(const char* filter)
       Warning("CreateListOfClasses",
          "Cannot find the header for the following classes [reason]:");
       TIter iClassesDeclFileNotFound(&classesDeclFileNotFound);
-      TClass* iClass = 0;
+      TClass* iClass = nullptr;
       while ((iClass = (TClass*)iClassesDeclFileNotFound())) {
          if (iClass->GetDeclFileName() && iClass->GetDeclFileName()[0]) {
             Warning("CreateListOfClasses", "   %s [header %s not found]", iClass->GetName(), iClass->GetDeclFileName());
@@ -1812,7 +1812,7 @@ void THtml::CreateListOfClasses(const char* filter)
       Warning("CreateListOfClasses",
          "Cannot find the source file for the following classes [reason]:");
       TIter iClassesDeclFileNotFound(&classesImplFileNotFound);
-      TClass* iClass = 0;
+      TClass* iClass = nullptr;
       while ((iClass = (TClass*)iClassesDeclFileNotFound())) {
          if (iClass->GetDeclFileName() && iClass->GetDeclFileName()[0]) {
             Info("CreateListOfClasses", "   %s [source %s not found]", iClass->GetName(), iClass->GetImplFileName());
@@ -1831,7 +1831,7 @@ void THtml::CreateListOfClasses(const char* filter)
 
    // fill typedefs
    TIter iTypedef(gROOT->GetListOfTypes());
-   TDataType* dt = 0;
+   TDataType* dt = nullptr;
    TDocOutput output(*this);
    while ((dt = (TDataType*) iTypedef())) {
       if (dt->GetType() != -1) continue;
@@ -1869,7 +1869,7 @@ void THtml::CreateListOfClasses(const char* filter)
    fDocEntityInfo.fClasses.Sort();
    fDocEntityInfo.fModules.Sort();
    TIter iterModule(&fDocEntityInfo.fModules);
-   TModuleDocInfo* mdi = 0;
+   TModuleDocInfo* mdi = nullptr;
    while ((mdi = (TModuleDocInfo*) iterModule()))
       mdi->GetClasses()->Sort();
 
@@ -1964,7 +1964,7 @@ void THtml::CreateStyleSheet() const {
 void THtml::GetDerivedClasses(TClass* cl, std::map<TClass*, Int_t>& derived) const
 {
    TIter iClass(&fDocEntityInfo.fClasses);
-   TClassDocInfo* cdi = 0;
+   TClassDocInfo* cdi = nullptr;
    while ((cdi = (TClassDocInfo*) iClass())) {
       TClass* candidate = dynamic_cast<TClass*>(cdi->GetClass());
       if (!candidate) continue;
@@ -1975,7 +1975,7 @@ void THtml::GetDerivedClasses(TClass* cl, std::map<TClass*, Int_t>& derived) con
             TList* bases = currentBaseOfCandidate->GetListOfBases();
             if (!bases) continue;
             TIter iBase(bases);
-            TBaseClass* base = 0;
+            TBaseClass* base = nullptr;
             while ((base = (TBaseClass*) iBase())) {
                TClass* clBase = base->GetClassPointer();
                if (clBase && clBase->InheritsFrom(cl)) {
@@ -2067,7 +2067,7 @@ const char* THtml::GetHtmlFileName(const char* classname) const
    TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(classname);
    if (cdi)
       return cdi->GetHtmlFileName();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2075,16 +2075,16 @@ const char* THtml::GetHtmlFileName(const char* classname) const
 
 TClass *THtml::GetClass(const char *name1) const
 {
-   if(!name1 || !name1[0]) return 0;
+   if(!name1 || !name1[0]) return nullptr;
    // no doc for internal classes
    if (strstr(name1,"ROOT::")==name1) {
       Bool_t ret = kTRUE;
       if (!strncmp(name1 + 6,"Math", 4))   ret = kFALSE;
-      if (ret) return 0;
+      if (ret) return nullptr;
    }
 
    TClassDocInfo* cdi = (TClassDocInfo*)fDocEntityInfo.fClasses.FindObject(name1);
-   if (!cdi) return 0;
+   if (!cdi) return nullptr;
    TClass *cl = dynamic_cast<TClass*>(cdi->GetClass());
    // hack to get rid of prec_stl types
    // TClassEdit checks are far too slow...
@@ -2096,7 +2096,7 @@ TClass *THtml::GetClass(const char *name1) const
    TString declFileName;
    if (cl && GetDeclFileName(cl, kFALSE, declFileName))
       return cl;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2229,7 +2229,7 @@ void THtml::MakeAll(Bool_t force, const char *filter, int numthreads /*= -1*/)
 
    if (numthreads == 1) {
       // CreateListOfClasses(filter); already done by MakeIndex
-      TClassDocInfo* classinfo = 0;
+      TClassDocInfo* classinfo = nullptr;
       TIter iClassInfo(&fDocEntityInfo.fClasses);
       UInt_t count = 0;
 
@@ -2265,7 +2265,7 @@ void THtml::MakeAll(Bool_t force, const char *filter, int numthreads /*= -1*/)
       }
 
       TIter iThread(&threads);
-      TThread* thread = 0;
+      TThread* thread = nullptr;
       Bool_t wait = kTRUE;
       while (wait) {
          while (wait && (thread = (TThread*) iThread()))
@@ -2352,12 +2352,12 @@ void THtml::MakeClass(void *cdi_void, Bool_t force)
 
 void* THtml::MakeClassThreaded(void* info) {
    const THtmlThreadInfo* hti = (const THtmlThreadInfo*)info;
-   if (!hti) return 0;
-   TClassDocInfo* classinfo = 0;
+   if (!hti) return nullptr;
+   TClassDocInfo* classinfo = nullptr;
    while ((classinfo = hti->GetHtml()->GetNextClass()))
       hti->GetHtml()->MakeClass(classinfo, hti->GetForce());
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2400,7 +2400,7 @@ void THtml::MakeTree(const char *className, Bool_t force)
       return;
    }
 
-   TClassDocOutput cdo(*this, classPtr, 0);
+   TClassDocOutput cdo(*this, classPtr, nullptr);
    cdo.MakeTree(force);
 }
 
@@ -2508,7 +2508,7 @@ void THtml::SetImplFileName(TClass* cl, const char* filename)
 {
    TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cl->GetName());
    if (!cdi) {
-      cdi = new TClassDocInfo(cl, "" /*html*/, "" /*fsdecl*/, "" /*fsimpl*/, 0 /*decl*/, filename);
+      cdi = new TClassDocInfo(cl, "" /*html*/, "" /*fsdecl*/, "" /*fsimpl*/, nullptr /*decl*/, filename);
       fDocEntityInfo.fClasses.Add(cdi);
    } else
       cdi->SetImplFileName(filename);

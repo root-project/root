@@ -340,7 +340,7 @@ struct TUtmpContent {
          fclose(utmp);
 
       free(fUtmpContents);
-      fUtmpContents = 0;
+      fUtmpContents = nullptr;
       return 0;
    }
 
@@ -1127,14 +1127,14 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
          for (fd = 0; fd < mxfd; fd++) {
             t.Set(fd);
             if (fReadmask->IsSet(fd)) {
-               rc = UnixSelect(fd+1, &t, 0, 0);
+               rc = UnixSelect(fd+1, &t, nullptr, 0);
                if (rc < 0 && rc != -2) {
                   SysError("DispatchOneEvent", "select: read error on %d", fd);
                   fReadmask->Clr(fd);
                }
             }
             if (fWritemask->IsSet(fd)) {
-               rc = UnixSelect(fd+1, 0, &t, 0);
+               rc = UnixSelect(fd+1, nullptr, &t, 0);
                if (rc < 0 && rc != -2) {
                   SysError("DispatchOneEvent", "select: write error on %d", fd);
                   fWritemask->Clr(fd);
@@ -1156,7 +1156,7 @@ void TUnixSystem::Sleep(UInt_t milliSec)
    tv.tv_sec  = milliSec / 1000;
    tv.tv_usec = (milliSec % 1000) * 1000;
 
-   select(0, 0, 0, 0, &tv);
+   select(0, nullptr, nullptr, nullptr, &tv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1174,7 +1174,7 @@ Int_t TUnixSystem::Select(TList *act, Long_t to)
    TFdSet rd, wr;
    Int_t mxfd = -1;
    TIter next(act);
-   TFileHandler *h = 0;
+   TFileHandler *h = nullptr;
    while ((h = (TFileHandler *) next())) {
       Int_t fd = h->GetFd();
       if (fd > -1) {
@@ -1371,7 +1371,7 @@ void *TUnixSystem::OpenDirectory(const char *name)
 
 void TUnixSystem::FreeDirectory(void *dirp)
 {
-   TSystem *helper = FindHelper(0, dirp);
+   TSystem *helper = FindHelper(nullptr, dirp);
    if (helper) {
       helper->FreeDirectory(dirp);
       return;
@@ -1386,7 +1386,7 @@ void TUnixSystem::FreeDirectory(void *dirp)
 
 const char *TUnixSystem::GetDirEntry(void *dirp)
 {
-   TSystem *helper = FindHelper(0, dirp);
+   TSystem *helper = FindHelper(nullptr, dirp);
    if (helper)
       return helper->GetDirEntry(dirp);
 
@@ -1440,7 +1440,7 @@ std::string TUnixSystem::GetWorkingDirectory() const
 
 void TUnixSystem::FillWithCwd(char *cwd) const
 {
-   if (::getcwd(cwd, kMAXPATHLEN) == 0) {
+   if (::getcwd(cwd, kMAXPATHLEN) == nullptr) {
       Error("WorkingDirectory", "getcwd() failed");
    }
 }
@@ -2281,7 +2281,7 @@ void TUnixSystem::StackTrace()
    if (fd && message) { }  // remove unused warning (remove later)
 
    if (gApplication && !strcmp(gApplication->GetName(), "TRint"))
-      Getlinem(kCleanUp, 0);
+      Getlinem(kCleanUp, nullptr);
 
 #if defined(USE_GDB_STACK_TRACE)
    char *gdb = Which(Getenv("PATH"), "gdb", kExecutePermission);
@@ -2698,13 +2698,13 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
       xh->fFile = file;
 
       // Redirect stdout & stderr
-      if (freopen(file, m, stdout) == 0) {
+      if (freopen(file, m, stdout) == nullptr) {
          SysError("RedirectOutput", "could not freopen stdout (errno: %d)", TSystem::GetErrno());
          return -1;
       }
-      if (freopen(file, m, stderr) == 0) {
+      if (freopen(file, m, stderr) == nullptr) {
          SysError("RedirectOutput", "could not freopen stderr (errno: %d)", TSystem::GetErrno());
-         if (freopen(xh->fStdOutTty.Data(), "a", stdout) == 0)
+         if (freopen(xh->fStdOutTty.Data(), "a", stdout) == nullptr)
             SysError("RedirectOutput", "could not restore stdout (errno: %d)", TSystem::GetErrno());
          return -1;
       }
@@ -2712,7 +2712,7 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
       // Restore stdout & stderr
       fflush(stdout);
       if (!(xh->fStdOutTty.IsNull())) {
-         if (freopen(xh->fStdOutTty.Data(), "a", stdout) == 0) {
+         if (freopen(xh->fStdOutTty.Data(), "a", stdout) == nullptr) {
             SysError("RedirectOutput", "could not restore stdout (errno: %d)", TSystem::GetErrno());
             rc = -1;
          }
@@ -2738,7 +2738,7 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
       }
       fflush(stderr);
       if (!(xh->fStdErrTty.IsNull())) {
-         if (freopen(xh->fStdErrTty.Data(), "a", stderr) == 0) {
+         if (freopen(xh->fStdErrTty.Data(), "a", stderr) == nullptr) {
             SysError("RedirectOutput", "could not restore stderr (errno: %d)", TSystem::GetErrno());
             rc = -1;
          }
@@ -3147,7 +3147,7 @@ int TUnixSystem::GetServiceByName(const char *servicename)
 {
    struct servent *sp;
 
-   if ((sp = getservbyname(servicename, kProtocolName)) == 0) {
+   if ((sp = getservbyname(servicename, kProtocolName)) == nullptr) {
       Error("GetServiceByName", "no service \"%s\" with protocol \"%s\"\n",
               servicename, kProtocolName);
       return -1;
@@ -3162,7 +3162,7 @@ char *TUnixSystem::GetServiceByPort(int port)
 {
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
+   if ((sp = getservbyport(htons(port), kProtocolName)) == nullptr) {
       //::Error("GetServiceByPort", "no service \"%d\" with protocol \"%s\"",
       //        port, kProtocolName);
       return Form("%d", port);
@@ -3252,7 +3252,7 @@ int TUnixSystem::AcceptConnection(int sock)
 {
    int soc = -1;
 
-   while ((soc = ::accept(sock, 0, 0)) == -1 && GetErrno() == EINTR)
+   while ((soc = ::accept(sock, nullptr, nullptr)) == -1 && GetErrno() == EINTR)
       ResetErrno();
 
    if (soc == -1) {
@@ -3591,22 +3591,22 @@ static struct Signalmap_t {
    struct sigaction *fOldHandler;
    const char       *fSigName;
 } gSignalMap[kMAXSIGNALS] = {       // the order of the signals should be identical
-   { SIGBUS,   0, 0, "bus error" }, // to the one in TSysEvtHandler.h
-   { SIGSEGV,  0, 0, "segmentation violation" },
-   { SIGSYS,   0, 0, "bad argument to system call" },
-   { SIGPIPE,  0, 0, "write on a pipe with no one to read it" },
-   { SIGILL,   0, 0, "illegal instruction" },
-   { SIGABRT,  0, 0, "abort" },
-   { SIGQUIT,  0, 0, "quit" },
-   { SIGINT,   0, 0, "interrupt" },
-   { SIGWINCH, 0, 0, "window size change" },
-   { SIGALRM,  0, 0, "alarm clock" },
-   { SIGCHLD,  0, 0, "death of a child" },
-   { SIGURG,   0, 0, "urgent data arrived on an I/O channel" },
-   { SIGFPE,   0, 0, "floating point exception" },
-   { SIGTERM,  0, 0, "termination signal" },
-   { SIGUSR1,  0, 0, "user-defined signal 1" },
-   { SIGUSR2,  0, 0, "user-defined signal 2" }
+   { SIGBUS,   nullptr, nullptr, "bus error" }, // to the one in TSysEvtHandler.h
+   { SIGSEGV,  nullptr, nullptr, "segmentation violation" },
+   { SIGSYS,   nullptr, nullptr, "bad argument to system call" },
+   { SIGPIPE,  nullptr, nullptr, "write on a pipe with no one to read it" },
+   { SIGILL,   nullptr, nullptr, "illegal instruction" },
+   { SIGABRT,  nullptr, nullptr, "abort" },
+   { SIGQUIT,  nullptr, nullptr, "quit" },
+   { SIGINT,   nullptr, nullptr, "interrupt" },
+   { SIGWINCH, nullptr, nullptr, "window size change" },
+   { SIGALRM,  nullptr, nullptr, "alarm clock" },
+   { SIGCHLD,  nullptr, nullptr, "death of a child" },
+   { SIGURG,   nullptr, nullptr, "urgent data arrived on an I/O channel" },
+   { SIGFPE,   nullptr, nullptr, "floating point exception" },
+   { SIGTERM,  nullptr, nullptr, "termination signal" },
+   { SIGUSR1,  nullptr, nullptr, "user-defined signal 1" },
+   { SIGUSR2,  nullptr, nullptr, "user-defined signal 2" }
 };
 
 
@@ -3741,7 +3741,7 @@ void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
          if (sigaction(gSignalMap[sig].fCode, &sigact, &oldsigact[sig]) < 0)
             ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
       } else {
-         if (sigaction(gSignalMap[sig].fCode, &oldsigact[sig], 0) < 0)
+         if (sigaction(gSignalMap[sig].fCode, &oldsigact[sig], nullptr) < 0)
             ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
       }
    }
@@ -3783,7 +3783,7 @@ void TUnixSystem::UnixSigAlarmInterruptsSyscalls(Bool_t set)
          sigact.sa_flags |= SA_RESTART;
 #endif
       }
-      if (sigaction(gSignalMap[kSigAlarm].fCode, &sigact, 0) < 0)
+      if (sigaction(gSignalMap[kSigAlarm].fCode, &sigact, nullptr) < 0)
          ::SysError("TUnixSystem::UnixSigAlarmInterruptsSyscalls", "sigaction");
    }
 }
@@ -3803,11 +3803,11 @@ void TUnixSystem::UnixResetSignal(ESignals sig)
 {
    if (gSignalMap[sig].fOldHandler) {
       // restore old signal handler
-      if (sigaction(gSignalMap[sig].fCode, gSignalMap[sig].fOldHandler, 0) < 0)
+      if (sigaction(gSignalMap[sig].fCode, gSignalMap[sig].fOldHandler, nullptr) < 0)
          ::SysError("TUnixSystem::UnixSignal", "sigaction");
       delete gSignalMap[sig].fOldHandler;
-      gSignalMap[sig].fOldHandler = 0;
-      gSignalMap[sig].fHandler    = 0;
+      gSignalMap[sig].fOldHandler = nullptr;
+      gSignalMap[sig].fHandler    = nullptr;
    }
 }
 
@@ -3846,7 +3846,7 @@ Long64_t TUnixSystem::UnixNow()
    }
 
    struct timeval t;
-   gettimeofday(&t, 0);
+   gettimeofday(&t, nullptr);
    return Long64_t(t.tv_sec-(Long_t)jan95)*1000 + t.tv_usec/1000;
 }
 
@@ -3864,7 +3864,7 @@ int TUnixSystem::UnixSetitimer(Long_t ms)
       itv.it_value.tv_sec  = time_t(ms / 1000);
       itv.it_value.tv_usec = time_t((ms % 1000) * 1000);
    }
-   int st = setitimer(ITIMER_REAL, &itv, 0);
+   int st = setitimer(ITIMER_REAL, &itv, nullptr);
    if (st == -1)
       ::SysError("TUnixSystem::UnixSetitimer", "setitimer");
    return st;
@@ -3884,16 +3884,16 @@ int TUnixSystem::UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
 {
    int retcode;
 
-   fd_set *rd = (readready)  ? (fd_set*)readready->GetBits()  : 0;
-   fd_set *wr = (writeready) ? (fd_set*)writeready->GetBits() : 0;
+   fd_set *rd = (readready)  ? (fd_set*)readready->GetBits()  : nullptr;
+   fd_set *wr = (writeready) ? (fd_set*)writeready->GetBits() : nullptr;
 
    if (timeout >= 0) {
       struct timeval tv;
       tv.tv_sec  = Int_t(timeout / 1000);
       tv.tv_usec = (timeout % 1000) * 1000;
-      retcode = select(nfds, rd, wr, 0, &tv);
+      retcode = select(nfds, rd, wr, nullptr, &tv);
    } else {
-      retcode = select(nfds, rd, wr, 0, 0);
+      retcode = select(nfds, rd, wr, nullptr, nullptr);
    }
    if (retcode == -1) {
       if (GetErrno() == EINTR) {
@@ -4575,7 +4575,7 @@ int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get shared library search path. Static utility function.
 
-static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
+static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFALSE)
 {
    static TString dynpath;
    static Bool_t initialized = kFALSE;
@@ -4590,7 +4590,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       dynpath = newpath;
    } else if (reset || !initialized) {
       initialized = kTRUE;
-      TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
+      TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)nullptr);
       rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
          rdynpath = ".:"; rdynpath += TROOT::GetLibDir();
@@ -4633,7 +4633,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       std::string result = "";
       char buffer[128];
       while (!feof(pf)) {
-         if (fgets(buffer, 128, pf) != NULL)
+         if (fgets(buffer, 128, pf) != nullptr)
             result += buffer;
       }
       pclose(pf);
@@ -4659,7 +4659,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
 void TUnixSystem::AddDynamicPath(const char *path)
 {
    if (path) {
-      TString oldpath = DynamicPath(0, kFALSE);
+      TString oldpath = DynamicPath(nullptr, kFALSE);
       oldpath.Append(":");
       oldpath.Append(path);
       DynamicPath(oldpath);
@@ -4671,7 +4671,7 @@ void TUnixSystem::AddDynamicPath(const char *path)
 
 const char *TUnixSystem::GetDynamicPath()
 {
-   return DynamicPath(0, kFALSE);
+   return DynamicPath(nullptr, kFALSE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4682,7 +4682,7 @@ const char *TUnixSystem::GetDynamicPath()
 void TUnixSystem::SetDynamicPath(const char *path)
 {
    if (!path)
-      DynamicPath(0, kTRUE);
+      DynamicPath(nullptr, kTRUE);
    else
       DynamicPath(path);
 }
@@ -4720,7 +4720,7 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
       return nullptr;
    }
    static const char* exts[] = {
-      ".so", ".dll", ".dylib", ".sl", ".dl", ".a", 0 };
+      ".so", ".dll", ".dylib", ".sl", ".dl", ".a", nullptr };
    const char** ext = exts;
    while (*ext) {
       TString fname(sLib);

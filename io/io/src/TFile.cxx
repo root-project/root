@@ -2288,11 +2288,11 @@ void TFile::SetCacheRead(TFileCacheRead *cache, TObject* tree, ECacheAction acti
          // a TFileCacheRead* so the C-cast is safe.
          TFileCacheRead* tpf = (TFileCacheRead *)fCacheReadMap->GetValue(tree);
          fCacheReadMap->Remove(tree);
-         if (tpf && (tpf->GetFile() == this) && (action != kDoNotDisconnect)) tpf->SetFile(0, action);
+         if (tpf && (tpf->GetFile() == this) && (action != kDoNotDisconnect)) tpf->SetFile(nullptr, action);
       }
    }
    if (cache) cache->SetFile(this, action);
-   else if (!tree && fCacheRead && (action != kDoNotDisconnect)) fCacheRead->SetFile(0, action);
+   else if (!tree && fCacheRead && (action != kDoNotDisconnect)) fCacheRead->SetFile(nullptr, action);
    // For backward compatibility the last Cache set is the default cache.
    fCacheRead = cache;
 }
@@ -2368,7 +2368,7 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
    }
 
    fMustFlush = kFALSE;
-   Int_t nbytes = TDirectoryFile::Write(0, opt, bufsiz); // Write directory tree
+   Int_t nbytes = TDirectoryFile::Write(nullptr, opt, bufsiz); // Write directory tree
    WriteStreamerInfo();
    WriteFree();                       // Write free segments linked list
    WriteHeader();                     // Now write file header
@@ -2661,7 +2661,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          if (dirp) {
             path += "/PROOF-INF";
             void *dirinf = gSystem->OpenDirectory(path);
-            const char *afile = 0;
+            const char *afile = nullptr;
             if (dirinf) {
                while ((afile = gSystem->GetDirEntry(dirinf))) {
                   if (strcmp(afile,".") == 0) continue;
@@ -3598,7 +3598,7 @@ void TFile::ReadStreamerInfo()
          }
          // This is a quick way (instead of parsing the name) to see if this is
          // the description of an STL container.
-         if (info->GetElements()==0) {
+         if (info->GetElements()==nullptr) {
             Warning("ReadStreamerInfo","The StreamerInfo for %s does not have a list of elements.",info->GetName());
             lnk = lnk->Next();
             continue;
@@ -4188,7 +4188,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
    if (rediroutput) {
       // Restore output to stdout
-      gSystem->RedirectOutput(0, "", &rh);
+      gSystem->RedirectOutput(nullptr, "", &rh);
       // If we failed print error messages
       if (!f)
          gSystem->ShowOutput(&rh);
@@ -4298,7 +4298,7 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
 
    if (rediroutput) {
       // Restore output to stdout
-      gSystem->RedirectOutput(0, "", &rh);
+      gSystem->RedirectOutput(nullptr, "", &rh);
       // If we failed print error messages
       if (!notfound && !f)
          gSystem->ShowOutput(&rh);
@@ -4570,7 +4570,7 @@ Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
    cachetagfile += ".tag.ROOT.cache";
    if (!gSystem->GetPathInfo(cachetagfile, &id, &size, &flags, &modtime)) {
       // check the time passed since last cache cleanup
-      Long_t lastcleanuptime = ((Long_t)time(0) - modtime);
+      Long_t lastcleanuptime = ((Long_t)time(nullptr) - modtime);
       if (lastcleanuptime < cleanupinterval) {
          ::Info("TFile::ShrinkCacheFileDir", "clean-up is skipped - last cleanup %lu seconds ago - you requested %lu", lastcleanuptime, cleanupinterval);
          return kTRUE;

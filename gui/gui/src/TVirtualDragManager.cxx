@@ -28,7 +28,7 @@
 ClassImp(TVirtualDragManager);
 
 
-TVirtualDragManager *gDragManager = 0;
+TVirtualDragManager *gDragManager = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -46,13 +46,13 @@ TVirtualDragManager *TVirtualDragManager::Instance()
    if (gDragManager) return gDragManager;
 
    static Bool_t loaded = kFALSE;
-   static TPluginHandler *h = 0;
+   static TPluginHandler *h = nullptr;
 
    // load plugin
    if (!loaded) {
       h = gROOT->GetPluginManager()->FindHandler("TVirtualDragManager");
       if (h) {
-         if (h->LoadPlugin() == -1) return 0;
+         if (h->LoadPlugin() == -1) return nullptr;
          loaded = kTRUE;
       }
    }
@@ -70,9 +70,9 @@ void TVirtualDragManager::Init()
    fMoveWaiting = kFALSE;
    fDropping = kFALSE;
    fPasting = kFALSE;
-   fTarget = 0;
-   fSource = 0;
-   fFrameUnder = 0;
-   fPasteFrame = 0;
+   fTarget = nullptr;
+   fSource = nullptr;
+   fFrameUnder = nullptr;
+   fPasteFrame = nullptr;
    fDragType = kDragNone;
 }

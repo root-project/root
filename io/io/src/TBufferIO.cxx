@@ -371,7 +371,7 @@ void TBufferIO::TagStreamerInfo(TVirtualStreamerInfo *info)
 
 Int_t TBufferIO::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
 {
-   char **arr = (char **)a->GetObjectRef(0);
+   char **arr = (char **)a->GetObjectRef(nullptr);
    char **end = arr + nobjects;
    // a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
    TStreamerInfo *info = (TStreamerInfo *)a->GetClass()->GetStreamerInfo(objvers);
@@ -384,7 +384,7 @@ Int_t TBufferIO::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
 
 Int_t TBufferIO::WriteClones(TClonesArray *a, Int_t nobjects)
 {
-   char **arr = reinterpret_cast<char **>(a->GetObjectRef(0));
+   char **arr = reinterpret_cast<char **>(a->GetObjectRef(nullptr));
    // a->GetClass()->GetStreamerInfo()->WriteBufferClones(*this,(TClonesArray*)a,nobjects,-1,0);
    TStreamerInfo *info = (TStreamerInfo *)a->GetClass()->GetStreamerInfo();
    // return info->WriteBufferAux(*this,arr,-1,nobjects,0,1);
@@ -503,7 +503,7 @@ Int_t TBufferIO::WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t 
 
    TClass *clActual = ptrClass->GetActualClass(obj);
 
-   if (clActual == 0 || clActual->GetState() == TClass::kForwardDeclared) {
+   if (clActual == nullptr || clActual->GetState() == TClass::kForwardDeclared) {
       // The ptrClass is a class with a virtual table and we have no
       // TClass with the actual type_info in memory.
 

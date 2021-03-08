@@ -1038,6 +1038,6 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
       PP.Lex(tok);
    } while (tok.isNot(clang::tok::eof));
 
-   fSelectionRules = 0;
+   fSelectionRules = nullptr;
    return 0 == DClient.getNumErrors();
 }

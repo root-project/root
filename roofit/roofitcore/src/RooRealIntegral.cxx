@@ -65,15 +65,15 @@ Int_t RooRealIntegral::_cacheAllNDim(2) ;
 RooRealIntegral::RooRealIntegral() : 
   _valid(kFALSE),
   _respectCompSelect(true),
-  _funcNormSet(0),
-  _iconfig(0),
+  _funcNormSet(nullptr),
+  _iconfig(nullptr),
   _mode(0),
   _intOperMode(Hybrid),
   _restartNumIntEngine(kFALSE),
-  _numIntEngine(0),
-  _numIntegrand(0),
-  _rangeName(0),
-  _params(0),
+  _numIntEngine(nullptr),
+  _numIntegrand(nullptr),
+  _rangeName(nullptr),
+  _params(nullptr),
   _cacheNum(kFALSE)
 {
   TRACE_CREATE
@@ -109,10 +109,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _mode(0),
   _intOperMode(Hybrid), 
   _restartNumIntEngine(kFALSE),
-  _numIntEngine(0), 
-  _numIntegrand(0),
+  _numIntEngine(nullptr), 
+  _numIntegrand(nullptr),
   _rangeName((TNamed*)RooNameReg::ptr(rangeName)),
-  _params(0),
+  _params(nullptr),
   _cacheNum(kFALSE)
 {
   //   A) Check that all dependents are lvalues 
@@ -158,7 +158,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       }
     }
   } else {
-    _funcNormSet = 0 ;
+    _funcNormSet = nullptr ;
   }
 
   //_funcNormSet = funcNormSet ? (RooArgSet*)funcNormSet->snapshot(kFALSE) : 0 ;
@@ -316,7 +316,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
       // Add final dependents of arg as shape servers
       RooArgSet argLeafServers ;
-      arg->leafNodeServerList(&argLeafServers,0,kFALSE) ;
+      arg->leafNodeServerList(&argLeafServers,nullptr,kFALSE) ;
 
       //arg->printCompactTree() ;
       //cout << "leaf nodes of server are " << argLeafServers << " depList = " << depList << endl ;
@@ -632,14 +632,14 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
 Bool_t RooRealIntegral::initNumIntegrator() const
 {
   // if we already have an engine, check if it still works for the present limits.
-  if(0 != _numIntEngine) {
+  if(nullptr != _numIntEngine) {
     if(_numIntEngine->isValid() && _numIntEngine->checkLimits() && !_restartNumIntEngine ) return kTRUE;
     // otherwise, cleanup the old engine
     delete _numIntEngine ;
-    _numIntEngine= 0;
-    if(0 != _numIntegrand) {
+    _numIntEngine= nullptr;
+    if(nullptr != _numIntegrand) {
       delete _numIntegrand;
-      _numIntegrand= 0;
+      _numIntegrand= nullptr;
     }
   }
 
@@ -654,7 +654,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
   else {
     _numIntegrand= new RooRealBinding(_function.arg(),_intList,_funcNormSet,kFALSE,_rangeName);
   }
-  if(0 == _numIntegrand || !_numIntegrand->isValid()) {
+  if(nullptr == _numIntegrand || !_numIntegrand->isValid()) {
     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrand." << endl;
     return kFALSE;
   }
@@ -663,7 +663,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
   Bool_t isBinned = _function.arg().isBinnedDistribution(_intList) ;
   _numIntEngine = RooNumIntFactory::instance().createIntegrator(*_numIntegrand,*_iconfig,0,isBinned) ;
 
-  if(0 == _numIntEngine || !_numIntEngine->isValid()) {
+  if(nullptr == _numIntEngine || !_numIntEngine->isValid()) {
     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrator." << endl;
     return kFALSE;
   }
@@ -699,13 +699,13 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _mode(other._mode),
   _intOperMode(other._intOperMode), 
   _restartNumIntEngine(kFALSE),
-  _numIntEngine(0), 
-  _numIntegrand(0),
+  _numIntEngine(nullptr), 
+  _numIntegrand(nullptr),
   _rangeName(other._rangeName),
-  _params(0),
+  _params(nullptr),
   _cacheNum(kFALSE)
 {
- _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
+ _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : nullptr ;
 
  for (const auto arg : other._facList) {
    RooAbsArg* argClone = (RooAbsArg*) arg->Clone() ;
@@ -755,8 +755,8 @@ RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgS
   isetAll.add(_anaList) ;
   isetAll.add(_facList) ;
 
-  const RooArgSet* newNormSet(0) ;
-  RooArgSet* tmp(0) ;
+  const RooArgSet* newNormSet(nullptr) ;
+  RooArgSet* tmp(nullptr) ;
   if (nset && !_funcNormSet) {
     newNormSet = nset ;
   } else if (!nset && _funcNormSet) {
@@ -819,7 +819,7 @@ Double_t RooRealIntegral::evaluate() const
   case Hybrid: 
     {      
       // Cache numeric integrals in >1d expensive object cache
-      RooDouble* cacheVal(0) ;
+      RooDouble* cacheVal(nullptr) ;
       if ((_cacheNum && _intList.getSize()>0) || _intList.getSize()>=_cacheAllNDim) {
         cacheVal = (RooDouble*) expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters())  ;
       }
@@ -1004,7 +1004,7 @@ Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& /*newServerL
   // Delete parameters cache if we have one
   if (_params) {
     delete _params ;
-    _params = 0 ;
+    _params = nullptr ;
   }
 
   return kFALSE ;

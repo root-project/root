@@ -107,7 +107,7 @@ public:
 
 Bool_t TPopupDelayTimer::Notify()
 {
-   fPopup->HandleTimer(0);
+   fPopup->HandleTimer(nullptr);
    Reset();
    return kFALSE;
 }
@@ -125,7 +125,7 @@ Bool_t TPopupDelayTimer::Notify()
 TGMenuBar::TGMenuBar(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    : TGHorizontalFrame(p, w, h, options | kHorizontalFrame)
 {
-   fCurrent       = 0;
+   fCurrent       = nullptr;
    fTitles        = new TList;
    fStick         = kTRUE;
    fDefaultCursor = fClient->GetResourcePool()->GetGrabCursor();
@@ -218,7 +218,7 @@ void TGMenuBar::Layout()
          TGMenuEntry* menu = (TGMenuEntry*) fMenuMore->GetListOfEntries()->Last();
          TGLayoutHints* layout = (TGLayoutHints*) fOutLayouts->Last();
          ULong_t hints = (layout) ? layout->GetLayoutHints() : 0;
-         TGPopupMenu* beforeMenu = 0;
+         TGPopupMenu* beforeMenu = nullptr;
          if (hints & kLHintsRight) {
             TGFrameElement* entry = GetLastOnLeft();
             if (entry) {
@@ -300,7 +300,7 @@ void TGMenuBar::PopupConnection()
          fMenuMore->Disconnect(signal_name, receiver, slot_name);
       }
    }
-   fMenuMore->fMsgWindow = 0;
+   fMenuMore->fMsgWindow = nullptr;
 
    // Check wheter the current entry is a menu or not (just in case)
    TGMenuEntry* currentEntry = fMenuMore->GetCurrent();
@@ -489,7 +489,7 @@ TGPopupMenu *TGMenuBar::AddPopup(const TString &s, Int_t padleft, Int_t padright
    fTrash->Add(l);
 
    TGPopupMenu *menu = new TGPopupMenu(fClient->GetDefaultRoot());
-   AddPopup(new TGHotString(s), menu, l, 0);
+   AddPopup(new TGHotString(s), menu, l, nullptr);
    fTrash->Add(menu);
    return menu;
 }
@@ -538,7 +538,7 @@ void TGMenuBar::AddFrameBefore(TGFrame *f, TGLayoutHints *l,
 
 TGPopupMenu *TGMenuBar::GetPopup(const char *s)
 {
-   if (!GetList()) return 0;
+   if (!GetList()) return nullptr;
 
    TGFrameElement *el;
    TIter next(GetList());
@@ -549,7 +549,7 @@ TGPopupMenu *TGMenuBar::GetPopup(const char *s)
       if (str == t->GetName())
          return t->GetMenu();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -559,7 +559,7 @@ TGPopupMenu *TGMenuBar::GetPopup(const char *s)
 
 TGPopupMenu *TGMenuBar::RemovePopup(const char *s)
 {
-   if (!GetList()) return 0;
+   if (!GetList()) return nullptr;
 
    TGFrameElement *el;
    TIter next(GetList());
@@ -580,7 +580,7 @@ TGPopupMenu *TGMenuBar::RemovePopup(const char *s)
          return m;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -592,7 +592,7 @@ Bool_t TGMenuBar::HandleMotion(Event_t *event)
 
    Int_t        dummy;
    Window_t     wtarget;
-   TGMenuTitle *target = 0;
+   TGMenuTitle *target = nullptr;
 
    if (!(event->fState & kButton1Mask))
       fStick = kFALSE; // use some threshold!
@@ -634,7 +634,7 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
                                       dummy, dummy, wtarget);
       target = (TGMenuTitle*) fClient->GetWindowById(wtarget);
 
-      if (target != 0) {
+      if (target != nullptr) {
          fStick = kTRUE;
 
          if (target != fCurrent) {
@@ -667,9 +667,9 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
 
       gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
 
-      if (fCurrent != 0) {
+      if (fCurrent != nullptr) {
          target   = fCurrent; // tricky, because WaitFor
-         fCurrent = 0;
+         fCurrent = nullptr;
          if (!fKeyNavigate)
             target->DoSendMessage();
       }
@@ -684,7 +684,7 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
 
 Bool_t TGMenuBar::HandleKey(Event_t *event)
 {
-   TGMenuTitle *target = 0;
+   TGMenuTitle *target = nullptr;
    TGFrameElement *el;
    void *dummy;
    Int_t    ax, ay;
@@ -706,15 +706,15 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                break;
             }
          }
-         if (el == 0) target = 0;
+         if (el == nullptr) target = nullptr;
       } else {
          fKeyNavigate = kTRUE;
 
          if (fCurrent) {
-            TGFrameElement *cur  = 0;
-            TGPopupMenu    *menu = 0;
+            TGFrameElement *cur  = nullptr;
+            TGPopupMenu    *menu = nullptr;
             next.Reset();
-            el = 0;
+            el = nullptr;
             while ((el = (TGFrameElement *) next())) {
                if (el->fFrame == fCurrent) {
                   cur = el;
@@ -725,7 +725,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
             if (!menu || !menu->fPoppedUp) return kFALSE;
 
-            TGMenuEntry *ce = 0;
+            TGMenuEntry *ce = nullptr;
 
             TGPopupMenu* currentMenu = fCurrent->GetMenu();
             TGMenuEntry* currentEntry = currentMenu->GetCurrent();
@@ -735,7 +735,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                if ( currentEntry != currentMenu->GetCurrent() )
                   currentEntry = currentMenu->GetCurrent();
                else
-                  currentEntry = 0;
+                  currentEntry = nullptr;
             }
 
             TIter next2(currentMenu->GetListOfEntries());
@@ -753,7 +753,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                   Event_t ev;
                   ev.fType = kButtonRelease;
                   ev.fWindow = currentMenu->GetId();
-                  fCurrent = 0;
+                  fCurrent = nullptr;
                   return currentMenu->HandleButton(&ev);
                }
                else {
@@ -769,7 +769,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
             }
 
             ce = menu->GetCurrent();
-            TGPopupMenu *submenu = 0;
+            TGPopupMenu *submenu = nullptr;
 
             while (ce && (ce->GetType() == kMenuPopup)) {
                submenu = ce->GetPopup();
@@ -836,14 +836,14 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                   Event_t ev;
                   ev.fType = kButtonRelease;
                   ev.fWindow = menu->GetId();
-                  fCurrent = 0;
+                  fCurrent = nullptr;
                   return menu->HandleButton(&ev);
                }
                case kKey_Escape:
                   gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
                   fCurrent->SetState(kFALSE);
                   fStick = kFALSE;
-                  fCurrent = 0;
+                  fCurrent = nullptr;
                   return menu->EndMenu(dummy);
                default:
                   break;
@@ -857,7 +857,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
          }
       }
 
-      if (target != 0) {
+      if (target != nullptr) {
          fStick = kTRUE;
 
          if (target != fCurrent) {
@@ -903,9 +903,9 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
       while ((el = (TGFrameElement *) next()))
          ((TGMenuTitle*)el->fFrame)->SetState(kFALSE);
 
-      if (fCurrent != 0) {
+      if (fCurrent != nullptr) {
          target   = fCurrent; // tricky, because WaitFor
-         fCurrent = 0;
+         fCurrent = nullptr;
          target->DoSendMessage();
       }
    }
@@ -941,7 +941,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    gVirtualX->ChangeGC(fNormGC, &gcval);
    gVirtualX->ChangeGC(fSelGC, &gcval);
 
-   fDelay     = 0;
+   fDelay     = nullptr;
    fEntryList = new TList;
 
    // in case any of these magic values is changes, check also Reposition()
@@ -951,11 +951,11 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fXl          = 16;
    fMsgWindow   = p;
    fStick       = kTRUE;
-   fCurrent     = 0;
+   fCurrent     = nullptr;
    fHasGrab     = kFALSE;
    fPoppedUp    = kFALSE;
-   fMenuBar     = 0;
-   fSplitButton = 0;
+   fMenuBar     = nullptr;
+   fSplitButton = nullptr;
    fEntrySep    = 3;
 
    SetWindowAttributes_t wattr;
@@ -1006,7 +1006,7 @@ void TGPopupMenu::AddEntry(TGHotString *s, Int_t id, void *ud,
    nw->fType     = kMenuEntry;
    nw->fEntryId  = id;
    nw->fUserData = ud;
-   nw->fPopup    = 0;
+   nw->fPopup    = nullptr;
    nw->fStatus   = kMenuEnableMask;
    nw->fEx       = 2;
    nw->fEy       = fMenuHeight-2;
@@ -1060,12 +1060,12 @@ void TGPopupMenu::AddSeparator(TGMenuEntry *before)
 {
    TGMenuEntry *nw = new TGMenuEntry;
 
-   nw->fLabel    = 0;
-   nw->fPic      = 0;
+   nw->fLabel    = nullptr;
+   nw->fPic      = nullptr;
    nw->fType     = kMenuSeparator;
    nw->fEntryId  = -1;
-   nw->fUserData = 0;
-   nw->fPopup    = 0;
+   nw->fUserData = nullptr;
+   nw->fPopup    = nullptr;
    nw->fStatus   = kMenuEnableMask;
    nw->fEx       = 2;
    nw->fEy       = fMenuHeight-2;
@@ -1100,8 +1100,8 @@ void TGPopupMenu::AddLabel(TGHotString *s, const TGPicture *p,
    nw->fPic      = p;
    nw->fType     = kMenuLabel;
    nw->fEntryId  = -1;
-   nw->fUserData = 0;
-   nw->fPopup    = 0;
+   nw->fUserData = nullptr;
+   nw->fPopup    = nullptr;
    nw->fStatus   = kMenuEnableMask | kMenuDefaultMask;
    nw->fEx       = 2;
    nw->fEy       = fMenuHeight-2;
@@ -1157,7 +1157,7 @@ void TGPopupMenu::AddPopup(TGHotString *s, TGPopupMenu *popup,
    nw->fPic      = p;
    nw->fType     = kMenuPopup;
    nw->fEntryId  = -2;
-   nw->fUserData = 0;
+   nw->fUserData = nullptr;
    nw->fPopup    = popup;
    nw->fStatus   = kMenuEnableMask;
    nw->fEx       = 2;
@@ -1246,7 +1246,7 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
    UInt_t rw, rh;
 
    fStick = stick_mode;
-   fCurrent = 0;
+   fCurrent = nullptr;
 
    // Parent is root window for a popup menu
    gVirtualX->GetWindowSize(fParent->GetId(), rx, ry, rw, rh);
@@ -1293,7 +1293,7 @@ Int_t TGPopupMenu::EndMenu(void *&userData)
 
    // destroy any cascaded children and get any ID
 
-   if (fCurrent != 0) {
+   if (fCurrent != nullptr) {
 
       // deactivate the entry
       fCurrent->fStatus &= ~kMenuActiveMask;
@@ -1307,14 +1307,14 @@ Int_t TGPopupMenu::EndMenu(void *&userData)
             userData = fCurrent->fUserData;
          } else {
             id       = -1;
-            userData = 0;
+            userData = nullptr;
          }
       }
 
    } else {
       // if no entry selected...
       id       = -1;
-      userData = 0;
+      userData = nullptr;
    }
 
    // then unmap itself
@@ -1337,7 +1337,7 @@ Int_t TGPopupMenu::EndMenu(void *&userData)
 Bool_t TGPopupMenu::HandleButton(Event_t *event)
 {
    int   id;
-   void *ud = 0;
+   void *ud = nullptr;
 
    if (event->fType == kButtonRelease) {
       if (fStick) {
@@ -1348,7 +1348,7 @@ Bool_t TGPopupMenu::HandleButton(Event_t *event)
       //   if (fCurrent->fType == kMenuPopup) return kTRUE;
       id = EndMenu(ud);
       if (fHasGrab) gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab
-      if (fCurrent != 0) {
+      if (fCurrent != nullptr) {
          fCurrent->fStatus &= ~kMenuActiveMask;
          if (fCurrent->fStatus & kMenuEnableMask) {
             SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_MENU), id,
@@ -1379,7 +1379,7 @@ Bool_t TGPopupMenu::HandleCrossing(Event_t *event)
       }
       Activate(ptr);
    } else {
-      Activate((TGMenuEntry*)0);
+      Activate((TGMenuEntry*)nullptr);
    }
    if (fMenuBar) fMenuBar->fKeyNavigate = kFALSE;
    if (fSplitButton) fSplitButton->fKeyNavigate = kFALSE;
@@ -1427,9 +1427,9 @@ void TGPopupMenu::Activate(TGMenuEntry *entry)
 
    //-- Deactivate the current entry
 
-   if (fCurrent != 0) {
+   if (fCurrent != nullptr) {
       void *ud;
-      if (entry == 0 && fCurrent->fType == kMenuPopup) return;
+      if (entry == nullptr && fCurrent->fType == kMenuPopup) return;
       if ((fCurrent->fType == kMenuPopup) && fCurrent->fPopup)
          fCurrent->fPopup->EndMenu(ud);
       fCurrent->fStatus &= ~kMenuActiveMask;
@@ -1465,7 +1465,7 @@ void TGPopupMenu::Activate(TGMenuEntry *entry)
 
 Bool_t TGPopupMenu::HandleTimer(TTimer *)
 {
-   if (fCurrent != 0) {
+   if (fCurrent != nullptr) {
       if ((fCurrent->fType == kMenuPopup) && fCurrent->fPopup) {
          Int_t    ax, ay;
          Window_t wdummy;
@@ -1546,7 +1546,7 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
                DrawCheckMark(fSelGC, 6, entry->fEy+fEntrySep, 14, entry->fEy+11);
             if (entry->fStatus & kMenuRadioMask)
                DrawRCheckMark(fSelGC, 6, entry->fEy+fEntrySep, 14, entry->fEy+11);
-            if (entry->fPic != 0)
+            if (entry->fPic != nullptr)
                entry->fPic->Draw(fId, fSelGC, 8, entry->fEy+1);
             entry->fLabel->Draw(fId,
                            (entry->fStatus & kMenuEnableMask) ? fSelGC : GetShadowGC()(),
@@ -1566,7 +1566,7 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
                DrawCheckMark(fNormGC, 6, entry->fEy+fEntrySep, 14, entry->fEy+11);
             if (entry->fStatus & kMenuRadioMask)
                DrawRCheckMark(fNormGC, 6, entry->fEy+fEntrySep, 14, entry->fEy+11);
-            if (entry->fPic != 0)
+            if (entry->fPic != nullptr)
                entry->fPic->Draw(fId, fNormGC, 8, entry->fEy+1);
             if (entry->fStatus & kMenuEnableMask) {
                entry->fLabel->Draw(fId, fNormGC, tx, ty);
@@ -1901,7 +1901,7 @@ TGMenuEntry *TGPopupMenu::GetEntry(Int_t id)
    while ((ptr = (TGMenuEntry *) next()))
       if (ptr->fEntryId == id)
          return ptr;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1933,7 +1933,7 @@ void TGPopupMenu::DeleteEntry(Int_t id)
          delete ptr;
          Reposition();
          if (fCurrent == ptr)
-            fCurrent = 0;
+            fCurrent = nullptr;
          return;
       }
 }
@@ -1952,7 +1952,7 @@ void TGPopupMenu::DeleteEntry(TGMenuEntry *entry)
          delete ptr;
          Reposition();
          if (fCurrent == ptr)
-            fCurrent = 0;
+            fCurrent = nullptr;
          return;
       }
 }
@@ -2030,7 +2030,7 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
    fState      = kFALSE;
    fTitleId    = -1;
    fTextColor  = GetForeground();
-   fTitleData  = 0;
+   fTitleData  = nullptr;
 
    Int_t hotchar;
    if (s && (hotchar = s->GetHotChar()) != 0)
@@ -2059,7 +2059,7 @@ void TGMenuTitle::SetState(Bool_t state)
 {
    fState = state;
    if (state) {
-      if (fMenu != 0) {
+      if (fMenu != nullptr) {
          Int_t    ax, ay;
          Window_t wdummy;
 
@@ -2073,7 +2073,7 @@ void TGMenuTitle::SetState(Bool_t state)
          fMenu->PlaceMenu(ax-1, ay+fHeight, kTRUE, kFALSE); //kTRUE);
       }
    } else {
-      if (fMenu != 0) {
+      if (fMenu != nullptr) {
          fTitleId = fMenu->EndMenu(fTitleData);
       }
    }

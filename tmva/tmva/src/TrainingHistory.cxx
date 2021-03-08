@@ -72,7 +72,7 @@ void TMVA::TrainingHistory::SaveHistory(TString Name)
          h->AddBinContent(i+1,fHistoryData.at(iHistory)->at(i).second);
       }
       h->Print();
-      if (h!=0) {
+      if (h!=nullptr) {
          h->Write();
          delete h;
       }

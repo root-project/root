@@ -72,8 +72,8 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fGeometry = 0;
-   fVolume   = 0;
+   fGeometry = nullptr;
+   fVolume   = nullptr;
 
    fIsModified = kFALSE;
    fIsAssembly = kFALSE;
@@ -111,7 +111,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    label->SetTextColor(color);
    container->AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 10, 0));
    f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame);
-   fSelectedShape = 0;
+   fSelectedShape = nullptr;
    fLSelShape = new TGLabel(f1, "Select shape");
    gClient->GetColorByName("#0000ff", color);
    fLSelShape->SetTextColor(color);
@@ -129,7 +129,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
 
    // Current medium
    f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame);
-   fSelectedMedium = 0;
+   fSelectedMedium = nullptr;
    fLSelMedium = new TGLabel(f1, "Select medium");
    gClient->GetColorByName("#0000ff", color);
    fLSelMedium->SetTextColor(color);
@@ -187,7 +187,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
 
    // Select from existing volumes
    f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedVolume = 0;
+   fSelectedVolume = nullptr;
    fLSelVolume = new TGLabel(f1, "Select volume");
    gClient->GetColorByName("#0000ff", color);
    fLSelVolume->SetTextColor(color);
@@ -201,7 +201,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
 
    // Matrix selection for nodes
    f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedMatrix = 0;
+   fSelectedMatrix = nullptr;
    fLSelMatrix = new TGLabel(f1, "Select matrix");
    gClient->GetColorByName("#0000ff", color);
    fLSelMatrix->SetTextColor(color);
@@ -431,7 +431,7 @@ void TGeoVolumeEditor::ConnectSignals2Slots()
 
 void TGeoVolumeEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || !obj->InheritsFrom(TGeoVolume::Class())) {
+   if (obj == nullptr || !obj->InheritsFrom(TGeoVolume::Class())) {
       SetActive(kFALSE);
       return;
    }
@@ -958,7 +958,7 @@ void TGeoVolumeEditor::DoApplyDiv()
       nodes->Delete();
       nodes->Clear();
       delete finder;
-      fVolume->SetFinder(0);
+      fVolume->SetFinder(nullptr);
    }
    fVolume->Divide(fDivName->GetText(), iaxis, ndiv, xlo, step);
    fApplyDiv->SetEnabled(kFALSE);

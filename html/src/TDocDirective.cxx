@@ -57,7 +57,7 @@ void TDocDirective::DeleteOutputFiles(const char* ext) const
    basename += "_";
    TString dirname(GetOutputDir());
    void* hDir = gSystem->OpenDirectory(dirname);
-   const char* entry = 0;
+   const char* entry = nullptr;
    while ((entry = gSystem->GetDirEntry(hDir))) {
       TString sEntry(entry);
       if (sEntry.BeginsWith(basename) && isdigit(sEntry[basename.Length()]) && (!ext || sEntry.EndsWith(ext)))
@@ -96,7 +96,7 @@ void TDocDirective::GetName(TString& name) const
 
 const char* TDocDirective::GetOutputDir() const
 {
-   return fHtml ? fHtml->GetOutputDir().Data() : 0;
+   return fHtml ? fHtml->GetOutputDir().Data() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +139,7 @@ void TDocDirective::SetParameters(const char* params)
          AddParameter(param, value);
       } else {
          param = param.Strip(TString::kBoth);
-         AddParameter(param, 0);
+         AddParameter(param, nullptr);
       }
    }
 }
@@ -150,8 +150,8 @@ void TDocDirective::SetParameters(const char* params)
 void TDocDirective::SetParser(TDocParser* parser)
 {
    fDocParser    = parser;
-   fDocOutput = parser ? parser->GetDocOutput() : 0;
-   fHtml      = fDocOutput? fDocOutput->GetHtml() : 0;
+   fDocOutput = parser ? parser->GetDocOutput() : nullptr;
+   fHtml      = fDocOutput? fDocOutput->GetHtml() : nullptr;
 }
 
 
@@ -280,7 +280,7 @@ void TDocMacroDirective::SubProcess(const TString& what, const TString& out) {
       objRet = dynamic_cast<const TObject*>(objRet);
    }
    catch (...) {
-      objRet = 0;
+      objRet = nullptr;
    }
 
    if (!objRet) {
@@ -499,12 +499,12 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
    if (fShowSource) {
       // convert the macro source
       TIter iLine(fMacro->GetListOfLines());
-      TObjString* osLine = 0;
+      TObjString* osLine = nullptr;
       std::stringstream ssRaw;
       while ((osLine = (TObjString*)iLine()))
          ssRaw << osLine->String() << std::endl;
 
-      TDocParser *dparser = 0;
+      TDocParser *dparser = nullptr;
       if (GetDocParser()->GetCurrentClass())
          dparser = new TDocParser(*(TClassDocOutput*)GetDocOutput(), GetDocParser()->GetCurrentClass());
       else dparser = new TDocParser(*GetDocOutput());
@@ -530,7 +530,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
                "<div id=\"" + id + "_0\" class=\"tabvisible\">" + result + "</div>\n"
                "<div id=\"" + id + "_1\" class=\"tabhidden\"><div class=\"listing\"><pre class=\"code\">");
       iLine.Reset();
-      osLine = 0;
+      osLine = nullptr;
       while ((osLine = (TObjString*) iLine()))
          if (!TString(osLine->String().Strip()).EndsWith("*HIDE*"))
             tags += osLine->String() + "\n";
@@ -572,7 +572,7 @@ namespace {
       TObjArray* fColumns; // of TObjString*
 
    public:
-      TLatexLine(TObjArray* columns = 0):
+      TLatexLine(TObjArray* columns = nullptr):
          fHeight(0.), fColumns(columns) { if (columns) fWidths.resize(Size());}
 
       Float_t& Width(UInt_t col) {return fWidths[col];}
@@ -580,7 +580,7 @@ namespace {
       TString* operator[](Int_t column) {
          if (fColumns && fColumns->GetEntriesFast() > column)
             return &(((TObjString*)fColumns->At(column))->String());
-         return 0;
+         return nullptr;
       }
       UInt_t Size() const { return fColumns ? fColumns->GetEntries() : 0; }
       void Delete() { delete fColumns; }
@@ -683,7 +683,7 @@ void TDocLatexDirective::CreateLatex(const char* filename)
 
    // calculate positions
    TIter iterLine(fLatex->GetListOfLines());
-   TObjString* line = 0;
+   TObjString* line = nullptr;
    TPRegexp regexp;
    if (fSeparator.Length()) {
       if (fSepIsRegexp)
@@ -692,7 +692,7 @@ void TDocLatexDirective::CreateLatex(const char* filename)
 
    while ((line = (TObjString*) iterLine())) {
       const TString& str = line->String();
-      TObjArray* split = 0;
+      TObjArray* split = nullptr;
       if (!fSepIsRegexp) {
          split = new TObjArray();
          split->SetOwner();
@@ -818,7 +818,7 @@ void TDocLatexDirective::GetBoundingBox(TLatex& latex, const char* text, Float_t
 
 TList* TDocLatexDirective::GetListOfLines() const
 {
-   return fLatex ? fLatex->GetListOfLines() : 0;
+   return fLatex ? fLatex->GetListOfLines() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

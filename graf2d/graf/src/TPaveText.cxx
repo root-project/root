@@ -72,7 +72,7 @@ End_Macro
 
 TPaveText::TPaveText(): TPave(), TAttText()
 {
-   fLines   = 0;
+   fLines   = nullptr;
    fMargin  = 0.05;
    fLongest = 0;
 }
@@ -118,7 +118,7 @@ TPaveText::~TPaveText()
    if (!TestBit(kNotDeleted)) return;
    if (fLines) fLines->Delete();
    delete fLines;
-   fLines = 0;
+   fLines = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ TPaveText::TPaveText(const TPaveText &pavetext) : TPave(), TAttText()
    p->Streamer(b);
    b.SetReadMode();
    b.SetBufferOffset(0);
-   fLines = 0;
+   fLines = nullptr;
    Streamer(b);
 }
 
@@ -156,7 +156,7 @@ TPaveText& TPaveText::operator=(const TPaveText& pt)
 
 TBox *TPaveText::AddBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (!gPad->IsEditable()) return 0;
+   if (!gPad->IsEditable()) return nullptr;
    TBox *newbox = new TBox(x1,y1,x2,y2);
 
    if (!fLines) fLines = new TList;
@@ -169,7 +169,7 @@ TBox *TPaveText::AddBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 TLine *TPaveText::AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (!gPad->IsEditable()) return 0;
+   if (!gPad->IsEditable()) return nullptr;
    TLine *newline = new TLine(x1,y1,x2,y2);
 
    if (!fLines) fLines = new TList;
@@ -281,7 +281,7 @@ TText *TPaveText::GetLine(Int_t number) const
       if (nlines == number) return line;
       nlines++;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -294,7 +294,7 @@ TText *TPaveText::GetLineWith(const char *text) const
    while ((line = (TText*) next())) {
       if (strstr(line->GetTitle(),text)) return line;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,9 +302,9 @@ TText *TPaveText::GetLineWith(const char *text) const
 
 TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj) const
 {
-   if (!fLines) return 0;
+   if (!fLines) return nullptr;
    Int_t nlines = GetSize();
-   if (nlines == 0) return 0;
+   if (nlines == 0) return nullptr;
 
    // Evaluate text size as a function of the number of lines
 
@@ -355,7 +355,7 @@ TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj) const
          if (TMath::Abs(y-ymouse) < 0.5*yspace) {yobj = y; return line;}
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -599,7 +599,7 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
 {
    Int_t ival;
    Float_t val;
-   TText *lastline = 0;
+   TText *lastline = nullptr;
    TString opt = option;
    if (!opt.Contains("+")) {
       Clear();
@@ -622,7 +622,7 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
 
    const int linesize = 255;
    char currentline[linesize];
-   char *ss, *sclose, *s= 0;
+   char *ss, *sclose, *s= nullptr;
 
    Int_t kline = 0;
    while (1) {

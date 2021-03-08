@@ -463,7 +463,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
 
       // Initializing loop variables
       Bool_t isLineToBeSkipped = kFALSE ; //empty and ill-formed lines
-      char * token = NULL ;
+      char * token = nullptr ;
       TString token_str = "" ;
       Int_t token_idx = 0 ;
       Double_t * value = new Double_t [2] ; //x,y buffers
@@ -478,7 +478,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
             }
             //token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, rest);
             token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, &rest);
-            while (token != NULL && value_idx < 2) {
+            while (token != nullptr && value_idx < 2) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
                   token_str.ReplaceAll("\t", "") ;
@@ -490,7 +490,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
                      value_idx++ ;
                   }
                }
-               token = R__STRTOK_R(NULL, option, &rest); // next token
+               token = R__STRTOK_R(nullptr, option, &rest); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx == 2) {
@@ -501,7 +501,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
             }
          }
          isLineToBeSkipped = kFALSE ;
-         token = NULL ;
+         token = nullptr ;
          token_idx = 0 ;
          value_idx = 0 ;
       }
@@ -558,7 +558,7 @@ Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
    Double_t **newarrays = new Double_t*[Narrays];
    if (!arraySize) {
       for (Int_t i = 0; i < Narrays; ++i)
-         newarrays[i] = 0;
+         newarrays[i] = nullptr;
    } else {
       for (Int_t i = 0; i < Narrays; ++i)
          newarrays[i] = new Double_t[arraySize];
@@ -1023,7 +1023,7 @@ void TGraph::Expand(Int_t newsize, Int_t step)
 Double_t **TGraph::ExpandAndCopy(Int_t size, Int_t iend)
 {
    if (size <= fMaxSize) {
-      return 0;
+      return nullptr;
    }
    Double_t **newarrays = Allocate(2 * size);
    CopyPoints(newarrays, 0, iend, 0);
@@ -1046,7 +1046,7 @@ void TGraph::FillZero(Int_t begin, Int_t end, Bool_t)
 TObject *TGraph::FindObject(const char *name) const
 {
    if (fFunctions) return fFunctions->FindObject(name);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1055,7 +1055,7 @@ TObject *TGraph::FindObject(const char *name) const
 TObject *TGraph::FindObject(const TObject *obj) const
 {
    if (fFunctions) return fFunctions->FindObject(obj);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1640,7 +1640,7 @@ Double_t TGraph::GetPointY(Int_t i) const
 TAxis *TGraph::GetXaxis() const
 {
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetXaxis();
 }
 
@@ -1650,7 +1650,7 @@ TAxis *TGraph::GetXaxis() const
 TAxis *TGraph::GetYaxis() const
 {
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetYaxis();
 }
 
@@ -2371,7 +2371,7 @@ void TGraph::SetNameTitle(const char *name, const char *title)
 Double_t **TGraph::ShrinkAndCopy(Int_t size, Int_t oend)
 {
    if (size * 2 > fMaxSize || !fMaxSize) {
-      return 0;
+      return nullptr;
    }
    Double_t **newarrays = Allocate(size);
    CopyPoints(newarrays, 0, oend, 0);

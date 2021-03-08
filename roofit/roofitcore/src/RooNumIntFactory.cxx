@@ -206,9 +206,9 @@ RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const Roo
 
   // Check that a method was defined for this case
   if (!method.CompareTo("N/A")) {
-    oocoutE((TObject*)0,Integration) << "RooNumIntFactory::createIntegrator: No integration method has been defined for " 
+    oocoutE((TObject*)nullptr,Integration) << "RooNumIntFactory::createIntegrator: No integration method has been defined for " 
 				     << (openEnded?"an open ended ":"a ") << ndim << "-dimensional integral" << endl ;
-    return 0 ;    
+    return nullptr ;    
   }
 
   // Retrieve proto integrator and return clone configured for the requested integration task

@@ -25,7 +25,7 @@ ClassImp(TArrayC);
 
 TArrayC::TArrayC()
 {
-   fArray = 0;
+   fArray = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ TArrayC::TArrayC()
 
 TArrayC::TArrayC(Int_t n)
 {
-   fArray = 0;
+   fArray = nullptr;
    if (n > 0) Set(n);
 }
 
@@ -42,7 +42,7 @@ TArrayC::TArrayC(Int_t n)
 
 TArrayC::TArrayC(Int_t n, const Char_t *array)
 {
-   fArray = 0;
+   fArray = nullptr;
    Set(n, array);
 }
 
@@ -51,7 +51,7 @@ TArrayC::TArrayC(Int_t n, const Char_t *array)
 
 TArrayC::TArrayC(const TArrayC &array) : TArray(array)
 {
-   fArray = 0;
+   fArray = nullptr;
    Set(array.fN, array.fArray);
 }
 
@@ -71,7 +71,7 @@ TArrayC &TArrayC::operator=(const TArrayC &rhs)
 TArrayC::~TArrayC()
 {
    delete [] fArray;
-   fArray = 0;
+   fArray = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +115,7 @@ void TArrayC::Set(Int_t n)
             memset(&fArray[fN],0,(n-fN)*sizeof(Char_t));
          }
       } else {
-         fArray = 0;
+         fArray = nullptr;
       }
       if (fN) delete [] temp;
       fN = n;
@@ -130,11 +130,11 @@ void TArrayC::Set(Int_t n, const Char_t *array)
 {
    if (fArray && fN != n) {
       delete [] fArray;
-      fArray = 0;
+      fArray = nullptr;
    }
    fN = n;
    if (fN == 0) return;
-   if (array == 0) return;
+   if (array == nullptr) return;
    if (!fArray) fArray = new Char_t[fN];
    memmove(fArray, array, n*sizeof(Char_t));
 }

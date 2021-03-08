@@ -26,9 +26,9 @@ using namespace clang;
 namespace cling {
   ValueExtractionSynthesizer::ValueExtractionSynthesizer(clang::Sema* S,
                                                          bool isChildInterpreter)
-    : WrapperTransformer(S), m_Context(&S->getASTContext()), m_gClingVD(0),
-      m_UnresolvedNoAlloc(0), m_UnresolvedWithAlloc(0),
-      m_UnresolvedCopyArray(0), m_isChildInterpreter(isChildInterpreter) { }
+    : WrapperTransformer(S), m_Context(&S->getASTContext()), m_gClingVD(nullptr),
+      m_UnresolvedNoAlloc(nullptr), m_UnresolvedWithAlloc(nullptr),
+      m_UnresolvedCopyArray(nullptr), m_isChildInterpreter(isChildInterpreter) { }
 
   // pin the vtable here.
   ValueExtractionSynthesizer::~ValueExtractionSynthesizer() { }
@@ -113,7 +113,7 @@ namespace cling {
         else {
           // We can't PushDeclContext, because we don't have scope.
           Sema::ContextRAII pushedDC(*m_Sema, FD);
-          RS->setRetValue(SynthesizeSVRInit(0));
+          RS->setRetValue(SynthesizeSVRInit(nullptr));
         }
 
       }
@@ -213,7 +213,7 @@ namespace {
     // We have the wrapper as Sema's CurContext
     FunctionDecl* FD = cast<FunctionDecl>(m_Sema->CurContext);
 
-    ExprWithCleanups* Cleanups = 0;
+    ExprWithCleanups* Cleanups = nullptr;
     // In case of ExprWithCleanups we need to extend its 'scope' to the call.
     if (E && isa<ExprWithCleanups>(E)) {
       Cleanups = cast<ExprWithCleanups>(E);
@@ -273,7 +273,7 @@ namespace {
       CallArgs[2] = vpQTVP;
 
 
-      Call = m_Sema->ActOnCallExpr(/*Scope*/0, m_UnresolvedNoAlloc,
+      Call = m_Sema->ActOnCallExpr(/*Scope*/nullptr, m_UnresolvedNoAlloc,
                                    locStart, CallArgs, locEnd);
 
       if (E)
@@ -288,7 +288,7 @@ namespace {
           && !availableCopyConstructor(desugaredTy, m_Sema))
         return E;
       // call new (setValueWithAlloc(gCling, &SVR, ETy)) (E)
-      Call = m_Sema->ActOnCallExpr(/*Scope*/0, m_UnresolvedWithAlloc,
+      Call = m_Sema->ActOnCallExpr(/*Scope*/nullptr, m_UnresolvedWithAlloc,
                                    locStart, CallArgs, locEnd);
       Expr* placement = Call.get();
       if (const ConstantArrayType* constArray
@@ -304,7 +304,7 @@ namespace {
         CallArgs.push_back(arrSizeExpr);
         // 2.1) arrays:
         // call copyArray(T* src, void* placement, size_t size)
-        Call = m_Sema->ActOnCallExpr(/*Scope*/0, m_UnresolvedCopyArray,
+        Call = m_Sema->ActOnCallExpr(/*Scope*/nullptr, m_UnresolvedCopyArray,
                                      locStart, CallArgs, locEnd);
 
       }
@@ -383,7 +383,7 @@ namespace {
       // Test CallArgs.size to make sure an additional argument (the value)
       // has been pushed on, if not than we didn't know how to handle the type
       if (CallArgs.size() > nArgs) {
-        Call = m_Sema->ActOnCallExpr(/*Scope*/0, m_UnresolvedNoAlloc,
+        Call = m_Sema->ActOnCallExpr(/*Scope*/nullptr, m_UnresolvedNoAlloc,
                                    locStart, CallArgs, locEnd);
       }
       else {

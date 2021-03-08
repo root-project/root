@@ -116,7 +116,7 @@ private:
   void printCOFFLoadConfig(const T *Conf, LoadConfigTables &Tables);
   typedef void (*PrintExtraCB)(raw_ostream &, const uint8_t *);
   void printRVATable(uint64_t TableVA, uint64_t Count, uint64_t EntrySize,
-                     PrintExtraCB PrintExtra = 0);
+                     PrintExtraCB PrintExtra = nullptr);
 
   void printCodeViewSymbolSection(StringRef SectionName, const SectionRef &Section);
   void printCodeViewTypeSection(StringRef SectionName, const SectionRef &Section);

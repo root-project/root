@@ -95,22 +95,22 @@ TPServerSocket::TPServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 
 TSocket *TPServerSocket::Accept(UChar_t Opt)
 {
-   TSocket  *setupSocket = 0;
+   TSocket  *setupSocket = nullptr;
    TSocket  **pSockets;
-   TPSocket *newPSocket = 0;
+   TPSocket *newPSocket = nullptr;
 
    Int_t size, port;
 
    // wait for the incoming connections to the server and accept them
    setupSocket = TServerSocket::Accept(Opt);
 
-   if (setupSocket == 0) return 0;
+   if (setupSocket == nullptr) return nullptr;
 
    // receive the port number and number of parallel sockets from the
    // client and establish 'n' connections
    if (setupSocket->Recv(port, size) < 0) {
       Error("Accept", "error receiving port number and number of sockets");
-      return 0;
+      return nullptr;
    }
 
    // Check if client is running in single mode

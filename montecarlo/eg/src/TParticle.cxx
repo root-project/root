@@ -68,7 +68,7 @@ TParticle::TParticle() :
    fMother[1]   = 0;
    fDaughter[0] = 0;
    fDaughter[1] = 0;
-   fParticlePDG = 0;
+   fParticlePDG = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ const char *TParticle::GetTitle() const
 void TParticle::Paint(Option_t *option)
 {
    Float_t rmin[3], rmax[3];
-   static TPolyLine3D *pline = 0;
+   static TPolyLine3D *pline = nullptr;
    if (!pline) {
       pline = new TPolyLine3D(2);
    }

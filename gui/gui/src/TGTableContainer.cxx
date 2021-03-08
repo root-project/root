@@ -35,13 +35,13 @@ ClassImp(TGTableHeaderFrame);
 /// Create the container used to view TGTableCells. p.
 
 TGTableFrame::TGTableFrame(const TGWindow *p, UInt_t nrows, UInt_t ncolumns)
-   : TQObject(), fFrame(0), fCanvas(0)
+   : TQObject(), fFrame(nullptr), fCanvas(nullptr)
 {
    fFrame = new TGCompositeFrame(p, 10, 10, kHorizontalFrame,
                                  TGFrame::GetWhitePixel());
    fFrame->Connect("ProcessedEvent(Event_t*)", "TGTableFrame", this,
                    "HandleMouseWheel(Event_t*)");
-   fCanvas = 0;
+   fCanvas = nullptr;
    fFrame->SetLayoutManager(new TGMatrixLayout(fFrame, nrows, ncolumns));
 
    gVirtualX->GrabButton(fFrame->GetId(), kAnyButton, kAnyModifier,

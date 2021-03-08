@@ -100,13 +100,13 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
                   : TSocket(host, port, (Int_t)(size > 1 ? -1 : tcpwindowsize))
 {
    // To avoid uninitialization problems when Init is not called ...
-   fSockets        = 0;
-   fWriteMonitor   = 0;
-   fReadMonitor    = 0;
-   fWriteBytesLeft = 0;
-   fReadBytesLeft  = 0;
-   fWritePtr       = 0;
-   fReadPtr        = 0;
+   fSockets        = nullptr;
+   fWriteMonitor   = nullptr;
+   fReadMonitor    = nullptr;
+   fWriteBytesLeft = nullptr;
+   fReadBytesLeft  = nullptr;
+   fWritePtr       = nullptr;
+   fReadPtr        = nullptr;
 
    // set to the real value only at end (except for old servers)
    fSize           = 1;
@@ -180,13 +180,13 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
 TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
 {
    // To avoid uninitialization problems when Init is not called ...
-   fSockets        = 0;
-   fWriteMonitor   = 0;
-   fReadMonitor    = 0;
-   fWriteBytesLeft = 0;
-   fReadBytesLeft  = 0;
-   fWritePtr       = 0;
-   fReadPtr        = 0;
+   fSockets        = nullptr;
+   fWriteMonitor   = nullptr;
+   fReadMonitor    = nullptr;
+   fWriteBytesLeft = nullptr;
+   fReadBytesLeft  = nullptr;
+   fWritePtr       = nullptr;
+   fReadPtr        = nullptr;
 
    // set to the real value only at end (except for old servers)
    fSize           = 1;
@@ -351,7 +351,7 @@ void TPSocket::Close(Option_t *option)
       }
    }
    delete [] fSockets;
-   fSockets = 0;
+   fSockets = nullptr;
 
    {
       R__LOCKGUARD(gROOTMutex);
@@ -364,13 +364,13 @@ void TPSocket::Close(Option_t *option)
 
 void TPSocket::Init(Int_t tcpwindowsize, TSocket *sock)
 {
-   fSockets        = 0;
-   fWriteMonitor   = 0;
-   fReadMonitor    = 0;
-   fWriteBytesLeft = 0;
-   fReadBytesLeft  = 0;
-   fWritePtr       = 0;
-   fReadPtr        = 0;
+   fSockets        = nullptr;
+   fWriteMonitor   = nullptr;
+   fReadMonitor    = nullptr;
+   fWriteBytesLeft = nullptr;
+   fReadBytesLeft  = nullptr;
+   fWritePtr       = nullptr;
+   fReadPtr        = nullptr;
 
    if ((sock && !sock->IsValid()) || !TSocket::IsValid())
       return;
@@ -638,7 +638,7 @@ Int_t TPSocket::Recv(TMessage *&mess)
       return TSocket::Recv(mess);
 
    if (!IsValid()) {
-      mess = 0;
+      mess = nullptr;
       return -1;
    }
 
@@ -646,7 +646,7 @@ oncemore:
    Int_t  n;
    UInt_t len;
    if ((n = RecvRaw(&len, sizeof(UInt_t), kDefault)) <= 0) {
-      mess = 0;
+      mess = nullptr;
       return n;
    }
    len = net2host(len);  //from network to host byte order
@@ -654,7 +654,7 @@ oncemore:
    char *buf = new char[len+sizeof(UInt_t)];
    if ((n = RecvRaw(buf+sizeof(UInt_t), len, kDefault)) <= 0) {
       delete [] buf;
-      mess = 0;
+      mess = nullptr;
       return n;
    }
 
@@ -672,7 +672,7 @@ oncemore:
       char ok[2] = { 'o', 'k' };
       if (SendRaw(ok, sizeof(ok), kDefault) < 0) {
          delete mess;
-         mess = 0;
+         mess = nullptr;
          return -1;
       }
       mess->SetWhat(mess->What() & ~kMESS_ACK);

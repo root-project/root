@@ -49,13 +49,13 @@ ClassImp(RooGenFitStudy);
 
 RooGenFitStudy::RooGenFitStudy(const char* name, const char* title) : 
   RooAbsStudy(name?name:"RooGenFitStudy",title?title:"RooGenFitStudy"), 
-  _genPdf(0), 
-  _fitPdf(0), 
-  _genSpec(0),
-  _nllVar(0),
-  _ngenVar(0),
-  _params(0),
-  _initParams(0)
+  _genPdf(nullptr), 
+  _fitPdf(nullptr), 
+  _genSpec(nullptr),
+  _nllVar(nullptr),
+  _ngenVar(nullptr),
+  _params(nullptr),
+  _initParams(nullptr)
 {  
 }
 
@@ -70,13 +70,13 @@ RooGenFitStudy::RooGenFitStudy(const RooGenFitStudy& other) :
   _genObsName(other._genObsName),
   _fitPdfName(other._fitPdfName),
   _fitObsName(other._fitObsName),
-  _genPdf(0),
-  _fitPdf(0),
-  _genSpec(0),
-  _nllVar(0),
-  _ngenVar(0),
-  _params(0),
-  _initParams(0)
+  _genPdf(nullptr),
+  _fitPdf(nullptr),
+  _genSpec(nullptr),
+  _nllVar(nullptr),
+  _ngenVar(nullptr),
+  _params(nullptr),
+  _initParams(nullptr)
 {  
   TIterator* giter = other._genOpts.MakeIterator() ;
   TObject* o ;
@@ -224,11 +224,11 @@ Bool_t RooGenFitStudy::finalize()
   delete _ngenVar ;
   delete _initParams ;
   delete _genSpec ;
-  _params = 0 ;
-  _nllVar = 0 ;
-  _ngenVar = 0 ;
-  _initParams = 0 ;
-  _genSpec = 0 ;
+  _params = nullptr ;
+  _nllVar = nullptr ;
+  _ngenVar = nullptr ;
+  _initParams = nullptr ;
+  _genSpec = nullptr ;
   
 
   return kFALSE ; 

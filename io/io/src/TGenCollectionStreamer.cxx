@@ -214,9 +214,9 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b, const TCl
    size_t len = fValDiff * nElements;
    char   buffer[8096];
    Bool_t   feed = false;
-   void*  memory = 0;
-   StreamHelper* itmstore = 0;
-   StreamHelper* itmconv = 0;
+   void*  memory = nullptr;
+   StreamHelper* itmstore = nullptr;
+   StreamHelper* itmconv = nullptr;
    fEnv->fSize = nElements;
    switch (fSTL_type)  {
       case ROOT::kSTLvector:
@@ -365,11 +365,11 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
    // Object input streamer.
    Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion() <= 3;
    size_t len = fValDiff * nElements;
-   StreamHelper* itm = 0;
+   StreamHelper* itm = nullptr;
    char   buffer[8096];
-   void*  memory = 0;
+   void*  memory = nullptr;
 
-   TClass* onFileValClass = (onFileClass ? onFileClass->GetCollectionProxy()->GetValueClass() : 0);
+   TClass* onFileValClass = (onFileClass ? onFileClass->GetCollectionProxy()->GetValueClass() : nullptr);
 
    fEnv->fSize = nElements;
    switch (fSTL_type)  {
@@ -408,7 +408,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
          fResize(fEnv->fObject,fEnv->fSize);
          fEnv->fIdx = 0;
-         fEnv->fStart = 0;
+         fEnv->fStart = nullptr;
          switch (fVal->fCase) {
             case kIsClass:
                DOLOOP(b.StreamObject(i, fVal->fType, onFileValClass));
@@ -473,9 +473,9 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
 
    Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion() <= 3;
    size_t len = fValDiff * nElements;
-   StreamHelper* itm = 0;
+   StreamHelper* itm = nullptr;
    char   buffer[8096];
-   void*  memory = 0;
+   void*  memory = nullptr;
 
    TStreamerInfo *pinfo = (TStreamerInfo*)fVal->fType->GetStreamerInfo();
    R__ASSERT(pinfo);
@@ -730,7 +730,7 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass *on
    size_t len = fValDiff * nElements;
    Value  *v;
    char buffer[8096], *addr, *temp;
-   void* memory = 0;
+   void* memory = nullptr;
    StreamHelper* i;
    float f;
    fEnv->fSize  = nElements;
@@ -894,8 +894,8 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)
    // Primitive output streamer.
    size_t len = fValDiff * nElements;
    char   buffer[8192];
-   void*  memory  = 0;
-   StreamHelper* itm = 0;
+   void*  memory  = nullptr;
+   StreamHelper* itm = nullptr;
    switch (fSTL_type)  {
       case ROOT::kSTLvector:
          if (fVal->fKind != kBool_t)  {
@@ -966,7 +966,7 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)
 void TGenCollectionStreamer::WriteObjects(int nElements, TBuffer &b)
 {
    // Object output streamer.
-   StreamHelper* itm = 0;
+   StreamHelper* itm = nullptr;
    switch (fSTL_type)  {
          // Simple case: contiguous memory. get address of first, then jump.
       case ROOT::kSTLvector:
@@ -1229,7 +1229,7 @@ void TGenCollectionStreamer::ReadBuffer(TBuffer &b, void *obj)
    // Call the specialized function.  The first time this call ReadBufferDefault which
    // actually set to fReadBufferFunc to the 'right' specialized version.
 
-   (this->*fReadBufferFunc)(b,obj,0);
+   (this->*fReadBufferFunc)(b,obj,nullptr);
 }
 
 void TGenCollectionStreamer::ReadBufferDefault(TBuffer &b, void *obj, const TClass *onFileClass)

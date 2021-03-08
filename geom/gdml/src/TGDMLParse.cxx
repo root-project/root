@@ -127,13 +127,13 @@ ClassImp(TGDMLParse);
 TGDMLParse::TGDMLParse()
 {
    fWorldName = "";
-   fWorld = 0;
+   fWorld = nullptr;
    fVolID = 0;
    fFILENO = 0;
    for (Int_t i = 0; i < 20; i++)
-      fFileEngine[i] = 0;
-   fStartFile = 0;
-   fCurrentFile = 0;
+      fFileEngine[i] = nullptr;
+   fStartFile = nullptr;
+   fCurrentFile = nullptr;
    auto def_units = gGeoManager->GetDefaultUnits();
    switch (def_units) {
    case TGeoManager::kG4Units:
@@ -163,9 +163,9 @@ TGeoVolume *TGDMLParse::GDMLReadFile(const char *filename)
 
    // Now try to parse xml file
    XMLDocPointer_t gdmldoc = gdml->ParseFile(filename);
-   if (gdmldoc == 0) {
+   if (gdmldoc == nullptr) {
       delete gdml;
-      return 0;
+      return nullptr;
    } else {
 
       // take access to main node
@@ -197,7 +197,7 @@ const char *TGDMLParse::ParseGDML(TXMLEngine *gdml, XMLNodePointer_t node)
    const char *name = gdml->GetNodeName(node);
    XMLNodePointer_t parentn = gdml->GetParent(node);
    const char *parent = gdml->GetNodeName(parentn);
-   XMLNodePointer_t childtmp = 0;
+   XMLNodePointer_t childtmp = nullptr;
 
    const char *posistr = "position";
    const char *setustr = "setup";
@@ -385,7 +385,7 @@ const char *TGDMLParse::ParseGDML(TXMLEngine *gdml, XMLNodePointer_t node)
    // Check for Child node - if present call this funct. recursively until no more
 
    XMLNodePointer_t child = gdml->GetChild(node);
-   while (child != 0) {
+   while (child != nullptr) {
       ParseGDML(gdml, child);
       child = gdml->GetNext(child);
    }
@@ -454,7 +454,7 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    TString value = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
 
@@ -528,7 +528,7 @@ XMLNodePointer_t TGDMLParse::QuantityProcess(TXMLEngine *gdml, XMLNodePointer_t 
    TString unit = "1.0";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
 
@@ -559,7 +559,7 @@ XMLNodePointer_t TGDMLParse::MatrixProcess(TXMLEngine *gdml, XMLNodePointer_t no
    std::string values;
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
 
@@ -610,7 +610,7 @@ XMLNodePointer_t TGDMLParse::OpticalSurfaceProcess(TXMLEngine *gdml, XMLNodePoin
    Double_t value = 0;
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
 
@@ -635,10 +635,10 @@ XMLNodePointer_t TGDMLParse::OpticalSurfaceProcess(TXMLEngine *gdml, XMLNodePoin
    TGeoOpticalSurface *surf = new TGeoOpticalSurface(name, model, finish, type, value);
 
    XMLNodePointer_t child = gdml->GetChild(node);
-   while (child != 0) {
+   while (child != nullptr) {
       attr = gdml->GetFirstAttr(child);
       if ((strcmp(gdml->GetNodeName(child), "property")) == 0) {
-         while (attr != 0) {
+         while (attr != nullptr) {
             tempattr = gdml->GetAttrName(attr);
             tempattr.ToLower();
             if (tempattr == "name") {
@@ -844,7 +844,7 @@ XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    TString name = "0";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -896,7 +896,7 @@ XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -952,7 +952,7 @@ XMLNodePointer_t TGDMLParse::SclProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -1000,7 +1000,7 @@ XMLNodePointer_t TGDMLParse::IsoProcess(TXMLEngine *gdml, XMLNodePointer_t node,
 
    XMLAttrPointer_t attr = gdml->GetFirstAttr(parentn);
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -1020,7 +1020,7 @@ XMLNodePointer_t TGDMLParse::IsoProcess(TXMLEngine *gdml, XMLNodePointer_t node,
 
    attr = gdml->GetFirstAttr(node);
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
 
@@ -1073,7 +1073,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    typedef FracMap::iterator fractions;
    FracMap fracmap;
 
-   XMLNodePointer_t child = 0;
+   XMLNodePointer_t child = nullptr;
 
    // obtain attributes for the element
 
@@ -1082,7 +1082,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    if (hasIsotopes) {
 
       // Get the name of the element
-      while (attr != 0) {
+      while (attr != nullptr) {
          tempattr = gdml->GetAttrName(attr);
          if (tempattr == "name") {
             name = gdml->GetAttrValue(attr);
@@ -1096,7 +1096,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
       }
       // Get component isotopes. Loop all children.
       child = gdml->GetChild(node);
-      while (child != 0) {
+      while (child != nullptr) {
 
          // Check for fraction node name
          if ((strcmp(gdml->GetNodeName(child), "fraction")) == 0) {
@@ -1104,7 +1104,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
             TString ref = "";
             ncompo = ncompo + 1;
             attr = gdml->GetFirstAttr(child);
-            while (attr != 0) {
+            while (attr != nullptr) {
                tempattr = gdml->GetAttrName(attr);
                tempattr.ToLower();
                if (tempattr == "n") {
@@ -1144,7 +1144,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
 
    if (hasIsotopesExtended) {
 
-      while (attr != 0) {
+      while (attr != nullptr) {
          tempattr = gdml->GetAttrName(attr);
 
          if (tempattr == "name") {
@@ -1159,7 +1159,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
       }
       // Get component isotopes. Loop all children.
       child = gdml->GetChild(node);
-      while (child != 0) {
+      while (child != nullptr) {
 
          // Check for fraction node name
          if ((strcmp(gdml->GetNodeName(child), "fraction")) == 0) {
@@ -1167,7 +1167,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
             TString ref = "";
             ncompo = ncompo + 1;
             attr = gdml->GetFirstAttr(child);
-            while (attr != 0) {
+            while (attr != nullptr) {
                tempattr = gdml->GetAttrName(attr);
                tempattr.ToLower();
                if (tempattr == "n") {
@@ -1206,7 +1206,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    //***************************
 
    attr = gdml->GetFirstAttr(parentn);
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -1227,7 +1227,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
 
    attr = gdml->GetFirstAttr(node);
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -1288,8 +1288,8 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    Int_t ncompo = 0, mixflag = 2;
    Double_t density = 0;
    TString name = "";
-   TGeoMixture *mix = 0;
-   TGeoMaterial *mat = 0;
+   TGeoMixture *mix = nullptr;
+   TGeoMaterial *mat = nullptr;
    TString tempconst = "";
    TString matname;
    Bool_t composite = kFALSE;
@@ -1303,12 +1303,12 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
          name = TString::Format("%s_%s", name.Data(), fCurrentFile);
       }
 
-      while (child != 0) {
+      while (child != nullptr) {
          attr = gdml->GetFirstAttr(child);
 
          if ((strcmp(gdml->GetNodeName(child), "property")) == 0) {
             TNamed *property = new TNamed();
-            while (attr != 0) {
+            while (attr != nullptr) {
                tempattr = gdml->GetAttrName(attr);
                tempattr.ToLower();
 
@@ -1334,7 +1334,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
          }
 
          if ((strcmp(gdml->GetNodeName(child), "atom")) == 0) {
-            while (attr != 0) {
+            while (attr != nullptr) {
                tempattr = gdml->GetAttrName(attr);
                tempattr.ToLower();
 
@@ -1346,7 +1346,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
          }
 
          if ((strcmp(gdml->GetNodeName(child), "D")) == 0) {
-            while (attr != 0) {
+            while (attr != nullptr) {
                tempattr = gdml->GetAttrName(attr);
                tempattr.ToLower();
 
@@ -1405,12 +1405,12 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    }
 
    else if (z == 0) {
-      while (child != 0) {
+      while (child != nullptr) {
          attr = gdml->GetFirstAttr(child);
 
          if ((strcmp(gdml->GetNodeName(child), "property")) == 0) {
             TNamed *property = new TNamed();
-            while (attr != 0) {
+            while (attr != nullptr) {
                tempattr = gdml->GetAttrName(attr);
                tempattr.ToLower();
 
@@ -1439,7 +1439,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
             TString ref = "";
             ncompo = ncompo + 1;
 
-            while (attr != 0) {
+            while (attr != nullptr) {
                tempattr = gdml->GetAttrName(attr);
                tempattr.ToLower();
 
@@ -1462,7 +1462,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
             TString ref = "";
             ncompo = ncompo + 1;
 
-            while (attr != 0) {
+            while (attr != nullptr) {
                tempattr = gdml->GetAttrName(attr);
                tempattr.ToLower();
                if (tempattr == "n") {
@@ -1477,7 +1477,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
             }
             fracmap[ref.Data()] = n;
          } else if ((strcmp(gdml->GetNodeName(child), "D")) == 0) {
-            while (attr != 0) {
+            while (attr != nullptr) {
                tempattr = gdml->GetAttrName(attr);
                tempattr.ToLower();
 
@@ -1577,7 +1577,7 @@ XMLNodePointer_t TGDMLParse::SkinSurfaceProcess(TXMLEngine *gdml, XMLNodePointer
    TString name, surfname, volname;
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
 
@@ -1591,10 +1591,10 @@ XMLNodePointer_t TGDMLParse::SkinSurfaceProcess(TXMLEngine *gdml, XMLNodePointer
    }
 
    XMLNodePointer_t child = gdml->GetChild(node);
-   while (child != 0) {
+   while (child != nullptr) {
       attr = gdml->GetFirstAttr(child);
       if ((strcmp(gdml->GetNodeName(child), "volumeref")) == 0) {
-         while (attr != 0) {
+         while (attr != nullptr) {
             tempattr = gdml->GetAttrName(attr);
             tempattr.ToLower();
             if (tempattr == "ref") {
@@ -1623,7 +1623,7 @@ XMLNodePointer_t TGDMLParse::BorderSurfaceProcess(TXMLEngine *gdml, XMLNodePoint
    TString name, surfname, nodename[2];
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
 
@@ -1638,10 +1638,10 @@ XMLNodePointer_t TGDMLParse::BorderSurfaceProcess(TXMLEngine *gdml, XMLNodePoint
 
    XMLNodePointer_t child = gdml->GetChild(node);
    Int_t inode = 0;
-   while (child != 0) {
+   while (child != nullptr) {
       attr = gdml->GetFirstAttr(child);
       if ((strcmp(gdml->GetNodeName(child), "physvolref")) == 0) {
-         while (attr != 0) {
+         while (attr != nullptr) {
             tempattr = gdml->GetAttrName(attr);
             tempattr.ToLower();
             if (tempattr == "ref") {
@@ -1694,17 +1694,17 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
    TString name;
    TString solidname = "";
    TString tempattr = "";
-   TGeoShape *solid = 0;
-   TGeoMedium *medium = 0;
-   TGeoVolume *vol = 0;
-   TGeoVolume *lv = 0;
-   TGeoShape *reflex = 0;
-   const Double_t *parentrot = 0;
+   TGeoShape *solid = nullptr;
+   TGeoMedium *medium = nullptr;
+   TGeoVolume *vol = nullptr;
+   TGeoVolume *lv = nullptr;
+   TGeoShape *reflex = nullptr;
+   const Double_t *parentrot = nullptr;
    int yesrefl = 0;
    TString reftemp = "";
-   TMap *auxmap = 0;
+   TMap *auxmap = nullptr;
 
-   while (child != 0) {
+   while (child != nullptr) {
       if ((strcmp(gdml->GetNodeName(child), "solidref")) == 0) {
 
          reftemp = gdml->GetAttr(child, "ref");
@@ -1742,7 +1742,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
       name = TString::Format("%s_%s", name.Data(), fCurrentFile);
    }
 
-   if (reflex == 0) {
+   if (reflex == nullptr) {
       vol = new TGeoVolume(NameShort(name), solid, medium);
    } else {
       vol = new TGeoVolume(NameShort(name), reflex, medium);
@@ -1758,21 +1758,21 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
 
    child = gdml->GetChild(node);
 
-   while (child != 0) {
+   while (child != nullptr) {
       if ((strcmp(gdml->GetNodeName(child), "physvol")) == 0) {
 
          TString volref = "";
 
-         TGeoTranslation *pos = 0;
-         TGeoRotation *rot = 0;
-         TGeoScale *scl = 0;
+         TGeoTranslation *pos = nullptr;
+         TGeoRotation *rot = nullptr;
+         TGeoScale *scl = nullptr;
          TString pnodename = gdml->GetAttr(child, "name");
          TString scopynum = gdml->GetAttr(child, "copynumber");
          Int_t copynum = (scopynum.IsNull()) ? 0 : (Int_t)Value(scopynum);
 
          subchild = gdml->GetChild(child);
 
-         while (subchild != 0) {
+         while (subchild != nullptr) {
             tempattr = gdml->GetNodeName(subchild);
             tempattr.ToLower();
 
@@ -1793,7 +1793,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
                TXMLEngine *gdml2 = new TXMLEngine;
                gdml2->SetSkipComments(kTRUE);
                XMLDocPointer_t filedoc1 = gdml2->ParseFile(fCurrentFile);
-               if (filedoc1 == 0) {
+               if (filedoc1 == nullptr) {
                   Fatal("VolProcess", "Bad filename given %s", fCurrentFile);
                }
                // take access to main node
@@ -1886,12 +1886,12 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
 
          TGeoHMatrix *transform = new TGeoHMatrix();
 
-         if (pos != 0)
+         if (pos != nullptr)
             transform->SetTranslation(pos->GetTranslation());
-         if (rot != 0)
+         if (rot != nullptr)
             transform->SetRotation(rot->GetRotationMatrix());
 
-         if (scl != 0) { // Scaling must be added to the rotation matrix!
+         if (scl != nullptr) { // Scaling must be added to the rotation matrix!
 
             Double_t scale3x3[9];
             memset(scale3x3, 0, 9 * sizeof(Double_t));
@@ -1939,7 +1939,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
 
          attr = gdml->GetFirstAttr(child);
 
-         while (attr != 0) {
+         while (attr != nullptr) {
 
             tempattr = gdml->GetAttrName(attr);
             tempattr.ToLower();
@@ -1961,7 +1961,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
 
          subchild = gdml->GetChild(child);
 
-         while (subchild != 0) {
+         while (subchild != nullptr) {
             tempattr = gdml->GetNodeName(subchild);
             tempattr.ToLower();
 
@@ -2022,7 +2022,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
 
          attr = gdml->GetFirstAttr(child);
 
-         while (attr != 0) {
+         while (attr != nullptr) {
 
             tempattr = gdml->GetAttrName(attr);
             tempattr.ToLower();
@@ -2035,7 +2035,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
 
          subchild = gdml->GetChild(child);
 
-         while (subchild != 0) {
+         while (subchild != nullptr) {
             tempattr = gdml->GetNodeName(subchild);
             tempattr.ToLower();
 
@@ -2050,10 +2050,10 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
             if (tempattr == "replicate_along_axis") {
                subsubchild = gdml->GetChild(subchild);
 
-               while (subsubchild != 0) {
+               while (subsubchild != nullptr) {
                   if ((strcmp(gdml->GetNodeName(subsubchild), "width")) == 0) {
                      attr = gdml->GetFirstAttr(subsubchild);
-                     while (attr != 0) {
+                     while (attr != nullptr) {
                         tempattr = gdml->GetAttrName(attr);
                         tempattr.ToLower();
                         if (tempattr == "value") {
@@ -2066,7 +2066,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
                      }
                   } else if ((strcmp(gdml->GetNodeName(subsubchild), "offset")) == 0) {
                      attr = gdml->GetFirstAttr(subsubchild);
-                     while (attr != 0) {
+                     while (attr != nullptr) {
                         tempattr = gdml->GetAttrName(attr);
                         tempattr.ToLower();
                         if (tempattr == "value") {
@@ -2078,7 +2078,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
                      }
                   } else if ((strcmp(gdml->GetNodeName(subsubchild), "direction")) == 0) {
                      attr = gdml->GetFirstAttr(subsubchild);
-                     while (attr != 0) {
+                     while (attr != nullptr) {
                         tempattr = gdml->GetAttrName(attr);
                         tempattr.ToLower();
                         if (tempattr == "x") {
@@ -2184,8 +2184,8 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine *gdml, XMLNodePointer_t node, X
    TString tempattr = "";
    XMLNodePointer_t child = gdml->GetChild(node);
 
-   TGeoShape *first = 0;
-   TGeoShape *second = 0;
+   TGeoShape *first = nullptr;
+   TGeoShape *second = nullptr;
 
    TGeoTranslation *firstPos = new TGeoTranslation(0, 0, 0);
    TGeoTranslation *secondPos = new TGeoTranslation(0, 0, 0);
@@ -2206,7 +2206,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine *gdml, XMLNodePointer_t node, X
    if ((strcmp(fCurrentFile, fStartFile)) != 0)
       name = TString::Format("%s_%s", name.Data(), fCurrentFile);
 
-   while (child != 0) {
+   while (child != nullptr) {
       tempattr = gdml->GetNodeName(child);
       tempattr.ToLower();
 
@@ -2297,7 +2297,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine *gdml, XMLNodePointer_t node, X
    TGeoMatrix *firstMatrix = new TGeoCombiTrans(*firstPos, firstRot->Inverse());
    TGeoMatrix *secondMatrix = new TGeoCombiTrans(*secondPos, secondRot->Inverse());
 
-   TGeoCompositeShape *boolean = 0;
+   TGeoCompositeShape *boolean = nullptr;
    if (!first || !second) {
       Fatal("BooSolid", "Incomplete solid %s, missing shape components", name.Data());
       return child;
@@ -2389,9 +2389,9 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine *gdml, XMLNodePointer_t node)
    XMLNodePointer_t subchild;
    XMLNodePointer_t child = gdml->GetChild(node);
    TString tempattr = "";
-   TGeoVolume *lv = 0;
-   TGeoTranslation *pos = 0;
-   TGeoRotation *rot = 0;
+   TGeoVolume *lv = nullptr;
+   TGeoTranslation *pos = nullptr;
+   TGeoRotation *rot = nullptr;
    TGeoCombiTrans *matr;
 
    TGeoVolumeAssembly *assem = new TGeoVolumeAssembly(NameShort(name));
@@ -2400,7 +2400,7 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine *gdml, XMLNodePointer_t node)
 
    //   child = gdml->GetChild(node);
 
-   while (child != 0) {
+   while (child != nullptr) {
       if ((strcmp(gdml->GetNodeName(child), "physvol")) == 0) {
          TString pnodename = gdml->GetAttr(child, "name");
          TString scopynum = gdml->GetAttr(child, "copynumber");
@@ -2410,7 +2410,7 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine *gdml, XMLNodePointer_t node)
          pos = new TGeoTranslation(0, 0, 0);
          rot = new TGeoRotation();
 
-         while (subchild != 0) {
+         while (subchild != nullptr) {
             tempattr = gdml->GetNodeName(subchild);
             tempattr.ToLower();
 
@@ -2485,7 +2485,7 @@ XMLNodePointer_t TGDMLParse::TopProcess(TXMLEngine *gdml, XMLNodePointer_t node)
    XMLNodePointer_t child = gdml->GetChild(node);
    TString reftemp = "";
 
-   while (child != 0) {
+   while (child != nullptr) {
 
       if ((strcmp(gdml->GetNodeName(child), "world") == 0)) {
          // const char* reftemp;
@@ -2519,7 +2519,7 @@ XMLNodePointer_t TGDMLParse::Box(TXMLEngine *gdml, XMLNodePointer_t node, XMLAtt
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -2577,7 +2577,7 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine *gdml, XMLNodePointer_t node, 
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -2634,7 +2634,7 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine *gdml, XMLNodePointer_t node, 
    origin[2] = 0.5 * (z1 + z2);
    Double_t dz = 0.5 * (z2 - z1);
    TGeoBBox *pCutBox = new TGeoBBox("cutBox", dx, dy, dz, origin);
-   TGeoBoolNode *pBoolNode = new TGeoIntersection(shape, pCutBox, 0, 0);
+   TGeoBoolNode *pBoolNode = new TGeoIntersection(shape, pCutBox, nullptr, nullptr);
    TGeoCompositeShape *cs = new TGeoCompositeShape(NameShort(name), pBoolNode);
    fsolmap[name.Data()] = cs;
 
@@ -2660,7 +2660,7 @@ XMLNodePointer_t TGDMLParse::ElCone(TXMLEngine *gdml, XMLNodePointer_t node, XML
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -2735,7 +2735,7 @@ XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine *gdml, XMLNodePointer_t node,
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -2802,7 +2802,7 @@ XMLNodePointer_t TGDMLParse::Arb8(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -2909,7 +2909,7 @@ XMLNodePointer_t TGDMLParse::Tube(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -2949,7 +2949,7 @@ XMLNodePointer_t TGDMLParse::Tube(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
    Double_t deltaphideg = Value(deltaphi) * retaunit;
    Double_t endphideg = startphideg + deltaphideg;
 
-   TGeoShape *tube = 0;
+   TGeoShape *tube = nullptr;
    if (deltaphideg < 360.)
       tube = new TGeoTubeSeg(NameShort(name), rminline, rmaxline, zline / 2, startphideg, endphideg);
    else
@@ -2984,7 +2984,7 @@ XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine *gdml, XMLNodePointer_t node, XM
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -3070,7 +3070,7 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -3116,7 +3116,7 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
    Double_t dphi = Value(deltaphi) * retaunit;
    Double_t ephi = sphi + dphi;
 
-   TGeoShape *cone = 0;
+   TGeoShape *cone = nullptr;
    if (dphi < 360.)
       cone = new TGeoConeSeg(NameShort(name), zline / 2, rmin1line, rmax1line, rmin2line, rmax2line, sphi, ephi);
    else
@@ -3152,7 +3152,7 @@ XMLNodePointer_t TGDMLParse::Trap(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -3235,7 +3235,7 @@ XMLNodePointer_t TGDMLParse::Trd(TXMLEngine *gdml, XMLNodePointer_t node, XMLAtt
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -3298,7 +3298,7 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine *gdml, XMLNodePointer_t node, X
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -3329,7 +3329,7 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine *gdml, XMLNodePointer_t node, X
    XMLNodePointer_t child = gdml->GetChild(node);
    int numplanes = 0;
 
-   while (child != 0) {
+   while (child != nullptr) {
       numplanes = numplanes + 1;
       child = gdml->GetNext(child);
    }
@@ -3349,7 +3349,7 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine *gdml, XMLNodePointer_t node, X
    child = gdml->GetChild(node);
    int planeno = 0;
 
-   while (child != 0) {
+   while (child != nullptr) {
       if (strcmp(gdml->GetNodeName(child), "zplane") == 0) {
          // removed original dec
          Double_t rminline = 0;
@@ -3358,7 +3358,7 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine *gdml, XMLNodePointer_t node, X
 
          attr = gdml->GetFirstAttr(child);
 
-         while (attr != 0) {
+         while (attr != nullptr) {
             tempattr = gdml->GetAttrName(attr);
             tempattr.ToLower();
 
@@ -3423,7 +3423,7 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine *gdml, XMLNodePointer_t node, 
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -3457,7 +3457,7 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine *gdml, XMLNodePointer_t node, 
    XMLNodePointer_t child = gdml->GetChild(node);
    int numplanes = 0;
 
-   while (child != 0) {
+   while (child != nullptr) {
       numplanes = numplanes + 1;
       child = gdml->GetNext(child);
    }
@@ -3477,7 +3477,7 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine *gdml, XMLNodePointer_t node, 
    child = gdml->GetChild(node);
    int planeno = 0;
 
-   while (child != 0) {
+   while (child != nullptr) {
       if (strcmp(gdml->GetNodeName(child), "zplane") == 0) {
 
          Double_t rminline = 0;
@@ -3485,7 +3485,7 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine *gdml, XMLNodePointer_t node, 
          Double_t zline = 0;
          attr = gdml->GetFirstAttr(child);
 
-         while (attr != 0) {
+         while (attr != nullptr) {
             tempattr = gdml->GetAttrName(attr);
             tempattr.ToLower();
 
@@ -3551,7 +3551,7 @@ XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine *gdml, XMLNodePointer_t node, XML
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
 
@@ -3619,7 +3619,7 @@ XMLNodePointer_t TGDMLParse::Torus(TXMLEngine *gdml, XMLNodePointer_t node, XMLA
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -3684,7 +3684,7 @@ XMLNodePointer_t TGDMLParse::Hype(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
 
@@ -3749,7 +3749,7 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -3824,7 +3824,7 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine *gdml, XMLNodePointer_t node, 
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -3909,7 +3909,7 @@ XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine *gdml, XMLNodePointer_t node, XML
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -3959,7 +3959,7 @@ XMLNodePointer_t TGDMLParse::Orb(TXMLEngine *gdml, XMLNodePointer_t node, XMLAtt
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -4014,7 +4014,7 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
    TString name = "";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
@@ -4040,7 +4040,7 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
    int nosects = 0;
    int noverts = 0;
 
-   while (child != 0) {
+   while (child != nullptr) {
       tempattr = gdml->GetNodeName(child);
 
       if (tempattr == "twoDimVertex") {
@@ -4072,14 +4072,14 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
    int sect = 0;
    int vert = 0;
 
-   while (child != 0) {
+   while (child != nullptr) {
       if (strcmp(gdml->GetNodeName(child), "twoDimVertex") == 0) {
          Double_t xline = 0;
          Double_t yline = 0;
 
          attr = gdml->GetFirstAttr(child);
 
-         while (attr != 0) {
+         while (attr != nullptr) {
             tempattr = gdml->GetAttrName(attr);
 
             if (tempattr == "x") {
@@ -4106,7 +4106,7 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 
          attr = gdml->GetFirstAttr(child);
 
-         while (attr != 0) {
+         while (attr != nullptr) {
             tempattr = gdml->GetAttrName(attr);
 
             if (tempattr == "zOrder") {
@@ -4347,7 +4347,7 @@ XMLNodePointer_t TGDMLParse::Reflection(TXMLEngine *gdml, XMLNodePointer_t node,
    TString solid = "0";
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
 
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();

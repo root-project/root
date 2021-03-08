@@ -146,7 +146,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
       if (R__TestUseCache<T>(aElement)) {
          if (aElement->TestBit(TStreamerElement::kWrite)) {
-            if (((TBufferFile&)b).PeekDataCache()==0) {
+            if (((TBufferFile&)b).PeekDataCache()==nullptr) {
                Warning("WriteBuffer","Skipping %s::%s because the cache is missing.",GetName(),aElement->GetName());
             } else {
                if (gDebug > 1) {
@@ -501,7 +501,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                TClass *cl                 = compinfo[i]->fClass;
                TMemberStreamer *pstreamer = compinfo[i]->fStreamer;
                TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
-               TClass* vClass = proxy ? proxy->GetValueClass() : 0;
+               TClass* vClass = proxy ? proxy->GetValueClass() : nullptr;
 
                if (!b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)
                    && proxy && vClass
@@ -542,7 +542,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                   continue;
                }
                UInt_t pos = b.WriteVersion(this->IsA(),kTRUE);
-               if (pstreamer == 0) {
+               if (pstreamer == nullptr) {
                   DOLOOP {
                      char **contp = (char**)(arr[k]+ioffset);
                      for(int j=0;j<compinfo[i]->fLength;++j) {
@@ -563,7 +563,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                TClass *cl                 = compinfo[i]->fClass;
                TMemberStreamer *pstreamer = compinfo[i]->fStreamer;
                TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
-               TClass* vClass = proxy ? proxy->GetValueClass() : 0;
+               TClass* vClass = proxy ? proxy->GetValueClass() : nullptr;
                if (!b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)
                    && proxy && vClass
                    && GetStreamMemberWise() && cl->CanSplit()
@@ -605,9 +605,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                   continue;
                }
                UInt_t pos = b.WriteVersion(this->IsA(),kTRUE);
-               if (pstreamer == 0) {
+               if (pstreamer == nullptr) {
                   DOLOOP {
-                     b.WriteFastArray((void*)(arr[k]+ioffset),cl,compinfo[i]->fLength,0);
+                     b.WriteFastArray((void*)(arr[k]+ioffset),cl,compinfo[i]->fLength,nullptr);
                   }
                } else {
                   DOLOOP{(*pstreamer)(b,arr[k]+ioffset,compinfo[i]->fLength);}
@@ -665,7 +665,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
             TMemberStreamer *pstreamer = compinfo[i]->fStreamer;
 
             UInt_t pos = b.WriteVersion(this->IsA(),kTRUE);
-            if (pstreamer == 0) {
+            if (pstreamer == nullptr) {
                printf("ERROR, Streamer is null\n");
                aElement->ls();continue;
             } else {
@@ -691,7 +691,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
             // Get any private streamer which was set for the data member.
             TMemberStreamer* pstreamer = compinfo[i]->fStreamer;
             // Which are we, an array of objects or an array of pointers to objects?
-            Bool_t isPtrPtr = (strstr(aElement->GetTypeName(), "**") != 0);
+            Bool_t isPtrPtr = (strstr(aElement->GetTypeName(), "**") != nullptr);
             if (pstreamer) {
                // -- We have a private streamer.
                UInt_t pos = b.WriteVersion(this->IsA(), kTRUE);
@@ -737,13 +737,13 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                            // -- We are a varying-length array of objects.
                            // Write the entire array of objects to the buffer.
                            // Note: Polymorphism is not allowed here.
-                           b.WriteFastArray(pp[ndx], cl, vlen, 0);
+                           b.WriteFastArray(pp[ndx], cl, vlen, nullptr);
                         }
                         else {
                            // -- We are a varying-length array of pointers to objects.
                            // Write the entire array of object pointers to the buffer.
                            // Note: The object pointers are allowed to be polymorphic.
-                           b.WriteFastArray((void**) pp[ndx], cl, vlen, kFALSE, 0);
+                           b.WriteFastArray((void**) pp[ndx], cl, vlen, kFALSE, nullptr);
                         } // isPtrPtr
                      } // ndx
                   } // vlen
@@ -866,7 +866,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *ipointer, Int_t first)
 Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones,
                                        Int_t nc, Int_t first, Int_t eoffset)
 {
-   char **arr = reinterpret_cast<char**>(clones->GetObjectRef(0));
+   char **arr = reinterpret_cast<char**>(clones->GetObjectRef(nullptr));
    return WriteBufferAux(b,arr,fCompFull,first==-1?0:first,first==-1?fNfulldata:first+1,nc,eoffset,1);
 }
 

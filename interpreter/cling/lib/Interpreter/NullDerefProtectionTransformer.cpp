@@ -56,7 +56,7 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
     PointerCheckInjector(Interpreter& I)
       : m_Interp(I), m_Sema(I.getCI()->getSema()),
         m_Context(I.getCI()->getASTContext()),
-        m_clingthrowIfInvalidPointerCache(0) {}
+        m_clingthrowIfInvalidPointerCache(nullptr) {}
 
     ~PointerCheckInjector() {
       delete m_clingthrowIfInvalidPointerCache;

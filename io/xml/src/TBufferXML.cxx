@@ -394,7 +394,7 @@ void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
    const char *src = Buffer();
    int srcSize = Length();
 
-   char *fZipBuffer = 0;
+   char *fZipBuffer = nullptr;
 
    Int_t compressionLevel = GetCompressionLevel();
    ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm =
@@ -1056,7 +1056,7 @@ void TBufferXML::ClassBegin(const TClass *cl, Version_t)
 
 void TBufferXML::ClassEnd(const TClass *)
 {
-   DecrementLevel(0);
+   DecrementLevel(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3128,7 +3128,7 @@ void TBufferXML::XmlReadBasic(ULong64_t &value)
 const char *TBufferXML::XmlReadValue(const char *name)
 {
    if (fErrorFlag > 0)
-      return 0;
+      return nullptr;
 
    Bool_t trysimple = fCanUseCompact;
    fCanUseCompact = kFALSE;
@@ -3142,7 +3142,7 @@ const char *TBufferXML::XmlReadValue(const char *name)
 
    if (!trysimple) {
       if (!VerifyItemNode(name, "XmlReadValue"))
-         return 0;
+         return nullptr;
       fValueBuf = fXML->GetAttr(StackNode(), xmlio::v);
    }
 

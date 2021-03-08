@@ -22,21 +22,21 @@ void TMVA::TMVAGlob::SetSignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* all )
    Int_t LineColor__B = getBackgroundLine();
    Int_t LineWidth__B = 2;
 
-   if (sig != NULL) {
+   if (sig != nullptr) {
       sig->SetLineColor( LineColor__S );
       sig->SetLineWidth( LineWidth__S );
       sig->SetFillStyle( FillStyle__S );
       sig->SetFillColor( FillColor__S );
    }
 
-   if (bkg != NULL) {
+   if (bkg != nullptr) {
       bkg->SetLineColor( LineColor__B );
       bkg->SetLineWidth( LineWidth__B );
       bkg->SetFillStyle( FillStyle__B );
       bkg->SetFillColor( FillColor__B );
    }
 
-   if (all != NULL) {
+   if (all != nullptr) {
       all->SetLineColor( LineColor__S );
       all->SetLineWidth( LineWidth__S );
       all->SetFillStyle( FillStyle__S );
@@ -96,7 +96,7 @@ void TMVA::TMVAGlob::SetFrameStyle( TH1* frame, Float_t scale )
 void TMVA::TMVAGlob::SetTMVAStyle() {
 
    TStyle *TMVAStyle = gROOT->GetStyle("TMVA");
-   if(TMVAStyle!=0) {
+   if(TMVAStyle!=nullptr) {
       gROOT->SetStyle("TMVA");
       return;
    }
@@ -112,7 +112,7 @@ void TMVA::TMVAGlob::SetTMVAStyle() {
    TMVAStyle->SetLineStyleString( 7, "[22 10 7 10]" );
 
    // the pretty color palette of old
-   TMVAStyle->SetPalette((gConfig().fVariablePlotting.fUsePaperStyle ? 18 : 1),0);
+   TMVAStyle->SetPalette((gConfig().fVariablePlotting.fUsePaperStyle ? 18 : 1),nullptr);
 
    // use plain black on white colors
    TMVAStyle->SetFrameBorderMode(0);
@@ -168,7 +168,7 @@ void TMVA::TMVAGlob::DestroyCanvases()
 
    TList* loc = (TList*)gROOT->GetListOfCanvases();
    TListIter itc(loc);
-   TObject *o(0);
+   TObject *o(nullptr);
    while ((o = itc())) delete o;
 }
 
@@ -192,8 +192,8 @@ void TMVA::TMVAGlob::Initialize( Bool_t useTMVAStyle )
 TFile* TMVA::TMVAGlob::OpenFile( const TString& fin )
 {
    TFile* file = gDirectory->GetFile();
-   if (file==0 || fin != file->GetName()) {
-      if (file != 0) {
+   if (file==nullptr || fin != file->GetName()) {
+      if (file != nullptr) {
          gROOT->cd();
          file->Close();
       }
@@ -212,7 +212,7 @@ TFile* TMVA::TMVAGlob::OpenFile( const TString& fin )
 void TMVA::TMVAGlob::imgconv( TCanvas* c, const TString & fname )
 {
    // return;
-   if (NULL == c) {
+   if (nullptr == c) {
       cout << "*** Error in TMVAGlob::imgconv: canvas is NULL" << endl;
    }
    else {
@@ -255,7 +255,7 @@ TImage * TMVA::TMVAGlob::findImage(const char * imageName)
    //TString tutorialPath = "$ROOTSYS/tutorials/tmva"; // look for the image in here
    TString tutorialPath = getenv ("ROOTSYS");
    tutorialPath+="/tutorials/tmva";
-   TImage *img(0);
+   TImage *img(nullptr);
    TString fullName = Form("%s/%s", tutorialPath.Data(), imageName);
    Bool_t fileFound = ! gSystem->AccessPathName(fullName);
 
@@ -314,7 +314,7 @@ void TMVA::TMVAGlob::plot_logo( Float_t v_scale, Float_t skew )
 
 void TMVA::TMVAGlob::NormalizeHist( TH1* h )
 {
-   if (h==0) return;
+   if (h==nullptr) return;
    if (h->GetSumw2N() == 0) h->Sumw2();
    if(h->GetSumOfWeights()!=0) {
       Float_t dx = (h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin())/h->GetNbinsX();
@@ -330,7 +330,7 @@ void TMVA::TMVAGlob::NormalizeHists( TH1* sig, TH1* bkg )
       Float_t dx = (sig->GetXaxis()->GetXmax() - sig->GetXaxis()->GetXmin())/sig->GetNbinsX();
       sig->Scale( 1.0/sig->GetSumOfWeights()/dx );
    }
-   if (bkg != 0 && bkg->GetSumOfWeights()!=0) {
+   if (bkg != nullptr && bkg->GetSumOfWeights()!=0) {
       Float_t dx = (bkg->GetXaxis()->GetXmax() - bkg->GetXaxis()->GetXmin())/bkg->GetNbinsX();
       bkg->Scale( 1.0/bkg->GetSumOfWeights()/dx );
    }
@@ -340,31 +340,31 @@ void TMVA::TMVAGlob::NormalizeHists( TH1* sig, TH1* bkg )
 
 
 void TMVA::TMVAGlob::GetMethodName( TString & name, TKey * mkey ) {
-   if (mkey==0) return;
+   if (mkey==nullptr) return;
    name = mkey->GetName();
    name.ReplaceAll("Method_","");
 }
 
 void TMVA::TMVAGlob::GetMethodTitle( TString & name, TKey * ikey ) {
-   if (ikey==0) return;
+   if (ikey==nullptr) return;
    name = ikey->GetName();
 }
 
 void TMVA::TMVAGlob::GetMethodName( TString & name, TDirectory * mdir ) {
-   if (mdir==0) return;
+   if (mdir==nullptr) return;
    name = mdir->GetName();
    name.ReplaceAll("Method_","");
 }
 
 void TMVA::TMVAGlob::GetMethodTitle( TString & name, TDirectory * idir ) {
-   if (idir==0) return;
+   if (idir==nullptr) return;
    name = idir->GetName();
 }
 
 TKey *TMVA::TMVAGlob::NextKey( TIter & keyIter, TString className) {
    TKey *key=(TKey *)keyIter.Next();
-   TKey *rkey=0;
-   Bool_t loop=(key!=0);
+   TKey *rkey=nullptr;
+   Bool_t loop=(key!=nullptr);
    //
    while (loop) {
       TClass *cl = gROOT->GetClass(key->GetClassName());
@@ -373,7 +373,7 @@ TKey *TMVA::TMVAGlob::NextKey( TIter & keyIter, TString className) {
          rkey = key;
       } else {
          key = (TKey *)keyIter.Next();
-         if (key==0) loop = kFALSE;
+         if (key==nullptr) loop = kFALSE;
       }
    }
    return rkey;
@@ -383,7 +383,7 @@ UInt_t TMVA::TMVAGlob::GetListOfKeys( TList& keys, TString inherits, TDirectory 
 {
    // get a list of keys with a given inheritance
    // the list contains TKey objects
-   if (dir==0) dir = gDirectory;
+   if (dir==nullptr) dir = gDirectory;
    TIter mnext(dir->GetListOfKeys());
    TKey *mkey;
    keys.Clear();
@@ -407,7 +407,7 @@ Int_t TMVA::TMVAGlob::GetNumberOfTargets( TDirectory *dir )
       return 0;
    }
    TIter next(dir->GetListOfKeys());
-   TKey* key    = 0;
+   TKey* key    = nullptr;
    Int_t noTrgts = 0;
 
    while ((key = (TKey*)next())) {
@@ -420,7 +420,7 @@ Int_t TMVA::TMVAGlob::GetNumberOfTargets( TDirectory *dir )
 Int_t TMVA::TMVAGlob::GetNumberOfInputVariables( TDirectory *dir )
 {
    TIter next(dir->GetListOfKeys());
-   TKey* key    = 0;
+   TKey* key    = nullptr;
    Int_t noVars = 0;
 
    while ((key = (TKey*)next())) {
@@ -436,7 +436,7 @@ Int_t TMVA::TMVAGlob::GetNumberOfInputVariables( TDirectory *dir )
 std::vector<TString> TMVA::TMVAGlob::GetInputVariableNames(TDirectory *dir)
 {
    TIter next(dir->GetListOfKeys());
-   TKey* key = 0;
+   TKey* key = nullptr;
    std::vector<TString> names;
 
    while ((key = (TKey*)next())) {
@@ -470,7 +470,7 @@ std::vector<TString> TMVA::TMVAGlob::GetClassNames(TDirectory *dir )
 {
 
    TIter next(dir->GetListOfKeys());
-   TKey* key = 0;
+   TKey* key = nullptr;
    //set<std::string> varnames;
    std::vector<TString> names;
 
@@ -519,14 +519,14 @@ std::vector<TString> TMVA::TMVAGlob::GetClassNames(TDirectory *dir )
 TKey* TMVA::TMVAGlob::FindMethod( TString name, TDirectory *dir )
 {
    // find the key for a method
-   if (dir==0) dir = gDirectory;
+   if (dir==nullptr) dir = gDirectory;
    TIter mnext(dir->GetListOfKeys());
    TKey *mkey;
-   TKey *retkey=0;
+   TKey *retkey=nullptr;
    Bool_t loop=kTRUE;
    while (loop) {
       mkey = (TKey*)mnext();
-      if (mkey==0) {
+      if (mkey==nullptr) {
          loop = kFALSE;
       }
       else {
@@ -548,13 +548,13 @@ TKey* TMVA::TMVAGlob::FindMethod( TString name, TDirectory *dir )
 Bool_t TMVA::TMVAGlob::ExistMethodName( TString name, TDirectory *dir )
 {
    // find the key for a method
-   if (dir==0) dir = gDirectory;
+   if (dir==nullptr) dir = gDirectory;
    TIter mnext(dir->GetListOfKeys());
    TKey *mkey;
    Bool_t loop=kTRUE;
    while (loop) {
       mkey = (TKey*)mnext();
-      if (mkey==0) {
+      if (mkey==nullptr) {
          loop = kFALSE;
       }
       else {
@@ -591,7 +591,7 @@ UInt_t TMVA::TMVAGlob::GetListOfMethods( TList & methods, TDirectory *dir )
 {
    // get a list of methods
    // the list contains TKey objects
-   if (dir==0) dir = gDirectory;
+   if (dir==nullptr) dir = gDirectory;
    TIter mnext(dir->GetListOfKeys());
    TKey *mkey;
    methods.Clear();
@@ -617,7 +617,7 @@ UInt_t TMVA::TMVAGlob::GetListOfJobs( TFile* file, TList& jobdirs)
    // get a list of all jobs in all method directories
    // based on ideas by Peter and Joerg found in macro deviations.C
    TIter next(file->GetListOfKeys());
-   TKey *key(0);
+   TKey *key(nullptr);
    while ((key = (TKey*)next())) {
 
       if (TString(key->GetName()).BeginsWith("Method_")) {
@@ -644,9 +644,9 @@ UInt_t TMVA::TMVAGlob::GetListOfTitles( TDirectory *rfdir, TList & titles )
 {
    // get a list of titles (i.e TDirectory) given a method dir
    UInt_t ni=0;
-   if (rfdir==0) return 0;
+   if (rfdir==nullptr) return 0;
    TList *keys = rfdir->GetListOfKeys();
-   if (keys==0) {
+   if (keys==nullptr) {
       cout << "+++ Directory '" << rfdir->GetName() << "' contains no keys" << endl;
       return 0;
    }
@@ -673,9 +673,9 @@ UInt_t TMVA::TMVAGlob::GetListOfTitles( TString & methodName, TList & titles, TD
    // if the input dir is 0, gDirectory is used
    // returns a list of keys
    UInt_t ni=0;
-   if (dir==0) dir = gDirectory;
+   if (dir==nullptr) dir = gDirectory;
    TDirectory* rfdir = (TDirectory*)dir->Get( methodName );
-   if (rfdir==0) {
+   if (rfdir==nullptr) {
       cout << "+++ Could not locate directory '" << methodName << endl;
       return 0;
    }
@@ -683,7 +683,7 @@ UInt_t TMVA::TMVAGlob::GetListOfTitles( TString & methodName, TList & titles, TD
    return GetListOfTitles( rfdir, titles );
 
    TList *keys = rfdir->GetListOfKeys();
-   if (keys==0) {
+   if (keys==nullptr) {
       cout << "+++ Directory '" << methodName << "' contains no keys" << endl;
       return 0;
    }
@@ -711,13 +711,13 @@ TDirectory *TMVA::TMVAGlob::GetInputVariablesDir( TMVAGlob::TypeOfPlot type, TDi
                                                           "InputVariables_Deco",
                                                           "InputVariables_PCA",
                                                           "InputVariables_Gauss_Deco" };
-   if (dir==0) dir = gDirectory;
+   if (dir==nullptr) dir = gDirectory;
 
    // get top dir containing all hists of the variables
    dir = (TDirectory*)gDirectory->Get( directories[type] );
-   if (dir==0) {
+   if (dir==nullptr) {
       cout << "+++ Could not locate input variable directory '" << directories[type] << endl;
-      return 0;
+      return nullptr;
    }
    return dir;
 }
@@ -725,13 +725,13 @@ TDirectory *TMVA::TMVAGlob::GetInputVariablesDir( TMVAGlob::TypeOfPlot type, TDi
 TDirectory *TMVA::TMVAGlob::GetCorrelationPlotsDir( TMVAGlob::TypeOfPlot type, TDirectory *dir )
 {
    // get the CorrelationPlots directory
-   if (dir==0) dir = GetInputVariablesDir( type, 0 );
-   if (dir==0) return 0;
+   if (dir==nullptr) dir = GetInputVariablesDir( type, nullptr );
+   if (dir==nullptr) return nullptr;
    //
    TDirectory* corrdir = (TDirectory*)dir->Get( "CorrelationPlots" );
-   if (corrdir==0) {
+   if (corrdir==nullptr) {
       cout << "+++ Could not find CorrelationPlots directory 'CorrelationPlots'" << endl;
-      return 0;
+      return nullptr;
    }
    return corrdir;
 }

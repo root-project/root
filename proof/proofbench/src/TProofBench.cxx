@@ -62,14 +62,14 @@ ClassImp(TProofBench);
 
 // Functions for fitting
 
-TF1 *TProofBench::fgFp1 = 0;
-TF1 *TProofBench::fgFp1n = 0;
-TF1 *TProofBench::fgFp2 = 0;
-TF1 *TProofBench::fgFp2n = 0;
-TF1 *TProofBench::fgFp3 = 0;
-TF1 *TProofBench::fgFp3n = 0;
-TF1 *TProofBench::fgFio = 0;
-TF1 *TProofBench::fgFioV = 0;
+TF1 *TProofBench::fgFp1 = nullptr;
+TF1 *TProofBench::fgFp1n = nullptr;
+TF1 *TProofBench::fgFp2 = nullptr;
+TF1 *TProofBench::fgFp2n = nullptr;
+TF1 *TProofBench::fgFp3 = nullptr;
+TF1 *TProofBench::fgFp3n = nullptr;
+TF1 *TProofBench::fgFio = nullptr;
+TF1 *TProofBench::fgFioV = nullptr;
 static Int_t gFioVn0 = -1;             // Number of real cores for fgFioV
 static Int_t gFioVn1 = -1;             // Number of real+hyper cores for fgFioV
 
@@ -183,11 +183,11 @@ Double_t funcpuvn(Double_t *xx, Double_t *par)
 /// Constructor: check PROOF and load selectors PAR
 
 TProofBench::TProofBench(const char *url, const char *outfile, const char *proofopt)
-            : fUnlinkOutfile(kFALSE), fProofDS(0), fOutFile(0),
-              fNtries(4), fHistType(0), fNHist(16), fReadType(0),
+            : fUnlinkOutfile(kFALSE), fProofDS(nullptr), fOutFile(nullptr),
+              fNtries(4), fHistType(nullptr), fNHist(16), fReadType(nullptr),
               fDataSet("BenchDataSet"), fNFilesWrk(2), fReleaseCache(kTRUE),
               fDataGenSel(kPROOF_BenchSelDataGenDef),
-              fRunCPU(0), fRunDS(0), fDS(0), fDebug(kFALSE), fDescription(0)
+              fRunCPU(nullptr), fRunDS(nullptr), fDS(nullptr), fDebug(kFALSE), fDescription(nullptr)
 {
    SetBit(kInvalidObject);
    if (!url) {
@@ -266,7 +266,7 @@ Int_t TProofBench::OpenOutFile(Bool_t wrt, Bool_t verbose)
 
    Int_t rc = 0;
    if (!fOutFile && fOutFileName.Length() > 0) {
-      const char *mode = 0;
+      const char *mode = nullptr;
       if (wrt)
          mode = gSystem->AccessPathName(fOutFileName) ? "RECREATE" : "UPDATE";
       else
@@ -326,7 +326,7 @@ Int_t TProofBench::SetOutFile(const char *outfile, Bool_t verbose)
 
 void TProofBench::CloseOutFile()
 {
-   if (SetOutFile(0) != 0)
+   if (SetOutFile(nullptr) != 0)
       Warning("CloseOutFile", "problems closing '%s'", fOutFileName.Data());
 }
 
@@ -352,7 +352,7 @@ Int_t TProofBench::RunCPU(Long64_t nevents, Int_t start, Int_t stop, Int_t step)
    fRunCPU->Run(nevents, start, stop, step, fNtries, fDebug, -1);
 
    // Close the file
-   if (SetOutFile(0) != 0)
+   if (SetOutFile(nullptr) != 0)
       Warning("RunCPU", "problems closing '%s'", fOutFileName.Data());
 
    // Done
@@ -381,7 +381,7 @@ Int_t TProofBench::RunCPUx(Long64_t nevents, Int_t start, Int_t stop)
    fRunCPU->Run(nevents, start, stop, -2, fNtries, fDebug, -1);
 
    // Close the file
-   if (SetOutFile(0) != 0)
+   if (SetOutFile(nullptr) != 0)
       Warning("RunCPUx", "problems closing '%s'", fOutFileName.Data());
 
    // Done
@@ -450,11 +450,11 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
    Int_t kamx = -1, kmmx = -1, nbins = -1;
    Double_t ymx = -1., ymi = -1.;
 
-   TProfile *pf = 0;
+   TProfile *pf = nullptr;
    Int_t kmx = -1;
 
-   TProfile *pfav = 0;
-   TGraphErrors *grav = 0;
+   TProfile *pfav = nullptr;
+   TGraphErrors *grav = nullptr;
    if (doAvg) {
       if (!(grav = GetGraph(d, hprofn, nbins, xmin, xmax, ami, amx, kamx, pfav))) {
          ::Error("DrawCPU", "could not find '%s' ...", hprofn.Data());
@@ -467,8 +467,8 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
       pf = pfav;
       kmx = kamx;
    }
-   TProfile *pfmx = 0;
-   TGraphErrors *grmx = 0;
+   TProfile *pfmx = nullptr;
+   TGraphErrors *grmx = nullptr;
    if (doMax) {
       if (!(grmx = GetGraph(d, hmaxn, nbins, xmin, xmax, mmi, mmx, kmmx, pfmx))) {
          ::Warning("DrawCPU", "could not find '%s': feature added in 5.34/11", hmaxn.Data());
@@ -494,7 +494,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
    hgr->SetMaximum(ymx + (ymx-ymi)*0.2);
    hgr->SetMinimum(0);
    if (isNorm) hgr->SetMaximum(ymx*1.2);
-   hgr->SetDirectory(0);
+   hgr->SetDirectory(nullptr);
    hgr->SetStats(0);
    hgr->GetXaxis()->SetTitle(pf->GetXaxis()->GetTitle());
    hgr->GetXaxis()->CenterTitle(true);
@@ -505,7 +505,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
    hgr->GetYaxis()->SetTitleOffset(0.52);
    hgr->GetYaxis()->SetTitle("Rate (events/s)");
 
-   TLegend *leg = 0;
+   TLegend *leg = nullptr;
    if (isNorm) {
       leg = new TLegend(0.7, 0.8, 0.9, 0.9);
    } else {
@@ -513,7 +513,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
    }
 
    gStyle->SetOptTitle(0);
-   TGraphErrors *gr = 0;
+   TGraphErrors *gr = nullptr;
    if (doAvg) {
       grav->SetFillColor(1);
       grav->SetLineColor(13);
@@ -643,11 +643,11 @@ TGraphErrors *TProofBench::GetGraph(TDirectory *d, const char *pfn, Int_t &nb,
    // Sanity checks
    if (!d || !pfn || (pfn && strlen(pfn) <= 0)) {
       ::Error("TProofBench::GetGraph", "directory or name not defined!");
-      return (TGraphErrors *)0;
+      return (TGraphErrors *)nullptr;
    }
 
    TList *keylist = d->GetListOfKeys();
-   TKey *key = 0;
+   TKey *key = nullptr;
    TIter nxk(keylist);
    while ((key = (TKey *) nxk())) {
       if (TString(key->GetName()).BeginsWith(pfn)) {
@@ -658,7 +658,7 @@ TGraphErrors *TProofBench::GetGraph(TDirectory *d, const char *pfn, Int_t &nb,
    // Sanity checks
    if (!pf) {
       ::Error("TProofBench::GetGraph", "TProfile for '%s' not found in directory '%s'", pfn, d->GetName());
-      return (TGraphErrors *)0;
+      return (TGraphErrors *)nullptr;
    }
 
    nb = pf->GetNbinsX();
@@ -776,7 +776,7 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
          ::Error("TProofBench::GetPerfSpecs", "directory path '%s' could nto be open - abort", pp.Data());
          return;
       }
-      const char *ent = 0;
+      const char *ent = nullptr;
       while ((ent = gSystem->GetDirEntry(dirp))) {
          if (!strcmp(ent, ".") || !strcmp(ent, "..")) continue;
          fn.Form("%s/%s", pp.Data(), ent);
@@ -854,7 +854,7 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
       }
    }
 
-   fileDesc *nm = 0;
+   fileDesc *nm = nullptr;
    // Ask the user, if more then 1
    if (filels.GetSize() == 1) {
       nm = (fileDesc *) filels.First();
@@ -917,7 +917,7 @@ Int_t TProofBench::RunDataSet(const char *dset,
    SafeDelete(readType);
 
    // Close the file
-   if (SetOutFile(0) != 0)
+   if (SetOutFile(nullptr) != 0)
       Warning("RunDataSet", "problems closing '%s'", fOutFileName.Data());
 
    // Done
@@ -950,7 +950,7 @@ Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
    SafeDelete(readType);
 
    // Close the file
-   if (SetOutFile(0) != 0)
+   if (SetOutFile(nullptr) != 0)
       Warning("RunDataSetx", "problems closing '%s'", fOutFileName.Data());
 
    // Done
@@ -1027,11 +1027,11 @@ void TProofBench::DrawDataSet(const char *outfile,
    Int_t kamx = -1, kmmx = -1, nbins = -1;
    Double_t ymx = -1., ymi = -1.;
 
-   TProfile *pf = 0;
+   TProfile *pf = nullptr;
    Int_t kmx = -1;
 
-   TProfile *pfav = 0;
-   TGraphErrors *grav = 0;
+   TProfile *pfav = nullptr;
+   TGraphErrors *grav = nullptr;
    if (doAvg) {
       if (!(grav = GetGraph(d, hprofn, nbins, xmin, xmax, ami, amx, kamx, pfav))) {
          ::Error("DrawCPU", "could not find '%s' ...", hprofn.Data());
@@ -1045,8 +1045,8 @@ void TProofBench::DrawDataSet(const char *outfile,
       kmx = kamx;
    }
 
-   TProfile *pfmx = 0;
-   TGraphErrors *grmx = 0;
+   TProfile *pfmx = nullptr;
+   TGraphErrors *grmx = nullptr;
    if (doMax) {
       if (!(grmx = GetGraph(d, hmaxn, nbins, xmin, xmax, mmi, mmx, kmmx, pfmx))) {
          ::Warning("DrawCPU", "could not find '%s': feature added in 5.34/11", hmaxn.Data());
@@ -1072,7 +1072,7 @@ void TProofBench::DrawDataSet(const char *outfile,
    hgr->SetMaximum(ymx + (ymx-ymi)*0.2);
    hgr->SetMinimum(0);
    if (isNorm) hgr->SetMaximum(ymx*1.2);
-   hgr->SetDirectory(0);
+   hgr->SetDirectory(nullptr);
    hgr->SetStats(0);
    hgr->GetXaxis()->SetTitle(pf->GetXaxis()->GetTitle());
    hgr->GetXaxis()->CenterTitle(true);
@@ -1088,14 +1088,14 @@ void TProofBench::DrawDataSet(const char *outfile,
       hgr->GetYaxis()->SetTitle("Rate (events/s)");
    }
 
-   TLegend *leg = 0;
+   TLegend *leg = nullptr;
    if (isNorm) {
       leg = new TLegend(0.7, 0.8, 0.9, 0.9);
    } else {
       leg = new TLegend(0.1, 0.8, 0.3, 0.9);
    }
 
-   TGraphErrors *gr = 0;
+   TGraphErrors *gr = nullptr;
    if (doAvg) {
       grav->SetFillColor(1);
       grav->SetLineColor(13);
@@ -1221,8 +1221,8 @@ void TProofBench::DrawEfficiency(const char *outfile,
          lst = 2;
       }
    }
-   const char *dirn = 0;
-   TDirectory *d = 0;
+   const char *dirn = nullptr;
+   TDirectory *d = nullptr;
    for (Int_t i = fst; i <= lst; i++) {
       if ((d = (TDirectory *) fout->Get(dirs[i]))) {
          dirn = dirs[i];
@@ -1245,8 +1245,8 @@ void TProofBench::DrawEfficiency(const char *outfile,
    Int_t kmx = -1, nbins = -1;
    Double_t ymx = -1., ymi = -1.;
 
-   TProfile *pf = 0;
-   TGraphErrors *gr = 0;
+   TProfile *pf = nullptr;
+   TGraphErrors *gr = nullptr;
    if (!(gr = GetGraph(d, hprof, nbins, xmin, xmax, ymi, ymx, kmx, pf))) {
       ::Error("DrawEfficiency", "could not find '%s' ...", hprof.Data());
       fout->Close();
@@ -1261,7 +1261,7 @@ void TProofBench::DrawEfficiency(const char *outfile,
    TH1F *hgr = new TH1F("Graph-Efficiency","CPU effectiveness", nbins*4, xmin, xmax);
    hgr->SetMaximum(1.2);
    hgr->SetMinimum(0);
-   hgr->SetDirectory(0);
+   hgr->SetDirectory(nullptr);
    hgr->SetStats(0);
    hgr->GetXaxis()->SetTitle(pf->GetXaxis()->GetTitle());
    hgr->GetXaxis()->CenterTitle(true);
@@ -1412,10 +1412,10 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    TMap *filesmap = new TMap;
    TMap *nodesmap = pn.GetMapOfNodes();
    TIter nxnd(nodesmap);
-   TList *wli = 0;
-   TObject *obj = 0;
+   TList *wli = nullptr;
+   TObject *obj = nullptr;
    Int_t kf = 1;
-   while ((obj = nxnd()) != 0) {
+   while ((obj = nxnd()) != nullptr) {
       if ((wli = dynamic_cast<TList *>(nodesmap->GetValue(obj)))) {
          THashList *fli = new THashList;
          Int_t nf = wli->GetSize() * fNFilesWrk;
@@ -1475,7 +1475,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
          TList *fli = dynamic_cast<TList *>(obj);
          if (fli && TString(fli->GetName()).BeginsWith("PROOF_FilesGenerated_")) {
             TIter nxfg(fli);
-            TFileInfo *fi = 0;
+            TFileInfo *fi = nullptr;
             while ((fi = (TFileInfo *) nxfg()))
                fc->Add(fi);
             fli->SetOwner(kFALSE);
@@ -1553,7 +1553,7 @@ Int_t TProofBench::CopyDataSet(const char *dset, const char *dsetdst, const char
    }
    TFileCollection *fcn = new TFileCollection(dsetdst, "");
    TString fn;
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    TIter nxfi(fc->GetList());
    while ((fi = (TFileInfo *) nxfi())) {
       fn.Form("%s/%s", destdir, gSystem->BaseName(fi->GetCurrentUrl()->GetFile()));

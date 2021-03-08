@@ -28,14 +28,14 @@ void TMVA::mvas(TString dataset, TString fin, HistType htype, Bool_t useTMVAStyl
    const Int_t width = 600;   // size of canvas
 
    // this defines how many canvases we need
-   TCanvas *c = 0;
+   TCanvas *c = nullptr;
 
    // counter variables
    Int_t countCanvas = 0;
 
    // search for the right histograms in full list of keys
    TIter next(file->GetDirectory(dataset.Data())->GetListOfKeys());
-   TKey *key(0);   
+   TKey *key(nullptr);   
    while ((key = (TKey*)next())) {
 
       if (!TString(key->GetName()).BeginsWith("Method_")) continue;
@@ -63,7 +63,7 @@ void TMVA::mvas(TString dataset, TString fin, HistType htype, Bool_t useTMVAStyl
          TH1* sig = dynamic_cast<TH1*>(titDir->Get( hname + "_S" ));
          TH1* bgd = dynamic_cast<TH1*>(titDir->Get( hname + "_B" ));
 
-         if (sig==0 || bgd==0) {
+         if (sig==nullptr || bgd==nullptr) {
             if     (htype == kMVAType)     
                cout << ":\t mva distribution not available (this is normal for Cut classifier)" << endl;
             else if(htype == kProbaType)   
@@ -153,14 +153,14 @@ void TMVA::mvas(TString dataset, TString fin, HistType htype, Bool_t useTMVAStyl
    
          if (htype == kCompareType) {
             // if overtraining check, load additional histograms
-            TH1* sigOv = 0;
-            TH1* bgdOv = 0;
+            TH1* sigOv = nullptr;
+            TH1* bgdOv = nullptr;
 
             TString ovname = hname += "_Train";
             sigOv = dynamic_cast<TH1*>(titDir->Get( ovname + "_S" ));
             bgdOv = dynamic_cast<TH1*>(titDir->Get( ovname + "_B" ));
       
-            if (sigOv == 0 || bgdOv == 0) {
+            if (sigOv == nullptr || bgdOv == nullptr) {
                cout << "+++ Problem in \"mvas.C\": overtraining check histograms do not exist" << endl;
             }
             else {

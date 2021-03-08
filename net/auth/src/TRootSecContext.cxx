@@ -87,7 +87,7 @@ void TRootSecContext::DeActivate(Option_t *Opt)
    if (fMethod == TAuthenticate::kClear)
       if (fContext) {
          delete (TPwdCtx *)fContext;
-         fContext = 0;
+         fContext = nullptr;
       }
 
    Bool_t remove = (strstr(Opt,"R") || strstr(Opt,"r"));
@@ -121,7 +121,7 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
    // Contact remote services that used this context,
    // starting from the last ...
    TIter last(fCleanup,kIterBackward);
-   TSecContextCleanup *nscc = 0;
+   TSecContextCleanup *nscc = nullptr;
    while ((nscc = (TSecContextCleanup *)last()) && !cleaned) {
 
       // First check if remote daemon supports cleaning

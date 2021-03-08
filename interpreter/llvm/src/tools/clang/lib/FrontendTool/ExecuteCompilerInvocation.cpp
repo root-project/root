@@ -127,7 +127,7 @@ CreateFrontendBaseAction(CompilerInstance &CI) {
 #if !CLANG_ENABLE_ARCMT || !CLANG_ENABLE_STATIC_ANALYZER \
   || !CLANG_ENABLE_OBJC_REWRITER
   CI.getDiagnostics().Report(diag::err_fe_action_not_available) << Action;
-  return 0;
+  return nullptr;
 #else
   llvm_unreachable("Invalid program action!");
 #endif

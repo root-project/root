@@ -46,12 +46,12 @@
 
 TGHtmlBlock::TGHtmlBlock() : TGHtmlElement(Html_Block)
 {
-   fZ = NULL;
+   fZ = nullptr;
    fTop = fBottom = 0;
    fLeft = fRight = 0;
    fN = 0;
-   fPPrev = fPNext = 0;
-   fBPrev = fBNext = 0;
+   fPPrev = fPNext = nullptr;
+   fBPrev = fBNext = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +79,7 @@ void TGHtml::UnlinkAndFreeBlock(TGHtmlBlock *pBlock)
    } else {
       fPFirst = pBlock->fPNext;
    }
-   pBlock->fPPrev = pBlock->fPNext = 0;
+   pBlock->fPPrev = pBlock->fPNext = nullptr;
    delete pBlock;
 }
 
@@ -95,7 +95,7 @@ void TGHtml::AppendBlock(TGHtmlElement *pToken, TGHtmlBlock *pBlock)
    pBlock->fPPrev = pToken->fPPrev;
    pBlock->fPNext = pToken;
    pBlock->fBPrev = fLastBlock;
-   pBlock->fBNext = 0;
+   pBlock->fBNext = nullptr;
    if (fLastBlock) {
       fLastBlock->fBNext = pBlock;
    } else {
@@ -218,18 +218,18 @@ void TGHtml::DrawSelectionBackground(TGHtmlBlock *pBlock, Drawable_t drawable,
 {
    int xLeft, xRight;        // Left and right bounds of box to draw
    int yTop, yBottom;        // Top and bottom of box
-   TGHtmlElement *p = 0;     // First element of the block
-   TGFont *font=0;           // Font
+   TGHtmlElement *p = nullptr;     // First element of the block
+   TGFont *font=nullptr;           // Font
    GContext_t gc;            // GC for drawing
 
-   if (pBlock == 0 || (pBlock->fFlags & HTML_Selected) == 0) return;
+   if (pBlock == nullptr || (pBlock->fFlags & HTML_Selected) == 0) return;
 
    xLeft = pBlock->fLeft - x;
    if (pBlock == fPSelStartBlock && fSelStartIndex > 0) {
       if (fSelStartIndex >= pBlock->fN) return;
       p = pBlock->fPNext;
       font = GetFont(p->fStyle.fFont);
-      if (font == 0) return;
+      if (font == nullptr) return;
       if (p->fType == Html_Text) {
          TGHtmlTextElement *tp = (TGHtmlTextElement *) p;
          xLeft = tp->fX - x + font->TextWidth(pBlock->fZ, fSelStartIndex);
@@ -237,10 +237,10 @@ void TGHtml::DrawSelectionBackground(TGHtmlBlock *pBlock, Drawable_t drawable,
    }
    xRight = pBlock->fRight - x;
    if (pBlock == fPSelEndBlock && fSelEndIndex < pBlock->fN) {
-      if (p == 0) {
+      if (p == nullptr) {
          p = pBlock->fPNext;
          font = GetFont(p->fStyle.fFont);
-         if (font == 0) return;
+         if (font == nullptr) return;
       }
       if (p->fType == Html_Text) {
          TGHtmlTextElement *tp = (TGHtmlTextElement *) p;
@@ -326,12 +326,12 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
    Int_t x, y;             // Where to draw
    UInt_t width, height;
 
-   if (pBlock == 0) return;
+   if (pBlock == nullptr) return;
 
    src = pBlock->fPNext;
    while (src && (src->fFlags & HTML_Visible) == 0) src = src->fPNext;
 
-   if (src == 0) return;
+   if (src == nullptr) return;
 
    if (pBlock->fN > 0) {
       // We must be dealing with plain old text
@@ -348,7 +348,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
       }
       gc = GetGC(src->fStyle.fColor, src->fStyle.fFont);
       font = GetFont(src->fStyle.fFont);
-      if (font == 0) return;
+      if (font == nullptr) return;
       font->DrawChars(drawable, gc, pBlock->fZ, pBlock->fN,
                       x - drawableLeft, y - drawableTop);
       if (src->fStyle.fFlags & STY_Underline) {
@@ -434,7 +434,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
                case LI_TYPE_Enum_i:
                   cnt = strlen(zBuf);
                   font = GetFont(src->fStyle.fFont);
-                  if (font == 0) return;
+                  if (font == nullptr) return;
                   w = font->TextWidth(zBuf, cnt);
                   font->DrawChars(drawable, gc, zBuf, cnt,
                                   x - w - drawableLeft, y - drawableTop);
@@ -519,7 +519,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
             } else if (image->fZAlt) {
                gc = GetGC(src->fStyle.fColor, src->fStyle.fFont);
                font = GetFont(src->fStyle.fFont);
-               if (font == 0) return;
+               if (font == nullptr) return;
                font->DrawChars(drawable, gc,
                                image->fZAlt, strlen(image->fZAlt),
                                image->fX - drawableLeft,
@@ -627,7 +627,7 @@ TGHtmlElement *TGHtml::FillOutBlock(TGHtmlBlock *p)
    if (p->fN) p->fN = 0;
 
    if (p->fZ) delete[] p->fZ;
-   p->fZ = 0;
+   p->fZ = nullptr;
 
    // Skip over TGHtmlElements that aren't directly displayed.
 
@@ -642,7 +642,7 @@ TGHtmlElement *TGHtml::FillOutBlock(TGHtmlBlock *p)
       }
       pElem = fPNext;
    }
-   if (pElem == 0) return 0;
+   if (pElem == nullptr) return nullptr;
 
    // Handle "special" elements.
 

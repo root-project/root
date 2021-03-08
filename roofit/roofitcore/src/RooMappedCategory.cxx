@@ -37,9 +37,9 @@
 
 class RooMappedCategoryCache : public RooAbsCache {
   public:
-    RooMappedCategoryCache(RooAbsArg* owner = 0) : RooAbsCache(owner)
+    RooMappedCategoryCache(RooAbsArg* owner = nullptr) : RooAbsCache(owner)
   { initialise(); }
-    RooMappedCategoryCache(const RooAbsCache& other, RooAbsArg* owner = 0) :
+    RooMappedCategoryCache(const RooAbsCache& other, RooAbsArg* owner = nullptr) :
       RooAbsCache(other, owner)
     { initialise(); }
 
@@ -82,7 +82,7 @@ class RooMappedCategoryCache : public RooAbsCache {
 
 RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defOut, Int_t defOutIdx) :
   RooAbsCategory(name, title), _inputCat("input","Input category",this,inputCat),
-  _mapcache(0)
+  _mapcache(nullptr)
 {
   // Constructor with input category and name of default output state, which is assigned
   // to all input category states that do not follow any mapping rule.
@@ -96,7 +96,7 @@ RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbs
 
 RooMappedCategory::RooMappedCategory(const RooMappedCategory& other, const char *name) :
   RooAbsCategory(other,name), _inputCat("input",this,other._inputCat), _mapArray(other._mapArray),
-  _mapcache(0)
+  _mapcache(nullptr)
 {
   _defCat = lookupIndex(other.lookupName(other._defCat));
 }
@@ -209,7 +209,7 @@ Bool_t RooMappedCategory::readFromStream(std::istream& is, Bool_t compact, Bool_
      TString defCatName(lookupName(_defCat));
      _mapArray.clear() ;
      delete _mapcache;
-     _mapcache = 0;
+     _mapcache = nullptr;
      clearTypes() ;
      _defCat = defineState(defCatName.Data()).second;
 

@@ -107,7 +107,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
   _offsetSaveW2 = 0.;
   _offsetCarrySaveW2 = 0.;
 
-  _binnedPdf = 0 ;
+  _binnedPdf = nullptr ;
 }
 
 
@@ -128,7 +128,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 {
   // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
   // for a binned likelihood calculation
-  _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
+  _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : nullptr ;
 
   // Retrieve and cache bin widths needed to convert un-normalized binnedPdf values back to yields
   if (_binnedPdf) {
@@ -138,7 +138,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
     RooArgSet* obs = _funcClone->getObservables(_dataClone) ;
     if (obs->getSize()!=1) {
-      _binnedPdf = 0 ;
+      _binnedPdf = nullptr ;
     } else {
       RooRealVar* var = (RooRealVar*) obs->first() ;
       std::list<Double_t>* boundaries = _binnedPdf->binBoundaries(*var,var->getMin(),var->getMax()) ;
@@ -175,14 +175,14 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 {
   // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
   // for a binned likelihood calculation
-  _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
+  _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : nullptr ;
 
   // Retrieve and cache bin widths needed to convert un-normalized binnedPdf values back to yields
   if (_binnedPdf) {
 
     RooArgSet* obs = _funcClone->getObservables(_dataClone) ;
     if (obs->getSize()!=1) {
-      _binnedPdf = 0 ;
+      _binnedPdf = nullptr ;
     } else {
       RooRealVar* var = (RooRealVar*) obs->first() ;
       std::list<Double_t>* boundaries = _binnedPdf->binBoundaries(*var,var->getMin(),var->getMax()) ;
@@ -214,7 +214,7 @@ RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
   _first(kTRUE), _offsetSaveW2(other._offsetSaveW2),
   _offsetCarrySaveW2(other._offsetCarrySaveW2),
   _binw(other._binw) {
-  _binnedPdf = other._binnedPdf ? (RooRealSumPdf*)_funcClone : 0 ;
+  _binnedPdf = other._binnedPdf ? (RooRealSumPdf*)_funcClone : nullptr ;
 }
 
 

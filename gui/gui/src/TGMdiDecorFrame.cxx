@@ -345,7 +345,7 @@ TGMdiTitleBar::TGMdiTitleBar(const TGWindow *p, const TGWindow *mdiwin,
 {
    fMdiWin = mdiwin;
    fEditDisabled = kTRUE;
-   fWinName = 0;
+   fWinName = nullptr;
    fMidButPressed = fLeftButPressed = fRightButPressed = kFALSE;
 
    AddInput(kButtonPressMask | kButtonReleaseMask | kButtonMotionMask);
@@ -615,7 +615,7 @@ TGMdiButtons::TGMdiButtons(const TGWindow *p, const TGWindow *titlebar) :
    fDefaultHint = new TGLayoutHints(kLHintsNormal, 0, 0, 1, 0);
    fCloseHint = new TGLayoutHints(kLHintsNormal, 2, 0, 1, 0);
    fEditDisabled = kTRUE;
-   fMsgWindow = 0;
+   fMsgWindow = nullptr;
 
    //--- Minimize button
 

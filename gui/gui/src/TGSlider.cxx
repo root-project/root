@@ -66,7 +66,7 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
                    UInt_t options, ULong_t back)
    : TGFrame(p, w, h, options, back)
 {
-   fDisabledPic = 0;
+   fDisabledPic = nullptr;
    fWidgetId    = id;
    fWidgetFlags = kWidgetWantFocus | kWidgetIsEnabled;
    fMsgWindow   = p;
@@ -76,7 +76,7 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
    fDragging = kFALSE;
    fPos = fRelPos = 0;
    fVmax = fVmin = 0;
-   fSliderPic = 0;
+   fSliderPic = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

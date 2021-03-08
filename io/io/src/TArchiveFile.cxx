@@ -54,7 +54,7 @@ TArchiveFile::TArchiveFile(const char *archive, const char *member, TFile *file)
       fMemberIndex = atoi(fMemberName);
    fMembers     = new TObjArray;
    fMembers->SetOwner();
-   fCurMember   = 0;
+   fCurMember   = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,19 +123,19 @@ TArchiveFile *TArchiveFile::Open(const char *url, TFile *file)
    if (!file) {
       ::Error("TArchiveFile::Open", "must specify a valid TFile to access %s",
               url);
-      return 0;
+      return nullptr;
    }
 
    TString archive, member, type;
 
    if (!ParseUrl(url, archive, member, type))
-      return 0;
+      return nullptr;
 
-   TArchiveFile *f = 0;
+   TArchiveFile *f = nullptr;
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TArchiveFile", type))) {
       if (h->LoadPlugin() == -1)
-         return 0;
+         return nullptr;
       f = (TArchiveFile*) h->ExecPlugin(3, archive.Data(), member.Data(), file);
    }
 

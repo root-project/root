@@ -68,7 +68,7 @@ void TMVA::DrawMLPoutputMovie(TString dataset, TFile* file, const TString& metho
    const Int_t width = 600;   // size of canvas
 
    // this defines how many canvases we need
-   TCanvas* c = 0;
+   TCanvas* c = nullptr;
 
    Float_t nrms = 4;
    Float_t xmin = -1.2;
@@ -117,7 +117,7 @@ void TMVA::DrawMLPoutputMovie(TString dataset, TFile* file, const TString& metho
       // find background
       TString nbn = sig->GetName(); nbn[nbn.Length()-1] = 'B';            
       TH1F* bgd = dynamic_cast<TH1F*>(epochDir->Get( nbn ));
-      if (bgd == 0) {
+      if (bgd == nullptr) {
          cout << "Big troubles with histogram: " << bgd << " -> cannot find!" << endl;
          exit(1);
       }

@@ -136,7 +136,7 @@ fg_999(999)
    for(i=0; i<max_Events_;++i) fVarn_1.nclass[i] = 0;
    for(i=0; i<max_nVar_;++i) fVarn_1.xmax[i] = 0;
 
-   fLogger = 0;
+   fLogger = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

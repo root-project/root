@@ -255,7 +255,7 @@ IncrementalExecutor::runStaticInitializersOnce(Transaction& T) {
   // it will call inits multiple times.
   GV->eraseFromParent();
 
-  if (InitList == 0)
+  if (InitList == nullptr)
     return kExeSuccess;
 
   //SmallVector<Function*, 2> initFuncs;
@@ -263,7 +263,7 @@ IncrementalExecutor::runStaticInitializersOnce(Transaction& T) {
   for (unsigned i = 0, e = InitList->getNumOperands(); i != e; ++i) {
     llvm::ConstantStruct *CS
       = llvm::dyn_cast<llvm::ConstantStruct>(InitList->getOperand(i));
-    if (CS == 0) continue;
+    if (CS == nullptr) continue;
 
     llvm::Constant *FP = CS->getOperand(1);
     if (FP->isNullValue())
@@ -397,7 +397,7 @@ IncrementalExecutor::getPointerToGlobalFromJIT(llvm::StringRef name) const {
   void* addr = (void*)m_JIT->getSymbolAddress(name, false /*no dlsym*/);
 
   if (diagnoseUnresolvedSymbols(name, "symbol"))
-    return 0;
+    return nullptr;
   return addr;
 }
 

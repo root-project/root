@@ -55,7 +55,7 @@ TPerfEvent::TPerfEvent(TTimeStamp *offset)
      fEventsProcessed(0), fBytesRead(0), fLen(0), fLatency(0.0), fProcTime(0.0), fCpuTime(0.0),
      fIsStart(kFALSE), fIsOk(kFALSE)
 {
-   if (gProofServ != 0) {
+   if (gProofServ != nullptr) {
       fEvtNode = gProofServ->GetOrdinal();
    } else {
       if (gProof && gProof->IsLite())
@@ -64,7 +64,7 @@ TPerfEvent::TPerfEvent(TTimeStamp *offset)
          fEvtNode = "-2"; // not on a PROOF server
    }
 
-   if (offset != 0) {
+   if (offset != nullptr) {
       fTimeStamp = TTimeStamp(fTimeStamp.GetSec() - offset->GetSec(),
                      fTimeStamp.GetNanoSec() - offset->GetNanoSec());
    }
@@ -116,9 +116,9 @@ Long_t TPerfStats::fgResMemMax = -1;
 /// Normal constructor.
 
 TPerfStats::TPerfStats(TList *input, TList *output)
-   : fTrace(0), fPerfEvent(0), fPacketsHist(0), fProcPcktHist(0),
-      fEventsHist(0), fNodeHist(0), fLatencyHist(0),
-      fProcTimeHist(0), fCpuTimeHist(0), fBytesRead(0),
+   : fTrace(nullptr), fPerfEvent(nullptr), fPacketsHist(nullptr), fProcPcktHist(nullptr),
+      fEventsHist(nullptr), fNodeHist(nullptr), fLatencyHist(nullptr),
+      fProcTimeHist(nullptr), fCpuTimeHist(nullptr), fBytesRead(0),
       fTotCpuTime(0.), fTotBytesRead(0), fTotEvents(0), fNumEvents(0),
       fSlaves(0), fDoHist(kFALSE),
       fDoTrace(kFALSE), fDoTraceRate(kFALSE), fDoSlaveTrace(kFALSE), fDoQuota(kFALSE),
@@ -133,7 +133,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    Bool_t isEndMaster = ((gProofServ && gProofServ->IsEndMaster()) ||
                          (proof && proof->IsLite())) ? kTRUE : kFALSE;
 
-   TList *l = 0;
+   TList *l = nullptr;
    Bool_t deletel = kFALSE;
    TParameter<Int_t> *dyns = (TParameter<Int_t> *) input->FindObject("PROOF_DynamicStartup");
    if (dyns) {
@@ -151,7 +151,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
          deletel = kTRUE;
       }
    }
-   if (!l) l = proof ? proof->GetListOfSlaveInfos() : 0 ;
+   if (!l) l = proof ? proof->GetListOfSlaveInfos() : nullptr ;
 
    TIter nextslaveinfo(l);
    while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(nextslaveinfo()))
@@ -159,10 +159,10 @@ TPerfStats::TPerfStats(TList *input, TList *output)
 
    PDB(kMonitoring,1) Info("TPerfStats", "Statistics for %d slave(s)", fSlaves);
 
-   fDoHist = (input->FindObject("PROOF_StatsHist") != 0);
-   fDoTrace = (input->FindObject("PROOF_StatsTrace") != 0);
-   fDoTraceRate = (input->FindObject("PROOF_RateTrace") != 0);
-   fDoSlaveTrace = (input->FindObject("PROOF_SlaveStatsTrace") != 0);
+   fDoHist = (input->FindObject("PROOF_StatsHist") != nullptr);
+   fDoTrace = (input->FindObject("PROOF_StatsTrace") != nullptr);
+   fDoTraceRate = (input->FindObject("PROOF_RateTrace") != nullptr);
+   fDoSlaveTrace = (input->FindObject("PROOF_SlaveStatsTrace") != nullptr);
    PDB(kMonitoring,1)
       Info("TPerfStats", "master:%d  hist:%d,trace:%d,rate:%d,wrktrace:%d",
                          isMaster, fDoHist, fDoTrace, fDoTraceRate, fDoSlaveTrace);
@@ -178,7 +178,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       Info("TPerfStats", "sending full information after each packet");
 
    // Extract the name of the dataset
-   TObject *o = 0;
+   TObject *o = nullptr;
    TIter nxi(input);
    while ((o = nxi()))
       if (!strncmp(o->ClassName(), "TDSet", strlen("TDSet"))) break;
@@ -213,7 +213,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       // Construct tree
       gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_PerfStats"));
       fTrace = new TTree("PROOF_PerfStats", "PROOF Statistics");
-      fTrace->SetDirectory(0);
+      fTrace->SetDirectory(nullptr);
       fTrace->Bronch("PerfEvents", "TPerfEvent", &fPerfEvent, 64000, 0);
       output->Add(fTrace);
       PDB(kMonitoring,1)
@@ -230,7 +230,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fPacketsHist = new TH1D("PROOF_PacketsHist", "Packets processed per Worker",
                               fSlaves, 0, fSlaves);
       fPacketsHist->SetFillColor(kCyan);
-      fPacketsHist->SetDirectory(0);
+      fPacketsHist->SetDirectory(nullptr);
       fPacketsHist->SetMinimum(0);
       output->Add(fPacketsHist);
       PDB(kMonitoring,1)
@@ -240,7 +240,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fProcPcktHist = new TH1I("PROOF_ProcPcktHist", "Packets being processed per Worker",
                               fSlaves, 0, fSlaves);
       fProcPcktHist->SetFillColor(kRed);
-      fProcPcktHist->SetDirectory(0);
+      fProcPcktHist->SetDirectory(nullptr);
       fProcPcktHist->SetMinimum(0);
       output->Add(fProcPcktHist);
       PDB(kMonitoring,1)
@@ -250,7 +250,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fEventsHist = new TH1D("PROOF_EventsHist", "Events processed per Worker",
                              fSlaves, 0, fSlaves);
       fEventsHist->SetFillColor(kGreen);
-      fEventsHist->SetDirectory(0);
+      fEventsHist->SetDirectory(nullptr);
       fEventsHist->SetMinimum(0);
       output->Add(fEventsHist);
       PDB(kMonitoring,1)
@@ -259,7 +259,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_NodeHist"));
       fNodeHist = new TH1D("PROOF_NodeHist", "Slaves per Fileserving Node",
                            fSlaves, 0, fSlaves);
-      fNodeHist->SetDirectory(0);
+      fNodeHist->SetDirectory(nullptr);
       fNodeHist->SetMinimum(0);
       fNodeHist->SetCanExtend(TH1::kAllAxes);
       output->Add(fNodeHist);
@@ -270,7 +270,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fLatencyHist = new TH2D("PROOF_LatencyHist", "GetPacket Latency per Worker",
                               fSlaves, 0, fSlaves,
                               ntime_bins, min_time, time_per_bin);
-      fLatencyHist->SetDirectory(0);
+      fLatencyHist->SetDirectory(nullptr);
       fLatencyHist->SetMarkerStyle(4);
       fLatencyHist->SetCanExtend(TH1::kAllAxes);
       output->Add(fLatencyHist);
@@ -281,7 +281,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fProcTimeHist = new TH2D("PROOF_ProcTimeHist", "Packet Processing Time per Worker",
                                fSlaves, 0, fSlaves,
                                ntime_bins, min_time, time_per_bin);
-      fProcTimeHist->SetDirectory(0);
+      fProcTimeHist->SetDirectory(nullptr);
       fProcTimeHist->SetMarkerStyle(4);
       fProcTimeHist->SetCanExtend(TH1::kAllAxes);
       output->Add(fProcTimeHist);
@@ -292,7 +292,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fCpuTimeHist = new TH2D("PROOF_CpuTimeHist", "Packet CPU Time per Worker",
                               fSlaves, 0, fSlaves,
                               ntime_bins, min_time, time_per_bin);
-      fCpuTimeHist->SetDirectory(0);
+      fCpuTimeHist->SetDirectory(nullptr);
       fCpuTimeHist->SetMarkerStyle(4);
       fCpuTimeHist->SetCanExtend(TH1::kAllAxes);
       output->Add(fCpuTimeHist);
@@ -328,7 +328,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
 
       TString mons = gEnv->GetValue("ProofServ.Monitoring", ""), mon;
       Ssiz_t fmon = 0;
-      TProofMonSender *monSender = 0;
+      TProofMonSender *monSender = nullptr;
       while (mons.Tokenize(mon, fmon, "[,|\\\\]")) {
          if (mon != "") {
             // Extract arguments (up to 9 'const char *')
@@ -346,7 +346,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
             }
             na--;
             // Get monitor object from the plugin manager
-            TPluginHandler *h = 0;
+            TPluginHandler *h = nullptr;
             if ((h = gROOT->GetPluginManager()->FindHandler("TProofMonSender", a[0]))) {
                if (h->LoadPlugin() != -1) {
                   monSender =
@@ -366,7 +366,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
                                   mon.Data(), fMonSenders.GetEntries());
             fDoQuota = kTRUE;
          }
-         monSender = 0;
+         monSender = nullptr;
       }
    }
 }
@@ -386,7 +386,7 @@ TPerfStats::~TPerfStats()
 
 void TPerfStats::SimpleEvent(EEventType type)
 {
-   if (type == kStop && fPacketsHist != 0) {
+   if (type == kStop && fPacketsHist != nullptr) {
       fPacketsHist->LabelsDeflate("X");
       fPacketsHist->LabelsOption("auv","X");
    }
@@ -394,7 +394,7 @@ void TPerfStats::SimpleEvent(EEventType type)
    if (type == kStop && fDoQuota)
       WriteQueryLog();
 
-   if (fTrace == 0) return;
+   if (fTrace == nullptr) return;
 
    TPerfEvent pe(&fTzero);
    pe.fType = type;
@@ -402,7 +402,7 @@ void TPerfStats::SimpleEvent(EEventType type)
    fPerfEvent = &pe;
    fTrace->SetBranchAddress("PerfEvents",&fPerfEvent);
    fTrace->Fill();
-   fPerfEvent = 0;
+   fPerfEvent = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -414,7 +414,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
                              Long64_t eventsprocessed, Double_t latency, Double_t proctime,
                              Double_t cputime, Long64_t bytesRead)
 {
-   if (fDoTrace && fTrace != 0) {
+   if (fDoTrace && fTrace != nullptr) {
       TPerfEvent pe(&fTzero);
 
       pe.fType = kPacket;
@@ -430,14 +430,14 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
       fPerfEvent = &pe;
       fTrace->SetBranchAddress("PerfEvents",&fPerfEvent);
       fTrace->Fill();
-      fPerfEvent = 0;
+      fPerfEvent = nullptr;
    }
 
    PDB(kMonitoring,1)
       Info("PacketEvent","%s: fDoHist: %d, fPacketsHist: %p, eventsprocessed: %lld",
                          slave, fDoHist, fPacketsHist, eventsprocessed);
 
-   if (fDoHist && fPacketsHist != 0) {
+   if (fDoHist && fPacketsHist != nullptr) {
       fPacketsHist->Fill(slave, 1);
       fEventsHist->Fill(slave, eventsprocessed);
       fLatencyHist->Fill(slave, latency, 1);
@@ -454,12 +454,12 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
    // Write to monitoring system, if requested
    if (!fMonSenders.IsEmpty() && fMonitorPerPacket) {
       TQueryResult *qr = (gProofServ && gProofServ->GetProof()) ?
-                          gProofServ->GetProof()->GetQueryResult() : 0;
+                          gProofServ->GetProof()->GetQueryResult() : nullptr;
       if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() || !qr) {
          Error("PacketEvent", "some required object are undefined (%p %p %p %p)",
-               gProofServ, (gProofServ ? gProofServ->GetSessionTag() : 0),
-              (gProofServ ? gProofServ->GetProof() : 0),
-              ((gProofServ && gProofServ->GetProof()) ? qr : 0));
+               gProofServ, (gProofServ ? gProofServ->GetSessionTag() : nullptr),
+              (gProofServ ? gProofServ->GetProof() : nullptr),
+              ((gProofServ && gProofServ->GetProof()) ? qr : nullptr));
          return;
       }
 
@@ -482,7 +482,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
       values.Add(new TNamed("querytag", identifier.Data()));
 
       // Memory usage on workers
-      TStatus *pst = (fOutput) ? (TStatus *) fOutput->FindObject("PROOF_Status") : 0;
+      TStatus *pst = (fOutput) ? (TStatus *) fOutput->FindObject("PROOF_Status") : nullptr;
       // This most likely will be always NULL when sending from GetNextPacket ...
       Long64_t vmxw = (pst) ? (Long64_t) pst->GetVirtMemMax() : -1;
       Long64_t rmxw = (pst) ? (Long64_t) pst->GetResMemMax() : -1;
@@ -495,7 +495,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
       values.Add(new TNamed("dataset", fDataSet.Data()));
       values.Add(new TParameter<int>("numfiles", fDataSetSize));
       // Missing files
-      TList *mfls = (fOutput) ? (TList *) fOutput->FindObject("MissingFiles") : 0;
+      TList *mfls = (fOutput) ? (TList *) fOutput->FindObject("MissingFiles") : nullptr;
       Int_t nmiss = (mfls && mfls->GetSize() > 0) ? mfls->GetSize() : 0;
       values.Add(new TParameter<int>("missfiles", nmiss));
       // Query status
@@ -524,7 +524,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
 void TPerfStats::FileEvent(const char *slave, const char *slavename, const char *nodename,
                             const char *filename, Bool_t isStart)
 {
-   if (fDoTrace && fTrace != 0) {
+   if (fDoTrace && fTrace != nullptr) {
       TPerfEvent pe(&fTzero);
 
       pe.fType = kFile;
@@ -537,10 +537,10 @@ void TPerfStats::FileEvent(const char *slave, const char *slavename, const char 
       fPerfEvent = &pe;
       fTrace->SetBranchAddress("PerfEvents",&fPerfEvent);
       fTrace->Fill();
-      fPerfEvent = 0;
+      fPerfEvent = nullptr;
    }
 
-   if (fDoHist && fPacketsHist != 0) {
+   if (fDoHist && fPacketsHist != nullptr) {
       fNodeHist->Fill(nodename, isStart ? 1 : -1);
    }
 }
@@ -550,19 +550,19 @@ void TPerfStats::FileEvent(const char *slave, const char *slavename, const char 
 
 void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t start)
 {
-   if (fDoTrace && fTrace != 0) {
+   if (fDoTrace && fTrace != nullptr) {
       TPerfEvent pe(&fTzero);
 
       pe.fType = kFileOpen;
       pe.fFileName = filename;
-      pe.fFileClass = file != 0 ? file->ClassName() : "none";
+      pe.fFileClass = file != nullptr ? file->ClassName() : "none";
       pe.fProcTime = double(TTimeStamp())-start;
-      pe.fIsOk = (file != 0);
+      pe.fIsOk = (file != nullptr);
 
       fPerfEvent = &pe;
       fTrace->SetBranchAddress("PerfEvents",&fPerfEvent);
       fTrace->Fill();
-      fPerfEvent = 0;
+      fPerfEvent = nullptr;
    }
 }
 
@@ -571,7 +571,7 @@ void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t start
 
 void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 {
-   if (fDoTrace && fTrace != 0) {
+   if (fDoTrace && fTrace != nullptr) {
       TPerfEvent pe(&fTzero);
 
       pe.fType = kFileRead;
@@ -583,7 +583,7 @@ void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
       fPerfEvent = &pe;
       fTrace->SetBranchAddress("PerfEvents",&fPerfEvent);
       fTrace->Fill();
-      fPerfEvent = 0;
+      fPerfEvent = nullptr;
    }
 }
 
@@ -607,7 +607,7 @@ void TPerfStats::UnzipEvent(TObject * /* tree */, Long64_t /* pos */,
 void TPerfStats::RateEvent(Double_t proctime, Double_t deltatime,
                            Long64_t eventsprocessed, Long64_t bytesRead)
 {
-   if ((fDoTrace || fDoTraceRate) && fTrace != 0) {
+   if ((fDoTrace || fDoTraceRate) && fTrace != nullptr) {
       TPerfEvent pe(&fTzero);
 
       pe.fType = kRate;
@@ -619,7 +619,7 @@ void TPerfStats::RateEvent(Double_t proctime, Double_t deltatime,
       fPerfEvent = &pe;
       fTrace->SetBranchAddress("PerfEvents",&fPerfEvent);
       fTrace->Fill();
-      fPerfEvent = 0;
+      fPerfEvent = nullptr;
    }
 }
 
@@ -652,12 +652,12 @@ void TPerfStats::WriteQueryLog()
    // Write to monitoring system
    if (!fMonSenders.IsEmpty()) {
       TQueryResult *qr = (gProofServ && gProofServ->GetProof()) ?
-                          gProofServ->GetProof()->GetQueryResult() : 0;
+                          gProofServ->GetProof()->GetQueryResult() : nullptr;
       if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() || !qr) {
          Error("WriteQueryLog", "some required object are undefined (%p %p %p %p)",
-               gProofServ, (gProofServ ? gProofServ->GetSessionTag() : 0),
-              (gProofServ ? gProofServ->GetProof() : 0),
-              ((gProofServ && gProofServ->GetProof()) ? qr : 0));
+               gProofServ, (gProofServ ? gProofServ->GetSessionTag() : nullptr),
+              (gProofServ ? gProofServ->GetProof() : nullptr),
+              ((gProofServ && gProofServ->GetProof()) ? qr : nullptr));
          return;
       }
 
@@ -679,9 +679,9 @@ void TPerfStats::WriteQueryLog()
       values.Add(new TParameter<int>("workers", fSlaves));
       values.Add(new TNamed("querytag", identifier.Data()));
 
-      TList *mfls = (fOutput) ? (TList *) fOutput->FindObject("MissingFiles") : 0;
+      TList *mfls = (fOutput) ? (TList *) fOutput->FindObject("MissingFiles") : nullptr;
       // Memory usage on workers
-      TStatus *pst = (fOutput) ? (TStatus *) fOutput->FindObject("PROOF_Status") : 0;
+      TStatus *pst = (fOutput) ? (TStatus *) fOutput->FindObject("PROOF_Status") : nullptr;
       Long64_t vmxw = (pst) ? (Long64_t) pst->GetVirtMemMax() : -1;
       Long64_t rmxw = (pst) ? (Long64_t) pst->GetResMemMax() : -1;
       values.Add(new TParameter<Long64_t>("vmemmxw", vmxw));
@@ -769,7 +769,7 @@ void TPerfStats::Stop()
    gPerfStats->SimpleEvent(TVirtualPerfStats::kStop);
 
    delete gPerfStats;
-   gPerfStats = 0;
+   gPerfStats = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

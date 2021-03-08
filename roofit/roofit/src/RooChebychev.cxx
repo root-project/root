@@ -108,7 +108,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooChebychev::RooChebychev() : _refRangeName(0)
+RooChebychev::RooChebychev() : _refRangeName(nullptr)
 {
 }
 
@@ -120,7 +120,7 @@ RooChebychev::RooChebychev(const char* name, const char* title,
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
   _coefList("coefficients","List of coefficients",this),
-  _refRangeName(0)
+  _refRangeName(nullptr)
 {
   for (const auto coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
@@ -151,7 +151,7 @@ void RooChebychev::selectNormalizationRange(const char* rangeName, Bool_t force)
     _refRangeName = (TNamed*) RooNameReg::instance().constPtr(rangeName) ;
   }
   if (!rangeName) {
-    _refRangeName = 0 ;
+    _refRangeName = nullptr ;
   }
 }
 
@@ -162,8 +162,8 @@ Double_t RooChebychev::evaluate() const
   // first bring the range of the variable _x to the normalised range [-1, 1]
   // calculate sum_k c_k T_k(x) where x is given in the normalised range,
   // c_0 = 1, and the higher coefficients are given in _coefList
-  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
-  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():nullptr);
+  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():nullptr);
   // transform to range [-1, +1]
   const Double_t x = (_x - 0.5 * (xmax + xmin)) / (0.5 * (xmax - xmin));
   // extract current values of coefficients
@@ -216,8 +216,8 @@ Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) con
 {
   assert(1 == code); (void)code;
 
-  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
-  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():nullptr);
+  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():nullptr);
   const Double_t halfrange = .5 * (xmax - xmin), mid = .5 * (xmax + xmin);
   // the full range of the function is mapped to the normalised [-1, 1] range
   const Double_t b = (_x.max(rangeName) - mid) / halfrange;

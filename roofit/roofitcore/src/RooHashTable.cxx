@@ -110,7 +110,7 @@ Bool_t RooHashTable::remove(TObject* arg, TObject* hashArg)
       _entries-- ;
       if (_arr[slot]->GetSize()==0) {
 	delete _arr[slot] ;
-	_arr[slot] = 0 ;
+	_arr[slot] = nullptr ;
 	_usedSlots-- ;
       }
       return kTRUE ;
@@ -131,7 +131,7 @@ Bool_t RooHashTable::remove(TObject* arg, TObject* hashArg)
       _entries-- ;
       if (_arr[i]->GetSize()==0) {
         delete _arr[i] ;
-        _arr[i] = 0 ;
+        _arr[i] = nullptr ;
         _usedSlots-- ;
       }
       return kTRUE ;
@@ -202,7 +202,7 @@ TObject* RooHashTable::find(const char* name) const
 
   Int_t slot = TMath::Hash(name) % _size ;
   if (_arr[slot]) return _arr[slot]->find(name) ;
-  return 0;  
+  return nullptr;  
 }
 
 
@@ -215,7 +215,7 @@ RooAbsArg* RooHashTable::findArg(const RooAbsArg* arg) const
   
   Int_t slot = TMath::Hash(arg->GetName()) % _size ;
   if (_arr[slot]) return _arr[slot]->findArg(arg) ;
-  return 0;  
+  return nullptr;  
 }
 
 
@@ -226,7 +226,7 @@ RooAbsArg* RooHashTable::findArg(const RooAbsArg* arg) const
 TObject* RooHashTable::find(const TObject* hashArg) const 
 {
   RooLinkedListElem* elem = findLinkTo(hashArg) ;
-  return elem ? elem->_arg : 0 ;
+  return elem ? elem->_arg : nullptr ;
 }
 
 
@@ -248,7 +248,7 @@ RooLinkedListElem* RooHashTable::findLinkTo(const TObject* hashArg) const
       if (elem->_arg == hashArg) return elem ;
     }
   }
-  return 0;  
+  return nullptr;  
 }
 
 
@@ -271,7 +271,7 @@ RooSetPair* RooHashTable::findSetPair(const RooArgSet* set1, const RooArgSet* se
     }
   }
 
-  return 0 ;
+  return nullptr ;
 }
 
 

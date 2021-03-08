@@ -37,7 +37,7 @@ Objects of this class can only be created via TProof member functions.
 ClassImp(TSlave);
 
 // Hook for the TXSlave constructor
-TSlave_t TSlave::fgTXSlaveHook = 0;
+TSlave_t TSlave::fgTXSlaveHook = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a PROOF slave object. Called via the TProof ctor.
@@ -48,8 +48,8 @@ TSlave::TSlave(const char *url, const char *ord, Int_t perf,
   : fImage(image), fProofWorkDir(workdir),
     fWorkDir(workdir), fPort(-1),
     fOrdinal(ord), fPerfIdx(perf),
-    fProtocol(0), fSocket(0), fProof(proof),
-    fInput(0), fBytesRead(0), fRealTime(0),
+    fProtocol(0), fSocket(nullptr), fProof(proof),
+    fInput(nullptr), fBytesRead(0), fRealTime(0),
     fCpuTime(0), fSlaveType((ESlaveType)stype), fStatus(TSlave::kInvalid),
     fParallel(0), fMsd(msd)
 {
@@ -67,11 +67,11 @@ TSlave::TSlave()
    fPort      = -1;
    fOrdinal   = "-1";
    fPerfIdx   = -1;
-   fProof     = 0;
+   fProof     = nullptr;
    fSlaveType = kMaster;
    fProtocol  = 0;
-   fSocket    = 0;
-   fInput     = 0;
+   fSocket    = nullptr;
+   fInput     = nullptr;
    fBytesRead = 0;
    fRealTime  = 0;
    fCpuTime   = 0;
@@ -143,11 +143,11 @@ void TSlave::Init(const char *host, Int_t port, Int_t stype)
       TMessage m(kPROOF_SETENV);
 
       const TList *envs = TProof::GetEnvVars();
-      if (envs != 0 ) {
+      if (envs != nullptr ) {
          TIter next(envs);
-         for (TObject *o = next(); o != 0; o = next()) {
+         for (TObject *o = next(); o != nullptr; o = next()) {
             TNamed *env = dynamic_cast<TNamed*>(o);
-            if (env != 0) {
+            if (env != nullptr) {
                TString def = Form("%s=%s", env->GetName(), env->GetTitle());
                const char *p = def.Data();
                m << p;
@@ -288,7 +288,7 @@ void TSlave::Close(Option_t *opt)
       TSecContext *sc = fSocket->GetSecContext();
       if (sc && sc->IsActive()) {
          TIter last(sc->GetSecContextCleanup(), kIterBackward);
-         TSecContextCleanup *nscc = 0;
+         TSecContextCleanup *nscc = nullptr;
          while ((nscc = (TSecContextCleanup *)last())) {
             if (nscc->GetType() == TSocket::kPROOFD &&
                 nscc->GetProtocol() < 9) {
@@ -402,12 +402,12 @@ void TSlave::SetInputHandler(TFileHandler *ih)
 
 Int_t TSlave::OldAuthSetup(Bool_t master, TString wconf)
 {
-   static OldSlaveAuthSetup_t oldAuthSetupHook = 0;
+   static OldSlaveAuthSetup_t oldAuthSetupHook = nullptr;
 
    if (!oldAuthSetupHook) {
       // Load libraries needed for (server) authentication ...
       TString authlib = "libRootAuth";
-      char *p = 0;
+      char *p = nullptr;
       // The generic one
       if ((p = gSystem->DynamicPathName(authlib, kTRUE))) {
          delete[] p;
@@ -442,7 +442,7 @@ TSlave *TSlave::Create(const char *url, const char *ord, Int_t perf,
                        const char *image, TProof *proof, Int_t stype,
                        const char *workdir, const char *msd, Int_t nwk)
 {
-   TSlave *s = 0;
+   TSlave *s = nullptr;
 
    // Check if we are setting up a lite version
    if (!strcmp(url, "lite")) {
@@ -467,7 +467,7 @@ TSlave *TSlave::Create(const char *url, const char *ord, Int_t perf,
 
       // Load the library containing TXSlave ...
       TString proofxlib = "libProofx";
-      char *p = 0;
+      char *p = nullptr;
       if ((p = gSystem->DynamicPathName(proofxlib, kTRUE))) {
          delete[] p;
          if (gSystem->Load(proofxlib) == -1)
@@ -644,7 +644,7 @@ TObjString *TSlave::SendCoordinator(Int_t, const char *, Int_t)
 {
    if (gDebug > 0)
       Info("SendCoordinator","method not implemented for this communication layer");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

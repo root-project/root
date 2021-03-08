@@ -141,12 +141,12 @@ TMVA::StatDialogMVAEffs::~StatDialogMVAEffs()
 {
    if (fInfoList) {
       TIter next(fInfoList);
-      MethodInfo *info(0);
+      MethodInfo *info(nullptr);
       while ( (info = (MethodInfo*)next()) ) {
          delete info;
       }
       delete fInfoList;
-      fInfoList=0;
+      fInfoList=nullptr;
    }
 
    // in case of batch mode fMain is a nullptr
@@ -159,7 +159,7 @@ TMVA::StatDialogMVAEffs::~StatDialogMVAEffs()
 
    fMain->CloseWindow();
    fMain->Cleanup();
-   fMain = 0;
+   fMain = nullptr;
    }
 }
 
@@ -168,12 +168,12 @@ TMVA::StatDialogMVAEffs::StatDialogMVAEffs(TString ds,const TGWindow* p, Float_t
    fNBackground(nb),
    fFormula(""),
    dataset(ds),
-   fInfoList(0),
-   fSigInput(0),
-   fBkgInput(0),
-   fButtons(0),
-   fDrawButton(0),
-   fCloseButton(0),
+   fInfoList(nullptr),
+   fSigInput(nullptr),
+   fBkgInput(nullptr),
+   fButtons(nullptr),
+   fDrawButton(nullptr),
+   fCloseButton(nullptr),
    maxLenTitle(0)
 {
    // only in interactive mode
@@ -229,10 +229,10 @@ TMVA::StatDialogMVAEffs::StatDialogMVAEffs(TString ds,const TGWindow* p, Float_t
 
 void TMVA::StatDialogMVAEffs::UpdateCanvases()
 {
-   if (fInfoList==0) return;
-   if (fInfoList->First()==0) return;
+   if (fInfoList==nullptr) return;
+   if (fInfoList->First()==nullptr) return;
    MethodInfo* info = (MethodInfo*)fInfoList->First();
-   if ( info->canvas==0 ) {
+   if ( info->canvas==nullptr ) {
       DrawHistograms();
       return;
    }
@@ -250,7 +250,7 @@ void TMVA::StatDialogMVAEffs::UpdateSignificanceHists()
 {
    TFormula f("sigf",GetFormula());
    TIter next(fInfoList);
-   MethodInfo* info(0);
+   MethodInfo* info(nullptr);
    TString cname = "Classifier";
    if (cname.Length() >  maxLenTitle)  maxLenTitle = cname.Length();
    TString str = Form( "%*s   (  #signal, #backgr.)  Optimal-cut  %s      NSig      NBkg   EffSig   EffBkg",
@@ -292,18 +292,18 @@ void TMVA::StatDialogMVAEffs::ReadHistograms(TFile* file)
 {
    if (fInfoList) {
       TIter next(fInfoList);
-      MethodInfo *info(0);
+      MethodInfo *info(nullptr);
       while ( (info = (MethodInfo*)next()) ) {
          delete info;
       }
       delete fInfoList;
-      fInfoList=0;
+      fInfoList=nullptr;
    }
    fInfoList = new TList;
 
    // search for the right histograms in full list of keys
    TIter next(file->GetDirectory(dataset.Data())->GetListOfKeys());
-   TKey *key(0);
+   TKey *key(nullptr);
    while( (key = (TKey*)next()) ) {
 
       if (!TString(key->GetName()).BeginsWith("Method_")) continue;
@@ -332,7 +332,7 @@ void TMVA::StatDialogMVAEffs::ReadHistograms(TFile* file)
          info->bgd = dynamic_cast<TH1*>(titDir->Get( hname + "_B" ));
          info->origSigE = dynamic_cast<TH1*>(titDir->Get( hname + "_effS" ));
          info->origBgdE = dynamic_cast<TH1*>(titDir->Get( hname + "_effB" ));
-         if (info->origSigE==0 || info->origBgdE==0) { delete info; continue; }
+         if (info->origSigE==nullptr || info->origBgdE==nullptr) { delete info; continue; }
 
          info->SetResultHists();
          fInfoList->Add(info);
@@ -351,7 +351,7 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
    Int_t signifColor = TColor::GetColor( "#00aa00" );
 
    TIter next(fInfoList);
-   MethodInfo* info(0);
+   MethodInfo* info(nullptr);
    while ( (info = (MethodInfo*)next()) ) {
 
       // create new canvas
@@ -480,10 +480,10 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
 void TMVA::StatDialogMVAEffs::PrintResults( const MethodInfo* info )
 {
    Int_t maxbin = info->sSig->GetMaximumBin();
-   if (info->line1 !=0 )
+   if (info->line1 !=nullptr )
       info->line1->SetText( 0.15, 0.23, Form("For %1.0f signal and %1.0f background", fNSignal, fNBackground));
 
-   if (info->line2 !=0 ) {
+   if (info->line2 !=nullptr ) {
       if (info->maxSignificanceErr > 0) {
          info->line2->SetText( 0.15, 0.15, Form("%3.2g +- %3.2g when cutting at %3.2g",
                                                 info->maxSignificance,

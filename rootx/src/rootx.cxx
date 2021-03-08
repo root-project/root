@@ -429,10 +429,10 @@ int main(int argc, char **argv)
    // Continue with child...
 
    // Restore original signal actions
-   sigaction(SIGINT,  &saveintr, 0);
-   sigaction(SIGQUIT, &savequit, 0);
-   sigaction(SIGUSR1, &saveusr1, 0);
-   sigaction(SIGTERM, &saveterm, 0);
+   sigaction(SIGINT,  &saveintr, nullptr);
+   sigaction(SIGQUIT, &savequit, nullptr);
+   sigaction(SIGUSR1, &saveusr1, nullptr);
+   sigaction(SIGTERM, &saveterm, nullptr);
 
    // Close X display connection
    CloseDisplay();
@@ -454,7 +454,7 @@ int main(int argc, char **argv)
 
    for (i = 1; i < argc; i++)
       argvv[1+i] = argv[i];
-   argvv[1+i] = 0;
+   argvv[1+i] = nullptr;
 
 #ifndef IS_RPATH_BUILD
    // Make sure library path is set

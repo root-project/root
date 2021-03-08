@@ -61,7 +61,7 @@ TGraphPolargram::TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
    Init();
    fNdivRad          = 508;
    fNdivPol          = 508;
-   fPolarLabels      = NULL;
+   fPolarLabels      = nullptr;
    fRwrmax           = rmax;
    fRwrmin           = rmin;
    fRwtmin           = tmin;
@@ -77,7 +77,7 @@ TGraphPolargram::TGraphPolargram(const char* name):
    Init();
    fNdivRad     = 0;
    fNdivPol     = 0;
-   fPolarLabels = NULL;
+   fPolarLabels = nullptr;
    fRwrmax      = 1;
    fRwrmin      = 0;
    fRwtmax      = 0;
@@ -89,7 +89,7 @@ TGraphPolargram::TGraphPolargram(const char* name):
 
 TGraphPolargram::~TGraphPolargram()
 {
-   if (fPolarLabels != NULL) delete [] fPolarLabels;
+   if (fPolarLabels != nullptr) delete [] fPolarLabels;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -431,7 +431,7 @@ void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
          TGaxis axis;
          if (TestBit(TGraphPolargram::kLabelOrtho)) {
             // Polar numbers are aligned with their axis.
-            if(fPolarLabels == NULL && optionLabels){;
+            if(fPolarLabels == nullptr && optionLabels){;
                if (fRadian) {
                   // Radian case.
                   ReduceFraction(2*i, ndivMajor, rnum, rden); // Reduces the fraction.
@@ -463,7 +463,7 @@ void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
             }
          } else {
             // Polar numbers are shown horizontally.
-            if(fPolarLabels == NULL && optionLabels){
+            if(fPolarLabels == nullptr && optionLabels){
                if (fRadian) {
                // Radian case
                   ReduceFraction(2*i, ndivMajor, rnum, rden);
@@ -547,7 +547,7 @@ void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
          TGaxis axis;
 
          if (TestBit(TGraphPolargram::kLabelOrtho)) {
-            if(fPolarLabels==NULL && optionLabels){
+            if(fPolarLabels==nullptr && optionLabels){
             // Polar numbers are aligned with their axis.
                form = Form("%5.3g",txtval);
                axis.LabelsLimits(form,first,last);
@@ -564,7 +564,7 @@ void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
             }
 
          } else {
-            if(fPolarLabels==NULL && optionLabels){
+            if(fPolarLabels==nullptr && optionLabels){
             // Polar numbers are shown horizontally.
                form = Form("%5.3g",txtval);
                axis.LabelsLimits(form,first,last);
@@ -793,7 +793,7 @@ void TGraphPolargram::SetNdivRadial(Int_t ndiv)
 
 void TGraphPolargram::SetPolarLabel(Int_t div, const TString & label)
 {
-   if(fPolarLabels == NULL)
+   if(fPolarLabels == nullptr)
       fPolarLabels = new TString[fNdivPol];
    fPolarLabels[div]=label;
    if (gPad) gPad->Modified();

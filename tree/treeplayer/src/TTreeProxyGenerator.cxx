@@ -255,7 +255,7 @@ namespace Internal {
    {
       // Return true if we should create a nested class representing this class
 
-      return cl!=0 && cl->TestBit(TClass::kIsEmulation);
+      return cl!=nullptr && cl->TestBit(TClass::kIsEmulation);
    }
 
    TBranchProxyClassDescriptor*
@@ -263,7 +263,7 @@ namespace Internal {
    {
       // Add a Class Descriptor.
 
-      if (desc==0) return 0;
+      if (desc==nullptr) return nullptr;
 
       TBranchProxyClassDescriptor *existing =
          (TBranchProxyClassDescriptor*)fListOfClasses(desc->GetName());
@@ -292,7 +292,7 @@ namespace Internal {
    {
       // Add Friend descriptor.
 
-      if (desc==0) return;
+      if (desc==nullptr) return;
 
       TFriendProxyDescriptor *existing =
          (TFriendProxyDescriptor*)fListOfFriends(desc->GetName());
@@ -343,7 +343,7 @@ namespace Internal {
       TObject *obj = fListOfForwards.FindObject(classname);
       if (obj) return;
 
-      if (strstr(classname,"<")!=0) {
+      if (strstr(classname,"<")!=nullptr) {
          // this is a template instantiation.
          // let's ignore it for now
 
@@ -402,7 +402,7 @@ namespace Internal {
       // Generate an enum for a given type if it is not known in the list of class
       // unless the type itself a template.
 
-      if (!TClassEdit::IsStdClass(clname) && !TClass::GetClass(clname) && gROOT->GetType(clname) == 0) {
+      if (!TClassEdit::IsStdClass(clname) && !TClass::GetClass(clname) && gROOT->GetType(clname) == nullptr) {
 
          TObject *obj = fListOfForwards.FindObject(clname);
          if (obj) return;
@@ -471,7 +471,7 @@ namespace Internal {
       // Analyze the sub-branch and populate the TTreeProxyGenerator or the topdesc with
       // its findings.
 
-      if (info==0) info = branch->GetInfo();
+      if (info==nullptr) info = branch->GetInfo();
 
       TIter branches( branch->GetListOfBranches() );
 
@@ -568,7 +568,7 @@ namespace Internal {
          TIter peek = branches;
          TBranchElement *branch = (TBranchElement*)peek();
 
-         if (branch==0) {
+         if (branch==nullptr) {
             if (topdesc) {
                Error("AnalyzeBranches","Ran out of branches when looking in branch %s, class %s",
                      topdesc->GetBranchName(), info->GetName());
@@ -711,7 +711,7 @@ namespace Internal {
                }
 
                TBranch *parent = branch->GetMother()->GetSubBranch(branch);
-               TVirtualStreamerInfo *objInfo = 0;
+               TVirtualStreamerInfo *objInfo = nullptr;
                if (branch->GetListOfBranches()->GetEntries()) {
                   objInfo = ((TBranchElement*)branch->GetListOfBranches()->At(0))->GetInfo();
                } else {
@@ -726,7 +726,7 @@ namespace Internal {
                      continue;
                   }
 
-                  TBranchProxyClassDescriptor *cldesc = 0;
+                  TBranchProxyClassDescriptor *cldesc = nullptr;
 
                   if (branchEndname == element->GetName()) {
                      // We have a proper node for the base class, recurse
@@ -735,7 +735,7 @@ namespace Internal {
                         // The branch contains a non-split base class that we are unfolding!
 
                         // See AnalyzeTree for similar code!
-                        TBranchProxyClassDescriptor *local_cldesc = 0;
+                        TBranchProxyClassDescriptor *local_cldesc = nullptr;
 
                         TVirtualStreamerInfo *binfo = branch->GetInfo();
                         if (strcmp(cl->GetName(),binfo->GetName())!=0) {
@@ -746,7 +746,7 @@ namespace Internal {
                                                                        isclones, 0 /* unsplit object */,
                                                                        containerName);
 
-                        TStreamerElement *elem = 0;
+                        TStreamerElement *elem = nullptr;
 
                         TIter next(binfo->GetElements());
                         while( (elem = (TStreamerElement*)next()) ) {
@@ -781,7 +781,7 @@ namespace Internal {
                      }
                      TString local_prefix = topdesc ? topdesc->GetSubBranchPrefix() : parent->GetName();
                      objInfo = GetBaseClass( element );
-                     if (objInfo == 0) {
+                     if (objInfo == nullptr) {
                         // There is no data in this base class
                         continue;
                      }
@@ -799,7 +799,7 @@ namespace Internal {
                   if (added) proxyTypeName = added->GetName();
 
                } else {
-                  TBranchProxyClassDescriptor *cldesc = 0;
+                  TBranchProxyClassDescriptor *cldesc = nullptr;
 
                   if (branchEndname == element->GetName()) {
 
@@ -808,7 +808,7 @@ namespace Internal {
                         // The branch contains a non-split object that we are unfolding!
 
                         // See AnalyzeTree for similar code!
-                        TBranchProxyClassDescriptor *local_cldesc = 0;
+                        TBranchProxyClassDescriptor *local_cldesc = nullptr;
 
                         TVirtualStreamerInfo *binfo = branch->GetInfo();
                         if (strcmp(cl->GetName(),binfo->GetName())!=0) {
@@ -819,7 +819,7 @@ namespace Internal {
                                                                        isclones, 0 /* unsplit object */,
                                                                        containerName);
 
-                        TStreamerElement *elem = 0;
+                        TStreamerElement *elem = nullptr;
 
                         TIter next(binfo->GetElements());
                         while( (elem = (TStreamerElement*)next()) ) {
@@ -1094,7 +1094,7 @@ namespace Internal {
       TIter next( tree->GetListOfBranches() );
       TBranch *branch;
       while ( (branch = (TBranch*)next()) ) {
-         TVirtualStreamerInfo *info = 0;
+         TVirtualStreamerInfo *info = nullptr;
          const char *branchname = branch->GetName();
          const char *classname = branch->GetClassName();
          if (classname && strlen(classname)) {
@@ -1102,7 +1102,7 @@ namespace Internal {
             AddHeader( classname );
          }
 
-         TBranchProxyClassDescriptor *desc = 0;
+         TBranchProxyClassDescriptor *desc = nullptr;
          TClass *cl = TClass::GetClass(classname);
          TString type = "unknown";
          if (cl) {
@@ -1123,14 +1123,14 @@ namespace Internal {
                   }
                } else {
                   TClonesArray **ptr = (TClonesArray**)branch->GetAddress();
-                  TClonesArray *clones = 0;
-                  if (ptr==0) {
+                  TClonesArray *clones = nullptr;
+                  if (ptr==nullptr) {
                      clones = new TClonesArray;
                      branch->SetAddress(&clones);
                      ptr = &clones;
                   }
                   branch->GetEntry(0);
-                  TClass *ncl = *ptr ? (*ptr)->GetClass() : 0;
+                  TClass *ncl = *ptr ? (*ptr)->GetClass() : nullptr;
                   if (ncl) {
                      cl = ncl;
                   } else {
@@ -1173,7 +1173,7 @@ namespace Internal {
 
                if (desc) {
                   TVirtualStreamerInfo *cinfo = cl->GetStreamerInfo();
-                  TStreamerElement *elem = 0;
+                  TStreamerElement *elem = nullptr;
 
                   TIter cnext(cinfo->GetElements());
                   while( (elem = (TStreamerElement*)cnext()) ) {
@@ -1198,7 +1198,7 @@ namespace Internal {
             } else {
 
                // We have a top level raw type.
-               AnalyzeOldBranch(branch, 0, 0);
+               AnalyzeOldBranch(branch, 0, nullptr);
             }
 
          } else {
@@ -1218,7 +1218,7 @@ namespace Internal {
             if ( branchname[strlen(branchname)-1] != '.' ) {
                // If there is no dot also include the data member directly
 
-               AnalyzeBranches(1,0,dynamic_cast<TBranchElement*>(branch),info);
+               AnalyzeBranches(1,nullptr,dynamic_cast<TBranchElement*>(branch),info);
 
                subnext.Reset();
             }
@@ -1307,7 +1307,7 @@ namespace Internal {
                //                                          containerName);
 
                TVirtualStreamerInfo *info = cl->GetStreamerInfo();
-               TStreamerElement *elem = 0;
+               TStreamerElement *elem = nullptr;
 
                TString subpath = path;
                if (subpath.Length()>0) subpath += ".";
@@ -1496,7 +1496,7 @@ namespace Internal {
                                                      containerName);
 
             TVirtualStreamerInfo *info = cl->GetStreamerInfo();
-            TStreamerElement *elem = 0;
+            TStreamerElement *elem = nullptr;
 
             TString subpath = path;
             if (subpath.Length()>0) subpath += ".";
@@ -1627,7 +1627,7 @@ namespace Internal {
       // if and only if it is different.
 
       Bool_t updating = kFALSE;
-      if (gSystem->GetPathInfo( fHeaderFileName, 0, (Long_t*)0, 0, 0 ) == 0) {
+      if (gSystem->GetPathInfo( fHeaderFileName, nullptr, (Long_t*)nullptr, nullptr, nullptr ) == 0) {
          // file already exist
          updating = kTRUE;
       }
@@ -1696,7 +1696,7 @@ namespace Internal {
       } else {
          hf = fopen(fHeaderFileName, "w");
       }
-      if (hf == 0) {
+      if (hf == nullptr) {
          Error("WriteProxy","Unable to open the file %s for writing.",
                updating ? tmpfilename.Data() : fHeaderFileName.Data());
          delete [] filename;
@@ -1744,7 +1744,7 @@ namespace Internal {
       TIter next( &fListOfForwards );
       TObject *current;
       while ( (current=next()) ) {
-         if (strstr(current->GetTitle(),"::")==0) {
+         if (strstr(current->GetTitle(),"::")==nullptr) {
             // We can not forward declared nested classes (well we might be able to do so for
             // the one nested in a namespace but it is not clear yet if we can really reliably
             // find this information)

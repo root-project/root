@@ -854,7 +854,7 @@ Type *AttributeSetNode::getByValType() const {
   for (const auto I : *this)
     if (I.hasAttribute(Attribute::ByVal))
       return I.getValueAsType();
-  return 0;
+  return nullptr;
 }
 
 uint64_t AttributeSetNode::getDereferenceableBytes() const {

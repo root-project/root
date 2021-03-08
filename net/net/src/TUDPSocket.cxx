@@ -59,7 +59,7 @@ TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
    R__ASSERT(gSystem);
 
    fService = service;
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -70,8 +70,8 @@ TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
    fAddress.fPort = gSystem->GetServiceByName(service);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fUUIDs = 0;
-   fLastUsageMtx = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TUDPSocket::kBrokenConn);
 
    if (fAddress.GetPort() != -1) {
@@ -105,7 +105,7 @@ TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
    R__ASSERT(gSystem);
 
    fService = gSystem->GetServiceByPort(port);
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -117,8 +117,8 @@ TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fUUIDs = 0;
-   fLastUsageMtx = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TUDPSocket::kBrokenConn);
 
    fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
@@ -148,7 +148,7 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
    R__ASSERT(gSystem);
 
    fService = service;
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -160,8 +160,8 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
    SetName(fAddress.GetHostName());
    fBytesSent = 0;
    fBytesRecv = 0;
-   fUUIDs = 0;
-   fLastUsageMtx = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TUDPSocket::kBrokenConn);
 
    if (fAddress.GetPort() != -1) {
@@ -196,7 +196,7 @@ TUDPSocket::TUDPSocket(const char *url, Int_t port)
    TString host(TUrl(fUrl).GetHost());
 
    fService = gSystem->GetServiceByPort(port);
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fUrl.Contains("root"))
@@ -209,8 +209,8 @@ TUDPSocket::TUDPSocket(const char *url, Int_t port)
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fUUIDs = 0;
-   fLastUsageMtx = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TUDPSocket::kBrokenConn);
 
    fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), -1, "udp");
@@ -238,7 +238,7 @@ TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, ""),
    fUrl = sockpath;
 
    fService = "unix";
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    fAddress.fPort = -1;
@@ -246,8 +246,8 @@ TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, ""),
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fUUIDs = 0;
-   fLastUsageMtx  = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx  = nullptr;
    ResetBit(TUDPSocket::kBrokenConn);
 
    fSocket = gSystem->OpenConnection(sockpath, -1, -1, "udp");
@@ -266,14 +266,14 @@ TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", ""), fCompress(ROOT::RCompressio
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
-   fSecContext     = 0;
+   fSecContext     = nullptr;
    fRemoteProtocol = 0;
    fService        = (char *)kSOCKD;
    fServType       = kSOCKD;
    fBytesSent      = 0;
    fBytesRecv      = 0;
-   fUUIDs          = 0;
-   fLastUsageMtx   = 0;
+   fUUIDs          = nullptr;
+   fLastUsageMtx   = nullptr;
    ResetBit(TUDPSocket::kBrokenConn);
 
    if (desc >= 0) {
@@ -299,7 +299,7 @@ TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, ""),
    fUrl = sockpath;
 
    fService = "unix";
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    fAddress.fPort = -1;
@@ -307,8 +307,8 @@ TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, ""),
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fUUIDs = 0;
-   fLastUsageMtx  = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx  = nullptr;
    ResetBit(TUDPSocket::kBrokenConn);
 
    if (desc >= 0) {
@@ -335,8 +335,8 @@ TUDPSocket::TUDPSocket(const TUDPSocket &s) : TNamed(s)
    fSecContext     = s.fSecContext;
    fRemoteProtocol = s.fRemoteProtocol;
    fServType       = s.fServType;
-   fUUIDs          = 0;
-   fLastUsageMtx   = 0;
+   fUUIDs          = nullptr;
+   fLastUsageMtx   = nullptr;
    ResetBit(TUDPSocket::kBrokenConn);
 
    if (fSocket != -1) {
@@ -618,7 +618,7 @@ void TUDPSocket::SendStreamerInfos(const TMessage &mess)
    if (mess.fInfos && mess.fInfos->GetEntries()) {
       TIter next(mess.fInfos);
       TStreamerInfo *info;
-      TList *minilist = 0;
+      TList *minilist = nullptr;
       while ((info = (TStreamerInfo*)next())) {
          Int_t uid = info->GetNumber();
          if (fBitsInfo.TestBitNumber(uid))
@@ -654,7 +654,7 @@ void TUDPSocket::SendProcessIDs(const TMessage &mess)
       TObjArray *pids = TProcessID::GetPIDs();
       Int_t npids = pids->GetEntries();
       TProcessID *pid;
-      TList *minilist = 0;
+      TList *minilist = nullptr;
       for (Int_t ipid = 0; ipid < npids; ipid++) {
          pid = (TProcessID*)pids->At(ipid);
          if (!pid || !mess.TestBitNumber(pid->GetUniqueID()+1))
@@ -786,7 +786,7 @@ Int_t TUDPSocket::Recv(TMessage *&mess)
    TSystem::ResetErrno();
 
    if (fSocket == -1) {
-      mess = 0;
+      mess = nullptr;
       return -1;
    }
 
@@ -800,7 +800,7 @@ oncemore:
          SetBit(TUDPSocket::kBrokenConn);
          Close();
       }
-      mess = 0;
+      mess = nullptr;
       return n;
    }
    len = net2host(len);  //from network to host byte order
@@ -814,7 +814,7 @@ oncemore:
          Close();
       }
       delete [] buf;
-      mess = 0;
+      mess = nullptr;
       return n;
    }
 
@@ -842,7 +842,7 @@ oncemore:
             Close();
          }
          delete mess;
-         mess = 0;
+         mess = nullptr;
          return n2;
       }
       mess->SetWhat(mess->What() & ~kMESS_ACK);
@@ -956,7 +956,7 @@ Bool_t TUDPSocket::RecvProcessIDs(TMessage *mess)
          while ((p = (TProcessID*)nextpid())) {
             if (!strcmp(p->GetTitle(), pid->GetTitle())) {
                delete pid;
-               pid = 0;
+               pid = nullptr;
                break;
             }
          }

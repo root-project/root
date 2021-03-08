@@ -389,12 +389,12 @@ TLatex::TLatex()
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
    fPos         = 0;
    fTabMax      = 0;
    fOriginSize  = 0.04;
-   fTabSize     = 0;
+   fTabSize     = nullptr;
    fItalic      = kFALSE;
    fLimitFactorSize = 3;
    SetLineWidth(2);
@@ -408,12 +408,12 @@ TLatex::TLatex(Double_t x, Double_t y, const char *text)
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
    fPos         = 0;
    fTabMax      = 0;
    fOriginSize  = 0.04;
-   fTabSize     = 0;
+   fTabSize     = nullptr;
    fItalic      = kFALSE;
    fLimitFactorSize = 3;
    SetLineWidth(2);
@@ -433,12 +433,12 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
    fPos         = 0;
    fTabMax      = 0;
    fOriginSize  = 0.04;
-   fTabSize     = 0;
+   fTabSize     = nullptr;
    fItalic      = kFALSE;
    fLimitFactorSize = 3;
    ((TLatex&)text).Copy(*this);
@@ -476,7 +476,7 @@ void TLatex::Copy(TObject &obj) const
    ((TLatex&)obj).fLimitFactorSize  = fLimitFactorSize;
    ((TLatex&)obj).fError       = fError;
    ((TLatex&)obj).fShow        = fShow;
-   ((TLatex&)obj).fTabSize     = 0;
+   ((TLatex&)obj).fTabSize     = nullptr;
    ((TLatex&)obj).fOriginSize  = fOriginSize;
    ((TLatex&)obj).fTabMax      = fTabMax;
    ((TLatex&)obj).fPos         = fPos;
@@ -543,7 +543,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
 
    const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","tilde","slash"};
 
-   if (fError != 0) return TLatexFormSize(0,0,0);
+   if (fError != nullptr) return TLatexFormSize(0,0,0);
 
    Int_t nBlancDeb=0,nBlancFin=0,l_nBlancDeb=0,l_nBlancFin=0;
    Int_t i,k;
@@ -1441,7 +1441,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
                // tilde must be drawn separately on screen and on PostScript
                // because an adjustment is required along Y for PostScript.
                TVirtualPS *saveps = gVirtualPS;
-               if (gVirtualPS) gVirtualPS = 0;
+               if (gVirtualPS) gVirtualPS = nullptr;
                Double_t y22 = y2;
                if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
                Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
@@ -2133,7 +2133,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          }
          gPad->SetBatch(saveb);
       }
-      gVirtualPS = 0;
+      gVirtualPS = nullptr;
    }
 
    if (!gPad->IsBatch()) PaintLatex1( x, y, angle, size, text1);
@@ -2149,13 +2149,13 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    if( newText.Length() == 0) return 0;
    newText.ReplaceAll("#hbox","#mbox");
 
-   fError = 0 ;
+   fError = nullptr ;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<text1<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr ;
 
    // Do not use Latex if font is low precision.
    if (fTextFont%10 < 2) {
@@ -2224,7 +2224,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    Short_t halign = fTextAlign/10;
    Short_t valign = fTextAlign - 10*halign;
    TextSpec_t newSpec = spec;
-   if (fError != 0) {
+   if (fError != nullptr) {
       std::cout<<"*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<text<<std::endl;
    } else {
@@ -2253,7 +2253,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    SetLineWidth(lineW);
    SetLineColor(lineC);
    delete[] fTabSize;
-   if (fError != 0) return 0;
+   if (fError != nullptr) return 0;
    return 1;
 }
 
@@ -2466,7 +2466,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
 
 TLatex::TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *text)
 {
-   fError   = 0;
+   fError   = nullptr;
    fTabMax  = 100;
    fTabSize = new FormSize_t[fTabMax];
    // we assume less than 100 parts in one formula
@@ -2533,13 +2533,13 @@ Double_t TLatex::GetXsize()
       return tm.GetXsize();
    }
 
-   fError = 0 ;
+   fError = nullptr ;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr ;
 
    const Char_t *text = newText.Data() ;
    Double_t angle_old = GetTextAngle();
@@ -2565,13 +2565,13 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       return;
    }
 
-   fError = 0 ;
+   fError = nullptr ;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return;
    }
-   fError = 0 ;
+   fError = nullptr ;
 
    if (angle) {
       Int_t cBoxX[4], cBoxY[4];
@@ -2620,13 +2620,13 @@ Double_t TLatex::GetYsize()
       return tm.GetYsize();
    }
 
-   fError = 0 ;
+   fError = nullptr ;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr ;
 
    const Char_t *text = newText.Data() ;
    Double_t angsav = fTextAngle;

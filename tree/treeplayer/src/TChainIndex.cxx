@@ -46,8 +46,8 @@ ClassImp(TChainIndex);
 
 TChainIndex::TChainIndex(): TVirtualIndex()
 {
-   fTree = 0;
-   fMajorFormulaParent = fMinorFormulaParent = 0;
+   fTree = nullptr;
+   fMajorFormulaParent = fMinorFormulaParent = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,8 +63,8 @@ TChainIndex::TChainIndex(): TVirtualIndex()
 TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname)
            : TVirtualIndex()
 {
-   fTree = 0;
-   fMajorFormulaParent = fMinorFormulaParent = 0;
+   fTree = nullptr;
+   fMajorFormulaParent = fMinorFormulaParent = nullptr;
 
    TChain *chain = dynamic_cast<TChain*>(const_cast<TTree*>(T));
    if (!chain) {
@@ -85,7 +85,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
       TVirtualIndex *index = chain->GetTree()->GetTreeIndex();
 
       TChainIndexEntry entry;
-      entry.fTreeIndex = 0;
+      entry.fTreeIndex = nullptr;
 
       //if an index already exists, we must check if major/minorname correspond
       //to the major/minor names in this function call
@@ -99,7 +99,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
       if (!index) {
          chain->GetTree()->BuildIndex(majorname, minorname);
          index = chain->GetTree()->GetTreeIndex();
-         chain->GetTree()->SetTreeIndex(0);
+         chain->GetTree()->SetTreeIndex(nullptr);
          entry.fTreeIndex = index;
       }
       if (!index || index->IsZombie() || index->GetN() == 0) {
@@ -110,7 +110,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
       }
 
       TTreeIndex *ti_index = dynamic_cast<TTreeIndex*>(index);
-      if (ti_index == 0) {
+      if (ti_index == nullptr) {
          Error("TChainIndex", "The underlying TTree must have a TTreeIndex but has a %s.",
                index->IsA()->GetName());
          return;
@@ -138,13 +138,13 @@ void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
 {
    if (index) {
       const TTreeIndex *ti_index = dynamic_cast<const TTreeIndex*>(index);
-      if (ti_index == 0) {
+      if (ti_index == nullptr) {
          Error("Append", "The given index is not a TTreeIndex but a %s",
                index->IsA()->GetName());
       }
 
       TChainIndexEntry entry;
-      entry.fTreeIndex = 0;
+      entry.fTreeIndex = nullptr;
       entry.SetMinMaxFrom(ti_index);
       fEntries.push_back(entry);
    }
@@ -169,7 +169,7 @@ void TChainIndex::DeleteIndices()
    for (unsigned int i = 0; i < fEntries.size(); i++) {
       if (fEntries[i].fTreeIndex) {
          if (fTree->GetTree() && fTree->GetTree()->GetTreeIndex() == fEntries[i].fTreeIndex) {
-            fTree->GetTree()->SetTreeIndex(0);
+            fTree->GetTree()->SetTreeIndex(nullptr);
             SafeDelete(fEntries[i].fTreeIndex);
          }
          SafeDelete(fEntries[i].fTreeIndex);
@@ -184,7 +184,7 @@ TChainIndex::~TChainIndex()
 {
    DeleteIndices();
    if (fTree && fTree->GetTreeIndex() == this)
-      fTree->SetTreeIndex(0);
+      fTree->SetTreeIndex(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,14 +198,14 @@ std::pair<TVirtualIndex*, Int_t> TChainIndex::GetSubTreeIndex(Long64_t major, Lo
    using namespace std;
    if (fEntries.size() == 0) {
       Warning("GetSubTreeIndex", "No subindices in the chain. The chain is probably empty");
-      return make_pair(static_cast<TVirtualIndex*>(0), 0);
+      return make_pair(static_cast<TVirtualIndex*>(nullptr), 0);
    }
 
    const TChainIndexEntry::IndexValPair_t     indexValue(major, minor);
 
    if( indexValue < fEntries[0].GetMinIndexValPair() ) {
       Warning("GetSubTreeIndex", "The index value is less than the smallest index values in subtrees");
-      return make_pair(static_cast<TVirtualIndex*>(0), 0);
+      return make_pair(static_cast<TVirtualIndex*>(nullptr), 0);
    }
 
    Int_t treeNo = fEntries.size() - 1;
@@ -217,7 +217,7 @@ std::pair<TVirtualIndex*, Int_t> TChainIndex::GetSubTreeIndex(Long64_t major, Lo
    }
    // Double check we found the right range.
    if( indexValue > fEntries[treeNo].GetMaxIndexValPair() ) {
-      return make_pair(static_cast<TVirtualIndex*>(0), 0);
+      return make_pair(static_cast<TVirtualIndex*>(nullptr), 0);
    }
    TChain* chain = dynamic_cast<TChain*> (fTree);
    R__ASSERT(chain);
@@ -230,7 +230,7 @@ std::pair<TVirtualIndex*, Int_t> TChainIndex::GetSubTreeIndex(Long64_t major, Lo
       if (!index) {
          Warning("GetSubTreeIndex", "The tree has no index and the chain index"
                   " doesn't store an index for that tree");
-         return make_pair(static_cast<TVirtualIndex*>(0), 0);
+         return make_pair(static_cast<TVirtualIndex*>(nullptr), 0);
       }
       else {
          fTree->GetTree()->SetTreeIndex(index);
@@ -248,7 +248,7 @@ void TChainIndex::ReleaseSubTreeIndex(TVirtualIndex* index, int treeNo) const
 {
    if (fEntries[treeNo].fTreeIndex == index) {
       R__ASSERT(fTree->GetTree()->GetTreeIndex() == index);
-      fTree->GetTree()->SetTreeIndex(0);
+      fTree->GetTree()->SetTreeIndex(nullptr);
    }
 }
 
@@ -401,6 +401,6 @@ void TChainIndex::UpdateFormulaLeaves(const TTree *parent)
 
 void TChainIndex::SetTree(const TTree *T)
 {
-   R__ASSERT(fTree == 0 || fTree == T || T==0);
+   R__ASSERT(fTree == nullptr || fTree == T || T==nullptr);
 }
 

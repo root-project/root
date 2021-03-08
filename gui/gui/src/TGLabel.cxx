@@ -265,8 +265,8 @@ void TGLabel::DoRedraw()
       } else {
          fontH = gVirtualX->GetFontHandle(GetDefaultFontStruct());
       }
-      static TGGC *gc1 = 0;
-      static TGGC *gc2 = 0;
+      static TGGC *gc1 = nullptr;
+      static TGGC *gc2 = nullptr;
 
       if (!gc1) {
          gc1 = fClient->GetResourcePool()->GetGCPool()->FindGC(GetHilightGC()());

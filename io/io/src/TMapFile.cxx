@@ -124,7 +124,7 @@ union semun {
 
 
 Long_t TMapFile::fgMapAddress = 0;
-void  *TMapFile::fgMmallocDesc = 0;
+void  *TMapFile::fgMmallocDesc = nullptr;
 
 //void *ROOT::Internal::gMmallocDesc = 0; //is initialized in TStorage.cxx
 
@@ -162,11 +162,11 @@ struct SetFreeIfTMapFile_t {
 TMapRec::TMapRec(const char *name, const TObject *obj, Int_t size, void *buf)
 {
    fName      = StrDup(name);
-   fClassName = 0;
+   fClassName = nullptr;
    fObject    = (TObject*)obj;
    fBuffer    = buf;
    fBufSize   = size;
-   fNext      = 0;
+   fNext      = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,7 +244,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 #endif
    fMmallocDesc = nullptr;
    fSize        = size;
-   fFirst       = 0;
+   fFirst       = nullptr;
    fOffset      = 0;
    fVersion     = gROOT->GetVersionInt();
    fTitle       = StrDup(title);
@@ -363,7 +363,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 
    if (((mapto = MapToAddress()) == (void *)-1) ||
 #ifndef WIN32
-       ((fMmallocDesc = mmalloc_attach(fFd, mapto, fSize)) == 0)) {
+       ((fMmallocDesc = mmalloc_attach(fFd, mapto, fSize)) == nullptr)) {
 #else
        ((fMmallocDesc = mmalloc_attach((HANDLE) fFd, mapto, fSize)) == 0)) {
 #endif
@@ -372,10 +372,10 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
          Error("TMapFile", "no memory mapped file capability available\n"
                            "Use rootn.exe or link application against \"-lNew\"");
       } else {
-         if (fMmallocDesc == 0 && fWritable)
+         if (fMmallocDesc == nullptr && fWritable)
             Error("TMapFile", "mapped file not in mmalloc format or\n"
                               "already open in RW mode by another process");
-         if (fMmallocDesc == 0 && !fWritable)
+         if (fMmallocDesc == nullptr && !fWritable)
             Error("TMapFile", "mapped file not in mmalloc format");
       }
 #ifndef WIN32
@@ -388,7 +388,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
          gSystem->Unlink(fname);
       goto zombie;
 
-   } else if ((mapfil = (TMapFile *) mmalloc_getkey(fMmallocDesc, 0)) != 0) {
+   } else if ((mapfil = (TMapFile *) mmalloc_getkey(fMmallocDesc, 0)) != nullptr) {
 
       // File contains mmalloc heap. If we are in write mode and mapped
       // file already connected in write mode switch to read-only mode.
@@ -405,7 +405,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
          CloseHandle((HANDLE) fFd);
 #endif
          fFd = -1;
-         fMmallocDesc = 0;
+         fMmallocDesc = nullptr;
          goto zombie;
       }
 
@@ -431,10 +431,10 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
          mf->CreateSemaphore(fSemaphore);
 #endif
          mmalloc_setkey(fMmallocDesc, 0, mf);
-         ROOT::Internal::gMmallocDesc = 0;
+         ROOT::Internal::gMmallocDesc = nullptr;
          mapfil = mf;
       } else {
-         ROOT::Internal::gMmallocDesc = 0;    // make sure we are in sbrk heap
+         ROOT::Internal::gMmallocDesc = nullptr;    // make sure we are in sbrk heap
          fOffset      = ((struct mdesc *) fMmallocDesc)->offset;
          TMapFile *mf = new TMapFile(*mapfil, fOffset);
          delete [] mf->fOption;
@@ -464,7 +464,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
          CloseHandle((HANDLE) fFd);
 #endif
          fFd = -1;
-         fMmallocDesc = 0;
+         fMmallocDesc = nullptr;
          goto zombie;
       }
 
@@ -477,7 +477,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
       mapfil = new TMapFile(*this);
       mmalloc_setkey(fMmallocDesc, 0, mapfil);
 
-      ROOT::Internal::gMmallocDesc = 0;
+      ROOT::Internal::gMmallocDesc = nullptr;
 
       // store shadow mapfile
       fVersion  = -1;   // make this the shadow map file
@@ -502,7 +502,7 @@ zombie:
    // error in file opening occured, make this object a zombie
    MakeZombie();
    newMapFile   = this;
-   ROOT::Internal::gMmallocDesc = 0;
+   ROOT::Internal::gMmallocDesc = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -615,7 +615,7 @@ void TMapFile::Add(const TObject *obj, const char *name)
       //Warning("Add", "replaced object with same name %s", n);
    }
 
-   TMapRec *mr = new TMapRec(n, obj, 0, 0);
+   TMapRec *mr = new TMapRec(n, obj, 0, nullptr);
    if (!fFirst) {
       fFirst = mr;
       fLast  = mr;
@@ -641,7 +641,7 @@ void TMapFile::Update(TObject *obj)
 
    ROOT::Internal::gMmallocDesc = fMmallocDesc;
 
-   Bool_t all = (obj == 0) ? kTRUE : kFALSE;
+   Bool_t all = (obj == nullptr) ? kTRUE : kFALSE;
 
    TMapRec *mr = fFirst;
    while (mr) {
@@ -675,19 +675,19 @@ void TMapFile::Update(TObject *obj)
 
 TObject *TMapFile::Remove(TObject *obj, Bool_t lock)
 {
-   if (!fWritable || !fMmallocDesc) return 0;
+   if (!fWritable || !fMmallocDesc) return nullptr;
 
    if (lock)
       AcquireSemaphore();
 
-   TObject *retObj = 0;
-   TMapRec *prev = 0, *mr = fFirst;
+   TObject *retObj = nullptr;
+   TMapRec *prev = nullptr, *mr = fFirst;
    while (mr) {
       if (mr->fObject == obj) {
          if (mr == fFirst) {
             fFirst = mr->fNext;
             if (mr == fLast)
-               fLast = 0;
+               fLast = nullptr;
          } else {
             prev->fNext = mr->fNext;
             if (mr == fLast)
@@ -714,19 +714,19 @@ TObject *TMapFile::Remove(TObject *obj, Bool_t lock)
 
 TObject *TMapFile::Remove(const char *name, Bool_t lock)
 {
-   if (!fWritable || !fMmallocDesc) return 0;
+   if (!fWritable || !fMmallocDesc) return nullptr;
 
    if (lock)
       AcquireSemaphore();
 
-   TObject *retObj = 0;
-   TMapRec *prev = 0, *mr = fFirst;
+   TObject *retObj = nullptr;
+   TMapRec *prev = nullptr, *mr = fFirst;
    while (mr) {
       if (!strcmp(mr->fName, name)) {
          if (mr == fFirst) {
             fFirst = mr->fNext;
             if (mr == fLast)
-               fLast = 0;
+               fLast = nullptr;
          } else {
             prev->fNext = mr->fNext;
             if (mr == fLast)
@@ -761,7 +761,7 @@ void TMapFile::RemoveAll()
       mr = mr->fNext;
       delete t;
    }
-   fFirst = fLast = 0;
+   fFirst = fLast = nullptr;
 
    ReleaseSemaphore();
 }
@@ -776,13 +776,13 @@ void TMapFile::RemoveAll()
 
 TObject *TMapFile::Get(const char *name, TObject *delObj)
 {
-   if (!fMmallocDesc) return 0;
+   if (!fMmallocDesc) return nullptr;
 
    AcquireSemaphore();
 
    delete delObj;
 
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    TMapRec *mr = GetFirst();
    while (OrgAddress(mr)) {
       if (!strcmp(mr->GetName(fOffset), name)) {
@@ -805,7 +805,7 @@ TObject *TMapFile::Get(const char *name, TObject *delObj)
          obj->Streamer(*b);
          b->DetachBuffer();
          delete b;
-         fGetting = 0;
+         fGetting = nullptr;
          goto release;
       }
       mr = mr->GetNext(fOffset);
@@ -982,7 +982,7 @@ void TMapFile::Close(Option_t *option)
       // it points to the just unmapped memory region. Any further
       // access to this TMapFile will cause a crash.
       if (!shadow->fWritable)
-         fMmallocDesc = 0;
+         fMmallocDesc = nullptr;
    }
 
    if (shadow->fFd != -1)
@@ -1008,7 +1008,7 @@ TMapFile *TMapFile::FindShadowMapFile()
          return mf;
       lnk = lnk->Prev();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1130,7 +1130,7 @@ Int_t TMapFile::GetBestBuffer()
 
 void *TMapFile::GetBreakval() const
 {
-   if (!fMmallocDesc) return 0;
+   if (!fMmallocDesc) return nullptr;
    return (void *)((struct mdesc *)fMmallocDesc)->breakval;
 }
 
@@ -1224,7 +1224,7 @@ void *TMapFile::MapToAddress()
 void TMapFile::operator delete(void *ptr)
 {
    mmalloc_detach(fgMmallocDesc);
-   fgMmallocDesc = 0;
+   fgMmallocDesc = nullptr;
 
    TObject::operator delete(ptr);
 }
@@ -1239,17 +1239,17 @@ TMapFile *TMapFile::WhichMapFile(void *addr)
    // start up).  Using gROOT leads to recursive call to RegisterModule and initialization of
    // the interpreter in the middle of the execution of RegisterModule (i.e. undefined behavior).
    if (!ROOT::Internal::gROOTLocal || !ROOT::Internal::gROOTLocal->GetListOfMappedFiles())
-      return 0;
+      return nullptr;
 
    TObjLink *lnk = ((TList *)ROOT::Internal::gROOTLocal->GetListOfMappedFiles())->LastLink();
    while (lnk) {
       TMapFile *mf = (TMapFile*)lnk->GetObject();
-      if (!mf) return 0;
+      if (!mf) return nullptr;
       if ((ULong_t)addr >= mf->fBaseAddr + mf->fOffset &&
           (ULong_t)addr <  (ULong_t)mf->GetBreakval() + mf->fOffset)
          return mf;
       lnk = lnk->Prev();
    }
-   return 0;
+   return nullptr;
 }
 

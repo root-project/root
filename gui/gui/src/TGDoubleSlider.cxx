@@ -76,7 +76,7 @@ TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t typ
                                Bool_t reversed, Bool_t mark_ends)
    : TGFrame(p, w, h, options, back)
 {
-   fSliderPic = 0;
+   fSliderPic = nullptr;
 
    fWidgetId    = id;
    fWidgetFlags = kWidgetWantFocus;

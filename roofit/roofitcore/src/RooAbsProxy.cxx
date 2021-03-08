@@ -43,7 +43,7 @@ ClassImp(RooAbsProxy);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsProxy::RooAbsProxy() : _nset(0)
+RooAbsProxy::RooAbsProxy() : _nset(nullptr)
 {
 }
 

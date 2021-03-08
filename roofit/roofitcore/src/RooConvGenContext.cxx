@@ -58,7 +58,7 @@ ClassImp(RooConvGenContext);
 
 RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArgSet &vars, 
 	 			     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdfVarsOwned(0), _modelVarsOwned(0)
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdfVarsOwned(nullptr), _modelVarsOwned(nullptr)
 {
   cxcoutI(Generation) << "RooConvGenContext::ctor() setting up special generator context for analytical convolution p.d.f. " << model.GetName() 
 		      << " for generation of observable(s) " << vars << endl ;
@@ -92,7 +92,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   RooResolutionModel* modelClone = (RooResolutionModel*) 
     _modelCloneSet->find(model._convSet.at(0)->GetName())->Clone("smearing") ;
   _modelCloneSet->addOwned(*modelClone) ;
-  modelClone->changeBasis(0) ;
+  modelClone->changeBasis(nullptr) ;
   convV = dynamic_cast<RooRealVar*>(&modelClone->convVar());
   if (!convV) {
     throw std::runtime_error("RooConvGenContext only works with convolution variables of type RooRealVar.");
@@ -145,7 +145,7 @@ RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet
   _pdfVarsOwned = (RooArgSet*) model.conv().clonePdf().getObservables(&vars)->snapshot(kTRUE) ;
   _pdfVars = new RooArgSet(*_pdfVarsOwned) ;
   _pdfGen = ((RooAbsPdf&)model.conv().clonePdf()).genContext(*_pdfVars,prototype,auxProto,verbose) ;  
-  _pdfCloneSet = 0 ;
+  _pdfCloneSet = nullptr ;
 
   // Create generator for resolution model as PDF
   _modelVarsOwned = (RooArgSet*) model.conv().cloneModel().getObservables(&vars)->snapshot(kTRUE) ;

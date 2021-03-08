@@ -114,8 +114,8 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
 
 
    TClass *cl = TClass::GetClass(fName.c_str(), kTRUE, silent);
-   fEnv = 0;
-   fKey = 0;
+   fEnv = nullptr;
+   fKey = nullptr;
    if ( cl )  {
       int nested = 0;
       std::vector<std::string> inside;
@@ -181,14 +181,14 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                   GenerateTemporaryTEnum keyEnum(fKey->fCase, inside[1]);
                   GenerateTemporaryTEnum valueEnum(fVal->fCase, inside[2]);
 
-                  if (0==TClass::GetClass(nam.c_str(), kTRUE, silent)) {
+                  if (nullptr==TClass::GetClass(nam.c_str(), kTRUE, silent)) {
                      // We need to emulate the pair
                      TVirtualStreamerInfo::Factory()->GenerateInfoForPair(inside[1],inside[2], silent, 0, 0);
                   }
                }
                fValue = new Value(nam,silent);
                if ( !(*fValue).IsValid() || !fKey->IsValid() || !fVal->IsValid() ) {
-                  return 0;
+                  return nullptr;
                }
                fPointers |= 0 != (fKey->fCase&kIsPointer);
                if (fPointers || (0 != (fKey->fProperties&kNeedDelete))) {
@@ -213,7 +213,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                fValue = new Value(inside[1],silent);
                fVal   = new Value(*fValue);
                if ( !(*fValue).IsValid() || !fVal->IsValid() ) {
-                  return 0;
+                  return nullptr;
                }
                if ( 0 == fValDiff )  {
                   fValDiff  = fVal->fSize;
@@ -237,13 +237,13 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
       Fatal("TEmulatedCollectionProxy","Components of %s not analysed!",cl->GetName());
    }
    Fatal("TEmulatedCollectionProxy","Collection class %s not found!",fTypeinfo.name());
-   return 0;
+   return nullptr;
 }
 
 Bool_t TEmulatedCollectionProxy::IsValid() const
 {
    // Return true if the collection proxy was well initialized.
-   return  (0 != fCreateEnv.call);
+   return  (nullptr != fCreateEnv.call);
 }
 
 UInt_t TEmulatedCollectionProxy::Size() const
@@ -298,7 +298,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                   //(but only when needed).
                   void* ptr = h->ptr();
                   if (force) fKey->fType->Destructor(ptr);
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
             case kIsPointer|kBIT_ISSTRING:
@@ -307,14 +307,14 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                   //Eventually we'll need to delete this
                   //(but only when needed).
                   if (force) delete (std::string*)h->ptr();
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
             case kIsPointer|kBIT_ISTSTRING|kIsClass:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   if (force) delete (TString*)h->ptr();
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
          }
@@ -344,27 +344,27 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                   if ( p && force )  {
                      fVal->fType->Destructor(p);
                   }
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
             case kIsPointer|kBIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   if (force) delete (std::string*)h->ptr();
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
             case kIsPointer|kBIT_ISTSTRING|kIsClass:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   if (force) delete (TString*)h->ptr();
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
          }
    }
    c->resize(left*fValDiff,0);
-   fEnv->fStart = left>0 ? &(*c->begin()) : 0;
+   fEnv->fStart = left>0 ? &(*c->begin()) : nullptr;
    return;
 }
 
@@ -375,7 +375,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
    PCont_t c   = PCont_t(fEnv->fObject);
    c->resize(left*fValDiff,0);
    void *oldstart = fEnv->fStart;
-   fEnv->fStart = left>0 ? &(*c->begin()) : 0;
+   fEnv->fStart = left>0 ? &(*c->begin()) : nullptr;
 
    char* addr = ((char*)fEnv->fStart) + fValDiff*nCurr;
    switch ( fSTL_type )  {
@@ -406,7 +406,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
             case kIsPointer|kBIT_ISSTRING:
             case kIsPointer|kBIT_ISTSTRING|kIsClass:
                for( i=nCurr; i<left; ++i, addr += fValDiff )
-                  *(void**)addr = 0;
+                  *(void**)addr = nullptr;
                break;
          }
          addr = ((char*)fEnv->fStart)+fValOffset+fValDiff*nCurr;
@@ -440,7 +440,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
             case kIsPointer|kBIT_ISSTRING:
             case kIsPointer|kBIT_ISTSTRING|kIsClass:
                for( i=nCurr; i<left; ++i, addr += fValDiff )
-                  *(void**)addr = 0;
+                  *(void**)addr = nullptr;
                break;
          }
          break;
@@ -454,7 +454,7 @@ void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)
    if ( fEnv && fEnv->fObject )   {
       size_t nCurr = Size();
       PCont_t c = PCont_t(fEnv->fObject);
-      fEnv->fStart = nCurr>0 ? &(*c->begin()) : 0;
+      fEnv->fStart = nCurr>0 ? &(*c->begin()) : nullptr;
       if ( left == nCurr )  {
          return;
       }
@@ -475,12 +475,12 @@ void* TEmulatedCollectionProxy::At(UInt_t idx)
       PCont_t c = PCont_t(fEnv->fObject);
       size_t  s = c->size();
       if ( idx >= (s/fValDiff) )  {
-         return 0;
+         return nullptr;
       }
-      return idx<(s/fValDiff) ? ((char*)&(*c->begin()))+idx*fValDiff : 0;
+      return idx<(s/fValDiff) ? ((char*)&(*c->begin()))+idx*fValDiff : nullptr;
    }
    Fatal("TEmulatedCollectionProxy","At> Logic error - no proxy object set.");
-   return 0;
+   return nullptr;
 }
 
 void* TEmulatedCollectionProxy::Allocate(UInt_t n, Bool_t forceDelete)

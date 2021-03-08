@@ -125,8 +125,8 @@ const char *TRootDialog::GetParameters()
 
       nparam++;
 
-      const char *type = str ? str->GetString().Data() : 0;
-      const char *data = 0;
+      const char *type = str ? str->GetString().Data() : nullptr;
+      const char *data = nullptr;
 
       if (obj && obj->IsA() == TGTextEntry::Class())
          data = ((TGTextEntry *) obj)->GetBuffer()->GetString();

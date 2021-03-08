@@ -80,7 +80,7 @@ void ROOT_flush()
 extern "C"
 void ROOT_adddep(char* buf, size_t len)
 {
-   char* posColon = 0;
+   char* posColon = nullptr;
    if (newFile)
       posColon = strstr(buf, ".o: ");
 
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
                && !(strcmp(outname + strlen(outname) - sDictExt.length(),
                            sDictExt.c_str()));
          } else {
-            isDict = (strstr(outname, sDictTag.c_str()) != 0);
+            isDict = (strstr(outname, sDictTag.c_str()) != nullptr);
          }
       } else {
          // no = after "-R", thus "/G__%.d";

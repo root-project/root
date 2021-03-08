@@ -63,9 +63,9 @@ ClassImp(RooAbsTestStatistic);
 /// Default constructor
 
 RooAbsTestStatistic::RooAbsTestStatistic() :
-  _func(0), _data(0), _projDeps(0), _splitRange(0), _simCount(0),
+  _func(nullptr), _data(nullptr), _projDeps(nullptr), _splitRange(0), _simCount(0),
   _verbose(kFALSE), _init(kFALSE), _gofOpMode(Slave), _nEvents(0), _setNum(0),
-  _numSets(0), _extSet(0), _nGof(0), _gofArray(0), _nCPU(1), _mpfeArray(0),
+  _numSets(0), _extSet(0), _nGof(0), _gofArray(nullptr), _nCPU(1), _mpfeArray(nullptr),
   _mpinterl(RooFit::BulkPartition), _doOffset(kFALSE), _offset(0),
   _offsetCarry(0), _evalCarry(0)
 {
@@ -112,9 +112,9 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _simCount(1),
   _verbose(verbose),
   _nGof(0),
-  _gofArray(0),
+  _gofArray(nullptr),
   _nCPU(nCPU),
-  _mpfeArray(0),
+  _mpfeArray(nullptr),
   _mpinterl(interleave),
   _doOffset(kFALSE),
   _offset(0),
@@ -170,10 +170,10 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _simCount(1),
   _verbose(other._verbose),
   _nGof(0),
-  _gofArray(0),
+  _gofArray(nullptr),
   _gofSplitMode(other._gofSplitMode),
   _nCPU(other._nCPU),
-  _mpfeArray(0),
+  _mpfeArray(nullptr),
   _mpinterl(other._mpinterl),
   _doOffset(other._doOffset),
   _offset(other._offset),
@@ -354,9 +354,9 @@ Bool_t RooAbsTestStatistic::initialize()
   if (_init) return kFALSE;
   
   if (MPMaster == _gofOpMode) {
-    initMPMode(_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
+    initMPMode(_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():nullptr,_addCoefRangeName.size()?_addCoefRangeName.c_str():nullptr) ;
   } else if (SimMaster == _gofOpMode) {
-    initSimMode((RooSimultaneous*)_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
+    initSimMode((RooSimultaneous*)_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():nullptr,_addCoefRangeName.size()?_addCoefRangeName.c_str():nullptr) ;
   }
   _init = kTRUE;
   return kFALSE;
@@ -542,7 +542,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
       // *** START HERE
       // WVE HACK determine if we have a RooRealSumPdf and then treat it like a binned likelihood
-      RooAbsPdf* binnedPdf = 0 ;
+      RooAbsPdf* binnedPdf = nullptr ;
       Bool_t binnedL = kFALSE ;
       if (pdf->getAttribute("BinnedLikelihood") && pdf->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
         // Simplest case: top-level of component is a RRSP

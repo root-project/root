@@ -24,7 +24,7 @@
 
 std::vector<TControlBar*> TMVA::BDTReg_Global__cbar;
 
-TMVA::StatDialogBDTReg* TMVA::StatDialogBDTReg::fThis = 0;
+TMVA::StatDialogBDTReg* TMVA::StatDialogBDTReg::fThis = nullptr;
 
 void TMVA::StatDialogBDTReg::SetItree() 
 {
@@ -42,15 +42,15 @@ void TMVA::StatDialogBDTReg::Close()
 }
 
 TMVA::StatDialogBDTReg::StatDialogBDTReg(TString dataset, const TGWindow* p, TString wfile, TString methName, Int_t itree )
-   : fMain( 0 ),
+   : fMain( nullptr ),
      fItree(itree),
      fNtrees(0),
-     fCanvas(0),
+     fCanvas(nullptr),
      fDataset(dataset),
-     fInput(0),
-     fButtons(0),
-     fDrawButton(0),
-     fCloseButton(0),
+     fInput(nullptr),
+     fButtons(nullptr),
+     fDrawButton(nullptr),
+     fCloseButton(nullptr),
      fWfile( wfile ),
      fMethName( methName )
 {
@@ -160,13 +160,13 @@ void TMVA::StatDialogBDTReg::DrawNode( TMVA::DecisionTreeNode *n,
    Float_t xsize=xscale*1.5;
    Float_t ysize=yscale/3;
    if (xsize>0.15) xsize=0.1;
-   if (n->GetLeft() != NULL){
+   if (n->GetLeft() != nullptr){
       TLine *a1 = new TLine(x-xscale/4,y-ysize,x-xscale,y-ysize*2);
       a1->SetLineWidth(2);
       a1->Draw();
       DrawNode((TMVA::DecisionTreeNode*) n->GetLeft(), x-xscale, y-yscale, xscale/2, yscale, vars);
    }
-   if (n->GetRight() != NULL){
+   if (n->GetRight() != nullptr){
       TLine *a1 = new TLine(x+xscale/4,y-ysize,x+xscale,y-ysize*2);
       a1->SetLineWidth(2);
       a1->Draw();
@@ -215,7 +215,7 @@ TMVA::DecisionTree* TMVA::StatDialogBDTReg::ReadTree( TString* &vars, Int_t itre
          std::cout << "*** ERROR: Weight file: " << fWfile << " does not exist" << std::endl;
          delete d;
          d = nullptr;
-         return 0;
+         return nullptr;
       }
       TString dummy = "";
       
@@ -224,7 +224,7 @@ TMVA::DecisionTree* TMVA::StatDialogBDTReg::ReadTree( TString* &vars, Int_t itre
                    << ", but number of trained trees only: " << fNtrees << std::endl;
          delete d;
          d = nullptr;
-         return 0;
+         return nullptr;
       }
       
       // file header with name
@@ -259,7 +259,7 @@ TMVA::DecisionTree* TMVA::StatDialogBDTReg::ReadTree( TString* &vars, Int_t itre
                    << ", but number of trained trees only: " << fNtrees << std::endl;
          delete d;
          d = nullptr;
-         return 0;
+         return nullptr;
       }
       Int_t nVars;
       void* doc = TMVA::gTools().xmlengine().ParseFile(fWfile);
@@ -294,7 +294,7 @@ void TMVA::StatDialogBDTReg::DrawTree( Int_t itree )
    TString *vars;   
 
    TMVA::DecisionTree* d = ReadTree( vars, itree );
-   if (d == 0) return;
+   if (d == nullptr) return;
 
    UInt_t   depth = d->GetTotalTreeDepth();
    Double_t ystep = 1.0/(depth + 1.0);
@@ -381,7 +381,7 @@ void TMVA::BDT_Reg(TString dataset, const TString& fin )
 
    // read all directories
    TIter next( dir->GetListOfKeys() );
-   TKey *key(0);   
+   TKey *key(nullptr);   
    std::vector<TString> methname;   
    std::vector<TString> path;   
    std::vector<TString> wfile;   
@@ -433,7 +433,7 @@ void TMVA::BDTReg_DeleteTBar(int i)
    TMVAGlob::DestroyCanvases();
 
    delete BDTReg_Global__cbar[i];
-   BDTReg_Global__cbar[i] = 0;
+   BDTReg_Global__cbar[i] = nullptr;
 }
 
 // input: - No. of tree

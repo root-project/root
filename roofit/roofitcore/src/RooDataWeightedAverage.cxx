@@ -56,7 +56,7 @@ ClassImp(RooDataWeightedAverage);
 
 RooDataWeightedAverage::RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& indata, 
 					       const RooArgSet& projdeps, Int_t nCPU, RooFit::MPSplit interleave, Bool_t showProgress, Bool_t verbose) : 
-  RooAbsOptTestStatistic(name,title,pdf,indata,projdeps,0,0,nCPU,interleave,verbose,kFALSE),
+  RooAbsOptTestStatistic(name,title,pdf,indata,projdeps,nullptr,nullptr,nCPU,interleave,verbose,kFALSE),
   _showProgress(showProgress)
 {
   if (_showProgress) {

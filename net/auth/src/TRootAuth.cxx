@@ -35,7 +35,7 @@
 TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
                                      const char *user, Option_t *opts)
 {
-   TSecContext *ctx = 0;
+   TSecContext *ctx = nullptr;
    Int_t rc = 0;
 
    Int_t rproto =  s->GetRemoteProtocol() % 1000;

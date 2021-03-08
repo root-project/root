@@ -77,32 +77,32 @@ TSpider::TSpider()
 {
    fDisplayAverage=kFALSE;
    fForceDim=kFALSE;
-   fPolargram=NULL;
-   fInput=NULL;
-   fManager=NULL;
+   fPolargram=nullptr;
+   fInput=nullptr;
+   fManager=nullptr;
    fNcols=0;
    fNx=3;
    fNy=4;
-   fPolyList=NULL;
-   fSelect=NULL;
-   fSelector=NULL;
-   fTree=NULL;
-   fMax=NULL;
-   fMin=NULL;
-   fAve=NULL;
-   fCanvas=NULL;
-   fAveragePoly=NULL;
+   fPolyList=nullptr;
+   fSelect=nullptr;
+   fSelector=nullptr;
+   fTree=nullptr;
+   fMax=nullptr;
+   fMin=nullptr;
+   fAve=nullptr;
+   fCanvas=nullptr;
+   fAveragePoly=nullptr;
    fEntry=0;
-   fSuperposed=NULL;
+   fSuperposed=nullptr;
    fShowRange=kFALSE;
    fAngularLabels=kFALSE;
-   fAverageSlices=NULL;
+   fAverageSlices=nullptr;
    fSegmentDisplay=kFALSE;
    fNentries=0;
    fFirstEntry=0;
    fArraySize=0;
-   fCurrentEntries = NULL;
-   fFormulas = NULL;
+   fCurrentEntries = nullptr;
+   fFormulas = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,16 +129,16 @@ TSpider::TSpider(TTree* tree ,const char *varexp, const char *selection,
    fNx=2;
    fNy=2;
    fDisplayAverage=kFALSE;
-   fSelect=NULL;
-   fManager=NULL;
-   fCanvas=NULL;
-   fAveragePoly=NULL;
+   fSelect=nullptr;
+   fManager=nullptr;
+   fCanvas=nullptr;
+   fAveragePoly=nullptr;
    fEntry=fFirstEntry;
-   fSuperposed=NULL;
+   fSuperposed=nullptr;
    fShowRange=kFALSE;
    fAngularLabels=kTRUE;
    fForceDim=kFALSE;
-   fAverageSlices=NULL;
+   fAverageSlices=nullptr;
    fSegmentDisplay=kFALSE;
    if (firstentry < 0 || firstentry > tree->GetEstimate()) firstentry = 0;
    fFirstEntry = firstentry;
@@ -147,8 +147,8 @@ TSpider::TSpider(TTree* tree ,const char *varexp, const char *selection,
 
    fEntry = fFirstEntry;
 
-   fPolargram=NULL;
-   fPolyList=NULL;
+   fPolargram=nullptr;
+   fPolyList=nullptr;
 
    fTree->SetScanField(fNx*fNy);
    fCurrentEntries = new Long64_t[fNx*fNy];
@@ -310,7 +310,7 @@ void TSpider::AddVariable(const char* varexp)
    }
 
    delete fPolargram;
-   fPolargram = NULL;
+   fPolargram = nullptr;
 
    if(fSegmentDisplay){
       for(ui=0;ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
@@ -318,11 +318,11 @@ void TSpider::AddVariable(const char* varexp)
    }
    fPolyList->Delete();
    delete fPolyList;
-   fPolyList = NULL;
+   fPolyList = nullptr;
    delete [] fAverageSlices;
-   fAverageSlices = NULL;
+   fAverageSlices = nullptr;
    delete fAveragePoly;
-   fAveragePoly = NULL;
+   fAveragePoly = nullptr;
 
    if (fCanvas) {
       fCanvas->Clear();
@@ -395,7 +395,7 @@ void TSpider::DeleteVariable(const char* varexp)
    }
 
    delete fPolargram;
-   fPolargram = NULL;
+   fPolargram = nullptr;
 
    if(fSegmentDisplay){
       for(ui=0;ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
@@ -403,11 +403,11 @@ void TSpider::DeleteVariable(const char* varexp)
    }
    fPolyList->Delete();
    delete fPolyList;
-   fPolyList = NULL;
+   fPolyList = nullptr;
    delete [] fAverageSlices;
-   fAverageSlices = NULL;
+   fAverageSlices = nullptr;
    delete fAveragePoly;
-   fAveragePoly = NULL;
+   fAveragePoly = nullptr;
 
    if (fCanvas) {
       fCanvas->Clear();
@@ -1030,12 +1030,12 @@ void TSpider::SetDisplayAverage(Bool_t disp)
 
    fDisplayAverage = disp;
    delete fAveragePoly;
-   fAveragePoly = NULL;
+   fAveragePoly = nullptr;
    if(fAverageSlices){
       for(ui = 0;ui<fNcols;++ui) delete fAverageSlices[ui];
    }
    delete [] fAverageSlices;
-   fAverageSlices = NULL;
+   fAverageSlices = nullptr;
 
    for(ui=0;ui<fNx*fNy;++ui){
       if (fCanvas) fCanvas->cd(ui+1);
@@ -1253,9 +1253,9 @@ void TSpider::SetNx(UInt_t nx)
    }
    fPolyList->Delete();
    delete fPolyList;
-   fPolyList = NULL;
+   fPolyList = nullptr;
    delete [] fCurrentEntries;
-   fCurrentEntries = NULL;
+   fCurrentEntries = nullptr;
 
    fNx = nx;
 
@@ -1330,9 +1330,9 @@ void TSpider::SetNy(UInt_t ny)
    }
    fPolyList->Delete();
    delete fPolyList;
-   fPolyList = NULL;
+   fPolyList = nullptr;
    delete [] fCurrentEntries;
-   fCurrentEntries = NULL;
+   fCurrentEntries = nullptr;
 
    fNy = ny;
 
@@ -1412,14 +1412,14 @@ void TSpider::SetSegmentDisplay(Bool_t seg)
    }
 
    delete fPolyList;
-   fPolyList = NULL;
+   fPolyList = nullptr;
    if(fAverageSlices){
       for(ui=0;ui<fNcols;++ui) delete fAverageSlices[ui];
    }
    delete [] fAverageSlices;
-   fAverageSlices = NULL;
+   fAverageSlices = nullptr;
    delete fAveragePoly;
-   fAveragePoly = NULL;
+   fAveragePoly = nullptr;
 
    for(ui=0;ui<fNx*fNy;++ui){
       if (fCanvas) fCanvas->cd(ui+1);

@@ -67,7 +67,7 @@ void TMVA::compareanapp( TString finAn , TString finApp ,
          TH1* sig = dynamic_cast<TH1*>(titDir->Get( hname + "_S" ));
          TH1* bgd = dynamic_cast<TH1*>(titDir->Get( hname + "_B" ));
 
-         if (sig==0 || bgd==0) continue;
+         if (sig==nullptr || bgd==nullptr) continue;
 
          // chop off useless stuff
          sig->SetTitle( Form("TMVA output for classifier: %s", methodTitle.Data()) );
@@ -148,7 +148,7 @@ void TMVA::compareanapp( TString finAn , TString finApp ,
          cout << "--- Searching for histogram: " << hStem.Data() << " in application file" << endl;
          
          TH1* testHist = (TH1*)fileApp->Get( hStem );
-         if (testHist != 0) {
+         if (testHist != nullptr) {
             cout << "--> Found application histogram: " << testHist->GetName() << " --> superimpose it" << endl;
             // compute normalisation factor
             TMVAGlob::NormalizeHists( testHist );

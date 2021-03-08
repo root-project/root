@@ -124,7 +124,7 @@ static const char *gSaveMacroTypes[] = {
    "TIFF",        "*.tiff",
    "XPM",         "*.xpm",
    "All files",   "*",
-   0,             0
+   nullptr,             nullptr
 };
 
 TList *gListOfHiddenFrames = new TList();
@@ -144,7 +144,7 @@ ClassImp(TGHeaderFrame);
 
 TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
                  UInt_t options, Pixel_t back)
-   : TGWindow(p, 0, 0, w, h, 0, 0, 0, 0, 0, options)
+   : TGWindow(p, 0, 0, w, h, 0, 0, 0, nullptr, nullptr, options)
 {
    if (!fgInit && gClient) {
       TGFrame::GetDefaultFrameBackground();
@@ -169,7 +169,7 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fMinHeight   = 0;
    fMaxWidth    = kMaxUInt;
    fMaxHeight   = kMaxUInt;
-   fFE          = 0;
+   fFE          = nullptr;
 
    if (fOptions & (kSunkenFrame | kRaisedFrame))
       fBorderWidth = (gClient->GetStyle() > 1) ? 1 : (fOptions & kDoubleBorder) ? 2 : 1;
@@ -240,7 +240,7 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fMinHeight   = 0;
    fMaxWidth    = kMaxUInt;
    fMaxHeight   = kMaxUInt;
-   fFE          = 0;
+   fFE          = nullptr;
 
    SetWindowName();
 }
@@ -262,7 +262,7 @@ void TGFrame::DeleteWindow()
 {
    if (gDNDManager) {
       if (gDNDManager->GetMainFrame() == this)
-         gDNDManager->SetMainFrame(0);
+         gDNDManager->SetMainFrame(nullptr);
    }
    if (!TestBit(kDeleteWindowCalled)) {
       // coverity[returned_null]
@@ -829,7 +829,7 @@ void TGFrame::StartGuiBuilding(Bool_t on)
    if (!gDragManager) gDragManager = TVirtualDragManager::Instance();
    if (!gDragManager) return;
 
-   TGCompositeFrame *comp = 0;
+   TGCompositeFrame *comp = nullptr;
 
    if (InheritsFrom(TGCompositeFrame::Class())) {
       comp = (TGCompositeFrame *)this;
@@ -846,7 +846,7 @@ void TGFrame::StartGuiBuilding(Bool_t on)
 TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
          UInt_t options, Pixel_t back) : TGFrame(p, w, h, options, back)
 {
-   fLayoutManager = 0;
+   fLayoutManager = nullptr;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
    fMustCleanup   = kNoCleanup;
@@ -870,7 +870,7 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
 TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent)
    : TGFrame(c, id, parent)
 {
-   fLayoutManager = 0;
+   fLayoutManager = nullptr;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
    fMustCleanup   = kNoCleanup;
@@ -891,7 +891,7 @@ TGCompositeFrame::~TGCompositeFrame()
    if (fMustCleanup != kNoCleanup) {
       Cleanup();
    } else {
-      TGFrameElement *el = 0;
+      TGFrameElement *el = nullptr;
       TIter next(fList);
 
       while ((el = (TGFrameElement *) next())) {
@@ -902,8 +902,8 @@ TGCompositeFrame::~TGCompositeFrame()
 
    delete fList;
    delete fLayoutManager;
-   fList = 0;
-   fLayoutManager = 0;
+   fList = nullptr;
+   fLayoutManager = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -938,7 +938,7 @@ void TGCompositeFrame::SetEditable(Bool_t on)
    if (on) {
       fClient->SetRoot(this);
    } else {
-      fClient->SetRoot(0);
+      fClient->SetRoot(nullptr);
    }
    if (gDragManager) gDragManager->SetEditable(on);
 }
@@ -958,7 +958,7 @@ void TGCompositeFrame::Cleanup()
 
    while ((el = (TGFrameElement *) next())) {
       if (el->fFrame) {
-         el->fFrame->SetFrameElement(0);
+         el->fFrame->SetFrameElement(nullptr);
          if (!gVirtualX->InheritsFrom("TGX11") && !gVirtualX->InheritsFrom("TGCocoa"))
             el->fFrame->DestroyWindow();
          delete el->fFrame;
@@ -968,7 +968,7 @@ void TGCompositeFrame::Cleanup()
           (el->fLayout->References() > 0)) {
          el->fLayout->RemoveReference();
          if (!el->fLayout->References()) {
-            el->fLayout->fFE = 0;
+            el->fLayout->fFE = nullptr;
             delete el->fLayout;
          }
       }
@@ -1078,7 +1078,7 @@ void TGCompositeFrame::SetCleanup(Int_t mode)
 
 TGFrameElement* TGCompositeFrame::FindFrameElement(TGFrame *f) const
 {
-   if (!fList) return 0;
+   if (!fList) return nullptr;
 
    TGFrameElement *el;
    TIter next(fList);
@@ -1087,7 +1087,7 @@ TGFrameElement* TGCompositeFrame::FindFrameElement(TGFrame *f) const
       if (el->fFrame == f)
          return el;
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1138,7 +1138,7 @@ void TGCompositeFrame::RemoveFrame(TGFrame *f)
    if (el) {
       fList->Remove(el);
       if (el->fLayout) el->fLayout->RemoveReference();
-      f->SetFrameElement(0);
+      f->SetFrameElement(nullptr);
       delete el;
    }
 }
@@ -1292,7 +1292,7 @@ void TGCompositeFrame::ChangeSubframesBackground(Pixel_t back)
 
 TGFrame *TGCompositeFrame::GetFrameFromPoint(Int_t x, Int_t y)
 {
-   if (!Contains(x, y)) return 0;
+   if (!Contains(x, y)) return nullptr;
 
    if (!fList) return this;
 
@@ -1570,7 +1570,7 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
 
       TIter next(fBindList);
       TGMapKey *m;
-      TGFrame  *w = 0;
+      TGFrame  *w = nullptr;
 
       while ((m = (TGMapKey *) next())) {
          if (m->fKeyCode == event->fCode) {
@@ -1783,7 +1783,7 @@ const TGPicture *TGMainFrame::SetIconPixmap(const char *iconName)
       gVirtualX->SetIconPixmap(fId, pic);
       return iconPic;
    } else
-      return 0;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2323,8 +2323,8 @@ TGHeaderFrame::TGHeaderFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fOverButton = -1;
    fLastButton = -1;
    fNColumns   = 1;
-   fColHeader  = 0;
-   fSplitHeader = 0;
+   fColHeader  = nullptr;
+   fSplitHeader = nullptr;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask,
@@ -2633,8 +2633,8 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
    char quote = '"';
 
    TGFrameElement *el;
-   static TGHSplitter *hsplit = 0;
-   static TGVSplitter *vsplit = 0;
+   static TGHSplitter *hsplit = nullptr;
+   static TGVSplitter *vsplit = nullptr;
    TList *signalslist;
    TList *connlist;
    TQConnection *conn;
@@ -2655,12 +2655,12 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
       if (el->fFrame->InheritsFrom("TGVSplitter")) {
          vsplit = (TGVSplitter *)el->fFrame;
          if (vsplit->GetLeft())
-            vsplit = 0;
+            vsplit = nullptr;
       }
       else if (el->fFrame->InheritsFrom("TGHSplitter")) {
          hsplit = (TGHSplitter *)el->fFrame;
          if (hsplit->GetAbove())
-            hsplit = 0;
+            hsplit = nullptr;
       }
       el->fFrame->SavePrimitive(out, option);
       out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
@@ -2681,13 +2681,13 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
          out << "   " << vsplit->GetName() << "->SetFrame(" << vsplit->GetFrame()->GetName();
          if (vsplit->GetLeft()) out << ",kTRUE);" << std::endl;
          else                 out << ",kFALSE);"<< std::endl;
-         vsplit = 0;
+         vsplit = nullptr;
       }
       if (hsplit && el->fFrame == hsplit->GetFrame()) {
          out << "   " << hsplit->GetName() << "->SetFrame(" << hsplit->GetFrame()->GetName();
          if (hsplit->GetAbove()) out << ",kTRUE);" << std::endl;
          else                  out << ",kFALSE);"<< std::endl;
-         hsplit = 0;
+         hsplit = nullptr;
       }
 
       if (!(el->fState & kIsVisible)) {
@@ -2793,7 +2793,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
          if (c1==c2) continue;
          else {
             c3 = c2->GetBaseClass(c1);
-            if (c3 != 0) {
+            if (c3 != nullptr) {
                bc->SetBitNumber(k, kTRUE);
                break;
             }
@@ -3312,7 +3312,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
          if (c1==c2) continue;
          else {
             c3 = c2->GetBaseClass(c1);
-            if (c3 != 0) {
+            if (c3 != nullptr) {
                bc->SetBitNumber(k, kTRUE);
                break;
             }

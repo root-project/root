@@ -97,7 +97,7 @@ GeneticMinimizerParameters::GeneticMinimizerParameters()
 // genetic minimizer class
 
 GeneticMinimizer::GeneticMinimizer(int ):
-   fFitness(0),
+   fFitness(nullptr),
    fMinValue(0),
    fParameters(GeneticMinimizerParameters() )
 {
@@ -120,7 +120,7 @@ GeneticMinimizer::~GeneticMinimizer()
    if ( fFitness )
    {
       delete fFitness;
-      fFitness = 0;
+      fFitness = nullptr;
    }
 }
 
@@ -131,7 +131,7 @@ void GeneticMinimizer::Clear()
    if ( fFitness )
    {
       delete fFitness;
-      fFitness = 0;
+      fFitness = nullptr;
    }
 }
 
@@ -335,7 +335,7 @@ double GeneticMinimizer::MinValue() const
 }
 
 const double *  GeneticMinimizer::X() const {
-   return (fFitness) ? &fResult[0] : 0;
+   return (fFitness) ? &fResult[0] : nullptr;
 }
 
 unsigned int GeneticMinimizer::NCalls() const
@@ -362,9 +362,9 @@ unsigned int GeneticMinimizer::NFree() const
 }
 
 // Functions we don't need...
-const double *  GeneticMinimizer::MinGradient() const { return 0; }
+const double *  GeneticMinimizer::MinGradient() const { return nullptr; }
 bool GeneticMinimizer::ProvidesError() const { return false; }
-const double * GeneticMinimizer::Errors() const { return 0; }
+const double * GeneticMinimizer::Errors() const { return nullptr; }
 double GeneticMinimizer::Edm() const { return 0; }
 double GeneticMinimizer::CovMatrix(unsigned int, unsigned int) const { return 0; }
 

@@ -1524,7 +1524,7 @@ TAttParticle* TAttParticle::GetParticle(Int_t mcnumber)
       if (par->GetMCNumber() == mcnumber) return par;
    }
    fgList->Error("GetParticle","No match for %d exists !",mcnumber);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

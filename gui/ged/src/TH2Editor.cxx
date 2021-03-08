@@ -174,9 +174,9 @@ enum ETH2Wid {
 TH2Editor::TH2Editor(const TGWindow *p, Int_t width,
                      Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back),
-     fHist(0),
-     fBin(0),
-     fBinHist(0)
+     fHist(nullptr),
+     fBin(nullptr),
+     fBinHist(nullptr)
 {
    MakeTitle("Title");
 
@@ -687,7 +687,7 @@ TH2Editor::~TH2Editor()
    delete fDim0lh;
 
    if (fBinHist) delete fBinHist;
-   fBinHist = 0;
+   fBinHist = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -767,7 +767,7 @@ void TH2Editor::ConnectSignals2Slots()
 
 Bool_t TH2Editor::AcceptModel(TObject* obj)
 {
-   if (obj == 0 || !obj->InheritsFrom(TH2::Class()) ||
+   if (obj == nullptr || !obj->InheritsFrom(TH2::Class()) ||
        (!strcmp(((TH2 *)obj)->GetName(),"htemp") &&
         ((TH2*)obj)->GetEntries() == 0)) {  // htemp is an empty histogram
       return kFALSE;
@@ -796,7 +796,7 @@ void TH2Editor::SetModel(TObject* obj)
       }
       // delete in anycase fBinHist also when fHist is zero (i.e when it has been deleted)
       delete fBinHist;
-      fBinHist = 0;
+      fBinHist = nullptr;
       if (fGedEditor->GetPad()) {
          fGedEditor->GetPad()->Modified();
          fGedEditor->GetPad()->Update();
@@ -1590,7 +1590,7 @@ void TH2Editor::DoBinReleased()
    if (fDelaydraw->GetState()==kButtonDown){
       if (!fBinHist) {
          fBinHist = (TH2*)fHist->Clone("BinHist");
-         fBinHist->SetDirectory(0); // TH2Editor manages this histogram
+         fBinHist->SetDirectory(nullptr); // TH2Editor manages this histogram
       }
       Int_t nx = fBinHist->GetXaxis()->GetNbins();
       Int_t ny = fBinHist->GetYaxis()->GetNbins();
@@ -1663,7 +1663,7 @@ void TH2Editor::DoBinPressed()
    if (divx[0]==2 && divy[0]==2 && !fBinHist)
       new TGMsgBox(fClient->GetDefaultRoot(), this->GetMainFrame(),
                    "TH2Editor", "It is not possible to rebin the histogram",
-                   kMBIconExclamation, kMBOk, 0, kVerticalFrame);
+                   kMBIconExclamation, kMBOk, nullptr, kVerticalFrame);
    // calling the MessageBox again does NOT work!*/
    delete [] divx;
    delete [] divy;
@@ -1687,7 +1687,7 @@ void TH2Editor::DoBinMoved()
          return;
       }
       fBinHist = (TH2*)fHist->Clone("BinHist");
-      fBinHist->SetDirectory(0);    // TH2Editor manages this histogram
+      fBinHist->SetDirectory(nullptr);    // TH2Editor manages this histogram
       delete [] divx;
       delete [] divy;
    }
@@ -1824,7 +1824,7 @@ void TH2Editor::DoApply()
    if (ret==1) {
       if (fBinHist) {
          delete fBinHist;
-         fBinHist = 0;
+         fBinHist = nullptr;
       }
       Int_t nx = fHist->GetXaxis()->GetNbins();
       Int_t ny = fHist->GetYaxis()->GetNbins();
@@ -1872,7 +1872,7 @@ void TH2Editor::DoCancel()
                                   fBinHist->GetYaxis()->GetLast());
 
       delete fBinHist;
-      fBinHist = 0;
+      fBinHist = nullptr;
 
       fCancel->SetState(kButtonDisabled);
       fApply->SetState(kButtonDisabled);
@@ -2937,7 +2937,7 @@ void TH2Editor::ActivateBaseClassEditors(TClass* /*cl*/)
 void TH2Editor::RecursiveRemove(TObject* obj)
 {
    if (obj == fHist) {
-      fHist = 0;
+      fHist = nullptr;
    }
 }
 

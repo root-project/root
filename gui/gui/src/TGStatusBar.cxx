@@ -60,7 +60,7 @@ public:
 TGStatusBarPart::TGStatusBarPart(const TGWindow *p, Int_t h, Int_t y, ULong_t back)
    : TGHorizontalFrame(p, 5, 5, kChildFrame | kHorizontalFrame, back)
 {
-   fStatusInfo = 0;
+   fStatusInfo = nullptr;
    fYt = y + 1;
    fHeight = h;
    MapWindow();
@@ -167,7 +167,7 @@ const char *TGStatusBar::GetText(Int_t partidx) const
 {
    if (partidx < 0 || partidx >= fNpart) {
       Error("GetText", "partidx out of range (0,%d)", fNpart-1);
-      return 0;
+      return nullptr;
    }
 
    const TGString *str = fStatusPart[partidx]->GetText();
@@ -354,7 +354,7 @@ const TGGC &TGStatusBar::GetDefaultGC()
 
 TGCompositeFrame *TGStatusBar::GetBarPart(Int_t npart) const
 {
-   return  ((npart<fNpart) && (npart>=0)) ? (TGCompositeFrame*)fStatusPart[npart] : 0;
+   return  ((npart<fNpart) && (npart>=0)) ? (TGCompositeFrame*)fStatusPart[npart] : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

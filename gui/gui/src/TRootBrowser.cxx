@@ -90,13 +90,13 @@
 static const char *gOpenFileTypes[] = {
    "ROOT files",   "*.root",
    "All files",    "*",
-   0,              0
+   nullptr,              nullptr
 };
 
 static const char *gPluginFileTypes[] = {
    "ROOT files",   "*.C",
    "All files",    "*",
-   0,              0
+   nullptr,              nullptr
 };
 
 //_____________________________________________________________________________
@@ -116,8 +116,8 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width,
    TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
 {
    fShowCloseTab = kTRUE;
-   fActBrowser = 0;
-   fIconPic = 0;
+   fActBrowser = nullptr;
+   fIconPic = nullptr;
    CreateBrowser(name);
    Resize(width, height);
    if (initshow) {
@@ -139,8 +139,8 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y,
    TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
 {
    fShowCloseTab = kTRUE;
-   fActBrowser = 0;
-   fIconPic = 0;
+   fActBrowser = nullptr;
+   fIconPic = nullptr;
    CreateBrowser(name);
    MoveResize(x, y, width, height);
    SetWMPosition(x, y);
@@ -284,8 +284,8 @@ void TRootBrowser::CreateBrowser(const char *name)
    AddFrame(fStatusBar, fLH6);
 
    fNbInitPlugins = 0;
-   fEditFrame = 0;
-   fEditTab   = 0;
+   fEditFrame = nullptr;
+   fEditTab   = nullptr;
    fEditPos   = -1;
    fEditSubPos= -1;
    fNbTab[0]  = fNbTab[1] = fNbTab[2] = 0;
@@ -377,7 +377,7 @@ void TRootBrowser::BrowseObj(TObject *obj)
 void TRootBrowser::CloneBrowser()
 {
    Int_t loop = 1;
-   TBrowserPlugin *plugin = 0;
+   TBrowserPlugin *plugin = nullptr;
    TBrowser *b = new TBrowser();
    TIter next(&fPlugins);
    while ((plugin = (TBrowserPlugin *)next())) {
@@ -409,13 +409,13 @@ void TRootBrowser::CloseTabs()
    Disconnect(fMenuFile, "Activated(Int_t)", this, "HandleMenu(Int_t)");
    Disconnect(fTabRight, "Selected(Int_t)", this, "DoTab(Int_t)");
    if (fPlugins.IsEmpty()) return;
-   fActBrowser = 0;
+   fActBrowser = nullptr;
    for (i=0;i<fTabLeft->GetNumberOfTabs();i++) {
       container = fTabLeft->GetTabContainer(i);
       if (!container) continue;
       el = (TGFrameElement *)container->GetList()->First();
       if (el && el->fFrame) {
-         el->fFrame->SetFrameElement(0);
+         el->fFrame->SetFrameElement(nullptr);
          if (el->fFrame->InheritsFrom("TVirtualPadEditor")) {
             TVirtualPadEditor::Terminate();
          }
@@ -426,7 +426,7 @@ void TRootBrowser::CloseTabs()
          }
          else
             delete el->fFrame;
-         el->fFrame = 0;
+         el->fFrame = nullptr;
          if (el->fLayout && (el->fLayout != fgDefaultHints) &&
             (el->fLayout->References() > 0)) {
             el->fLayout->RemoveReference();
@@ -443,7 +443,7 @@ void TRootBrowser::CloseTabs()
       if (!container) continue;
       el = (TGFrameElement *)container->GetList()->First();
       if (el && el->fFrame) {
-         el->fFrame->SetFrameElement(0);
+         el->fFrame->SetFrameElement(nullptr);
          if (el->fFrame->InheritsFrom("TGMainFrame")) {
             el->fFrame->UnmapWindow();
             Bool_t sleep = (el->fFrame->InheritsFrom("TRootCanvas")) ? kTRUE : kFALSE;
@@ -456,7 +456,7 @@ void TRootBrowser::CloseTabs()
          }
          else
             delete el->fFrame;
-         el->fFrame = 0;
+         el->fFrame = nullptr;
          if (el->fLayout && (el->fLayout != fgDefaultHints) &&
             (el->fLayout->References() > 0)) {
             el->fLayout->RemoveReference();
@@ -473,7 +473,7 @@ void TRootBrowser::CloseTabs()
       if (!container) continue;
       el = (TGFrameElement *)container->GetList()->First();
       if (el && el->fFrame) {
-         el->fFrame->SetFrameElement(0);
+         el->fFrame->SetFrameElement(nullptr);
          if (el->fFrame->InheritsFrom("TGMainFrame")) {
             el->fFrame->UnmapWindow();
             ((TGMainFrame *)el->fFrame)->CloseWindow();
@@ -482,7 +482,7 @@ void TRootBrowser::CloseTabs()
          }
          else
             delete el->fFrame;
-         el->fFrame = 0;
+         el->fFrame = nullptr;
          if (el->fLayout && (el->fLayout != fgDefaultHints) &&
             (el->fLayout->References() > 0)) {
             el->fLayout->RemoveReference();
@@ -527,7 +527,7 @@ void TRootBrowser::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
 {
    const Int_t kTMAX=256;
    static char atext[kTMAX];
-   if (selected == 0 || event == kMouseLeave) {
+   if (selected == nullptr || event == kMouseLeave) {
       SetStatusText("", 0);
       SetStatusText("", 1);
       SetStatusText("", 2);
@@ -589,7 +589,7 @@ Option_t *TRootBrowser::GetDrawOption() const
 {
    if (fActBrowser)
       return fActBrowser->GetDrawOption();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -601,7 +601,7 @@ TGTab* TRootBrowser::GetTab(Int_t pos) const
       case kLeft:   return fTabLeft;
       case kRight:  return fTabRight;
       case kBottom: return fTabBottom;
-      default:      return 0;
+      default:      return nullptr;
    }
 }
 
@@ -710,7 +710,7 @@ void TRootBrowser::HandleMenu(Int_t id)
             }
             if (fActBrowser && newfile) {
                TGFileBrowser *fb = dynamic_cast<TGFileBrowser *>(fActBrowser);
-               if (fb) fb->Selected(0);
+               if (fb) fb->Selected(nullptr);
             }
          }
          break;
@@ -797,7 +797,7 @@ void TRootBrowser::HandleMenu(Int_t id)
                              kFDOpen,&fi);
             dir = fi.fIniDir;
             if (fi.fFilename) {
-               ExecPlugin(0, fi.fFilename, 0, kRight);
+               ExecPlugin(nullptr, fi.fFilename, nullptr, kRight);
             }
          }
          break;
@@ -810,7 +810,7 @@ void TRootBrowser::HandleMenu(Int_t id)
                               "Enter plugin command line:",
                               command, command);
             if (strcmp(command, "")) {
-               ExecPlugin("User", 0, command, kRight);
+               ExecPlugin("User", nullptr, command, kRight);
             }
          }
          break;
@@ -843,14 +843,14 @@ void TRootBrowser::InitPlugins(Option_t *opt)
 {
    TString cmd;
 
-   if ((opt == 0) || (!opt[0]))
+   if ((opt == nullptr) || (!opt[0]))
       return;
    // --- Left vertical area
 
    // File Browser plugin
    if (strchr(opt, 'F')) {
       cmd.Form("new TGFileBrowser(gClient->GetRoot(), (TBrowser *)0x%lx, 200, 500);", (ULong_t)fBrowser);
-      ExecPlugin("Files", 0, cmd.Data(), 0);
+      ExecPlugin("Files", nullptr, cmd.Data(), 0);
       ++fNbInitPlugins;
    }
 
@@ -861,7 +861,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
       // Editor plugin...
       if (opt[i] == 'E') {
          cmd.Form("new TGTextEditor((const char *)0, gClient->GetRoot());");
-         ExecPlugin("Editor 1", 0, cmd.Data(), 1);
+         ExecPlugin("Editor 1", nullptr, cmd.Data(), 1);
          ++fNbInitPlugins;
       }
 
@@ -871,7 +871,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
             cmd.Form("new TGHtmlBrowser(\"%s\", gClient->GetRoot());",
                      gEnv->GetValue("Browser.StartUrl",
                      "http://root.cern.ch/root/html/ClassIndex.html"));
-            ExecPlugin("HTML", 0, cmd.Data(), 1);
+            ExecPlugin("HTML", nullptr, cmd.Data(), 1);
             ++fNbInitPlugins;
          }
       }
@@ -879,21 +879,21 @@ void TRootBrowser::InitPlugins(Option_t *opt)
       // Canvas plugin...
       if ((opt[i] == 'C') && !IsWebGUI()) {
          cmd.Form("new TCanvas();");
-         ExecPlugin("c1", 0, cmd.Data(), 1);
+         ExecPlugin("c1", nullptr, cmd.Data(), 1);
          ++fNbInitPlugins;
       }
 
       // GLViewer plugin...
       if (opt[i] == 'G') {
          cmd.Form("new TGLSAViewer(gClient->GetRoot(), 0);");
-         ExecPlugin("OpenGL", 0, cmd.Data(), 1);
+         ExecPlugin("OpenGL", nullptr, cmd.Data(), 1);
          ++fNbInitPlugins;
       }
 
       // PROOF plugin...
       if (opt[i] == 'P') {
          cmd.Form("new TSessionViewer();");
-         ExecPlugin("PROOF", 0, cmd.Data(), 1);
+         ExecPlugin("PROOF", nullptr, cmd.Data(), 1);
          ++fNbInitPlugins;
       }
    }
@@ -902,7 +902,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
    // Command plugin...
    if (strchr(opt, 'I')) {
       cmd.Form("new TGCommandPlugin(gClient->GetRoot(), 700, 300);");
-      ExecPlugin("Command", 0, cmd.Data(), 2);
+      ExecPlugin("Command", nullptr, cmd.Data(), 2);
       ++fNbInitPlugins;
    }
 
@@ -926,7 +926,7 @@ Bool_t TRootBrowser::IsWebGUI()
 
 void TRootBrowser::ReallyDelete()
 {
-   if (fBrowser) fBrowser->SetBrowserImp(0);
+   if (fBrowser) fBrowser->SetBrowserImp(nullptr);
    delete this;
 }
 
@@ -944,7 +944,7 @@ void TRootBrowser::RecursiveRemove(TObject *obj)
 
 void TRootBrowser::RecursiveReparent(TGPopupMenu *popup)
 {
-   TGMenuEntry *entry = 0;
+   TGMenuEntry *entry = nullptr;
    TIter next(popup->GetListOfEntries());
    while ((entry = (TGMenuEntry *)next())) {
       if (entry->GetPopup()) {
@@ -968,7 +968,7 @@ void TRootBrowser::Refresh(Bool_t force)
 
 void TRootBrowser::RemoveTab(Int_t pos, Int_t subpos)
 {
-   TGTab *edit = 0;
+   TGTab *edit = nullptr;
    switch (pos) {
       case kLeft: // left
          edit = fTabLeft;
@@ -977,7 +977,7 @@ void TRootBrowser::RemoveTab(Int_t pos, Int_t subpos)
          edit = fTabRight;
          fMenuFrame->HideFrame(fActMenuBar);
          fMenuFrame->GetList()->Remove(fActMenuBar);
-         fActMenuBar = 0;
+         fActMenuBar = nullptr;
          break;
       case kBottom: // bottom
          edit = fTabBottom;
@@ -986,16 +986,16 @@ void TRootBrowser::RemoveTab(Int_t pos, Int_t subpos)
    if (!edit || !edit->GetTabTab(subpos))
       return;
    const char *tabName = edit->GetTabTab(subpos)->GetString();
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    if ((obj = fPlugins.FindObject(tabName))) {
       fPlugins.Remove(obj);
    }
-   TGFrameElement *el = 0;
+   TGFrameElement *el = nullptr;
    if (edit->GetTabContainer(subpos))
       el = (TGFrameElement *)edit->GetTabContainer(subpos)->GetList()->First();
    if (el && el->fFrame) {
       el->fFrame->Disconnect("ProcessedConfigure(Event_t*)");
-      el->fFrame->SetFrameElement(0);
+      el->fFrame->SetFrameElement(nullptr);
       if (el->fFrame->InheritsFrom("TGMainFrame")) {
          Bool_t sleep = (el->fFrame->InheritsFrom("TRootCanvas")) ? kTRUE : kFALSE;
          ((TGMainFrame *)el->fFrame)->CloseWindow();
@@ -1005,7 +1005,7 @@ void TRootBrowser::RemoveTab(Int_t pos, Int_t subpos)
       }
       else
          delete el->fFrame;
-      el->fFrame = 0;
+      el->fFrame = nullptr;
       if (el->fLayout && (el->fLayout != fgDefaultHints) &&
          (el->fLayout->References() > 0)) {
          el->fLayout->RemoveReference();
@@ -1042,7 +1042,7 @@ void TRootBrowser::SetTab(Int_t pos, Int_t subpos)
 
 void TRootBrowser::SetTabTitle(const char *title, Int_t pos, Int_t subpos)
 {
-   TBrowserPlugin *p = 0;
+   TBrowserPlugin *p = nullptr;
    TGTab *edit = GetTab(pos);
    if (!edit) return;
    if (subpos == -1)
@@ -1070,7 +1070,7 @@ void TRootBrowser::SetStatusText(const char* txt, Int_t col)
 
 void TRootBrowser::ShowMenu(TGCompositeFrame *menu)
 {
-   TGFrameElement *el = 0;
+   TGFrameElement *el = nullptr;
    // temporary solution until I find a proper way to handle
    // these bloody menus...
    fBindList->Delete();
@@ -1104,7 +1104,7 @@ void TRootBrowser::StartEmbedding(Int_t pos, Int_t subpos)
    fEditPos = pos;
    fEditSubPos = subpos;
 
-   if (fEditFrame == 0) {
+   if (fEditFrame == nullptr) {
       if (subpos == -1) {
          fCrTab[pos] = fNbTab[pos]++;
          fEditFrame  = fEditTab->AddTab(Form("Tab %d",fNbTab[pos]));
@@ -1133,7 +1133,7 @@ void TRootBrowser::StartEmbedding(Int_t pos, Int_t subpos)
 
 void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
 {
-   if (fEditFrame != 0) {
+   if (fEditFrame != nullptr) {
       fEditFrame->SetEditable(kFALSE);
       TGFrameElement *el = (TGFrameElement*) fEditFrame->GetList()->First();
       if (el && el->fFrame) {
@@ -1155,7 +1155,7 @@ void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
       SetTabTitle(name, fEditPos, fEditSubPos);
    }
    if (fEditTab) fEditTab->Selected(fEditSubPos);
-   fEditFrame = fEditTab = 0;
+   fEditFrame = fEditTab = nullptr;
    fEditPos = fEditSubPos = -1;
 }
 
@@ -1165,7 +1165,7 @@ void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
 
 void TRootBrowser::SwitchMenus(TGCompositeFrame  *from)
 {
-   if (from == 0)
+   if (from == nullptr)
       return;
    TGFrameElement *fe = (TGFrameElement *)from->GetList()->First();
    if (!fe) {
@@ -1174,7 +1174,7 @@ void TRootBrowser::SwitchMenus(TGCompositeFrame  *from)
       return;
    }
    TGCompositeFrame *embed = (TGCompositeFrame *)fe->fFrame;
-   TGFrameElement *el = 0;
+   TGFrameElement *el = nullptr;
    if (embed && embed->GetList()) {
       TIter next(embed->GetList());
       while ((el = (TGFrameElement *)next())) {

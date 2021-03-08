@@ -53,7 +53,7 @@ TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t width,
    };
 
    fPriority = 1;
-   fAttLine = 0;
+   fAttLine = nullptr;
 
    MakeTitle("Line");
 

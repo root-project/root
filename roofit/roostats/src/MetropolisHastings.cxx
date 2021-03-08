@@ -70,8 +70,8 @@ using namespace std;
 MetropolisHastings::MetropolisHastings()
 {
    // default constructor
-   fFunction = NULL;
-   fPropFunc = NULL;
+   fFunction = nullptr;
+   fPropFunc = nullptr;
    fNumIters = 0;
    fNumBurnInSteps = 0;
    fSign = kSignUnset;
@@ -99,13 +99,13 @@ MarkovChain* MetropolisHastings::ConstructChain()
    if (fParameters.getSize() == 0 || !fPropFunc || !fFunction) {
       coutE(Eval) << "Critical members unintialized: parameters, proposal " <<
                      " function, or (log) likelihood function" << endl;
-         return NULL;
+         return nullptr;
    }
    if (fSign == kSignUnset || fType == kTypeUnset) {
       coutE(Eval) << "Please set type and sign of your function using "
          << "MetropolisHastings::SetType() and MetropolisHastings::SetSign()" <<
          endl;
-      return NULL;
+      return nullptr;
    }
 
    if (fChainParams.getSize() == 0) fChainParams.add(fParameters);
@@ -177,7 +177,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    }
 
 
-   ooccoutP((TObject *)0, Generation) << "Metropolis-Hastings progress: ";
+   ooccoutP((TObject *)nullptr, Generation) << "Metropolis-Hastings progress: ";
 
    // do main loop
    for (i = 0; i < fNumIters; i++) {
@@ -185,7 +185,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
       hadEvalError = false;
 
       // print a dot every 1% of the chain construction
-      if (i % (fNumIters / 100) == 0) ooccoutP((TObject*)0, Generation) << ".";
+      if (i % (fNumIters / 100) == 0) ooccoutP((TObject*)nullptr, Generation) << ".";
 
       fPropFunc->Propose(xPrime, x);
 
@@ -243,7 +243,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    // make sure to add the last point
    if (weight != 0.0)
       chain->Add(x, CalcNLL(xL), (Double_t)weight);
-   ooccoutP((TObject *)0, Generation) << endl;
+   ooccoutP((TObject *)nullptr, Generation) << endl;
 
    RooMsgService::instance().setGlobalKillBelow(oldMsgLevel);
 

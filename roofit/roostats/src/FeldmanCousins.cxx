@@ -66,9 +66,9 @@ FeldmanCousins::FeldmanCousins(RooAbsData& data, ModelConfig& model) :
   fSize(0.05),
   fModel(model),
   fData(data),
-  fTestStatSampler(0),
-  fPointsToTest(0),
-  fPOIToTest(0),
+  fTestStatSampler(nullptr),
+  fPointsToTest(nullptr),
+  fPOIToTest(nullptr),
   fConfBelt(nullptr),
   fAdaptiveSampling(false),
   fAdditionalNToysFactor(1.),
@@ -162,7 +162,7 @@ void FeldmanCousins::CreateParameterPoints() const{
 
     // get dataset for POI scan
     //     RooDataHist* parameterScan = NULL;
-    RooAbsData* parameterScan = NULL;
+    RooAbsData* parameterScan = nullptr;
     if(fPOIToTest)
       parameterScan = fPOIToTest;
     else

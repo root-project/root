@@ -62,10 +62,10 @@ TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase * const meth
    fTuneParameters(tuneParameters),
    fFOMType(fomType),
    fOptimizationFitType(optimizationFitType),
-   fMvaSig(NULL),
-   fMvaBkg(NULL),
-   fMvaSigFineBin(NULL),
-   fMvaBkgFineBin(NULL),
+   fMvaSig(nullptr),
+   fMvaBkg(nullptr),
+   fMvaSigFineBin(nullptr),
+   fMvaBkgFineBin(nullptr),
    fNotDoneYet(kFALSE)
 {
    std::string name = "OptimizeConfigParameters_";
@@ -258,7 +258,7 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
 
    // create the fitter
 
-   FitterBase* fitter = NULL;
+   FitterBase* fitter = nullptr;
 
    if ( fOptimizationFitType == "Minuit"  ) {
       TString opt="FitStrategy=0:UseImprove=False:UseMinos=False:Tolerance=100";

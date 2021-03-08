@@ -65,7 +65,7 @@ TPieEditor::TPieEditor(const TGWindow *p, Int_t width,
                          Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fPie = 0;
+   fPie = nullptr;
    // TextEntry to change the title
    MakeTitle("Pie Chart");
 

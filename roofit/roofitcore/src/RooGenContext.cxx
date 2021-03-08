@@ -70,8 +70,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, const RooArgSet* auxProto,
 			     Bool_t verbose, const RooArgSet* forceDirect) :  
   RooAbsGenContext(model,vars,prototype,auxProto,verbose),
-  _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0),
-  _maxVar(0), _uniIter(0), _updateFMaxPerEvent(0) 
+  _cloneSet(nullptr), _pdfClone(nullptr), _acceptRejectFunc(nullptr), _generator(nullptr),
+  _maxVar(nullptr), _uniIter(nullptr), _updateFMaxPerEvent(0) 
 {
   cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName() 
 			<< " for generation of observable(s) " << vars ;
@@ -105,8 +105,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   _isValid= kTRUE;
   TIterator *iterator= vars.createIterator();
   TIterator *servers= _pdfClone->serverIterator();
-  const RooAbsArg *tmp = 0;
-  const RooAbsArg *arg = 0;
+  const RooAbsArg *tmp = nullptr;
+  const RooAbsArg *arg = nullptr;
   while((_isValid && (tmp= (const RooAbsArg*)iterator->Next()))) {
     // is this argument derived?
     if(!tmp->isFundamental()) {
@@ -116,7 +116,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     }
     // lookup this argument in the cloned set of PDF dependents
     arg= (const RooAbsArg*)_cloneSet->find(tmp->GetName());
-    if(0 == arg) {
+    if(nullptr == arg) {
       coutI(Generation) << "RooGenContext::ctor() WARNING model does not depend on \"" << tmp->GetName() 
 			  << "\" which will have uniform distribution" << endl;
       _uniformVars.add(*tmp);
@@ -126,10 +126,10 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       // does the model depend on this variable directly, ie, like "x" in
       // f(x) or f(x,g(x,y)) or even f(x,x) ?      
       const RooAbsArg *direct= arg ;
-      if (forceDirect==0 || !forceDirect->find(direct->GetName())) {
+      if (forceDirect==nullptr || !forceDirect->find(direct->GetName())) {
 	if (!_pdfClone->isDirectGenSafe(*arg)) {
 	  cxcoutD(Generation) << "RooGenContext::ctor() observable " << arg->GetName() << " has been determined to be unsafe for internal generation" << endl;
-	  direct=0 ;
+	  direct=nullptr ;
 	}
       }
       
@@ -227,7 +227,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList,&vars);
       cxcoutI(Generation) << "RooGenContext::ctor() accept/reject sampling function is " << _acceptRejectFunc->GetName() << endl ;
     } else {
-      _acceptRejectFunc = 0 ;
+      _acceptRejectFunc = nullptr ;
     }
 
   } else {
@@ -301,7 +301,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     cxcoutD(Generation) << "RooGenContext::ctor() creating MC sampling generator " << _generator->IsA()->GetName() << "  from function for observables " << _otherVars << endl ;
     //_generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,RooNumGenConfig::defaultConfig(),_verbose,_maxVar);
   } else {
-    _generator = 0 ;
+    _generator = nullptr ;
   }
 
   delete protoDeps ;
@@ -398,7 +398,7 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 			  << resampleRatio << " due to increased maximum weight" << endl ; 
 	resampleData(resampleRatio) ;
       }
-      if(0 == subEvent) {
+      if(nullptr == subEvent) {
 	coutE(Generation) << "RooGenContext::generateEvent ERROR accept/reject generator failed" << endl ;
 	return;
       }

@@ -55,7 +55,7 @@ TGHtmlUri::TGHtmlUri(const char *zUri)
 {
    int n;
 
-   fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = (char *) 0;
+   fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = (char *) nullptr;
 
    if (zUri && *zUri) {
       while (isspace(*zUri)) ++zUri;
@@ -91,7 +91,7 @@ TGHtmlUri::TGHtmlUri(const char *zUri)
 
 TGHtmlUri::TGHtmlUri(const TGHtmlUri *uri)
 {
-   fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = (char *) 0;
+   fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = (char *) nullptr;
 
    if (uri) {
       if (uri->fZScheme)    fZScheme    = StrDup(uri->fZScheme);
@@ -212,7 +212,7 @@ char *TGHtmlUri::BuildUri()
    if (fZQuery)     n += strlen(fZQuery) + 1;
    if (fZFragment)  n += strlen(fZFragment) + 1;
    z = new char[n];
-   if (z == 0) return 0;
+   if (z == nullptr) return nullptr;
    n = 0;
    if (fZScheme) {
       // coverity[secure_coding]
@@ -272,9 +272,9 @@ static char *StrNDup(const char *z, int n)
 
 static void ReplaceStr(char **pzDest, const char *zSrc)
 {
-   if (*pzDest != 0) delete[] *pzDest;
-   if (zSrc == 0) {
-      *pzDest = 0;
+   if (*pzDest != nullptr) delete[] *pzDest;
+   if (zSrc == nullptr) {
+      *pzDest = nullptr;
    } else {
       *pzDest = StrNDup(zSrc, -1);
    }
@@ -306,10 +306,10 @@ static char *Trim(char *z)
 
 char *TGHtml::ResolveUri(const char *zUri)
 {
-   char *result = 0;
+   char *result = nullptr;
    TGHtmlUri *base, *term;
 
-   if (zUri == 0 || *zUri == 0) return 0;
+   if (zUri == nullptr || *zUri == 0) return nullptr;
 
    if (fZBaseHref && *fZBaseHref) {
       base = new TGHtmlUri(fZBaseHref);
@@ -319,10 +319,10 @@ char *TGHtml::ResolveUri(const char *zUri)
 
    term = new TGHtmlUri(zUri);
 
-   if (term->fZScheme == 0 &&
-       term->fZAuthority == 0 &&
-       term->fZPath == 0 &&
-       term->fZQuery == 0 &&
+   if (term->fZScheme == nullptr &&
+       term->fZAuthority == nullptr &&
+       term->fZPath == nullptr &&
+       term->fZQuery == nullptr &&
        term->fZFragment) {
       ReplaceStr(&base->fZFragment, term->fZFragment);
    } else if (term->fZScheme) {
@@ -335,7 +335,7 @@ char *TGHtml::ResolveUri(const char *zUri)
       ReplaceStr(&base->fZPath, term->fZPath);
       ReplaceStr(&base->fZQuery, term->fZQuery);
       ReplaceStr(&base->fZFragment, term->fZFragment);
-   } else if (term->fZPath && (term->fZPath[0] == '/' || base->fZPath == 0)) {
+   } else if (term->fZPath && (term->fZPath[0] == '/' || base->fZPath == nullptr)) {
       ReplaceStr(&base->fZPath, term->fZPath);
       ReplaceStr(&base->fZQuery, term->fZQuery);
       ReplaceStr(&base->fZFragment, term->fZFragment);

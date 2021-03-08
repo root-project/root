@@ -174,10 +174,10 @@ enum ETH1Wid{
 TH1Editor::TH1Editor(const TGWindow *p,  Int_t width,
                      Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back),
-     fHist(0),
+     fHist(nullptr),
      fSameOpt(kFALSE),
-     fBin(0),
-     fBinHist(0)
+     fBin(nullptr),
+     fBinHist(nullptr)
 {
    // TextEntry for changing the title of the histogram
    MakeTitle("Title");
@@ -521,7 +521,7 @@ void TH1Editor::CreateBinTab()
    // to avoid calling SetDrawoption after every change
    fMake=kTRUE;
 
-   fBinHist = 0; // used to save a copy of the histogram
+   fBinHist = nullptr; // used to save a copy of the histogram
 
    // (when not drawn from an ntuple)
    fBinOffsetSld->SetRange(0,100);
@@ -547,7 +547,7 @@ TH1Editor::~TH1Editor()
    delete fDim0lh;
 
    if (fBinHist) delete fBinHist;
-   fBinHist = 0;
+   fBinHist = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -611,7 +611,7 @@ void TH1Editor::ConnectSignals2Slots()
 
 Bool_t TH1Editor::AcceptModel(TObject* obj)
 {
-   if (obj == 0 || !obj->InheritsFrom(TH1::Class()) ||
+   if (obj == nullptr || !obj->InheritsFrom(TH1::Class()) ||
        ((TH1*)obj)->GetDimension()!=1 ||
        ((TH1*)obj)->GetEntries() == 0
        /*|| obj->InheritsFrom("TH2")  || obj->InheritsFrom("TProfile")*/) {
@@ -637,7 +637,7 @@ void TH1Editor::SetModel(TObject* obj)
          fHist->Add(fBinHist);
       }
       // delete in anycase fBinHist also when fHist is zero (i.e when it has been deleted)
-      delete fBinHist; fBinHist = 0;
+      delete fBinHist; fBinHist = nullptr;
    }
 
    fHist = (TH1*)obj;
@@ -1711,7 +1711,7 @@ void TH1Editor::DoBinReleased()
       if (!fBinHist) {
          fBinHist = (TH1*)fHist->Clone("BinHist");
          // we will manage this histogram
-         fBinHist->SetDirectory(0);
+         fBinHist->SetDirectory(nullptr);
       }
       Int_t nx = fBinHist->GetXaxis()->GetNbins();
       Int_t numx = fBinSlider->GetPosition();
@@ -1771,7 +1771,7 @@ void TH1Editor::DoBinMoved(Int_t numx)
       }
       fBinHist = (TH1*)fHist->Clone("BinHist");
       // the TH1Editor class  manage this histogram
-      fBinHist->SetDirectory(0);
+      fBinHist->SetDirectory(nullptr);
       delete [] divx;
    }
    // if the slider already has been moved and the clone is saved
@@ -1826,7 +1826,7 @@ void TH1Editor::DoBinPressed()
    if (d[0]==2 && !fBinHist) {
       new TGMsgBox(fClient->GetDefaultRoot(), this->GetMainFrame(),
                    "TH1 Editor", "It is not possible to rebin the histogram",
-                   kMBIconExclamation, kMBOk, 0, kVerticalFrame);
+                   kMBIconExclamation, kMBOk, nullptr, kVerticalFrame);
       gVirtualX->GrabPointer(fBinSlider->GetId(),0,0,0);
    }
    delete [] d;
@@ -2159,7 +2159,7 @@ void TH1Editor::DoApply()
    if (ret==1) {
       if (fBinHist) {
          delete fBinHist;
-         fBinHist = 0;
+         fBinHist = nullptr;
       }
       Int_t nx = fHist->GetXaxis()->GetNbins();
       Int_t *div = Dividers(nx);
@@ -2193,7 +2193,7 @@ void TH1Editor::DoCancel()
       fHist->GetXaxis()->SetRange(fBinHist->GetXaxis()->GetFirst(),
                                   fBinHist->GetXaxis()->GetLast());
       delete fBinHist;
-      fBinHist = 0;
+      fBinHist = nullptr;
       fCancel->SetState(kButtonDisabled);
       fApply->SetState(kButtonDisabled);
       Int_t* divx = Dividers(fHist->GetXaxis()->GetNbins());
@@ -2474,6 +2474,6 @@ Int_t* TH1Editor::Dividers(Int_t n)
 void TH1Editor::RecursiveRemove(TObject* obj)
 {
    if (obj == fHist) {
-      fHist = 0;
+      fHist = nullptr;
    }
 }

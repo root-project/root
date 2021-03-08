@@ -160,7 +160,7 @@ namespace cling {
     //
     //  Note: To switch back to the main file we must consume an eof token.
     //
-    PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
+    PP.EnterSourceFile(FID, /*DirLookup*/nullptr, NewLoc);
     PP.Lex(const_cast<Token&>(P.getCurToken()));
   }
 
@@ -195,10 +195,10 @@ namespace cling {
     PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
 
     if (!complete)
-      return 0;
+      return nullptr;
     if (const TagDecl *result = dyn_cast<TagDecl>(complete))
       return result->getDefinition();
-    return 0;
+    return nullptr;
   }
 
   ///\brief Look for a tag decl based on its name
@@ -294,7 +294,7 @@ namespace cling {
           }
           sofar = dyn_cast_or_null<DeclContext>(next);
         } else {
-          sofar = 0;
+          sofar = nullptr;
         }
         if (!sofar) {
           // We are looking into something that is not a decl context,
@@ -501,12 +501,12 @@ namespace cling {
     //
     clang::ParsedAttributes Attrs(P.getAttrFactory());
     // FIXME: All arguments to ParseTypeName are the default arguments. Remove.
-    TypeResult Res(P.ParseTypeName(0, DeclaratorContext::TypeNameContext,
-                                   clang::AS_none, 0, &Attrs));
+    TypeResult Res(P.ParseTypeName(nullptr, DeclaratorContext::TypeNameContext,
+                                   clang::AS_none, nullptr, &Attrs));
     if (Res.isUsable()) {
       // Accept it only if the whole name was parsed.
       if (P.NextToken().getKind() == clang::tok::eof) {
-        TypeSourceInfo* TSI = 0;
+        TypeSourceInfo* TSI = nullptr;
         TheQT = clang::Sema::GetTypeFromParser(Res.get(), &TSI);
       }
     }
@@ -608,11 +608,11 @@ namespace cling {
     //
     //  Our return values.
     //
-    const Type* TheType = 0;
+    const Type* TheType = nullptr;
     const Type** setResultType = &TheType;
     if (resultType)
       setResultType = resultType;
-    *setResultType = 0;
+    *setResultType = nullptr;
 
     //
     //  Prevent failing on an assert in TryAnnotateCXXScopeToken.
@@ -623,17 +623,17 @@ namespace cling {
              && P.NextToken().is(clang::tok::coloncolon))
         && !P.getCurToken().is(clang::tok::kw_decltype)) {
       // error path
-      return 0;
+      return nullptr;
     }
     //
     //  Try parsing the name as a nested-name-specifier.
     //
     if (P.TryAnnotateCXXScopeToken(false)) {
       // error path
-      return 0;
+      return nullptr;
     }
 
-    Decl* TheDecl = 0;
+    Decl* TheDecl = nullptr;
 
     if (P.getCurToken().getKind() == tok::annot_cxxscope) {
       CXXScopeSpec SS;
@@ -712,14 +712,14 @@ namespace cling {
                           // if the decl is invalid try to clean up
                           UnloadDecl(&S, TheDecl);
                           *setResultType = nullptr;
-                          return 0;
+                          return nullptr;
                         }
                       } else {
                         // NOTE: We cannot instantiate the scope: not a valid decl.
                         // Need to rollback transaction.
                         UnloadDecl(&S, TD);
                         *setResultType = nullptr;
-                        return 0;
+                        return nullptr;
                       }
                     }
                   }
@@ -733,7 +733,7 @@ namespace cling {
               break;
           case NestedNameSpecifier::Super:
             // Microsoft's __super::
-            return 0;
+            return nullptr;
           }
           return TheDecl;
         }
@@ -757,7 +757,7 @@ namespace cling {
                                                    SrcMgr::C_User,
                                                    /*LoadedID*/0,
                                                    /*LoadedOffset*/0, NewLoc);
-    PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
+    PP.EnterSourceFile(FID, /*DirLookup*/nullptr, NewLoc);
     PP.Lex(const_cast<clang::Token&>(P.getCurToken()));
 
     //
@@ -765,14 +765,14 @@ namespace cling {
     //
     if (P.TryAnnotateTypeOrScopeToken()) {
       // error path
-      return 0;
+      return nullptr;
     }
     if (P.getCurToken().getKind() == tok::annot_typename) {
       ParsedType T = P.getTypeAnnotation(const_cast<Token&>(P.getCurToken()));
       // Only accept the parse if we consumed all of the name.
       if (P.NextToken().getKind() == clang::tok::eof)
         if (!T.get().isNull()) {
-          TypeSourceInfo *TSI = 0;
+          TypeSourceInfo *TSI = nullptr;
           clang::QualType QT = clang::Sema::GetTypeFromParser(T, &TSI);
           if (const TagType* TT = QT->getAs<TagType>()) {
             TheDecl = TT->getDecl()->getDefinition();
@@ -789,7 +789,7 @@ namespace cling {
     //  Find a class template decl given its name.
     //
 
-    if (Name.empty()) return 0;
+    if (Name.empty()) return nullptr;
 
     // Humm ... this seems to do the trick ... or does it? or is there a better way?
 
@@ -811,7 +811,7 @@ namespace cling {
              && P.NextToken().is(clang::tok::coloncolon))
         && !P.getCurToken().is(clang::tok::kw_decltype)) {
       // error path
-      return 0;
+      return nullptr;
     }
 
     //
@@ -819,9 +819,9 @@ namespace cling {
     //
     if (P.TryAnnotateTypeOrScopeToken()) {
       // error path
-      return 0;
+      return nullptr;
     }
-    DeclContext *where = 0;
+    DeclContext *where = nullptr;
     if (P.getCurToken().getKind() == tok::annot_cxxscope) {
       CXXScopeSpec SS;
       S.RestoreNestedNameSpecifierAnnotation(P.getCurToken().getAnnotationValue(),
@@ -830,10 +830,10 @@ namespace cling {
       if (SS.isValid()) {
         P.ConsumeAnyToken();
         if (!P.getCurToken().is(clang::tok::identifier)) {
-          return 0;
+          return nullptr;
         }
         NestedNameSpecifier *nested = SS.getScopeRep();
-        if (!nested) return 0;
+        if (!nested) return nullptr;
         switch (nested->getKind()) {
         case NestedNameSpecifier::Global:
           where = Context.getTranslationUnitDecl();
@@ -843,18 +843,18 @@ namespace cling {
           break;
         case NestedNameSpecifier::NamespaceAlias:
         case NestedNameSpecifier::Identifier:
-           return 0;
+           return nullptr;
         case NestedNameSpecifier::TypeSpec:
         case NestedNameSpecifier::TypeSpecWithTemplate:
           {
             const Type *ntype = nested->getAsType();
             where = ntype->getAsCXXRecordDecl();
-            if (!where) return 0;
+            if (!where) return nullptr;
             break;
           }
         case NestedNameSpecifier::Super:
           // Microsoft's __super::
-          return 0;
+          return nullptr;
         };
       }
     } else if (P.getCurToken().is(clang::tok::annot_typename)) {
@@ -895,7 +895,7 @@ namespace cling {
           return theDecl;
       }
     }
-    return 0;
+    return nullptr;
   }
 
   const ValueDecl* LookupHelper::findDataMember(const clang::Decl* scopeDecl,
@@ -921,7 +921,7 @@ namespace cling {
         return result;
     }
 
-    return 0;
+    return nullptr;
   }
 
   static
@@ -934,33 +934,33 @@ namespace cling {
     DeclContext* foundDC = dyn_cast<DeclContext>(const_cast<Decl*>(scopeDecl));
     if (foundDC->isDependentContext()) {
       // Passed decl is a template, we cannot use it.
-      return 0;
+      return nullptr;
     }
     if (scopeDecl->isInvalidDecl()) {
       // if the decl is invalid try to clean up
       UnloadDecl(&S, const_cast<Decl*>(scopeDecl));
-      return 0;
+      return nullptr;
     }
 
     //
     //  Convert the passed decl into a nested name specifier,
     //  a scope spec, and a decl context.
     //
-    NestedNameSpecifier* classNNS = 0;
+    NestedNameSpecifier* classNNS = nullptr;
     if (const NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(scopeDecl)) {
-      classNNS = NestedNameSpecifier::Create(Context, 0,
+      classNNS = NestedNameSpecifier::Create(Context, nullptr,
                                              const_cast<NamespaceDecl*>(NSD));
       SS.MakeTrivial(Context, classNNS, scopeDecl->getSourceRange());
       return foundDC;
     }
     else if (const RecordDecl* RD = dyn_cast<RecordDecl>(scopeDecl)) {
       const Type* T = Context.getRecordType(RD).getTypePtr();
-      classNNS = NestedNameSpecifier::Create(Context, 0, false, T);
+      classNNS = NestedNameSpecifier::Create(Context, nullptr, false, T);
       // We pass a 'random' but valid source range.
       SS.MakeTrivial(Context, classNNS, scopeDecl->getSourceRange());
       if (S.RequireCompleteDeclContext(SS, foundDC)) {
         // Forward decl or instantiation failure, we cannot use it.
-        return 0;
+        return nullptr;
       }
       return foundDC;
     }
@@ -970,7 +970,7 @@ namespace cling {
       return foundDC;
     }
     // Not a namespace or class, we cannot use it.
-    return 0;
+    return nullptr;
   }
 
   static
@@ -982,12 +982,12 @@ namespace cling {
     DeclContext* foundDC = dyn_cast<DeclContext>(const_cast<Decl*>(scopeDecl));
     if (foundDC->isDependentContext()) {
       // Passed decl is a template, we cannot use it.
-      return 0;
+      return nullptr;
     }
     if (scopeDecl->isInvalidDecl()) {
       // if the decl is invalid try to clean up
       UnloadDecl(&S, const_cast<Decl*>(scopeDecl));
-      return 0;
+      return nullptr;
     }
     //
     //  Convert the passed decl into a nested name specifier,
@@ -1003,14 +1003,14 @@ namespace cling {
       } else {
         //const Type* T = Context.getRecordType(RD).getTypePtr();
         const Type* T = Context.getTypeDeclType(RD).getTypePtr();
-        NestedNameSpecifier* classNNS = NestedNameSpecifier::Create(Context, 0, false, T);
+        NestedNameSpecifier* classNNS = NestedNameSpecifier::Create(Context, nullptr, false, T);
         // We pass a 'random' but valid source range.
         CXXScopeSpec SS;
         SS.MakeTrivial(Context, classNNS, scopeDecl->getSourceRange());
 
         if (S.RequireCompleteDeclContext(SS, foundDC)) {
           // Forward decl or instantiation failure, we cannot use it.
-          return 0;
+          return nullptr;
         }
       }
     }
@@ -1019,7 +1019,7 @@ namespace cling {
     }
     else {
       // Not a namespace or class, we cannot use it.
-      return 0;
+      return nullptr;
     }
 
     return foundDC;
@@ -1083,7 +1083,7 @@ namespace cling {
     //
     //  Our return value.
     //
-    FunctionDecl* TheDecl = 0;
+    FunctionDecl* TheDecl = nullptr;
 
     //
     //  If we are looking up a member function, construct
@@ -1198,7 +1198,7 @@ namespace cling {
           if (TheDecl->isInvalidDecl()) {
             // if the decl is invalid try to clean up
             UnloadDecl(&S, const_cast<FunctionDecl*>(TheDecl));
-            return 0;
+            return nullptr;
           }
        }
     }
@@ -1226,18 +1226,18 @@ namespace cling {
 
     if (TheDecl) {
       if ( IsOverload(Context, FuncTemplateArgs, GivenArgs, TheDecl) ) {
-        return 0;
+        return nullptr;
       } else {
         // Double check const-ness.
         if (const clang::CXXMethodDecl *md =
             llvm::dyn_cast<clang::CXXMethodDecl>(TheDecl)) {
           if (md->getMethodQualifiers().hasConst()) {
             if (!objectIsConst) {
-              TheDecl = 0;
+              TheDecl = nullptr;
             }
           } else { // FIXME: The else should be attached to the if hasConst stmt
             if (objectIsConst) {
-              TheDecl = 0;
+              TheDecl = nullptr;
             }
           }
         }
@@ -1362,7 +1362,7 @@ namespace cling {
                                                      SrcMgr::C_User,
                                                      /*LoadedID*/0,
                                                      /*LoadedOffset*/0, NewLoc);
-      PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
+      PP.EnterSourceFile(FID, /*DirLookup*/nullptr, NewLoc);
       PP.Lex(const_cast<clang::Token&>(P.getCurToken()));
     }
 
@@ -1663,7 +1663,7 @@ namespace cling {
           // Bad parse, done.
           return false;
         }
-        TypeSourceInfo *TSI = 0;
+        TypeSourceInfo *TSI = nullptr;
         clang::QualType QT = clang::Sema::GetTypeFromParser(Res.get(), &TSI);
         QT = QT.getCanonicalType();
         {
@@ -1721,7 +1721,7 @@ namespace cling {
     //  Check for lookup failure.
     //
     if (Result.empty())
-      return 0;
+      return nullptr;
     if (Result.isSingleResult())
       return dyn_cast<FunctionTemplateDecl>(Result.getFoundDecl());
     else {
@@ -1733,7 +1733,7 @@ namespace cling {
           return MethodTmpl;
         }
       }
-      return 0;
+      return nullptr;
     }
   }
 
@@ -1766,7 +1766,7 @@ namespace cling {
     //  Check for lookup failure.
     //
     if (Result.empty())
-      return 0;
+      return nullptr;
     if (Result.isSingleResult())
       return dyn_cast<FunctionDecl>(Result.getFoundDecl());
     else {
@@ -1785,7 +1785,7 @@ namespace cling {
         // pick a specialization that result match the given arguments
         SourceLocation loc;
         sema::TemplateDeductionInfo Info(loc);
-        FunctionDecl *fdecl = 0;
+        FunctionDecl *fdecl = nullptr;
         Sema::TemplateDeductionResult TemplDedResult
           = S.DeduceTemplateArguments(MethodTmpl,
                     const_cast<TemplateArgumentListInfo*>(ExplicitTemplateArgs),
@@ -1793,7 +1793,7 @@ namespace cling {
                                       Info);
         if (TemplDedResult != Sema::TDK_Success) {
           // Deduction failure.
-          return 0;
+          return nullptr;
         } else {
           // Instantiate the function if needed.
           if (!fdecl->isDefined())
@@ -1802,12 +1802,12 @@ namespace cling {
           if (fdecl->isInvalidDecl()) {
             // if the decl is invalid try to clean up
             UnloadDecl(&S, fdecl);
-            return 0;
+            return nullptr;
           }
           return fdecl;
         }
       }
-      return 0;
+      return nullptr;
     }
   }
 
@@ -1947,7 +1947,7 @@ namespace cling {
               proto += ',';
             }
             stdstrstream tmp;
-            expr->printPretty(tmp, /*PrinterHelper=*/0, Policy,
+            expr->printPretty(tmp, /*PrinterHelper=*/nullptr, Policy,
                               /*Indentation=*/0);
             proto += tmp.str();
           }

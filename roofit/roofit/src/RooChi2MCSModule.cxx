@@ -46,7 +46,7 @@ ClassImp(RooChi2MCSModule);
 
 RooChi2MCSModule::RooChi2MCSModule() :
   RooAbsMCStudyModule("RooChi2MCSModule","RooChi2Module"),
-  _data(0), _chi2(0), _ndof(0), _chi2red(0), _prob(0)
+  _data(nullptr), _chi2(nullptr), _ndof(nullptr), _chi2red(nullptr), _prob(nullptr)
 
 {
   // Constructor of module
@@ -57,7 +57,7 @@ RooChi2MCSModule::RooChi2MCSModule() :
 
 RooChi2MCSModule::RooChi2MCSModule(const RooChi2MCSModule& other) :
   RooAbsMCStudyModule(other),
-  _data(0), _chi2(0), _ndof(0), _chi2red(0), _prob(0)
+  _data(nullptr), _chi2(nullptr), _ndof(nullptr), _chi2red(nullptr), _prob(nullptr)
 {
 }
 

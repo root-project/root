@@ -64,7 +64,7 @@ static struct sockaddr_in gTcpSrvAddr;
 static struct sockaddr_in gTcpCliAddr;
 
 static int  gSockFd             = -1;
-static SigPipe_t   gSigPipeHook = 0;
+static SigPipe_t   gSigPipeHook = nullptr;
 extern int  gParallel;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,7 +297,7 @@ int NetRecvAllocate(void *&buf, int &len, EMessageTypes &kind)
       buf = new char* [len];
       return NetRecvRaw(buf, len);
    }
-   buf = 0;
+   buf = nullptr;
    return 0;
 }
 
@@ -309,7 +309,7 @@ int NetRecv(char *msg, int len, EMessageTypes &kind)
 {
    int   mlen;
 
-   void *tmpbuf = 0;
+   void *tmpbuf = nullptr;
    if (NetRecvAllocate(tmpbuf, mlen, kind) < 0)
       return -1;
    char *buf = static_cast<char *>(tmpbuf);
@@ -569,7 +569,7 @@ void NetSetOptions(EService serv, int sock, int tcpwindowsize)
       if (!setsockopt(sock,SOL_SOCKET,SO_KEEPALIVE,(char *)&val,sizeof(val))) {
          if (gDebug > 0)
             ErrorInfo("NetSetOptions: set SO_KEEPALIVE");
-         if (gSigPipeHook != 0)
+         if (gSigPipeHook != nullptr)
             signal(SIGPIPE, (*gSigPipeHook));   // handle SO_KEEPALIVE failure
       }
    }

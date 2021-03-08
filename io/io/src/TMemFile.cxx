@@ -346,8 +346,8 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    fProcessIDs   = nullptr;
    fNProcessIDs  = 0;
    fOffset       = 0;
-   fCacheRead    = 0;
-   fCacheWrite   = 0;
+   fCacheRead    = nullptr;
+   fCacheWrite   = nullptr;
    fReadCalls    = 0;
    if (fFree) {
       fFree->Delete();
@@ -604,7 +604,7 @@ Int_t TMemFile::SysWriteImpl(Int_t /* fd */, const void *buf, Long64_t len)
       return 0;
    }
 
-   if (fBlockList.fBuffer == 0) {
+   if (fBlockList.fBuffer == nullptr) {
       errno = EBADF;
       gSystem->SetErrorStr("The memory file is not open.");
       return 0;

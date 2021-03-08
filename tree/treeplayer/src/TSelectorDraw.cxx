@@ -46,8 +46,8 @@ const Int_t kCustomHistogram = BIT(17);
 
 TSelectorDraw::TSelectorDraw()
 {
-   fTree           = 0;
-   fW              = 0;
+   fTree           = nullptr;
+   fW              = nullptr;
    fValSize        = 4;
    fVal            = new Double_t*[fValSize];
    fVmin           = new Double_t[fValSize];
@@ -56,20 +56,20 @@ TSelectorDraw::TSelectorDraw()
    fVarMultiple    = new Bool_t[fValSize];
    fVar            = new TTreeFormula*[fValSize];
    for (Int_t i = 0; i < fValSize; ++i) {
-      fVal[i] = 0;
-      fVar[i] = 0;
+      fVal[i] = nullptr;
+      fVar[i] = nullptr;
    }
-   fManager        = 0;
+   fManager        = nullptr;
    fMultiplicity   = 0;
-   fSelect         = 0;
+   fSelect         = nullptr;
    fSelectedRows   = 0;
    fDraw           = 0;
-   fObject         = 0;
-   fOldHistogram   = 0;
+   fObject         = nullptr;
+   fOldHistogram   = nullptr;
    fObjEval        = kFALSE;
    fSelectMultiple = kFALSE;
    fCleanElist     = kFALSE;
-   fTreeElist      = 0;
+   fTreeElist      = nullptr;
    fAction         = 0;
    fNfill          = 0;
    fDimension      = 0;
@@ -77,7 +77,7 @@ TSelectorDraw::TSelectorDraw()
    fForceRead      = 0;
    fWeight         = 1;
    fCurrentSubEntry = -1;
-   fTreeElistArray  = 0;
+   fTreeElistArray  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,9 +124,9 @@ void TSelectorDraw::Begin(TTree *tree)
    Int_t i, j, hkeep;
    opt = option;
    opt.ToLower();
-   fOldHistogram = 0;
-   TEntryList *enlist = 0;
-   TEventList *evlist = 0;
+   fOldHistogram = nullptr;
+   TEntryList *enlist = nullptr;
+   TEventList *evlist = nullptr;
    TString htitle;
    Bool_t profile = kFALSE;
    Bool_t optSame = kFALSE;
@@ -175,7 +175,7 @@ void TSelectorDraw::Begin(TTree *tree)
    fCleanElist = kFALSE;
    fTreeElist = inElist;
 
-   fTreeElistArray = inElist ? dynamic_cast<TEntryListArray*>(fTreeElist) : 0;
+   fTreeElistArray = inElist ? dynamic_cast<TEntryListArray*>(fTreeElist) : nullptr;
 
 
    if (inElist && inElist->GetReapplyCut()) {
@@ -198,7 +198,7 @@ void TSelectorDraw::Begin(TTree *tree)
    Int_t nbinsx = 0, nbinsy = 0, nbinsz = 0;
    Double_t xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0;
 
-   fObject  = 0;
+   fObject  = nullptr;
    char *hname = nullptr;
    TString hnamealloc;
    i = 0;
@@ -255,7 +255,7 @@ void TSelectorDraw::Begin(TTree *tree)
 
          pstart = strchr(hname, '(');
          pend =  strchr(hname, ')');
-         if (pstart != 0) {   // found the bracket
+         if (pstart != nullptr) {   // found the bracket
 
             mustdelete = 1;
 
@@ -266,7 +266,7 @@ void TSelectorDraw::Begin(TTree *tree)
                ncomma = 0;
                cdummy = pstart;
                cdummy = strchr(&cdummy[1], ',');
-               while (cdummy != 0) {
+               while (cdummy != nullptr) {
                   cdummy = strchr(&cdummy[1], ',');
                   ncomma++;
                }
@@ -371,7 +371,7 @@ void TSelectorDraw::Begin(TTree *tree)
          }
 
          TObject *oldObject = gDirectory->Get(hname);  // if hname contains '(...)' the return values is NULL, which is what we want
-         fOldHistogram = oldObject ? dynamic_cast<TH1*>(oldObject) : 0;
+         fOldHistogram = oldObject ? dynamic_cast<TH1*>(oldObject) : nullptr;
 
          if (!fOldHistogram && oldObject && !oldObject->InheritsFrom(TH1::Class())) {
             abrt.Form("An object of type '%s' has the same name as the requested histo (%s)", oldObject->IsA()->GetName(), hname);
@@ -385,7 +385,7 @@ void TSelectorDraw::Begin(TTree *tree)
             if (gDebug) {
                Warning("Begin", "Deleting old histogram, since (possibly new) limits and binnings have been given");
             }
-            delete fOldHistogram; fOldHistogram=0;
+            delete fOldHistogram; fOldHistogram=nullptr;
          }
 
       } else {
@@ -393,7 +393,7 @@ void TSelectorDraw::Begin(TTree *tree)
          TObject *oldObject = gDirectory->Get(hname);
          if (optEnlist) {
             //write into a TEntryList
-            enlist = oldObject ? dynamic_cast<TEntryList*>(oldObject) : 0;
+            enlist = oldObject ? dynamic_cast<TEntryList*>(oldObject) : nullptr;
 
             if (!enlist && oldObject) {
                abrt.Form("An object of type '%s' has the same name as the requested event list (%s)",
@@ -432,7 +432,7 @@ void TSelectorDraw::Begin(TTree *tree)
             }
          } else {
             //write into a TEventList
-            evlist = oldObject ? dynamic_cast<TEventList*>(oldObject) : 0;
+            evlist = oldObject ? dynamic_cast<TEventList*>(oldObject) : nullptr;
 
             if (!evlist && oldObject) {
                abrt.Form("An object of type '%s' has the same name as the requested event list (%s)",
@@ -472,7 +472,7 @@ void TSelectorDraw::Begin(TTree *tree)
       strlcpy(varexp, varexp0, varexpLen);
       if (gDirectory) {
          fOldHistogram = (TH1*)gDirectory->Get(hname);
-         if (fOldHistogram) { fOldHistogram->Delete(); fOldHistogram = 0;}
+         if (fOldHistogram) { fOldHistogram->Delete(); fOldHistogram = nullptr;}
       }
    }
 
@@ -523,7 +523,7 @@ void TSelectorDraw::Begin(TTree *tree)
       if (mustdelete) {
          Warning("Begin", "Deleting old histogram with different dimensions");
          delete fOldHistogram;
-         fOldHistogram = 0;
+         fOldHistogram = nullptr;
       }
    }
 
@@ -547,7 +547,7 @@ void TSelectorDraw::Begin(TTree *tree)
          if (gPad && optSame) {
             TListIter np(gPad->GetListOfPrimitives());
             TObject *op;
-            TH1 *oldhtemp = 0;
+            TH1 *oldhtemp = nullptr;
             while ((op = np()) && !oldhtemp) {
                if (op->InheritsFrom(TH1::Class())) oldhtemp = (TH1 *)op;
             }
@@ -588,7 +588,7 @@ void TSelectorDraw::Begin(TTree *tree)
          if (!hkeep) {
             hist->GetXaxis()->SetTitle(fVar[0]->GetTitle());
             hist->SetBit(kCanDelete);
-            if (!opt.Contains("goff")) hist->SetDirectory(0);
+            if (!opt.Contains("goff")) hist->SetDirectory(nullptr);
          }
          if (opt.Length() && opt.Contains("e")) hist->Sumw2();
       }
@@ -661,7 +661,7 @@ void TSelectorDraw::Begin(TTree *tree)
             }
             if (!hkeep) {
                hp->SetBit(kCanDelete);
-               if (!opt.Contains("goff")) hp->SetDirectory(0);
+               if (!opt.Contains("goff")) hp->SetDirectory(nullptr);
             }
             hp->SetLineColor(fTree->GetLineColor());
             hp->SetLineWidth(fTree->GetLineWidth());
@@ -701,7 +701,7 @@ void TSelectorDraw::Begin(TTree *tree)
                h2->GetYaxis()->SetTitle(fVar[0]->GetTitle());
                h2->SetBit(TH1::kNoStats);
                h2->SetBit(kCanDelete);
-               if (!opt.Contains("goff")) h2->SetDirectory(0);
+               if (!opt.Contains("goff")) h2->SetDirectory(nullptr);
             }
          }
          fVar[0]->SetAxis(h2->GetYaxis());
@@ -803,7 +803,7 @@ void TSelectorDraw::Begin(TTree *tree)
             }
             if (!hkeep) {
                hp->SetBit(kCanDelete);
-               if (!opt.Contains("goff")) hp->SetDirectory(0);
+               if (!opt.Contains("goff")) hp->SetDirectory(nullptr);
             }
             hp->SetLineColor(fTree->GetLineColor());
             hp->SetLineWidth(fTree->GetLineWidth());
@@ -839,7 +839,7 @@ void TSelectorDraw::Begin(TTree *tree)
                h2->GetZaxis()->SetTitle(fVar[2]->GetTitle());
                h2->SetBit(TH1::kNoStats);
                h2->SetBit(kCanDelete);
-               if (!opt.Contains("goff")) h2->SetDirectory(0);
+               if (!opt.Contains("goff")) h2->SetDirectory(nullptr);
             }
          }
          fVar[0]->SetAxis(h2->GetYaxis());
@@ -877,7 +877,7 @@ void TSelectorDraw::Begin(TTree *tree)
                h3->GetZaxis()->SetTitle(fVar[0]->GetTitle());
                h3->SetBit(kCanDelete);
                h3->SetBit(TH1::kNoStats);
-               if (!opt.Contains("goff")) h3->SetDirectory(0);
+               if (!opt.Contains("goff")) h3->SetDirectory(nullptr);
             }
          }
          fVar[0]->SetAxis(h3->GetZaxis());
@@ -943,10 +943,10 @@ void TSelectorDraw::ClearFormula()
    ResetBit(kWarn);
    for (Int_t i = 0; i < fValSize; ++i) {
       delete fVar[i];
-      fVar[i] = 0;
+      fVar[i] = nullptr;
    }
-   delete fSelect; fSelect = 0;
-   fManager = 0;
+   delete fSelect; fSelect = nullptr;
+   fManager = nullptr;
    fMultiplicity = 0;
 }
 
@@ -988,7 +988,7 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
       fSelect->SetQuickLoad(kTRUE);
       if (!fSelect->GetNdim()) {
          delete fSelect;
-         fSelect = 0;
+         fSelect = nullptr;
          return kFALSE;
       }
    }
@@ -1069,7 +1069,7 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
 Double_t* TSelectorDraw::GetVal(Int_t i) const
 {
    if (i < 0 || i >= fDimension)
-      return 0;
+      return nullptr;
    else
       return fVal[i];
 }
@@ -1081,7 +1081,7 @@ Double_t* TSelectorDraw::GetVal(Int_t i) const
 TTreeFormula* TSelectorDraw::GetVar(Int_t i) const
 {
    if (i < 0 || i >= fDimension)
-      return 0;
+      return nullptr;
    else
       return fVar[i];
 }
@@ -1112,8 +1112,8 @@ void TSelectorDraw::InitArrays(Int_t newsize)
       fVal = new Double_t*[fValSize];
       fVar = new TTreeFormula*[fValSize];
       for (Int_t i = 0; i < fValSize; ++i) {
-         fVal[i] = 0;
-         fVar[i] = 0;
+         fVal[i] = nullptr;
+         fVar[i] = nullptr;
       }
    }
 }
@@ -1210,7 +1210,7 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
    if (!ndata) return;
 
    // If the entry list is a TEntryListArray, get the selected subentries for this entry
-   TEntryList *subList = 0;
+   TEntryList *subList = nullptr;
    if (fTreeElistArray) {
       subList = fTreeElistArray->GetSubListForEntry(entry, fTree->GetTree());
    }
@@ -1345,10 +1345,10 @@ void TSelectorDraw::SetEstimate(Long64_t)
    if (fVal) {
       for (Int_t i = 0; i < fValSize; ++i) {
          delete [] fVal[i];
-         fVal[i] = 0;
+         fVal[i] = nullptr;
       }
    }
-   delete [] fW;   fW  = 0;
+   delete [] fW;   fW  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1371,7 +1371,7 @@ void TSelectorDraw::TakeAction()
       if (fObject->InheritsFrom(TEntryListArray::Class())) {
          TEntryListArray *enlistarray = (TEntryListArray*)fObject;
          Long64_t enumb = fTree->GetTree()->GetReadEntry();
-         enlistarray->Enter(enumb, 0, fCurrentSubEntry);
+         enlistarray->Enter(enumb, nullptr, fCurrentSubEntry);
       } else if (fObject->InheritsFrom(TEntryList::Class())) {
          TEntryList *enlist = (TEntryList*)fObject;
          Long64_t enumb = fTree->GetTree()->GetReadEntry();
@@ -1659,7 +1659,7 @@ void TSelectorDraw::TakeEstimate()
                   if (h2->TestBit(kCanDelete)) {
                      // h2 will be deleted, the axis setting is delegated to only
                      // the TGraph.
-                     h2 = 0;
+                     h2 = nullptr;
                      fObject = pm->GetHistogram();
                   }
                }

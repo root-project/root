@@ -169,7 +169,7 @@ public:
    }
 
    Int_t *GetRootColors() {
-      static Int_t *gRootColors = 0;
+      static Int_t *gRootColors = nullptr;
       if (gRootColors) return gRootColors;
 
       gRootColors = new Int_t[216];
@@ -270,11 +270,11 @@ void TPaletteEditor::CloseWindow()
 TImagePalette::TImagePalette()
 {
    fNumPoints     = 0;
-   fPoints        = 0;
-   fColorRed      = 0;
-   fColorGreen    = 0;
-   fColorBlue     = 0;
-   fColorAlpha    = 0;
+   fPoints        = nullptr;
+   fColorRed      = nullptr;
+   fColorGreen    = nullptr;
+   fColorBlue     = nullptr;
+   fColorAlpha    = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -317,11 +317,11 @@ TImagePalette::TImagePalette(const TImagePalette &palette) : TObject(palette)
 TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
 {
    fNumPoints  = 0;
-   fPoints     = 0;
-   fColorRed   = 0;
-   fColorGreen = 0;
-   fColorBlue  = 0;
-   fColorAlpha = 0;
+   fPoints     = nullptr;
+   fColorRed   = nullptr;
+   fColorGreen = nullptr;
+   fColorBlue  = nullptr;
+   fColorAlpha = nullptr;
 
    Int_t i;
    static Int_t palette[50] = {19,18,17,16,15,14,13,12,11,20,
@@ -329,7 +329,7 @@ TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
                         31,32,33,34,35,36,37,38,39,40, 9,
                         41,42,43,44,45,47,48,49,46,50, 2,
                          7, 6, 5, 4, 3, 112,1};
-   TColor *col = 0;
+   TColor *col = nullptr;
    Float_t step = 0;
    // set default palette (pad type)
    if (ncolors <= 0) {
@@ -355,7 +355,7 @@ TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
    }
 
    // set Pretty Palette Spectrum Violet->Red
-   if (ncolors == 1 && colors == 0) {
+   if (ncolors == 1 && colors == nullptr) {
       ncolors = 50;
       fNumPoints  = ncolors;
       step = 1./fNumPoints;
@@ -386,7 +386,7 @@ TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
    }
 
    // set DeepSea palette
-   if (colors == 0 && ncolors > 50) {
+   if (colors == nullptr && ncolors > 50) {
       static const Int_t nRGBs = 5;
       static Float_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
       static Float_t red[nRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
@@ -506,7 +506,7 @@ Int_t TImagePalette::FindColor(UShort_t r, UShort_t g, UShort_t b)
 
 Int_t *TImagePalette::GetRootColors()
 {
-   static Int_t *gRootColors = 0;
+   static Int_t *gRootColors = nullptr;
    if (gRootColors) return gRootColors;
 
    gRootColors = new Int_t[fNumPoints];
@@ -524,7 +524,7 @@ Int_t *TImagePalette::GetRootColors()
 TAttImage::TAttImage()
 {
    ResetAttImage();
-   fPaletteEditor = 0;
+   fPaletteEditor = nullptr;
    fPaletteEnabled = kTRUE;
 }
 
@@ -549,7 +549,7 @@ TAttImage::TAttImage(EImageQuality lquality, UInt_t lcompression,
    fImageQuality = lquality;
    fImageCompression = (lcompression > 100) ? 100 : lcompression;
    fConstRatio = constRatio;
-   fPaletteEditor = 0;
+   fPaletteEditor = nullptr;
    fPaletteEnabled = kTRUE;
 }
 
@@ -779,7 +779,7 @@ TImagePalette* TImagePalette::CreateCOLPalette(Int_t ncontours)
 
 void TAttImage::StartPaletteEditor()
 {
-   if (fPaletteEditor == 0) {
+   if (fPaletteEditor == nullptr) {
       TPluginHandler *h;
 
       if ((h = gROOT->GetPluginManager()->FindHandler("TPaletteEditor"))) {

@@ -40,7 +40,7 @@ TGSplitter::TGSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    TGFrame(p, w, h, options, back),
    fDragging        (kFALSE),
    fExternalHandler (kFALSE),
-   fSplitterPic     (0)
+   fSplitterPic     (nullptr)
 {
    fSplitCursor = kNone;
    fEditDisabled = kTRUE;
@@ -75,7 +75,7 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    fLeft = kTRUE;
    fMax = fMin = 0;
    fStartX = 0;
-   fFrame = 0;
+   fFrame = nullptr;
 
    if (!fSplitterPic)
       Error("TGVSplitter", "splitterv.xpm not found");
@@ -113,7 +113,7 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external)
       Error("TGVSplitter", "splitterv.xpm not found");
 
    fSplitCursor = gVirtualX->CreateCursor(kArrowHor);
-   fFrame = 0;
+   fFrame = nullptr;
    fFrameHeight = h;
    fFrameWidth = w;
    fLeft = kTRUE;
@@ -264,9 +264,9 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
               UInt_t options, ULong_t back) : TGSplitter(p, w, h, options, back)
 {
    fSplitCursor = kNone;
-   fSplitterPic = 0;
+   fSplitterPic = nullptr;
    fSplitCursor = 0;
-   fFrame = 0;
+   fFrame = nullptr;
    fFrameHeight = h;
    fFrameWidth = w;
    fAbove = kTRUE;
@@ -312,7 +312,7 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external)
       Error("TGHSplitter", "splitterh.xpm not found");
 
    fSplitCursor = gVirtualX->CreateCursor(kArrowVer);
-   fFrame = 0;
+   fFrame = nullptr;
    fFrameHeight = h;
    fFrameWidth = w;
    fAbove = kTRUE;
@@ -518,7 +518,7 @@ Bool_t TGVFileSplitter::HandleButton(Event_t *event)
    if ( event->fType == kButtonPress) {
       ButtonPressed();
    } else if ( event->fType == kButtonRelease) {
-      LayoutHeader(0);
+      LayoutHeader(nullptr);
       LayoutListView();
       ButtonReleased();
    } else if ( event->fType == kButtonDoubleClick ) {

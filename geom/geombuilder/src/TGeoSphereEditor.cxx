@@ -48,7 +48,7 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape   = nullptr;
    fRmini = fRmaxi = fTheta1i = fTheta2i = fPhi1i = fPhi2i = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -211,7 +211,7 @@ void TGeoSphereEditor::ConnectSignals2Slots()
 
 void TGeoSphereEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoSphere::Class())) {
+   if (obj == nullptr || (obj->IsA()!=TGeoSphere::Class())) {
       SetActive(kFALSE);
       return;
    }

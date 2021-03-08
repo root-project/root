@@ -63,7 +63,7 @@ TGTreeLBEntry::TGTreeLBEntry(const TGWindow *p, TGString *text,
       Error("TGTreeLBEntry", "icon not found for entry %s", text->GetString());
 
    fPic    = pic;
-   fSelPic = 0;
+   fSelPic = nullptr;
    fTWidth = 0;
    fText   = text;
    fPath   = path;
@@ -103,7 +103,7 @@ void TGTreeLBEntry::Activate(Bool_t a)
       fSelPic = new TGSelectedPicture(fClient, fPic);
    } else {
       if (fSelPic) delete fSelPic;
-      fSelPic = 0;
+      fSelPic = nullptr;
    }
    DoRedraw();
 }
@@ -331,7 +331,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
 void TGFSComboBox::Update(const char *path)
 {
    char dirname[1024], mpath[1024];
-   const char *tailpath = 0;
+   const char *tailpath = nullptr;
    int  indent_lvl = 0, afterID = -1, sel = -1;
 
    if (!path) return;
@@ -364,8 +364,8 @@ void TGFSComboBox::Update(const char *path)
          while (1) {
             const char *picname;
             const char *semi = strchr(tailpath, '/');
-            if (semi == 0) semi = strchr(tailpath, '\\');
-            if (semi == 0) {
+            if (semi == nullptr) semi = strchr(tailpath, '\\');
+            if (semi == nullptr) {
                strlcpy(dirname, tailpath, 1024);
                picname = "ofolder_t.xpm";
             } else {
@@ -388,7 +388,7 @@ void TGFSComboBox::Update(const char *path)
                         afterID);
             sel = ++afterID;
             ++indent_lvl;
-            if (semi == 0) break;
+            if (semi == nullptr) break;
             tailpath = ++semi;
          }
    }

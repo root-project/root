@@ -55,7 +55,7 @@ void TVectorT<Element>::Delete_m(Int_t size,Element *&m)
    if (m) {
       if (size > kSizeMax)
          delete [] m;
-      m = 0;
+      m = nullptr;
    }
 }
 
@@ -66,7 +66,7 @@ void TVectorT<Element>::Delete_m(Int_t size,Element *&m)
 template<class Element>
 Element* TVectorT<Element>::New_m(Int_t size)
 {
-   if (size == 0) return 0;
+   if (size == 0) return nullptr;
    else {
       if ( size <= kSizeMax )
          return fDataStack;
@@ -153,7 +153,7 @@ void TVectorT<Element>::Allocate(Int_t nrows,Int_t row_lwb,Int_t init)
    fIsOwner  = kTRUE;
    fNrows    = 0;
    fRowLwb   = 0;
-   fElements = 0;
+   fElements = nullptr;
 
    if (nrows < 0)
    {

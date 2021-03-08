@@ -103,7 +103,7 @@ Bool_t RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu
 {
   // sanity checks
   if(n < 0) {
-    oocoutE((TObject*)0,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n = " << n << endl;
+    oocoutE((TObject*)nullptr,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n = " << n << endl;
     return kFALSE;
   }
 
@@ -122,7 +122,7 @@ Bool_t RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu
   }
 
   // Backup solution for negative numbers
-  return getInterval(&upper,0,(Double_t)n,1.0,mu1,mu2,nSigma);
+  return getInterval(&upper,nullptr,(Double_t)n,1.0,mu1,mu2,nSigma);
 }
 
 
@@ -135,7 +135,7 @@ Bool_t RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
 {
   // sanity checks
   if(n < 0 || m < 0) {
-    oocoutE((TObject*)0,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
+    oocoutE((TObject*)nullptr,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
     return kFALSE;
   }
 
@@ -175,7 +175,7 @@ Bool_t RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
     status= getInterval(&upper,&lower,(Double_t)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
   }
   else {
-    status= getInterval(&upper,0,(Double_t)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
+    status= getInterval(&upper,nullptr,(Double_t)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
   }
 
   // undo the swap here
@@ -198,7 +198,7 @@ Bool_t RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
 {
   // sanity checks
   if(n < 0 || m < 0) {
-    oocoutE((TObject*)0,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
+    oocoutE((TObject*)nullptr,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
     return kFALSE;
   }
 
@@ -239,7 +239,7 @@ Bool_t RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
     status= getInterval(&upper,&lower,eff,0.1,asym1,asym2,nSigma*0.5);
   }
   else {
-    status= getInterval(&upper,0,eff,0.1,asym1,asym2,nSigma*0.5);
+    status= getInterval(&upper,nullptr,eff,0.1,asym1,asym2,nSigma*0.5);
   }
 
   // undo the swap here
@@ -264,7 +264,7 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
 				 Double_t stepSize, Double_t &lo, Double_t &hi, Double_t nSigma) const
 {
   // sanity checks
-  assert(0 != Qu || 0 != Ql);
+  assert(nullptr != Qu || nullptr != Ql);
 
   // convert number of sigma into a confidence level
   Double_t beta= TMath::Erf(nSigma/sqrt(2.));
@@ -273,10 +273,10 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
   // Does the central interval contain the point estimate?
   Bool_t ok(kTRUE);
   Double_t loProb(1),hiProb(0);
-  if(0 != Ql) loProb= (*Ql)(&pointEstimate);
-  if(0 != Qu) hiProb= (*Qu)(&pointEstimate);
+  if(nullptr != Ql) loProb= (*Ql)(&pointEstimate);
+  if(nullptr != Qu) hiProb= (*Qu)(&pointEstimate);
 
-  if (Qu && (0 == Ql || loProb > alpha + beta))  {
+  if (Qu && (nullptr == Ql || loProb > alpha + beta))  {
     // Force the low edge to be at the pointEstimate
     lo= pointEstimate;
     Double_t target= loProb - beta;
@@ -284,7 +284,7 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
     RooBrentRootFinder uFinder(*Qu);
     ok= uFinder.findRoot(hi,hi-stepSize,hi,target);
   }
-  else if(Ql && (0 == Qu || hiProb < alpha)) {
+  else if(Ql && (nullptr == Qu || hiProb < alpha)) {
     // Force the high edge to be at pointEstimate
     hi= pointEstimate;
     Double_t target= hiProb + beta;
@@ -300,7 +300,7 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
     ok= lFinder.findRoot(lo,lo,lo+stepSize,alpha+beta);
     ok|= uFinder.findRoot(hi,hi-stepSize,hi,alpha);
   }
-  if(!ok) oocoutE((TObject*)0,Plotting) << "RooHistError::getInterval: failed to find root(s)" << endl;
+  if(!ok) oocoutE((TObject*)nullptr,Plotting) << "RooHistError::getInterval: failed to find root(s)" << endl;
 
   return ok;
 }

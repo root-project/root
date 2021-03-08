@@ -73,7 +73,7 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
       if (curlast == first-1) {
          idcur->SetLast(last);
          TFree *idnext = (TFree*)lfree->After(idcur);
-         if (idnext == 0) return idcur;
+         if (idnext == nullptr) return idcur;
          if (idnext->GetFirst() > last+1) return idcur;
          idcur->SetLast( idnext->GetLast() );
          lfree->Remove(idnext);
@@ -93,7 +93,7 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
       }
       idcur = (TFree*)lfree->After(idcur);
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,8 +127,8 @@ void TFree::FillBuffer(char *&buffer)
 TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
 {
    TFree *idcur = this;
-   if (idcur == 0) return 0;
-   TFree *idcur1 = 0;
+   if (idcur == nullptr) return nullptr;
+   TFree *idcur1 = nullptr;
    do {
       Long64_t nleft = Long64_t(idcur->fLast - idcur->fFirst +1);
       if (nleft == nbytes) {
@@ -136,12 +136,12 @@ TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
          return idcur;
       }
       if(nleft > (Long64_t)(nbytes+3)) {
-         if (idcur1 == 0) {
+         if (idcur1 == nullptr) {
             idcur1=idcur;
          }
       }
       idcur = (TFree*)lfree->After(idcur);
-   } while (idcur !=0);
+   } while (idcur !=nullptr);
 
    // return first segment >nbytes
    if (idcur1) return idcur1;

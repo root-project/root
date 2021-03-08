@@ -50,7 +50,7 @@ void TMVA::correlationsMultiClass(TString dataset, TString fin , Bool_t /* isReg
       c->SetBottomMargin( newMargin2 );
       c->SetRightMargin ( newMargin1 );
       c->SetTopMargin   ( newMargin1 );
-      gStyle->SetPalette( 1, 0 );
+      gStyle->SetPalette( 1, nullptr );
 
 
       gStyle->SetPaintTextFormat( "3g" );

@@ -200,7 +200,7 @@ End_Macro
 TLegend::TLegend(): TPave(0.3,0.15,0.3,0.15,4,"brNDC"),
                     TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
-   fPrimitives = 0;
+   fPrimitives = nullptr;
    SetDefaults();
    SetBorderSize(gStyle->GetLegendBorderSize());
    SetFillColor(gStyle->GetLegendFillColor());
@@ -226,7 +226,7 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2,
 {
    fPrimitives = new TList;
    if ( header && strlen(header) > 0) {
-      TLegendEntry *headerEntry = new TLegendEntry( 0, header, "h" );
+      TLegendEntry *headerEntry = new TLegendEntry( nullptr, header, "h" );
       headerEntry->SetTextAlign(0);
       headerEntry->SetTextAngle(0);
       headerEntry->SetTextColor(0);
@@ -259,7 +259,7 @@ TLegend::TLegend( Double_t w, Double_t h, const char *header, Option_t *option)
 {
    fPrimitives = new TList;
    if ( header && strlen(header) > 0) {
-      TLegendEntry *headerEntry = new TLegendEntry( 0, header, "h" );
+      TLegendEntry *headerEntry = new TLegendEntry( nullptr, header, "h" );
       headerEntry->SetTextAlign(0);
       headerEntry->SetTextAngle(0);
       headerEntry->SetTextColor(0);
@@ -276,7 +276,7 @@ TLegend::TLegend( Double_t w, Double_t h, const char *header, Option_t *option)
 /// Copy constructor.
 
 TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend),
-                                            fPrimitives(0)
+                                            fPrimitives(nullptr)
 {
   if (legend.fPrimitives) {
       fPrimitives = new TList();
@@ -312,7 +312,7 @@ TLegend::~TLegend()
 {
    if (fPrimitives) fPrimitives->Delete();
    delete fPrimitives;
-   fPrimitives = 0;
+   fPrimitives = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -354,7 +354,7 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
 {
    if (!gPad) {
       Error("AddEntry", "need to create a canvas first");
-      return 0;
+      return nullptr;
    }
 
    TObject *obj = gPad->FindObject(name);
@@ -364,7 +364,7 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
    if (!obj) {
       TList *lop = gPad->GetListOfPrimitives();
       if (lop) {
-         TObject *o=0;
+         TObject *o=nullptr;
          TIter next(lop);
          while( (o=next()) ) {
             if ( o->InheritsFrom(TMultiGraph::Class() ) ) {
@@ -477,11 +477,11 @@ TLegendEntry *TLegend::GetEntry() const
 {
    if (!gPad) {
       Error("GetEntry", "need to create a canvas first");
-      return 0;
+      return nullptr;
    }
 
    Int_t nRows = GetNRows();
-   if ( nRows == 0 ) return 0;
+   if ( nRows == 0 ) return nullptr;
 
    Double_t ymouse = gPad->AbsPixeltoY(gPad->GetEventY())-fY1;
    Double_t yspace = (fY2 - fY1)/nRows;
@@ -503,7 +503,7 @@ TLegendEntry *TLegend::GetEntry() const
    Int_t nloops = TMath::Min(ix+(nColumns*(iy-1)), fPrimitives->GetSize());
 
    TIter next(fPrimitives);
-   TLegendEntry *entry = 0;
+   TLegendEntry *entry = nullptr;
 
    for (Int_t i=1; i<= nloops; i++) entry = (TLegendEntry *)next();
 
@@ -516,7 +516,7 @@ TLegendEntry *TLegend::GetEntry() const
 
 const char *TLegend::GetHeader() const
 {
-   if ( !fPrimitives ) return 0;
+   if ( !fPrimitives ) return nullptr;
       TIter next(fPrimitives);
    TLegendEntry *first;   // header is always the first entry
    if ((  first = (TLegendEntry*)next()  )) {
@@ -524,7 +524,7 @@ const char *TLegend::GetHeader() const
       opt.ToLower();
       if ( opt.Contains("h") ) return first->GetLabel();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -587,7 +587,7 @@ Int_t TLegend::GetNRows() const
    if ( nEntries == 0 ) return 0;
 
    Int_t nRows;
-   if(GetHeader() != NULL) nRows = 1 + (Int_t) TMath::Ceil((Double_t) (nEntries-1)/fNColumns);
+   if(GetHeader() != nullptr) nRows = 1 + (Int_t) TMath::Ceil((Double_t) (nEntries-1)/fNColumns);
    else  nRows = (Int_t) TMath::Ceil((Double_t) nEntries/fNColumns);
 
    return nRows;
@@ -1038,7 +1038,7 @@ void TLegend::RecursiveRemove(TObject *obj)
    TIter next(fPrimitives);
    TLegendEntry *entry;
    while (( entry = (TLegendEntry *)next() )) {
-      if (entry->GetObject() == obj) entry->SetObject((TObject*)0);
+      if (entry->GetObject() == obj) entry->SetObject((TObject*)nullptr);
    }
 }
 
@@ -1115,7 +1115,7 @@ void TLegend::SetHeader( const char *header, Option_t* option )
          return;
       }
    }
-   first = new TLegendEntry( 0, header, "h" );
+   first = new TLegendEntry( nullptr, header, "h" );
    opt = option;
    opt.ToLower();
    if ( opt.Contains("c") ) first->SetTextAlign(22);

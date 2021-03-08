@@ -221,13 +221,13 @@ All other keys with valid ASCII codes insert themselves into the line.
 #include <iostream>
 
 
-TString      *TGTextEntry::fgClipboardText = 0;
-const TGFont *TGTextEntry::fgDefaultFont = 0;
-const TGGC   *TGTextEntry::fgDefaultSelectedGC = 0;
-const TGGC   *TGTextEntry::fgDefaultSelectedBackgroundGC = 0;
-const TGGC   *TGTextEntry::fgDefaultGC = 0;
+TString      *TGTextEntry::fgClipboardText = nullptr;
+const TGFont *TGTextEntry::fgDefaultFont = nullptr;
+const TGGC   *TGTextEntry::fgDefaultSelectedGC = nullptr;
+const TGGC   *TGTextEntry::fgDefaultSelectedBackgroundGC = nullptr;
+const TGGC   *TGTextEntry::fgDefaultGC = nullptr;
 
-TGTextEntry *gBlinkingEntry = 0;
+TGTextEntry *gBlinkingEntry = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -244,7 +244,7 @@ public:
 
 Bool_t TBlinkTimer::Notify()
 {
-   fTextEntry->HandleTimer(0);
+   fTextEntry->HandleTimer(nullptr);
    Reset();
    return kFALSE;
 }
@@ -318,7 +318,7 @@ TGTextEntry::~TGTextEntry()
    delete fCurBlink;
    delete fTip;
 
-   if (this == gBlinkingEntry) gBlinkingEntry = 0;
+   if (this == gBlinkingEntry) gBlinkingEntry = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -356,8 +356,8 @@ void TGTextEntry::Init()
    fCursorX     = offset ;
    fCursorIX    = fStartIX = fEndIX = fOffset = 0;
    fSelectionOn = fCursorOn = kFALSE;
-   fCurBlink    = 0;
-   fTip         = 0;
+   fCurBlink    = nullptr;
+   fTip         = nullptr;
    fClipboard   = fClient->GetResourcePool()->GetClipboard();
 
    gVirtualX->SetCursor(fId, fClient->GetResourcePool()->GetTextCursor());
@@ -1478,7 +1478,7 @@ Bool_t TGTextEntry::HandleFocusChange(Event_t *event)
          fCursorOn = kFALSE;
           // fSelectionOn = kFALSE;        // "netscape location behavior"
          if (fCurBlink) fCurBlink->Remove();
-         gBlinkingEntry = 0;
+         gBlinkingEntry = nullptr;
       }
       fClient->NeedRedraw(this);
    return kTRUE;
@@ -1664,7 +1664,7 @@ void TGTextEntry::SetToolTipText(const char *text, Long_t delayms)
 {
    if (fTip) {
       delete fTip;
-      fTip = 0;
+      fTip = nullptr;
    }
 
    if (text && strlen(text))

@@ -158,8 +158,8 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
    fNotAssigned = new TList;
    fNotAssigned->SetName("*");
    TIter nxl(fFiles);
-   TObject *key, *o = 0;
-   while ((key = nxl()) != 0) {
+   TObject *key, *o = nullptr;
+   while ((key = nxl()) != nullptr) {
       THashList *wrklist = dynamic_cast<THashList *>(fFiles->GetValue(key));
       if (!wrklist) {
          TFileCollection *fc = dynamic_cast<TFileCollection *>(fFiles->GetValue(key));
@@ -246,7 +246,7 @@ Float_t TPacketizerFile::GetCurrentRate(Bool_t &all)
    if (fSlaveStats && fSlaveStats->GetSize() > 0) {
       TIter nxw(fSlaveStats);
       TObject *key;
-      while ((key = nxw()) != 0) {
+      while ((key = nxw()) != nullptr) {
          TSlaveStat *wrkstat = (TSlaveStat *) fSlaveStats->GetValue(key);
          if (wrkstat && wrkstat->GetProgressStatus() && wrkstat->GetEntriesProcessed() > 0) {
             // Sum-up the current rates
@@ -265,7 +265,7 @@ Float_t TPacketizerFile::GetCurrentRate(Bool_t &all)
 
 TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
 {
-   TDSetElement *elem = 0;
+   TDSetElement *elem = nullptr;
    if (!fValid)  return elem;
 
    // Find slave
@@ -285,13 +285,13 @@ TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
    Long64_t totev = 0;
    Long64_t numev = -1;
 
-   TProofProgressStatus *status = 0;
+   TProofProgressStatus *status = nullptr;
    if (wrk->GetProtocol() > 18) {
       (*r) >> latency;
       (*r) >> status;
 
       // Calculate the progress made in the last packet
-      TProofProgressStatus *progress = 0;
+      TProofProgressStatus *progress = nullptr;
       if (status) {
          // upadte the worker status
          numev = status->GetEntries() - wrkstat->GetEntriesProcessed();
@@ -329,21 +329,21 @@ TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
                            wrk->GetOrdinal(), wrk->GetName(),
                            numev, latency, proctime, proccpu, bytesRead);
 
-   if (gPerfStats != 0) {
+   if (gPerfStats != nullptr) {
       gPerfStats->PacketEvent(wrk->GetOrdinal(), wrk->GetName(), "", numev,
                               latency, proctime, proccpu, bytesRead);
    }
 
    if (fAssigned == fTotalEntries) {
       // Send last timer message
-      HandleTimer(0);
-      return 0;
+      HandleTimer(nullptr);
+      return nullptr;
    }
 
    if (fStop) {
       // Send last timer message
-      HandleTimer(0);
-      return 0;
+      HandleTimer(nullptr);
+      return nullptr;
    }
 
    PDB(kPacketizer,2)
@@ -351,7 +351,7 @@ TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
                             wrk->GetName());
 
    // Get next file now
-   TObject *nextfile = 0;
+   TObject *nextfile = nullptr;
 
    // Find iterator associated to the worker
    TString wrkname = TUrl(wrk->GetName()).GetHostFQDN();
@@ -377,8 +377,8 @@ TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
 
    // The file name: we support TObjString or TFileInfo
    TString filename;
-   TObjString *os = 0;
-   TFileInfo *fi = 0;
+   TObjString *os = nullptr;
+   TFileInfo *fi = nullptr;
    if ((os = dynamic_cast<TObjString *>(nextfile))) {
       filename = os->GetName();
    } else {
@@ -485,7 +485,7 @@ TProofProgressStatus *TPacketizerFile::TSlaveStat::AddProcessed(TProofProgressSt
       return diff;
    } else {
       Error("AddProcessed", "status arg undefined");
-      return 0;
+      return nullptr;
    }
 }
 

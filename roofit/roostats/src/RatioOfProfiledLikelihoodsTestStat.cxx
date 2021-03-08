@@ -74,7 +74,7 @@ Double_t RooStats::RatioOfProfiledLikelihoodsTestStat::ProfiledLikelihood(RooAbs
    else if (&pdf == fAltProfile.GetPdf() )
       return fAltProfile.EvaluateProfileLikelihood(type, data, poi);
 
-   oocoutE((TObject*)NULL,InputArguments) << "RatioOfProfiledLikelihoods::ProfileLikelihood - invalid pdf used for computing the profiled likelihood - return NaN"
+   oocoutE((TObject*)nullptr,InputArguments) << "RatioOfProfiledLikelihoods::ProfileLikelihood - invalid pdf used for computing the profiled likelihood - return NaN"
                          << std::endl;
 
    return TMath::QuietNaN();
@@ -96,13 +96,13 @@ Double_t  RooStats::RatioOfProfiledLikelihoodsTestStat::Evaluate(RooAbsData& dat
    double altNLL = fAltProfile.EvaluateProfileLikelihood(type, data, *fAltPOI);
    const RooArgSet *altset = fAltProfile.GetDetailedOutput();
 
-   if (fDetailedOutput != NULL) {
+   if (fDetailedOutput != nullptr) {
       delete fDetailedOutput;
-      fDetailedOutput = NULL;
+      fDetailedOutput = nullptr;
    }
    if (fDetailedOutputEnabled) {
       fDetailedOutput = new RooArgSet();
-      RooRealVar* var(0);
+      RooRealVar* var(nullptr);
       for(TIterator *it = nullset->createIterator();(var = dynamic_cast<RooRealVar*>(it->Next()));) {
          RooRealVar* cloneVar = new RooRealVar(TString::Format("nullprof_%s", var->GetName()),
                                                TString::Format("%s for null", var->GetTitle()), var->getVal());

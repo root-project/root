@@ -53,7 +53,7 @@ void TGHtml::UnmapControls()
    TGHtmlInput *p;
 
    for (p = fFirstInput; p; p = p->fINext) {
-      if (p->fFrame != 0 /*&& p->fFrame->IsMapped()*/) {
+      if (p->fFrame != nullptr /*&& p->fFrame->IsMapped()*/) {
          p->fFrame->UnmapWindow();
       }
    }
@@ -79,7 +79,7 @@ int TGHtml::MapControls()
    w = fCanvas->GetWidth();
    h = fCanvas->GetHeight();
    for (p = fFirstInput; p; p = p->fINext) {
-      if (p->fFrame == 0) continue;
+      if (p->fFrame == nullptr) continue;
       if (p->fY < y + h && p->fY + p->fH > y &&
           p->fX < x + w && p->fX + p->fW > x) {
          // The control should be visible. Make is so if it isn't already
@@ -105,11 +105,11 @@ void TGHtml::DeleteControls()
    TGHtmlInput *p;        // For looping over all controls
 
    p = fFirstInput;
-   fFirstInput = 0;
-   fLastInput = 0;
+   fFirstInput = nullptr;
+   fLastInput = nullptr;
    fNInput = 0;
 
-   if (p == 0) return;
+   if (p == nullptr) return;
 
    for (; p; p = p->fINext) {
       if (p->fPForm && ((TGHtmlForm *)p->fPForm)->fHasctl) {
@@ -118,7 +118,7 @@ void TGHtml::DeleteControls()
       if (p->fFrame) {
          if (!fExiting) p->fFrame->DestroyWindow();
          delete p->fFrame;
-         p->fFrame = 0;
+         p->fFrame = nullptr;
       }
       p->fSized = 0;
    }
@@ -154,7 +154,7 @@ static int InputType(TGHtmlElement *p)
    switch (p->fType) {
       case Html_INPUT:
          z = p->MarkupArg("type", "text");
-         if (z == 0) break;
+         if (z == nullptr) break;
          for (i = 0; i < int(sizeof(types) / sizeof(types[0])); i++) {
             if (strcasecmp(types[i].zName, z) == 0) {
                type = types[i].type;
@@ -193,7 +193,7 @@ void TGHtml::SizeAndLink(TGFrame *frame, TGHtmlInput *pElem)
 {
 
    pElem->fFrame = frame;
-   if (pElem->fFrame == 0) {
+   if (pElem->fFrame == nullptr) {
       pElem->Empty();
    } else if (pElem->fItype == INPUT_TYPE_Hidden) {
       pElem->fW = 0;
@@ -206,8 +206,8 @@ void TGHtml::SizeAndLink(TGFrame *frame, TGHtmlInput *pElem)
       pElem->fFlags |= HTML_Visible;
       pElem->fHtml = this;
    }
-   pElem->fINext = 0;
-   if (fFirstInput == 0) {
+   pElem->fINext = nullptr;
+   if (fFirstInput == nullptr) {
       fFirstInput = pElem;
    } else {
       fLastInput->fINext = pElem;
@@ -283,7 +283,7 @@ public:
       TGTextLBEntry(p, s, ID) { fVal = val; }
    virtual ~TGHtmlLBEntry() { if (fVal) delete fVal; }
 
-   const char *GetValue() const { return fVal ? fVal->GetString() : 0; }
+   const char *GetValue() const { return fVal ? fVal->GetString() : nullptr; }
 
 protected:
    TGString *fVal;
@@ -373,13 +373,13 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
       case INPUT_TYPE_Hidden:
       case INPUT_TYPE_Image:
          pElem->Empty();
-         SizeAndLink(0, pElem);
+         SizeAndLink(nullptr, pElem);
          break;
 
       case INPUT_TYPE_Checkbox: {
          pElem->fCnt = ++fNInput;
          TGCheckButton *f = new TGCheckButton(fCanvas, "", pElem->fCnt);
-         if (pElem->MarkupArg("checked", 0))
+         if (pElem->MarkupArg("checked", nullptr))
             ((TGCheckButton *)f)->SetState(kButtonDown);
          f->Associate(this);
          f->Resize(f->GetDefaultSize());
@@ -390,7 +390,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
       case INPUT_TYPE_Radio: {
          pElem->fCnt = ++fNInput;
          TGRadioButton *f = new TGRadioButton(fCanvas, "", pElem->fCnt);
-         if (pElem->MarkupArg("checked", 0))
+         if (pElem->MarkupArg("checked", nullptr))
             ((TGRadioButton *)f)->SetState(kButtonDown);
          f->Associate(this);
          f->Resize(f->GetDefaultSize());
@@ -400,7 +400,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
 
       case INPUT_TYPE_Reset: {
          pElem->fCnt = ++fNInput;
-         const char *z = pElem->MarkupArg("value", 0);
+         const char *z = pElem->MarkupArg("value", nullptr);
          if (!z) z = "Reset";
          TGTextButton *f = new TGTextButton(fCanvas, new TGHotString(z), pElem->fCnt);
          f->RequestFocus();
@@ -413,7 +413,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
       case INPUT_TYPE_Button:
       case INPUT_TYPE_Submit: {
          pElem->fCnt = ++fNInput;
-         const char *z = pElem->MarkupArg("value", 0);
+         const char *z = pElem->MarkupArg("value", nullptr);
          if (!z) z = "Submit";
          TGTextButton *f = new TGTextButton(fCanvas, new TGHotString(z), pElem->fCnt);
          f->RequestFocus();
@@ -426,14 +426,14 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
 
       case INPUT_TYPE_Text: {
          pElem->fCnt = ++fNInput;
-         const char *z = pElem->MarkupArg("maxlength", 0);
+         const char *z = pElem->MarkupArg("maxlength", nullptr);
          int maxlen = z ? atoi(z) : 256;
          if (maxlen < 2) maxlen = 2;
-         z = pElem->MarkupArg("size", 0);
+         z = pElem->MarkupArg("size", nullptr);
          int size = z ? atoi(z) * 5 : 150;
          TGTextEntry *f = new TGTextEntry(fCanvas, new TGTextBuffer(maxlen),
                                           pElem->fCnt);
-         z = pElem->MarkupArg("value", 0);
+         z = pElem->MarkupArg("value", nullptr);
          if (z) f->AppendText(z);
          f->Resize(size, f->GetDefaultHeight());
          SizeAndLink(f, pElem);
@@ -442,15 +442,15 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
 
       case INPUT_TYPE_Password: {
          pElem->fCnt = ++fNInput;
-         const char *z = pElem->MarkupArg("maxlength", 0);
+         const char *z = pElem->MarkupArg("maxlength", nullptr);
          int maxlen = z ? atoi(z) : 256;
          if (maxlen < 2) maxlen = 2;
-         z = pElem->MarkupArg("size", 0);
+         z = pElem->MarkupArg("size", nullptr);
          int size = z ? atoi(z) * 5 : 150;
          TGTextEntry *f = new TGTextEntry(fCanvas, new TGTextBuffer(maxlen),
                                           pElem->fCnt);
          f->SetEchoMode(TGTextEntry::kPassword);
-         z = pElem->MarkupArg("value", 0);
+         z = pElem->MarkupArg("value", nullptr);
          if (z) f->AppendText(z);
          f->Resize(size, f->GetDefaultHeight());
          SizeAndLink(f, pElem);
@@ -459,7 +459,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
 
       case INPUT_TYPE_Select: {  // listbox or dd-listbox?
          pElem->fCnt = ++fNInput;
-         const char *z = pElem->MarkupArg("size", 0);
+         const char *z = pElem->MarkupArg("size", nullptr);
          int size = z ? atoi(z) : 1;
          UInt_t width = 0, height = 0;
          if (size == 1) {
@@ -482,7 +482,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
             SizeAndLink(cb, pElem);
          } else {
             TGListBox *lb = new TGListBox(fCanvas, pElem->fCnt);
-            z = pElem->MarkupArg("multiple", 0);
+            z = pElem->MarkupArg("multiple", nullptr);
             if (z) lb->SetMultipleSelections(kTRUE);
             AddSelectOptions(lb, pElem, pElem->fPEnd);
             for (int i=0;i<lb->GetNumberOfEntries();++i) {
@@ -530,7 +530,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
          CANT_HAPPEN;
          pElem->fFlags &= ~HTML_Visible;
          pElem->fStyle.fFlags |= STY_Invisible;
-         pElem->fFrame = 0;
+         pElem->fFrame = nullptr;
          break;
       }
    }
@@ -584,9 +584,9 @@ void TGHtml::AddFormInfo(TGHtmlElement *p)
          input->fInpId = fInputIdx++;
          t = input->fItype = InputType(input);
          if (t == INPUT_TYPE_Radio) {
-            if ((name = p->MarkupArg("name", 0))) {
+            if ((name = p->MarkupArg("name", nullptr))) {
                for (q = f->fPFirst; q; q = ((TGHtmlInput *)q)->fINext) {
-                  if ((z = q->MarkupArg("name", 0)) && !strcmp(z, name)) {
+                  if ((z = q->MarkupArg("name", nullptr)) && !strcmp(z, name)) {
                      input->fSubId = fRadioIdx++;
                      break;
                   }
@@ -605,10 +605,10 @@ void TGHtml::AddFormInfo(TGHtmlElement *p)
       case Html_EndTEXTAREA:
       case Html_EndSELECT:
       case Html_EndFORM:
-         fFormStart = 0;
+         fFormStart = nullptr;
          fInputIdx = 0;
          fRadioIdx = 0;
-         fFormElemLast = 0;
+         fFormElemLast = nullptr;
          break;
 
       case Html_OPTION:

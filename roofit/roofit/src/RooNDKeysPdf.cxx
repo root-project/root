@@ -293,7 +293,7 @@ RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf &other, const char *name)
      _nSigma(other._nSigma), _rotate(other._rotate), _sortInput(other._sortInput),
      _nAdpt(other._nAdpt)
 {
-   _tracker = (other._tracker != NULL ? new RooChangeTracker(*other._tracker) : NULL);
+   _tracker = (other._tracker != nullptr ? new RooChangeTracker(*other._tracker) : nullptr);
    // if (_tracker!=NULL) { _tracker->hasChanged(true); }
 
    _fixedShape = other._fixedShape;
@@ -499,16 +499,16 @@ void RooNDKeysPdf::initialize()
   _xDatLo3s.resize(_nDim,0.);
   _xDatHi3s.resize(_nDim,0.);
 
-  boxInfoInit(&_fullBoxInfo,0,0xFFFF);
+  boxInfoInit(&_fullBoxInfo,nullptr,0xFFFF);
 
   _minWeight=0;
   _maxWeight=0;
   _wMap.clear();
 
-  _covMat = 0;
-  _corrMat= 0;
-  _rotMat = 0;
-  _sigmaR = 0;
+  _covMat = nullptr;
+  _corrMat= nullptr;
+  _rotMat = nullptr;
+  _sigmaR = nullptr;
   _dx = new TVectorD(_nDim); _dx->Zero();
   _dataPtsR.resize(_nEvents,*_dx);
 
@@ -925,8 +925,8 @@ void RooNDKeysPdf::calculateBandWidth()
      vector<Double_t> dummy(_nDim, 0.);
      _weights1.resize(_nEvents, dummy);
 
-     std::vector<std::vector<Double_t>> *weights_prev(0);
-     std::vector<std::vector<Double_t>> *weights_new(0);
+     std::vector<std::vector<Double_t>> *weights_prev(nullptr);
+     std::vector<std::vector<Double_t>> *weights_new(nullptr);
 
      // cout << "Number of adaptive iterations: " << _nAdpt << endl;
 
@@ -1156,7 +1156,7 @@ Double_t RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) con
   vector<Bool_t> doInt(_nDim,kTRUE);
 
   // get BoxInfo
-  BoxInfo* bi(0);
+  BoxInfo* bi(nullptr);
 
   if (rangeName) {
     string rangeNameStr(rangeName) ;

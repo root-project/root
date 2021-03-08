@@ -55,7 +55,7 @@ and must be explicitly enabled by the user.
 
 TFilePrefetch::TFilePrefetch(TFile* file) :
   fFile(file),
-  fConsumer(0),
+  fConsumer(nullptr),
   fThreadJoined(kTRUE),
   fPrefetchFinished(kFALSE)
 {
@@ -107,7 +107,7 @@ void TFilePrefetch::WaitFinishPrefetch()
 
 void TFilePrefetch::ReadAsync(TFPBlock* block, Bool_t &inCache)
 {
-   char* path = 0;
+   char* path = nullptr;
 
    if (CheckBlockInCache(path, block)){
       block->SetBuffer(GetBlockFromCache(path, block->GetDataSize()));
@@ -130,7 +130,7 @@ void TFilePrefetch::ReadAsync(TFPBlock* block, Bool_t &inCache)
 void TFilePrefetch::ReadListOfBlocks()
 {
    Bool_t inCache = kFALSE;
-   TFPBlock*  block = 0;
+   TFPBlock*  block = nullptr;
 
    while((block = GetPendingBlock())){
       ReadAsync(block, inCache);
@@ -180,7 +180,7 @@ Long64_t TFilePrefetch::GetWaitTime()
 Bool_t TFilePrefetch::ReadBuffer(char* buf, Long64_t offset, Int_t len)
 {
    Bool_t found = false;
-   TFPBlock* blockObj = 0;
+   TFPBlock* blockObj = nullptr;
    Int_t index = -1;
 
    std::unique_lock<std::mutex> lk(fMutexReadList);
@@ -236,7 +236,7 @@ void TFilePrefetch::AddPendingBlock(TFPBlock* block)
 
 TFPBlock* TFilePrefetch::GetPendingBlock()
 {
-   TFPBlock* block = 0;
+   TFPBlock* block = nullptr;
 
    // Use the semaphore to deal with the case when the file pointer
    // is changed on the fly by TChain
@@ -266,7 +266,7 @@ void TFilePrefetch::AddReadBlock(TFPBlock* block)
       TFPBlock* movedBlock = (TFPBlock*) fReadBlocks->First();
       movedBlock = (TFPBlock*)fReadBlocks->Remove(movedBlock);
       delete movedBlock;
-      movedBlock = 0;
+      movedBlock = nullptr;
    }
 
    fReadBlocks->Add(block);
@@ -282,7 +282,7 @@ void TFilePrefetch::AddReadBlock(TFPBlock* block)
 
 TFPBlock* TFilePrefetch::CreateBlockObj(Long64_t* offset, Int_t* len, Int_t noblock)
 {
-   TFPBlock* blockObj = 0;
+   TFPBlock* blockObj = nullptr;
 
    fMutexReadList.lock();
 
@@ -442,14 +442,14 @@ Bool_t TFilePrefetch::CheckBlockInCache(char*& path, TFPBlock* block)
 
 char* TFilePrefetch::GetBlockFromCache(const char* path, Int_t length)
 {
-   char *buffer = 0;
+   char *buffer = nullptr;
    TString strPath = path;
 
    strPath += "?filetype=raw";
    TFile* file = new TFile(strPath);
 
    Double_t start = 0;
-   if (gPerfStats != 0) start = TTimeStamp();
+   if (gPerfStats != nullptr) start = TTimeStamp();
 
    buffer = (char*) calloc(length, sizeof(char));
    file->ReadBuffer(buffer, 0, length);
@@ -461,7 +461,7 @@ char* TFilePrefetch::GetBlockFromCache(const char* path, Int_t length)
 
    if (gMonitoringWriter)
       gMonitoringWriter->SendFileReadProgress(fFile);
-   if (gPerfStats != 0) {
+   if (gPerfStats != nullptr) {
       gPerfStats->FileReadEvent(fFile, length, start);
    }
 
@@ -500,7 +500,7 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
    if (!gSystem->OpenDirectory(fullPath))
       gSystem->mkdir(fullPath);
 
-   TFile* file = 0;
+   TFile* file = nullptr;
    fullPath += ("/" + fileName);
    FileStat_t stat;
    if (gSystem->GetPathInfo(fullPath, stat) == 0) {

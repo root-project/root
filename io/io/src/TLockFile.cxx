@@ -69,11 +69,11 @@ TLockFile::~TLockFile()
 Bool_t TLockFile::Lock(const char *path, Int_t timeLimit)
 {
    Long_t modTime = 0;
-   if (gSystem->GetPathInfo(path, 0, (Long_t*) 0, 0, &modTime) == 0) {
+   if (gSystem->GetPathInfo(path, nullptr, (Long_t*) nullptr, nullptr, &modTime) == 0) {
       if (timeLimit > 0) {
          if (gDebug > 0)
-            Info("Lock", "%s modification time %ld, %ld seconds ago", path, modTime, time(0) - modTime);
-         if (time(0) - modTime > timeLimit){
+            Info("Lock", "%s modification time %ld, %ld seconds ago", path, modTime, time(nullptr) - modTime);
+         if (time(nullptr) - modTime > timeLimit){
             gSystem->Unlink(path);
             if (gDebug > 0)
                Info("Lock", "time expired, removed %s", path);

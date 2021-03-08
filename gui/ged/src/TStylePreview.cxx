@@ -37,9 +37,9 @@ ClassImp(TStylePreview);
 
 TStylePreview::TStylePreview(const TGWindow *p, TStyle *style,
                               TVirtualPad *currentPad)
-                     : TGTransientFrame(0, p)
+                     : TGTransientFrame(nullptr, p)
 {
-   fPad = 0;
+   fPad = nullptr;
 
    // Create the main window.
    SetWindowName("Style Manager's Preview");

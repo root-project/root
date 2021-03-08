@@ -29,7 +29,7 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
    TKey *key;
    while ((key = TMVAGlob::NextKey(next,"TH1"))) { // loop over all TH1
       TH1 *h = (TH1*)key->ReadObj();
-      TH1F *b( 0 );
+      TH1F *b( nullptr );
       TString hname( h->GetName() );
 
       // avoid duplicated plotting
@@ -104,8 +104,8 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
             // the PDFs --------------
 
             // check for splines
-            h = 0;
-            b = 0;
+            h = nullptr;
+            b = nullptr;
             TString pname = hname; pname.ReplaceAll("_nice","");            
             for (int i=0; i<= 5; i++) {
                TString hspline = pname + Form( "_smoothed_hist_from_spline%i", i );
@@ -117,7 +117,7 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
             }
 
             // check for KDE
-            if (h == 0 && b == 0) {
+            if (h == nullptr && b == nullptr) {
                TString hspline = pname +"_smoothed_hist_from_KDE";
                h = (TH1F*)lhdir->Get( hspline );
                if (h) {
@@ -126,7 +126,7 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
             }
                
             // found something ?
-            if (h == 0 || b == 0) {
+            if (h == nullptr || b == nullptr) {
                cout << "--- likelihoodrefs.C: did not find spline for histogram: " << pname.Data() << endl;
             }
             else {

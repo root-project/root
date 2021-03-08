@@ -499,10 +499,10 @@ TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    switch (iaxis) {
       case 1:
          Warning("Divide", "dividing a Trd2 on X not implemented");
-         return 0;
+         return nullptr;
       case 2:
          Warning("Divide", "dividing a Trd2 on Y not implemented");
-         return 0;
+         return nullptr;
       case 3:
          finder = new TGeoPatternZ(voldiv, ndiv, start, end);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -525,7 +525,7 @@ TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          return vmulti;
       default:
          Error("Divide", "Wrong axis type for division");
-         return 0;
+         return nullptr;
    }
 }
 
@@ -601,10 +601,10 @@ Int_t TGeoTrd2::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
 
 TGeoShape *TGeoTrd2::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return nullptr;
    if (!mother->TestShapeBit(kGeoTrd2)) {
       Error("GetMakeRuntimeShape", "invalid mother");
-      return 0;
+      return nullptr;
    }
    Double_t dx1, dx2, dy1, dy2, dz;
    if (fDx1<0) dx1=((TGeoTrd2*)mother)->GetDx1();

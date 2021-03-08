@@ -46,7 +46,7 @@ TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
    fManager = fBuilder->GetManager();
    fEditDisabled = kEditDisable;
    SetCleanup(kDeepCleanup);
-   TGFrame *frame = 0;
+   TGFrame *frame = nullptr;
    TGFrame *fSelected = fEditor->GetSelected();
    if (fSelected) frame = fSelected;
 
@@ -159,7 +159,7 @@ void TGuiBldNameFrame::ChangeSelected(TGFrame *frame)
    }
 
    //highlight and open
-   TGListTreeItem *item = 0;
+   TGListTreeItem *item = nullptr;
    fListTree->OpenItem(fListTree->GetFirstItem()); //mdi
    item = fListTree->FindItemByObj(fListTree->GetFirstItem(), frame);
    if (item) {
@@ -233,7 +233,7 @@ TGCompositeFrame *TGuiBldNameFrame::GetMdi(TGFrame *frame)
       }
       p = (TGFrame*)p->GetParent();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -246,7 +246,7 @@ void TGuiBldNameFrame::MapItems(TGCompositeFrame *main)
    }
 
    TList *list = main->GetList(); //list of all elements in the frame
-   TGFrameElement *el = 0;
+   TGFrameElement *el = nullptr;
    TIter next(list);
 
    while ((el = (TGFrameElement *) next())) {
@@ -257,18 +257,18 @@ void TGuiBldNameFrame::MapItems(TGCompositeFrame *main)
 
             // first loop, we're in the main frame -> add items directly
             // to main frame folder of the tree list
-            if (!fListTree->FindChildByData(0, main)) {
+            if (!fListTree->FindChildByData(nullptr, main)) {
                // add main frame to root
-               fListTree->AddItem(0, main->GetName(), main);
+               fListTree->AddItem(nullptr, main->GetName(), main);
             }
              //add other items to mainframe
-            fListTree->AddItem(fListTree->FindChildByData(0, main),
+            fListTree->AddItem(fListTree->FindChildByData(nullptr, main),
                                el->fFrame->GetName(), el->fFrame);
 
          } else { //means we're in recursion loop, browsing in subframe
             // result is the name of the tree folder to which we want to
             // place the element
-            TGListTreeItem *result = 0;
+            TGListTreeItem *result = nullptr;
             TGFrame *par = (TGFrame*)el->fFrame->GetParent();
             result = fListTree->FindItemByObj(fListTree->GetFirstItem(), par);
             if (result)
@@ -292,11 +292,11 @@ Bool_t TGuiBldNameFrame::CheckItems(TGCompositeFrame *main)
 {
    TList *list = main->GetList(); //list of all elements in the frame
 
-   TGFrameElement *el = 0;
-   TGListTreeItem *item = 0;
+   TGFrameElement *el = nullptr;
+   TGListTreeItem *item = nullptr;
    TIter next(list);
-   TGFrame *f = 0;
-   TGListTreeItem *par = 0;
+   TGFrame *f = nullptr;
+   TGListTreeItem *par = nullptr;
 
    while ((el = (TGFrameElement *) next())) {
       if (el && (el->fFrame)) {
@@ -361,7 +361,7 @@ TGListTreeItem *TGuiBldNameFrame::FindItemByName(TGListTree *tree,
          return FindItemByName(tree, name, item->GetNextSibling());
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

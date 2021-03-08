@@ -87,27 +87,27 @@ public:
    TXftFontData *FindByFont(FontStruct_t font)
    {
       TIter next(fList);
-      TXftFontData *d = 0;
+      TXftFontData *d = nullptr;
 
       while ((d = (TXftFontData*) next())) {
          if (d->fXftFont == (XftFont *)font) {
             return d;
          }
       }
-      return 0;
+      return nullptr;
    }
 
    TXftFontData *FindByGC(GContext_t gc)
    {
       TIter next(fList);
-      TXftFontData *d = 0;
+      TXftFontData *d = nullptr;
 
       while ((d = (TXftFontData*) next())) {
          if (d->fGC == gc) {
             return d;
          }
       }
-      return 0;
+      return nullptr;
    }
 
    void AddFont(TXftFontData *data)
@@ -116,7 +116,7 @@ public:
       // font data, set the reference counter of this one beyond 1 so it does
       // delete the font pointer
       TIter next(fList);
-      TXftFontData *d = 0;
+      TXftFontData *d = nullptr;
 
       while ((d = (TXftFontData*) next())) {
          if (d->fXftFont == data->fXftFont) {
@@ -168,7 +168,7 @@ TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
    fAlign.y = 0;
 
 #ifdef R__HAS_XFT
-   fXftFontHash = 0;
+   fXftFontHash = nullptr;
 #endif
 }
 
@@ -190,8 +190,8 @@ void TGX11TTF::Activate()
 Bool_t TGX11TTF::Init(void *display)
 {
 #ifdef R__HAS_XFT
-   fXftFontHash = 0;
-   XFontStruct *fs = 0;
+   fXftFontHash = nullptr;
+   XFontStruct *fs = nullptr;
    if (display) fs = XLoadQueryFont((Display *)display, "-*-helvetica-*-r-*-*-14-*-*-*-*-*-*-*");
    if (!fs) gEnv->SetValue("X11.UseXft", 1);
    if (display && fs) XFreeFont((Display *)display, fs);
@@ -255,7 +255,7 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
    if (TTF::fgSmoothing) {
 
       static RXColor col[5];
-      RXColor  *bcol = 0;
+      RXColor  *bcol = nullptr;
       XColor  *bc;
       Int_t    x, y;
 
@@ -478,9 +478,9 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
 
    // create the XImage that will contain the text
    UInt_t depth = fDepth;
-   XImage *xim  = 0;
+   XImage *xim  = nullptr;
    xim = XCreateImage((Display*)fDisplay, fVisual,
-                      depth, ZPixmap, 0, 0, w, h,
+                      depth, ZPixmap, 0, nullptr, w, h,
                       depth == 24 ? 32 : (depth==15?16:depth), 0);
    if (!xim) return;
 
@@ -531,7 +531,7 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
       if (FT_Glyph_To_Bitmap(&glyph->fImage,
                              TTF::fgSmoothing ? ft_render_mode_normal
                                               : ft_render_mode_mono,
-                             0, 1 )) continue;
+                             nullptr, 1 )) continue;
       FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
       FT_Bitmap*     source = &bitmap->bitmap;
       Int_t          bx, by;

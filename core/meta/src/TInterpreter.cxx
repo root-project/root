@@ -57,7 +57,7 @@ TInterpreter::TInterpreter(const char *name, const char *title)
 
 TInterpreter *TInterpreter::Instance()
 {
-   if (gInterpreterLocal == 0) {
+   if (gInterpreterLocal == nullptr) {
       static TROOT *getROOT = ROOT::GetROOT(); // Make sure gInterpreterLocal is set
       if (!getROOT) {
          ::Fatal("TInterpreter::Instance","TROOT object is required before accessing a TInterpreter");

@@ -138,7 +138,7 @@ TASLogHandler::TASLogHandler(const char *cmd, TSocket *s, const char *pfx)
               : TFileHandler(-1, 1), fSocket(s), fPfx(pfx)
 {
    ResetBit(kFileIsPipe);
-   fFile = 0;
+   fFile = nullptr;
    if (s && cmd) {
       fFile = gSystem->OpenPipe(cmd, "r");
       if (fFile) {
@@ -148,7 +148,7 @@ TASLogHandler::TASLogHandler(const char *cmd, TSocket *s, const char *pfx)
          // Used in the destructor
          SetBit(kFileIsPipe);
       } else {
-         fSocket = 0;
+         fSocket = nullptr;
          Error("TASLogHandler", "executing command in pipe");
       }
    } else {
@@ -163,7 +163,7 @@ TASLogHandler::TASLogHandler(FILE *f, TSocket *s, const char *pfx)
               : TFileHandler(-1, 1), fSocket(s), fPfx(pfx)
 {
    ResetBit(kFileIsPipe);
-   fFile = 0;
+   fFile = nullptr;
    if (s && f) {
       fFile = f;
       SetFd(fileno(fFile));
@@ -180,8 +180,8 @@ TASLogHandler::~TASLogHandler()
 {
    if (TestBit(kFileIsPipe) && fFile)
       gSystem->ClosePipe(fFile);
-   fFile = 0;
-   fSocket = 0;
+   fFile = nullptr;
+   fSocket = nullptr;
    ResetBit(kFileIsPipe);
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,7 +193,7 @@ Bool_t TASLogHandler::Notify()
       TMessage m(kMESS_ANY);
       // Read buffer
       char line[4096];
-      char *plf = 0;
+      char *plf = nullptr;
       while (fgets(line, sizeof(line), fFile)) {
          if ((plf = strchr(line, '\n')))
             *plf = 0;
@@ -229,7 +229,7 @@ void TASLogHandler::SetDefaultPrefix(const char *pfx)
 TASLogHandlerGuard::TASLogHandlerGuard(const char *cmd, TSocket *s,
                                        const char *pfx, Bool_t on)
 {
-   fExecHandler = 0;
+   fExecHandler = nullptr;
    if (cmd && on) {
       fExecHandler = new TASLogHandler(cmd, s, pfx);
       if (fExecHandler->IsValid()) {
@@ -249,7 +249,7 @@ TASLogHandlerGuard::TASLogHandlerGuard(const char *cmd, TSocket *s,
 TASLogHandlerGuard::TASLogHandlerGuard(FILE *f, TSocket *s,
                                        const char *pfx, Bool_t on)
 {
-   fExecHandler = 0;
+   fExecHandler = nullptr;
    if (f && on) {
       fExecHandler = new TASLogHandler(f, s, pfx);
       if (fExecHandler->IsValid()) {
@@ -282,7 +282,7 @@ ClassImp(TApplicationServer);
 
 TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
                                        FILE *flog, const char *logfile)
-       : TApplication("server", argc, argv, 0, -1)
+       : TApplication("server", argc, argv, nullptr, -1)
 {
    // Parse options
    GetOptions(argc, argv);
@@ -292,8 +292,8 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
    SetErrorHandler(ErrorHandler);
 
    fInterrupt       = kFALSE;
-   fSocket          = 0;
-   fWorkingDir      = 0;
+   fSocket          = nullptr;
+   fWorkingDir      = nullptr;
 
    fLogFilePath     = logfile;
    fLogFile         = flog;
@@ -302,7 +302,7 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
       // For some reason we failed setting a redirection; we cannot continue
       Terminate(0);
    fRealTimeLog     = kFALSE;
-   fSentCanvases    = 0;
+   fSentCanvases    = nullptr;
 
    // Default prefix for notifications
    TASLogHandler::SetDefaultPrefix(Form("roots:%s", gSystem->HostName()));
@@ -329,7 +329,7 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
 
    // Load user functions
    const char *logon;
-   logon = gEnv->GetValue("Rint.Load", (char *)0);
+   logon = gEnv->GetValue("Rint.Load", (char *)nullptr);
    if (logon) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
@@ -355,7 +355,7 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
    fIsValid = kTRUE;
 
    // Startup notification
-   BrowseDirectory(0);
+   BrowseDirectory(nullptr);
    SendLogFile();
 }
 
@@ -885,7 +885,7 @@ Int_t TApplicationServer::SendCanvases()
    // Send back new canvases
    TMessage mess(kMESS_OBJECT);
    TIter next(gROOT->GetListOfCanvases());
-   TObject *o = 0;
+   TObject *o = nullptr;
    while ((o = next())) {
       if (!fSentCanvases)
          fSentCanvases = new TList;
@@ -957,7 +957,7 @@ Int_t TApplicationServer::BrowseFile(const char *fname)
    if (!fname || !*fname) {
       // fname is null, so send the list of files.
       TIter next(gROOT->GetListOfFiles());
-      TNamed *fh = 0;
+      TNamed *fh = nullptr;
       TRemoteObject *robj;
       while ((fh = (TNamed *)next())) {
          robj = new TRemoteObject(fh->GetName(), fh->GetTitle(), "TFile");
@@ -978,7 +978,7 @@ Int_t TApplicationServer::BrowseFile(const char *fname)
          TRemoteObject dir(fh->GetName(), fh->GetTitle(), "TFile");
          TList *keylist = (TList *)gROOT->ProcessLine(Form("((TFile *)0x%lx)->GetListOfKeys();", (ULong_t)fh));
          TIter nextk(keylist);
-         TNamed *key = 0;
+         TNamed *key = nullptr;
          TRemoteObject *robj;
          while ((key = (TNamed *)nextk())) {
             robj = new TRemoteObject(key->GetName(), key->GetTitle(), "TKey");
@@ -1041,7 +1041,7 @@ void TApplicationServer::Terminate(Int_t status)
    // Remove input handler to avoid spurious signals in socket
    // selection for closing activities executed upon exit()
    TIter next(gSystem->GetListOfFileHandlers());
-   TObject *fh = 0;
+   TObject *fh = nullptr;
    while ((fh = next())) {
       TASInputHandler *ih = dynamic_cast<TASInputHandler *>(fh);
       if (ih)
@@ -1119,7 +1119,7 @@ void TApplicationServer::ErrorHandler(Int_t level, Bool_t abort, const char *loc
       gSystem->Openlog(syslogService, kLogPid | kLogCons, kLogLocal5);
    }
 
-   const char *type   = 0;
+   const char *type   = nullptr;
    ELogLevel loglevel = kLogInfo;
 
    if (level >= kPrint) {
@@ -1217,7 +1217,7 @@ Long_t TApplicationServer::ProcessLine(const char *line, Bool_t, Int_t *)
          while (filefollows) {
 
             // Get a message
-            TMessage *rm = 0;
+            TMessage *rm = nullptr;
             if (fSocket->Recv(rm) <= 0) {
                Error("ProcessLine","ask-file: received empty message from client");
                return 0;
@@ -1298,7 +1298,7 @@ void TApplicationServer::ExecLogon()
    }
 
    // execute also the logon macro specified by "Rint.Logon"
-   const char *logon = gEnv->GetValue("Rint.Logon", (char*)0);
+   const char *logon = gEnv->GetValue("Rint.Logon", (char*)nullptr);
    if (logon) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)

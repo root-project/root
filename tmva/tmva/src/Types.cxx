@@ -43,7 +43,7 @@ Singleton class for Global types used by TMVA
 #endif
 
 #if __cplusplus > 199711L && !defined _MSC_VER
-std::atomic<TMVA::Types*> TMVA::Types::fgTypesPtr{0};
+std::atomic<TMVA::Types*> TMVA::Types::fgTypesPtr{nullptr};
 static std::mutex gTypesMutex;
 #else
 TMVA::Types* TMVA::Types::fgTypesPtr = 0;
@@ -71,7 +71,7 @@ TMVA::Types& TMVA::Types::Instance()
 #if __cplusplus > 199711L && !defined _MSC_VER
    if(!fgTypesPtr) {
       Types* tmp = new Types();
-      Types* expected = 0;
+      Types* expected = nullptr;
       if(!fgTypesPtr.compare_exchange_strong(expected,tmp)) {
          //Another thread already did it
          delete tmp;
@@ -89,7 +89,7 @@ TMVA::Types& TMVA::Types::Instance()
 void   TMVA::Types::DestroyInstance()
 {
 #if __cplusplus > 199711L && !defined _MSC_VER
-   if (fgTypesPtr != 0) { delete fgTypesPtr.load(); fgTypesPtr = 0; }
+   if (fgTypesPtr != nullptr) { delete fgTypesPtr.load(); fgTypesPtr = nullptr; }
 #else
    if (fgTypesPtr != 0) { delete fgTypesPtr; fgTypesPtr = 0; }
 #endif

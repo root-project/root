@@ -190,8 +190,8 @@ Double_t RooAddition::evaluate() const
 
 Double_t RooAddition::defaultErrorLevel() const 
 {
-  RooAbsReal* nllArg(0) ;
-  RooAbsReal* chi2Arg(0) ;
+  RooAbsReal* nllArg(nullptr) ;
+  RooAbsReal* chi2Arg(nullptr) ;
 
   RooAbsArg* arg ;
 
@@ -277,7 +277,7 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName));
-  if (cache!=0) {
+  if (cache!=nullptr) {
     Int_t code = _cacheMgr.lastIndex();
     return code+1;
   }
@@ -300,7 +300,7 @@ Double_t RooAddition::analyticalIntegral(Int_t code, const char* rangeName) cons
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
-  if (cache==0) {
+  if (cache==nullptr) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
     std::unique_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) );
@@ -309,7 +309,7 @@ Double_t RooAddition::analyticalIntegral(Int_t code, const char* rangeName) cons
     assert(code==code2); // must have revived the right (sterilized) slot...
     return analyticalIntegral(code2,rangeName);
   }
-  assert(cache!=0);
+  assert(cache!=nullptr);
 
   // loop over cache, and sum...
   double result(0);
@@ -326,7 +326,7 @@ Double_t RooAddition::analyticalIntegral(Int_t code, const char* rangeName) cons
 
 std::list<Double_t>* RooAddition::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  std::list<Double_t>* sumBinB = 0 ;
+  std::list<Double_t>* sumBinB = nullptr ;
   Bool_t needClean(kFALSE) ;
   
   RooFIter iter = _set.fwdIterator() ;
@@ -390,7 +390,7 @@ Bool_t RooAddition::isBinnedDistribution(const RooArgSet& obs) const
 
 std::list<Double_t>* RooAddition::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  std::list<Double_t>* sumHint = 0 ;
+  std::list<Double_t>* sumHint = nullptr ;
   Bool_t needClean(kFALSE) ;
   
   RooFIter iter = _set.fwdIterator() ;

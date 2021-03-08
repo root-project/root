@@ -118,17 +118,17 @@ public:
    {
       TFileStat *f = new TFileStat(this,elem);
       fFiles->Add(f);
-      if (fUnAllocFileNext == 0) fUnAllocFileNext = fFiles->First();
+      if (fUnAllocFileNext == nullptr) fUnAllocFileNext = fFiles->First();
    }
 
    TFileStat *GetNextUnAlloc()
    {
       TObject *next = fUnAllocFileNext;
 
-      if (next != 0) {
+      if (next != nullptr) {
          // make file active
          fActFiles->Add(next);
-         if (fActFileNext == 0) fActFileNext = fActFiles->First();
+         if (fActFileNext == nullptr) fActFileNext = fActFiles->First();
 
          // move cursor
          fUnAllocFileNext = fFiles->After(fUnAllocFileNext);
@@ -141,9 +141,9 @@ public:
    {
       TObject *next = fActFileNext;
 
-      if (fActFileNext != 0) {
+      if (fActFileNext != nullptr) {
          fActFileNext = fActFiles->After(fActFileNext);
-         if (fActFileNext == 0) fActFileNext = fActFiles->First();
+         if (fActFileNext == nullptr) fActFileNext = fActFiles->First();
       }
 
       return (TFileStat *) next;
@@ -153,7 +153,7 @@ public:
    {
       if (fActFileNext == file) fActFileNext = fActFiles->After(file);
       fActFiles->Remove(file);
-      if (fActFileNext == 0) fActFileNext = fActFiles->First();
+      if (fActFileNext == nullptr) fActFileNext = fActFiles->First();
    }
 
    Int_t Compare(const TObject *other) const
@@ -188,7 +188,7 @@ public:
    {
       fUnAllocFileNext = fFiles->First();
       fActFiles->Clear();
-      fActFileNext = 0;
+      fActFileNext = nullptr;
       fSlaveCnt = 0;
       fMySlaveCnt = 0;
    }
@@ -196,8 +196,8 @@ public:
 
 
 TPacketizer::TFileNode::TFileNode(const char *name)
-   : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),fActFiles(new TList),
-     fActFileNext(0), fMySlaveCnt(0), fSlaveCnt(0)
+   : fNodeName(name), fFiles(new TList), fUnAllocFileNext(nullptr),fActFiles(new TList),
+     fActFileNext(nullptr), fMySlaveCnt(0), fSlaveCnt(0)
 {
    // Constructor
 
@@ -228,7 +228,7 @@ public:
 
 
 TPacketizer::TSlaveStat::TSlaveStat(TSlave *slave)
-   : fFileNode(0), fCurFile(0), fCurElem(0)
+   : fFileNode(nullptr), fCurFile(nullptr), fCurElem(nullptr)
 {
    fSlave = slave;
    fStatus = new TProofProgressStatus();
@@ -260,7 +260,7 @@ TProofProgressStatus *TPacketizer::TSlaveStat::AddProcessed(TProofProgressStatus
       return diff;
    } else {
       Error("AddProcessed", "status arg undefined");
-      return 0;
+      return nullptr;
    }
 }
 
@@ -278,10 +278,10 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    PDB(kPacketizer,1) Info("TPacketizer", "Enter (first %lld, num %lld)", first, num);
 
    // Init pointer members
-   fPackets = 0;
-   fUnAllocated = 0;
-   fActive = 0;
-   fFileNodes = 0;
+   fPackets = nullptr;
+   fUnAllocated = nullptr;
+   fActive = nullptr;
+   fFileNodes = nullptr;
    fMaxPerfIdx = 1;
    fMaxSlaveCnt = 0;
    fHeuristicPSiz = kFALSE;
@@ -365,7 +365,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
       TFileNode *node = (TFileNode*) fFileNodes->FindObject( host );
 
-      if (node == 0) {
+      if (node == nullptr) {
          node = new TFileNode(host);
          fFileNodes->Add(node);
       }
@@ -509,7 +509,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
       TFileNode *node = (TFileNode*) fFileNodes->FindObject( host );
 
-      if ( node == 0 ) {
+      if ( node == nullptr ) {
          node = new TFileNode( host );
          fFileNodes->Add( node );
       }
@@ -632,21 +632,21 @@ Int_t TPacketizer::AddWorkers(TList *workers)
 
 TPacketizer::TFileStat *TPacketizer::GetNextUnAlloc(TFileNode *node)
 {
-   TFileStat *file = 0;
+   TFileStat *file = nullptr;
 
-   if (node != 0) {
+   if (node != nullptr) {
       file = node->GetNextUnAlloc();
-      if (file == 0) RemoveUnAllocNode(node);
+      if (file == nullptr) RemoveUnAllocNode(node);
    } else {
-      while (file == 0 && ((node = NextUnAllocNode()) != 0)) {
+      while (file == nullptr && ((node = NextUnAllocNode()) != nullptr)) {
          file = node->GetNextUnAlloc();
-         if (file == 0) RemoveUnAllocNode(node);
+         if (file == nullptr) RemoveUnAllocNode(node);
       }
    }
 
-   if (file != 0) {
+   if (file != nullptr) {
       // if needed make node active
-      if (fActive->FindObject(node) == 0) {
+      if (fActive->FindObject(node) == nullptr) {
          fActive->Add(node);
       }
    }
@@ -666,10 +666,10 @@ TPacketizer::TFileNode *TPacketizer::NextUnAllocNode()
    }
 
    TFileNode *fn = (TFileNode*) fUnAllocated->First();
-   if (fn != 0 && fMaxSlaveCnt > 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
+   if (fn != nullptr && fMaxSlaveCnt > 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
       PDB(kPacketizer,1) Info("NextUnAllocNode", "reached workers per node limit (%ld)",
                               fMaxSlaveCnt);
-      fn = 0;
+      fn = nullptr;
    }
 
    return fn;
@@ -689,11 +689,11 @@ void TPacketizer::RemoveUnAllocNode(TFileNode * node)
 TPacketizer::TFileStat *TPacketizer::GetNextActive()
 {
    TFileNode *node;
-   TFileStat *file = 0;
+   TFileStat *file = nullptr;
 
-   while (file == 0 && ((node = NextActiveNode()) != 0)) {
+   while (file == nullptr && ((node = NextActiveNode()) != nullptr)) {
          file = node->GetNextActive();
-         if (file == 0) RemoveActiveNode(node);
+         if (file == nullptr) RemoveActiveNode(node);
    }
 
    return file;
@@ -711,10 +711,10 @@ TPacketizer::TFileNode *TPacketizer::NextActiveNode()
    }
 
    TFileNode *fn = (TFileNode*) fActive->First();
-   if (fn != 0 && fMaxSlaveCnt > 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
+   if (fn != nullptr && fMaxSlaveCnt > 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
       PDB(kPacketizer,1)
          Info("NextActiveNode", "reached workers per node limit (%ld)", fMaxSlaveCnt);
-      fn = 0;
+      fn = nullptr;
    }
 
    return fn;
@@ -751,21 +751,21 @@ void TPacketizer::Reset()
 
    TIter files(fFileNodes);
    TFileNode *fn;
-   while ((fn = (TFileNode*) files.Next()) != 0) {
+   while ((fn = (TFileNode*) files.Next()) != nullptr) {
       fn->Reset();
    }
 
    TIter slaves(fSlaveStats);
    TObject *key;
-   while ((key = slaves.Next()) != 0) {
+   while ((key = slaves.Next()) != nullptr) {
       TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue(key);
       if (slstat) {
          fn = (TFileNode*) fFileNodes->FindObject(slstat->GetName());
-         if (fn != 0 ) {
+         if (fn != nullptr ) {
             slstat->SetFileNode(fn);
             fn->IncMySlaveCnt();
          }
-         slstat->fCurFile = 0;
+         slstat->fCurFile = nullptr;
       } else {
          Warning("Reset", "TSlaveStat associated to key '%s' is NULL", key->GetName());
       }
@@ -787,8 +787,8 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves, Long64_t maxent, Boo
 
    workers.AddAll(slaves);
    TIter    si(slaves);
-   TSlave  *slm = 0;
-   while ((slm = (TSlave*)si.Next()) != 0) {
+   TSlave  *slm = nullptr;
+   while ((slm = (TSlave*)si.Next()) != nullptr) {
       PDB(kPacketizer,3)
          Info("ValidateFiles","socket added to monitor: %p (%s)",
               slm->GetSocket(), slm->GetName());
@@ -827,23 +827,23 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves, Long64_t maxent, Boo
             Error("ValidateFiles", "TSlaveStat associated to slave '%s' is NULL", s->GetName());
             continue;
          }
-         TFileNode *node = 0;
-         TFileStat *file = 0;
+         TFileNode *node = nullptr;
+         TFileStat *file = nullptr;
 
          // try its own node first
-         if ( (node = slstat->GetFileNode()) != 0 ) {
+         if ( (node = slstat->GetFileNode()) != nullptr ) {
             file = GetNextUnAlloc(node);
-            if ( file == 0 ) {
-               slstat->SetFileNode(0);
+            if ( file == nullptr ) {
+               slstat->SetFileNode(nullptr);
             }
          }
 
          // look for a file on any other node if necessary
-         if (file == 0) {
+         if (file == nullptr) {
             file = GetNextUnAlloc();
          }
 
-         if ( file != 0 ) {
+         if ( file != nullptr ) {
             // files are done right away
             RemoveActive(file);
 
@@ -935,7 +935,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves, Long64_t maxent, Boo
          Info("ValidateFiles", "waiting for %d workers:", mon.GetActive());
          TList *act = mon.GetListOfActives();
          TIter next(act);
-         TSocket *s = 0;
+         TSocket *s = nullptr;
          while ((s = (TSocket*) next())) {
             Info("ValidateFiles", "found sck: %p", s);
             TSlave *sl = (TSlave *) slaves_by_sock.GetValue(s);
@@ -1073,7 +1073,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves, Long64_t maxent, Boo
    ((TProof*)gProof)->ActivateAsyncInput();
 
    // This needs to be reset
-   ((TProof*)gProof)->fCurrentMonitor = 0;
+   ((TProof*)gProof)->fCurrentMonitor = nullptr;
 
    // No reason to continue if invalid
    if (!fValid)
@@ -1097,11 +1097,11 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves, Long64_t maxent, Boo
 
 Long64_t TPacketizer::GetEntriesProcessed(TSlave *slave) const
 {
-   if ( fSlaveStats == 0 ) return 0;
+   if ( fSlaveStats == nullptr ) return 0;
 
    TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue( slave );
 
-   if ( slstat == 0 ) return 0;
+   if ( slstat == nullptr ) return 0;
 
    return slstat->GetEntriesProcessed();
 }
@@ -1118,7 +1118,7 @@ Float_t TPacketizer::GetCurrentRate(Bool_t &all)
    if (fSlaveStats && fSlaveStats->GetSize() > 0) {
       TIter nxw(fSlaveStats);
       TObject *key;
-      while ((key = nxw()) != 0) {
+      while ((key = nxw()) != nullptr) {
          TSlaveStat *slstat = (TSlaveStat *) fSlaveStats->GetValue(key);
          if (slstat && slstat->GetProgressStatus() && slstat->GetEntriesProcessed() > 0) {
             // Sum-up the current rates
@@ -1138,21 +1138,21 @@ Float_t TPacketizer::GetCurrentRate(Bool_t &all)
 TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 {
    if ( !fValid ) {
-      return 0;
+      return nullptr;
    }
 
    // Find worker
 
    TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue( sl );
 
-   R__ASSERT( slstat != 0 );
+   R__ASSERT( slstat != nullptr );
 
    PDB(kPacketizer,1)
       Info("GetNextPacket","worker-%s (%s)", sl->GetOrdinal(), sl->GetName());
    // update stats & free old element
 
    Bool_t firstPacket = kFALSE;
-   if ( slstat->fCurElem != 0 ) {
+   if ( slstat->fCurElem != nullptr ) {
       Double_t latency = 0., proctime = 0., proccpu = 0.;
       Long64_t bytesRead = -1;
       Long64_t totalEntries = -1;
@@ -1162,12 +1162,12 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       fPackets->Add(slstat->fCurElem);
 
       if (sl->GetProtocol() > 18) {
-         TProofProgressStatus *status = 0;
+         TProofProgressStatus *status = nullptr;
          (*r) >> latency;
          (*r) >> status;
 
          // Calculate the progress made in the last packet
-         TProofProgressStatus *progress = 0;
+         TProofProgressStatus *progress = nullptr;
          if (status) {
             // upadte the worker status
             numev = status->GetEntries() - slstat->GetEntriesProcessed();
@@ -1212,30 +1212,30 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
          gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(), slstat->fCurElem->GetFileName(),
                                  numev, latency, proctime, proccpu, bytesRead);
 
-      slstat->fCurElem = 0;
+      slstat->fCurElem = nullptr;
       if (fProgressStatus && fProgressStatus->GetEntries() == fTotalEntries) {
-         HandleTimer(0);   // Send last timer message
-         delete fProgress; fProgress = 0;
+         HandleTimer(nullptr);   // Send last timer message
+         delete fProgress; fProgress = nullptr;
       }
    } else {
       firstPacket = kTRUE;
    }
 
    if ( fStop ) {
-      HandleTimer(0);
-      return 0;
+      HandleTimer(nullptr);
+      return nullptr;
    }
 
    // get a file if needed
 
    TFileStat *file = slstat->fCurFile;
 
-   if ( file != 0 && file->IsDone() ) {
+   if ( file != nullptr && file->IsDone() ) {
       file->GetNode()->DecSlaveCnt(slstat->GetName());
       if (gPerfStats)
          gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(), file->GetNode()->GetName(),
                                file->GetElement()->GetFileName(), kFALSE);
-      file = 0;
+      file = nullptr;
    }
    // Reset the current file field
    slstat->fCurFile = file;
@@ -1243,10 +1243,10 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
    if (!file) {
 
       // Try its own node first
-      if (slstat->GetFileNode() != 0) {
+      if (slstat->GetFileNode() != nullptr) {
          file = GetNextUnAlloc(slstat->GetFileNode());
          if (!file) {
-            slstat->SetFileNode(0);
+            slstat->SetFileNode(nullptr);
          }
       }
 
@@ -1260,7 +1260,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
          file = GetNextActive();
       }
 
-      if (!file) return 0;
+      if (!file) return nullptr;
 
       slstat->fCurFile = file;
       file->GetNode()->IncSlaveCnt(slstat->GetName());

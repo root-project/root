@@ -105,7 +105,7 @@ SHtmlStyle_t TGHtml::PopStyleStack(int tag)
       CANT_HAPPEN;
       return GetCurrentStyle();
    }
-   while ((p = fStyleStack) != 0) {
+   while ((p = fStyleStack) != nullptr) {
       type = p->fType;
       if (type <= 0 || type > Html_TypeCount) {
          CANT_HAPPEN;
@@ -143,7 +143,7 @@ static void ScaleFont(SHtmlStyle_t *pStyle, int delta)
 
 void TGHtml::MakeInvisible(TGHtmlElement *p_first, TGHtmlElement *p_last)
 {
-   if (p_first == 0) return;
+   if (p_first == nullptr) return;
    p_first = p_first->fPNext;
    while (p_first && p_first != p_last) {
       p_first->fStyle.fFlags |= STY_Invisible;
@@ -245,10 +245,10 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_A:
             if (fAnchorStart) {
                style = PopStyleStack(Html_EndA);
-               fAnchorStart = 0;
+               fAnchorStart = nullptr;
                fAnchorFlags = 0;
             }
-            z = p->MarkupArg("href", 0);
+            z = p->MarkupArg("href", nullptr);
             if (z) {
                style.fColor = GetLinkColor(z);
                if (fUnderlineLinks) style.fFlags |= STY_Underline;
@@ -262,7 +262,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             if (fAnchorStart) {
                ((TGHtmlRef *)p)->fPOther = fAnchorStart;
                style = PopStyleStack(Html_EndA);
-               fAnchorStart = 0;
+               fAnchorStart = nullptr;
                fAnchorFlags = 0;
             }
             break;
@@ -275,7 +275,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
 
          case Html_AREA: {
             TGHtmlMapArea *area = (TGHtmlMapArea *) p;
-            z = p->MarkupArg("shape", 0);
+            z = p->MarkupArg("shape", nullptr);
             area->fMType = HTML_MAP_RECT;
             if (z) {
                if (strcasecmp(z, "circle") == 0) {
@@ -284,7 +284,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                   area->fMType = HTML_MAP_POLY;
                }
             }
-            z = p->MarkupArg("coords", 0);
+            z = p->MarkupArg("coords", nullptr);
             if (z) {
                area->fCoords = GetCoords(z, &area->fNum);
             }
@@ -315,32 +315,32 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             break;
 
          case Html_BODY:
-            z = p->MarkupArg("text", 0);
+            z = p->MarkupArg("text", nullptr);
             if (z) {
                //FreeColor(fApColor[COLOR_Normal]);
                fApColor[COLOR_Normal] = AllocColor(z);
             }
-            z = p->MarkupArg("bgcolor", 0);
+            z = p->MarkupArg("bgcolor", nullptr);
             if (z) {
                //FreeColor(fApColor[COLOR_Background]);
                fApColor[COLOR_Background] = AllocColor(z);
                SetBackgroundColor(fApColor[COLOR_Background]->fPixel);
                SetBackgroundPixmap(0);
             }
-            z = p->MarkupArg("link", 0);
+            z = p->MarkupArg("link", nullptr);
             if (z) {
                //FreeColor(fApColor[COLOR_Unvisited]);
                fApColor[COLOR_Unvisited] = AllocColor(z);
             }
-            z = p->MarkupArg("vlink", 0);
+            z = p->MarkupArg("vlink", nullptr);
             if (z) {
                //FreeColor(fApColor[COLOR_Visited]);
                fApColor[COLOR_Visited] = AllocColor(z);
             }
-            z = p->MarkupArg("alink", 0);
+            z = p->MarkupArg("alink", nullptr);
             if (z) {
             }
-            z = p->MarkupArg("background", 0);
+            z = p->MarkupArg("background", nullptr);
             if (z) {
                z = ResolveUri(z);
                if (z) {
@@ -404,10 +404,10 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             break;
 
          case Html_BASE:
-            z = p->MarkupArg("href", 0);
+            z = p->MarkupArg("href", nullptr);
             if (z) {
                char *z1 = ResolveUri(z);
-               if (z1 != 0) {
+               if (z1 != nullptr) {
                   if (fZBaseHref) delete[] fZBaseHref;
                   fZBaseHref = z1;
                }
@@ -462,7 +462,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             if (fInnerList && fInnerList->fType == Html_DL) {
                ((TGHtmlRef *)p)->fPOther = fInnerList;
             } else {
-               ((TGHtmlRef *)p)->fPOther = 0;
+               ((TGHtmlRef *)p)->fPOther = nullptr;
             }
             fInDt = 0;
             break;
@@ -479,10 +479,10 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             list->fLPrev = fInnerList;
             list->fCnt = 0;
             fInnerList = list;
-            if (list->fLPrev == 0) {
+            if (list->fLPrev == nullptr) {
                list->fLtype = LI_TYPE_Bullet1;
-               list->fCompact = (list->MarkupArg("compact", 0) != 0);
-            } else if (list->fLPrev->fLPrev == 0) {
+               list->fCompact = (list->MarkupArg("compact", nullptr) != nullptr);
+            } else if (list->fLPrev->fLPrev == nullptr) {
                list->fLtype = LI_TYPE_Bullet2;
                list->fCompact = 1;
             } else {
@@ -514,7 +514,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             if (fInnerList && fInnerList->fType == Html_DL) {
                ((TGHtmlRef *)p)->fPOther = fInnerList;
             } else {
-               ((TGHtmlRef *)p)->fPOther = 0;
+               ((TGHtmlRef *)p)->fPOther = nullptr;
             }
             fInDt = STY_DT;
             break;
@@ -529,7 +529,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             list->fLPrev = fInnerList;
             list->fCnt = 0;
             fInnerList = list;
-            list->fCompact = (list->MarkupArg("compact", 0) != 0);
+            list->fCompact = (list->MarkupArg("compact", nullptr) != nullptr);
             fInDt = 0;
             break;
          }
@@ -544,7 +544,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
 
          case Html_BASEFONT:
          case Html_FONT:
-            z = p->MarkupArg("size", 0);
+            z = p->MarkupArg("size", nullptr);
             if (z && !fOverrideFonts) {
                if (*z == '-') {
                   size = FontSize(style.fFont) - atoi(&z[1]) +1;
@@ -557,7 +557,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                if (size >= N_FONT_SIZE) size = N_FONT_SIZE - 1;
                style.fFont = FontFamily(style.fFont) + size - 1;
             }
-            z = p->MarkupArg("color", 0);
+            z = p->MarkupArg("color", nullptr);
             if (z && *z && !fOverrideColors) style.fColor = GetColorByName(z);
             PushStyleStack(p->fType == Html_FONT ?
                            Html_EndFONT : Html_EndBASEFONT, style);
@@ -572,13 +572,13 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             // int result;
             char zToken[50];
 
-            fFormStart = 0;
+            fFormStart = nullptr;
             //form->fFormId = 0;
 
-            zUrl = p->MarkupArg("action", 0);
-            if (zUrl == 0) zUrl = fZBase;
+            zUrl = p->MarkupArg("action", nullptr);
+            if (zUrl == nullptr) zUrl = fZBase;
             zUrl = ResolveUri(zUrl);
-            if (zUrl == 0) zUrl = StrDup("");
+            if (zUrl == nullptr) zUrl = StrDup("");
             zMethod = p->MarkupArg("method", "GET");
             snprintf(zToken, 50, " %d form ", form->fFormId);
             cmd.Append("Form:");
@@ -600,7 +600,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_EndFORM:
             ((TGHtmlRef *)p)->fPOther = fFormStart;
             if (fFormStart) fFormStart->fPEnd = p;
-            fFormStart = 0;
+            fFormStart = nullptr;
             break;
 
          case Html_H1:
@@ -663,7 +663,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                TGHtmlLi *li = (TGHtmlLi *) p;
                li->fLtype = fInnerList->fLtype;
                if (fInnerList->fType == Html_OL) {
-                  z = li->MarkupArg("value", 0);
+                  z = li->MarkupArg("value", nullptr);
                   if (z) {
                      int n = atoi(z);
                      if (n > 0) {
@@ -730,12 +730,12 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             list->fLPrev = fInnerList;
             list->fLtype = list->GetOrderedListType(LI_TYPE_Enum_1);
             list->fCnt = 1;
-            z = list->MarkupArg("start", 0);
+            z = list->MarkupArg("start", nullptr);
             if (z) {
                int n = atoi(z);
                if (n > 0) list->fCnt = n;
             }
-            list->fCompact = (fInnerList != 0 || list->MarkupArg("compact", 0) != 0);
+            list->fCompact = (fInnerList != nullptr || list->MarkupArg("compact", nullptr) != nullptr);
             fInnerList = list;
             break;
          }
@@ -779,7 +779,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                if (e2 && e2 != p && ((e3 = b3 = e2->fPNext))) {
                   while (e3->fPNext) e3 = e3->fPNext;
                   e1->fPNext = b3;
-                  e2->fPNext = 0;   b2->fPPrev = e3;
+                  e2->fPNext = nullptr;   b2->fPPrev = e3;
                   e3->fPNext = b2;  b3->fPPrev = e1;
                }
                delete[] result;
@@ -804,9 +804,9 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                 ((TGHtmlRef *)p)->fPOther = fFormElemStart;
                MakeInvisible(((TGHtmlRef *)p)->fPOther, p);
             } else {
-               ((TGHtmlRef *)p)->fPOther = 0;
+               ((TGHtmlRef *)p)->fPOther = nullptr;
             }
-            fFormElemStart = 0;
+            fFormElemStart = nullptr;
             break;
 
          case Html_STRIKE:
@@ -853,7 +853,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                style.fFlags |= STY_Preformatted;
             }
             nextStyle.fAlign = ALIGN_Left;
-            z = p->MarkupArg("bgcolor", 0);
+            z = p->MarkupArg("bgcolor", nullptr);
             if (z && *z && !fOverrideColors) {
                style.fBgcolor = nextStyle.fBgcolor = GetColorByName(z);
                style.fExpbg = 1;
@@ -884,7 +884,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             if (fInTd) style = PopStyleStack(Html_EndTD);
             fInTd = 1;
             paraAlign = p->GetAlignment(rowAlign);
-            z = p->MarkupArg("bgcolor", 0);
+            z = p->MarkupArg("bgcolor", nullptr);
             if (z && *z && !fOverrideColors) {
                style.fBgcolor = GetColorByName(z);
                style.fExpbg = 1;
@@ -907,9 +907,9 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             if (fFormElemStart && fFormElemStart->fType == Html_TEXTAREA) {
                ((TGHtmlRef *)p)->fPOther = fFormElemStart;
             } else {
-               ((TGHtmlRef *)p)->fPOther = 0;
+               ((TGHtmlRef *)p)->fPOther = nullptr;
             }
-            fFormElemStart = 0;
+            fFormElemStart = nullptr;
             break;
 
          case Html_TH:
@@ -917,7 +917,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             if (fInTd) style = PopStyleStack(Html_EndTD);
             paraAlign = p->GetAlignment(ALIGN_Center);
             style.fFont = BoldFont(style.fFont);
-            z = p->MarkupArg("bgcolor", 0);
+            z = p->MarkupArg("bgcolor", nullptr);
             if (z && *z && !fOverrideColors) {
                style.fBgcolor = GetColorByName(z);
                style.fExpbg = 1;
@@ -935,7 +935,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                style = PopStyleStack(Html_EndTR);
             }
             rowAlign = p->GetAlignment(ALIGN_None);
-            z = p->MarkupArg("bgcolor", 0);
+            z = p->MarkupArg("bgcolor", nullptr);
             if (z && *z && !fOverrideColors) {
                style.fBgcolor = GetColorByName(z);
                style.fExpbg = 1;
@@ -1023,7 +1023,7 @@ void TGHtml::TableBgndImage(TGHtmlElement *p)
 {
    const char *z;
 
-   z = p->MarkupArg("background", 0);
+   z = p->MarkupArg("background", nullptr);
    if (!z) return;
 
    char *z1 = ResolveUri(z);
@@ -1077,22 +1077,22 @@ void TGHtml::Sizer()
 {
    TGHtmlElement *p;
    int iFont = -1;
-   TGFont *font=0;
+   TGFont *font=nullptr;
    int spaceWidth = 0;
    FontMetrics_t fontMetrics;
    const char *z;
    int stop = 0;
 
-   if (fPFirst == 0) return;
+   if (fPFirst == nullptr) return;
 
-   if (fLastSized == 0) {
+   if (fLastSized == nullptr) {
       p = fPFirst;
    } else {
       p = fLastSized->fPNext;
    }
 
    // coverity[dead_error_line]
-   for (; !stop && p; p = p ? p->fPNext : 0) {
+   for (; !stop && p; p = p ? p->fPNext : nullptr) {
       if (p->fStyle.fFlags & STY_Invisible) {
          p->fFlags &= ~HTML_Visible;
          continue;
@@ -1146,22 +1146,22 @@ void TGHtml::Sizer()
 
          case Html_IMG: {
             TGHtmlImageMarkup *image = (TGHtmlImageMarkup *) p;
-            z = p->MarkupArg("usemap", 0);
+            z = p->MarkupArg("usemap", nullptr);
             if (z && *z == '#') {
                image->fPMap = GetMap(z+1);
             } else {
-               image->fPMap = 0;
+               image->fPMap = nullptr;
             }
             p->fFlags |= HTML_Visible;
             image->fRedrawNeeded = 0;
             image->fTextAscent = fontMetrics.fAscent;
             image->fTextDescent = fontMetrics.fDescent;
             image->fAlign = GetImageAlignment(p);
-            if (image->fPImage == 0) {
+            if (image->fPImage == nullptr) {
                image->fAscent = fontMetrics.fAscent;
                image->fDescent = fontMetrics.fDescent;
                image->fZAlt = p->MarkupArg("alt", "<image>");
-               if (image->fZAlt == 0) image->fZAlt = "<image>";
+               if (image->fZAlt == nullptr) image->fZAlt = "<image>";
                image->fW = font->TextWidth(image->fZAlt, strlen(image->fZAlt));
             } else {
                int w, h;
@@ -1174,18 +1174,18 @@ void TGHtml::Sizer()
                image->fAscent = h / 2;
                image->fDescent = h - image->fAscent;
             }
-            if ((z = p->MarkupArg("width", 0)) != 0) {
+            if ((z = p->MarkupArg("width", nullptr)) != nullptr) {
                int w = atoi(z);
                if (z[strlen(z)-1] == '%') w = 0; //// -- HP
                if (w > 0) image->fW = w;
             }
-            if ((z = p->MarkupArg("height", 0)) != 0) {
+            if ((z = p->MarkupArg("height", nullptr)) != nullptr) {
                int h = atoi(z);
                if (h > 0) image->fH = h;
             }
 
 #if 1  // --HP
-            if (image->fPImage == 0 && !*image->fZAlt) {
+            if (image->fPImage == nullptr && !*image->fZAlt) {
                image->fAscent = image->fH / 2;
                image->fDescent = image->fH - image->fAscent;
             }

@@ -349,7 +349,7 @@ void TAdvancedGraphicsDialog::DoDraw()
 
 void TAdvancedGraphicsDialog::DrawContour()
 {
-   static TGraph * graph = 0;
+   static TGraph * graph = nullptr;
    std::string options;
    if ( ! (fContourOver->GetState() == kButtonDown) ) {
       if ( graph )
@@ -380,7 +380,7 @@ void TAdvancedGraphicsDialog::DrawContour()
 
 void TAdvancedGraphicsDialog::DrawScan()
 {
-   static TGraph * graph = 0;
+   static TGraph * graph = nullptr;
    if ( graph )
       delete graph;
    graph = new TGraph( static_cast<int>(fScanPoints->GetNumber()) );

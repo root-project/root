@@ -30,13 +30,13 @@
 #include "TVirtualMutex.h"
 
 // Hook to server authentication wrapper
-SrvAuth_t TServerSocket::fgSrvAuthHook = 0;
-SrvClup_t TServerSocket::fgSrvAuthClupHook = 0;
+SrvAuth_t TServerSocket::fgSrvAuthHook = nullptr;
+SrvClup_t TServerSocket::fgSrvAuthClupHook = nullptr;
 
 // Defaul options for accept
 UChar_t TServerSocket::fgAcceptOpt = kSrvNoAuth;
 
-TVirtualMutex *gSrvAuthenticateMutex = 0;
+TVirtualMutex *gSrvAuthenticateMutex = nullptr;
 
 ClassImp(TServerSocket);
 
@@ -81,7 +81,7 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 
    SetName("ServerSocket");
 
-   fSecContext = 0;
+   fSecContext = nullptr;
    fSecContexts = new TList;
 
    // If this is a local path, try announcing a UNIX socket service
@@ -144,7 +144,7 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
 
    SetName("ServerSocket");
 
-   fSecContext = 0;
+   fSecContext = nullptr;
    fSecContexts = new TList;
    fService = gSystem->GetServiceByPort(port);
    SetTitle(fService);
@@ -170,7 +170,7 @@ TServerSocket::~TServerSocket()
       // Remove the list
       fSecContexts->Delete();
       SafeDelete(fSecContexts);
-      fSecContexts = 0;
+      fSecContexts = nullptr;
    }
 
    Close();
@@ -203,12 +203,12 @@ TServerSocket::~TServerSocket()
 
 TSocket *TServerSocket::Accept(UChar_t opt)
 {
-   if (fSocket == -1) { return 0; }
+   if (fSocket == -1) { return nullptr; }
 
    TSocket *socket = new TSocket;
 
    Int_t soc = gSystem->AcceptConnection(fSocket);
-   if (soc == -1) { delete socket; return 0; }
+   if (soc == -1) { delete socket; return nullptr; }
    if (soc == -2) { delete socket; return (TSocket*) -1; }
 
    // Parse Opt
@@ -217,7 +217,7 @@ TSocket *TServerSocket::Accept(UChar_t opt)
    Bool_t auth = (Bool_t)(acceptOpt & kSrvAuth);
 
    socket->fSocket  = soc;
-   socket->fSecContext = 0;
+   socket->fSecContext = nullptr;
    socket->fService = fService;
    if (!TestBit(TSocket::kIsUnix))
       socket->fAddress = gSystem->GetPeerName(socket->fSocket);
@@ -230,7 +230,7 @@ TSocket *TServerSocket::Accept(UChar_t opt)
    if (auth) {
       if (!Authenticate(socket)) {
          delete socket;
-         socket = 0;
+         socket = nullptr;
       }
    }
 
@@ -304,7 +304,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
 
       // Load libraries needed for (server) authentication ...
       TString srvlib = "libSrvAuth";
-      char *p = 0;
+      char *p = nullptr;
       // The generic one
       if ((p = gSystem->DynamicPathName(srvlib, kTRUE))) {
          delete[] p;

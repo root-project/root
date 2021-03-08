@@ -47,12 +47,12 @@ TList* TFileStager::GetStaged(TCollection *pathlist)
 {
    if (!pathlist) {
       Error("GetStaged", "list of pathnames was not specified!");
-      return 0;
+      return nullptr;
    }
 
    TList* stagedlist = new TList();
    TIter nxt(pathlist);
-   TObject* o = 0;
+   TObject* o = nullptr;
    Bool_t local = (!strcmp(GetName(), "local")) ? kTRUE : kFALSE;
    while ((o = nxt())) {
       TString pn = TFileStager::GetPathName(o);
@@ -75,7 +75,7 @@ TList* TFileStager::GetStaged(TCollection *pathlist)
 Bool_t TFileStager::Stage(TCollection *pathlist, Option_t *opt)
 {
    TIter nxt(pathlist);
-   TObject *o = 0;
+   TObject *o = nullptr;
    Bool_t success = kFALSE;
 
    while ((o = nxt()))  {
@@ -101,17 +101,17 @@ Bool_t TFileStager::Stage(TCollection *pathlist, Option_t *opt)
 TFileStager *TFileStager::Open(const char *stager)
 {
    TPluginHandler *h;
-   TFileStager *s = 0;
+   TFileStager *s = nullptr;
 
    if (!stager) {
       ::Error("TFileStager::Open", "stager name missing: do nothing");
-      return 0;
+      return nullptr;
    }
 
    if (!gSystem->IsPathLocal(stager) &&
       (h = gROOT->GetPluginManager()->FindHandler("TFileStager", stager))) {
       if (h->LoadPlugin() == -1)
-         return 0;
+         return nullptr;
       s = (TFileStager *) h->ExecPlugin(1, stager);
    } else
       s = new TFileStager("local");

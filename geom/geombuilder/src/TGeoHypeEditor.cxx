@@ -47,7 +47,7 @@ TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape   = nullptr;
    fRini = fRouti = fStIni = fStOuti = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -181,7 +181,7 @@ void TGeoHypeEditor::ConnectSignals2Slots()
 
 void TGeoHypeEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoHype::Class())) {
+   if (obj == nullptr || (obj->IsA()!=TGeoHype::Class())) {
       SetActive(kFALSE);
       return;
    }

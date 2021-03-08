@@ -338,7 +338,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
          FileStat_t infile_stat;
          if (!gSystem->GetPathInfo(infilename, infile_stat)) {
             // can stat.
-            const char* outfile = 0;
+            const char* outfile = nullptr;
             TString firstCanvasFileBase(gSystem->BaseName(outfilename));
             firstCanvasFileBase += "_0.png";
             // first check whether the firstCanvasFile exists:
@@ -413,7 +413,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             void* outdirH = gSystem->OpenDirectory(gSystem->GetDirName(outfilename));
             if (outdirH) {
                // the directory exists.
-               const char* outdirE = 0;
+               const char* outdirE = nullptr;
                while ((outdirE = gSystem->GetDirEntry(outdirH))) {
                   if (reOutFile.Match(outdirE)) {
                      gSystem->Unlink(outdirE);
@@ -432,7 +432,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             outdirH = gSystem->OpenDirectory(gSystem->GetDirName(outfilename));
             if (outdirH) {
                // the directory exists.
-               const char* outdirE = 0;
+               const char* outdirE = nullptr;
                while ((outdirE = gSystem->GetDirEntry(outdirH))) {
                   if (reOutFile.Match(outdirE)) {
                      ++nCanvases;
@@ -468,7 +468,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             }
             TIter iTimer(gSystem->GetListOfTimers());
             std::set<TObject*> timersBefore;
-            TObject* timerOld = 0;
+            TObject* timerOld = nullptr;
             while ((timerOld = iTimer()))
                timersBefore.insert(timerOld);
 
@@ -487,10 +487,10 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
                if (gclient) {
                   TClass* clRootCanvas = TClass::GetClass("TRootCanvas");
                   TClass* clGMainFrame = TClass::GetClass("TGMainFrame");
-                  TObject* win = 0;
+                  TObject* win = nullptr;
                   TIter iWin(gClientGetListOfWindows);
                   while((win = iWin())) {
-                     TObject* winGetParent = 0;
+                     TObject* winGetParent = nullptr;
                      gROOT->ProcessLine(TString::Format("*((TObject**)0x%lx) = ((TGWindow*)0x%lx)->GetParent();",
                                                         (ULong_t)&winGetParent, (ULong_t)win));
                      Bool_t winIsMapped = kFALSE;
@@ -507,7 +507,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
                                                               (ULong_t)&hasEditor, (ULong_t)win));
                         }
                         if (isRootCanvas && !hasEditor) {
-                           TVirtualPad* pad = 0;
+                           TVirtualPad* pad = nullptr;
                            gROOT->ProcessLine(TString::Format("*((TVirtualPad**)0x%lx) = ((TRootCanvas*)0x%lx)->Canvas();",
                                                               (ULong_t)&pad, (ULong_t)win));
                            if (!pad->HasViewer3D() || pad->GetViewer3D()->InheritsFrom("TViewer3DPad")) {
@@ -520,14 +520,14 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
                   }
                } else {
                   // no gClient
-                  TVirtualPad* pad = 0;
-                  TVirtualPad* last = 0;
+                  TVirtualPad* pad = nullptr;
+                  TVirtualPad* last = nullptr;
                   if (!previousWindows.empty())
                      last = (TVirtualPad*) *previousWindows.begin();
                   TIter iCanvas(gROOT->GetListOfCanvases());
                   while ((pad = (TVirtualPad*) iCanvas())) {
                      if (last) {
-                        if (last == pad) last = 0;
+                        if (last == pad) last = nullptr;
                         continue;
                      }
                      pad->SaveAs(TString::Format("%s_%d.png", outfilename, nCanvases++));
@@ -536,7 +536,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
                gInterpreter->Reset();
                gInterpreter->ResetGlobals();
                TIter iTimerRemove(gSystem->GetListOfTimers());
-               TTimer* timer = 0;
+               TTimer* timer = nullptr;
                while ((timer = (TTimer*) iTimerRemove()))
                   if (timersBefore.find(timer) == timersBefore.end())
                      gSystem->RemoveTimer(timer);
@@ -656,13 +656,13 @@ void TDocOutput::CreateHierarchy()
    // write out header
    WriteHtmlHeader(out, "Class Hierarchy");
 
-   WriteTopLinks(out, 0);
+   WriteTopLinks(out, nullptr);
 
    out << "<h1>Class Hierarchy</h1>" << std::endl;
 
 
    // loop on all classes
-   TClassDocInfo* cdi = 0;
+   TClassDocInfo* cdi = nullptr;
    TIter iClass(fHtml->GetListOfClasses());
    while ((cdi = (TClassDocInfo*)iClass())) {
       if (!cdi->HaveSource())
@@ -671,13 +671,13 @@ void TDocOutput::CreateHierarchy()
       // get class
       TDictionary *dictPtr = cdi->GetClass();
       TClass *basePtr = dynamic_cast<TClass*>(dictPtr);
-      if (basePtr == 0) {
+      if (basePtr == nullptr) {
          if (!dictPtr)
             Warning("THtml::CreateHierarchy", "skipping class %s\n", cdi->GetName());
          continue;
       }
 
-      TClassDocOutput cdo(*fHtml, basePtr, 0);
+      TClassDocOutput cdo(*fHtml, basePtr, nullptr);
       cdo.CreateClassHierarchy(out, cdi->GetHtmlFileName());
    }
 
@@ -710,7 +710,7 @@ void TDocOutput::CreateClassIndex()
    // write indexFile header
    WriteHtmlHeader(indexFile, "Class Index");
 
-   WriteTopLinks(indexFile, 0);
+   WriteTopLinks(indexFile, nullptr);
 
    indexFile << "<h1>Class Index</h1>" << std::endl;
 
@@ -721,7 +721,7 @@ void TDocOutput::CreateClassIndex()
       std::vector<std::string> classNames;
       {
          TIter iClass(fHtml->GetListOfClasses());
-         TClassDocInfo* cdi = 0;
+         TClassDocInfo* cdi = nullptr;
          while ((cdi = (TClassDocInfo*)iClass()))
             if (cdi->IsSelected() && cdi->HaveSource())
                classNames.push_back(cdi->GetName());
@@ -745,7 +745,7 @@ void TDocOutput::CreateClassIndex()
    // loop on all classes
    UInt_t currentIndexEntry = 0;
    TIter iClass(fHtml->GetListOfClasses());
-   TClassDocInfo* cdi = 0;
+   TClassDocInfo* cdi = nullptr;
    Int_t i = 0;
    while ((cdi = (TClassDocInfo*)iClass())) {
       if (!cdi->IsSelected() || !cdi->HaveSource())
@@ -814,7 +814,7 @@ void TDocOutput::CreateModuleIndex()
                  << "splines=true;" << std::endl
                  << "K=0.1;" << std::endl;
 
-   TModuleDocInfo* module = 0;
+   TModuleDocInfo* module = nullptr;
    TIter iterModule(fHtml->GetListOfModules());
 
    std::stringstream sstrCluster;
@@ -861,7 +861,7 @@ void TDocOutput::CreateModuleIndex()
       std::list<std::string> classNames;
       {
          TIter iClass(module->GetClasses());
-         TClassDocInfo* cdi = 0;
+         TClassDocInfo* cdi = nullptr;
          while ((cdi = (TClassDocInfo*) iClass())) {
             if (!cdi->IsSelected() || !cdi->HaveSource())
                continue;
@@ -921,7 +921,7 @@ void TDocOutput::CreateModuleIndex()
       } // just a scope block
 
       TIter iClass(module->GetClasses());
-      TClassDocInfo* cdi = 0;
+      TClassDocInfo* cdi = nullptr;
       UInt_t count = 0;
       UInt_t currentIndexEntry = 0;
       while ((cdi = (TClassDocInfo*) iClass())) {
@@ -1004,7 +1004,7 @@ void TDocOutput::CreateModuleIndex()
    // A->C, A->B->C, keep only A->B->C.
 
    TIter iLib(fHtml->GetLibraryDependencies());
-   TLibraryDocInfo* libinfo = 0;
+   TLibraryDocInfo* libinfo = nullptr;
    while ((libinfo = (TLibraryDocInfo*)iLib())) {
       if (!libinfo->GetName() || !libinfo->GetName()[0]) continue;
 
@@ -1107,7 +1107,7 @@ void TDocOutput::CreateModuleIndex()
    // write out header
    WriteHtmlHeader(out, "Library Dependencies");
 
-   WriteTopLinks(out, 0);
+   WriteTopLinks(out, nullptr);
 
    out << "<h1>Library Dependencies</h1>" << std::endl;
 
@@ -1140,7 +1140,7 @@ void TDocOutput::CreateProductIndex()
 
    WriteHtmlHeader(out, GetHtml()->GetProductName() + " Reference Guide");
 
-   WriteTopLinks(out, 0);
+   WriteTopLinks(out, nullptr);
 
    out << "<h1>" << GetHtml()->GetProductName() + " Reference Guide</h1>" << std::endl;
 
@@ -1171,12 +1171,12 @@ void TDocOutput::CreateClassTypeDefs()
    TDocParser parser(*this);
 
    TIter iClass(GetHtml()->GetListOfClasses());
-   TClassDocInfo* cdi = 0;
+   TClassDocInfo* cdi = nullptr;
    while ((cdi = (TClassDocInfo*) iClass())) {
       if (cdi->GetListOfTypedefs().IsEmpty())
          continue;
       TIter iTypedefs(&cdi->GetListOfTypedefs());
-      TDataType* dt = 0;
+      TDataType* dt = nullptr;
       while ((dt = (TDataType*) iTypedefs())) {
          if (gDebug > 0)
             Info("CreateClassTypeDefs", "Creating typedef %s to class %s",
@@ -1681,7 +1681,7 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
    void * dirHandle = gSystem->OpenDirectory(indir);
    if (!dirHandle) return;
 
-   const char* entry = 0;
+   const char* entry = nullptr;
    std::list<std::string> files;
    while ((entry = gSystem->GetDirEntry(dirHandle))) {
       FileStat_t stat;
@@ -1869,7 +1869,7 @@ void TDocOutput::ReferenceEntity(TSubString& str, TDataType* entity, const char*
    NameSpace2FileName(mangledEntity);
 
    TString link;
-   TClassDocInfo* cdi = 0;
+   TClassDocInfo* cdi = nullptr;
    bool isClassTypedef = entity->GetType() == -1;
    if (isClassTypedef)
       /* is class/ struct / union */
@@ -1925,7 +1925,7 @@ void TDocOutput::ReferenceEntity(TSubString& str, TMethod* entity, const char* c
    TString description;
    if (!comment && entity->GetClass()) {
       TIter iMeth(scope->GetListOfMethods());
-      TMethod* mCand = 0;
+      TMethod* mCand = nullptr;
       while ((mCand = (TMethod*)iMeth()))
          if (!strcmp(mCand->GetName(), entity->GetName())) {
             if (description.Length()) {
@@ -1977,7 +1977,7 @@ const char* TDocOutput::ReplaceSpecialChars(char c)
       case '&': return "&amp;";
       case '>': return "&gt;";
    };
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2316,7 +2316,7 @@ void TDocOutput::WriteModuleLinks(std::ostream& out)
       // find index chars
       fHtml->SortListOfModules();
       TIter iModule(fHtml->GetListOfModules());
-      TModuleDocInfo* module = 0;
+      TModuleDocInfo* module = nullptr;
       while ((module = (TModuleDocInfo*) iModule())) {
          if (!module->GetName() || strchr(module->GetName(), '/'))
             continue;
@@ -2362,7 +2362,7 @@ void TDocOutput::WriteModuleLinks(std::ostream& out, TModuleDocInfo* super)
       // find index chars
       super->GetSub().Sort();
       TIter iModule(&super->GetSub());
-      TModuleDocInfo* module = 0;
+      TModuleDocInfo* module = nullptr;
       while ((module = (TModuleDocInfo*) iModule())) {
          if (module->IsSelected()) {
             TString name(module->GetName());

@@ -64,7 +64,7 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t width,
                        Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fPadPointer = 0;
+   fPadPointer = nullptr;
 
    MakeTitle("Pad/Canvas");
 

@@ -38,7 +38,7 @@ Int_t TBufferMergerFile::Write(const char *name, Int_t opt, Int_t bufsize)
    // then Reading and then deleting, let's see if we can just merge using
    // the live TTree.
    if (fMerger.TryMerge(this)) {
-      ResetAfterMerge(0);
+      ResetAfterMerge(nullptr);
       return 0;
    }
 
@@ -53,7 +53,7 @@ Int_t TBufferMergerFile::Write(const char *name, Int_t opt, Int_t bufsize)
       CopyTo(*buffer);
       buffer->SetReadMode();
       fMerger.Push(buffer);
-      ResetAfterMerge(0);
+      ResetAfterMerge(nullptr);
    }
    return nbytes;
 }

@@ -51,16 +51,16 @@ TFileCacheRead::TFileCacheRead() : TObject()
    fNtot        = 0;
    fNb          = 0;
    fSeekSize    = 0;
-   fSeek        = 0;
-   fSeekIndex   = 0;
-   fSeekSort    = 0;
-   fPos         = 0;
-   fSeekLen     = 0;
-   fSeekSortLen = 0;
-   fSeekPos     = 0;
-   fLen         = 0;
-   fFile        = 0;
-   fBuffer      = 0;
+   fSeek        = nullptr;
+   fSeekIndex   = nullptr;
+   fSeekSort    = nullptr;
+   fPos         = nullptr;
+   fSeekLen     = nullptr;
+   fSeekSortLen = nullptr;
+   fSeekPos     = nullptr;
+   fLen         = nullptr;
+   fFile        = nullptr;
+   fBuffer      = nullptr;
    fIsSorted    = kFALSE;
    fIsTransferred = kFALSE;
 
@@ -69,20 +69,20 @@ TFileCacheRead::TFileCacheRead() : TObject()
    fBNtot        = 0;
    fBNb          = 0;
    fBSeekSize    = 0;
-   fBSeek        = 0;
-   fBSeekSort    = 0;
-   fBSeekIndex   = 0;
-   fBPos         = 0;
-   fBSeekLen     = 0;
-   fBSeekSortLen = 0;
-   fBSeekPos     = 0;
-   fBLen         = 0;
+   fBSeek        = nullptr;
+   fBSeekSort    = nullptr;
+   fBSeekIndex   = nullptr;
+   fBPos         = nullptr;
+   fBSeekLen     = nullptr;
+   fBSeekSortLen = nullptr;
+   fBSeekPos     = nullptr;
+   fBLen         = nullptr;
    fBIsSorted    = kFALSE;
    fBIsTransferred=kFALSE;
 
    fAsyncReading = kFALSE;
    fEnablePrefetching = kFALSE;
-   fPrefetch        = 0;
+   fPrefetch        = nullptr;
    fPrefetchedBlocks= 0;
 }
 
@@ -130,8 +130,8 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree)
    fBSeekPos     = new Int_t[fBSeekSize];
    fBLen         = new Int_t[fBSeekSize];
 
-   fBuffer = 0;
-   fPrefetch = 0;
+   fBuffer = nullptr;
+   fPrefetch = nullptr;
    fPrefetchedBlocks = 0;
 
    //initialise the prefetch object and set the cache directory
@@ -189,7 +189,7 @@ void TFileCacheRead::Close(Option_t * /* opt = "" */)
 {
    if (fPrefetch) {
       delete fPrefetch;
-      fPrefetch = 0;
+      fPrefetch = nullptr;
    }
 
 }
@@ -469,8 +469,8 @@ Int_t TFileCacheRead::ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, In
          // in the async way.
 
          // Use the async readv instead of single reads
-         fFile->ReadBuffers(0, 0, 0, 0); //Clear the XrdClient cache
-         if (fFile->ReadBuffers(0,fPos,fLen,fNb)) {
+         fFile->ReadBuffers(nullptr, nullptr, nullptr, 0); //Clear the XrdClient cache
+         if (fFile->ReadBuffers(nullptr,fPos,fLen,fNb)) {
             return -1;
          }
          fIsTransferred = kTRUE;
@@ -593,7 +593,7 @@ void TFileCacheRead::Sort()
    if (fNtot > fBufferSizeMin) {
       fBufferSize = fNtot + 100;
       delete [] fBuffer;
-      fBuffer = 0;
+      fBuffer = nullptr;
       // If ReadBufferAsync is not supported by this implementation
       // it means that we are using sync primitives, hence we need the local buffer
       if (!fAsyncReading)
@@ -651,7 +651,7 @@ void TFileCacheRead::SecondSort()
    if (fBNtot > fBufferSizeMin) {
       fBufferSize = fBNtot + 100;
       delete [] fBuffer;
-      fBuffer = 0;
+      fBuffer = nullptr;
       // If ReadBufferAsync is not supported by this implementation
       // it means that we are using sync primitives, hence we need the local buffer
       if (!fAsyncReading)
@@ -728,16 +728,16 @@ Int_t TFileCacheRead::SetBufferSize(Int_t buffersize)
       inval = kTRUE;
    }
 
-   char *np = 0;
+   char *np = nullptr;
    if (!fEnablePrefetching && !fAsyncReading) {
-      char *pres = 0;
+      char *pres = nullptr;
       if (fIsTransferred) {
          // will need to preserve buffer data
          pres = fBuffer;
-         fBuffer = 0;
+         fBuffer = nullptr;
       }
       delete [] fBuffer;
-      fBuffer = 0;
+      fBuffer = nullptr;
       np = new char[buffersize];
       if (pres) {
          memcpy(np, pres, fNtot);
@@ -794,7 +794,7 @@ void TFileCacheRead::SetEnablePrefetchingImpl(Bool_t setPrefetching)
       }
    } else if (fPrefetch && !fEnablePrefetching) {
        SafeDelete(fPrefetch);
-       fPrefetch = NULL;
+       fPrefetch = nullptr;
    }
 
    //environment variable used to switch to the new method of reading asynchronously
@@ -809,7 +809,7 @@ void TFileCacheRead::SetEnablePrefetchingImpl(Bool_t setPrefetching)
          if (fFile && !(fFile->ReadBufferAsync(0, 0)))
             fAsyncReading = kTRUE;
          }
-      if (!fAsyncReading && fBuffer == 0) {
+      if (!fAsyncReading && fBuffer == nullptr) {
          // we use sync primitives, hence we need the local buffer
          fBuffer = new char[fBufferSize];
       }

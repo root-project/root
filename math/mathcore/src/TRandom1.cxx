@@ -351,7 +351,7 @@ void TRandom1::GetTableSeeds(UInt_t* seeds, Int_t index)
       seeds[0] = fgSeedTable[index][0];
       seeds[1] = fgSeedTable[index][1];
    }
-   else seeds = 0;
+   else seeds = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -500,7 +500,7 @@ void TRandom1::SetSeeds(const UInt_t *seeds, int lux)
    fTheSeeds = seeds;
    seedptr   = seeds;
 
-   if(seeds == 0) {
+   if(seeds == nullptr) {
       SetSeed2(fSeed,lux);
       fTheSeeds = &fSeed;
       return;

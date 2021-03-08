@@ -54,14 +54,14 @@ TProof *TProofMgrLite::CreateSession(const char *cfg,
    TString c(fUrl.GetOptions());
    if (!c.Contains("workers=") && cfg && strstr(cfg, "workers=")) c = cfg;
    Int_t nwrk = TProofLite::GetNumberOfWorkers(c);
-   if (nwrk == 0) return (TProof *)0;
+   if (nwrk == 0) return (TProof *)nullptr;
 
    // Check if we have already a running session
    if (gProof && gProof->IsLite()) {
       if (gProof->IsValid()) {
          if (nwrk > 0 && gProof->GetParallel() != nwrk) {
             delete gProof;
-            gProof = 0;
+            gProof = nullptr;
          } else {
             // We have already a running session
             return gProof;
@@ -69,14 +69,14 @@ TProof *TProofMgrLite::CreateSession(const char *cfg,
       } else {
          // Remove existing instance
          delete gProof;
-         gProof = 0;
+         gProof = nullptr;
       }
    }
 
    // Create the instance
    TString u("lite");
    if (strlen(fUrl.GetOptions()) > 0) u.Form("lite/?%s", fUrl.GetOptions());
-   TProof *p = new TProofLite(u, cfg, 0, loglevel, 0, this);
+   TProof *p = new TProofLite(u, cfg, nullptr, loglevel, nullptr, this);
 
    if (p && p->IsValid()) {
 
@@ -129,7 +129,7 @@ TProof *TProofMgrLite::CreateSession(const char *cfg,
 TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess, const char *stag,
                                          const char *pattern, Bool_t)
 {
-   TProofLog *pl = 0;
+   TProofLog *pl = nullptr;
 
    // The absolute value of isess counts
    isess = (isess < 0) ? -isess : isess;
@@ -163,14 +163,14 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess, const char *stag,
       sessiondir.Form("%s/session-%s", sandbox.Data(), tag.Data());
       if (gSystem->AccessPathName(sessiondir, kReadPermission)) {
          Error("GetSessionLogs", "information for session '%s' not available", tag.Data());
-         return (TProofLog *)0;
+         return (TProofLog *)nullptr;
       }
    } else {
       // Get the list of available dirs
       TSortedList *olddirs = new TSortedList(kFALSE);
       void *dirp = gSystem->OpenDirectory(sandbox);
       if (dirp) {
-         const char *e = 0;
+         const char *e = nullptr;
          while ((e = gSystem->GetDirEntry(dirp))) {
             if (!strncmp(e, "session-", 8)) {
                TString d(e);
@@ -203,7 +203,7 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess, const char *stag,
       if (!n) {
          Error("GetSessionLogs", "cannot locate session dir for index '%d' under '%s':"
                                  " cannot continue!", isess, sandbox.Data());
-         return (TProofLog *)0;
+         return (TProofLog *)nullptr;
       }
       sessiondir = n->GetTitle();
       tag = gSystem->BaseName(sessiondir);
@@ -221,7 +221,7 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess, const char *stag,
    void *dirp = gSystem->OpenDirectory(sessiondir);
    if (dirp) {
       TSortedList *logs = new TSortedList;
-      const char *e = 0;
+      const char *e = nullptr;
       while ((e = gSystem->GetDirEntry(dirp))) {
          TString fn(e);
          if (fn.EndsWith(".log") && fn.CountChar('-') > 0) {
@@ -256,7 +256,7 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess, const char *stag,
       gSystem->FreeDirectory(dirp);
 
       TIter nxl(logs);
-      TNamed *n = 0;
+      TNamed *n = nullptr;
       while ((n = (TNamed *) nxl())) {
          TString ord = Form("0.%s", n->GetName());
          if (ord == "0.-1") ord = "0";
@@ -273,7 +273,7 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess, const char *stag,
    if (pl && retrieve) {
       const char *pat = pattern ? pattern : "-v \"| SvcMsg\"";
       if (pat && strlen(pat) > 0)
-         pl->Retrieve("*", TProofLog::kGrep, 0, pat);
+         pl->Retrieve("*", TProofLog::kGrep, nullptr, pat);
       else
          pl->Retrieve();
    }
@@ -290,7 +290,7 @@ TObjString *TProofMgrLite::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
 {
    if (!fin || strlen(fin) <= 0) {
       Error("ReadBuffer", "undefined path!");
-      return (TObjString *)0;
+      return (TObjString *)nullptr;
    }
 
    // Open the file
@@ -298,7 +298,7 @@ TObjString *TProofMgrLite::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
    Int_t fd = open(fn.Data(), O_RDONLY);
    if (fd < 0) {
       Error("ReadBuffer", "problems opening file %s", fn.Data());
-      return (TObjString *)0;
+      return (TObjString *)nullptr;
    }
 
    // Total size
@@ -325,7 +325,7 @@ TObjString *TProofMgrLite::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
       if (len < 0) {
          Error("ReadBuffer", "error reading file %s", fn.Data());
          close(fd);
-         return (TObjString *)0;
+         return (TObjString *)nullptr;
       } else if (len > 0) {
          if (len == wanted)
             buf[len-1] = '\n';
@@ -354,11 +354,11 @@ TObjString *TProofMgrLite::ReadBuffer(const char *fin, const char *pattern)
 {
    // If no pattern, read everything
    if (!pattern || strlen(pattern) <= 0)
-      return (TObjString *)0;
+      return (TObjString *)nullptr;
 
    if (!fin || strlen(fin) <= 0) {
       Error("ReadBuffer", "undefined path!");
-      return (TObjString *)0;
+      return (TObjString *)nullptr;
    }
    TString fn = TUrl(fin).GetFile();
 

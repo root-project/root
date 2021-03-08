@@ -100,8 +100,8 @@ TGTableLayout::TGTableLayout(TGCompositeFrame *main, UInt_t nrows, UInt_t ncols,
    fHints   = hints;
    fNrows   = nrows;
    fNcols   = ncols;
-   fRow     = 0;
-   fCol     = 0;
+   fRow     = nullptr;
+   fCol     = nullptr;
    fHomogeneous = homogeneous;
 }
 

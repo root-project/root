@@ -47,7 +47,7 @@ void SequentialProposal::Propose(RooArgSet& xPrime, RooArgSet& x )
    RooRealVar* var;
    int n = xPrime.getSize();
    int j = int( floor(RooRandom::uniform()*n) );
-   for (int i = 0; (var = (RooRealVar*)it.Next()) != NULL; ++i) {
+   for (int i = 0; (var = (RooRealVar*)it.Next()) != nullptr; ++i) {
       if (i == j) {
         double val = var->getVal(), max = var->getMax(), min = var->getMin(), len = max - min;
         val += RooRandom::gaussian() * len * fDivisor;

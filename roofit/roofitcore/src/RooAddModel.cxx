@@ -64,10 +64,10 @@ ClassImp(RooAddModel);
 
 RooAddModel::RooAddModel() :
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
-  _refCoefRangeName(0),
+  _refCoefRangeName(nullptr),
   _projectCoefs(false),
   _codeReg(10),
-  _snormList(0),
+  _snormList(nullptr),
   _haveLastCoef(false),
   _allExtendable(false)
 {
@@ -88,7 +88,7 @@ RooAddModel::RooAddModel() :
 RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& inPdfList, const RooArgList& inCoefList, Bool_t ownPdfList) :
   RooResolutionModel(name,title,((RooResolutionModel*)inPdfList.at(0))->convVar()),
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
-  _refCoefRangeName(0),
+  _refCoefRangeName(nullptr),
   _projectCoefs(kFALSE),
   _projCacheMgr(this,10),
   _intCacheMgr(this,10),
@@ -247,7 +247,7 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
     ccoutE(InputArguments) << "basis->findServer(0) = " << inBasis->findServer(0) << " " << inBasis->findServer(0)->GetName() << endl ;
     ccoutE(InputArguments) << "x.absArg()           = " << x.absArg() << " " << x.absArg()->GetName() << endl ;
     inBasis->Print("v") ;
-    return 0 ;
+    return nullptr ;
   }
 
   TString newName(GetName()) ;
@@ -324,7 +324,7 @@ Int_t RooAddModel::basisCode(const char* name) const
 RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
 {
   // Check if cache already exists 
-  CacheElem* cache = (CacheElem*) _projCacheMgr.getObj(nset,iset,0,RooNameReg::ptr(rangeName)) ;
+  CacheElem* cache = (CacheElem*) _projCacheMgr.getObj(nset,iset,nullptr,RooNameReg::ptr(rangeName)) ;
   if (cache) {
     return cache ;
   }
@@ -388,7 +388,7 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
   // *** PART 2 : Create projection coefficients ***
 
   // If no projections required stop here
-  if (!_projectCoefs || _basis!=0 ) {
+  if (!_projectCoefs || _basis!=nullptr ) {
     _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
     return cache ;
   }
@@ -398,7 +398,7 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
   RooArgSet* nset2 = nset ? getObservables(nset) : new RooArgSet() ;
 
   // Check if requested transformation is not identity 
-  if (!nset2->equals(_refCoefNorm) || _refCoefRangeName !=0 || rangeName !=0 ) {
+  if (!nset2->equals(_refCoefNorm) || _refCoefRangeName !=nullptr || rangeName !=nullptr ) {
     
     coutI(Caching)  << "RooAddModel::syncCoefProjList(" << GetName() << ") creating coefficient projection integrals" << endl ;
     ccoutI(Caching) << "  from current normalization: "  ; nset2->Print("1") ;
@@ -711,7 +711,7 @@ void RooAddModel::getCompIntList(const RooArgSet* nset, const RooArgSet* iset, p
   for (auto obj : _pdfList) {
     auto model = static_cast<RooResolutionModel*>(obj);
 
-    RooAbsReal* intPdf = model->createIntegral(*iset,nset,0,isetRangeName) ;
+    RooAbsReal* intPdf = model->createIntegral(*iset,nset,nullptr,isetRangeName) ;
     cache->_intList.addOwned(*intPdf) ;
   }
 
@@ -740,7 +740,7 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,
   RooArgList* compIntList ;
 
   // If cache has been sterilized, revive this slot
-  if (cache==0) {
+  if (cache==nullptr) {
     RooArgSet* vars = getParameters(RooArgSet()) ;
     RooArgSet* nset = _intCacheMgr.nameSet1ByIndex(code-1)->select(*vars) ;
     RooArgSet* iset = _intCacheMgr.nameSet2ByIndex(code-1)->select(*vars) ;

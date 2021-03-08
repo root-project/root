@@ -96,9 +96,9 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    fTotalEntries = 0;
    fValid = kTRUE;
    fStop = kFALSE;
-   fFailedPackets = 0;
+   fFailedPackets = nullptr;
    fDataSet = "";
-   fSlaveStats = 0;
+   fSlaveStats = nullptr;
 
    // Performance monitoring
    fStartTime = gSystem->Now();
@@ -113,7 +113,7 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    fCircN = 5;
    TProof::GetParameter(input, "PROOF_ProgressCircularity", fCircN);
    fCircProg->SetCircular(fCircN);
-   fCircProg->SetDirectory(0);
+   fCircProg->SetDirectory(nullptr);
 
    // Check if we need to start the progress timer (multi-packetizers do not want
    // timers from the packetizers they control ...). Also submasters do not need
@@ -126,7 +126,7 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    // Init progress timer, if requested
    // The timer is destroyed (and therefore stopped) by the relevant TPacketizer implementation
    // in GetNextPacket when end of work is detected.
-   fProgress = 0;
+   fProgress = nullptr;
    if (startProgress == "yes") {
       Long_t period = 500;
       TProof::GetParameter(input, "PROOF_ProgressPeriod", period);
@@ -136,7 +136,7 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    }
 
    // Init ntple to store active workers vs processing time
-   fProgressPerf = 0;
+   fProgressPerf = nullptr;
    TString saveProgressPerf("no");
    if (TProof::GetParameter(input, "PROOF_SaveProgressPerf", saveProgressPerf) == 0) {
       if (fProgress && saveProgressPerf == "yes")
@@ -175,7 +175,7 @@ TVirtualPacketizer::~TVirtualPacketizer()
    SafeDelete(fFailedPackets);
    SafeDelete(fConfigParams);
    SafeDelete(fProgressPerf);
-   fProgressStatus = 0; // belongs to the player
+   fProgressStatus = nullptr; // belongs to the player
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,14 +203,14 @@ Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
 
    if ( tree ) {
       TKey *key = dir->GetKey(e->GetObjName());
-      if ( key == 0 ) {
+      if ( key == nullptr ) {
          Error("GetEntries","Cannot find tree \"%s\" in %s",
                e->GetObjName(), e->GetFileName() );
          delete file;
          return -1;
       }
       TTree *t = (TTree *) key->ReadObj();
-      if ( t == 0 ) {
+      if ( t == nullptr ) {
          // Error always reported?
          delete file;
          return -1;
@@ -234,7 +234,7 @@ Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
 TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *, TMessage *)
 {
    AbstractMethod("GetNextPacket");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -243,7 +243,7 @@ TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *, TMessage *)
 void TVirtualPacketizer::StopProcess(Bool_t /*abort*/, Bool_t stoptimer)
 {
    fStop = kTRUE;
-   if (stoptimer) HandleTimer(0);
+   if (stoptimer) HandleTimer(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -256,13 +256,13 @@ TDSetElement* TVirtualPacketizer::CreateNewPacket(TDSetElement* base,
 {
    TDSetElement* elem = new TDSetElement(base->GetFileName(), base->GetObjName(),
                                          base->GetDirectory(), first, num,
-                                         0, fDataSet.Data());
+                                         nullptr, fDataSet.Data());
 
    // create TDSetElements for all the friends of elem.
    TList *friends = base->GetListOfFriends();
    if (friends) {
       TIter nxf(friends);
-      TDSetElement *fe = 0;
+      TDSetElement *fe = nullptr;
       while ((fe = (TDSetElement *) nxf())) {
          PDB(kLoop,2)
             Info("CreateNewPacket", "friend: file '%s', obj:'%s'",
@@ -270,7 +270,7 @@ TDSetElement* TVirtualPacketizer::CreateNewPacket(TDSetElement* base,
          TDSetElement *xfe = new TDSetElement(fe->GetFileName(), fe->GetObjName(),
                                               fe->GetDirectory(), first, num);
          // The alias, if any, is in the element name options ('friend_alias=<alias>|')
-         elem->AddFriend(xfe, 0);
+         elem->AddFriend(xfe, nullptr);
       }
    }
 
@@ -286,7 +286,7 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
       Info("HandleTimer", "fProgress: %p, isDone: %d",
                           fProgress, TestBit(TVirtualPacketizer::kIsDone));
 
-   if (fProgress == 0 || TestBit(TVirtualPacketizer::kIsDone)) {
+   if (fProgress == nullptr || TestBit(TVirtualPacketizer::kIsDone)) {
       // Make sure that the timer is stopped
       if (fProgress) fProgress->Stop();
       return kFALSE;

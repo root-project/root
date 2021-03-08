@@ -557,7 +557,7 @@ TF1* ROOT::Experimental::RFitPanel::copyTF1(TF1* f)
       fnew->SetParent( nullptr );
       fnew->AddToGlobalList(false);
       return fnew;
-   } else if ( dynamic_cast<TF2*>(f) != 0 ) {
+   } else if ( dynamic_cast<TF2*>(f) != nullptr ) {
       TF2* fnew = (TF2*)f->IsA()->New();
       f->Copy(*fnew);
       f->GetRange(xmin,ymin,xmax,ymax);

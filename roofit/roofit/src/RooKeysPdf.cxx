@@ -57,7 +57,7 @@ const Double_t RooKeysPdf::_nSigma = std::sqrt(-2. *
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]
 
-  RooKeysPdf::RooKeysPdf() : _nEvents(0), _dataPts(0), _dataWgts(0), _weights(0), _sumWgt(0),
+  RooKeysPdf::RooKeysPdf() : _nEvents(0), _dataPts(nullptr), _dataWgts(nullptr), _weights(nullptr), _sumWgt(0),
               _mirrorLeft(kFALSE), _mirrorRight(kFALSE),
               _asymLeft(kFALSE), _asymRight(kFALSE)
 {
@@ -73,9 +73,9 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
   RooAbsPdf(name,title),
   _x("x","observable",this,x),
   _nEvents(0),
-  _dataPts(0),
-  _dataWgts(0),
-  _weights(0),
+  _dataPts(nullptr),
+  _dataWgts(nullptr),
+  _weights(nullptr),
   _mirrorLeft(mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
   _mirrorRight(mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
   _asymLeft(mirror==MirrorAsymLeft || mirror==MirrorAsymLeftRight || mirror==MirrorAsymBoth),
@@ -102,9 +102,9 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
   RooAbsPdf(name,title),
   _x("x","Observable",this,xpdf),
   _nEvents(0),
-  _dataPts(0),
-  _dataWgts(0),
-  _weights(0),
+  _dataPts(nullptr),
+  _dataWgts(nullptr),
+  _weights(nullptr),
   _mirrorLeft(mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
   _mirrorRight(mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
   _asymLeft(mirror==MirrorAsymLeft || mirror==MirrorAsymLeftRight || mirror==MirrorAsymBoth),
@@ -126,7 +126,7 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 
 RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   RooAbsPdf(other,name), _x("x",this,other._x), _nEvents(other._nEvents),
-  _dataPts(0), _dataWgts(0), _weights(0), _sumWgt(0),
+  _dataPts(nullptr), _dataWgts(nullptr), _weights(nullptr), _sumWgt(0),
   _mirrorLeft( other._mirrorLeft ), _mirrorRight( other._mirrorRight ),
   _asymLeft(other._asymLeft), _asymRight(other._asymRight),
   _rho( other._rho ) {

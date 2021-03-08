@@ -197,7 +197,7 @@ RooWorkspace * ModelConfig::GetWS() const {
    RooWorkspace *ws = dynamic_cast<RooWorkspace *>(fRefWS.GetObject() );
    if(!ws) {
       coutE(ObjectHandling) << "workspace not set" << endl;
-      return NULL;
+      return nullptr;
    }
    return ws;
 }
@@ -223,18 +223,18 @@ void ModelConfig::SetSnapshot(const RooArgSet& set) {
 /// User must delete returned RooArgSet.
 
 const RooArgSet * ModelConfig::GetSnapshot() const{
-   if ( !GetWS() ) return 0;
-   if (!fSnapshotName.length()) return 0;
+   if ( !GetWS() ) return nullptr;
+   if (!fSnapshotName.length()) return nullptr;
    // calling loadSnapshot will also copy the current parameter values in the workspaces
    // since we do not want to change the model parameters - we restore the previous ones
-   if (! GetWS()->set(fSnapshotName.c_str() ) )return 0;
+   if (! GetWS()->set(fSnapshotName.c_str() ) )return nullptr;
    RooArgSet snapshotVars(*GetWS()->set(fSnapshotName.c_str() ) );
-   if (snapshotVars.getSize() == 0) return 0;
+   if (snapshotVars.getSize() == 0) return nullptr;
    // make my snapshot which will contain a copy of the snapshot variables
    RooArgSet tempSnapshot;
    snapshotVars.snapshot(tempSnapshot);
    // load snapshot value from the workspace
-   if (!(GetWS()->loadSnapshot(fSnapshotName.c_str())) ) return 0;
+   if (!(GetWS()->loadSnapshot(fSnapshotName.c_str())) ) return nullptr;
    // by doing this snapshotVars will have the snapshot values - make the snapshot to return
    const RooArgSet * modelSnapshot = dynamic_cast<const RooArgSet*>( snapshotVars.snapshot());
    // restore now the variables of snapshot in ws to their original values

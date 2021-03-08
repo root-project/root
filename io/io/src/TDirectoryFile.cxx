@@ -465,7 +465,7 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
       return this;
    }
 
-   if (funcname==0 || strlen(funcname)==0) funcname = "GetDirectory";
+   if (funcname==nullptr || strlen(funcname)==0) funcname = "GetDirectory";
 
    TDirectory *result = this;
 
@@ -633,7 +633,7 @@ void TDirectoryFile::Delete(const char *namecycle)
    if(strcmp(name,"*") == 0)   deleteall = 1;
    if(strcmp(name,"*T") == 0){ deleteall = 1; deletetree = 1;}
    if(strcmp(name,"T*") == 0){ deleteall = 1; deletetree = 1;}
-   if(namecycle==0 || !namecycle[0]){ deleteall = 1; deletetree = 1;}
+   if(namecycle==nullptr || !namecycle[0]){ deleteall = 1; deletetree = 1;}
    TRegexp re(name,kTRUE);
    TString s;
    Int_t deleteOK = 0;
@@ -693,7 +693,7 @@ void TDirectoryFile::Delete(const char *namecycle)
                if (deleteOK==2) {
                   // read directory with subdirectories to correctly delete and free key structure
                   TDirectory* dir = GetDirectory(key->GetName(), kTRUE, "Delete");
-                  if (dir!=0) {
+                  if (dir!=nullptr) {
                      dir->Delete("T*;*");
                      fList->Remove(dir);
                      delete dir;
@@ -707,7 +707,7 @@ void TDirectoryFile::Delete(const char *namecycle)
             }
          }
          TFile* f = GetFile();
-         if (fModified && (f!=0)) {
+         if (fModified && (f!=nullptr)) {
             WriteKeys();            //*-* Write new keys structure
             WriteDirHeader();       //*-* Write new directory header
             f->WriteFree();     //*-* Write new free segments list
@@ -920,7 +920,7 @@ TObject *TDirectoryFile::Get(const char *namecycle)
          TDirectory* dirToSearch=GetDirectory(name);
          const char *subnamecycle = namecycle + i + 1;
          name[i] = '/';
-         return dirToSearch?dirToSearch->Get(subnamecycle):0;
+         return dirToSearch?dirToSearch->Get(subnamecycle):nullptr;
       }
    }
    const char *namobj = name;
@@ -1042,7 +1042,7 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expe
 
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
-   if (expectedClass==0 || expectedClass->IsTObject()) {
+   if (expectedClass==nullptr || expectedClass->IsTObject()) {
       TObject *objcur = fList ? fList->FindObject(namobj) : nullptr;
       if (objcur) {
          if (objcur==this && strlen(namobj)!=0) {
@@ -1289,17 +1289,17 @@ void TDirectoryFile::ReadAll(Option_t* opt)
    TKey *key;
    TIter next(GetListOfKeys());
 
-   Bool_t readdirs = ((opt!=0) && ((strcmp(opt,"dirs")==0) || (strcmp(opt,"dirs*")==0)));
+   Bool_t readdirs = ((opt!=nullptr) && ((strcmp(opt,"dirs")==0) || (strcmp(opt,"dirs*")==0)));
 
    if (readdirs)
       while ((key = (TKey *) next())) {
 
          //if (strcmp(key->GetClassName(),"TDirectory")!=0) continue;
-         if (strstr(key->GetClassName(),"TDirectory")==0) continue;
+         if (strstr(key->GetClassName(),"TDirectory")==nullptr) continue;
 
          TDirectory *dir = GetDirectory(key->GetName(), kTRUE, "ReadAll");
 
-         if ((dir!=0) && (strcmp(opt,"dirs*")==0)) dir->ReadAll("dirs*");
+         if ((dir!=nullptr) && (strcmp(opt,"dirs*")==0)) dir->ReadAll("dirs*");
       }
    else
       while ((key = (TKey *) next())) {
@@ -1677,7 +1677,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
       if (fFile && fFile->IsWritable()) fWritable = kTRUE;
 
       if (fFile && !fFile->IsBinary()) {
-         Version_t R__v = b.ReadVersion(0, 0);
+         Version_t R__v = b.ReadVersion(nullptr, nullptr);
 
          TClass* dirclass = (R__v < 5) ? TDirectory::Class() : TDirectoryFile::Class();
 
@@ -1794,7 +1794,7 @@ Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsize)
    TObject *obj;
    Int_t nbytes = 0;
    while ((obj=next())) {
-      nbytes += obj->Write(0,opt,bufsize);
+      nbytes += obj->Write(nullptr,opt,bufsize);
    }
    if (R__likely(!(opt & kOnlyPrepStep)))
       SaveSelf(kTRUE);   // force save itself
@@ -1859,7 +1859,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
 {
    TDirectory::TContext ctxt(this);
 
-   if (fFile==0) {
+   if (fFile==nullptr) {
       const char *objname = "no name specified";
       if (name) objname = name;
       else if (obj) objname = obj->GetName();
@@ -1880,7 +1880,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    TString opt = option;
    opt.ToLower();
 
-   TKey *key=0, *oldkey=0;
+   TKey *key=nullptr, *oldkey=nullptr;
    Int_t bsize = GetBufferSize();
    if (bufsize > 0) bsize = bufsize;
 

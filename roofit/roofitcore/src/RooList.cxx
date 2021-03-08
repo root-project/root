@@ -44,18 +44,18 @@ ClassImp(RooList);
 
 TObjOptLink *RooList::findLink(const char *name, const char *caller) const 
 {
-  if(0 == strlen(name)) return 0;
+  if(0 == strlen(name)) return nullptr;
   TObjLink *link = FirstLink();
   while (link) {
     TObject *obj= link->GetObject();
     if (obj->GetName() && !strcmp(name, obj->GetName())) break;
     link = link->Next();
   }
-  if(0 == link) {
+  if(nullptr == link) {
     if(strlen(caller)) {
       coutE(InputArguments) << caller << ": cannot find object named \"" << name << "\"" << endl;
     }
-    return 0;
+    return nullptr;
   }
   return dynamic_cast<TObjOptLink*>(link);
 }
@@ -69,11 +69,11 @@ Bool_t RooList::moveBefore(const char *before, const char *target, const char *c
 {
   // Find the target object's link
   TObjOptLink *targetLink= findLink(target,caller);
-  if(0 == targetLink) return kFALSE;
+  if(nullptr == targetLink) return kFALSE;
 
   // Find the insert-before object's link
   TObjOptLink *beforeLink= findLink(before,caller);
-  if(0 == beforeLink) return kFALSE;
+  if(nullptr == beforeLink) return kFALSE;
 
   // Remember the target link's object and options
   TObject *obj= targetLink->GetObject();
@@ -104,11 +104,11 @@ Bool_t RooList::moveAfter(const char *after, const char *target, const char *cal
 {
   // Find the target object's link
   TObjOptLink *targetLink= findLink(target,caller);
-  if(0 == targetLink) return kFALSE;
+  if(nullptr == targetLink) return kFALSE;
 
   // Find the insert-after object's link
   TObjOptLink *afterLink= findLink(after,caller);
-  if(0 == afterLink) return kFALSE;
+  if(nullptr == afterLink) return kFALSE;
 
   // Remember the target link's object and options
   TObject *obj= targetLink->GetObject();

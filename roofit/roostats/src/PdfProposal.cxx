@@ -74,11 +74,11 @@ using namespace std;
 
 PdfProposal::PdfProposal() : ProposalFunction()
 {
-   fPdf = NULL;
+   fPdf = nullptr;
    fOwnsPdf = kFALSE;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = NULL;
+   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
    fOwnsPdf = kFALSE;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = NULL;
+   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ Bool_t PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
    if (x1.equals(x2)) {
       TIterator* it = x1.createIterator();
       RooRealVar* r;
-      while ((r = (RooRealVar*)it->Next()) != NULL)
+      while ((r = (RooRealVar*)it->Next()) != nullptr)
          if (r->getVal() != x2.getRealValue(r->GetName())) {
             delete it;
             return kFALSE;
@@ -199,8 +199,8 @@ Double_t PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
 
 void PdfProposal::AddMapping(RooRealVar& proposalParam, RooAbsReal& update)
 {
-   fMaster.add(*update.getParameters((RooAbsData*)NULL));
-   if (update.getParameters((RooAbsData*)NULL)->getSize() == 0)
+   fMaster.add(*update.getParameters((RooAbsData*)nullptr));
+   if (update.getParameters((RooAbsData*)nullptr)->getSize() == 0)
       fMaster.add(update);
    fMap.insert(pair<RooRealVar*, RooAbsReal*>(&proposalParam, &update));
 }

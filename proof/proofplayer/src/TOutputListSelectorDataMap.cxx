@@ -33,9 +33,9 @@ output list.
 namespace {
 
    static TClass* IsSettableDataMember(TDataMember* dm) {
-      if (!dm || !dm->IsaPointer() || dm->IsBasic()) return 0;
+      if (!dm || !dm->IsaPointer() || dm->IsBasic()) return nullptr;
       TString dtTypeName = dm->GetFullTypeName();
-      if (!dtTypeName.EndsWith("*")) return 0;
+      if (!dtTypeName.EndsWith("*")) return nullptr;
       dtTypeName.Remove(dtTypeName.Length()-1);
       return TClass::GetClass(dtTypeName);
    }
@@ -188,7 +188,7 @@ ClassImp(TOutputListSelectorDataMap);
 /// Create a mapper between output list items and TSelector data members.
 
 TOutputListSelectorDataMap::TOutputListSelectorDataMap(TSelector* sel /*= 0*/):
-   fMap(0)
+   fMap(nullptr)
 {
    if (sel) Init(sel);
 }
@@ -244,7 +244,7 @@ Bool_t TOutputListSelectorDataMap::Init(TSelector* sel)
       TObject* obj = (TObject*) (ptrdiff_t)cdm.GetMemberPointers().GetValue((Long64_t)(ptrdiff_t)output);
       if (!obj) continue;
 
-      TList* addAllDM = 0;
+      TList* addAllDM = nullptr;
       if (obj->InheritsFrom(TDataMember::Class())) {
          oneDM.Add(obj);
          addAllDM = &oneDM;
@@ -252,7 +252,7 @@ Bool_t TOutputListSelectorDataMap::Init(TSelector* sel)
          addAllDM = (TList*) obj;
       }
       TIter iDM(addAllDM);
-      TDataMember* dm = 0;
+      TDataMember* dm = nullptr;
       while ((dm = (TDataMember*) iDM())) {
          fMap->Add(new TNamed(dm->GetName(), output->GetName()));
          PDB(kOutput,1) Info("Init()","Data member `%s' corresponds to output `%s'",
@@ -291,7 +291,7 @@ Bool_t TOutputListSelectorDataMap::Merge(TObject* obj)
 
    // check for consistency
    TIter iMapping(other->GetMap());
-   TNamed* mapping = 0;
+   TNamed* mapping = nullptr;
    while ((mapping = (TNamed*)iMapping())) {
       TObject* oldMap = fMap->FindObject(mapping->GetName());
       if (!oldMap) {
@@ -318,8 +318,8 @@ Bool_t TOutputListSelectorDataMap::Merge(TObject* obj)
 TOutputListSelectorDataMap* TOutputListSelectorDataMap::FindInList(TCollection* coll)
 {
    TIter iOutput(coll);
-   TObject* out = 0;
-   TOutputListSelectorDataMap* olsdm = 0;
+   TObject* out = nullptr;
+   TOutputListSelectorDataMap* olsdm = nullptr;
    while ((out = iOutput())) {
       if (out->InheritsFrom(TOutputListSelectorDataMap::Class())) {
          olsdm = dynamic_cast<TOutputListSelectorDataMap*>(out);

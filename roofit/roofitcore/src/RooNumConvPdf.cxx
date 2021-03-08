@@ -85,7 +85,7 @@ ClassImp(RooNumConvPdf);
 
 RooNumConvPdf::RooNumConvPdf() :
   _init(kFALSE),
-  _conv(0)
+  _conv(nullptr)
 {  
 }
 
@@ -96,7 +96,7 @@ RooNumConvPdf::RooNumConvPdf() :
 RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& inPdf, RooAbsPdf& resmodel) : 
   RooAbsPdf(name,title), 
   _init(kFALSE),
-  _conv(0),
+  _conv(nullptr),
   _origVar("!origVar","Original Convolution variable",this,convVar),
   _origPdf("!origPdf","Original Input PDF",this,inPdf),
   _origModel("!origModel","Original Resolution model",this,resmodel)
@@ -129,7 +129,7 @@ RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
   if (other._conv) {
     _conv = new RooNumConvolution(*other._conv,Form("%s_CONV",name?name:GetName())) ;
   } else {
-    _conv = 0 ;
+    _conv = nullptr ;
   }
 }
 

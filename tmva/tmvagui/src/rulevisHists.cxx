@@ -27,10 +27,10 @@ void TMVA::rulevisHists(TString fin, TMVAGlob::TypeOfPlot type, bool useTMVAStyl
 
    // get top dir containing all hists of the variables
    TDirectory* vardir = TMVAGlob::GetInputVariablesDir( type );
-   if (vardir==0) return;
+   if (vardir==nullptr) return;
 
    TDirectory* corrdir = TMVAGlob::GetCorrelationPlotsDir( type, vardir );
-   if (corrdir==0) return;
+   if (corrdir==nullptr) return;
 
    // loop over all titles
    TIter keyIter(&titles);
@@ -44,9 +44,9 @@ void TMVA::rulevisHists(TString fin, TMVAGlob::TypeOfPlot type, bool useTMVAStyl
 
 void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corrdir, TMVAGlob::TypeOfPlot type) {
    //
-   if (rfdir==0)   return;
-   if (vardir==0)  return;
-   if (corrdir==0) return;
+   if (rfdir==nullptr)   return;
+   if (vardir==nullptr)  return;
+   if (corrdir==nullptr) return;
    //
    const TString rfName    = rfdir->GetName();
    const TString maintitle = rfName + " : Rule Importance";
@@ -126,7 +126,7 @@ void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corr
    // this defines how many canvases we need
    const Int_t noCanvas = 1 + (Int_t)((noPlots - 0.001)/noPad);
    TCanvas **c = new TCanvas*[noCanvas];
-   for (Int_t ic=0; ic<noCanvas; ic++) c[ic] = 0;
+   for (Int_t ic=0; ic<noCanvas; ic++) c[ic] = nullptr;
 
    // counter variables
    Int_t countCanvas = 0;
@@ -149,7 +149,7 @@ void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corr
       // check for all signal histograms
       if (hname.Contains("__S")){ // found a new signal plot
          // create new canvas
-         if ((c[countCanvas]==NULL) || (countPad>noPad)) {
+         if ((c[countCanvas]==nullptr) || (countPad>noPad)) {
             char cn[20];
             sprintf( cn, "rulehist%d_", countCanvas+1 );
             TString cname(cn);
@@ -171,7 +171,7 @@ void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corr
          bgname.ReplaceAll("__S","__B");
          TKey *hkey = vardir->GetKey(bgname);
          TH1F* bgd = (TH1F*)hkey->ReadObj();
-         if (bgd == NULL) {
+         if (bgd == nullptr) {
             cout << "ERROR!!! couldn't find backgroung histo for" << hname << endl;
             //exit(1);
             delete [] c;

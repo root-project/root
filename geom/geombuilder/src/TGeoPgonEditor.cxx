@@ -71,7 +71,7 @@ TGeoPgonEditor::~TGeoPgonEditor()
 
 void TGeoPgonEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoPgon::Class())) {
+   if (obj == nullptr || (obj->IsA()!=TGeoPgon::Class())) {
       SetActive(kFALSE);
       return;
    }

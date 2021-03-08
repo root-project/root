@@ -49,7 +49,7 @@ namespace ROOT {
 
          // init the pointers for CINT
          //if (fFunc->GetMethodCall() )  fFunc->InitArgs(fX, &fParams.front() );
-         if (fFunc->GetMethodCall())  fFunc->InitArgs(fX, 0);
+         if (fFunc->GetMethodCall())  fFunc->InitArgs(fX, nullptr);
          // distinguish case of polynomial functions and linear functions
          if (fFunc->GetNumber() >= 300 && fFunc->GetNumber() < 310) {
             fLinear = true;
@@ -60,7 +60,7 @@ namespace ROOT {
             int ip = 0;
             fLinear = true;
             while (fLinear && ip < fFunc->GetNpar())  {
-               fLinear &= (fFunc->GetLinearPart(ip) != 0) ;
+               fLinear &= (fFunc->GetLinearPart(ip) != nullptr) ;
                ip++;
             }
          }
@@ -77,7 +77,7 @@ namespace ROOT {
          //fParams(rhs.fParams)
       {
          // copy constructor
-         fFunc->InitArgs(fX, 0);
+         fFunc->InitArgs(fX, nullptr);
       }
 
       WrappedTF1 &WrappedTF1::operator = (const WrappedTF1 &rhs)
@@ -87,7 +87,7 @@ namespace ROOT {
          fLinear = rhs.fLinear;
          fPolynomial = rhs.fPolynomial;
          fFunc = rhs.fFunc;
-         fFunc->InitArgs(fX, 0);
+         fFunc->InitArgs(fX, nullptr);
          //fParams = rhs.fParams;
          return *this;
       }
@@ -113,7 +113,7 @@ namespace ROOT {
 
          // parameter are passed as non-const in Derivative
          //double * p =  (fParams.size() > 0) ? const_cast<double *>( &fParams.front()) : 0;
-         return  fFunc->Derivative(x, (double *) 0, GetDerivPrecision());
+         return  fFunc->Derivative(x, (double *) nullptr, GetDerivPrecision());
       }
 
       double WrappedTF1::DoParameterDerivative(double x, const double *p, unsigned int ipar) const
@@ -132,7 +132,7 @@ namespace ROOT {
          } else {
             // case of general linear function (built in TFormula with ++ )
             const TFormula *df = dynamic_cast<const TFormula *>(fFunc->GetLinearPart(ipar));
-            assert(df != 0);
+            assert(df != nullptr);
             fX[0] = x;
             // hack since TFormula::EvalPar is not const
             return (const_cast<TFormula *>(df))->Eval(x) ;     // derivatives should not depend on parameters since func is linear

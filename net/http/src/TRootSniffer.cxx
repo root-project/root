@@ -518,7 +518,7 @@ Int_t TRootSniffer::WithCurrentUserName(const char *option)
    if (strcmp(username, option) == 0)
       return 2;
 
-   if (strstr(option, username) == 0)
+   if (strstr(option, username) == nullptr)
       return -1;
 
    TObjArray *arr = TString(option).Tokenize(",");
@@ -630,7 +630,7 @@ void TRootSniffer::ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char 
 
       TRootSnifferScanRec chld;
 
-      if (chld.GoInside(rec, member, 0, this)) {
+      if (chld.GoInside(rec, member, nullptr, this)) {
 
          TClass *mcl = (member->IsBasic() || member->IsSTLContainer()) ? nullptr : gROOT->GetClass(member->GetTypeName());
 
@@ -660,7 +660,7 @@ void TRootSniffer::ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char 
             }
             dim.Append("]");
             chld.SetField(item_prop_arraydim, dim, kFALSE);
-         } else if (member->GetArrayIndex() != 0) {
+         } else if (member->GetArrayIndex() != nullptr) {
             TRealData *idata = cl->GetRealData(member->GetArrayIndex());
             TDataMember *imember = idata ? idata->GetDataMember() : nullptr;
             if (imember && (strcmp(imember->GetTrueTypeName(), "int") == 0)) {
@@ -1164,7 +1164,7 @@ Bool_t TRootSniffer::ExecuteCmd(const std::string &path, const std::string &opti
    TObject *obj = GetItem(path.c_str(), parent, kFALSE, kFALSE);
 
    const char *kind = GetItemField(parent, obj, item_prop_kind);
-   if ((kind == 0) || (strcmp(kind, "Command") != 0)) {
+   if ((kind == nullptr) || (strcmp(kind, "Command") != 0)) {
       if (gDebug > 0)
          Info("ExecuteCmd", "Entry %s is not a command", path.c_str());
       res = "false";

@@ -310,7 +310,7 @@ namespace cling {
       m_CI->createPCHExternalASTSource(PCHFileName,
                                        true /*DisablePCHValidation*/,
                                        true /*AllowPCHWithCompilerErrors*/,
-                                       0 /*DeserializationListener*/,
+                                       nullptr /*DeserializationListener*/,
                                        true /*OwnsDeserializationListener*/);
       result.push_back(endTransaction(PchT));
       if (Trap.hasErrorOccurred()) {
@@ -478,7 +478,7 @@ namespace cling {
       if (T->isNestedTransaction())
         m_Consumer->setTransaction(T->getParent());
       else
-        m_Consumer->setTransaction((Transaction*)0);
+        m_Consumer->setTransaction((Transaction*)nullptr);
 
       m_TransactionPool->releaseTransaction(T);
       return ParseResultTransaction(nullptr, ParseResult);
@@ -695,13 +695,13 @@ namespace cling {
 
     if (Transaction* Parent = T.getParent()) {
       Parent->removeNestedTransaction(&T);
-      T.setParent(0);
+      T.setParent(nullptr);
     } else {
       // Remove from the queue
       assert(&T == m_Transactions.back() && "Out of order transaction removal");
       m_Transactions.pop_back();
       if (!m_Transactions.empty())
-        m_Transactions.back()->setNext(0);
+        m_Transactions.back()->setNext(nullptr);
     }
 
     m_TransactionPool->releaseTransaction(&T);
@@ -787,7 +787,7 @@ namespace cling {
     Preprocessor& PP = m_CI->getPreprocessor();
     if (!PP.getCurrentLexer()) {
        PP.EnterSourceFile(m_CI->getSourceManager().getMainFileID(),
-                          0, SourceLocation());
+                          nullptr, SourceLocation());
     }
     assert(PP.isIncrementalProcessingEnabled() && "Not in incremental mode!?");
     PP.enableIncrementalProcessing();
@@ -832,7 +832,7 @@ namespace cling {
     m_MemoryBuffers.push_back(std::make_pair(MBNonOwn, FID));
 
     // NewLoc only used for diags.
-    PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
+    PP.EnterSourceFile(FID, /*DirLookup*/nullptr, NewLoc);
     m_Consumer->getTransaction()->setBufferFID(FID);
 
     DiagnosticsEngine& Diags = getCI()->getDiagnostics();

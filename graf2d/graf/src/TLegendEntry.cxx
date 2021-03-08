@@ -29,7 +29,7 @@ Storage class for one entry of a TLegend.
 
 TLegendEntry::TLegendEntry(): TAttText(), TAttLine(), TAttFill(), TAttMarker()
 {
-   fObject = 0;
+   fObject = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +51,7 @@ TLegendEntry::TLegendEntry(): TAttText(), TAttLine(), TAttFill(), TAttMarker()
 TLegendEntry::TLegendEntry(const TObject* obj, const char* label, Option_t* option )
              :TAttText(0,0,0,0,0), TAttLine(1,1,1), TAttFill(0,0), TAttMarker(1,21,1)
 {
-   fObject = 0;
+   fObject = nullptr;
    if ( !label && obj ) fLabel = obj->GetTitle();
    else                 fLabel = label;
    fOption = option;
@@ -71,7 +71,7 @@ TLegendEntry::TLegendEntry( const TLegendEntry &entry ) : TObject(entry), TAttTe
 
 TLegendEntry::~TLegendEntry()
 {
-   fObject = 0;
+   fObject = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +148,7 @@ void TLegendEntry::SetObject(TObject* obj )
 
 void TLegendEntry::SetObject( const char* objectName)
 {
-   TObject* obj = 0;
+   TObject* obj = nullptr;
    TList* padprimitives = gPad->GetListOfPrimitives();
    if (padprimitives) obj = padprimitives->FindObject( objectName );
    if (obj) SetObject( obj );

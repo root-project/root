@@ -77,9 +77,9 @@ ClassImp(TGeoPhysicalNode);
 TGeoPhysicalNode::TGeoPhysicalNode() : TNamed()
 {
    fLevel        = 0;
-   fMatrices     = 0;
-   fNodes        = 0;
-   fMatrixOrig   = 0;
+   fMatrices     = nullptr;
+   fNodes        = nullptr;
+   fMatrixOrig   = nullptr;
    SetVisibility(kTRUE);
    SetVisibleFull(kFALSE);
    SetIsVolAtt(kTRUE);
@@ -98,7 +98,7 @@ TGeoPhysicalNode::TGeoPhysicalNode(const char *path) : TNamed(path,"")
    fLevel  = 0;
    fMatrices = new TObjArray(30);
    fNodes    = new TObjArray(30);
-   fMatrixOrig   = 0;
+   fMatrixOrig   = nullptr;
    SetPath(path);
    SetVisibility(kTRUE);
    SetVisibleFull(kFALSE);
@@ -148,9 +148,9 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
    }
    // Refresh the node since other Align calls may have altered the stored nodes
    Refresh();
-   TGeoNode *nnode = 0;
+   TGeoNode *nnode = nullptr;
    TGeoVolume *vm = GetVolume(0);
-   TGeoVolume *vd = 0;
+   TGeoVolume *vd = nullptr;
    Int_t i;
    if (!IsAligned()) {
       Int_t *id = new Int_t[fLevel];
@@ -267,7 +267,7 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
                ncs->GetBoolNode()->ReplaceMatrix(oldmat, newmat1);
                vd->SetShape(ncs);
                // The right-side matrix pointer is preserved, so no need to update nodes.
-               aligned = 0; // to prevent updating its matrix
+               aligned = nullptr; // to prevent updating its matrix
             }
          }
       }
@@ -321,10 +321,10 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
          if (node && node->IsOverlapping()) {
             Info("Align", "The check for overlaps for assembly node: \n%s\n cannot be performed since the parent %s is declared possibly overlapping",
                  GetName(), node->GetName());
-            node = 0;
+            node = nullptr;
          }
          if (node) node->CheckOverlaps(ovlp);
-         gGeoManager->SetCheckedNode(0);
+         gGeoManager->SetCheckedNode(nullptr);
       }
    }
    // Clean current matrices from cache
@@ -354,7 +354,7 @@ void TGeoPhysicalNode::Draw(Option_t * /*option*/)
 TGeoNode *TGeoPhysicalNode::GetMother(Int_t levup) const
 {
    Int_t ind = fLevel-levup;
-   if (ind<0) return 0;
+   if (ind<0) return nullptr;
    return (TGeoNode*)fNodes->UncheckedAt(ind);
 }
 
@@ -364,7 +364,7 @@ TGeoNode *TGeoPhysicalNode::GetMother(Int_t levup) const
 TGeoHMatrix *TGeoPhysicalNode::GetMatrix(Int_t level) const
 {
    if (level<0) return (TGeoHMatrix*)fMatrices->UncheckedAt(fLevel);
-   if (level>fLevel) return 0;
+   if (level>fLevel) return nullptr;
    return (TGeoHMatrix*)fMatrices->UncheckedAt(level);
 }
 
@@ -374,7 +374,7 @@ TGeoHMatrix *TGeoPhysicalNode::GetMatrix(Int_t level) const
 TGeoNode *TGeoPhysicalNode::GetNode(Int_t level) const
 {
    if (level<0) return (TGeoNode*)fNodes->UncheckedAt(fLevel);
-   if (level>fLevel) return 0;
+   if (level>fLevel) return nullptr;
    return (TGeoNode*)fNodes->UncheckedAt(level);
 }
 
@@ -385,7 +385,7 @@ TGeoVolume *TGeoPhysicalNode::GetVolume(Int_t level) const
 {
    TGeoNode *node = GetNode(level);
    if (node) return node->GetVolume();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -395,7 +395,7 @@ TGeoShape *TGeoPhysicalNode::GetShape(Int_t level) const
 {
    TGeoVolume *vol = GetVolume(level);
    if (vol) return vol->GetShape();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -527,9 +527,9 @@ ClassImp(TGeoPNEntry);
 
 TGeoPNEntry::TGeoPNEntry()
 {
-   fNode = 0;
-   fMatrix = 0;
-   fGlobalOrig = 0;
+   fNode = nullptr;
+   fMatrix = nullptr;
+   fGlobalOrig = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -549,8 +549,8 @@ TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
    fGlobalOrig = new TGeoHMatrix();
    *fGlobalOrig = gGeoManager->GetCurrentMatrix();
    gGeoManager->PopPath();
-   fNode = 0;
-   fMatrix = 0;
+   fNode = nullptr;
+   fMatrix = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

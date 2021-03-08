@@ -61,11 +61,11 @@ ClassImp(TProofProgressDialog);
 
 TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
                                            Int_t files, Long64_t first,
-                                           Long64_t entries) : fDialog(0),
-   fBar(0), fClose(0), fStop(0), fAbort(0), fAsyn(0), fLog(0), fRatePlot(0),
-   fMemPlot(0), fKeepToggle(0), fLogQueryToggle(0), fTextQuery(0), fEntry(0),
-   fTitleLab(0), fFilesEvents(0), fTimeLab(0), fProcessed(0), fEstim(0),
-   fTotal(0), fRate(0), fInit(0), fSelector(0), fSpeedo(0), fSmoothSpeedo(0)
+                                           Long64_t entries) : fDialog(nullptr),
+   fBar(nullptr), fClose(nullptr), fStop(nullptr), fAbort(nullptr), fAsyn(nullptr), fLog(nullptr), fRatePlot(nullptr),
+   fMemPlot(nullptr), fKeepToggle(nullptr), fLogQueryToggle(nullptr), fTextQuery(nullptr), fEntry(nullptr),
+   fTitleLab(nullptr), fFilesEvents(nullptr), fTimeLab(nullptr), fProcessed(nullptr), fEstim(nullptr),
+   fTotal(nullptr), fRate(nullptr), fInit(nullptr), fSelector(nullptr), fSpeedo(nullptr), fSmoothSpeedo(nullptr)
 {
    fProof         = proof;
    fFiles         = files;
@@ -73,26 +73,26 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
    fEntries       = entries;
    fPrevProcessed = 0;
    fPrevTotal     = 0;
-   fLogWindow     = 0;
-   fMemWindow     = 0;
+   fLogWindow     = nullptr;
+   fMemWindow     = nullptr;
    fStatus        = kRunning;
    fKeep          = fgKeepDefault;
    fLogQuery      = fgLogQueryDefault;
-   fRatePoints    = 0;
-   fRateGraph     = 0;
-   fMBRtGraph     = 0;
-   fActWGraph     = 0;
-   fTotSGraph     = 0;
-   fEffSGraph     = 0;
+   fRatePoints    = nullptr;
+   fRateGraph     = nullptr;
+   fMBRtGraph     = nullptr;
+   fActWGraph     = nullptr;
+   fTotSGraph     = nullptr;
+   fEffSGraph     = nullptr;
    fProcTime      = 0.;
    fInitTime      = 0.;
    fAvgRate       = 0.;
    fAvgMBRate     = 0.;
    fRightInfo     = 0;
    fSpeedoEnabled = kFALSE;
-   fSpeedo        = 0;
-   fUpdtSpeedo    = 0;
-   fSmoothSpeedo  = 0;
+   fSpeedo        = nullptr;
+   fUpdtSpeedo    = nullptr;
+   fSmoothSpeedo  = nullptr;
 
    // Make sure we are attached to a good instance
    if (!proof || !(proof->IsValid())) {
@@ -111,7 +111,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
       fRatePoints = new TNtuple("RateNtuple","Rate progress info","tm:evr:mbr");
    }
 
-   fDialog = new TGTransientFrame(0, 0, 10, 10);
+   fDialog = new TGTransientFrame(nullptr, nullptr, 10, 10);
    fDialog->Connect("CloseWindow()", "TProofProgressDialog", this, "DoClose()");
    fDialog->DontCallClose();
    fDialog->SetCleanup(kDeepCleanup);
@@ -1051,7 +1051,7 @@ void TProofProgressDialog::DoSetLogQuery(Bool_t)
    if (fLogQuery)
       fEntry->SetToolTipText("Enter the query number ('last' for the last query)",50);
    else
-      fEntry->SetToolTipText(0);
+      fEntry->SetToolTipText(nullptr);
 
    // Last choice will be the default for the future
    fgLogQueryDefault = fLogQuery;
@@ -1245,7 +1245,7 @@ void TProofProgressDialog::DoPlotRateGraph()
                                fRateGraph->GetXaxis()->GetXmin(),fRateGraph->GetXaxis()->GetXmax());
       graph2->SetMinimum(0);
       graph2->SetMaximum(1.1*bymx);
-      graph2->SetDirectory(0);
+      graph2->SetDirectory(nullptr);
       graph2->SetStats(0);
       graph2->GetXaxis()->SetTitle("elapsed time (sec)");
       fMBRtGraph->SetHistogram(graph2);

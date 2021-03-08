@@ -153,7 +153,7 @@ std::vector<double> fetchValueTmp(const std::map<TString, TString> &keyValueMap,
    TObjArray *tokenStrings = parseString.Tokenize(tokenDelim);
    TIter nextToken(tokenStrings);
    TObjString *tokenString = (TObjString *)nextToken();
-   for (; tokenString != NULL; tokenString = (TObjString *)nextToken()) {
+   for (; tokenString != nullptr; tokenString = (TObjString *)nextToken()) {
       std::stringstream sstr;
       double currentValue;
       sstr << tokenString->GetString().Data();
@@ -1976,7 +1976,7 @@ const std::vector<Float_t> & TMVA::MethodDL::GetRegressionValues()
    for (size_t i = 0; i < nTargets; i++)
        output[i] = YHat(0, i);
 
-   if (fRegressionReturnVal == NULL) {
+   if (fRegressionReturnVal == nullptr) {
        fRegressionReturnVal = new std::vector<Float_t>();
    }
    fRegressionReturnVal->clear();
@@ -2000,7 +2000,7 @@ const std::vector<Float_t> & TMVA::MethodDL::GetMulticlassValues()
    MatrixImpl_t X(1, nVariables);
    TensorImpl_t X_vec ( 1, 1, nVariables);
    MatrixImpl_t YHat(1, DataInfo().GetNClasses());
-   if (fMulticlassReturnVal == NULL) {
+   if (fMulticlassReturnVal == nullptr) {
       fMulticlassReturnVal = new std::vector<Float_t>(DataInfo().GetNClasses());
    }
 
@@ -2061,7 +2061,7 @@ void MethodDL::AddWeightsXMLTo(void * parent) const
 {
       // Create the parent XML node with name "Weights"
    auto & xmlEngine = gTools().xmlengine();
-   void* nn = xmlEngine.NewChild(parent, 0, "Weights");
+   void* nn = xmlEngine.NewChild(parent, nullptr, "Weights");
 
    /*! Get all necessary information, in order to be able to reconstruct the net
     *  if we read the same XML file. */
@@ -2090,21 +2090,21 @@ void MethodDL::AddWeightsXMLTo(void * parent) const
    //char lossFunction = static_cast<char>(this->GetLossFunction());
 
    // Add attributes to the parent node
-   xmlEngine.NewAttr(nn, 0, "NetDepth", gTools().StringFromInt(depth));
+   xmlEngine.NewAttr(nn, nullptr, "NetDepth", gTools().StringFromInt(depth));
 
-   xmlEngine.NewAttr(nn, 0, "InputDepth", gTools().StringFromInt(inputDepth));
-   xmlEngine.NewAttr(nn, 0, "InputHeight", gTools().StringFromInt(inputHeight));
-   xmlEngine.NewAttr(nn, 0, "InputWidth", gTools().StringFromInt(inputWidth));
+   xmlEngine.NewAttr(nn, nullptr, "InputDepth", gTools().StringFromInt(inputDepth));
+   xmlEngine.NewAttr(nn, nullptr, "InputHeight", gTools().StringFromInt(inputHeight));
+   xmlEngine.NewAttr(nn, nullptr, "InputWidth", gTools().StringFromInt(inputWidth));
 
-   xmlEngine.NewAttr(nn, 0, "BatchSize", gTools().StringFromInt(batchSize));
-   xmlEngine.NewAttr(nn, 0, "BatchDepth", gTools().StringFromInt(batchDepth));
-   xmlEngine.NewAttr(nn, 0, "BatchHeight", gTools().StringFromInt(batchHeight));
-   xmlEngine.NewAttr(nn, 0, "BatchWidth", gTools().StringFromInt(batchWidth));
+   xmlEngine.NewAttr(nn, nullptr, "BatchSize", gTools().StringFromInt(batchSize));
+   xmlEngine.NewAttr(nn, nullptr, "BatchDepth", gTools().StringFromInt(batchDepth));
+   xmlEngine.NewAttr(nn, nullptr, "BatchHeight", gTools().StringFromInt(batchHeight));
+   xmlEngine.NewAttr(nn, nullptr, "BatchWidth", gTools().StringFromInt(batchWidth));
 
-   xmlEngine.NewAttr(nn, 0, "LossFunction", TString(lossFunction));
-   xmlEngine.NewAttr(nn, 0, "Initialization", TString(initialization));
-   xmlEngine.NewAttr(nn, 0, "Regularization", TString(regularization));
-   xmlEngine.NewAttr(nn, 0, "OutputFunction", TString(outputFunction));
+   xmlEngine.NewAttr(nn, nullptr, "LossFunction", TString(lossFunction));
+   xmlEngine.NewAttr(nn, nullptr, "Initialization", TString(initialization));
+   xmlEngine.NewAttr(nn, nullptr, "Regularization", TString(regularization));
+   xmlEngine.NewAttr(nn, nullptr, "OutputFunction", TString(outputFunction));
 
    gTools().AddAttr(nn, "WeightDecay", weightDecay);
 
@@ -2344,7 +2344,7 @@ void MethodDL::ReadWeightsFromStream(std::istream & /*istr*/)
 const Ranking *TMVA::MethodDL::CreateRanking()
 {
    // TODO
-   return NULL;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

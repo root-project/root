@@ -216,7 +216,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(iset,iset,&sterileIndex,RooNameReg::ptr(isetRange));
-  if (cache!=0) {
+  if (cache!=nullptr) {
     Int_t code = _cacheMgr.lastIndex();
     return code;
   }
@@ -243,7 +243,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
   cache = new CacheElem();
 
   for (ProdMap::const_iterator i = map->begin();i!=map->end();++i) {
-    RooAbsReal *term(0);
+    RooAbsReal *term(nullptr);
     if (i->second->getSize()>1) { // create a RooProd for this subexpression
       const char *name = makeFPName("SUBPROD_",*i->second);
       term = new RooProduct(name,name,*i->second);
@@ -254,7 +254,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
       RooFIter j = i->second->fwdIterator();
       term = (RooAbsReal*)j.next();
     }
-    assert(term!=0);
+    assert(term!=nullptr);
     if (i->first->getSize()==0) { // check whether we need to integrate over this term or not...
       cache->_prodList.add(*term);
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding simple factor " << term->GetName() << endl;
@@ -306,7 +306,7 @@ Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
-  if (cache==0) { 
+  if (cache==nullptr) { 
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
     std::unique_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) );
@@ -314,7 +314,7 @@ Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
     assert(code==code2); // must have revived the right (sterilized) slot...
     return analyticalIntegral(code2,rangeName);
   }
-  assert(cache!=0);
+  assert(cache!=nullptr);
   
   return calculate(cache->_prodList);
 }
@@ -325,7 +325,7 @@ Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 
 Double_t RooProduct::calculate(const RooArgList& partIntList) const
 {
-  RooAbsReal *term(0);
+  RooAbsReal *term(nullptr);
   Double_t val=1;
   RooFIter i = partIntList.fwdIterator() ;
   while((term=(RooAbsReal*)i.next())) {
@@ -395,7 +395,7 @@ std::list<Double_t>* RooProduct::binBoundaries(RooAbsRealLValue& obs, Double_t x
     }
   }
   
-  return 0 ;  
+  return nullptr ;  
 }
 
 
@@ -431,7 +431,7 @@ std::list<Double_t>* RooProduct::plotSamplingHint(RooAbsRealLValue& obs, Double_
     }
   }
   
-  return 0 ;
+  return nullptr ;
 }
 
 

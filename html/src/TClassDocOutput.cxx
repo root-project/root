@@ -50,7 +50,7 @@ ClassImp(TClassDocOutput);
 
 TClassDocOutput::TClassDocOutput(THtml& html, TClass* cl, TList* typedefs):
    TDocOutput(html), fHierarchyLines(0), fCurrentClass(cl),
-   fCurrentClassesTypedefs(typedefs), fParser(0)
+   fCurrentClassesTypedefs(typedefs), fParser(nullptr)
 {
    fParser = new TDocParser(*this, fCurrentClass);
 }
@@ -155,7 +155,7 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
          << "<table class=\"func\" id=\"tabfunc" << accessID[access] << "\" cellspacing=\"0\">" << std::endl;
 
       TIter iMethWrap(methods);
-      TDocMethodWrapper *methWrap = 0;
+      TDocMethodWrapper *methWrap = nullptr;
       while ((methWrap = (TDocMethodWrapper*) iMethWrap())) {
          const TMethod* method = methWrap->GetMethod();
 
@@ -261,7 +261,7 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
       << ":Data_Members\"></a>Data Members</h2>" << std::endl;
 
    for (Int_t access = 5; access >= 0 && !fHtml->IsNamespace(fCurrentClass); --access) {
-      const TList* datamembers = 0;
+      const TList* datamembers = nullptr;
       if (access > 2) datamembers = fParser->GetEnums((TDocParser::EAccess) (access - 3));
       else datamembers = fParser->GetDataMembers((TDocParser::EAccess) access);
       if (datamembers->GetEntries() == 0)
@@ -278,7 +278,7 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
          << "<table class=\"data\" id=\"tab" << what << accessID[access%3] << "\" cellspacing=\"0\">" << std::endl;
 
       TIter iDM(datamembers);
-      TDataMember *member = 0;
+      TDataMember *member = nullptr;
       TString prevEnumName;
       Bool_t prevIsInh = kTRUE;
 
@@ -647,7 +647,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
          if (cl->GetListOfBases() && cl->GetListOfBases()->GetSize()) {
             ssDep << "  \"" << cl->GetName() << "\" -> {";
             TIter iBase(cl->GetListOfBases());
-            TBaseClass* base = 0;
+            TBaseClass* base = nullptr;
             while ((base = (TBaseClass*)iBase())) {
                ssDep << " \"" << base->GetName() << "\";";
                writeBasesFor.push_back(base->GetClassPointer());
@@ -672,9 +672,9 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
          if (iDerived->second != level) continue;
          levelExists = kTRUE;
          TIter iBaseOfDerived(iDerived->first->GetListOfBases());
-         TBaseClass* baseDerived = 0;
+         TBaseClass* baseDerived = nullptr;
          Bool_t writeNode = kFALSE;
-         TClass* writeAndMoreFor = 0;
+         TClass* writeAndMoreFor = nullptr;
          while ((baseDerived = (TBaseClass*) iBaseOfDerived())) {
             TClass* clBaseDerived = baseDerived->GetClassPointer();
             if (clBaseDerived->InheritsFrom(fCurrentClass)
@@ -762,7 +762,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
 
          {
             TIter iDM(cl->GetListOfDataMembers());
-            TDataMember* dm = 0;
+            TDataMember* dm = nullptr;
             while ((dm = (TDataMember*) iDM()))
                dmMap[dm->GetName()] = dm;
          }
@@ -822,7 +822,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
 
          {
             TIter iMeth(cl->GetListOfMethods());
-            TMethod* meth = 0;
+            TMethod* meth = nullptr;
             while ((meth = (TMethod*) iMeth()))
                methMap[meth->GetName()] = meth;
          }
@@ -878,7 +878,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
 
       if (cl->GetListOfBases() && cl->GetListOfBases()->GetSize()) {
          TIter iBase(cl->GetListOfBases());
-         TBaseClass* base = 0;
+         TBaseClass* base = nullptr;
          while ((base = (TBaseClass*)iBase())) {
             ssDep << "  \"clusterNode" << numColumns - 1 << cl->GetName() << "\" -> "
                   << " \"clusterNode0" << base->GetName() << "\" [ltail=\"cluster" << cl->GetName()
@@ -1111,13 +1111,13 @@ Bool_t TClassDocOutput::CreateHierarchyDot()
           << "rankdir=RL;" << std::endl;
 
    // loop on all classes
-   TClassDocInfo* cdi = 0;
+   TClassDocInfo* cdi = nullptr;
    TIter iClass(fHtml->GetListOfClasses());
    while ((cdi = (TClassDocInfo*)iClass())) {
 
       TDictionary *dict = cdi->GetClass();
       TClass *cl = dynamic_cast<TClass*>(dict);
-      if (cl == 0) {
+      if (cl == nullptr) {
          if (!dict)
             Warning("THtml::CreateHierarchy", "skipping class %s\n", cdi->GetName());
          continue;
@@ -1128,7 +1128,7 @@ Bool_t TClassDocOutput::CreateHierarchyDot()
       if (bases && !bases->IsEmpty()) {
          dotout << "\"" << cdi->GetName() << "\" -> { ";
          TIter iBase(bases);
-         TBaseClass* base = 0;
+         TBaseClass* base = nullptr;
          while ((base = (TBaseClass*) iBase())) {
             // write out current class
             if (base != bases->First())
@@ -1216,7 +1216,7 @@ void TClassDocOutput::DescendHierarchy(std::ostream& out, TClass* basePtr, Int_t
 
    UInt_t numClasses = 0;
 
-   TClassDocInfo* cdi = 0;
+   TClassDocInfo* cdi = nullptr;
    TIter iClass(fHtml->GetListOfClasses());
    while ((cdi = (TClassDocInfo*)iClass()) && (!maxLines || fHierarchyLines<maxLines)) {
 
@@ -1397,7 +1397,7 @@ void TClassDocOutput::WriteClassDescription(std::ostream& out, const TString& de
       out << "<h4>This class is also known as (typedefs to this class)</h4>";
       TIter iTD(fCurrentClassesTypedefs);
       bool firsttd = true;
-      TDataType* dt = 0;
+      TDataType* dt = nullptr;
       while ((dt = (TDataType*) iTD())) {
          if (!firsttd)
             out << ", ";

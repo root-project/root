@@ -112,7 +112,7 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
       AddFrame(fHsb);
       fHsb->Associate(this);
    } else {
-      fHsb = 0;
+      fHsb = nullptr;
    }
 
    if (!(sboptions & kNoVSB)) {
@@ -120,7 +120,7 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
       AddFrame(fVsb);
       fVsb->Associate(this);
    } else {
-      fVsb = 0;
+      fVsb = nullptr;
    }
 
    fWhiteGC.SetGraphicsExposures(kTRUE);
@@ -138,7 +138,7 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
 
    // layout manager is not used
    delete fLayoutManager;
-   fLayoutManager = 0;
+   fLayoutManager = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

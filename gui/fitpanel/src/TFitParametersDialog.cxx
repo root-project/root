@@ -889,7 +889,7 @@ void TFitParametersDialog::DoParMaxLimit()
 void TFitParametersDialog::DrawFunction()
 {
    if ( !fFpad ) return;
-   TVirtualPad *save = 0;
+   TVirtualPad *save = nullptr;
    save = gPad;
    gPad = fFpad;
    gPad->cd();
@@ -961,7 +961,7 @@ void TFitParametersDialog::HandleShiftTab()
 {
    TGNumberEntryField *next, *sender = (TGNumberEntryField *)gTQSender;
    next = (TGNumberEntryField *)fTextEntries.Before((TObject *)sender);
-   if (next == 0)
+   if (next == nullptr)
       next = (TGNumberEntryField *)fTextEntries.Last();
    if (next) {
       next->SetFocus();
@@ -976,7 +976,7 @@ void TFitParametersDialog::HandleTab()
 {
    TGNumberEntryField *next, *sender = (TGNumberEntryField *)gTQSender;
    next = (TGNumberEntryField *)fTextEntries.After((TObject *)sender);
-   if (next == 0)
+   if (next == nullptr)
       next = (TGNumberEntryField *)fTextEntries.First();
    if (next) {
       next->SetFocus();

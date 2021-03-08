@@ -6391,7 +6391,7 @@ NamedDecl *Sema::ActOnVariableDeclarator(
     // The event type cannot be used to declare a program scope variable.
     // OpenCL v2.0 s6.9.q:
     // The clk_event_t and reserve_id_t types cannot be declared in program scope.
-    if (NULL == S->getParent()) {
+    if (nullptr == S->getParent()) {
       if (R->isReserveIDT() || R->isClkEventT() || R->isEventT()) {
         Diag(D.getIdentifierLoc(),
              diag::err_invalid_type_for_program_scope_var) << R;

@@ -45,7 +45,7 @@ namespace ROOTX {
 //Globals! A bunch of functions
 //messing around with these globals :)
 //But it's ok for our humble lil program :)
-Display     *gDisplay       = 0;
+Display     *gDisplay       = nullptr;
 Window       gLogoWindow    = 0;
 Pixmap       gLogoPixmap    = 0;
 
@@ -53,8 +53,8 @@ Pixmap       gLogoPixmap    = 0;
 Pixmap       gShapeMask     = 0;
 //
 Pixmap       gCreditsPixmap = 0;
-GC           gGC            = 0;
-XFontStruct *gFont          = 0;
+GC           gGC            = nullptr;
+XFontStruct *gFont          = nullptr;
 bool         gDone          = false;
 
 //Can be accessed from a signal handler:
@@ -85,10 +85,10 @@ struct timeval gPopupTime;
 const char *gConception[] = {
    "Rene Brun",
    "Fons Rademakers",
-   0
+   nullptr
 };
 
-char **gContributors = 0;
+char **gContributors = nullptr;
 
 
 //
@@ -143,7 +143,7 @@ void PopupLogo(bool about)
    if (!CreateSplashscreenWindow()) {
       printf("PopupLogo, CreateSplashscreenWindow failed\n");
       XCloseDisplay(gDisplay);
-      gDisplay = 0;
+      gDisplay = nullptr;
       return;
    }
 
@@ -154,7 +154,7 @@ void PopupLogo(bool about)
       XDestroyWindow(gDisplay, gLogoWindow);
       XCloseDisplay(gDisplay);
       gLogoWindow = 0;
-      gDisplay = 0;
+      gDisplay = nullptr;
       return;
    }
 
@@ -174,7 +174,7 @@ void PopupLogo(bool about)
       } else {
          //GC creation failed, no need in a custom font anymore.
          XFreeFont(gDisplay, gFont);
-         gFont = 0;
+         gFont = nullptr;
       }
    }
 
@@ -192,12 +192,12 @@ void PopupLogo(bool about)
          //Error while creating a pixmap, we
          //do not need our context and font anymore.
          XFreeFont(gDisplay, gFont);
-         gFont = 0;
+         gFont = nullptr;
          //
          FreeCustomColors();
          //
          XFreeGC(gDisplay, gGC);
-         gGC = 0;
+         gGC = nullptr;
          //We still can show an empty splashscreen with
          //our nice logo! ;) - so this error is not fatal.
       }
@@ -206,7 +206,7 @@ void PopupLogo(bool about)
    XSelectInput(gDisplay, gLogoWindow, ButtonPressMask | ExposureMask);
    XMapRaised(gDisplay, gLogoWindow);
 
-   gettimeofday(&gPopupTime, 0);
+   gettimeofday(&gPopupTime, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -316,7 +316,7 @@ namespace ROOTX {
 
 bool CreateSplashscreenWindow()
 {
-   assert(gDisplay != 0 && "CreateSplashscreenWindow, gDisplay is None");
+   assert(gDisplay != nullptr && "CreateSplashscreenWindow, gDisplay is None");
    assert(gLogoWindow == 0 && "CreateSplashscreenWindow, gLogoWindow is already initialized");
 
    //TODO: check the screen???
@@ -344,7 +344,7 @@ bool CreateSplashscreenImageAndShapeMask()
 {
    bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask);
 
-   assert(gDisplay != 0 && "CreateSplashscreenImageAndShapeMask, gDisplay is None");
+   assert(gDisplay != nullptr && "CreateSplashscreenImageAndShapeMask, gDisplay is None");
    assert(gLogoPixmap == 0 &&
           "CreateSplashscreenImageAndShapeMask, gLogoPixmap is initialized already");
    assert(gShapeMask == 0 &&
@@ -373,9 +373,9 @@ bool CreateSplashscreenImageAndShapeMask()
 
 bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask)
 {
-   assert(imageFileName != 0 && "LoadROOTSplashscreenPixmap, parameter 'imageFileName' is null");
+   assert(imageFileName != nullptr && "LoadROOTSplashscreenPixmap, parameter 'imageFileName' is null");
    //'None' instead of '0'?
-   assert(gDisplay != 0 && "LoadROOTSplashscreenPixmap, gDisplay is null");
+   assert(gDisplay != nullptr && "LoadROOTSplashscreenPixmap, gDisplay is null");
    assert(gLogoWindow != 0 && "LoadROOTSplashscreenPixmap, gLogoWindow is None");
 
    Screen * const screen = XDefaultScreenOfDisplay(gDisplay);
@@ -433,7 +433,7 @@ bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask)
    //Bertrand! Many thanks for this simple but ... smart and not so obvious (??) idea
    //with a mask :) Without you I'll have two separate xpms :)
    const int ret = XpmReadFileToPixmap(gDisplay, gLogoWindow, (char *)path.c_str(), &logo,
-                                       gHasShapeExt ? &mask : 0, &xpmAttr);
+                                       gHasShapeExt ? &mask : nullptr, &xpmAttr);
    XpmFreeAttributes(&xpmAttr);
 
    if ((ret == XpmSuccess || ret == XpmColorError) && logo) {
@@ -465,8 +465,8 @@ bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask)
 
 bool CreateFont()
 {
-   assert(gDisplay != 0 && "CreateFont, gDisplay is null");
-   assert(gFont == 0 && "CreateFont, gFont exists already");
+   assert(gDisplay != nullptr && "CreateFont, gDisplay is null");
+   assert(gFont == nullptr && "CreateFont, gFont exists already");
 
    gFont = XLoadQueryFont(gDisplay, "-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1");
    if (!gFont) {
@@ -482,12 +482,12 @@ bool CreateFont()
 
 bool CreateGC()
 {
-   assert(gDisplay != 0 && "CreateGC, gDisplay is None");
+   assert(gDisplay != nullptr && "CreateGC, gDisplay is None");
    assert(gLogoWindow != 0 && "CreateGC, gLogoWindow is None");
    //Call it only once.
-   assert(gGC == 0 && "CreateGC, gGC exists already");
+   assert(gGC == nullptr && "CreateGC, gGC exists already");
 
-   if (!(gGC = XCreateGC(gDisplay, gLogoWindow, 0, 0))) {
+   if (!(gGC = XCreateGC(gDisplay, gLogoWindow, 0, nullptr))) {
       printf("rootx - XCreateGC failed\n");
       return false;
    }
@@ -499,7 +499,7 @@ bool CreateGC()
 
 bool CreateCustomColors()
 {
-   assert(gDisplay != 0 && "CreateCustomColors, gDisplay is None");
+   assert(gDisplay != nullptr && "CreateCustomColors, gDisplay is None");
    //Call it only once.
    assert(gTextColor == 0 && "CreateCustomColors, gTextColor exists already");
 
@@ -529,7 +529,7 @@ bool CreateCustomColors()
 void FreeCustomColors()
 {
    if (gTextColor) {
-      assert(gDisplay != 0 && "FreeCustomColors, gDisplay is None");
+      assert(gDisplay != nullptr && "FreeCustomColors, gDisplay is None");
       assert(gColormap != 0 && "FreeCustomColors, gColormap is None");
       XFreeColors(gDisplay, gColormap, &gTextColor, 1, 0);
       gTextColor = 0;
@@ -541,7 +541,7 @@ void FreeCustomColors()
 
 void CreateTextPixmap()
 {
-   assert(gDisplay != 0 && "CreateTextPixmap, gDisplay is None");
+   assert(gDisplay != nullptr && "CreateTextPixmap, gDisplay is None");
    assert(gLogoWindow != 0 && "CreateTextPixmap, gLogoWindow is None");
 
    if (!gGC)//Something is wrong and we don't need pixmap anymore.
@@ -569,7 +569,7 @@ void CreateTextPixmap()
 
 void SetBackgroundPixmapAndMask()
 {
-   assert(gDisplay != 0 && "SetBackgroundPixmapAndMask, gDisplay is None");
+   assert(gDisplay != nullptr && "SetBackgroundPixmapAndMask, gDisplay is None");
    assert(gLogoWindow != 0 && "SetBackgroundPixmapAndMask, gLogoWindow is None");
    assert(gLogoPixmap != 0 && "SetBackgroundPixmapAndMask, gLogoPixmap is None");
 
@@ -589,7 +589,7 @@ void SetBackgroundPixmapAndMask()
 
 void SetSplashscreenPosition()
 {
-   assert(gDisplay != 0 && "SetSplashscreenPosition, gDisplay is None");
+   assert(gDisplay != nullptr && "SetSplashscreenPosition, gDisplay is None");
    assert(gLogoWindow != 0 && "SetSplashscreenPosition, gLogoWindow is None");
 
    Window rootWindow = Window();
@@ -623,7 +623,7 @@ bool StayUp(int milliSec)
    tv.tv_sec  = milliSec / 1000;
    tv.tv_usec = (milliSec % 1000) * 1000;
 
-   gettimeofday(&ctv, 0);
+   gettimeofday(&ctv, nullptr);
    if ((dtv.tv_usec = ctv.tv_usec - ptv.tv_usec) < 0) {
       dtv.tv_usec += 1000000;
       ptv.tv_sec++;
@@ -651,14 +651,14 @@ void Sleep(int milliSec)
    tv.tv_sec  = milliSec / 1000;
    tv.tv_usec = (milliSec % 1000) * 1000;
 
-   select(0, 0, 0, 0, &tv);
+   select(0, nullptr, nullptr, nullptr, &tv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ScrollCredits(int ypos)
 {
-   assert(gDisplay != 0 && "ScrollCredits, gDisplay is None");
+   assert(gDisplay != nullptr && "ScrollCredits, gDisplay is None");
 
    if (!gGC || !gLogoPixmap || !gCreditsPixmap)
       return;
@@ -688,9 +688,9 @@ void DrawVersion()
    return;
 #endif
 
-   assert(gDisplay != 0 && "DrawVersion, gDisplay is None");
+   assert(gDisplay != nullptr && "DrawVersion, gDisplay is None");
    assert(gLogoWindow != 0 && "DrawVersion, gLogoWindow is None");
-   assert(gGC != 0 && "DrawVersion, gGC is None");
+   assert(gGC != nullptr && "DrawVersion, gGC is None");
 
    std::string version("Version ");
    version += ROOT_RELEASE;
@@ -704,10 +704,10 @@ void DrawVersion()
 
 int DrawCreditItem(const char *creditItem, const char **members, int y, bool draw)
 {
-   assert(creditItem != 0 && "DrawCreditItem, parameter 'creditItem' is null");
+   assert(creditItem != nullptr && "DrawCreditItem, parameter 'creditItem' is null");
 
-   assert(gFont != 0 && "DrawCreditItem, gFont is None");
-   assert(gDisplay != 0 && "DrawCreditItem, gDisplay is None");
+   assert(gFont != nullptr && "DrawCreditItem, gFont is None");
+   assert(gDisplay != nullptr && "DrawCreditItem, gDisplay is None");
 
    const int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
    assert(lineSpacing > 0 && "DrawCreditItem, lineSpacing must be positive");
@@ -773,9 +773,9 @@ int DrawCredits(bool draw, bool extended)
       y = DrawCreditItem("Contributors: ", (const char **)gContributors, y, draw);
 
       y += 2 * lineSpacing;
-      y = DrawCreditItem("Our sincere thanks and apologies to anyone who deserves", 0, y, draw);
+      y = DrawCreditItem("Our sincere thanks and apologies to anyone who deserves", nullptr, y, draw);
       y += lineSpacing;
-      y = DrawCreditItem("credit but fails to appear in this list.", 0, y, draw);
+      y = DrawCreditItem("credit but fails to appear in this list.", nullptr, y, draw);
 
       struct passwd *pwd = getpwuid(getuid());
       if (pwd) {
@@ -790,9 +790,9 @@ int DrawCredits(bool draw, bool extended)
             snprintf(line, sizeof(line), "Extra special thanks go to %s,", pwd->pw_name);
          delete [] name;
          y += 2*lineSpacing;
-         y = DrawCreditItem(line, 0, y, draw);
+         y = DrawCreditItem(line, nullptr, y, draw);
          y += lineSpacing;
-         y = DrawCreditItem("one of our favorite users.", 0, y, draw);
+         y = DrawCreditItem("one of our favorite users.", nullptr, y, draw);
       }
    }
 
@@ -816,7 +816,7 @@ void ReadContributors()
    snprintf(buf, sizeof(buf), "%s/README/CREDITS", getenv("ROOTSYS"));
 #endif
 
-   gContributors = 0;
+   gContributors = nullptr;
 
    FILE *f = fopen(buf, "r");
    if (!f) return;
@@ -842,7 +842,7 @@ void ReadContributors()
       }
    }
 
-   gContributors[cnt] = 0;
+   gContributors[cnt] = nullptr;
 
    fclose(f);
 }
@@ -852,49 +852,49 @@ void ReadContributors()
 void Cleanup()
 {
    if (gLogoWindow) {
-      assert(gDisplay != 0 && "Cleanup, gDisplay is None");
+      assert(gDisplay != nullptr && "Cleanup, gDisplay is None");
       XUnmapWindow(gDisplay, gLogoWindow);
       XDestroyWindow(gDisplay, gLogoWindow);
       gLogoWindow = 0;
    }
 
    if (gLogoPixmap) {
-      assert(gDisplay != 0 && "Cleanup, gDisplay is None");
+      assert(gDisplay != nullptr && "Cleanup, gDisplay is None");
       XFreePixmap(gDisplay, gLogoPixmap);
       gLogoPixmap = 0;
    }
 
    if (gShapeMask) {
-      assert(gDisplay != 0 && "Cleanup, gDisplay is None");
+      assert(gDisplay != nullptr && "Cleanup, gDisplay is None");
       XFreePixmap(gDisplay, gShapeMask);
       gShapeMask = 0;
    }
 
    if (gCreditsPixmap) {
-      assert(gDisplay != 0 && "Cleanup, gDisplay is None");
+      assert(gDisplay != nullptr && "Cleanup, gDisplay is None");
       XFreePixmap(gDisplay, gCreditsPixmap);
       gCreditsPixmap = 0;
    }
 
    if (gFont) {
-      assert(gDisplay != 0 && "Cleanup, gDisplay is None");
+      assert(gDisplay != nullptr && "Cleanup, gDisplay is None");
       XFreeFont(gDisplay, gFont);
-      gFont = 0;
+      gFont = nullptr;
    }
 
    //If any.
    FreeCustomColors();
 
    if (gGC) {
-      assert(gDisplay != 0 && "Cleanup, gDisplay is None");
+      assert(gDisplay != nullptr && "Cleanup, gDisplay is None");
       XFreeGC(gDisplay, gGC);
-      gGC = 0;
+      gGC = nullptr;
    }
 
    if (gDisplay) {
       XSync(gDisplay, False);
       XCloseDisplay(gDisplay);
-      gDisplay = 0;
+      gDisplay = nullptr;
    }
 }
 

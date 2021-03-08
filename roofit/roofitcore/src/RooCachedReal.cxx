@@ -156,7 +156,7 @@ void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) cons
 
   // Delete source clone if we don't cache it
   if (!cache.cacheSource()) {
-    cache.setSourceClone(0) ;
+    cache.setSourceClone(nullptr) ;
   }
 
   cache.func()->setCdfBoundaries(_useCdfBoundaries) ;

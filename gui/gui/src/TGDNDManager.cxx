@@ -52,7 +52,7 @@ Bool_t TGDNDManager::fgInit = kFALSE;
 // - implement INCR protocol
 // - cache several requests?
 
-TGDNDManager *gDNDManager = 0;
+TGDNDManager *gDNDManager = nullptr;
 
 Cursor_t TGDragWindow::fgDefaultCursor = kNone;
 
@@ -212,7 +212,7 @@ TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t * /*typelist*/)
    }
 
    //Reset();
-   fDropTimeout = 0;
+   fDropTimeout = nullptr;
 
    fSource = kNone;
    fTarget = kNone;
@@ -222,11 +222,11 @@ TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t * /*typelist*/)
    fAcceptedAction = kNone; // target's accepted action
    fLocalAction = kNone;    // our last specified action when we act as source
    fDragging = kFALSE;
-   fDragWin = 0;
-   fLocalSource = 0;
-   fLocalTarget = 0;
+   fDragWin = nullptr;
+   fLocalSource = nullptr;
+   fLocalTarget = nullptr;
    fPic = fMask = kNone;
-   fDraggerTypes = 0;
+   fDraggerTypes = nullptr;
    fDropType = kNone;
    fHotx = fHoty = 0;
 
@@ -259,7 +259,7 @@ TGDNDManager::~TGDNDManager()
    // delete the drag pixmap, if any
    if (fDragWin) {
       fDragWin->DeleteWindow();
-      fDragWin = 0;
+      fDragWin = nullptr;
    }
    if (fPic != kNone) gVirtualX->DeletePixmap(fPic);
    if (fMask != kNone) gVirtualX->DeletePixmap(fMask);
@@ -368,7 +368,7 @@ Window_t TGDNDManager::GetRootProxy()
    Atom_t actual;
    Int_t format = 32;
    ULong_t count, remaining;
-   unsigned char *data = 0;
+   unsigned char *data = nullptr;
    Window_t win, proxy = kNone;
 
    // search for XdndProxy property on the root window...
@@ -388,7 +388,7 @@ Window_t TGDNDManager::GetRootProxy()
       // found the XdndProxy property, now check for the proxy window...
       win = *((Window_t *) data);
       delete[] data;
-      data = 0;
+      data = nullptr;
 
       gVirtualX->GetProperty(win, fgDNDProxy, 0, 1, kFALSE, XA_WINDOW,
                              &actual, &format, &count, &remaining, &data);
@@ -461,7 +461,7 @@ Bool_t TGDNDManager::HandleTimer(TTimer *t)
       // status confirmation from the target. Send a
       // leave message instead (and notify the user or widget).
       delete fDropTimeout;
-      fDropTimeout = 0;
+      fDropTimeout = nullptr;
 
       SendDNDLeave(fTarget);
       fStatusPending = kFALSE;
@@ -497,7 +497,7 @@ void TGDNDManager::SendDNDEnter(Window_t target)
       event.fUser[2+i] = (i < n) ? fTypelist[i] : kNone;
 
    if (fLocalSource) {
-      TDNDData *dnddata = 0;
+      TDNDData *dnddata = nullptr;
       Atom_t dataType;
 
       // get the data type from the drag source widget
@@ -634,7 +634,7 @@ Bool_t TGDNDManager::HandleDNDEnter(Window_t src, Long_t vers, Atom_t dataTypes[
       Atom_t type, *a;
       Int_t format = 32;
       ULong_t i, count, remaining;
-      unsigned char *data = 0;
+      unsigned char *data = nullptr;
 
       gVirtualX->GetProperty(src, fgDNDTypeList,
                              0, 0x8000000L, kFALSE, XA_ATOM,
@@ -667,7 +667,7 @@ Bool_t TGDNDManager::HandleDNDEnter(Window_t src, Long_t vers, Atom_t dataTypes[
    // the following is not strictly neccessary, unless the previous
    // dragging application crashed without sending XdndLeave
    if (fLocalTarget) fLocalTarget->HandleDNDLeave();
-   fLocalTarget = 0;
+   fLocalTarget = nullptr;
 
    return kTRUE;
 }
@@ -679,10 +679,10 @@ Bool_t TGDNDManager::HandleDNDLeave(Window_t /*src*/)
 {
    fSource = kNone;
    if (fLocalTarget) fLocalTarget->HandleDNDLeave();
-   fLocalTarget = 0;
+   fLocalTarget = nullptr;
 
    if (fDraggerTypes) delete[] fDraggerTypes;
-   fDraggerTypes = 0;
+   fDraggerTypes = nullptr;
 
    return kTRUE;
 }
@@ -695,8 +695,8 @@ Bool_t TGDNDManager::HandleDNDPosition(Window_t source, Int_t x_root, Int_t y_ro
 {
    Int_t x = 0, y = 0;
    Window_t child;
-   TGFrame *f = 0, *main = 0;
-   TGWindow *w = 0;
+   TGFrame *f = nullptr, *main = nullptr;
+   TGWindow *w = nullptr;
    Window_t wtarget = 0;
 
    wtarget = FindWindow(gVirtualX->GetDefaultRootWindow(), x_root, y_root, 15);
@@ -715,7 +715,7 @@ Bool_t TGDNDManager::HandleDNDPosition(Window_t source, Int_t x_root, Int_t y_ro
       if (fLocalTarget) {
          main = (TGFrame *)fLocalTarget->GetMainFrame();
          main->RaiseWindow();
-         if (fMain == 0)
+         if (fMain == nullptr)
             fMain = main;
          fDropType = fLocalTarget->HandleDNDEnter(fDraggerTypes);
       }
@@ -758,7 +758,7 @@ Bool_t TGDNDManager::HandleDNDStatus(Window_t target, Int_t accepted,
       }
       if (fDropTimeout) {   // were we waiting for this to do the drop?
          delete fDropTimeout;
-         fDropTimeout = 0;
+         fDropTimeout = nullptr;
          SendDNDDrop(fTarget);
       }
    }
@@ -777,7 +777,7 @@ Bool_t TGDNDManager::HandleDNDDrop(Window_t source, Time_t timestamp)
 
    if (fMain && fDropType != kNone) {
       gVirtualX->ChangeProperties(fMain->GetId(), fgXCDNDData, fDropType,
-                                  8, (unsigned char *) 0, 0);
+                                  8, (unsigned char *) nullptr, 0);
 
       gVirtualX->ConvertSelection(fMain->GetId(), fgDNDSelection, fDropType,
                                   fgXCDNDData, timestamp);
@@ -805,7 +805,7 @@ Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
 {
    if ((Atom_t)event->fUser[1] == fgDNDSelection) {
       Event_t xevent;
-      TDNDData *dnddata = 0;
+      TDNDData *dnddata = nullptr;
       char *data;
       int len;
 
@@ -848,7 +848,7 @@ Bool_t TGDNDManager::HandleSelection(Event_t *event)
       Atom_t actual = fDropType;
       Int_t format = 8;
       ULong_t count, remaining;
-      unsigned char *data = 0;
+      unsigned char *data = nullptr;
 
 
       gVirtualX->GetProperty(event->fUser[0], event->fUser[3],
@@ -869,7 +869,7 @@ Bool_t TGDNDManager::HandleSelection(Event_t *event)
          TDNDData dndData(actual, data, count, fLocalAction);
          fLocalTarget->HandleDNDDrop(&dndData);
          if (fDraggerTypes) delete[] fDraggerTypes;
-         fDraggerTypes = 0;
+         fDraggerTypes = nullptr;
       }
 
       fSource = kNone;
@@ -919,13 +919,13 @@ Bool_t TGDNDManager::StartDrag(TGFrame *src, int x_root, int y_root,
 
    gVirtualX->GrabPointer(grabWin, fGrabEventMask, kNone, fDNDNoDropCursor, kTRUE, kFALSE);
 
-   fLocalTarget = 0;
+   fLocalTarget = nullptr;
    fDragging = kTRUE;
    fTarget = kNone;
    fTargetIsDNDAware = kFALSE;
    fStatusPending = kFALSE;
    if (fDropTimeout) delete fDropTimeout;
-   fDropTimeout = 0;
+   fDropTimeout = nullptr;
    fDropAccepted = kFALSE;
    fAcceptedAction = kNone;
    fLocalAction = kNone;
@@ -980,7 +980,7 @@ Bool_t TGDNDManager::EndDrag()
    fDragging = kFALSE;
    if (fDragWin) {
       fDragWin->DeleteWindow();
-      fDragWin = 0;
+      fDragWin = nullptr;
    }
    return kTRUE;
 }

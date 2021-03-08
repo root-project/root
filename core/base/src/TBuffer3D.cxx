@@ -244,7 +244,7 @@ TBuffer3D::~TBuffer3D()
 
 void TBuffer3D::Init()
 {
-   fID            = 0;
+   fID            = nullptr;
    fColor         = 0;
    // Set fLocalMaster in section kCore to identity
    fTransparency  = 0;
@@ -261,9 +261,9 @@ void TBuffer3D::Init()
    // Set fLocalMaster in section kCore to identity
 
    // Set kRaw tessellation section of buffer with supplied sizes
-   fPnts          = 0;
-   fSegs          = 0;
-   fPols          = 0;
+   fPnts          = nullptr;
+   fSegs          = nullptr;
+   fPols          = nullptr;
 
    fNbPnts        = 0;
    fNbSegs        = 0;

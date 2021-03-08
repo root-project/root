@@ -46,7 +46,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape   = nullptr;
    fDxi1 = fDxi2 = fDyi1 = fDyi2 = fDzi = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -186,7 +186,7 @@ void TGeoTrd2Editor::ConnectSignals2Slots()
 
 void TGeoTrd2Editor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoTrd2::Class())) {
+   if (obj == nullptr || (obj->IsA()!=TGeoTrd2::Class())) {
       SetActive(kFALSE);
       return;
    }

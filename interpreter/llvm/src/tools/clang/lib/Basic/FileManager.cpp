@@ -176,7 +176,7 @@ const FileEntry *FileManager::getFile(StringRef Filename, bool openFile,
 
   auto &NamedFileEnt = *SeenFileInsertResult.first;
 
-  const FileEntry *StaleFileEntry = 0;
+  const FileEntry *StaleFileEntry = nullptr;
   bool needsRereading = false;
   if (NamedFileEnt.getValue()) {
     std::set<const FileEntry*>::const_iterator found

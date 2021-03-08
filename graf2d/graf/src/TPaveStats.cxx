@@ -225,7 +225,7 @@ const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat
 
 TPaveStats::TPaveStats(): TPaveText()
 {
-   fParent  = 0;
+   fParent  = nullptr;
    fOptFit  = gStyle->GetOptFit();
    fOptStat = gStyle->GetOptStat();
 }
@@ -236,7 +236,7 @@ TPaveStats::TPaveStats(): TPaveText()
 TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
 {
-   fParent = 0;
+   fParent = nullptr;
    fOptFit  = gStyle->GetOptFit();
    fOptStat = gStyle->GetOptStat();
    SetFitFormat(gStyle->GetFitFormat());
@@ -346,7 +346,7 @@ void TPaveStats::Paint(Option_t *option)
    TIter next(fLines);
    Double_t longest = 0, titlelength = 0;
    Double_t w, wtok[2];
-   char *st, *sl=0;
+   char *st, *sl=nullptr;
    if (textsize == 0)  {
       textsize = 0.92*yspace/(y2 - y1);
       titlesize = textsize;
@@ -357,10 +357,10 @@ void TPaveStats::Paint(Option_t *option)
             Int_t nchs = strlen(latex->GetTitle());
             sl = new char[nchs+1];
             strlcpy(sl, latex->GetTitle(),nchs+1);
-            if (strpbrk(sl, "=") !=0 && print_name == 0) {
+            if (strpbrk(sl, "=") !=nullptr && print_name == 0) {
                st = strtok(sl, "=");
                Int_t itok = 0;
-               while ( st !=0 ) {
+               while ( st !=nullptr ) {
                   latex_tok = new TLatex(0.,0.,st);
                   Style_t tfont = latex->GetTextFont();
                   if (tfont == 0) tfont = GetTextFont();
@@ -368,11 +368,11 @@ void TPaveStats::Paint(Option_t *option)
                   latex_tok->SetTextSize(textsize);
                   w = latex_tok->GetXsize();
                   if (w > wtok[itok]) wtok[itok] = w;
-                  st = strtok(0, "=");
+                  st = strtok(nullptr, "=");
                   ++itok;
                   delete latex_tok;
                }
-            } else if (strpbrk(sl, "|") !=0) {
+            } else if (strpbrk(sl, "|") !=nullptr) {
             } else {
                print_name = 0;
                Style_t tfont = latex->GetTextFont();
@@ -382,7 +382,7 @@ void TPaveStats::Paint(Option_t *option)
                if (titlelength > 0.98*dx) titlesize *= 0.98*dx/titlelength;
                latex->SetTextFont(tfont);
             }
-            delete [] sl; sl = 0;
+            delete [] sl; sl = nullptr;
          }
       }
       longest = wtok[0]+wtok[1]+2.*margin;
@@ -416,10 +416,10 @@ void TPaveStats::Paint(Option_t *option)
          sl = new char[nchs+1];
          strlcpy(sl, latex->GetTitle(),nchs+1);
          // Draw all the histogram stats except the 2D under/overflow
-         if (strpbrk(sl, "=") !=0 && print_name == 0) {
+         if (strpbrk(sl, "=") !=nullptr && print_name == 0) {
             st = strtok(sl, "=");
             Int_t halign = 12;
-            while ( st !=0 ) {
+            while ( st !=nullptr ) {
                typolabel = st;
                latex->SetTextAlign(halign);
                if (halign == 12) xtext = x1ref + margin;
@@ -431,11 +431,11 @@ void TPaveStats::Paint(Option_t *option)
                latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                              latex->GetTextSize(),
                                              typolabel.Data());
-               st = strtok(0, "=");
+               st = strtok(nullptr, "=");
                halign = 32;
             }
          // Draw the 2D under/overflow
-         } else if (strpbrk(sl, "|") !=0) {
+         } else if (strpbrk(sl, "|") !=nullptr) {
             Double_t yline1 = ytext+yspace/2.;
             Double_t yline2 = ytext-yspace/2.;
             Double_t xline1 = dx/3+x1ref;
@@ -445,7 +445,7 @@ void TPaveStats::Paint(Option_t *option)
             gPad->PaintLine(xline2,yline1,xline2,yline2);
             st = strtok(sl, "|");
             Int_t theIndex = 0;
-            while ( st !=0 ) {
+            while ( st !=nullptr ) {
                latex->SetTextAlign(22);
                if (theIndex == 0) xtext = 0.5*(x1ref+xline1);
                if (theIndex == 1) xtext = 0.5*(x1ref+x2ref);
@@ -456,7 +456,7 @@ void TPaveStats::Paint(Option_t *option)
                                              latex->GetTextSize(),
                                              typolabel.Data());
                theIndex++;
-               st = strtok(0, "|");
+               st = strtok(nullptr, "|");
             }
          // Draw the histogram identifier
          } else {

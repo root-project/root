@@ -44,10 +44,10 @@ TDrawFeedback::TDrawFeedback(TProof *proof, TSeqCollection *names)
    fNames = new THashList;
    fNames->SetOwner();
 
-   if (proof == 0) proof = gProof;
+   if (proof == nullptr) proof = gProof;
 
    TProof *p = dynamic_cast<TProof*>(proof);
-   if (p == 0) {
+   if (p == nullptr) {
       Error("TDrawFeedback","no valid proof session found");
       return;
    }
@@ -62,16 +62,16 @@ TDrawFeedback::TDrawFeedback(TProof *proof, TSeqCollection *names)
       return;
    }
 
-   if (names != 0) {
+   if (names != nullptr) {
       TIter next(names);
       TObjString *name;
-      while((name = dynamic_cast<TObjString*>(next())) != 0) {
+      while((name = dynamic_cast<TObjString*>(next())) != nullptr) {
          fNames->Add(new TNamed(name->GetName(),""));
       }
    } else {
       fAll = kTRUE;
    }
-   fOption = 0;
+   fOption = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +113,7 @@ void TDrawFeedback::Feedback(TList *objs)
 
             TVirtualPad *p = (TVirtualPad*) canvases->FindObject(name.Data());
 
-            if ( p == 0 ) {
+            if ( p == nullptr ) {
                gROOT->MakeDefCanvas();
                gPad->SetName(name);
                PDB(kFeedback,2) Info("Feedback","Created canvas %s", name.Data());
@@ -135,9 +135,9 @@ void TDrawFeedback::Feedback(TList *objs)
       }
    }
 
-   if (save != 0) {
+   if (save != nullptr) {
       save->cd();
    } else {
-      gPad = 0;
+      gPad = nullptr;
    }
 }

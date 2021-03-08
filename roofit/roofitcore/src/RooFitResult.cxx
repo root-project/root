@@ -67,8 +67,8 @@ ClassImp(RooFitResult);
 /// Constructor with name and title
 
 RooFitResult::RooFitResult(const char* name, const char* title) : 
-  TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0),
-  _CM(0), _VM(0), _GC(0)
+  TNamed(name,title), _constPars(nullptr), _initPars(nullptr), _finalPars(nullptr), _globalCorr(nullptr), _randomPars(nullptr), _Lt(nullptr),
+  _CM(nullptr), _VM(nullptr), _GC(nullptr)
 {  
   if (name) appendToDir(this,kTRUE) ;
 }
@@ -86,12 +86,12 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   _numBadNLL(other._numBadNLL),
   _minNLL(other._minNLL),
   _edm(other._edm),
-  _globalCorr(0),
-  _randomPars(0),
-  _Lt(0),
-  _CM(0),
-  _VM(0),
-  _GC(0),
+  _globalCorr(nullptr),
+  _randomPars(nullptr),
+  _Lt(nullptr),
+  _CM(nullptr),
+  _VM(nullptr),
+  _GC(nullptr),
   _statusHistory(other._statusHistory)
 {
   _constPars = (RooArgList*) other._constPars->snapshot() ;
@@ -250,14 +250,14 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
 {
   // lookup the input parameters by name: we require that they were floated in our fit
   const RooRealVar *par1= dynamic_cast<const RooRealVar*>(floatParsFinal().find(parName1));
-  if(0 == par1) {
+  if(nullptr == par1) {
     coutE(InputArguments) << "RooFitResult::correlationPlot: parameter not floated in fit: " << parName1 << endl;
-    return 0;
+    return nullptr;
   }
   const RooRealVar *par2= dynamic_cast<const RooRealVar*>(floatParsFinal().find(parName2));
-  if(0 == par2) {
+  if(nullptr == par2) {
     coutE(InputArguments) << "RooFitResult::correlationPlot: parameter not floated in fit: " << parName2 << endl;
-    return 0;
+    return nullptr;
   }
 
   // options are not case sensitive
@@ -346,8 +346,8 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
 const RooArgList& RooFitResult::randomizePars() const 
 {
   Int_t nPar= _finalPars->getSize();
-  if(0 == _randomPars) { // first-time initialization
-    assert(0 != _finalPars);
+  if(nullptr == _randomPars) { // first-time initialization
+    assert(nullptr != _finalPars);
     // create the list of random values to fill
     _randomPars= (RooArgList*)_finalPars->snapshot();
     // calculate the elements of the upper-triangular matrix L that gives Lt*L = C
@@ -385,9 +385,9 @@ const RooArgList& RooFitResult::randomizePars() const
   g*= (*_Lt);
   // add the mean value offsets and store the results
   TIterator *iter= _randomPars->createIterator();
-  RooRealVar *par(0);
+  RooRealVar *par(nullptr);
   Int_t index(0);
-  while((0 != (par= (RooRealVar*)iter->Next()))) {
+  while((nullptr != (par= (RooRealVar*)iter->Next()))) {
     par->setVal(par->getVal() + g(index++));
   }
   delete iter;
@@ -422,14 +422,14 @@ Double_t RooFitResult::correlation(const char* parname1, const char* parname2) c
 
 const RooArgList* RooFitResult::correlation(const char* parname) const 
 {
-  if (_globalCorr==0) {
+  if (_globalCorr==nullptr) {
     fillLegacyCorrMatrix() ;
   }
 
   RooAbsArg* arg = _initPars->find(parname) ;
   if (!arg) {
     coutE(InputArguments) << "RooFitResult::correlation: variable " << parname << " not a floating parameter in fit" << endl ;
-    return 0 ;
+    return nullptr ;
   }    
   return (RooArgList*)_corrMatrix.At(_initPars->index(arg)) ;
 }
@@ -441,7 +441,7 @@ const RooArgList* RooFitResult::correlation(const char* parname) const
 
 Double_t RooFitResult::globalCorr(const char* parname) 
 {
-  if (_globalCorr==0) {
+  if (_globalCorr==nullptr) {
     fillLegacyCorrMatrix() ;
   }
 
@@ -465,7 +465,7 @@ Double_t RooFitResult::globalCorr(const char* parname)
 
 const RooArgList* RooFitResult::globalCorr() 
 {
-  if (_globalCorr==0) {
+  if (_globalCorr==nullptr) {
     fillLegacyCorrMatrix() ;
   }
 
@@ -679,7 +679,7 @@ void RooFitResult::fillLegacyCorrMatrix() const
 
   TIterator *gcIter = _globalCorr->createIterator() ;
   TIterator *parIter = _finalPars->createIterator() ;
-  RooRealVar* gcVal = 0;
+  RooRealVar* gcVal = nullptr;
   for (unsigned int i = 0; i < (unsigned int)_CM->GetNcols() ; ++i) {
 
     // Find the next global correlation slot to fill, skipping fixed parameters
@@ -911,9 +911,9 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
 {
   // Verify length of supplied varList
   if (varList.getSize()>0 && varList.getSize()!=gMinuit->fNu) {
-    oocoutE((TObject*)0,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: supplied variable list must be either empty " << endl 
+    oocoutE((TObject*)nullptr,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: supplied variable list must be either empty " << endl 
 					<< "                             or match the number of variables of the last fit (" << gMinuit->fNu << ")" << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
   // Verify that all members of varList are of type RooRealVar
@@ -921,8 +921,8 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
   RooAbsArg* arg  ;
   while((arg=(RooAbsArg*)iter->Next())) {
     if (!dynamic_cast<RooRealVar*>(arg)) {
-      oocoutE((TObject*)0,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName() << "' is not of type RooRealVar" << endl ;
-      return 0 ;
+      oocoutE((TObject*)nullptr,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName() << "' is not of type RooRealVar" << endl ;
+      return nullptr ;
     }
   }
   delete iter ;
@@ -964,7 +964,7 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
 	var->setRange(xlo,xhi) ;
       }
       if (varName.CompareTo(var->GetName())) {
-	oocoutI((TObject*)0,Eval) << "RooFitResult::lastMinuitFit: fit parameter '" << varName 
+	oocoutI((TObject*)nullptr,Eval) << "RooFitResult::lastMinuitFit: fit parameter '" << varName 
 				  << "' stored in variable '" << var->GetName() << "'" << endl ;
       }
 
@@ -1007,9 +1007,9 @@ RooFitResult *RooFitResult::prefitResult(const RooArgList &paramList)
    RooAbsArg *arg;
    while ((arg = (RooAbsArg *)iter->Next())) {
       if (!dynamic_cast<RooRealVar *>(arg)) {
-         oocoutE((TObject *)0, InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName()
+         oocoutE((TObject *)nullptr, InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName()
                                                << "' is not of type RooRealVar" << endl;
-         return 0;
+         return nullptr;
       }
    }
 
@@ -1266,7 +1266,7 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
   if (det<=0) {
     coutE(Eval) << "RooFitResult::createHessePdf(" << GetName() << ") ERROR: covariance matrix is not positive definite (|V|=" 
 		<< det << ") cannot construct p.d.f" << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
   // Make sure that all given params were floating parameters in the represented fit
@@ -1492,7 +1492,7 @@ void RooFitResult::Streamer(TBuffer &R__b)
       
       TIterator *gcIter = _globalCorr->createIterator() ;
       TIterator *parIter = _finalPars->createIterator() ;
-      RooRealVar* gcVal = 0;
+      RooRealVar* gcVal = nullptr;
       for (unsigned int i = 0; i < (unsigned int)_CM->GetNcols() ; ++i) {
 	
 	// Find the next global correlation slot to fill, skipping fixed parameters

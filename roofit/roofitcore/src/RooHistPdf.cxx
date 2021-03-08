@@ -51,7 +51,7 @@ ClassImp(RooHistPdf);
 /// Default constructor
 /// coverity[UNINIT_CTOR]
 
-RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0), _unitNorm(kFALSE)
+RooHistPdf::RooHistPdf() : _dataHist(nullptr), _totVolume(0), _unitNorm(kFALSE)
 {
 
 }
@@ -211,7 +211,7 @@ Double_t RooHistPdf::evaluate() const
     if (harg != parg) {
       parg->syncCache() ;
       harg->copyCache(parg,kTRUE) ;
-      if (!harg->inRange(0)) {
+      if (!harg->inRange(nullptr)) {
         return 0 ;
       }
     }
@@ -375,7 +375,7 @@ list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo
 {
   // No hints are required when interpolation is used
   if (_intOrder>0) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Check that observable is in dataset, if not no hint is generated
@@ -390,16 +390,16 @@ list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo
   }
 
   if (!dhObs) {
-    return 0 ;
+    return nullptr ;
   }
   RooAbsLValue* lval = dynamic_cast<RooAbsLValue*>(dhObs) ;
   if (!lval) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries
   
-  const RooAbsBinning* binning = lval->getBinningPtr(0) ;
+  const RooAbsBinning* binning = lval->getBinningPtr(nullptr) ;
   Double_t* boundaries = binning->array() ;
 
   list<Double_t>* hint = new list<Double_t> ;
@@ -433,17 +433,17 @@ std::list<Double_t>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, Double_t x
 {
   // No hints are required when interpolation is used
   if (_intOrder>0) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(obs.GetName())) ;
   if (!lvarg) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
+  const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr) ;
   Double_t* boundaries = binning->array() ;
 
   list<Double_t>* hint = new list<Double_t> ;

@@ -124,8 +124,8 @@ std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 
 RooAbsArg::RooAbsArg()
    : TNamed(), _deleteWatch(kFALSE), _valueDirty(kTRUE), _shapeDirty(kTRUE), _operMode(Auto), _fast(kFALSE), _ownedComponents(nullptr),
-     _prohibitServerRedirect(kFALSE), _namePtr(0), _isConstant(kFALSE), _localNoInhibitDirty(kFALSE),
-     _myws(0)
+     _prohibitServerRedirect(kFALSE), _namePtr(nullptr), _isConstant(kFALSE), _localNoInhibitDirty(kFALSE),
+     _myws(nullptr)
 {
   _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
 
@@ -138,8 +138,8 @@ RooAbsArg::RooAbsArg()
 
 RooAbsArg::RooAbsArg(const char *name, const char *title)
    : TNamed(name, title), _deleteWatch(kFALSE), _valueDirty(kTRUE), _shapeDirty(kTRUE), _operMode(Auto), _fast(kFALSE),
-     _ownedComponents(0), _prohibitServerRedirect(kFALSE), _namePtr(0), _isConstant(kFALSE),
-     _localNoInhibitDirty(kFALSE), _myws(0)
+     _ownedComponents(nullptr), _prohibitServerRedirect(kFALSE), _namePtr(nullptr), _isConstant(kFALSE),
+     _localNoInhibitDirty(kFALSE), _myws(nullptr)
 {
   if (name == nullptr || strlen(name) == 0) {
     throw std::logic_error("Each RooFit object needs a name. "
@@ -155,8 +155,8 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
 RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
    : TNamed(other.GetName(), other.GetTitle()), RooPrintable(other), _boolAttrib(other._boolAttrib),
      _stringAttrib(other._stringAttrib), _deleteWatch(other._deleteWatch), _operMode(Auto), _fast(kFALSE),
-     _ownedComponents(0), _prohibitServerRedirect(kFALSE), _namePtr(other._namePtr),
-     _isConstant(other._isConstant), _localNoInhibitDirty(other._localNoInhibitDirty), _myws(0)
+     _ownedComponents(nullptr), _prohibitServerRedirect(kFALSE), _namePtr(other._namePtr),
+     _isConstant(other._isConstant), _localNoInhibitDirty(other._localNoInhibitDirty), _myws(nullptr)
 {
   // Use name in argument, if supplied
   if (name) {
@@ -251,7 +251,7 @@ RooAbsArg::~RooAbsArg()
 
   if (_ownedComponents) {
     delete _ownedComponents ;
-    _ownedComponents = 0 ;
+    _ownedComponents = nullptr ;
   }
 
 }
@@ -339,7 +339,7 @@ const Text_t* RooAbsArg::getStringAttribute(const Text_t* key) const
   if (iter!=_stringAttrib.end()) {
     return iter->second.c_str() ;
   } else {
-    return 0 ;
+    return nullptr ;
   }
 }
 
@@ -577,7 +577,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 
 RooArgSet* RooAbsArg::getParameters(const RooAbsData* set, Bool_t stripDisconnected) const
 {
-  return getParameters(set?set->get():0,stripDisconnected) ;
+  return getParameters(set?set->get():nullptr,stripDisconnected) ;
 }
 
 
@@ -685,7 +685,7 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly
 
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
-  treeNodeServerList(&leafList,0,kFALSE,kTRUE,valueOnly) ;
+  treeNodeServerList(&leafList,nullptr,kFALSE,kTRUE,valueOnly) ;
 
   if (valueOnly) {
     for (const auto arg : leafList) {
@@ -868,7 +868,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source)
   }
 
   // Cyclical dependency interception
-  if (source==0) {
+  if (source==nullptr) {
     source=this ;
   } else if (source==this) {
     // Cyclical dependency, abort
@@ -912,7 +912,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
   }
 
   // Set 'dirty' shape state for this object and propagate flag to all its clients
-  if (source==0) {
+  if (source==nullptr) {
     source=this ;
   } else if (source==this) {
     // Cyclical dependency, abort
@@ -1076,7 +1076,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
 RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const
 {
-  RooAbsArg *newServer = 0;
+  RooAbsArg *newServer = nullptr;
   if (!nameChange) {
     newServer = newSet.find(*this) ;
   }
@@ -1087,12 +1087,12 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
     nameAttrib.Append(GetName()) ;
 
     RooArgSet* tmp = (RooArgSet*) newSet.selectByAttrib(nameAttrib,kTRUE) ;
-    if(0 != tmp) {
+    if(nullptr != tmp) {
 
       // Check if any match was found
       if (tmp->getSize()==0) {
         delete tmp ;
-        return 0 ;
+        return nullptr ;
       }
 
       // Check if match is unique
@@ -1380,7 +1380,7 @@ void RooAbsArg::printArgs(ostream& os) const
   os << "[ " ;
   for (Int_t i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* p = getProxy(i) ;
-    if (p==0) continue ;
+    if (p==nullptr) continue ;
     if (!TString(p->name()).BeginsWith("!")) {
       p->print(os) ;
       os << " " ;
@@ -1517,7 +1517,7 @@ void RooAbsArg::attachDataSet(const RooAbsData &data)
 {
   const RooArgSet* set = data.get() ;
   RooArgSet branches ;
-  branchNodeServerList(&branches,0,kTRUE) ;
+  branchNodeServerList(&branches,nullptr,kTRUE) ;
 
   RooFIter iter = branches.fwdIterator() ;
   RooAbsArg* branch ;
@@ -1536,7 +1536,7 @@ void RooAbsArg::attachDataStore(const RooAbsDataStore &dstore)
 {
   const RooArgSet* set = dstore.get() ;
   RooArgSet branches ;
-  branchNodeServerList(&branches,0,kTRUE) ;
+  branchNodeServerList(&branches,nullptr,kTRUE) ;
 
   RooFIter iter = branches.fwdIterator() ;
   RooAbsArg* branch ;
@@ -1783,7 +1783,7 @@ void RooAbsArg::setOperMode(OperMode mode, Bool_t recurseADirty)
   if (mode==_operMode) return ;
 
   _operMode = mode ;
-  _fast = ((mode==AClean) || dynamic_cast<RooRealVar*>(this)!=0 || dynamic_cast<RooConstVar*>(this)!=0 ) ;
+  _fast = ((mode==AClean) || dynamic_cast<RooRealVar*>(this)!=nullptr || dynamic_cast<RooConstVar*>(this)!=nullptr ) ;
   for (Int_t i=0 ;i<numCaches() ; i++) {
     getCache(i)->operModeHook() ;
   }
@@ -1988,8 +1988,8 @@ RooLinkedList RooAbsArg::getCloningAncestors() const
       char buf[128] ;
       strlcpy(buf,iter->c_str(),128) ;
       strtok(buf,"(") ;
-      char* ptrToken = strtok(0,")") ;
-      RooAbsArg* ptr = (RooAbsArg*) strtol(ptrToken,0,16) ;
+      char* ptrToken = strtok(nullptr,")") ;
+      RooAbsArg* ptr = (RooAbsArg*) strtol(ptrToken,nullptr,16) ;
       retVal.Add(ptr) ;
     }
   }

@@ -33,10 +33,10 @@ TF1Data::TF1Data(): ROOT::v5::TFormula(), TAttLine(), TAttFill(), TAttMarker()
    fNDF       = 0;
    fNsave     = 0;
    fChisquare = 0;
-   fParErrors = 0;
-   fParMin    = 0;
-   fParMax    = 0;
-   fSave      = 0;
+   fParErrors = nullptr;
+   fParMin    = nullptr;
+   fParMax    = nullptr;
+   fSave      = nullptr;
    fMinimum   = -1111;
    fMaximum   = -1111;
    SetFillStyle(0);
@@ -142,7 +142,7 @@ void TF1Data::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TCla
          fSave[fNsave+1] = fSave[fNsave+2];
          fSave[fNsave+2] = fSave[fNsave+3];
          fNsave += 3;
-      } else fSave = 0;
+      } else fSave = nullptr;
    }
    b.CheckByteCount(R__s, R__c, TF1Data::IsA());
    //====end of old versions

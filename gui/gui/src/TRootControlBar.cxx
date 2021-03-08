@@ -33,11 +33,11 @@ ClassImp(TRootControlBar);
 TRootControlBar::TRootControlBar(TControlBar *c, const char *title, Int_t x, Int_t y)
    : TGMainFrame(gClient->GetRoot(), 10, 10), TControlBarImp(c)
 {
-   fWidgets = 0;
+   fWidgets = nullptr;
    fXpos    = x;
    fYpos    = y;
    fBwidth  = 0;
-   fClicked = 0;
+   fClicked = nullptr;
    SetCleanup(kDeepCleanup);
 
    // if controlbar orientation is horizontal change layout manager
@@ -57,7 +57,7 @@ TRootControlBar::TRootControlBar(TControlBar *c, const char *title, Int_t x, Int
 TRootControlBar::~TRootControlBar()
 {
    delete fWidgets;
-   fWidgets = 0;
+   fWidgets = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ TRootControlBar::~TRootControlBar()
 void TRootControlBar::Create()
 {
    fWidgets = new TList;
-   TGButton *b = 0;
+   TGButton *b = nullptr;
 
    TControlBarButton *button;
    TIter next(fControlBar->GetListOfButtons());

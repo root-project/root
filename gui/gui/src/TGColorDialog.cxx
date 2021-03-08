@@ -1056,8 +1056,8 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    Int_t i;
 
    fRetc = retc;
-   fRetColor = 0;
-   fRetTColor = 0;
+   fRetColor = nullptr;
+   fRetTColor = nullptr;
    fInitColor = 0;
    if (color) {
       fRetColor = color;
@@ -1085,16 +1085,16 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    cf1->SetLayoutManager(new TGMatrixLayout(cf1, 0, 2, 4));
 
    cf1->AddFrame(new TGLabel(cf1, new TGHotString("Red:")));
-   cf1->AddFrame(fRte = new TGTextEntry(cf1, fRtb = new TGTextBuffer(5), kCDLG_RTE),0);
+   cf1->AddFrame(fRte = new TGTextEntry(cf1, fRtb = new TGTextBuffer(5), kCDLG_RTE),nullptr);
    fRte->Resize(50, fRte->GetDefaultHeight());
-   cf1->AddFrame(new TGLabel(cf1, new TGHotString("Green:")),0);
-   cf1->AddFrame(fGte = new TGTextEntry(cf1, fGtb = new TGTextBuffer(5), kCDLG_GTE),0);
+   cf1->AddFrame(new TGLabel(cf1, new TGHotString("Green:")),nullptr);
+   cf1->AddFrame(fGte = new TGTextEntry(cf1, fGtb = new TGTextBuffer(5), kCDLG_GTE),nullptr);
    fGte->Resize(50, fGte->GetDefaultHeight());
    cf1->AddFrame(new TGLabel(cf1, new TGHotString("Blue:")));
-   cf1->AddFrame(fBte = new TGTextEntry(cf1, fBtb = new TGTextBuffer(5), kCDLG_BTE),0);
+   cf1->AddFrame(fBte = new TGTextEntry(cf1, fBtb = new TGTextBuffer(5), kCDLG_BTE),nullptr);
    fBte->Resize(50, fBte->GetDefaultHeight());
-   cf1->AddFrame(new TGLabel(cf1, new TGHotString("Opacity:")),0);
-   cf1->AddFrame(fAle = new TGTextEntry(cf1, fAlb = new TGTextBuffer(5), kCDLG_ALE),0);
+   cf1->AddFrame(new TGLabel(cf1, new TGHotString("Opacity:")),nullptr);
+   cf1->AddFrame(fAle = new TGTextEntry(cf1, fAlb = new TGTextBuffer(5), kCDLG_ALE),nullptr);
    fAle->Resize(50, fAle->GetDefaultHeight());
 
    if (!TCanvas::SupportAlpha()) {
@@ -1105,14 +1105,14 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    cf2->SetCleanup();
    cf->AddFrame(cf2, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 0, 30, 0));
    cf2->SetLayoutManager(new TGMatrixLayout(cf2, 0, 2, 4));
-   cf2->AddFrame(new TGLabel(cf2, new TGHotString("Hue:")),0);
-   cf2->AddFrame(fHte = new TGTextEntry(cf2, fHtb = new TGTextBuffer(5), kCDLG_HTE),0);
+   cf2->AddFrame(new TGLabel(cf2, new TGHotString("Hue:")),nullptr);
+   cf2->AddFrame(fHte = new TGTextEntry(cf2, fHtb = new TGTextBuffer(5), kCDLG_HTE),nullptr);
    fHte->Resize(50, fHte->GetDefaultHeight());
-   cf2->AddFrame(new TGLabel(cf2, new TGHotString("Sat:")),0);
-   cf2->AddFrame(fSte = new TGTextEntry(cf2, fStb = new TGTextBuffer(5), kCDLG_STE),0);
+   cf2->AddFrame(new TGLabel(cf2, new TGHotString("Sat:")),nullptr);
+   cf2->AddFrame(fSte = new TGTextEntry(cf2, fStb = new TGTextBuffer(5), kCDLG_STE),nullptr);
    fSte->Resize(50, fSte->GetDefaultHeight());
-   cf2->AddFrame(new TGLabel(cf2, new TGHotString("Lum:")),0);
-   cf2->AddFrame(fLte = new TGTextEntry(cf2, fLtb = new TGTextBuffer(5), kCDLG_LTE),0);
+   cf2->AddFrame(new TGLabel(cf2, new TGHotString("Lum:")),nullptr);
+   cf2->AddFrame(fLte = new TGTextEntry(cf2, fLtb = new TGTextBuffer(5), kCDLG_LTE),nullptr);
    fLte->Resize(50, fLte->GetDefaultHeight());
 
    fHte->Associate(this);
@@ -1136,11 +1136,11 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    TGCompositeFrame *cf3 = new TGCompositeFrame(cf, 10, 10);
    cf3->SetCleanup();
    cf3->SetLayoutManager(new TGMatrixLayout(cf3, 0, 1, 0));
-   cf3->AddFrame(fColorInfo = new TGLabel(cf3, new TGString("New: not set         ")),0);
+   cf3->AddFrame(fColorInfo = new TGLabel(cf3, new TGString("New: not set         ")),nullptr);
    fColorInfo->SetTextJustify(kTextLeft);
-   cf3->AddFrame(fSample = new TGFrame(cf3, 50, 25, kOwnBackground),0);
-   cf3->AddFrame(fSampleOld = new TGFrame(cf3, 50, 25, kOwnBackground),0);
-   cf3->AddFrame(new TGLabel(cf3, new TGString("Current")),0);
+   cf3->AddFrame(fSample = new TGFrame(cf3, 50, 25, kOwnBackground),nullptr);
+   cf3->AddFrame(fSampleOld = new TGFrame(cf3, 50, 25, kOwnBackground),nullptr);
+   cf3->AddFrame(new TGLabel(cf3, new TGString("Current")),nullptr);
    cf->AddFrame(cf3, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 5, 20, 0));
    fSample->SetBackgroundColor(fCurrentColor);
    fSampleOld->SetBackgroundColor(fCurrentColor);

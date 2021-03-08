@@ -718,7 +718,7 @@ const TVectorD* TRobustEstimator::GetHyperplane() const
 {
    if (fExact==0) {
       Error("GetHyperplane","the data doesn't lie on a hyperplane!\n");
-      return 0;
+      return nullptr;
    } else {
       return &fHyperplane;
    }

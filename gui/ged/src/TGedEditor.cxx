@@ -78,7 +78,7 @@ public:
 
 ClassImp(TGedEditor);
 
-TGedEditor* TGedEditor::fgFrameCreator = 0;
+TGedEditor* TGedEditor::fgFrameCreator = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns TGedEditor that currently creates TGedFrames.
@@ -101,13 +101,13 @@ void TGedEditor::SetFrameCreator(TGedEditor* e)
 
 TGedEditor::TGedEditor(TCanvas* canvas, UInt_t width, UInt_t height) :
    TGMainFrame(gClient->GetRoot(), width, height),
-   fCan          (0),
-   fTab          (0),
-   fTabContainer (0),
-   fModel        (0),
-   fPad          (0),
-   fCanvas       (0),
-   fClass        (0),
+   fCan          (nullptr),
+   fTab          (nullptr),
+   fTabContainer (nullptr),
+   fModel        (nullptr),
+   fPad          (nullptr),
+   fCanvas       (nullptr),
+   fClass        (nullptr),
    fGlobal       (kTRUE)
 {
    fCan = new TGCanvas(this, 170, 10, kFixedWidth);
@@ -153,7 +153,7 @@ TGedEditor::~TGedEditor()
    TIter next(fFrameMap.GetTable());
    TPair* pair;
    while ((pair = (TPair*) next())) {
-      if (pair->Value() != 0) {
+      if (pair->Value() != nullptr) {
          TGedFrame* frame  = (TGedFrame*) pair->Value();
          delete frame;
       }
@@ -162,8 +162,8 @@ TGedEditor::~TGedEditor()
    TGedTabInfo* ti;
    TIter it1(&fCreatedTabs);
    while ((ti = (TGedTabInfo*) it1())) {
-      fTab->AddFrame(ti->fElement,0);
-      fTab->AddFrame(ti->fContainer,0);
+      fTab->AddFrame(ti->fElement,nullptr);
+      fTab->AddFrame(ti->fContainer,nullptr);
    }
 
    delete fTab;
@@ -218,7 +218,7 @@ TGedTabInfo* TGedEditor::GetEditorTabInfo(const char* name)
    TGedFrame* nf = CreateNameFrame(tc, name);
    if (nf) {
       nf->SetGedEditor(this);
-      nf->SetModelClass(0);
+      nf->SetModelClass(nullptr);
       tc->AddFrame(nf, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
    }
    // add to list of created tabs
@@ -255,7 +255,7 @@ void TGedEditor::ReinitWorkspace()
       TIter frames(tc->GetList());
       frames(); // skip name-frame
       TGFrameElement* fr;
-      while ((fr = (TGFrameElement *) frames()) != 0) {
+      while ((fr = (TGFrameElement *) frames()) != nullptr) {
          TGFrame *f = fr->fFrame;
          tc->RemoveFrame(f);
          f->UnmapWindow();
@@ -340,7 +340,7 @@ void TGedEditor::SetCanvas(TCanvas *newcan)
 
    SetWindowName(Form("%s_Editor", fCanvas->GetName()));
    fPad = fCanvas->GetSelectedPad();
-   if (fPad == 0) fPad = fCanvas;
+   if (fPad == nullptr) fPad = fCanvas;
    ConnectToCanvas(fCanvas);
 }
 
@@ -356,7 +356,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t fo
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
 
    fPad = pad;
-   if (obj == 0) obj = fPad;
+   if (obj == nullptr) obj = fPad;
 
    // keep selected by name
    TGTabElement* seltab = fTab->GetCurrentTab();
@@ -364,7 +364,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t fo
    Bool_t mapTabs = kFALSE;
    if (fModel != obj || force) {
       fModel = obj;
-      if (fModel == 0 || fModel->IsA() != fClass) {
+      if (fModel == nullptr || fModel->IsA() != fClass) {
          ReinitWorkspace();
          mapTabs = kTRUE;
          // add Sytle tab to list of visible tabs
@@ -374,7 +374,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t fo
             // build a list of editors
             ActivateEditor(fClass, kTRUE);
          } else {
-            fClass = 0;
+            fClass = nullptr;
          }
 
          // add class editors to fTabContainer
@@ -390,8 +390,8 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t fo
          TIter next(&fVisibleTabs);
          TGedTabInfo* ti;
          while ((ti = (TGedTabInfo *) next())) {
-            fTab->AddFrame(ti->fElement,0);
-            fTab->AddFrame(ti->fContainer,0);
+            fTab->AddFrame(ti->fElement,nullptr);
+            fTab->AddFrame(ti->fContainer,nullptr);
          }
       }
       ConfigureGedFrames(kTRUE);
@@ -406,7 +406,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t fo
          ti->fElement->MapWindow();
          ti->fContainer->MapWindow();
       }
-      if (seltab == 0 || fTab->SetTab(seltab->GetString(), kFALSE) == kFALSE)
+      if (seltab == nullptr || fTab->SetTab(seltab->GetString(), kFALSE) == kFALSE)
          fTab->SetTab(0, kFALSE);
    }
 
@@ -472,9 +472,9 @@ void TGedEditor::Hide()
 {
    UnmapWindow();
    ReinitWorkspace();
-   fModel = 0; fClass = 0;
+   fModel = nullptr; fClass = nullptr;
    DisconnectFromCanvas();
-   fCanvas = 0; fPad = 0;
+   fCanvas = nullptr; fPad = nullptr;
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
@@ -504,10 +504,10 @@ void TGedEditor::RecursiveRemove(TObject* obj)
 void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
 {
    TPair     *pair = (TPair*) fFrameMap.FindObject(cl);
-   TClass    *edClass = 0;
-   TGedFrame *frame = 0;
+   TClass    *edClass = nullptr;
+   TGedFrame *frame = nullptr;
 
-   if (pair == 0) {
+   if (pair == nullptr) {
       edClass = TClass::GetClass(Form("%sEditor", cl->GetName()));
 
       if (edClass && edClass->InheritsFrom(TGedFrame::Class())) {
@@ -516,7 +516,7 @@ void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
          fgFrameCreator = this;
          frame = reinterpret_cast<TGedFrame*>(edClass->New());
          frame->SetModelClass(cl);
-         fgFrameCreator = 0;
+         fgFrameCreator = nullptr;
          fClient->SetRoot(exroot);
       }
       fFrameMap.Add(cl, frame);
@@ -531,7 +531,7 @@ void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
       TPair* exclpair = (TPair*) fExclMap.FindObject(cl);
       if (exclpair) {
          exclfr = kTRUE;
-         exclbases = (exclpair->Value() != 0);
+         exclbases = (exclpair->Value() != nullptr);
       }
 
       if (!exclfr && frame->AcceptModel(fModel)){
@@ -543,7 +543,7 @@ void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
                // locate the composite frame on created tabs
                TGedTabInfo* ti = GetEditorTabInfo(subf->fName);
                ti->fContainer->AddFrame(subf->fFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
-               if (fVisibleTabs.FindObject(ti) == 0)
+               if (fVisibleTabs.FindObject(ti) == nullptr)
                   fVisibleTabs.Add(ti);
             }
          }
@@ -580,7 +580,7 @@ void  TGedEditor::ExcludeClassEditor(TClass* cl, Bool_t recurse)
 {
    TPair* pair = (TPair*) fExclMap.FindObject(cl);
    if (pair) {
-      if (recurse && pair->Value() == 0)
+      if (recurse && pair->Value() == nullptr)
          pair->SetValue((TObject*)(Long_t)1); // hack, reuse TObject as Bool_t
    } else {
       fExclMap.Add(cl, (TObject*)(Long_t)(recurse ? 1 : 0));
@@ -594,7 +594,7 @@ void TGedEditor::InsertGedFrame(TGedFrame* f)
 {
    // printf("%s %s  insert gedframe %s \n", fModel->GetName(), fModel->IsA()->GetName(),f->GetModelClass()->GetName());
    TObjLink* lnk = fGedFrames.FirstLink();
-   if (lnk == 0) {
+   if (lnk == nullptr) {
       fGedFrames.Add(f);
       return;
    }
@@ -672,7 +672,7 @@ void TGedEditor::PrintFrameStat()
    TIter next(fFrameMap.GetTable());
    TPair* pair;
    while ((pair = (TPair*) next())) {
-      if (pair->Value() != 0) {
+      if (pair->Value() != nullptr) {
          TClass* cl  = (TClass*) pair->Key();
          printf("TGedFrame created for %s \n", cl->GetName());
          sum ++;

@@ -81,51 +81,51 @@ ClassImp(TEntryListArray);
 
 void TEntryListArray::Init()
 {
-   fSubLists = 0;
+   fSubLists = nullptr;
    fEntry = -1;
-   fLastSubListQueried = 0;
-   fSubListIter = 0;
+   fLastSubListQueried = nullptr;
+   fSubListIter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default c-tor
 
-TEntryListArray::TEntryListArray() : TEntryList(), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
+TEntryListArray::TEntryListArray() : TEntryList(), fSubLists(nullptr), fEntry(-1), fLastSubListQueried(nullptr), fSubListIter(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// c-tor with name and title
 
-TEntryListArray::TEntryListArray(const char *name, const char *title): TEntryList(name, title), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
+TEntryListArray::TEntryListArray(const char *name, const char *title): TEntryList(name, title), fSubLists(nullptr), fEntry(-1), fLastSubListQueried(nullptr), fSubListIter(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///constructor with name and title, which also sets the tree
 
-TEntryListArray::TEntryListArray(const char *name, const char *title, const TTree *tree): TEntryList(name, title, tree), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
+TEntryListArray::TEntryListArray(const char *name, const char *title, const TTree *tree): TEntryList(name, title, tree), fSubLists(nullptr), fEntry(-1), fLastSubListQueried(nullptr), fSubListIter(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// c-tor with name and title, which also sets the treename and the filename
 
-TEntryListArray::TEntryListArray(const char *name, const char *title, const char *treename, const char *filename): TEntryList(name, title, treename, filename), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
+TEntryListArray::TEntryListArray(const char *name, const char *title, const char *treename, const char *filename): TEntryList(name, title, treename, filename), fSubLists(nullptr), fEntry(-1), fLastSubListQueried(nullptr), fSubListIter(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// c-tor, which sets the tree
 
-TEntryListArray::TEntryListArray(const TTree *tree) : TEntryList(tree), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
+TEntryListArray::TEntryListArray(const TTree *tree) : TEntryList(tree), fSubLists(nullptr), fEntry(-1), fLastSubListQueried(nullptr), fSubListIter(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy c-tor
 
-TEntryListArray::TEntryListArray(const TEntryListArray &elist) : TEntryList(), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
+TEntryListArray::TEntryListArray(const TEntryListArray &elist) : TEntryList(), fSubLists(nullptr), fEntry(-1), fLastSubListQueried(nullptr), fSubListIter(nullptr)
 {
    fEntry = elist.fEntry;
    Add(&elist);
@@ -134,7 +134,7 @@ TEntryListArray::TEntryListArray(const TEntryListArray &elist) : TEntryList(), f
 ////////////////////////////////////////////////////////////////////////////////
 /// c-tor, from TEntryList
 
-TEntryListArray::TEntryListArray(const TEntryList& elist) : TEntryList(elist), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
+TEntryListArray::TEntryListArray(const TEntryList& elist) : TEntryList(elist), fSubLists(nullptr), fEntry(-1), fLastSubListQueried(nullptr), fSubListIter(nullptr)
 {
 }
 
@@ -147,9 +147,9 @@ TEntryListArray::~TEntryListArray()
       fSubLists->Delete();
       delete fSubLists;
    }
-   fSubLists = 0;
+   fSubLists = nullptr;
    delete fSubListIter;
-   fSubListIter = 0;
+   fSubListIter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +168,7 @@ void TEntryListArray::Add(const TEntryList *elist)
    // This would happen in any case when calling TEntryList::Add
    if (elist->GetLists()) { // the other list has lists to hold mutiple trees, add one by one
       TIter next(elist->GetLists());
-      const TEntryList *e = 0;
+      const TEntryList *e = nullptr;
       while ((e = (const TEntryList*)next())) {
          SetTree(e->GetTreeName(), e->GetFileName());
       }
@@ -194,7 +194,7 @@ void TEntryListArray::AddEntriesAndSubLists(const TEntryList *elist)
    if (!elist) return;
 
    if (fLists) { // This list is splitted
-      TEntryListArray* e = 0;
+      TEntryListArray* e = nullptr;
       TIter next(fLists);
       fN = 0; // reset fN to set it to the sum of fN in each list
       // Only need to do it here and the next condition will be called only from here
@@ -204,7 +204,7 @@ void TEntryListArray::AddEntriesAndSubLists(const TEntryList *elist)
       }
    } else if (elist->GetLists()) { // The other list is splitted --> will be called only from the previous if
       TIter next(elist->GetLists());
-      TEntryList *e = 0;
+      TEntryList *e = nullptr;
       while ((e = (TEntryList*) next())) {
          AddEntriesAndSubLists(e);
       }
@@ -225,7 +225,7 @@ void TEntryListArray::AddEntriesAndSubLists(const TEntryList *elist)
       }
       TEntryListArray *el1;
       const TEntryListArray *el2;
-      TCollection *other_sublists = 0;
+      TCollection *other_sublists = nullptr;
       if (elist_array) {
          other_sublists = elist_array->GetSubLists();
       }
@@ -275,7 +275,7 @@ Int_t TEntryListArray::Contains(Long64_t entry, TTree *tree, Long64_t subentry)
       SetTree(tree->GetTree());
       TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
       if (currentArray) {
-         return currentArray->Contains(localentry, 0, subentry);
+         return currentArray->Contains(localentry, nullptr, subentry);
       }
       return 0;
    }
@@ -317,7 +317,7 @@ void TEntryListArray::ConvertToTEntryListArray(TEntryList *e)
    // and must keep the current sublists
    if (fSubLists) {
       earray->fSubLists = fSubLists;
-      fSubLists = 0;
+      fSubLists = nullptr;
    }
    if (e == fLists->First()) {
       fLists->AddFirst(earray);
@@ -326,7 +326,7 @@ void TEntryListArray::ConvertToTEntryListArray(TEntryList *e)
    }
    fLists->Remove(e);
    delete e;
-   e = 0;
+   e = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -350,7 +350,7 @@ Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
       SetTree(tree->GetTree());
       TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
       if (currentArray) {
-         if ((result = currentArray->Enter(localentry, 0, subentry)))
+         if ((result = currentArray->Enter(localentry, nullptr, subentry)))
             if (fLists) ++fN;
       }
       return result;
@@ -358,7 +358,7 @@ Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
    if (fLists) {
       if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
       TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
-      if (currentArray && (result = currentArray->Enter(entry, 0, subentry))) {
+      if (currentArray && (result = currentArray->Enter(entry, nullptr, subentry))) {
          ++fN;
       }
       return result;
@@ -396,12 +396,12 @@ TEntryListArray* TEntryListArray::GetSubListForEntry(Long64_t entry, TTree *tree
             return currentArray->GetSubListForEntry(localentry);
          }
       }
-      return 0;
+      return nullptr;
    }
    // tree = 0
 
    if (!fSubLists || !fSubLists->GetEntries()) {
-      return 0;
+      return nullptr;
    }
 
    if (!fSubListIter) {
@@ -428,7 +428,7 @@ TEntryListArray* TEntryListArray::GetSubListForEntry(Long64_t entry, TTree *tree
          break;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -450,7 +450,7 @@ void TEntryListArray::Print(const Option_t* option) const
 
    if (fLists) {
       TIter next(fLists);
-      TEntryListArray *e = 0;
+      TEntryListArray *e = nullptr;
       while ((e = (TEntryListArray*)next())) {
          std::cout << e->fTreeName << ":" << std::endl;
          e->Print(option);
@@ -495,7 +495,7 @@ Bool_t TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
       Long64_t localentry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
       TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
-      if (currentArray && (result = currentArray->Remove(localentry, 0, subentry))) {
+      if (currentArray && (result = currentArray->Remove(localentry, nullptr, subentry))) {
          if (fLists) {
             --fN;
          }
@@ -505,7 +505,7 @@ Bool_t TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
    if (fLists) {
       if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
       TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
-      if (currentArray && (result = currentArray->Remove(entry, 0, subentry)) && fLists) {
+      if (currentArray && (result = currentArray->Remove(entry, nullptr, subentry)) && fLists) {
          --fN;
       }
       return result;
@@ -546,10 +546,10 @@ Bool_t TEntryListArray::RemoveSubList(TEntryListArray *e, TTree *tree)
    }
    // fSubLists->Sort(); --> for TObjArray
    delete e;
-   e = 0;
+   e = nullptr;
    if (!fSubLists->GetEntries()) {
       delete fSubLists;
-      fSubLists = 0;
+      fSubLists = nullptr;
    }
    return 1;
 }
@@ -592,7 +592,7 @@ void TEntryListArray::Reset()
 
 TEntryListArray* TEntryListArray::SetEntry(Long64_t entry, TTree *tree)
 {
-   if (entry < 0) return 0;
+   if (entry < 0) return nullptr;
 
    // If tree is given, switch to the list that contains tree
    if (tree) {
@@ -602,7 +602,7 @@ TEntryListArray* TEntryListArray::SetEntry(Long64_t entry, TTree *tree)
       if (currentArray) {
          return currentArray->SetEntry(localentry);
       }
-      return 0;
+      return nullptr;
    }
    // tree = 0
    if (!fSubLists) {
@@ -631,7 +631,7 @@ void TEntryListArray::Subtract(const TEntryList *elist)
    if (!elist) return;
 
    if (fLists) { // This list is splitted
-      TEntryListArray* e = 0;
+      TEntryListArray* e = nullptr;
       TIter next(fLists);
       fN = 0; // reset fN to set it to the sum of fN in each list
       while ((e = (TEntryListArray*) next())) {
@@ -640,7 +640,7 @@ void TEntryListArray::Subtract(const TEntryList *elist)
       }
    } else if (elist->GetLists()) { // The other list is splitted
       TIter next(elist->GetLists());
-      TEntryList *e = 0;
+      TEntryList *e = nullptr;
       while ((e = (TEntryList*) next())) {
          Subtract(e);
       }
@@ -651,7 +651,7 @@ void TEntryListArray::Subtract(const TEntryList *elist)
       if (!fSubLists || !elist_array || !elist_array->GetSubLists()) {  // there are no sublists in one of the lists
          TEntryList::Subtract(elist);
          if (fSubLists) {
-            TEntryListArray *e = 0;
+            TEntryListArray *e = nullptr;
             TIter next(fSubLists);
             while ((e = (TEntryListArray*) next())) {
                if (!Contains(e->fEntry))

@@ -124,7 +124,7 @@ TGCommandPlugin::~TGCommandPlugin()
    fCommand->Disconnect("TabPressed()");
    fCommand->Disconnect("TextChanged(const char *)");
    delete fTimer;
-   fTimer = 0;
+   fTimer = nullptr;
    Cleanup();
 }
 
@@ -211,7 +211,7 @@ void TGCommandPlugin::HandleCommand()
       fPos = 0;
       if (app->InheritsFrom("TRint") || fHistAdd)
          Gl_histadd((char *)string);
-      gSystem->RedirectOutput(0);
+      gSystem->RedirectOutput(nullptr);
       fStatus->LoadFile(pathtmp.Data());
       fStatus->ShowBottom();
       CheckRemote(string);
@@ -255,7 +255,7 @@ void TGCommandPlugin::HandleTextChanged(const char *text)
 
 Bool_t TGCommandPlugin::HandleTimer(TTimer *t)
 {
-   if ((fTimer == 0) || (t != fTimer)) return kTRUE;
+   if ((fTimer == nullptr) || (t != fTimer)) return kTRUE;
    CheckRemote("");
    return kTRUE;
 }

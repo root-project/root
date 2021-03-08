@@ -78,7 +78,7 @@ TWebSocket::~TWebSocket()
 {
    if (!fWebFile->fHTTP11) {
       delete fWebFile->fSocket;
-      fWebFile->fSocket = 0;
+      fWebFile->fSocket = nullptr;
    }
 }
 
@@ -89,7 +89,7 @@ void TWebSocket::ReOpen()
 {
    if (fWebFile->fSocket) {
       delete fWebFile->fSocket;
-      fWebFile->fSocket = 0;
+      fWebFile->fSocket = nullptr;
    }
 
    TUrl connurl;
@@ -111,7 +111,7 @@ void TWebSocket::ReOpen()
 
       if (!fWebFile->fSocket || !fWebFile->fSocket->IsValid()) {
          delete fWebFile->fSocket;
-         fWebFile->fSocket = 0;
+         fWebFile->fSocket = nullptr;
          if (gSystem->GetErrno() == EADDRINUSE || gSystem->GetErrno() == EISCONN) {
             gSystem->Sleep(i*10);
          } else {
@@ -143,7 +143,7 @@ ClassImp(TWebFile);
 /// to see if the file is accessible. The preferred interface to this
 /// constructor is via TFile::Open().
 
-TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB"), fSocket(0)
+TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB"), fSocket(nullptr)
 {
    TString option = opt;
    fNoProxy = kFALSE;
@@ -176,7 +176,7 @@ TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB"), fSocket(
 /// the kZombie bit will be set in the TWebFile object. Use IsZombie()
 /// to see if the file is accessible.
 
-TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB"), fSocket(0)
+TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB"), fSocket(nullptr)
 {
    TString option = opt;
    fNoProxy = kFALSE;
@@ -199,7 +199,7 @@ TWebFile::~TWebFile()
    delete fSocket;
    if (fFullCache) {
       free(fFullCache);
-      fFullCache = 0;
+      fFullCache = nullptr;
       fFullCacheSize = 0;
    }
 }
@@ -212,11 +212,11 @@ void TWebFile::Init(Bool_t readHeadOnly)
    char buf[4];
    int  err;
 
-   fSocket     = 0;
+   fSocket     = nullptr;
    fSize       = -1;
    fHasModRoot = kFALSE;
    fHTTP11     = kFALSE;
-   fFullCache  = 0;
+   fFullCache  = nullptr;
    fFullCacheSize = 0;
    SetMsgReadBuffer10();
 
@@ -756,13 +756,13 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
                return -1;
             }
 
-            if ((fFullCache == 0) && (fullsize <= GetMaxFullCacheSize())) {
+            if ((fFullCache == nullptr) && (fullsize <= GetMaxFullCacheSize())) {
               // try to read file content into cache and than reuse it, limit cache by 2 GB
                fFullCache = malloc(fullsize);
-               if (fFullCache != 0) {
+               if (fFullCache != nullptr) {
                   if (fSocket->RecvRaw(fFullCache, fullsize) != fullsize) {
                      Error("GetFromWeb10", "error receiving data from host %s", fUrl.GetHost());
-                     free(fFullCache); fFullCache = 0;
+                     free(fFullCache); fFullCache = nullptr;
                      return -1;
                   }
                   fFullCacheSize = fullsize;
@@ -1053,7 +1053,7 @@ Int_t TWebFile::GetHead()
    else
       connurl = fUrl;
 
-   TSocket *s = 0;
+   TSocket *s = nullptr;
    for (Int_t i = 0; i < 5; i++) {
       if (strcmp(connurl.GetProtocol(), "https") == 0) {
 #ifdef R__SSL
@@ -1068,7 +1068,7 @@ Int_t TWebFile::GetHead()
       if (!s->IsValid()) {
          delete s;
          if (gSystem->GetErrno() == EADDRINUSE || gSystem->GetErrno() == EISCONN) {
-            s = 0;
+            s = nullptr;
             gSystem->Sleep(i*10);
          } else {
             Error("GetHead", "cannot connect to host %s (errno=%d)", fUrl.GetHost(),
@@ -1357,7 +1357,7 @@ const char *TWebFile::HttpTerminator(const char *start, const char *peeked,
       // p+1 because the line must include '\n'
       return p + 1;
 #endif
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1441,7 +1441,7 @@ TWebSystem::TWebSystem() : TSystem("-http", "HTTP Helper System")
 {
    SetName("http");
 
-   fDirp = 0;
+   fDirp = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1460,10 +1460,10 @@ void *TWebSystem::OpenDirectory(const char *)
 {
    if (fDirp) {
       Error("OpenDirectory", "invalid directory pointer (should never happen)");
-      fDirp = 0;
+      fDirp = nullptr;
    }
 
-   fDirp = 0;   // not implemented for the time being
+   fDirp = nullptr;   // not implemented for the time being
 
    return fDirp;
 }
@@ -1478,7 +1478,7 @@ void TWebSystem::FreeDirectory(void *dirp)
       return;
    }
 
-   fDirp = 0;
+   fDirp = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1488,10 +1488,10 @@ const char *TWebSystem::GetDirEntry(void *dirp)
 {
    if (dirp != fDirp) {
       Error("GetDirEntry", "invalid directory pointer (should never happen)");
-      return 0;
+      return nullptr;
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

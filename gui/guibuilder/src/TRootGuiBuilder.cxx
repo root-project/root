@@ -189,45 +189,45 @@ const char gHelpAboutBuilder[] = "\
 //----- Toolbar stuff...
 
 static ToolBarData_t gToolBarData[] = {
-   { "bld_edit.png",   "Start Edit (Ctrl-Dbl-Click)",   kFALSE, kEditableAct, 0 },
-   { "",                 "",               kFALSE, -1, 0 },
-   { "bld_new.png",   "New (Ctrl-N)",   kFALSE, kNewAct, 0 },
-   { "bld_open.png",   "Open (Ctrl-O)",   kFALSE, kOpenAct, 0 },
-   { "bld_save.png",   "Save As (Ctrl-S)",   kFALSE, kSaveAct, 0 },
-   { "",                 "",               kFALSE, -1, 0 },
+   { "bld_edit.png",   "Start Edit (Ctrl-Dbl-Click)",   kFALSE, kEditableAct, nullptr },
+   { "",                 "",               kFALSE, -1, nullptr },
+   { "bld_new.png",   "New (Ctrl-N)",   kFALSE, kNewAct, nullptr },
+   { "bld_open.png",   "Open (Ctrl-O)",   kFALSE, kOpenAct, nullptr },
+   { "bld_save.png",   "Save As (Ctrl-S)",   kFALSE, kSaveAct, nullptr },
+   { "",                 "",               kFALSE, -1, nullptr },
 //   { "bld_pointer.xpm",   "Selector (Ctrl-Click)",   kTRUE, kSelectAct, 0 },
 //   { "bld_grab.xpm",   "Grab Selected Frames (Return)",   kTRUE, kGrabAct, 0 },
-   { "",                 "",               kFALSE, -1, 0 },
-   { "bld_compact.png",   "Compact selected frame (Ctrl-L)",        kFALSE,  kCompactAct, 0 },
-   { "bld_break.png",   "Disable/Enable layout (Ctrl-B)",        kFALSE,  kBreakLayoutAct, 0 },
-   { "bld_hbox.png",  "Layout selected frame horizontally (Ctrl-H)",    kFALSE,  kLayoutHAct, 0 },
-   { "bld_vbox.png",   "Layout selected frame vertically (Ctrl-H)",    kFALSE,  kLayoutVAct, 0 },
-   { "bld_grid.png",   "On/Off grid (Ctrl+G)",     kFALSE,  kGridAct, 0 },
-   { "",                 "",               kFALSE, -1, 0 },
-   { "bld_AlignTop.png",   "Align selected frames to the top line of lasso (Up  Arrow)",        kFALSE,  kUpAct, 0 },
-   { "bld_AlignBtm.png",   "Align selected frames to the down line of lasso (Down Arrow)",        kFALSE,  kDownAct, 0 },
-   { "bld_AlignLeft.png",   "Align selected frames to the left line of lasso (Left  Arrow)",        kFALSE,  kLeftAct, 0 },
-   { "bld_AlignRight.png",   "Align selected frames to the right line of lasso (Right  Arrow)",        kFALSE,  kRightAct, 0 },
-   { "",                 "",               kFALSE, -1, 0 },
-   { "bld_cut.png",   "Cut (Ctrl-X)",        kFALSE,  kCutAct, 0 },
-   { "bld_copy.png",   "Copy (Ctrl-C)",        kFALSE,  kCopyAct, 0 },
-   { "bld_paste.png",   "Paste frame into the last clicked position (Ctrl-V)",        kFALSE,  kPasteAct, 0 },
+   { "",                 "",               kFALSE, -1, nullptr },
+   { "bld_compact.png",   "Compact selected frame (Ctrl-L)",        kFALSE,  kCompactAct, nullptr },
+   { "bld_break.png",   "Disable/Enable layout (Ctrl-B)",        kFALSE,  kBreakLayoutAct, nullptr },
+   { "bld_hbox.png",  "Layout selected frame horizontally (Ctrl-H)",    kFALSE,  kLayoutHAct, nullptr },
+   { "bld_vbox.png",   "Layout selected frame vertically (Ctrl-H)",    kFALSE,  kLayoutVAct, nullptr },
+   { "bld_grid.png",   "On/Off grid (Ctrl+G)",     kFALSE,  kGridAct, nullptr },
+   { "",                 "",               kFALSE, -1, nullptr },
+   { "bld_AlignTop.png",   "Align selected frames to the top line of lasso (Up  Arrow)",        kFALSE,  kUpAct, nullptr },
+   { "bld_AlignBtm.png",   "Align selected frames to the down line of lasso (Down Arrow)",        kFALSE,  kDownAct, nullptr },
+   { "bld_AlignLeft.png",   "Align selected frames to the left line of lasso (Left  Arrow)",        kFALSE,  kLeftAct, nullptr },
+   { "bld_AlignRight.png",   "Align selected frames to the right line of lasso (Right  Arrow)",        kFALSE,  kRightAct, nullptr },
+   { "",                 "",               kFALSE, -1, nullptr },
+   { "bld_cut.png",   "Cut (Ctrl-X)",        kFALSE,  kCutAct, nullptr },
+   { "bld_copy.png",   "Copy (Ctrl-C)",        kFALSE,  kCopyAct, nullptr },
+   { "bld_paste.png",   "Paste frame into the last clicked position (Ctrl-V)",        kFALSE,  kPasteAct, nullptr },
 //   { "bld_paste_into.png",   "Paste with replacing of selected frame (Ctrl-R)",        kFALSE,  kReplaceAct, 0 },
-   { "bld_delete.png",   "Delete (Del/Backspace)",        kFALSE,  kDeleteAct, 0 },
-   { "bld_crop.png",   "Crop (Shift-Del)",        kFALSE,  kCropAct, 0 },
+   { "bld_delete.png",   "Delete (Del/Backspace)",        kFALSE,  kDeleteAct, nullptr },
+   { "bld_crop.png",   "Crop (Shift-Del)",        kFALSE,  kCropAct, nullptr },
 //   { "",                 "",               kFALSE, -1, 0 },
 //   { "bld_undo.png",   "Undo (Ctrl-Z)",        kFALSE,  kUndoAct, 0 },
 //   { "bld_redo.png",   "Redo (Shift-Ctrl-Z)",        kFALSE,  kRedoAct, 0 },
-   { 0,                  0,                kFALSE, 0, 0 }
+   { nullptr,                  nullptr,                kFALSE, 0, nullptr }
 };
 
 
 ClassImp(TRootGuiBuilder);
 
 
-TGGC *TRootGuiBuilder::fgBgnd = 0;
-TGGC *TRootGuiBuilder::fgBgndPopup = 0;
-TGGC *TRootGuiBuilder::fgBgndPopupHlght = 0;
+TGGC *TRootGuiBuilder::fgBgnd = nullptr;
+TGGC *TRootGuiBuilder::fgBgndPopup = nullptr;
+TGGC *TRootGuiBuilder::fgBgndPopupHlght = nullptr;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -350,7 +350,7 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
    Int_t ty = entry->GetEy() + max_ascent + 2;
    UInt_t h = max_ascent + max_descent + sep;
    Int_t picposy = 0;
-   if (entry->GetPic() != 0) {
+   if (entry->GetPic() != nullptr) {
       picposy = entry->GetEy() + h / 2;
       picposy -= entry->GetPic()->GetHeight() / 2;
    }
@@ -386,7 +386,7 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
                               entry->GetEy()+11);
             }
 
-            if (entry->GetPic() != 0) {
+            if (entry->GetPic() != nullptr) {
                entry->GetPic()->Draw(fId, fSelGC, 8, picposy);
             }
 
@@ -427,7 +427,7 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
                               entry->GetEy()+11);
             }
 
-            if (entry->GetPic() != 0) {
+            if (entry->GetPic() != nullptr) {
                entry->GetPic()->Draw(fId, fNormGC, 8, picposy);
             }
 
@@ -583,9 +583,9 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
 {
    SetCleanup(kDeepCleanup);
    gGuiBuilder  = this;
-   fManager = 0;
-   fEditor = 0;
-   fActionButton = 0;
+   fManager = nullptr;
+   fEditor = nullptr;
+   fActionButton = nullptr;
    fClosing = 0;
 
    if (gDragManager) {
@@ -907,7 +907,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    fIconPic = SetIconPixmap("bld_rgb.xpm");
    SetClassHints("ROOT", "GuiBuilder");
 
-   fSelected = 0;
+   fSelected = nullptr;
    Update();
 
    fMenuFile->Connect("Activated(Int_t)", "TRootGuiBuilder", this,
@@ -935,7 +935,7 @@ TRootGuiBuilder::~TRootGuiBuilder()
    delete fMenuFile;
    delete fMenuWindow;
    delete fMenuHelp;
-   gGuiBuilder = 0;
+   gGuiBuilder = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -977,10 +977,10 @@ void TRootGuiBuilder::CloseWindow()
 
 TGButton *TRootGuiBuilder::FindActionButton(const char *name, const char *sect)
 {
-   if (!name || !sect) return 0;
+   if (!name || !sect) return nullptr;
 
    TGShutterItem *item = fShutter->GetItem(sect);
-   if (!item) return 0;
+   if (!item) return nullptr;
 
    TGCompositeFrame *cont = (TGCompositeFrame *)item->GetContainer();
    TGHorizontalFrame *hf;
@@ -998,7 +998,7 @@ TGButton *TRootGuiBuilder::FindActionButton(const char *name, const char *sect)
          return (TGButton*)btn;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1009,13 +1009,13 @@ void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
    if (!act || !sect) return;
 
    TGShutterItem *item = fShutter->GetItem(sect);
-   TGButton *btn = 0;
+   TGButton *btn = nullptr;
 
    if (!item) return;
    TGCompositeFrame *cont = (TGCompositeFrame *)item->GetContainer();
    cont->SetBackgroundColor(TColor::Number2Pixel(18));
 
-   const TGPicture *pic = 0;
+   const TGPicture *pic = nullptr;
    if (!act->fPicture) {
       act->fPicture = fClient->GetPicture(act->fPic);
    }
@@ -1098,9 +1098,9 @@ void TRootGuiBuilder::HandleButtons()
 
 TGFrame *TRootGuiBuilder::ExecuteAction()
 {
-   if (!fAction || fAction->fAct.IsNull()) return 0;
+   if (!fAction || fAction->fAct.IsNull()) return nullptr;
 
-   TGFrame *ret = 0;
+   TGFrame *ret = nullptr;
 
    if (!fClient->IsEditable() && (fAction->fType != kGuiBldMacro)) {
       TGMdiFrame *current = fMain->GetCurrent();
@@ -1113,7 +1113,7 @@ TGFrame *TRootGuiBuilder::ExecuteAction()
       case kGuiBldProj:
          s = fAction->fAct.Data();
          NewProject(s);
-         fAction = 0;
+         fAction = nullptr;
          break;
       case kGuiBldMacro:
          {
@@ -1121,7 +1121,7 @@ TGFrame *TRootGuiBuilder::ExecuteAction()
          if (root) root->SetEditable(kFALSE);
          gROOT->Macro(fAction->fAct.Data());
          if (root) root->SetEditable(kTRUE);
-         fAction = 0;
+         fAction = nullptr;
          break;
          }
       default:
@@ -1141,26 +1141,26 @@ void TRootGuiBuilder::InitMenu()
 {
    fMenuFile = new TGuiBldPopupMenu();
    fMenuFile->AddEntry(new TGHotString("&Edit (Ctrl+double-click)"),
-                       kGUIBLD_FILE_START, 0,
+                       kGUIBLD_FILE_START, nullptr,
                        fClient->GetPicture("bld_edit.png"));
    fMenuFile->AddEntry(new TGHotString("&Stop (Ctrl+double-click)"),
-                       kGUIBLD_FILE_STOP, 0,
+                       kGUIBLD_FILE_STOP, nullptr,
                        fClient->GetPicture("bld_stop.png"));
    fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
    fMenuFile->DisableEntry(kGUIBLD_FILE_START);
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry(new TGHotString("&New Project"), kGUIBLD_FILE_NEW,
-                       0, fClient->GetPicture("bld_new.png"));
+                       nullptr, fClient->GetPicture("bld_new.png"));
    fMenuFile->AddEntry(new TGHotString("&Open"), kGUIBLD_FILE_OPEN,
-                       0, fClient->GetPicture("bld_open.png"));
+                       nullptr, fClient->GetPicture("bld_open.png"));
    fMenuFile->AddEntry(new TGHotString("&Close"), kGUIBLD_FILE_CLOSE,
-                        0, fClient->GetPicture("bld_delete.png"));
+                        nullptr, fClient->GetPicture("bld_delete.png"));
    fMenuFile->AddEntry(new TGHotString("&Save project as"), kGUIBLD_FILE_SAVE,
-                       0, fClient->GetPicture("bld_save.png"));
+                       nullptr, fClient->GetPicture("bld_save.png"));
    fMenuFile->DisableEntry(kGUIBLD_FILE_CLOSE);
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry(new TGHotString("E&xit"), kGUIBLD_FILE_EXIT,
-                        0, fClient->GetPicture("bld_exit.png"));
+                        nullptr, fClient->GetPicture("bld_exit.png"));
 /*
    fMenuEdit = new TGuiBldPopupMenu();
    fMenuEdit->AddSeparator();
@@ -1222,7 +1222,7 @@ void TRootGuiBuilder::ChangeSelected(TGFrame *f)
 
 void TRootGuiBuilder::EnableLassoButtons(Bool_t on)
 {
-   TGButton *btn = 0;
+   TGButton *btn = nullptr;
 
    btn = fToolBar->GetButton(kUpAct);
    if (btn) {
@@ -1268,7 +1268,7 @@ void TRootGuiBuilder::EnableSelectedButtons(Bool_t on)
 {
    fSelected = fManager->GetSelected();
 
-   TGButton *btn = 0;
+   TGButton *btn = nullptr;
 
    if (!fSelected) {
       btn = fToolBar->GetButton(kCompactAct);
@@ -1286,7 +1286,7 @@ void TRootGuiBuilder::EnableSelectedButtons(Bool_t on)
    }
 
    Bool_t comp = kFALSE;
-   TGLayoutManager *lm = 0;
+   TGLayoutManager *lm = nullptr;
    Bool_t hor = kFALSE;
    Bool_t fixed = kFALSE;
    Bool_t enable = on;
@@ -1338,7 +1338,7 @@ void TRootGuiBuilder::EnableSelectedButtons(Bool_t on)
 
 void TRootGuiBuilder::EnableEditButtons(Bool_t on)
 {
-   TGButton *btn = 0;
+   TGButton *btn = nullptr;
 
    Bool_t lasso = fManager->IsLassoDrawn() && on;
 
@@ -1405,7 +1405,7 @@ void TRootGuiBuilder::Update()
       UpdateStatusBar("");
       fMenuFile->EnableEntry(kGUIBLD_FILE_START);
       fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
-      fEditable = 0;
+      fEditable = nullptr;
       //fShutter->SetSelectedItem(fShutter->GetItem("Projects"));
    } else {
       fMenuFile->DisableEntry(kGUIBLD_FILE_START);
@@ -1413,7 +1413,7 @@ void TRootGuiBuilder::Update()
    }
 
    SwitchToolbarButton();
-   fActionButton = 0;
+   fActionButton = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1421,7 +1421,7 @@ void TRootGuiBuilder::Update()
 
 Bool_t TRootGuiBuilder::IsSelectMode() const
 {
-   TGButton *btn = 0;
+   TGButton *btn = nullptr;
    btn = fToolBar->GetButton(kSelectAct);
 
    if (!btn) return kFALSE;
@@ -1453,7 +1453,7 @@ public:
 static const char *gSaveMacroTypes[] = {
    "Macro files", "*.[C|c]*",
    "All files",   "*",
-   0,             0
+   nullptr,             nullptr
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1610,7 +1610,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
    TGMdiFrame *savfr = fMain->GetCurrent();
    if (!savfr) return kFALSE;
 
-   static TImage *img = 0;
+   static TImage *img = nullptr;
 
    if (!img) {
       img = TImage::Create();
@@ -1708,7 +1708,7 @@ void TRootGuiBuilder::AddMacro(const char *macro, TImage *img)
    const char *name = gSystem->BaseName(macro);
 
    TGButton *btn = FindActionButton(name, "User's Macros");
-   TGuiBldAction *act = 0;
+   TGuiBldAction *act = nullptr;
 
    if (!btn) {
       act = new TGuiBldAction(name, macro, kGuiBldMacro);
@@ -1738,7 +1738,7 @@ void TRootGuiBuilder::AddMacro(const char *macro, TImage *img)
 TGMdiFrame *TRootGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
 {
    const TGWindow *parent = win;
-   TGMdiFrame *ret = 0;
+   TGMdiFrame *ret = nullptr;
 
    while (parent && (parent != fClient->GetDefaultRoot())) {
       if (parent->InheritsFrom(TGMdiFrame::Class())) {
@@ -1747,7 +1747,7 @@ TGMdiFrame *TRootGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
       }
       parent = parent->GetParent();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1814,7 +1814,7 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
             UpdateStatusBar("Stop edit");
             fMenuFile->EnableEntry(kGUIBLD_FILE_START);
             fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
-            fEditable = 0;
+            fEditable = nullptr;
             SwitchToolbarButton();
          }
          fEditor->Reset();
@@ -1946,7 +1946,7 @@ void TRootGuiBuilder::MaybeCloseWindow()
 
 void TRootGuiBuilder::HandleWindowClosed(Int_t )
 {
-   fEditable = 0;
+   fEditable = nullptr;
 
    if (fClient->IsEditable()) {
       fManager->SetEditable(kFALSE);
@@ -1975,7 +1975,7 @@ void TRootGuiBuilder::UpdateStatusBar(const char *txt)
 {
    if (!fStatusBar) return;
 
-   const char *text = 0;
+   const char *text = nullptr;
 
    if (!txt) {
       TObject *o = (TObject *)gTQSender;
@@ -2312,11 +2312,11 @@ TGFrame *TRootGuiBuilder::BuildListTree()
 {
    TGCanvas *canvas = new TGCanvas(gClient->GetRoot(), 100, 100);
    TGListTree *lt = new TGListTree(canvas, kHorizontalFrame);
-   lt->AddItem(0, "Entry 1");
-   lt->AddItem(0, "Entry 2");
-   lt->AddItem(0, "Entry 3");
-   lt->AddItem(0, "Entry 4");
-   lt->AddItem(0, "Entry 5");
+   lt->AddItem(nullptr, "Entry 1");
+   lt->AddItem(nullptr, "Entry 2");
+   lt->AddItem(nullptr, "Entry 3");
+   lt->AddItem(nullptr, "Entry 4");
+   lt->AddItem(nullptr, "Entry 5");
    canvas->Resize(100, 60);
    canvas->MapSubwindows();
 
@@ -2519,7 +2519,7 @@ TGFrame *TRootGuiBuilder::BuildComboBox()
 
 TGFrame *TRootGuiBuilder::BuildH3DLine()
 {
-   TGHorizontal3DLine *l = new TGHorizontal3DLine(0, 100, 2);
+   TGHorizontal3DLine *l = new TGHorizontal3DLine(nullptr, 100, 2);
    l->Resize(100, 2);
 
    return l;

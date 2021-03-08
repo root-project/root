@@ -168,11 +168,11 @@ list<Double_t>* RooParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dh.get()->find(obs.GetName())) ;
   if (!lvarg) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
+  const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr) ;
   Double_t* boundaries = binning->array() ;
 
   list<Double_t>* hint = new list<Double_t> ;
@@ -205,11 +205,11 @@ std::list<Double_t>* RooParamHistFunc::binBoundaries(RooAbsRealLValue& obs, Doub
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dh.get()->find(obs.GetName())) ;
   if (!lvarg) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
+  const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr) ;
   Double_t* boundaries = binning->array() ;
 
   list<Double_t>* hint = new list<Double_t> ;

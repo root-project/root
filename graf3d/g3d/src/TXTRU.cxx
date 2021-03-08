@@ -74,8 +74,8 @@ and thus it is left to the user to avoid this mistake.
 /// TXTRU shape - default constructor
 
 TXTRU::TXTRU()
-   : fNxy(0), fNxyAlloc(0), fNz(0), fNzAlloc(0), fXvtx(0), fYvtx(0),
-     fZ(0), fScale(0), fX0(0), fY0(0)
+   : fNxy(0), fNxyAlloc(0), fNz(0), fNzAlloc(0), fXvtx(nullptr), fYvtx(nullptr),
+     fZ(nullptr), fScale(nullptr), fX0(nullptr), fY0(nullptr)
 {
    fPolygonShape  = kUncheckedXY;
    fZOrdering     = kUncheckedZ;
@@ -97,12 +97,12 @@ TXTRU::TXTRU(const char *name, const char *title, const char *material,
    fNxyAlloc = 0;
    fNz       = 0;
    fNzAlloc  = 0;
-   fXvtx     = 0;
-   fYvtx     = 0;
-   fZ        = 0;
-   fScale    = 0;
-   fX0       = 0;
-   fY0       = 0;
+   fXvtx     = nullptr;
+   fYvtx     = nullptr;
+   fZ        = nullptr;
+   fScale    = nullptr;
+   fX0       = nullptr;
+   fY0       = nullptr;
 
    fPolygonShape  = kUncheckedXY;
    fZOrdering     = kUncheckedZ;
@@ -164,8 +164,8 @@ TXTRU::~TXTRU()
 {
    if (fXvtx) delete [] fXvtx;
    if (fYvtx) delete [] fYvtx;
-   fXvtx     = 0;
-   fYvtx     = 0;
+   fXvtx     = nullptr;
+   fYvtx     = nullptr;
    fNxy      = 0;
    fNxyAlloc = 0;
 
@@ -173,10 +173,10 @@ TXTRU::~TXTRU()
    if (fScale) delete [] fScale;
    if (fX0)    delete [] fX0;
    if (fY0)    delete [] fY0;
-   fZ        = 0;
-   fScale    = 0;
-   fX0       = 0;
-   fY0       = 0;
+   fZ        = nullptr;
+   fScale    = nullptr;
+   fX0       = nullptr;
+   fY0       = nullptr;
    fNz       = 0;
    fNzAlloc  = 0;
 
@@ -429,8 +429,8 @@ void TXTRU::Print(Option_t *option) const
    printf("TXTRU %s Nxy=%d [of %d] Nz=%d [of %d] Option=%s\n",
           GetName(),fNxy,fNxyAlloc,fNz,fNzAlloc,option);
 
-   const char *shape = 0;
-   const char *zorder = 0;
+   const char *shape = nullptr;
+   const char *zorder = nullptr;
 
    switch (fPolygonShape) {
    case kUncheckedXY:   shape = "Unchecked  ";  break;
@@ -462,8 +462,8 @@ void TXTRU::Print(Option_t *option) const
       nz    = fNzAlloc;
    }
 
-   const char *name = 0;
-   Float_t *p=0;
+   const char *name = nullptr;
+   Float_t *p=nullptr;
    Int_t   nlimit = 0;
    Bool_t  print_vtx = opt.Contains("xy");
    Bool_t  print_z   = opt.Contains("z");

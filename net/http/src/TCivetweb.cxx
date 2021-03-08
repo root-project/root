@@ -215,7 +215,7 @@ static int log_message_handler(const struct mg_connection *conn, const char *mes
       return engine->ProcessLog(message);
 
    // provide debug output
-   if ((gDebug > 0) || (strstr(message, "cannot bind to") != 0))
+   if ((gDebug > 0) || (strstr(message, "cannot bind to") != nullptr))
       fprintf(stderr, "Error in <TCivetweb::Log> %s\n", message);
 
    return 0;
@@ -439,7 +439,7 @@ TCivetweb::~TCivetweb()
 
 Int_t TCivetweb::ProcessLog(const char *message)
 {
-   if ((gDebug > 0) || (strstr(message, "cannot bind to") != 0))
+   if ((gDebug > 0) || (strstr(message, "cannot bind to") != nullptr))
       Error("Log", "%s", message);
 
    return 0;

@@ -147,7 +147,7 @@ RooDataSet *RooBinnedGenContext::generate(Double_t nEvt, Bool_t /*skipInit*/, Bo
     if (!_pdf->canBeExtended()) {
       coutE(InputArguments) << "RooAbsPdf::generateBinned(" << GetName() 
 			    << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << endl ;
-      return 0 ;
+      return nullptr ;
     } else {
       // Don't round in expectedData mode
       if (_expectedData || extended) {

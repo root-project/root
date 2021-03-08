@@ -58,7 +58,7 @@ ClassImp(TRootSnifferStoreXml);
 
 void TRootSnifferStoreXml::SetField(Int_t, const char *field, const char *value, Bool_t)
 {
-   if (strpbrk(value, "<>&\'\"") == 0) {
+   if (strpbrk(value, "<>&\'\"") == nullptr) {
       fBuf.Append(TString::Format(" %s=\"%s\"", field, value));
    } else {
       fBuf.Append(TString::Format(" %s=\"", field));

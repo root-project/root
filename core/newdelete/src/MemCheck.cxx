@@ -146,7 +146,7 @@ void TStackTable::Expand(int newsize)
    //update list
    TStackInfo *info = (TStackInfo *) fTable;
    while (((char *) info->Next() - fTable) <= nextindex) {
-      if (info->fNextHash != 0)
+      if (info->fNextHash != nullptr)
          info->fNextHash = (TStackInfo *)
              & fTable[(char *) info->fNextHash - tableold];
       info = info->Next();
@@ -154,7 +154,7 @@ void TStackTable::Expand(int newsize)
    //
    //update hash table
    for (int i = 0; i < fHashSize; i++)
-      if (fHashTable[i] != 0)
+      if (fHashTable[i] != nullptr)
          fHashTable[i] =
              (TStackInfo *) & fTable[((char *) fHashTable[i]) - tableold];
    //  printf("new table %p\n",fTable);
@@ -174,13 +174,13 @@ TStackInfo *TStackTable::AddInfo(int size, void **stackptrs)
       info = (TStackInfo *) fNext;
    }
    info->Init(size, stackptrs);
-   info->fNextHash = 0;
+   info->fNextHash = nullptr;
    fNext = (char *) info->Next();
 
    //add info to hash table
    int hash = int(info->Hash() % fHashSize);
    TStackInfo *info2 = fHashTable[hash];
-   if (info2 == 0) {
+   if (info2 == nullptr) {
       fHashTable[hash] = info;
    } else {
       while (info2->fNextHash)
@@ -198,13 +198,13 @@ TStackInfo *TStackTable::FindInfo(int size, void **stackptrs)
 {
    int hash = int(TStackInfo::HashStack(size, (void **) stackptrs) % fHashSize);
    TStackInfo *info = fHashTable[hash];
-   if (info == 0) {
+   if (info == nullptr) {
       info = AddInfo(size, stackptrs);
       //printf("f0 %p    - %d\n",info,(char*)info-fTable);
       return info;
    }
    while (info->IsEqual(size, stackptrs) == 0) {
-      if (info->fNextHash == 0) {
+      if (info->fNextHash == nullptr) {
          info = AddInfo(size, stackptrs);
          //  printf("f1 %p    - %d\n",info,(char*)info-fTable);
          return info;
@@ -234,7 +234,7 @@ TStackInfo *TStackTable::GetInfo(int index)
 
 Int_t        TMemHashTable::fgSize = 0;
 Int_t        TMemHashTable::fgAllocCount = 0;
-TMemTable  **TMemHashTable::fgLeak = 0;
+TMemTable  **TMemHashTable::fgLeak = nullptr;
 TDeleteTable TMemHashTable::fgMultDeleteTable;
 TStackTable  TMemHashTable::fgStackTable;
 
@@ -250,7 +250,7 @@ void TMemHashTable::Init()
    fgSize = 65536;
    fgAllocCount = 0;
    fgLeak = (TMemTable **) malloc(sizeof(void *) * fgSize);
-   fgMultDeleteTable.fLeaks = 0;
+   fgMultDeleteTable.fLeaks = nullptr;
    fgMultDeleteTable.fAllocCount = 0;
    fgMultDeleteTable.fTableSize = 0;
 
@@ -260,7 +260,7 @@ void TMemHashTable::Init()
       fgLeak[i]->fMemSize = 0;
       fgLeak[i]->fFirstFreeSpot = 0;
       fgLeak[i]->fTableSize = 0;
-      fgLeak[i]->fLeaks = 0;
+      fgLeak[i]->fLeaks = nullptr;
    }
 }
 
@@ -279,12 +279,12 @@ void TMemHashTable::RehashLeak(int newSize)
       newLeak[i]->fMemSize = 0;
       newLeak[i]->fFirstFreeSpot = 0;
       newLeak[i]->fTableSize = 0;
-      newLeak[i]->fLeaks = 0;
+      newLeak[i]->fLeaks = nullptr;
    }
    for (int ib = 0; ib < fgSize; ib++) {
       TMemTable *branch = fgLeak[ib];
       for (int i = 0; i < branch->fTableSize; i++)
-         if (branch->fLeaks[i].fAddress != 0) {
+         if (branch->fLeaks[i].fAddress != nullptr) {
             int hash = int(TString::Hash(&branch->fLeaks[i].fAddress, sizeof(void*)) % newSize);
             TMemTable *newbranch = newLeak[hash];
             if (newbranch->fAllocCount >= newbranch->fTableSize) {
@@ -321,9 +321,9 @@ void TMemHashTable::RehashLeak(int newSize)
 
 void *TMemHashTable::AddPointer(size_t size, void *ptr)
 {
-   void *p = 0;
+   void *p = nullptr;
 
-   if (ptr == 0) {
+   if (ptr == nullptr) {
       p = malloc(size);
       if (!p) {
          Error("TMemHashTable::AddPointer", "malloc failure");
@@ -349,15 +349,15 @@ void *TMemHashTable::AddPointer(size_t size, void *ptr)
    branch->fMemSize += size;
    for (;;) {
       for (int i = branch->fFirstFreeSpot; i < branch->fTableSize; i++)
-         if (branch->fLeaks[i].fAddress == 0) {
+         if (branch->fLeaks[i].fAddress == nullptr) {
             branch->fLeaks[i].fAddress = p;
             branch->fLeaks[i].fSize = size;
-            void *sp = 0;
+            void *sp = nullptr;
             int j = 0;
             void *stptr[stack_history_size + 1];
             for (j = 0; (j < stack_history_size); j++) {
                sp = get_stack_pointer(j + 1);
-               if (sp == 0)
+               if (sp == nullptr)
                   break;
                stptr[j] = sp;
             }
@@ -388,14 +388,14 @@ void *TMemHashTable::AddPointer(size_t size, void *ptr)
 
 void TMemHashTable::FreePointer(void *p)
 {
-   if (p == 0)
+   if (p == nullptr)
       return;
    int hash = int(TString::Hash(&p, sizeof(void*)) % fgSize);
    fgAllocCount--;
    TMemTable *branch = fgLeak[hash];
    for (int i = 0; i < branch->fTableSize; i++) {
       if (branch->fLeaks[i].fAddress == p) {
-         branch->fLeaks[i].fAddress = 0;
+         branch->fLeaks[i].fAddress = nullptr;
          branch->fMemSize -= branch->fLeaks[i].fSize;
          if (i < branch->fFirstFreeSpot)
             branch->fFirstFreeSpot = i;
@@ -422,13 +422,13 @@ void TMemHashTable::FreePointer(void *p)
       fgMultDeleteTable.fAllocCount = newTableSize;
    }
 
-   fgMultDeleteTable.fLeaks[fgMultDeleteTable.fTableSize].fAddress = 0;
-   void *sp = 0;
+   fgMultDeleteTable.fLeaks[fgMultDeleteTable.fTableSize].fAddress = nullptr;
+   void *sp = nullptr;
    void *stptr[stack_history_size + 1];
    int j;
    for (j = 0; (j < stack_history_size); j++) {
       sp = get_stack_pointer(j + 1);
-      if (sp == 0)
+      if (sp == nullptr)
          break;
       stptr[j] = sp;
    }
@@ -450,7 +450,7 @@ void TMemHashTable::Dump()
    else
       filename = "memcheck.out";
 
-   char *fn = 0;
+   char *fn = nullptr;
    if (gSystem)
       fn = gSystem->ExpandPathName(filename);
 
@@ -490,7 +490,7 @@ void TMemHashTable::Dump()
 
 static void *get_stack_pointer(int level)
 {
-   void *p = 0;
+   void *p = nullptr;
 #if defined(R__GNU) && (defined(R__LINUX) || defined(R__HURD))
 #if __GNUC__ > 5
 #pragma GCC diagnostic ignored "-Wframe-address"
@@ -578,7 +578,7 @@ static void *get_stack_pointer(int level)
       break;
 
    default:
-      p = 0;
+      p = nullptr;
    }
 #else
    if (level) { }

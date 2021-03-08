@@ -35,7 +35,7 @@ void TMVA::deviations(TString dataset, TString fin,
    //    TList* methods = new TMap();
 
    TIter next(file->GetDirectory(dataset.Data())->GetListOfKeys());
-   TKey *key(0);   
+   TKey *key(nullptr);   
    while ((key = (TKey*)next())) {
 
       if (!TString(key->GetName()).BeginsWith("Method_")) continue;

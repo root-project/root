@@ -37,7 +37,7 @@ Example of a function
 TF12::TF12(): TF1()
 {
    fCase = 0;
-   fF2   = 0;
+   fF2   = nullptr;
    fXY   = 0;
 }
 

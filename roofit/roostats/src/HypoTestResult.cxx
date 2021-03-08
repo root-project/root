@@ -79,9 +79,9 @@ HypoTestResult::HypoTestResult(const char* name) :
    fNullPValue(NaN), fAlternatePValue(NaN),
    fNullPValueError(0), fAlternatePValueError(0),
    fTestStatisticData(NaN),
-   fAllTestStatisticsData(NULL),
-   fNullDistr(NULL), fAltDistr(NULL),
-   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL),
+   fAllTestStatisticsData(nullptr),
+   fNullDistr(nullptr), fAltDistr(nullptr),
+   fNullDetailedOutput(nullptr), fAltDetailedOutput(nullptr),
    fPValueIsRightTail(kTRUE),
    fBackgroundIsAlt(kFALSE)
 {
@@ -95,9 +95,9 @@ HypoTestResult::HypoTestResult(const char* name, Double_t nullp, Double_t altp) 
    fNullPValue(nullp), fAlternatePValue(altp),
    fNullPValueError(0), fAlternatePValueError(0),
    fTestStatisticData(NaN),
-   fAllTestStatisticsData(NULL),
-   fNullDistr(NULL), fAltDistr(NULL),
-   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL),
+   fAllTestStatisticsData(nullptr),
+   fNullDistr(nullptr), fAltDistr(nullptr),
+   fNullDetailedOutput(nullptr), fAltDetailedOutput(nullptr),
    fPValueIsRightTail(kTRUE),
    fBackgroundIsAlt(kFALSE)
 {
@@ -111,9 +111,9 @@ HypoTestResult::HypoTestResult(const HypoTestResult& other) :
    fNullPValue(NaN), fAlternatePValue(NaN),
    fNullPValueError(0), fAlternatePValueError(0),
    fTestStatisticData(NaN),
-   fAllTestStatisticsData(NULL),
-   fNullDistr(NULL), fAltDistr(NULL),
-   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL),
+   fAllTestStatisticsData(nullptr),
+   fNullDistr(nullptr), fAltDistr(nullptr),
+   fNullDetailedOutput(nullptr), fAltDetailedOutput(nullptr),
    fPValueIsRightTail( other.GetPValueIsRightTail() ),
    fBackgroundIsAlt( other.GetBackGroundIsAlt() )
 {
@@ -148,11 +148,11 @@ HypoTestResult & HypoTestResult::operator=(const HypoTestResult& other) {
    fTestStatisticData = other.fTestStatisticData;
 
    if( fAllTestStatisticsData ) delete fAllTestStatisticsData;
-   fAllTestStatisticsData = NULL;
-   if( fNullDistr ) { delete fNullDistr; fNullDistr = NULL; }
-   if( fAltDistr ) { delete fAltDistr; fAltDistr = NULL; }
-   if( fNullDetailedOutput ) { delete fNullDetailedOutput; fNullDetailedOutput = NULL; }
-   if( fAltDetailedOutput ) { delete fAltDetailedOutput;  fAltDetailedOutput = NULL; }
+   fAllTestStatisticsData = nullptr;
+   if( fNullDistr ) { delete fNullDistr; fNullDistr = nullptr; }
+   if( fAltDistr ) { delete fAltDistr; fAltDistr = nullptr; }
+   if( fNullDetailedOutput ) { delete fNullDetailedOutput; fNullDetailedOutput = nullptr; }
+   if( fAltDetailedOutput ) { delete fAltDetailedOutput;  fAltDetailedOutput = nullptr; }
    fFitInfo = nullptr;
 
    fPValueIsRightTail =  other.GetPValueIsRightTail();
@@ -233,7 +233,7 @@ void HypoTestResult::SetTestStatisticData(const Double_t tsd) {
 void HypoTestResult::SetAllTestStatisticsData(const RooArgList* tsd) {
    if (fAllTestStatisticsData) {
       delete fAllTestStatisticsData;
-      fAllTestStatisticsData = 0;
+      fAllTestStatisticsData = nullptr;
    }
    if (tsd) fAllTestStatisticsData = (const RooArgList*)tsd->snapshot();
 

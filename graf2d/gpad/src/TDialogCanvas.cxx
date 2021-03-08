@@ -133,6 +133,6 @@ void TDialogCanvas::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 void TDialogCanvas::RecursiveRemove(TObject *obj)
 {
    TPad::RecursiveRemove(obj);
-   if (fRefObject == obj) fRefObject = 0;
-   if (fRefPad    == obj) fRefPad    = 0;
+   if (fRefObject == obj) fRefObject = nullptr;
+   if (fRefPad    == obj) fRefPad    = nullptr;
 }

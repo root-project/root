@@ -41,11 +41,11 @@ ClassImp(TMessageHandler);
 TMessageHandler::TMessageHandler(const TClass *cl, Bool_t derived)
 {
    fClass   = cl;
-   fMessObj = 0;
+   fMessObj = nullptr;
    fMessId  = 0;
    fSize    = 0;
-   fCnts    = 0;
-   fMessIds = 0;
+   fCnts    = nullptr;
+   fMessIds = nullptr;
    fDerived = derived;
 
    if (fClass)
@@ -63,11 +63,11 @@ TMessageHandler::TMessageHandler(const TClass *cl, Bool_t derived)
 TMessageHandler::TMessageHandler(const char *cl, Bool_t derived)
 {
    fClass   = TClass::GetClass(cl);
-   fMessObj = 0;
+   fMessObj = nullptr;
    fMessId  = 0;
    fSize    = 0;
-   fCnts    = 0;
-   fMessIds = 0;
+   fCnts    = nullptr;
+   fMessIds = nullptr;
    fDerived = derived;
 
    SetName(cl);

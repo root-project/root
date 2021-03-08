@@ -107,7 +107,7 @@ int NetParSend(const void *buf, int len)
 
       fd_set writeReady = gFdSet;
 
-      int isel = select(gMaxFd+1, 0, &writeReady, 0, 0);
+      int isel = select(gMaxFd+1, nullptr, &writeReady, nullptr, nullptr);
       if (isel < 0) {
          ErrorInfo("NetParSend: error on select");
          return -1;
@@ -162,7 +162,7 @@ int NetParRecv(void *buf, int len)
 
       fd_set readReady = gFdSet;
 
-      int isel = select(gMaxFd+1, &readReady, 0, 0, 0);
+      int isel = select(gMaxFd+1, &readReady, nullptr, nullptr, nullptr);
       if (isel < 0) {
          ErrorInfo("NetParRecv: error on select");
          return -1;

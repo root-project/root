@@ -91,25 +91,25 @@ const char *xpm_names[] = {
     "monitor02.xpm",
     "monitor03.xpm",
     "monitor04.xpm",
-    0
+    nullptr
 };
 
 const char *conftypes[] = {
    "Config files",  "*.conf",
    "All files",     "*.*",
-    0,               0
+    nullptr,               nullptr
 };
 
 const char *pkgtypes[] = {
    "Package files", "*.par",
    "All files",     "*.*",
-    0,               0
+    nullptr,               nullptr
 };
 
 const char *macrotypes[] = {
    "C files",       "*.[C|c]*",
    "All files",     "*",
-   0,               0
+   nullptr,               nullptr
 };
 
 
@@ -120,7 +120,7 @@ const char *kFeedbackHistos[] = {
    "PROOF_LatencyHist",
    "PROOF_ProcTimeHist",
    "PROOF_CpuTimeHist",
-   0
+   nullptr
 };
 
 const char* const kSession_RedirectFile = ".templog";
@@ -174,23 +174,23 @@ const char *xpm_toolbar[] = {
     "about.xpm",
     "",
     "quit.xpm",
-    0
+    nullptr
 };
 
 ToolBarData_t tb_data[] = {
-  { "", "Open Config File",     kFALSE, kFileLoadConfig,    0 },
-  { "", "Save Config File",     kFALSE, kFileSaveConfig,    0 },
-  { "", 0,                      0,      -1,                 0 },
-  { "", "Connect",              kFALSE, kSessionConnect,    0 },
-  { "", "Disconnect",           kFALSE, kSessionDisconnect, 0 },
-  { "", 0,                      0,      -1,                 0 },
-  { "", "New Query",            kFALSE, kQueryNew,          0 },
-  { "", "Submit Query",         kFALSE, kQuerySubmit,       0 },
-  { "", 0,                      0,      -1,                 0 },
-  { "", "About Root",           kFALSE, kHelpAbout,         0 },
-  { "", 0,                      0,      -1,                 0 },
-  { "", "Exit Root",            kFALSE, kFileQuit,          0 },
-  { 0,  0,                      0,      0,                  0 }
+  { "", "Open Config File",     kFALSE, kFileLoadConfig,    nullptr },
+  { "", "Save Config File",     kFALSE, kFileSaveConfig,    nullptr },
+  { "", nullptr,                      0,      -1,                 nullptr },
+  { "", "Connect",              kFALSE, kSessionConnect,    nullptr },
+  { "", "Disconnect",           kFALSE, kSessionDisconnect, nullptr },
+  { "", nullptr,                      0,      -1,                 nullptr },
+  { "", "New Query",            kFALSE, kQueryNew,          nullptr },
+  { "", "Submit Query",         kFALSE, kQuerySubmit,       nullptr },
+  { "", nullptr,                      0,      -1,                 nullptr },
+  { "", "About Root",           kFALSE, kHelpAbout,         nullptr },
+  { "", nullptr,                      0,      -1,                 nullptr },
+  { "", "Exit Root",            kFALSE, kFileQuit,          nullptr },
+  { nullptr,  nullptr,                      0,      0,                  nullptr }
 };
 
 
@@ -201,9 +201,9 @@ ToolBarData_t tb_data[] = {
 /// Constructor.
 
 TSessionServerFrame::TSessionServerFrame(TGWindow* p, Int_t w, Int_t h) :
-   TGCompositeFrame(p, w, h), fFrmNewServer(0), fTxtName(0), fTxtAddress(0),
-   fNumPort(0), fLogLevel(0), fTxtConfig(0), fTxtUsrName(0), fSync(0),
-   fViewer(0), fBtnAdd(0), fBtnConnect(0)
+   TGCompositeFrame(p, w, h), fFrmNewServer(nullptr), fTxtName(nullptr), fTxtAddress(nullptr),
+   fNumPort(nullptr), fLogLevel(nullptr), fTxtConfig(nullptr), fTxtUsrName(nullptr), fSync(nullptr),
+   fViewer(nullptr), fBtnAdd(nullptr), fBtnConnect(nullptr)
 {
 }
 
@@ -235,13 +235,13 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
    fFrmNewServer->AddFrame(new TGLabel(fFrmNewServer, "Session Name:"),
                            new TGLayoutHints(kLHintsLeft, 3, 3, 3, 3));
    fFrmNewServer->AddFrame(fTxtName = new TGTextEntry(fFrmNewServer,
-                           (const char *)0, 1), new TGLayoutHints());
+                           (const char *)nullptr, 1), new TGLayoutHints());
    fTxtName->Resize(156, fTxtName->GetDefaultHeight());
    fTxtName->Associate(this);
    fFrmNewServer->AddFrame(new TGLabel(fFrmNewServer, "Server name:"),
                            new TGLayoutHints(kLHintsLeft, 3, 3, 3, 3));
    fFrmNewServer->AddFrame(fTxtAddress = new TGTextEntry(fFrmNewServer,
-                           (const char *)0, 2), new TGLayoutHints());
+                           (const char *)nullptr, 2), new TGLayoutHints());
    fTxtAddress->Resize(156, fTxtAddress->GetDefaultHeight());
    fTxtAddress->Associate(this);
    fFrmNewServer->AddFrame(new TGLabel(fFrmNewServer, "Port (default: 1093):"),
@@ -253,7 +253,7 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
    fFrmNewServer->AddFrame(new TGLabel(fFrmNewServer, "Configuration File:"),
                            new TGLayoutHints(kLHintsLeft, 3, 3, 3, 3));
    fFrmNewServer->AddFrame(fTxtConfig = new TGTextEntry(fFrmNewServer,
-                           (const char *)0, 4), new TGLayoutHints());
+                           (const char *)nullptr, 4), new TGLayoutHints());
    fTxtConfig->Resize(156, fTxtConfig->GetDefaultHeight());
    fTxtConfig->Associate(this);
    fFrmNewServer->AddFrame(new TGLabel(fFrmNewServer, "Log Level:"),
@@ -269,7 +269,7 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
    fFrmNewServer->AddFrame(new TGLabel(fFrmNewServer, "User Name:"),
             new TGLayoutHints(kLHintsLeft, 3, 3, 3, 3));
    fFrmNewServer->AddFrame(fTxtUsrName = new TGTextEntry(fFrmNewServer,
-                           (const char *)0, 6), new TGLayoutHints());
+                           (const char *)nullptr, 6), new TGLayoutHints());
    fTxtUsrName->Resize(156, fTxtUsrName->GetDefaultHeight());
    fTxtUsrName->Associate(this);
 
@@ -394,7 +394,7 @@ void TSessionServerFrame::OnBtnDeleteClicked()
    m.Form("Are you sure to delete the server \"%s\"",
           desc->fName.Data());
    Int_t result;
-   new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), 0,
+   new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), nullptr,
                 kMBOk | kMBCancel, &result);
    // if confirmed, delete it
    if (result == kMBOk) {
@@ -540,11 +540,11 @@ void TSessionServerFrame::OnBtnConnectClicked()
          }
       }
    }
-   if (fViewer->GetActDesc()->fProof == 0) {
+   if (fViewer->GetActDesc()->fProof == nullptr) {
       if (fViewer->GetActDesc()->fProofMgr->IsValid()) {
          fViewer->GetActDesc()->fProof = fViewer->GetActDesc()->fProofMgr->CreateSession(
          fViewer->GetActDesc()->fConfigFile);
-         desc = 0;
+         desc = nullptr;
          sessions = fViewer->GetActDesc()->fProofMgr->QuerySessions("");
          if (sessions)
             desc = (TProofDesc *)sessions->Last();
@@ -684,7 +684,7 @@ void TSessionServerFrame::OnBtnAddClicked()
 {
    Int_t retval;
    Bool_t newSession = kTRUE;
-   TSessionDescription* desc = 0;
+   TSessionDescription* desc = nullptr;
    // do nothing if connection in progress
    if (fViewer->IsBusy())
       return;
@@ -715,9 +715,9 @@ void TSessionServerFrame::OnBtnAddClicked()
       desc->fTag = "";
       desc->fQueries = new TList();
       desc->fPackages = new TList();
-      desc->fActQuery = 0;
-      desc->fProof = 0;
-      desc->fProofMgr = 0;
+      desc->fActQuery = nullptr;
+      desc->fProof = nullptr;
+      desc->fProofMgr = nullptr;
       desc->fAutoEnable = kFALSE;
       desc->fAddress = fTxtAddress->GetText();
       desc->fPort = fNumPort->GetIntNumber();
@@ -854,17 +854,17 @@ Bool_t TSessionServerFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 /// Constructor.
 
 TSessionFrame::TSessionFrame(TGWindow* p, Int_t w, Int_t h) :
-   TGCompositeFrame(p, w, h), fTab(0), fFA(0), fFB(0), fFC(0), fFD(0), fFE(0),
-   fCommandTxt(0), fCommandBuf(0), fInfoTextView(0), fClearCheck(0),
-   fBtnShowLog(0), fBtnNewQuery(0), fBtnGetQueries(0), fLBPackages(0),
-   fBtnAdd(0), fBtnRemove(0), fBtnUp(0), fBtnDown(0), fBtnShow(0),
-   fBtnShowEnabled(0), fChkMulti(0), fChkEnable(0), fBtnUpload(0),
-   fBtnEnable(0), fBtnClear(0), fBtnDisable(0), fDSetView(0), fDataSetTree(0),
-   fBtnUploadDSet(0), fBtnRemoveDSet(0), fBtnVerifyDSet(0), fBtnRefresh(0),
-   fTxtParallel(0), fLogLevel(0), fApplyLogLevel(0), fApplyParallel(0),
-   fViewer(0)
+   TGCompositeFrame(p, w, h), fTab(nullptr), fFA(nullptr), fFB(nullptr), fFC(nullptr), fFD(nullptr), fFE(nullptr),
+   fCommandTxt(nullptr), fCommandBuf(nullptr), fInfoTextView(nullptr), fClearCheck(nullptr),
+   fBtnShowLog(nullptr), fBtnNewQuery(nullptr), fBtnGetQueries(nullptr), fLBPackages(nullptr),
+   fBtnAdd(nullptr), fBtnRemove(nullptr), fBtnUp(nullptr), fBtnDown(nullptr), fBtnShow(nullptr),
+   fBtnShowEnabled(nullptr), fChkMulti(nullptr), fChkEnable(nullptr), fBtnUpload(nullptr),
+   fBtnEnable(nullptr), fBtnClear(nullptr), fBtnDisable(nullptr), fDSetView(nullptr), fDataSetTree(nullptr),
+   fBtnUploadDSet(nullptr), fBtnRemoveDSet(nullptr), fBtnVerifyDSet(nullptr), fBtnRefresh(nullptr),
+   fTxtParallel(nullptr), fLogLevel(nullptr), fApplyLogLevel(nullptr), fApplyParallel(nullptr),
+   fViewer(nullptr)
 {
-   for (int i=0;i<19;++i) fInfoLine[i] = 0;
+   for (int i=0;i<19;++i) fInfoLine[i] = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1087,7 +1087,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
    frmdataset->AddFrame(fDSetView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
          5, 5, 5, 5));
    fDataSetTree = new TGListTree(fDSetView, kHorizontalFrame);
-   fDataSetTree->AddItem(0, "DataSets");
+   fDataSetTree->AddItem(nullptr, "DataSets");
 
    // control buttons frame
    TGCompositeFrame* frmBut3 = new TGVerticalFrame(frmdataset, 150, 100);
@@ -1351,7 +1351,7 @@ void TSessionFrame::UpdateListOfDataSets()
       // ask for the list of datasets
 
       // TODO: is now returning a TMap; viewer has to be adapted
-      TList *dsetlist = 0; //fViewer->GetActDesc()->fProof->GetDataSets();
+      TList *dsetlist = nullptr; //fViewer->GetActDesc()->fProof->GetDataSets();
       // coverity[dead_error_condition]: to be changed for TMap usage
       if (dsetlist) {
          TGListTreeItem *dsetitem;
@@ -1392,12 +1392,12 @@ void TSessionFrame::UpdateListOfDataSets()
 void TSessionFrame::OnBtnRemoveDSet()
 {
    TGListTreeItem *item;
-   TObjString *obj = 0;
+   TObjString *obj = nullptr;
    if (fViewer->GetActDesc()->fLocal) return;
 
    item = fDataSetTree->GetSelected();
    if (!item) return;
-   if (item->GetParent() == 0) return;
+   if (item->GetParent() == nullptr) return;
    if (item->GetParent() == fDataSetTree->GetFirstItem()) {
       // Dataset itself
       obj = (TObjString *)item->GetUserData();
@@ -1421,12 +1421,12 @@ void TSessionFrame::OnBtnRemoveDSet()
 void TSessionFrame::OnBtnVerifyDSet()
 {
    TGListTreeItem *item;
-   TObjString *obj = 0;
+   TObjString *obj = nullptr;
    if (fViewer->GetActDesc()->fLocal) return;
 
    item = fDataSetTree->GetSelected();
    if (!item) return;
-   if (item->GetParent() == 0) return;
+   if (item->GetParent() == nullptr) return;
    if (item->GetParent() == fDataSetTree->GetFirstItem()) {
       // Dataset itself
       obj = (TObjString *)item->GetUserData();
@@ -1820,7 +1820,7 @@ void TSessionFrame::OnBtnDisconnectClicked()
    }
    // reset connected flag
    fViewer->GetActDesc()->fAttached = kFALSE;
-   fViewer->GetActDesc()->fProof = 0;
+   fViewer->GetActDesc()->fProof = nullptr;
    // disable animation timer
    fViewer->DisableTimer();
    // change list tree item picture to disconnected pixmap
@@ -1843,7 +1843,7 @@ void TSessionFrame::OnBtnDisconnectClicked()
 
 void TSessionFrame::OnBtnShowLogClicked()
 {
-   fViewer->ShowLog(0);
+   fViewer->ShowLog(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1860,9 +1860,9 @@ void TSessionFrame::OnBtnNewQueryClicked()
 
 void TSessionFrame::OnBtnGetQueriesClicked()
 {
-   TList *lqueries = 0;
-   TQueryResult *query = 0;
-   TQueryDescription *newquery = 0, *lquery = 0;
+   TList *lqueries = nullptr;
+   TQueryResult *query = nullptr;
+   TQueryDescription *newquery = nullptr, *lquery = nullptr;
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
       lqueries = fViewer->GetActDesc()->fProof->GetListOfQueries();
@@ -1906,7 +1906,7 @@ void TSessionFrame::OnBtnGetQueriesClicked()
          newquery->fNoEntries       = query->GetEntries();
          newquery->fFirstEntry      = query->GetFirst();
          newquery->fResult          = query;
-         newquery->fChain           = 0;
+         newquery->fChain           = nullptr;
          fViewer->GetActDesc()->fQueries->Add((TObject *)newquery);
          TGListTreeItem *item2 = fViewer->GetSessionHierarchy()->AddItem(item,
                   newquery->fQueryName, fViewer->GetQueryConPict(),
@@ -1952,7 +1952,7 @@ void TSessionFrame::OnCommandLine()
       // execute command line
       fViewer->GetActDesc()->fProof->Exec(cmd);
       // restore back stdout/stderr
-      if (gSystem->RedirectOutput(0) != 0) {
+      if (gSystem->RedirectOutput(nullptr) != 0) {
          Error("ShowStatus", "stdout/stderr retore failed; skipping");
          return;
       }
@@ -1975,7 +1975,7 @@ void TSessionFrame::OnCommandLine()
       // execute command line
       gApplication->ProcessLine(cmd);
       // restore back stdout/stderr
-      if (gSystem->RedirectOutput(0) != 0) {
+      if (gSystem->RedirectOutput(nullptr) != 0) {
          Error("ShowStatus", "stdout/stderr retore failed; skipping");
       }
       // if check box "clear view" is checked, clear text view
@@ -2036,7 +2036,7 @@ void TSessionFrame::ShutdownSession()
    m.Form("Are you sure to shutdown the session \"%s\"",
           fViewer->GetActDesc()->fName.Data());
    Int_t result;
-   new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), 0,
+   new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), nullptr,
                 kMBOk | kMBCancel, &result);
    // if confirmed, delete it
    if (result != kMBOk)
@@ -2045,7 +2045,7 @@ void TSessionFrame::ShutdownSession()
    fViewer->GetActDesc()->fProof->Detach("S");
    // reset connected flag
    fViewer->GetActDesc()->fAttached = kFALSE;
-   fViewer->GetActDesc()->fProof = 0;
+   fViewer->GetActDesc()->fProof = nullptr;
    // disable animation timer
    fViewer->DisableTimer();
    // change list tree item picture to disconnected pixmap
@@ -2072,10 +2072,10 @@ void TSessionFrame::ShutdownSession()
 /// the editmode flag is set, or to create a new one if not set.
 
 TEditQueryFrame::TEditQueryFrame(TGWindow* p, Int_t w, Int_t h) :
-   TGCompositeFrame(p, w, h, kVerticalFrame), fFrmMore(0), fBtnMore(0),
-   fTxtQueryName(0), fTxtChain(0), fTxtSelector(0), fTxtOptions(0),
-   fNumEntries(0), fNumFirstEntry(0), fTxtParFile(0), fTxtEventList(0),
-   fViewer(0), fQuery(0), fChain(0)
+   TGCompositeFrame(p, w, h, kVerticalFrame), fFrmMore(nullptr), fBtnMore(nullptr),
+   fTxtQueryName(nullptr), fTxtChain(nullptr), fTxtSelector(nullptr), fTxtOptions(nullptr),
+   fNumEntries(nullptr), fNumFirstEntry(nullptr), fTxtParFile(nullptr), fTxtEventList(nullptr),
+   fViewer(nullptr), fQuery(nullptr), fChain(nullptr)
 {
 }
 
@@ -2101,14 +2101,14 @@ void TEditQueryFrame::Build(TSessionViewer *gui)
    AddFrame(new TGLabel(this, "Query Name :"),
          new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 5, 5, 4, 0));
    AddFrame(fTxtQueryName = new TGTextEntry(this,
-         (const char *)0, 1), new TGTableLayoutHints(1, 2, 0, 1,
+         (const char *)nullptr, 1), new TGTableLayoutHints(1, 2, 0, 1,
          kLHintsCenterY, 5, 5, 4, 0));
 
    // add "TChain" label and text entry
    AddFrame(new TGLabel(this, "TChain :"),
          new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 5, 5, 4, 0));
    AddFrame(fTxtChain = new TGTextEntry(this,
-         (const char *)0, 2), new TGTableLayoutHints(1, 2, 1, 2,
+         (const char *)nullptr, 2), new TGTableLayoutHints(1, 2, 1, 2,
          kLHintsCenterY, 5, 5, 4, 0));
    fTxtChain->SetToolTipText("Specify TChain or TDSet from memory or file");
    fTxtChain->SetEnabled(kFALSE);
@@ -2121,7 +2121,7 @@ void TEditQueryFrame::Build(TSessionViewer *gui)
    AddFrame(new TGLabel(this, "Selector :"),
          new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 5, 5, 0, 0));
    AddFrame(fTxtSelector = new TGTextEntry(this,
-         (const char *)0, 3), new TGTableLayoutHints(1, 2, 2, 3,
+         (const char *)nullptr, 3), new TGTableLayoutHints(1, 2, 2, 3,
          kLHintsCenterY, 5, 5, 0, 0));
    // add "Browse" button
    AddFrame(btnTmp = new TGTextButton(this, "Browse..."),
@@ -2145,7 +2145,7 @@ void TEditQueryFrame::Build(TSessionViewer *gui)
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Options :"),
          new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 5, 5, 0, 0));
    fFrmMore->AddFrame(fTxtOptions = new TGTextEntry(fFrmMore,
-         (const char *)0, 4), new TGTableLayoutHints(1, 2, 0, 1, 0, 17,
+         (const char *)nullptr, 4), new TGTableLayoutHints(1, 2, 0, 1, 0, 17,
          0, 0, 8));
    //fTxtOptions->SetText("ASYN");
    fTxtOptions->SetText("");
@@ -2171,7 +2171,7 @@ void TEditQueryFrame::Build(TSessionViewer *gui)
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Event list :"),
          new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 5, 5, 0, 0));
    fFrmMore->AddFrame(fTxtEventList = new TGTextEntry(fFrmMore,
-         (const char *)0, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 17,
+         (const char *)nullptr, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 17,
          5, 0, 0));
    // add "Browse" button
    fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
@@ -2281,14 +2281,14 @@ void TEditQueryFrame::OnBtnSave()
    }
    else {
       newquery->fTDSetString = "";
-      newquery->fChain       = 0;
+      newquery->fChain       = nullptr;
    }
    newquery->fQueryName      = fTxtQueryName->GetText();
    newquery->fOptions        = fTxtOptions->GetText();
    newquery->fNoEntries      = fNumEntries->GetIntNumber();
    newquery->fFirstEntry     = fNumFirstEntry->GetIntNumber();
    newquery->fNbFiles        = 0;
-   newquery->fResult         = 0;
+   newquery->fResult         = nullptr;
 
    if (newquery->fChain) {
       if (newquery->fChain->IsA() == TChain::Class())
@@ -2350,7 +2350,7 @@ void TEditQueryFrame::SettingsChanged()
 
 void TEditQueryFrame::UpdateFields(TQueryDescription *desc)
 {
-   fChain = 0;
+   fChain = nullptr;
    fQuery = desc;
    fTxtChain->SetText("");
    if (desc->fChain) {
@@ -2372,12 +2372,12 @@ void TEditQueryFrame::UpdateFields(TQueryDescription *desc)
 /// Constructor
 
 TSessionQueryFrame::TSessionQueryFrame(TGWindow* p, Int_t w, Int_t h) :
-   TGCompositeFrame(p, w, h), fBtnSubmit(0), fBtnFinalize(0), fBtnStop(0),
-   fBtnAbort(0), fBtnShowLog(0), fBtnRetrieve(0), fBtnSave(0), fInfoTextView(0),
+   TGCompositeFrame(p, w, h), fBtnSubmit(nullptr), fBtnFinalize(nullptr), fBtnStop(nullptr),
+   fBtnAbort(nullptr), fBtnShowLog(nullptr), fBtnRetrieve(nullptr), fBtnSave(nullptr), fInfoTextView(nullptr),
    fModified(0), fFiles(0), fFirst(0), fEntries(0), fPrevTotal(0),
-   fPrevProcessed(0), fLabInfos(0), fLabStatus(0), fTotal(0), fRate(0),
-   fStatus(kStopped), fTab(0), fFA(0), fFB(0), fFC(0), fFD(0), frmProg(0),
-   fECanvas(0), fStatsCanvas(0), fViewer(0), fDesc(0)
+   fPrevProcessed(0), fLabInfos(nullptr), fLabStatus(nullptr), fTotal(nullptr), fRate(nullptr),
+   fStatus(kStopped), fTab(nullptr), fFA(nullptr), fFB(nullptr), fFC(nullptr), fFD(nullptr), frmProg(nullptr),
+   fECanvas(nullptr), fStatsCanvas(nullptr), fViewer(nullptr), fDesc(nullptr)
 {
 }
 
@@ -2601,10 +2601,10 @@ void TSessionQueryFrame::UpdateHistos(TList *objs)
    fStatsCanvas->cd();
    fStatsCanvas->Modified();
    fStatsCanvas->Update();
-   if (save != 0) {
+   if (save != nullptr) {
       save->cd();
    } else {
-      gPad = 0;
+      gPad = nullptr;
    }
 }
 
@@ -3035,7 +3035,7 @@ void TSessionQueryFrame::OnBtnRetrieve()
       }
    }
    if (fViewer->GetActDesc()->fLocal) {
-      TGListTreeItem *item=0, *item2=0;
+      TGListTreeItem *item=nullptr, *item2=nullptr;
       item = fViewer->GetSessionHierarchy()->FindItemByObj(fViewer->GetSessionItem(),
                                                            fViewer->GetActDesc());
       if (item) {
@@ -3255,9 +3255,9 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
       case TQueryDescription::kSessionQueryCompleted:
          fBtnSubmit->SetEnabled(submit_en);
          fBtnFinalize->SetEnabled(kTRUE);
-         if (((desc->fResult == 0) || (desc->fResult &&
+         if (((desc->fResult == nullptr) || (desc->fResult &&
               (desc->fResult->IsFinalized() ||
-              (desc->fResult->GetInputObject("TDSet") == 0)))) &&
+              (desc->fResult->GetInputObject("TDSet") == nullptr)))) &&
               !(fViewer->GetActDesc()->fLocal))
             fBtnFinalize->SetEnabled(kFALSE);
          fBtnStop->SetEnabled(kFALSE);
@@ -3479,7 +3479,7 @@ void TSessionQueryFrame::UpdateInfos()
 /// Constructor.
 
 TSessionOutputFrame::TSessionOutputFrame(TGWindow* p, Int_t w, Int_t h) :
-   TGCompositeFrame(p, w, h), fEntryTmp(0), fLVContainer(0), fViewer(0)
+   TGCompositeFrame(p, w, h), fEntryTmp(nullptr), fLVContainer(nullptr), fViewer(nullptr)
 {
 }
 
@@ -3527,7 +3527,7 @@ void TSessionOutputFrame::OnElementClicked(TGLVEntry* entry, Int_t btn, Int_t x,
    TObject *obj = (TObject *)entry->GetUserData();
    if ((obj) && (btn ==3)) {
       // if right button, popup context menu
-      fViewer->GetContextMenu()->Popup(x, y, obj, (TBrowser *)0);
+      fViewer->GetContextMenu()->Popup(x, y, obj, (TBrowser *)nullptr);
    }
 }
 
@@ -3576,7 +3576,7 @@ void TSessionOutputFrame::AddObject(TObject *obj)
 /// Constructor.
 
 TSessionInputFrame::TSessionInputFrame(TGWindow* p, Int_t w, Int_t h) :
-   TGCompositeFrame(p, w, h), fViewer(0), fLVContainer(0)
+   TGCompositeFrame(p, w, h), fViewer(nullptr), fLVContainer(nullptr)
 {
 }
 
@@ -3628,7 +3628,7 @@ void TSessionInputFrame::AddObject(TObject *obj)
 /// Main Session viewer constructor.
 
 TSessionViewer::TSessionViewer(const char *name, UInt_t w, UInt_t h) :
-   TGMainFrame(gClient->GetRoot(), w, h), fSessionHierarchy(0), fSessionItem(0)
+   TGMainFrame(gClient->GetRoot(), w, h), fSessionHierarchy(nullptr), fSessionItem(nullptr)
 {
    // only one session viewer allowed
    if (gSessionViewer)
@@ -3645,7 +3645,7 @@ TSessionViewer::TSessionViewer(const char *name, UInt_t w, UInt_t h) :
 
 TSessionViewer::TSessionViewer(const char *name, Int_t x, Int_t y, UInt_t w,
                               UInt_t h) : TGMainFrame(gClient->GetRoot(), w, h),
-                              fSessionHierarchy(0), fSessionItem(0)
+                              fSessionHierarchy(nullptr), fSessionItem(nullptr)
 {
    // only one session viewer allowed
    if (gSessionViewer)
@@ -3714,7 +3714,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
    if (fSessionItem)
       fSessionHierarchy->DeleteChildren(fSessionItem);
    else
-      fSessionItem = fSessionHierarchy->AddItem(0, "Sessions", fBaseIcon,
+      fSessionItem = fSessionHierarchy->AddItem(nullptr, "Sessions", fBaseIcon,
             fBaseIcon);
    // add local session description
    TGListTreeItem *item = fSessionHierarchy->AddItem(fSessionItem, "Local",
@@ -3730,9 +3730,9 @@ void TSessionViewer::ReadConfiguration(const char *filename)
    localdesc->fUserName = "";
    localdesc->fQueries = new TList();
    localdesc->fPackages = new TList();
-   localdesc->fActQuery = 0;
-   localdesc->fProof = 0;
-   localdesc->fProofMgr = 0;
+   localdesc->fActQuery = nullptr;
+   localdesc->fProof = nullptr;
+   localdesc->fProofMgr = nullptr;
    localdesc->fAttached = kFALSE;
    localdesc->fConnected = kFALSE;
    localdesc->fLocal = kTRUE;
@@ -3762,9 +3762,9 @@ void TSessionViewer::ReadConfiguration(const char *filename)
       litedesc->fUserName = "";
       litedesc->fQueries = new TList();
       litedesc->fPackages = new TList();
-      litedesc->fActQuery = 0;
-      litedesc->fProof = 0;
-      litedesc->fProofMgr = 0;
+      litedesc->fActQuery = nullptr;
+      litedesc->fProof = nullptr;
+      litedesc->fProofMgr = nullptr;
       litedesc->fAttached = kFALSE;
       litedesc->fConnected = kFALSE;
       litedesc->fLocal = kFALSE;
@@ -3780,26 +3780,26 @@ void TSessionViewer::ReadConfiguration(const char *filename)
    while ((er = (TEnvRec*) next())) {
       const char *s;
       if ((s = strstr(er->GetName(), "SessionDescription."))) {
-         const char *val = fViewerEnv->GetValue(s, (const char*)0);
+         const char *val = fViewerEnv->GetValue(s, (const char*)nullptr);
          if (val) {
             Int_t cnt = 0;
             char *v = StrDup(val);
             s += 7;
             while (1) {
-               TString name = strtok(!cnt ? v : 0, ";");
+               TString name = strtok(!cnt ? v : nullptr, ";");
                if (name.IsNull()) break;
-               TString sessiontag = strtok(0, ";");
-               TString address = strtok(0, ";");
+               TString sessiontag = strtok(nullptr, ";");
+               TString address = strtok(nullptr, ";");
                if (address.IsNull()) break;
-               TString port = strtok(0, ";");
+               TString port = strtok(nullptr, ";");
                if (port.IsNull()) break;
-               TString loglevel = strtok(0, ";");
+               TString loglevel = strtok(nullptr, ";");
                if (loglevel.IsNull()) break;
-               TString configfile = strtok(0, ";");
-               TString user = strtok(0, ";");
+               TString configfile = strtok(nullptr, ";");
+               TString user = strtok(nullptr, ";");
                if (user.IsNull()) break;
-               TString sync = strtok(0, ";");
-               TString autoen = strtok(0, ";");
+               TString sync = strtok(nullptr, ";");
+               TString autoen = strtok(nullptr, ";");
 
                // build session description
                proofDesc = new TSessionDescription();
@@ -3814,9 +3814,9 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                proofDesc->fLocal = kFALSE;
                proofDesc->fQueries = new TList();
                proofDesc->fPackages = new TList();
-               proofDesc->fActQuery = 0;
-               proofDesc->fProof = 0;
-               proofDesc->fProofMgr = 0;
+               proofDesc->fActQuery = nullptr;
+               proofDesc->fProof = nullptr;
+               proofDesc->fProofMgr = nullptr;
                proofDesc->fSync = (Bool_t)(atoi(sync));
                proofDesc->fAutoEnable = (Bool_t)(atoi(autoen));
                proofDesc->fUserName = user;
@@ -3833,28 +3833,28 @@ void TSessionViewer::ReadConfiguration(const char *filename)
          }
       }
       if ((s = strstr(er->GetName(), "QueryDescription."))) {
-         const char *val = fViewerEnv->GetValue(s, (const char*)0);
+         const char *val = fViewerEnv->GetValue(s, (const char*)nullptr);
          if (val) {
             Int_t cnt = 0;
             char *v = StrDup(val);
             s += 7;
             while (1) {
 
-               TString status = strtok(!cnt ? v : 0, ";");
+               TString status = strtok(!cnt ? v : nullptr, ";");
                if (status.IsNull()) break;
 
-               TString reference = strtok(0, ";");
+               TString reference = strtok(nullptr, ";");
                if (reference.IsNull()) break;
-               TString queryname = strtok(0, ";");
+               TString queryname = strtok(nullptr, ";");
                if (queryname.IsNull()) break;
-               TString selector = strtok(0, ";");
+               TString selector = strtok(nullptr, ";");
                if (selector.IsNull()) break;
-               TString dset = strtok(0, ";");
-               TString options = strtok(0, ";");
-               TString eventlist = strtok(0, ";");
-               TString nbfiles = strtok(0, ";");
-               TString nbentries = strtok(0, ";");
-               TString firstentry = strtok(0, ";");
+               TString dset = strtok(nullptr, ";");
+               TString options = strtok(nullptr, ";");
+               TString eventlist = strtok(nullptr, ";");
+               TString nbfiles = strtok(nullptr, ";");
+               TString nbentries = strtok(nullptr, ";");
+               TString firstentry = strtok(nullptr, ";");
 
                TQueryDescription *newquery = new TQueryDescription();
                newquery->fStatus =
@@ -3868,8 +3868,8 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                newquery->fNbFiles         = atoi(nbfiles);
                newquery->fNoEntries       = atoi(nbentries);
                newquery->fFirstEntry      = atoi(firstentry);
-               newquery->fResult          = 0;
-               newquery->fChain           = 0;
+               newquery->fResult          = nullptr;
+               newquery->fChain           = nullptr;
                fActDesc->fQueries->Add((TObject *)newquery);
                cnt++;
                TGListTreeItem *item1 = fSessionHierarchy->FindChildByData(
@@ -3905,9 +3905,9 @@ void TSessionViewer::UpdateListOfProofs()
    // get list of proof sessions
    Bool_t found  = kFALSE;
    Bool_t exists = kFALSE;
-   TGListTreeItem *item = 0;
+   TGListTreeItem *item = nullptr;
    TSeqCollection *proofs = gROOT->GetListOfProofs();
-   TSessionDescription *desc = 0;
+   TSessionDescription *desc = nullptr;
    TSessionDescription *newdesc;
    if (proofs) {
       TObject *o = proofs->First();
@@ -3915,8 +3915,8 @@ void TSessionViewer::UpdateListOfProofs()
          TProofMgr *mgr = dynamic_cast<TProofMgr *>(o);
          if (mgr && mgr->QuerySessions("L")) {
             TIter nxd(mgr->QuerySessions("L"));
-            TProofDesc *d = 0;
-            TProof *p = 0;
+            TProofDesc *d = nullptr;
+            TProof *p = nullptr;
             while ((d = (TProofDesc *)nxd())) {
                TIter nextfs(fSessions);
                // check if session exists in the list
@@ -4050,7 +4050,7 @@ void TSessionViewer::UpdateListOfProofs()
                newdesc->fPackages   = new TList();
                if (newdesc->fLogLevel < 0)
                   newdesc->fLogLevel = 0;
-               newdesc->fActQuery   = 0;
+               newdesc->fActQuery   = nullptr;
                newdesc->fLocal = kFALSE;
                newdesc->fSync = kFALSE;
                newdesc->fAutoEnable = kFALSE;
@@ -4103,7 +4103,7 @@ void TSessionViewer::UpdateListOfProofs()
          newdesc->fQueries    = new TList();
          newdesc->fPackages   = new TList();
          newdesc->fProof      = proof;
-         newdesc->fActQuery   = 0;
+         newdesc->fActQuery   = nullptr;
          newdesc->fConnected = kTRUE;
          newdesc->fAttached = kTRUE;
          newdesc->fLocal = kFALSE;
@@ -4137,7 +4137,7 @@ void TSessionViewer::UpdateListOfSessions()
       // loop over existing Proof sessions
       while ((pdesc = (TProofDesc *)nextp())) {
          TIter nexts(fSessions);
-         TSessionDescription *desc = 0;
+         TSessionDescription *desc = nullptr;
          Bool_t found = kFALSE;
          // check if session is already in the list
          while ((desc = (TSessionDescription *)nexts())) {
@@ -4169,7 +4169,7 @@ void TSessionViewer::UpdateListOfSessions()
             newdesc->fProof      = proof;
          }
          else {
-            newdesc->fProof      = 0;
+            newdesc->fProof      = nullptr;
             newdesc->fConfigFile = "";
             newdesc->fUserName   = fActDesc->fUserName;
             newdesc->fPort       = fActDesc->fPort;
@@ -4179,7 +4179,7 @@ void TSessionViewer::UpdateListOfSessions()
          newdesc->fQueries    = new TList();
          newdesc->fPackages   = new TList();
          newdesc->fProofMgr   = fActDesc->fProofMgr;
-         newdesc->fActQuery   = 0;
+         newdesc->fActQuery   = nullptr;
          newdesc->fConnected  = kTRUE;
          newdesc->fAttached   = kFALSE;
          newdesc->fLocal      = kFALSE;
@@ -4298,9 +4298,9 @@ void TSessionViewer::WriteConfiguration(const char *filename)
 void TSessionViewer::Build()
 {
    TString buf;
-   fActDesc = 0;
-   fActFrame = 0;
-   fLogWindow = 0;
+   fActDesc = nullptr;
+   fActFrame = nullptr;
+   fLogWindow = nullptr;
    fBusy = kFALSE;
    fAutoSave = kTRUE;
    fChangePic = kFALSE;
@@ -4357,7 +4357,7 @@ void TSessionViewer::Build()
    fQueryMenu->AddSeparator();
    fQueryMenu->AddEntry("&Delete", kQueryDelete);
 
-   fViewerEnv = 0;
+   fViewerEnv = nullptr;
 #ifdef WIN32
    fConfigFile = TString::Format("%s\\%s", gSystem->HomeDirectory(), kConfigFile);
 #else
@@ -4596,7 +4596,7 @@ void TSessionViewer::Build()
              fUserGroup->fGroup.Data());
    fStatusBar->SetText(buf.Data(), 1);
 
-   fTimer = 0;
+   fTimer = nullptr;
 
    // create context menu
    fContextMenu = new TContextMenu("SessionViewerContextMenu") ;
@@ -4625,7 +4625,7 @@ TSessionViewer::~TSessionViewer()
 {
    delete fUserGroup;
    if (gSessionViewer == this)
-      gSessionViewer = 0;
+      gSessionViewer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4641,7 +4641,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
    fSessionMenu->DisableEntry(kSessionAdd);
    if (fToolBar->GetButton(kQuerySubmit))
       fToolBar->GetButton(kQuerySubmit)->SetState(kButtonDisabled);
-   if (entry->GetParent() == 0) {  // PROOF
+   if (entry->GetParent() == nullptr) {  // PROOF
       // switch frames only if actual one doesn't match
       if (fActFrame != fServerFrame) {
          fV2->HideFrame(fActFrame);
@@ -4657,7 +4657,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       if (fToolBar->GetButton(kSessionConnect))
          fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
    }
-   else if (entry->GetParent()->GetParent() == 0) { // Server
+   else if (entry->GetParent()->GetParent() == nullptr) { // Server
       if (entry->GetUserData()) {
          obj = (TObject *)entry->GetUserData();
          if (!obj || obj->IsA() != TSessionDescription::Class())
@@ -4732,7 +4732,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fServerFrame->SetAddEnabled(kFALSE);
       fServerFrame->SetConnectEnabled();
    }
-   else if (entry->GetParent()->GetParent()->GetParent() == 0) { // query
+   else if (entry->GetParent()->GetParent()->GetParent() == nullptr) { // query
       obj = (TObject *)entry->GetParent()->GetUserData();
       if (obj && obj->IsA() == TSessionDescription::Class()) {
          fActDesc = (TSessionDescription *)obj;
@@ -4856,7 +4856,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fSessionMenu->DisableEntry(kSessionShowStatus);
       fPopupSrv->DisableEntry(kSessionGetQueries);
       fPopupSrv->DisableEntry(kSessionShowStatus);
-      if (entry->GetParent() != 0)
+      if (entry->GetParent() != nullptr)
          fSessionMenu->EnableEntry(kSessionDelete);
       fPopupSrv->EnableEntry(kSessionDelete);
       fPopupSrv->DisableEntry(kSessionDisconnect);
@@ -4895,7 +4895,7 @@ void TSessionViewer::OnListTreeDoubleClicked(TGListTreeItem *entry, Int_t /*btn*
 {
    if (entry == fSessionItem)
       return;
-   if (entry->GetParent()->GetParent() == 0) { // Server
+   if (entry->GetParent()->GetParent() == nullptr) { // Server
       if (entry->GetUserData()) {
          TObject *obj = (TObject *)entry->GetUserData();
          if ((!obj) || (obj->IsA() != TSessionDescription::Class()))
@@ -4928,7 +4928,7 @@ void TSessionViewer::Terminate()
    }
    // close opened Proof sessions (if any)
    TIter next(fSessions);
-   TSessionDescription *desc = 0;
+   TSessionDescription *desc = nullptr;
    while ((desc = (TSessionDescription *)next())) {
       if (desc->fAttached && desc->fProof &&
           desc->fProof->IsValid())
@@ -5069,12 +5069,12 @@ void TSessionViewer::QueryResultReady(char *query)
    strtmp.Form("Query Result Ready for %s", query);
    // show information on status bar
    ShowInfo(strtmp.Data());
-   TGListTreeItem *item=0, *item2=0;
-   TQueryDescription *lquery = 0;
+   TGListTreeItem *item=nullptr, *item2=nullptr;
+   TQueryDescription *lquery = nullptr;
    // loop over actual queries to find which one is ready
 
    TIter nexts(fSessions);
-   TSessionDescription *desc = 0;
+   TSessionDescription *desc = nullptr;
    // check if session is already in the list
    while ((desc = (TSessionDescription *)nexts())) {
       if (desc && !desc->fAttached)
@@ -5133,7 +5133,7 @@ void TSessionViewer::CleanupSession()
    m.Form("Are you sure to cleanup the session \"%s::%s\"",
          fActDesc->fName.Data(), fActDesc->fTag.Data());
    Int_t result;
-   new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), 0,
+   new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), nullptr,
          kMBYes | kMBNo | kMBCancel, &result);
    if (result == kMBYes) {
       // send cleanup request for the session specified by the tag reference
@@ -5166,7 +5166,7 @@ void TSessionViewer::ResetSession()
    m.Form("Do you really want to reset the session \"%s::%s\"",
          fActDesc->fName.Data(), fActDesc->fAddress.Data());
    Int_t result;
-   new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), 0,
+   new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), nullptr,
          kMBYes | kMBNo | kMBCancel, &result);
    if (result == kMBYes) {
       // reset the session
@@ -5176,7 +5176,7 @@ void TSessionViewer::ResetSession()
       }
       // reset connected flag
       fActDesc->fAttached = kFALSE;
-      fActDesc->fProof = 0;
+      fActDesc->fProof = nullptr;
       // disable animation timer
       DisableTimer();
       // change list tree item picture to disconnected pixmap
@@ -5300,7 +5300,7 @@ void TSessionViewer::ShowPackages()
    }
    fActDesc->fProof->ShowPackages(kTRUE);
    // restore stdout/stderr
-   if (gSystem->RedirectOutput(0) != 0) {
+   if (gSystem->RedirectOutput(nullptr) != 0) {
       Error("ShowStatus", "stdout/stderr retore failed; skipping");
       return;
    }
@@ -5385,7 +5385,7 @@ void TSessionViewer::ShowEnabledPackages()
    }
    fActDesc->fProof->ShowEnabledPackages(kTRUE);
    // restore stdout/stderr
-   if (gSystem->RedirectOutput(0) != 0) {
+   if (gSystem->RedirectOutput(nullptr) != 0) {
       Error("ShowStatus", "stdout/stderr retore failed; skipping");
       return;
    }
@@ -5466,7 +5466,7 @@ void TSessionViewer::ShowStatus()
    }
    fActDesc->fProof->GetStatus();
    // restore stdout/stderr
-   if (gSystem->RedirectOutput(0) != 0) {
+   if (gSystem->RedirectOutput(nullptr) != 0) {
       Error("ShowStatus", "stdout/stderr retore failed; skipping");
       return;
    }

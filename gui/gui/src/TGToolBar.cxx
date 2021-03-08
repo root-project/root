@@ -67,7 +67,7 @@ TGToolBar::~TGToolBar()
       if (fTrash) fTrash->Clear("nodelete");
    }
    delete fTrash;
-   fTrash = 0;
+   fTrash = nullptr;
 
    TIter next(fPictures);
    const TGPicture *p;
@@ -93,7 +93,7 @@ TGButton *TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t s
    const TGPicture *pic = fClient->GetPicture(button->fPixmap);
    if (!pic) {
       Error("AddButton", "pixmap not found: %s", button->fPixmap);
-      return 0;
+      return nullptr;
    }
    fPictures->Add((TObject*)pic);
 
@@ -156,7 +156,7 @@ TGButton *TGToolBar::AddButton(const TGWindow *w, TGPictureButton *pbut, Int_t s
 TGButton *TGToolBar::GetButton(Int_t id) const
 {
    TIter next(fMapOfButtons);
-   TGButton *item = 0;
+   TGButton *item = nullptr;
 
    while ((item = (TGButton*)next())) {
       if ((Long_t)fMapOfButtons->GetValue(item) == id) break;   // found
@@ -214,7 +214,7 @@ void TGToolBar::Cleanup()
 {
    // avoid double deletion of objects in trash
    delete fTrash;
-   fTrash = 0;
+   fTrash = nullptr;
 
    TGCompositeFrame::Cleanup();
 }

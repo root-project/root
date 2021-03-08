@@ -48,7 +48,7 @@ ClassImp(RooHistFunc);
 /// Default constructor
 
 RooHistFunc::RooHistFunc() :
-  _dataHist(0),
+  _dataHist(nullptr),
   _intOrder(0),
   _cdfBoundaries(kFALSE),
   _totVolume(0),
@@ -188,7 +188,7 @@ Double_t RooHistFunc::evaluate() const
       if (harg != parg) {
         parg->syncCache() ;
         harg->copyCache(parg,kTRUE) ;
-        if (!harg->inRange(0)) {
+        if (!harg->inRange(nullptr)) {
           return 0 ;
         }
       }
@@ -267,7 +267,7 @@ Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 {
 
   // Only analytical integrals over the full range are defined
-  if (rangeName!=0) {
+  if (rangeName!=nullptr) {
     return 0 ;
   }
 
@@ -339,7 +339,7 @@ Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* /*rangeName*/) 
       if (harg != parg) {
         parg->syncCache() ;
         harg->copyCache(parg,kTRUE) ;
-        if (!harg->inRange(0)) {
+        if (!harg->inRange(nullptr)) {
           return 0 ;
         }
       }
@@ -361,12 +361,12 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
 {
   // No hints are required when interpolation is used
   if (_intOrder>1) {
-    return 0 ;
+    return nullptr ;
   }
 
 
   // Find histogram observable corresponding to pdf observable
-  RooAbsArg* hobs(0) ;
+  RooAbsArg* hobs(nullptr) ;
   for (auto i = 0u; i < _histObsList.size(); ++i) {
     const auto harg = _histObsList[i];
     const auto parg = _depList[i];
@@ -375,17 +375,17 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
     }
   }
   if (!hobs) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(hobs->GetName())) ;
   if (!lvarg) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
+  const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr) ;
   Double_t* boundaries = binning->array() ;
 
   list<Double_t>* hint = new list<Double_t> ;
@@ -418,11 +418,11 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
 {
   // No hints are required when interpolation is used
   if (_intOrder>1) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Find histogram observable corresponding to pdf observable
-  RooAbsArg* hobs(0) ;
+  RooAbsArg* hobs(nullptr) ;
   for (auto i = 0u; i < _histObsList.size(); ++i) {
     const auto harg = _histObsList[i];
     const auto parg = _depList[i];
@@ -434,11 +434,11 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
   // cout << "RooHistFunc::bb(" << GetName() << ") histObs = " << _histObsList << endl ;
   // cout << "RooHistFunc::bb(" << GetName() << ") pdfObs = " << _depList << endl ;
 
-  RooAbsRealLValue* transform(0) ;
+  RooAbsRealLValue* transform(nullptr) ;
   if (!hobs) {
 
     // Considering alternate: input observable is histogram observable and pdf observable is transformation in terms of it
-    RooAbsArg* pobs(0) ;
+    RooAbsArg* pobs(nullptr) ;
     for (auto i = 0u; i < _histObsList.size(); ++i) {
       const auto harg = _histObsList[i];
       const auto parg = _depList[i];
@@ -451,7 +451,7 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
     // Not found, or check that matching pdf observable is an l-value dependent on histogram observable fails
     if (!hobs || !(pobs->dependsOn(obs) && dynamic_cast<RooAbsRealLValue*>(pobs))) {
       cout << "RooHistFunc::binBoundaries(" << GetName() << ") obs = " << obs.GetName() << " hobs is not found, returning null" << endl ;
-      return 0 ;
+      return nullptr ;
     }
 
     // Now we are in business - we are in a situation where the pdf observable LV(x), mapping to a histogram observable x
@@ -468,16 +468,16 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
   if (!xtmp) {
     cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " is not found in dataset?" << endl ;
     _dataHist->get()->Print("v") ;
-    return 0 ;
+    return nullptr ;
   }
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(hobs->GetName())) ;
   if (!lvarg) {
     cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " but is not an LV, returning null" << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
+  const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr) ;
   Double_t* boundaries = binning->array() ;
 
   list<Double_t>* hint = new list<Double_t> ;

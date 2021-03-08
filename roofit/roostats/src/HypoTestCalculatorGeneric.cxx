@@ -54,8 +54,8 @@ HypoTestCalculatorGeneric::HypoTestCalculatorGeneric(
    fNullModel(&nullModel),
    fData(&data),
    fTestStatSampler(sampler),
-   fDefaultSampler(0),
-   fDefaultTestStat(0),
+   fDefaultSampler(nullptr),
+   fDefaultTestStat(nullptr),
    fAltToysSeed(0)
 {
    if(!sampler){
@@ -111,20 +111,20 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    const_cast<ModelConfig*>(fAltModel)->GuessObsAndNuisance(*fData);
 
    const RooArgSet * nullSnapshot = fNullModel->GetSnapshot();
-   if(nullSnapshot == NULL) {
-      oocoutE((TObject*)0,Generation) << "Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
-      return 0;
+   if(nullSnapshot == nullptr) {
+      oocoutE((TObject*)nullptr,Generation) << "Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
+      return nullptr;
    }
 
    // CheckHook
    if(CheckHook() != 0) {
-      oocoutE((TObject*)0,Generation) << "There was an error in CheckHook(). Stop." << endl;
-      return 0;
+      oocoutE((TObject*)nullptr,Generation) << "There was an error in CheckHook(). Stop." << endl;
+      return nullptr;
    }
 
    if (!fTestStatSampler  || !fTestStatSampler->GetTestStatistic() ) {
-      oocoutE((TObject*)0,InputArguments) << "Test Statistic Sampler or Test Statistics not defined. Stop." << endl;
-      return 0;
+      oocoutE((TObject*)nullptr,InputArguments) << "Test Statistic Sampler or Test Statistics not defined. Stop." << endl;
+      return nullptr;
    }
 
    // get a big list of all variables for convenient switching
@@ -143,22 +143,22 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    RooArgSet nullP(*nullSnapshot);
    double obsTestStat;
 
-   RooArgList* allTS = NULL;
+   RooArgList* allTS = nullptr;
    if( toymcs ) {
       allTS = toymcs->EvaluateAllTestStatistics(*const_cast<RooAbsData*>(fData), nullP);
-      if (!allTS) return 0;
+      if (!allTS) return nullptr;
       //oocoutP((TObject*)0,Generation) << "All Test Statistics on data: " << endl;
       //allTS->Print("v");
       RooRealVar* firstTS = (RooRealVar*)allTS->at(0);
       obsTestStat = firstTS->getVal();
       if (allTS->getSize()<=1) {
         delete allTS;
-        allTS= 0;  // don't save
+        allTS= nullptr;  // don't save
       }
    }else{
       obsTestStat = fTestStatSampler->EvaluateTestStatistic(*const_cast<RooAbsData*>(fData), nullP);
    }
-   oocoutP((TObject*)0,Generation) << "Test Statistic on data: " << obsTestStat << endl;
+   oocoutP((TObject*)nullptr,Generation) << "Test Statistic on data: " << obsTestStat << endl;
 
    // set parameters back ... in case the evaluation of the test statistic
    // modified something (e.g. a nuisance parameter that is not randomized
@@ -171,17 +171,17 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    SetupSampler(*fNullModel);
    RooArgSet paramPointNull(*fNullModel->GetParametersOfInterest());
    if(PreNullHook(&paramPointNull, obsTestStat) != 0) {
-      oocoutE((TObject*)0,Generation) << "PreNullHook did not return 0." << endl;
+      oocoutE((TObject*)nullptr,Generation) << "PreNullHook did not return 0." << endl;
    }
-   SamplingDistribution* samp_null = NULL;
-   RooDataSet* detOut_null = NULL;
+   SamplingDistribution* samp_null = nullptr;
+   RooDataSet* detOut_null = nullptr;
    if(toymcs) {
       detOut_null = toymcs->GetSamplingDistributions(paramPointNull);
       if( detOut_null ) {
         samp_null = new SamplingDistribution( detOut_null->GetName(), detOut_null->GetTitle(), *detOut_null );
         if (detOut_null->get()->getSize()<=1) {
           delete detOut_null;
-          detOut_null= 0;
+          detOut_null= nullptr;
         }
       }
    }else samp_null = fTestStatSampler->GetSamplingDistribution(paramPointNull);
@@ -193,10 +193,10 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    SetupSampler(*fAltModel);
    RooArgSet paramPointAlt(*fAltModel->GetParametersOfInterest());
    if(PreAltHook(&paramPointAlt, obsTestStat) != 0) {
-      oocoutE((TObject*)0,Generation) << "PreAltHook did not return 0." << endl;
+      oocoutE((TObject*)nullptr,Generation) << "PreAltHook did not return 0." << endl;
    }
-   SamplingDistribution* samp_alt = NULL;
-   RooDataSet* detOut_alt = NULL;
+   SamplingDistribution* samp_alt = nullptr;
+   RooDataSet* detOut_alt = nullptr;
    if(toymcs) {
 
       // case of re-using same toys for every points
@@ -212,7 +212,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
         samp_alt = new SamplingDistribution( detOut_alt->GetName(), detOut_alt->GetTitle(), *detOut_alt );
         if (detOut_alt->get()->getSize()<=1) {
           delete detOut_alt;
-          detOut_alt= 0;
+          detOut_alt= nullptr;
         }
       }
 
@@ -236,8 +236,8 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    res->SetAllTestStatisticsData( allTS );
 
    const RooArgSet *aset = GetFitInfo();
-   if (aset != NULL) {
-      RooDataSet *dset = new RooDataSet(NULL, NULL, *aset);
+   if (aset != nullptr) {
+      RooDataSet *dset = new RooDataSet(nullptr, nullptr, *aset);
       dset->add(*aset);
       res->SetFitInfo( dset );
    }

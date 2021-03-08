@@ -311,7 +311,7 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
          left = fBlockSize;
 #ifdef HAVE_MMAP
 #if defined(R__SEEK64)
-      char *buf = (char*) mmap64(0, left, PROT_READ, MAP_FILE | MAP_SHARED, fd, pos);
+      char *buf = (char*) mmap64(nullptr, left, PROT_READ, MAP_FILE | MAP_SHARED, fd, pos);
 #else
       char *buf = (char*) mmap(0, left, PROT_READ, MAP_FILE | MAP_SHARED, fd, pos);
 #endif
@@ -522,7 +522,7 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
    timer.Start();
 
    char *buf = new char[fBlockSize];
-   char *buf2 = 0;
+   char *buf2 = nullptr;
    if (fMode == kAscii)
       buf2 = new char[fBlockSize];
 
@@ -989,16 +989,16 @@ const char *TFTP::GetDirEntry(Bool_t print)
 {
    static char dirent[1024] = {0};
 
-   if (!IsOpen() || !fDir) return 0;
+   if (!IsOpen() || !fDir) return nullptr;
 
    if (fProtocol < 12) {
       Error("GetDirEntry", "call not supported by remote rootd");
-      return 0;
+      return nullptr;
    }
 
    if (fSocket->Send(kROOTD_DIRENTRY) < 0) {
       Error("GetDirEntry", "error sending kROOTD_DIRENTRY command");
-      return 0;
+      return nullptr;
    }
 
    Int_t what;
@@ -1006,7 +1006,7 @@ const char *TFTP::GetDirEntry(Bool_t print)
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("GetDirEntry", "error receiving dir entry confirmation");
-      return 0;
+      return nullptr;
    }
 
    if (print)
@@ -1017,7 +1017,7 @@ const char *TFTP::GetDirEntry(Bool_t print)
       return (const char *)dirent;
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

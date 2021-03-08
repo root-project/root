@@ -36,17 +36,17 @@ namespace cling {
   }
 
   void Transaction::Initialize() {
-    m_NestedTransactions.reset(0);
-    m_Parent = 0;
+    m_NestedTransactions.reset(nullptr);
+    m_Parent = nullptr;
     m_State = kCollecting;
     m_IssuedDiags = kNone;
     m_Opts = CompilationOptions();
-    m_DefinitionShadowNS = 0;
-    m_Module = 0;
-    m_WrapperFD = 0;
-    m_Next = 0;
+    m_DefinitionShadowNS = nullptr;
+    m_Module = nullptr;
+    m_WrapperFD = nullptr;
+    m_Next = nullptr;
     m_BufferFID = FileID(); // sets it to invalid.
-    m_Exe = 0;
+    m_Exe = nullptr;
   }
 
   Transaction::~Transaction() {
@@ -128,7 +128,7 @@ namespace cling {
       }
     }
     if (!m_NestedTransactions->size())
-      m_NestedTransactions.reset(0);
+      m_NestedTransactions.reset(nullptr);
   }
 
   void Transaction::append(DelayCallInfo DCI) {
@@ -237,7 +237,7 @@ namespace cling {
   void Transaction::erase(iterator pos) {
     assert(!empty() && "Erasing from an empty transaction.");
     if (!pos->m_DGR.isNull() && m_WrapperFD == *pos->m_DGR.begin())
-      m_WrapperFD = 0;
+      m_WrapperFD = nullptr;
     m_DeclQueue.erase(pos);
   }
 

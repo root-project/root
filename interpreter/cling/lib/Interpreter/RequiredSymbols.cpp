@@ -22,7 +22,7 @@ void* cling_runtime_internal_throwIfInvalidPointer(void* Sema, void* Expr,
 namespace cling {
 namespace internal {
 void symbol_requester() {
-   const char* const argv[] = {"libcling__symbol_requester", 0};
+   const char* const argv[] = {"libcling__symbol_requester", nullptr};
    Interpreter I(1, argv);
    //cling_PrintValue(0);
    // sharedPtr is needed for SLC6 with devtoolset2:
@@ -32,12 +32,12 @@ void symbol_requester() {
    // grow...
    std::shared_ptr<int> sp;
    Interpreter* SLC6DevToolSet = (Interpreter*)(void*)&sp;
-   LookupHelper h(0,SLC6DevToolSet);
+   LookupHelper h(nullptr,SLC6DevToolSet);
    h.findType("", LookupHelper::NoDiagnostics);
    h.findScope("", LookupHelper::NoDiagnostics);
-   h.findFunctionProto(0, "", "", LookupHelper::NoDiagnostics);
-   h.findFunctionArgs(0, "", "", LookupHelper::NoDiagnostics);
-   runtime::internal::DynamicExprInfo DEI(0,0,false);
+   h.findFunctionProto(nullptr, "", "", LookupHelper::NoDiagnostics);
+   h.findFunctionArgs(nullptr, "", "", LookupHelper::NoDiagnostics);
+   runtime::internal::DynamicExprInfo DEI(nullptr,nullptr,false);
    DEI.getExpr();
    cling_runtime_internal_throwIfInvalidPointer(nullptr, nullptr, nullptr);
 }

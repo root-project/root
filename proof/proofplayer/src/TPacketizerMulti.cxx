@@ -48,9 +48,9 @@ TPacketizerMulti::TPacketizerMulti(TDSet *dset, TList *wrks,
    PDB(kPacketizer,1) Info("TPacketizerMulti",
                            "enter (first %lld, num %lld)", first, num);
    fValid = kFALSE;
-   fPacketizersIter = 0;
-   fCurrent = 0;
-   fAssignedPack = 0;
+   fPacketizersIter = nullptr;
+   fCurrent = nullptr;
+   fAssignedPack = nullptr;
 
    // Check inputs
    if (!dset || !wrks || !input || !st) {
@@ -66,7 +66,7 @@ TPacketizerMulti::TPacketizerMulti(TDSet *dset, TList *wrks,
    input->Add(progTimerFlag);
 
    fTotalEntries = 0;
-   TVirtualPacketizer *packetizer = 0;
+   TVirtualPacketizer *packetizer = nullptr;
    // Simple or multi?
    if (!(dset->TestBit(TDSet::kMultiDSet))) {
       if ((packetizer = CreatePacketizer(dset, wrks, first, num, input, st))) {
@@ -81,7 +81,7 @@ TPacketizerMulti::TPacketizerMulti(TDSet *dset, TList *wrks,
    } else {
       // Iterate on the datasets
       TIter nxds(dset->GetListOfElements());
-      TDSet *ds = 0;
+      TDSet *ds = nullptr;
       while ((ds = (TDSet *)nxds())) {
          if ((packetizer = CreatePacketizer(ds, wrks, first, num, input, st))) {
             fPacketizers->Add(packetizer);
@@ -141,7 +141,7 @@ TPacketizerMulti::~TPacketizerMulti()
       SafeDelete(fPacketizers);
    }
    SafeDelete(fPacketizers);
-   fCurrent = 0;
+   fCurrent = nullptr;
    if (fAssignedPack) {
       fAssignedPack->SetOwner(kFALSE);
       SafeDelete(fAssignedPack);
@@ -156,7 +156,7 @@ TPacketizerMulti::~TPacketizerMulti()
 
 TDSetElement *TPacketizerMulti::GetNextPacket(TSlave *wrk, TMessage *r)
 {
-   TDSetElement *elem = 0;
+   TDSetElement *elem = nullptr;
 
    // Must be valid
    if (!fValid) return elem;
@@ -178,7 +178,7 @@ TDSetElement *TPacketizerMulti::GetNextPacket(TSlave *wrk, TMessage *r)
 
    // Need something to be processed
    if (!fCurrent) {
-      HandleTimer(0);   // Send last timer message
+      HandleTimer(nullptr);   // Send last timer message
       return elem;
    }
 
@@ -187,7 +187,7 @@ TDSetElement *TPacketizerMulti::GetNextPacket(TSlave *wrk, TMessage *r)
       Info("GetNextPacket", "%s: asking current packetizer %p ... ", wrk->GetOrdinal(), fCurrent);
    if (!(elem = fCurrent->GetNextPacket(wrk, r))) {
       // We need to transfer the status info if we change packetizer now
-      TMap *oldStats = (lastPacketizer && lastPacketizer == fCurrent) ? lastPacketizer->GetSlaveStats() : 0;
+      TMap *oldStats = (lastPacketizer && lastPacketizer == fCurrent) ? lastPacketizer->GetSlaveStats() : nullptr;
       // If the packetizer is done, move to next
       fCurrent = (TVirtualPacketizer *) fPacketizersIter->Next();
       if (fCurrent) {
@@ -220,7 +220,7 @@ TDSetElement *TPacketizerMulti::GetNextPacket(TSlave *wrk, TMessage *r)
    if (fProgressStatus->GetEntries() >= fTotalEntries) {
       if (fProgressStatus->GetEntries() > fTotalEntries)
          Error("GetNextPacket", "Processed too many entries!");
-      HandleTimer(0);   // Send last timer message
+      HandleTimer(nullptr);   // Send last timer message
       SafeDelete(fProgress);
    }
 
@@ -236,7 +236,7 @@ TVirtualPacketizer *TPacketizerMulti::CreatePacketizer(TDSet *dset, TList *wrks,
                                                        Long64_t first, Long64_t num,
                                                        TList *input, TProofProgressStatus *st)
 {
-   TVirtualPacketizer *packetizer = 0;
+   TVirtualPacketizer *packetizer = nullptr;
 
    // Check inputs
    if (!dset || !wrks || !input || !st) {
@@ -252,7 +252,7 @@ TVirtualPacketizer *TPacketizerMulti::CreatePacketizer(TDSet *dset, TList *wrks,
    }
 
    TString packetizername;
-   TList *listOfMissingFiles = 0;
+   TList *listOfMissingFiles = nullptr;
 
    TMethodCall callEnv;
    TClass *cl;
@@ -284,7 +284,7 @@ TVirtualPacketizer *TPacketizerMulti::CreatePacketizer(TDSet *dset, TList *wrks,
 
    // Get linked to the related class
    cl = TClass::GetClass(packetizername);
-   if (cl == 0) {
+   if (cl == nullptr) {
       Error("CreatePacketizer", "class '%s' not found", packetizername.Data());
       return packetizer;
    }
@@ -310,7 +310,7 @@ TVirtualPacketizer *TPacketizerMulti::CreatePacketizer(TDSet *dset, TList *wrks,
    // Get an instance of the packetizer
    Long_t ret = 0;
    callEnv.Execute(ret);
-   if ((packetizer = (TVirtualPacketizer *)ret) == 0) {
+   if ((packetizer = (TVirtualPacketizer *)ret) == nullptr) {
       Error("CreatePacketizer", "cannot construct '%s'", cl->GetName());
       return packetizer;
    }
@@ -322,7 +322,7 @@ TVirtualPacketizer *TPacketizerMulti::CreatePacketizer(TDSet *dset, TList *wrks,
    }
 
    // Add invalid elements to the list of missing elements
-   TDSetElement *elem = 0;
+   TDSetElement *elem = nullptr;
    if (dset->TestBit(TDSet::kSomeInvalid)) {
       TIter nxe(dset->GetListOfElements());
       while ((elem = (TDSetElement *)nxe())) {

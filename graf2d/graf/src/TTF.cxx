@@ -430,7 +430,7 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
       }
    }
 
-   FT_Face  tface = 0;
+   FT_Face  tface = nullptr;
 
    if (FT_New_Face(fgLibrary, ttfont, 0, &tface)) {
       Error("TTF::SetTextFont", "error loading font %s", ttfont);
@@ -450,7 +450,7 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
    fgFontName[fgFontCount] = StrDup(basename);
    fgCurFontIdx            = fgFontCount;
    fgFace[fgCurFontIdx]    = tface;
-   fgCharMap[fgCurFontIdx] = 0;
+   fgCharMap[fgCurFontIdx] = nullptr;
    fgFontCount++;
 
    if (italic) {
@@ -460,7 +460,7 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
       slantMat.xy = ((1 << 16) >> 2);
       slantMat.yx = 0;
       slantMat.yy = (1 << 16);
-      FT_Set_Transform( fgFace[fgSymbItaFontIdx], &slantMat, NULL );
+      FT_Set_Transform( fgFace[fgSymbItaFontIdx], &slantMat, nullptr );
    }
 
    return 0;

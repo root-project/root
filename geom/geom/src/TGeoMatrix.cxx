@@ -1647,7 +1647,7 @@ ClassImp(TGeoCombiTrans);
 TGeoCombiTrans::TGeoCombiTrans()
 {
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
-   fRotation = 0;
+   fRotation = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1668,7 +1668,7 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoMatrix &other)
       SetBit(kGeoMatrixOwned);
       fRotation = new TGeoRotation(other);
    }
-   else fRotation = 0;
+   else fRotation = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1689,7 +1689,7 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoTranslation &tr, const TGeoRotation &ro
       fRotation = new TGeoRotation(rot);
       SetBit(kGeoReflection, rot.TestBit(kGeoReflection));
    }
-   else fRotation = 0;
+   else fRotation = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1699,7 +1699,7 @@ TGeoCombiTrans::TGeoCombiTrans(const char *name)
                :TGeoMatrix(name)
 {
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
-   fRotation = 0;
+   fRotation = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1709,7 +1709,7 @@ TGeoCombiTrans::TGeoCombiTrans(Double_t dx, Double_t dy, Double_t dz, TGeoRotati
                :TGeoMatrix("")
 {
    SetTranslation(dx, dy, dz);
-   fRotation = 0;
+   fRotation = nullptr;
    SetRotation(rot);
 }
 
@@ -1720,7 +1720,7 @@ TGeoCombiTrans::TGeoCombiTrans(const char *name, Double_t dx, Double_t dy, Doubl
                :TGeoMatrix(name)
 {
    SetTranslation(dx, dy, dz);
-   fRotation = 0;
+   fRotation = nullptr;
    SetRotation(rot);
 }
 
@@ -1753,7 +1753,7 @@ TGeoCombiTrans &TGeoCombiTrans::operator=(const TGeoMatrix &matrix)
    } else {
       if (fRotation && TestBit(kGeoMatrixOwned)) delete fRotation;
       ResetBit(kGeoMatrixOwned);
-      fRotation = 0;
+      fRotation = nullptr;
    }
    SetBit(kGeoRegistered,registered);
    ResetBit(kGeoScale);
@@ -1812,7 +1812,7 @@ void TGeoCombiTrans::Clear(Option_t *)
    }
    if (fRotation) {
       if (TestBit(kGeoMatrixOwned)) delete fRotation;
-      fRotation = 0;
+      fRotation = nullptr;
    }
    ResetBit(kGeoRotation);
    ResetBit(kGeoTranslation);
@@ -2057,7 +2057,7 @@ void TGeoCombiTrans::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 void TGeoCombiTrans::SetRotation(const TGeoRotation *rot)
 {
    if (fRotation && TestBit(kGeoMatrixOwned)) delete fRotation;
-   fRotation = 0;
+   fRotation = nullptr;
    ResetBit(TGeoMatrix::kGeoMatrixOwned);
    ResetBit(kGeoRotation);
    ResetBit(kGeoReflection);
@@ -2076,7 +2076,7 @@ void TGeoCombiTrans::SetRotation(const TGeoRotation *rot)
 void TGeoCombiTrans::SetRotation(const TGeoRotation &rot)
 {
    if (fRotation && TestBit(kGeoMatrixOwned)) delete fRotation;
-   fRotation = 0;
+   fRotation = nullptr;
    if (!rot.IsRotation()) {
       ResetBit(kGeoRotation);
       ResetBit(kGeoReflection);
@@ -2154,7 +2154,7 @@ TGeoGenTrans::TGeoGenTrans()
    SetBit(kGeoGenTrans);
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
    for (Int_t j=0; j<3; j++) fScale[j] = 1.0;
-   fRotation = 0;
+   fRotation = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2166,7 +2166,7 @@ TGeoGenTrans::TGeoGenTrans(const char *name)
    SetBit(kGeoGenTrans);
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
    for (Int_t j=0; j<3; j++) fScale[j] = 1.0;
-   fRotation = 0;
+   fRotation = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

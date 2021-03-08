@@ -73,7 +73,7 @@ TSlaveLite::TSlaveLite(const char *ord, Int_t perf,
    fProof = proof;
    fSlaveType = (ESlaveType)stype;
    fMsd = msd;
-   fIntHandler = 0;
+   fIntHandler = nullptr;
    fValid = kFALSE;
    fProtocol = kPROOF_Protocol;
 
@@ -124,7 +124,7 @@ Int_t TSlaveLite::SetupServ(Int_t, const char *)
    }
 
    // Receive the unique tag and save it as name of this object
-   TMessage *msg = 0;
+   TMessage *msg = nullptr;
    if (fSocket->Recv(msg) <= 0 || !msg || msg->What() != kPROOF_SESSIONTAG) {
       Error("SetupServ", "failed to receive unique session tag");
       Close("S");

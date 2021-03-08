@@ -35,7 +35,7 @@ void TMVA::regression_averagedevs(TString dataset,TString fin, Int_t Nevt, Bool_
    Int_t nTargets = TMVAGlob::GetNumberOfTargets( dir0);
 
    if (debug) cout << "found targets " << nTargets<<endl;
-   TCanvas* c=0;
+   TCanvas* c=nullptr;
    for (Int_t itrgt = 0 ; itrgt < nTargets; itrgt++){
       if (debug) cout << "loop targets " << itrgt<<endl;
       TString xtit = "Method";

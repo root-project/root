@@ -56,10 +56,10 @@ TProofProgressMemoryPlot::TProofProgressMemoryPlot(TProofProgressDialog *d,
                                             gClient->GetRoot(), w, h)
 {
    fDialog = d;
-   fProofLog = 0;
-   fWPlot = 0;
-   fMPlot = 0;
-   fAPlot = 0;
+   fProofLog = nullptr;
+   fWPlot = nullptr;
+   fMPlot = nullptr;
+   fAPlot = nullptr;
    fFullLogs = kFALSE;
 
    // use hierarchical cleaning
@@ -121,19 +121,19 @@ TProofProgressMemoryPlot::~TProofProgressMemoryPlot()
 {
    if (fProofLog){
       delete fProofLog;
-      fProofLog = 0;
+      fProofLog = nullptr;
    }
    if (fMPlot){
       delete fMPlot;
-      fMPlot = 0;
+      fMPlot = nullptr;
    }
    if (fWPlot){
       delete fWPlot;
-      fWPlot = 0;
+      fWPlot = nullptr;
    }
 
-   fProofLog = 0;
-   fDialog->fMemWindow = 0;
+   fProofLog = nullptr;
+   fDialog->fMemWindow = nullptr;
 
 }
 
@@ -147,10 +147,10 @@ TGListBox* TProofProgressMemoryPlot::BuildLogList(TGFrame *parent)
    c->AddEntry("average", 0);
 
    SafeDelete(fProofLog);
-   fProofLog = 0;
+   fProofLog = nullptr;
 
    TProofMgr *mgr = TProof::Mgr(fDialog->fSessionUrl.Data());
-   if (mgr) fProofLog = mgr->GetSessionLogs(0, 0, "Svc.*Memory");
+   if (mgr) fProofLog = mgr->GetSessionLogs(0, nullptr, "Svc.*Memory");
    if (fDialog->fStatus==TProofProgressDialog::kRunning) {
       fFullLogs = kFALSE;
    } else {
@@ -160,7 +160,7 @@ TGListBox* TProofProgressMemoryPlot::BuildLogList(TGFrame *parent)
    if (fProofLog) {
       TList *elem = fProofLog->GetListOfLogs();
       TIter next(elem);
-      TProofLogElem *pe = 0;
+      TProofLogElem *pe = nullptr;
 
       TString buf;
       Int_t is = 1;
@@ -198,7 +198,7 @@ void TProofProgressMemoryPlot::DoPlot()
       SafeDelete(fProofLog);
       if (fDialog) {
          TProofMgr *mgr = TProof::Mgr(fDialog->fSessionUrl.Data());
-         if (mgr) fProofLog = mgr->GetSessionLogs(0, 0, "Svc.*Memory");
+         if (mgr) fProofLog = mgr->GetSessionLogs(0, nullptr, "Svc.*Memory");
          if (fDialog->fStatus==TProofProgressDialog::kRunning) {
             fFullLogs = kFALSE;
          } else {
@@ -221,27 +221,27 @@ void TProofProgressMemoryPlot::DoPlot()
    TList *elem = fProofLog->GetListOfLogs();
    if (!elem) {Error("DoPlot", "No log elements\n"); return;}
    TIter next(elem);
-   TProofLogElem *ple=0;
+   TProofLogElem *ple=nullptr;
 
    Int_t iwelem = 0;
    Int_t imelem = 0;
-   TGraph *gr=0;
+   TGraph *gr=nullptr;
 
    TList *selected = new TList;
    fWorkers->GetSelectedEntries(selected);
    TIter nextworker(selected);
    TGTextLBEntry *selworker;
-   TLegend *legw = 0;
-   TLegend *legm = 0;
+   TLegend *legw = nullptr;
+   TLegend *legm = nullptr;
 
    //delete the current multigraphs
    if (fWPlot){
       delete fWPlot;
-      fWPlot = 0;
+      fWPlot = nullptr;
    }
    if (fMPlot) {
       delete fMPlot;
-      fMPlot = 0;
+      fMPlot = nullptr;
    }
 
    //loop over the selected workers in the list
@@ -382,18 +382,18 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
    TList *elem = fProofLog->GetListOfLogs();
    if (!elem) {
       Error("DoAveragePlot", "Empty log");
-      return 0;
+      return nullptr;
    }
    TIter next(elem);
 
-   TProofLogElem *ple=0;
+   TProofLogElem *ple=nullptr;
    Double_t max_av = 0;
    Double_t min_av = 10E9;
 
    Long64_t maxevent = 0;
    Long64_t step = -1;
-   TObjString *curline = 0;
-   TObjString *prevline = 0;
+   TObjString *curline = nullptr;
+   TObjString *prevline = nullptr;
    Long64_t curevent_value;
    Long64_t prevevent_value;
    Long64_t *last = new Long64_t[elem->GetEntries()];
@@ -485,11 +485,11 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
       gr->SetPoint(i, (i+1)*step, av_mem[i]/(nw[i]*1024.));
    }
    delete [] av_mem;
-   av_mem = 0;
+   av_mem = nullptr;
    delete [] nw;
-   nw = 0;
+   nw = nullptr;
    delete [] last;
-   last = 0;
+   last = nullptr;
    return gr;
 
 }
@@ -555,7 +555,7 @@ TGraph *TProofProgressMemoryPlot::DoWorkerPlot(TProofLogElem *ple)
    TList *lines = ple->GetMacro()->GetListOfLines();
    if (!lines) {
       //the log is empty so far
-      return 0;
+      return nullptr;
    }
 
    Long64_t vmem = -1, rmem = -1, nevt = -1;
@@ -565,7 +565,7 @@ TGraph *TProofProgressMemoryPlot::DoWorkerPlot(TProofLogElem *ple)
    Long64_t lastevent_value = 0;
    if (ParseLine(curline->String(), vmem, rmem, lastevent_value) != 0) {
       Error("DoWorkerPlot", "error parsing line: '%s'", curline->String().Data());
-      return 0;
+      return nullptr;
    }
 
    //find the step
@@ -573,12 +573,12 @@ TGraph *TProofProgressMemoryPlot::DoWorkerPlot(TProofLogElem *ple)
    Long64_t prevevent_value = 0;
    if (prevline && ParseLine(prevline->String(), vmem, rmem, prevevent_value) != 0) {
       Error("DoWorkerPlot", "error parsing line: '%s'", prevline->String().Data());
-      return 0;
+      return nullptr;
    }
    Long64_t step = lastevent_value - prevevent_value;
    if (step <= 0) {
       Error("DoWorkerPlot", "null or negative step (%lld) - cannot continue", step);
-      return 0;
+      return nullptr;
    }
 
    Int_t nlines = lastevent_value/step;

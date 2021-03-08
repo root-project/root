@@ -106,7 +106,7 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t
   void* p = (void*) gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)) ;
 
   // Check that PROOF initialization actually succeeeded
-  if (p==0) {
+  if (p==nullptr) {
     coutE(Generation) << "RooStudyManager::runProof(" << GetName() << ") ERROR initializing proof, aborting" << endl ;
     return ;
   }
@@ -157,7 +157,7 @@ void RooStudyManager::closeProof(Option_t *option)
       gROOT->ProcessLineFast("delete gProof ;") ;
     }
   } else {
-    ooccoutI((TObject*)NULL,Generation) << "RooStudyManager: No global Proof objects. No connections closed." << endl ;
+    ooccoutI((TObject*)nullptr,Generation) << "RooStudyManager: No global Proof objects. No connections closed." << endl ;
   }
 }
 

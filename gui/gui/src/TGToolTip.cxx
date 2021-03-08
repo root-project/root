@@ -63,7 +63,7 @@ public:
 
 Bool_t TTipDelayTimer::Notify()
 {
-   fTip->HandleTimer(0);
+   fTip->HandleTimer(nullptr);
    Reset();
    return kFALSE;
 }
@@ -97,8 +97,8 @@ TGToolTip::TGToolTip(const TGWindow *p, const TGFrame *f, const char *text,
    Resize(GetDefaultSize());
 
    fWindow = f;
-   fPad    = 0;
-   fBox    = 0;
+   fPad    = nullptr;
+   fBox    = nullptr;
    fX = fY = -1;
    fDelay = new TTipDelayTimer(this, delayms);
 }
@@ -131,8 +131,8 @@ TGToolTip::TGToolTip(const TGWindow *p, const TBox *box, const char *text,
    MapSubwindows();
    Resize(GetDefaultSize());
 
-   fWindow = 0;
-   fPad    = 0;
+   fWindow = nullptr;
+   fPad    = nullptr;
    fBox    = box;
    fDelay = new TTipDelayTimer(this, delayms);
 }
@@ -164,8 +164,8 @@ TGToolTip::TGToolTip(const TBox *box, const char *text,Long_t delayms)
    MapSubwindows();
    Resize(GetDefaultSize());
 
-   fWindow = 0;
-   fPad    = 0;
+   fWindow = nullptr;
+   fPad    = nullptr;
    fBox    = box;
    fDelay = new TTipDelayTimer(this, delayms);
 }
@@ -195,9 +195,9 @@ TGToolTip::TGToolTip(Int_t x, Int_t y, const char *text, Long_t delayms)
    MapSubwindows();
    Resize(GetDefaultSize());
 
-   fWindow = 0;
-   fPad    = 0;
-   fBox    = 0;
+   fWindow = nullptr;
+   fPad    = nullptr;
+   fBox    = nullptr;
    fX      = x;
    fY      = y;
    fDelay = new TTipDelayTimer(this, delayms);

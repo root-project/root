@@ -28,7 +28,7 @@ TTextEditor::TTextEditor(const TGWindow *p,
                   UInt_t options, Pixel_t back)
                   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fText = 0;
+   fText = nullptr;
 
    // start initializing the window components
    MakeTitle("Text String");

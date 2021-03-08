@@ -80,7 +80,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
                    Int_t compress, Int_t netopt)
    : TFile(url, "NET", ftitle, compress), fEndpointUrl(url)
 {
-   fSocket = 0;
+   fSocket = nullptr;
    Create(url, option, netopt);
 }
 
@@ -92,7 +92,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
 TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
    : TFile(url, "NET", ftitle, compress), fEndpointUrl(url)
 {
-   fSocket    = 0;
+   fSocket    = nullptr;
    fProtocol  = 0;
    fErrorCode = 0;
    fNetopt    = 0;
@@ -249,7 +249,7 @@ void TNetFile::Init(Bool_t create)
 
 Bool_t TNetFile::IsOpen() const
 {
-   return fSocket == 0 ? kFALSE : kTRUE;
+   return fSocket == nullptr ? kFALSE : kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -809,8 +809,8 @@ TNetSystem::TNetSystem(Bool_t ftpowner)
    SetName("root");
 
    fDir = kFALSE;
-   fDirp = 0;
-   fFTP  = 0;
+   fDirp = nullptr;
+   fFTP  = nullptr;
    fFTPOwner = ftpowner;
    fUser = "";
    fHost = "";
@@ -873,8 +873,8 @@ void TNetSystem::Create(const char *url, TSocket *sock)
    TUrl turl(surl);
 
    fDir  = kFALSE;
-   fDirp = 0;
-   fFTP  = 0;
+   fDirp = nullptr;
+   fFTP  = nullptr;
 
    // Check locality, taking into account possible prefixes
    fLocalPrefix = "";
@@ -957,8 +957,8 @@ TNetSystem::~TNetSystem()
          delete fFTP;
       }
    }
-   fDirp = 0;
-   fFTP  = 0;
+   fDirp = nullptr;
+   fFTP  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1037,7 +1037,7 @@ void TNetSystem::FreeDirectory(void *dirp)
       if (fDir) {
          fFTP->FreeDirectory(kFALSE);
          fDir = kFALSE;
-         fDirp = 0;
+         fDirp = nullptr;
       }
    }
 }
@@ -1054,13 +1054,13 @@ const char *TNetSystem::GetDirEntry(void *dirp)
 
    if (dirp != fDirp) {
       Error("GetDirEntry", "invalid directory pointer (should never happen)");
-      return 0;
+      return nullptr;
    }
 
    if (fFTP && fFTP->IsOpen() && fDir) {
       return fFTP->GetDirEntry(kFALSE);
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

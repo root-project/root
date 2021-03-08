@@ -37,11 +37,11 @@
 
 TGHtmlLayoutContext::TGHtmlLayoutContext()
 {
-   fPStart = 0;
-   fPEnd = 0;
-   fLeftMargin = 0;
-   fRightMargin = 0;
-   fHtml = 0;
+   fPStart = nullptr;
+   fPEnd = nullptr;
+   fLeftMargin = nullptr;
+   fRightMargin = nullptr;
+   fHtml = nullptr;
    fLeft = 0;
    fRight = 0;
    fMaxX = 0;
@@ -123,11 +123,11 @@ void TGHtmlLayoutContext::PopMargin(SHtmlMargin_t **ppMargin, int tag)
    SHtmlMargin_t *pM;
 
    for (pM = *ppMargin; pM && pM->fTag != tag; pM = pM->fPNext) {}
-   if (pM == 0) {
+   if (pM == nullptr) {
       // No matching margin is found. Do nothing.
       return;
    }
-   while ((pM = *ppMargin) != 0) {
+   while ((pM = *ppMargin) != nullptr) {
       if (pM->fBottom > bot) bot = pM->fBottom;
       oldTag = pM->fTag;
       PopOneMargin(ppMargin);
@@ -206,7 +206,7 @@ TGHtmlElement *TGHtmlLayoutContext::GetLine(TGHtmlElement *p_start,
    int x;                        // Current X coordinate
    int spaceWanted = 0;          // Add this much space before next token
    TGHtmlElement *p;              // For looping over tokens
-   TGHtmlElement *lastBreak = 0;  // Last line-break opportunity
+   TGHtmlElement *lastBreak = nullptr;  // Last line-break opportunity
    int isEmpty = 1;              // True if link contains nothing
    int origin;                   // Initial value of "x"
 
@@ -237,7 +237,7 @@ TGHtmlElement *TGHtmlLayoutContext::GetLine(TGHtmlElement *p_start,
       }
    }
    // coverity[dead_error_line]
-   for (; p && p != p_end; p = p ? p->fPNext : 0) {
+   for (; p && p != p_end; p = p ? p->fPNext : nullptr) {
       if (p->fStyle.fFlags & STY_Invisible) continue;
       switch (p->fType) {
          case Html_Text: {
@@ -337,7 +337,7 @@ TGHtmlElement *TGHtmlLayoutContext::GetLine(TGHtmlElement *p_start,
 
          case Html_DD: {
             TGHtmlRef *ref = (TGHtmlRef *) p;
-            if (ref->fPOther == 0) break;
+            if (ref->fPOther == nullptr) break;
                if (((TGHtmlListStart *)ref->fPOther)->fCompact == 0 ||
                   x + spaceWanted >= 0) {
                   *actualWidth = ((x <= 0) && !isEmpty) ? 1 : x;
@@ -466,7 +466,7 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
 
    if (actualWidth > 0) {
       for (p = p_start; p && p != p_end && p->fType != Html_Text; p = p->fPNext) {}
-      if (p == p_end || p == 0) p = p_start;
+      if (p == p_end || p == nullptr) p = p_start;
       maxAscent = maxTextAscent = 0;
       for (p = p_start; p && p != p_end; p = p->fPNext) {
          int ss;
@@ -660,7 +660,7 @@ void TGHtmlLayoutContext::Paragraph(TGHtmlElement *p)
 {
    int headroom;
 
-   if (p == 0) return;
+   if (p == nullptr) return;
 
    if (p->fType == Html_Text) {
       TGHtmlTextElement *text = (TGHtmlTextElement *) p;
@@ -673,7 +673,7 @@ void TGHtmlLayoutContext::Paragraph(TGHtmlElement *p)
       FontMetrics_t fontMetrics;
       TGFont *font;
       font = fHtml->GetFont(p->fStyle.fFont);
-      if (font == 0) return;
+      if (font == nullptr) return;
       font->GetFontMetrics(&fontMetrics);
       headroom = fontMetrics.fDescent + fontMetrics.fAscent;
    }
@@ -924,8 +924,8 @@ TGHtmlElement *TGHtmlLayoutContext::DoBreakMarkup(TGHtmlElement *p)
       case Html_HR: {
          int zl, wd;
          TGHtmlHr *hr = (TGHtmlHr *) p;
-         hr->fIs3D = (p->MarkupArg("noshade", 0) == 0);
-         z = p->MarkupArg("size", 0);
+         hr->fIs3D = (p->MarkupArg("noshade", nullptr) == nullptr);
+         z = p->MarkupArg("size", nullptr);
          if (z) {
             int hrsz = atoi(z);
             hr->fH = (hrsz < 0) ? 2 : hrsz;
@@ -1004,7 +1004,7 @@ TGHtmlElement *TGHtmlLayoutContext::DoBreakMarkup(TGHtmlElement *p)
          break;
 
       case Html_BR:
-         z = p->MarkupArg("clear",0);
+         z = p->MarkupArg("clear",nullptr);
          if (z) {
             if (strcasecmp(z, "left") == 0) {
                ClearObstacle(CLEAR_Left);
@@ -1098,7 +1098,7 @@ void TGHtmlLayoutContext::LayoutBlock()
          p = pNext;
       }
 
-      if (p == 0 || p == fPEnd) break;
+      if (p == nullptr || p == fPEnd) break;
 
 #ifdef TABLE_TRIM_BLANK
     HtmlLineWasBlank = 0;
@@ -1181,7 +1181,7 @@ void TGHtml::LayoutDoc()
 {
    int btm;
 
-   if (fPFirst == 0) return;
+   if (fPFirst == nullptr) return;
    Sizer();
    fLayoutContext.fHtml = this;
 #if 0  // orig
@@ -1195,7 +1195,7 @@ void TGHtml::LayoutDoc()
 #endif
    fLayoutContext.fRight = 0;
    fLayoutContext.fPStart = fNextPlaced;
-   if (fLayoutContext.fPStart == 0) fLayoutContext.fPStart = fPFirst;
+   if (fLayoutContext.fPStart == nullptr) fLayoutContext.fPStart = fPFirst;
    if (fLayoutContext.fPStart) {
       TGHtmlElement *p;
 
@@ -1214,7 +1214,7 @@ void TGHtml::LayoutDoc()
       if (fZGoto && (p = AttrElem("name", fZGoto+1))) {
          fVisible.fY = ((TGHtmlAnchor *)p)->fY;
          delete[] fZGoto;
-         fZGoto = 0;
+         fZGoto = nullptr;
       }
       RedrawText(btm);
    }

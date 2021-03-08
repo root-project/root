@@ -85,7 +85,7 @@ const TMVA::Event* TMVA::VariableRearrangeTransform::Transform( const TMVA::Even
    // apply the normalization transformation
    if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
 
-   if (fTransformedEvent==0) fTransformedEvent = new Event();
+   if (fTransformedEvent==nullptr) fTransformedEvent = new Event();
 
    FloatVector input; // will be filled with the selected variables, (targets)
    std::vector<Char_t> mask; // masked variables
@@ -104,7 +104,7 @@ const TMVA::Event* TMVA::VariableRearrangeTransform::InverseTransform( const TMV
    // apply the inverse transformation
    if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
 
-   if (fBackTransformedEvent==0) fBackTransformedEvent = new Event( *ev );
+   if (fBackTransformedEvent==nullptr) fBackTransformedEvent = new Event( *ev );
 
    FloatVector input;  // will be filled with the selected variables, targets, (spectators)
    std::vector<Char_t> mask; // masked variables
@@ -143,10 +143,10 @@ void TMVA::VariableRearrangeTransform::AttachXMLTo(void* parent)
 void TMVA::VariableRearrangeTransform::ReadFromXML( void* trfnode )
 {
 
-   void* inpnode = NULL;
+   void* inpnode = nullptr;
 
    inpnode = gTools().GetChild(trfnode, "Selection"); // new xml format
-   if(inpnode == NULL)
+   if(inpnode == nullptr)
       Log() << kFATAL << "Unknown weight file format for transformations. (tried to read in 'rearrange' transform)" << Endl;
 
    VariableTransformBase::ReadFromXML( inpnode );

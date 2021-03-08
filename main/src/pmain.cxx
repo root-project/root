@@ -89,7 +89,7 @@ static FILE *RedirectOutput(const char *logfile, const char *loc, Int_t donotred
    if (donotredir == 0) {
       if (!logfile || strlen(logfile) <= 0) {
          fprintf(stderr,"%s: RedirectOutput: logfile path undefined\n", loc);
-         return 0;
+         return nullptr;
       }
 
       if (loc)
@@ -97,14 +97,14 @@ static FILE *RedirectOutput(const char *logfile, const char *loc, Int_t donotred
       FILE *flog = freopen(logfile, "a", stdout);
       if (!flog) {
          fprintf(stderr,"%s: RedirectOutput: could not freopen stdout\n", loc);
-         return 0;
+         return nullptr;
       }
 
       if (loc)
          fprintf(stderr,"%s: RedirectOutput: dup2 ...\n", loc);
       if ((dup2(fileno(stdout), fileno(stderr))) < 0) {
          fprintf(stderr,"%s: RedirectOutput: could not redirect stderr\n", loc);
-         return 0;
+         return nullptr;
       }
    }
 
@@ -113,7 +113,7 @@ static FILE *RedirectOutput(const char *logfile, const char *loc, Int_t donotred
    FILE *fLog = fopen(logfile, "r");
    if (!fLog) {
       fprintf(stderr,"%s: RedirectOutput: could not open logfile %s\n", loc, logfile);
-      return 0;
+      return nullptr;
    }
 
    if (loc)
@@ -143,12 +143,12 @@ static void SetMaxMemLimits(const char *prog)
       aslim.rlim_cur = aslimref.rlim_cur;
       aslim.rlim_max = aslimref.rlim_max;
       if (assoft) {
-         Long_t rlim_cur = strtol(assoft, 0, 10);
+         Long_t rlim_cur = strtol(assoft, nullptr, 10);
          if (rlim_cur < kMaxLong && rlim_cur > 0)
             aslim.rlim_cur = (rlim_t) rlim_cur * (1024 * 1024);
       }
       if (ashard) {
-         Long_t rlim_max = strtol(ashard, 0, 10);
+         Long_t rlim_max = strtol(ashard, nullptr, 10);
          if (rlim_max < kMaxLong && rlim_max > 0)
             aslim.rlim_max = (rlim_t) rlim_max * (1024 * 1024);
       }
@@ -180,15 +180,15 @@ int main(int argc, char **argv)
       ReadPutEnvs(argv[5]);
    }
 
-   gLogLevel = (argc >= 5) ? strtol(argv[4], 0, 10) : -1;
+   gLogLevel = (argc >= 5) ? strtol(argv[4], nullptr, 10) : -1;
    if (gLogLevel < 0 && gSystem->Getenv("ROOTPROOFLOGLEVEL"))
       gLogLevel = atoi(gSystem->Getenv("ROOTPROOFLOGLEVEL"));
    if (gLogLevel > 0)
       fprintf(stderr,"%s: starting %s\n", argv[1], argv[0]);
 
    // Redirect the output
-   FILE *fLog = 0;
-   const char *loc = 0;
+   FILE *fLog = nullptr;
+   const char *loc = nullptr;
    const char *logfile = gSystem->Getenv("ROOTPROOFLOGFILE");
    Int_t donotredir = 0;
    if (gSystem->Getenv("ROOTPROOFDONOTREDIR")) {
@@ -197,7 +197,7 @@ int main(int argc, char **argv)
       if (anr.IsDigit()) donotredir = anr.Atoi();
    }
    if (logfile && donotredir != 1) {
-      loc = (gLogLevel > 0) ? argv[1] : 0;
+      loc = (gLogLevel > 0) ? argv[1] : nullptr;
       if (gLogLevel > 0)
          fprintf(stderr,"%s: redirecting output to %s\n", argv[1], logfile);
       if (!(fLog = RedirectOutput(logfile, loc, donotredir))) {
@@ -212,7 +212,7 @@ int main(int argc, char **argv)
    SetMaxMemLimits(argv[1]);
 
    gROOT->SetBatch();
-   TApplication *theApp = 0;
+   TApplication *theApp = nullptr;
 
    TString getter("GetTXProofServ");
    TString prooflib = "libProofx";
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
          getter = "GetTProofServ";
       }
    }
-   char *p = 0;
+   char *p = nullptr;
    if ((p = gSystem->DynamicPathName(prooflib, kTRUE))) {
       delete[] p;
       if (gSystem->Load(prooflib) == -1) {

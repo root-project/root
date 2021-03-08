@@ -1755,7 +1755,7 @@ void TSpectrum2Transform::Transform(const Double_t **fSource, Double_t **fDest)
 {
    Int_t i, j;
    Int_t size;
-   Double_t *working_vector = 0, **working_matrix = 0;
+   Double_t *working_vector = nullptr, **working_matrix = nullptr;
    size = (Int_t) TMath::Max(fSizeX, fSizeY);
    switch (fTransformType) {
    case kTransformHaar:
@@ -2116,7 +2116,7 @@ void TSpectrum2Transform::FilterZonal(const Double_t **fSource, Double_t **fDest
    Int_t i, j;
    Double_t a, old_area = 0, new_area = 0;
    Int_t size;
-   Double_t *working_vector = 0, **working_matrix = 0;
+   Double_t *working_vector = nullptr, **working_matrix = nullptr;
    size = (Int_t) TMath::Max(fSizeX, fSizeY);
    switch (fTransformType) {
    case kTransformHaar:
@@ -2447,7 +2447,7 @@ void TSpectrum2Transform::Enhance(const Double_t **fSource, Double_t **fDest)
    Int_t i, j;
    Double_t a, old_area = 0, new_area = 0;
    Int_t size;
-   Double_t *working_vector = 0, **working_matrix = 0;
+   Double_t *working_vector = nullptr, **working_matrix = nullptr;
    size = (Int_t) TMath::Max(fSizeX, fSizeY);
    switch (fTransformType) {
    case kTransformHaar:

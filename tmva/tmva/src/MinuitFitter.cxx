@@ -140,7 +140,7 @@ Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
             << GetNpars() << " != " << pars.size() << Endl;
 
    // timing of MC
-   Timer* timer = 0;
+   Timer* timer = nullptr;
    if (!fBatch) timer = new Timer();
 
    // define fit parameters

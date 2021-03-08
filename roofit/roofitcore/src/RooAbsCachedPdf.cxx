@@ -115,7 +115,7 @@ RooAbsPdf* RooAbsCachedPdf::getCachePdf(const RooArgSet* nset) const
   if (cache) {
     return cache->pdf() ;
   } else {
-    return 0 ;
+    return nullptr ;
   }
 }
 
@@ -130,7 +130,7 @@ RooDataHist* RooAbsCachedPdf::getCacheHist(const RooArgSet* nset) const
   if (cache) {
     return cache->hist() ;
   } else {
-    return 0 ;
+    return nullptr ;
   }
 }
 
@@ -155,7 +155,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 {
   // Check if this configuration was created becfore
   Int_t sterileIdx(-1) ;
-  PdfCacheElem* cache = (PdfCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx) ;
+  PdfCacheElem* cache = (PdfCacheElem*) _cacheMgr.getObj(nset,nullptr,&sterileIdx) ;
 
   // Check if we have a cache histogram in the global expensive object cache
   if (cache) {
@@ -191,7 +191,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 
 
   // Store this cache configuration
-  Int_t code = _cacheMgr.setObj(nset,0,((RooAbsCacheElement*)cache),0) ;
+  Int_t code = _cacheMgr.setObj(nset,nullptr,((RooAbsCacheElement*)cache),nullptr) ;
 
   coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache << " with pdf "
 		 << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
@@ -212,7 +212,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 /// object that tracks changes in listed dependent parameter of cache.
 
 RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const RooArgSet* nsetIn) :
-  _pdf(0), _paramTracker(0), _hist(0), _norm(0)
+  _pdf(nullptr), _paramTracker(nullptr), _hist(nullptr), _norm(nullptr)
 {
   // Create cache object itself -- Default implementation is a RooHistPdf
   RooArgSet* nset2 = self.actualObservables(nsetIn?*nsetIn:RooArgSet()) ;
@@ -470,7 +470,7 @@ Double_t RooAbsCachedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* norm
     return getVal(normSet) ;
   }
 
-  RooArgSet *allVars(0),*anaVars(0),*normSet2(0),*dummy(0) ;
+  RooArgSet *allVars(nullptr),*anaVars(nullptr),*normSet2(nullptr),*dummy(nullptr) ;
   const std::vector<Int_t> codeList = _anaReg.retrieve(code-1,allVars,anaVars,normSet2,dummy) ;
 
   PdfCacheElem* cache = getCache(normSet2?normSet2:anaVars,kFALSE) ;

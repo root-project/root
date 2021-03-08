@@ -23,9 +23,9 @@ ClassImp(TFoamCell);
 
 TFoamCell::TFoamCell()
 {
-   fParent  = 0;
-   fDaught0 = 0;
-   fDaught1 = 0;
+   fParent  = nullptr;
+   fDaught0 = nullptr;
+   fDaught1 = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,9 +38,9 @@ TFoamCell::TFoamCell(Int_t kDim)
       fDim     = kDim;
       fSerial   = 0;
       fStatus   = 1;
-      fParent   = 0;
-      fDaught0  = 0;
-      fDaught1  = 0;
+      fParent   = nullptr;
+      fDaught0  = nullptr;
+      fDaught1  = nullptr;
       fXdiv     = 0.0;
       fBest     = 0;
       fVolume   = 0.0;
@@ -119,9 +119,9 @@ void    TFoamCell::GetHcub( TFoamVect &cellPosi, TFoamVect &cellSize)  const
    const TFoamCell *pCell,*dCell;
    cellPosi = 0.0; cellSize=1.0; // load all components
    dCell = this;
-   while(dCell != 0) {
+   while(dCell != nullptr) {
       pCell = dCell->GetPare();
-      if( pCell== 0) break;
+      if( pCell== nullptr) break;
       Int_t    kDiv = pCell->fBest;
       Double_t xDivi = pCell->fXdiv;
       if(dCell == pCell->GetDau0()  ) {
@@ -148,9 +148,9 @@ void    TFoamCell::GetHSize( TFoamVect &cellSize)  const
    const TFoamCell *pCell,*dCell;
    cellSize=1.0; // load all components
    dCell = this;
-   while(dCell != 0) {
+   while(dCell != nullptr) {
       pCell = dCell->GetPare();
-      if( pCell== 0) break;
+      if( pCell== nullptr) break;
       Int_t    kDiv = pCell->fBest;
       Double_t xDivi = pCell->fXdiv;
       if(dCell == pCell->GetDau0() ) {

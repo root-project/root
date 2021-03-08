@@ -89,8 +89,8 @@ ClassImp(TGListTree);
 
 TGListTreeItem::TGListTreeItem(TGClient *client) :
    fClient(client),
-   fParent    (0), fFirstchild(0), fLastchild (0), fPrevsibling(0),
-   fNextsibling(0),fOpen (kFALSE), fDNDState  (0),
+   fParent    (nullptr), fFirstchild(nullptr), fLastchild (nullptr), fPrevsibling(nullptr),
+   fNextsibling(nullptr),fOpen (kFALSE), fDNDState  (0),
    fY         (0), fXtext     (0), fYtext(0), fHeight(0)
 {
 }
@@ -141,7 +141,7 @@ TGListTreeItemStd::TGListTreeItemStd(TGClient *client, const char *name,
    fActive = kFALSE;
 
    fOwnsData = kFALSE;
-   fUserData = 0;
+   fUserData = nullptr;
 
    fHasColor = kFALSE;
    fColor = 0;
@@ -345,9 +345,9 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    TGContainer(p, w, h, options, back)
 {
    fMsgWindow   = p;
-   fCanvas      = 0;
-   fTip         = 0;
-   fTipItem     = 0;
+   fCanvas      = nullptr;
+   fTip         = nullptr;
+   fTipItem     = nullptr;
    fAutoTips    = kFALSE;
    fAutoCheckBoxPic = kTRUE;
    fDisableOpen = kFALSE;
@@ -355,7 +355,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fUserControlled = kFALSE;
    fEventHandled   = kFALSE;
    fExposeTop = fExposeBottom = 0;
-   fDropItem = 0;
+   fDropItem = nullptr;
    fLastEventState = 0;
 
    fGrayPixel   = GetGrayPixel();
@@ -367,7 +367,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fHighlightGC = GetHighlightGC()();
    fColorGC     = GetColorGC()();
 
-   fFirst = fLast = fSelected = fCurrent = fBelowMouse = 0;
+   fFirst = fLast = fSelected = fCurrent = fBelowMouse = nullptr;
    fDefw = fDefh = 1;
 
    fHspacing = 2;
@@ -376,10 +376,10 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fMargin   = 2;
 
    fXDND = fYDND = 0;
-   fDNDData.fData = 0;
+   fDNDData.fData = nullptr;
    fDNDData.fDataLength = 0;
    fDNDData.fDataType = 0;
-   fBuf = 0;
+   fBuf = nullptr;
 
    fColorMode = kDefault;
    fCheckMode = kSimple;
@@ -409,8 +409,8 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    TGContainer(p, options, back)
 {
    fMsgWindow   = p;
-   fTip         = 0;
-   fTipItem     = 0;
+   fTip         = nullptr;
+   fTipItem     = nullptr;
    fAutoTips    = kFALSE;
    fAutoCheckBoxPic = kTRUE;
    fDisableOpen = kFALSE;
@@ -418,7 +418,7 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fUserControlled = kFALSE;
    fEventHandled   = kFALSE;
    fExposeTop = fExposeBottom = 0;
-   fDropItem = 0;
+   fDropItem = nullptr;
    fLastEventState = 0;
 
    fGrayPixel   = GetGrayPixel();
@@ -430,7 +430,7 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fHighlightGC = GetHighlightGC()();
    fColorGC     = GetColorGC()();
 
-   fFirst = fLast = fSelected = fCurrent = fBelowMouse = 0;
+   fFirst = fLast = fSelected = fCurrent = fBelowMouse = nullptr;
    fDefw = fDefh = 1;
 
    fHspacing = 2;
@@ -439,10 +439,10 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fMargin   = 2;
 
    fXDND = fYDND = 0;
-   fDNDData.fData = 0;
+   fDNDData.fData = nullptr;
    fDNDData.fDataLength = 0;
    fDNDData.fDataType = 0;
-   fBuf = 0;
+   fBuf = nullptr;
 
    fColorMode = kDefault;
    fCheckMode = kSimple;
@@ -527,7 +527,7 @@ void TGListTree::HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw)
 {
    if (item) {
       if ((item == fSelected) && !state) {
-         fSelected = 0;
+         fSelected = nullptr;
          if (draw) DrawItemName(fId, item);
       } else if (state != item->IsActive()) { // !!!! leave active alone ...
          item->SetActive(state);
@@ -595,7 +595,7 @@ Bool_t TGListTree::HandleButton(Event_t *event)
    }
 
    if (event->fType == kButtonPress) {
-      if ((item = FindItem(event->fY)) != 0) {
+      if ((item = FindItem(event->fY)) != nullptr) {
          if (event->fCode == kButton1) {
             Int_t minx, maxx;
             Int_t minxchk = 0, maxxchk = 0;
@@ -661,14 +661,14 @@ Bool_t TGListTree::HandleButton(Event_t *event)
 
 Bool_t TGListTree::HandleDoubleClick(Event_t *event)
 {
-   TGListTreeItem *item = 0;
+   TGListTreeItem *item = nullptr;
 
    if (event->fCode == kButton4 || event->fCode == kButton5) {
       return kFALSE;
    }
    // If fDisableOpen is set, only send message and emit signals.
    // It allows user to customize handling of double click events.
-   if (fDisableOpen && event->fCode == kButton1 && (item = FindItem(event->fY)) != 0) {
+   if (fDisableOpen && event->fCode == kButton1 && (item = FindItem(event->fY)) != nullptr) {
       SendMessage(fMsgWindow, MK_MSG(kC_LISTTREE, kCT_ITEMDBLCLICK),
                   event->fCode, (event->fYRoot << 16) | event->fXRoot);
       DoubleClicked(item, event->fCode);
@@ -706,19 +706,19 @@ Bool_t TGListTree::HandleCrossing(Event_t *event)
    if (event->fType == kLeaveNotify) {
       if (fTip) {
          fTip->Hide();
-         fTipItem = 0;
+         fTipItem = nullptr;
       }
       if (!fUserControlled) {
          if (fCurrent)
             DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
          if (fBelowMouse)
             DrawOutline(fId, fBelowMouse, 0xffffff, kTRUE);
-         fCurrent = 0;
+         fCurrent = nullptr;
       }
       if (fBelowMouse) {
-         fBelowMouse = 0;
-         MouseOver(0);
-         MouseOver(0, event->fState);
+         fBelowMouse = nullptr;
+         MouseOver(nullptr);
+         MouseOver(nullptr, event->fState);
       }
    }
    ClearViewPort();
@@ -731,9 +731,9 @@ Bool_t TGListTree::HandleCrossing(Event_t *event)
 Atom_t TGListTree::HandleDNDPosition(Int_t /*x*/, Int_t y, Atom_t action,
                                       Int_t /*xroot*/, Int_t /*yroot*/)
 {
-   static TGListTreeItem *olditem = 0;
+   static TGListTreeItem *olditem = nullptr;
    TGListTreeItem *item;
-   if ((item = FindItem(y)) != 0) {
+   if ((item = FindItem(y)) != nullptr) {
       if (item->IsDNDTarget()) {
          fDropItem = item;
          if (olditem)
@@ -743,10 +743,10 @@ Atom_t TGListTree::HandleDNDPosition(Int_t /*x*/, Int_t y, Atom_t action,
          return action;
       }
    }
-   fDropItem = 0;
+   fDropItem = nullptr;
    if (olditem) {
       HighlightItem(olditem, kFALSE, kTRUE);
-      olditem = 0;
+      olditem = nullptr;
    }
    return kNone;
 }
@@ -810,7 +810,7 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
    if (gDNDManager->IsDragging()) {
       gDNDManager->Drag(event->fXRoot, event->fYRoot,
                         TGDNDManager::GetDNDActionCopy(), event->fTime);
-   } else if ((item = FindItem(event->fY)) != 0) {
+   } else if ((item = FindItem(event->fY)) != nullptr) {
       if (!fUserControlled) {
          if (fCurrent)
             DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
@@ -917,7 +917,7 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
       fTipItem = item;
    } else {
       if (fBelowMouse) {
-         fBelowMouse = 0;
+         fBelowMouse = nullptr;
          MouseOver(fBelowMouse);
          MouseOver(fBelowMouse, event->fState);
       }
@@ -934,7 +934,7 @@ Bool_t TGListTree::HandleKey(Event_t *event)
 {
    char   input[10];
    UInt_t keysym;
-   TGListTreeItem *item = 0;
+   TGListTreeItem *item = nullptr;
 
    fLastEventState = event->fState;
    if (fTip) fTip->Hide();
@@ -1346,7 +1346,7 @@ void TGListTree::Search(Bool_t close)
          snprintf(msg, 255, "Couldn't find \"%s\"", srch->fBuffer);
          gVirtualX->Bell(20);
          new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
-                      kMBIconExclamation, kMBOk, 0);
+                      kMBIconExclamation, kMBOk, nullptr);
       } else {
          ClearHighlighted();
          HighlightItem(item);
@@ -1709,7 +1709,7 @@ void TGListTree::SetToolTipText(const char *text, Int_t x, Int_t y, Long_t delay
 {
    if (delayms == 0) {
       delete fTip;
-      fTip = 0;
+      fTip = nullptr;
       return;
    }
 
@@ -1758,7 +1758,7 @@ void TGListTree::RemoveReference(TGListTreeItem *item)
 void TGListTree::PDeleteItem(TGListTreeItem *item)
 {
    if (fSelected == item) {
-      fSelected = 0;
+      fSelected = nullptr;
    }
    if (fCurrent == item) {
       DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
@@ -1771,9 +1771,9 @@ void TGListTree::PDeleteItem(TGListTreeItem *item)
    }
    if (fBelowMouse == item) {
       DrawOutline(fId, fBelowMouse, 0xffffff, kTRUE);
-      fBelowMouse = 0;
-      MouseOver(0);
-      MouseOver(0,fLastEventState);
+      fBelowMouse = nullptr;
+      MouseOver(nullptr);
+      MouseOver(nullptr,fLastEventState);
    }
 
    delete item;
@@ -1793,7 +1793,7 @@ void TGListTree::PDeleteChildren(TGListTreeItem *item)
       child = next;
    }
 
-   item->fFirstchild = item->fLastchild = 0;
+   item->fFirstchild = item->fLastchild = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1804,7 +1804,7 @@ void TGListTree::InsertChild(TGListTreeItem *parent, TGListTreeItem *item)
    TGListTreeItem *i;
 
    item->fParent = parent;
-   item->fNextsibling = item->fPrevsibling = 0;
+   item->fNextsibling = item->fPrevsibling = nullptr;
 
    if (parent) {
 
@@ -1933,7 +1933,7 @@ TGListTreeItem *TGListTree::FindItem(Int_t findy)
 
    y = fMargin - pos.fY;
    item = fFirst;
-   finditem = 0;
+   finditem = nullptr;
    while (item && !finditem) {
       // Select the pixmap to use
       pic = item->GetPicture();
@@ -1966,7 +1966,7 @@ void TGListTree::AddItem(TGListTreeItem *parent, TGListTreeItem *item)
 {
    InsertChild(parent, item);
 
-   if ((parent == 0) || (parent && parent->IsOpen()))
+   if ((parent == nullptr) || (parent && parent->IsOpen()))
       ClearViewPort();
 }
 
@@ -1982,7 +1982,7 @@ TGListTreeItem *TGListTree::AddItem(TGListTreeItem *parent, const char *string,
    item = new TGListTreeItemStd(fClient, string, open, closed, checkbox);
    InsertChild(parent, item);
 
-   if ((parent == 0) || (parent && parent->IsOpen()))
+   if ((parent == nullptr) || (parent && parent->IsOpen()))
       ClearViewPort();
    return item;
 }
@@ -2023,7 +2023,7 @@ void TGListTree::RenameItem(TGListTreeItem *item, const char *string)
 Int_t TGListTree::DeleteItem(TGListTreeItem *item)
 {
    if (!fUserControlled)
-      fCurrent = fBelowMouse = 0;
+      fCurrent = fBelowMouse = nullptr;
 
    PDeleteChildren(item);
    RemoveReference(item);
@@ -2095,7 +2095,7 @@ void TGListTree::SetToolTipItem(TGListTreeItem *item, const char *string)
 Int_t TGListTree::DeleteChildren(TGListTreeItem *item)
 {
    if (!fUserControlled)
-      fCurrent = fBelowMouse = 0;
+      fCurrent = fBelowMouse = nullptr;
 
    PDeleteChildren(item);
 
@@ -2130,7 +2130,7 @@ Int_t TGListTree::ReparentChildren(TGListTreeItem *item,
 
    if (item->fFirstchild) {
       first = item->fFirstchild;
-      item->fFirstchild = 0;
+      item->fFirstchild = nullptr;
 
       InsertChildren(newparent, first);
 
@@ -2179,14 +2179,14 @@ Int_t TGListTree::Sort(TGListTreeItem *item)
 
    ::qsort(list, count, sizeof(TGListTreeItem*), ::Compare);
 
-   list[0]->fPrevsibling = 0;
+   list[0]->fPrevsibling = nullptr;
    for (i = 0; i < count; i++) {
       if (i < count - 1)
          list[i]->fNextsibling = list[i + 1];
       if (i > 0)
          list[i]->fPrevsibling = list[i - 1];
    }
-   list[count - 1]->fNextsibling = 0;
+   list[count - 1]->fNextsibling = nullptr;
    if (parent) {
       parent->fFirstchild = list[0];
       parent->fLastchild  = list[count-1];
@@ -2254,7 +2254,7 @@ TGListTreeItem *TGListTree::FindSiblingByName(TGListTreeItem *item, const char *
       }
       return item;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2276,7 +2276,7 @@ TGListTreeItem *TGListTree::FindSiblingByData(TGListTreeItem *item, void *userDa
       }
       return item;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2290,7 +2290,7 @@ TGListTreeItem *TGListTree::FindChildByName(TGListTreeItem *item, const char *na
    } else if (!item && fFirst) {
       item = fFirst;
    } else {
-      item = 0;
+      item = nullptr;
    }
 
    while (item) {
@@ -2299,7 +2299,7 @@ TGListTreeItem *TGListTree::FindChildByName(TGListTreeItem *item, const char *na
       }
       item = item->fNextsibling;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2313,7 +2313,7 @@ TGListTreeItem *TGListTree::FindChildByData(TGListTreeItem *item, void *userData
    } else if (!item && fFirst) {
       item = fFirst;
    } else {
-      item = 0;
+      item = nullptr;
    }
 
    while (item) {
@@ -2322,7 +2322,7 @@ TGListTreeItem *TGListTree::FindChildByData(TGListTreeItem *item, void *userData
       }
       item = item->fNextsibling;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2331,22 +2331,22 @@ TGListTreeItem *TGListTree::FindChildByData(TGListTreeItem *item, void *userData
 
 TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
 {
-   if (!path || !*path) return 0;
+   if (!path || !*path) return nullptr;
 
    const char *p = path, *s;
    char dirname[1024];
-   TGListTreeItem *item = 0;
+   TGListTreeItem *item = nullptr;
    item = FindChildByName(item, "/");
    if (!gVirtualX->InheritsFrom("TGX11")) {
       // on Windows, use the current drive instead of root (/)
       TList *curvol  = gSystem->GetVolumes("cur");
       if (curvol) {
          TNamed *drive = (TNamed *)curvol->At(0);
-         item = FindChildByName(0, TString::Format("%s\\", drive->GetName()));
+         item = FindChildByName(nullptr, TString::Format("%s\\", drive->GetName()));
          delete curvol;
       }
    }
-   TGListTreeItem *diritem = 0;
+   TGListTreeItem *diritem = nullptr;
    TString fulldir;
 
    while (1) {
@@ -2367,7 +2367,7 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
          fulldir += "/";
          fulldir += dirname;
 
-         if ((diritem=FindChildByName(0, fulldir.Data()))) {
+         if ((diritem=FindChildByName(nullptr, fulldir.Data()))) {
             if (!s || !s[0]) return diritem;
             p = ++s;
             item = diritem;
@@ -2378,7 +2378,7 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
       if (!s || !s[0]) return item;
       p = ++s;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2846,7 +2846,7 @@ TGListTreeItem *TGListTree::FindItemByObj(TGListTreeItem *item, void *ptr)
          return FindItemByObj(item->fNextsibling, ptr);
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -46,7 +46,7 @@ using namespace std ;
 ////////////////////////////////////////////////////////////////////////////////
 
 RooNormSetCache::RooNormSetCache(ULong_t max) :
-  _max(max), _next(0), _set2RangeName(0)
+  _max(max), _next(0), _set2RangeName(nullptr)
 {
 }
 

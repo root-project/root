@@ -355,8 +355,8 @@ void TMatrixTSparse<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb
          memset(fColIndex,0,this->fNelems*sizeof(Int_t));
       }
    } else {
-      fElements = 0;
-      fColIndex = 0;
+      fElements = nullptr;
+      fColIndex = nullptr;
    }
 }
 
@@ -1218,15 +1218,15 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
       if (*ep++ != 0.0) nr_nonzeros++;
 
    if (nr_nonzeros != this->fNelems) {
-      if (fColIndex) { delete [] fColIndex; fColIndex = 0; }
-      if (fElements) { delete [] fElements; fElements = 0; }
+      if (fColIndex) { delete [] fColIndex; fColIndex = nullptr; }
+      if (fElements) { delete [] fElements; fElements = nullptr; }
       this->fNelems = nr_nonzeros;
       if (this->fNelems > 0) {
          fColIndex = new Int_t[nr_nonzeros];
          fElements = new Element[nr_nonzeros];
       } else {
-         fColIndex = 0;
-         fElements = 0;
+         fColIndex = nullptr;
+         fElements = nullptr;
       }
    }
 
@@ -2043,8 +2043,8 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::Zero()
 {
    R__ASSERT(this->IsValid());
 
-   if (fElements) { delete [] fElements; fElements = 0; }
-   if (fColIndex) { delete [] fColIndex; fColIndex = 0; }
+   if (fElements) { delete [] fElements; fElements = nullptr; }
+   if (fColIndex) { delete [] fColIndex; fColIndex = nullptr; }
    this->fNelems = 0;
    memset(this->GetRowIndexArray(),0,this->fNrowIndex*sizeof(Int_t));
 

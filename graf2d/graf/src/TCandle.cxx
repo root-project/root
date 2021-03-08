@@ -63,8 +63,8 @@ TCandle::TCandle()
    fAxisMin       = 0.;
    fAxisMax       = 0.;
    fOption        = kNoOption;
-   fProj          = NULL;
-   fDatapoints    = 0;
+   fProj          = nullptr;
+   fDatapoints    = nullptr;
 
 }
 
@@ -95,8 +95,8 @@ TCandle::TCandle(const char *opt)
    fAxisMin       = 0.;
    fAxisMax       = 0.;
    fOption        = kNoOption;
-   fProj          = NULL;
-   fDatapoints    = 0;
+   fProj          = nullptr;
+   fDatapoints    = nullptr;
 
 
    // Conversion necessary in order to cast from const char* to char*
@@ -129,7 +129,7 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t 
    fCandleWidth   = candleWidth;
    fHistoWidth    = candleWidth;
    fDatapoints    = points;
-   fProj          = NULL;
+   fProj          = nullptr;
    fDismiss       = 0;
    fOption        = kNoOption;
    fLogX          = 0;
@@ -162,7 +162,7 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
    fPosCandleAxis = candlePos;
    fCandleWidth   = candleWidth;
    fHistoWidth    = candleWidth;
-   fDatapoints    = 0;
+   fDatapoints    = nullptr;
    fProj          = proj;
    fDismiss       = 0;
    fOption        = kNoOption;

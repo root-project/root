@@ -199,7 +199,7 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
 
    if (obj->InheritsFrom(TAtt3D::Class()) && !pad->GetView()) {
       pad->GetViewer3D("pad");
-      view = TView::CreateView(1, 0, 0); // Cartesian view by default
+      view = TView::CreateView(1, nullptr, nullptr); // Cartesian view by default
       pad->SetView(view);
 
       // Set view to perform first auto-range (scaling) pass

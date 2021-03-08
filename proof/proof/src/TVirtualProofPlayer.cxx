@@ -29,16 +29,16 @@ TVirtualProofPlayer *TVirtualProofPlayer::Create(const char *player,
                                                  TProof *pr, TSocket *s)
 {
    TPluginHandler *h;
-   TVirtualProofPlayer *p = 0;
+   TVirtualProofPlayer *p = nullptr;
 
    if (!player || !*player) {
       ::Error("TVirtualProofPlayer::Create", "player name missing");
-      return 0;
+      return nullptr;
    }
 
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualProofPlayer", player))) {
       if (h->LoadPlugin() == -1)
-         return 0;
+         return nullptr;
       if (!strcmp(player, "slave"))
          p = (TVirtualProofPlayer *) h->ExecPlugin(1, s);
       else

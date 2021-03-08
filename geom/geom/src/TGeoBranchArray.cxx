@@ -54,10 +54,10 @@ TGeoBranchArray::TGeoBranchArray(Int_t maxlevel)
 
 TGeoBranchArray * TGeoBranchArray::MakeInstance(size_t maxlevel)
 {
-   TGeoBranchArray* ba = 0;
+   TGeoBranchArray* ba = nullptr;
    size_t needed = SizeOf(maxlevel);
    char *ptr = new char[ needed ];
-   if (!ptr) return 0;
+   if (!ptr) return nullptr;
    new (ptr) TGeoBranchArray(maxlevel);
    ba = reinterpret_cast<TGeoBranchArray*>(ptr);
    ba->SetBit(kBASelfAlloc, kTRUE);
@@ -71,7 +71,7 @@ TGeoBranchArray * TGeoBranchArray::MakeInstance(size_t maxlevel)
 
 TGeoBranchArray * TGeoBranchArray::MakeInstanceAt(size_t maxlevel, void *addr)
 {
-   TGeoBranchArray* ba = 0;
+   TGeoBranchArray* ba = nullptr;
    new (addr) TGeoBranchArray(maxlevel);
    ba = reinterpret_cast<TGeoBranchArray*>(addr);
    ba->SetBit(kBASelfAlloc, kFALSE);
@@ -84,10 +84,10 @@ TGeoBranchArray * TGeoBranchArray::MakeInstanceAt(size_t maxlevel, void *addr)
 
 TGeoBranchArray * TGeoBranchArray::MakeCopy(const TGeoBranchArray &other)
 {
-   TGeoBranchArray *copy = 0;
+   TGeoBranchArray *copy = nullptr;
    size_t needed = SizeOf(other.fMaxLevel);
    char *ptr = new char[ needed ];
-   if (!ptr) return 0;
+   if (!ptr) return nullptr;
    new (ptr) TGeoBranchArray(other.fMaxLevel);
    copy = reinterpret_cast<TGeoBranchArray*>(ptr);
    copy->SetBit(kBASelfAlloc, kTRUE);
@@ -102,7 +102,7 @@ TGeoBranchArray * TGeoBranchArray::MakeCopy(const TGeoBranchArray &other)
 
 TGeoBranchArray * TGeoBranchArray::MakeCopyAt(const TGeoBranchArray &other, void *addr)
 {
-   TGeoBranchArray *copy = 0;
+   TGeoBranchArray *copy = nullptr;
    new (addr) TGeoBranchArray(other.fMaxLevel);
    copy = reinterpret_cast<TGeoBranchArray*>(addr);
    copy->SetBit(kBASelfAlloc, kFALSE);
@@ -159,7 +159,7 @@ TGeoBranchArray::TGeoBranchArray(const TGeoBranchArray&  other)
                  fLevel(other.fLevel),
                  fMaxLevel(other.fMaxLevel),
                  fMatrix(other.fMatrix),
-                 fArray(NULL)
+                 fArray(nullptr)
 {
    if (fMaxLevel) {
       fArray = new TGeoNode*[fMaxLevel];

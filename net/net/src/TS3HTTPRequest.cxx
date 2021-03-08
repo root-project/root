@@ -129,7 +129,7 @@ TString TS3HTTPRequest::ComputeSignature(TS3HTTPRequest::EHTTPVerb httpVerb) con
 #if defined(MAC_OS_X_VERSION_10_7)
    CCHmac(kCCHmacAlgSHA1, fSecretKey.Data(), fSecretKey.Length() , (unsigned char *)toSign.Data(), toSign.Length(), digest);
 #else
-   unsigned int *sd = NULL;
+   unsigned int *sd = nullptr;
    HMAC(EVP_sha1(), fSecretKey.Data(), fSecretKey.Length() , (unsigned char *)toSign.Data(), toSign.Length(), digest, sd);
 #endif
 
@@ -157,7 +157,7 @@ TString TS3HTTPRequest::HTTPVerbToTString(TS3HTTPRequest::EHTTPVerb httpVerb) co
 
 TS3HTTPRequest& TS3HTTPRequest::SetTimeStamp()
 {
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    char result[128];
 #ifdef _REENTRANT
    struct tm dateFormat;

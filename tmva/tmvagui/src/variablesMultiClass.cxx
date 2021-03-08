@@ -28,7 +28,7 @@ void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , 
    TFile* file = TMVAGlob::OpenFile( fin );
 
    TDirectory* dir = (TDirectory*)file->GetDirectory(dataset.Data())->Get( dirName );
-   if (dir==0) {
+   if (dir==nullptr) {
       cout << "No information about " << title << " available in directory " << dirName << " of file " << fin << endl;
       return;
    }
@@ -63,7 +63,7 @@ void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , 
    Int_t countPad    = 0;
 
    // loop over all objects in directory
-   TCanvas* canv = 0;
+   TCanvas* canv = nullptr;
    Bool_t   createNewFig = kFALSE;
    TIter next(dir->GetListOfKeys());
     
@@ -110,7 +110,7 @@ void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , 
          TString hname(*variter + "__" + *classiter + "_" + tmp);
          TH1 *hist = (TH1*)dir->Get(hname);
          //cout << "Looking for histgram " << hname << endl;
-         if (hist == NULL) {
+         if (hist == nullptr) {
             cout << "ERROR!!! couldn't find " << *variter << " histogram for class " << *classiter << endl;
             //exit(1);
             return;

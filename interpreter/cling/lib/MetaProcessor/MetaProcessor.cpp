@@ -190,7 +190,7 @@ namespace cling {
       // beforehand (--nologo) then the dup2 relinking stdout will have caused
       // it to be re-opened without line buffering.
       if (m_TTY)
-        ::setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
+        ::setvbuf(stdout, nullptr, _IOLBF, BUFSIZ);
 #endif
     }
 

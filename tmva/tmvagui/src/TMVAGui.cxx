@@ -20,7 +20,7 @@ TList* TMVA::GetKeyList( const TString& pattern )
    TList* list = new TList();
 
    TIter next( TMVAGui_keyContent );
-   TKey* key(0);
+   TKey* key(nullptr);
    while ((key = (TKey*)next())) {
       if (TString(key->GetName()).Contains( pattern )) { list->Add( new TObjString( key->GetName() ) ); }
    }
@@ -38,7 +38,7 @@ void TMVA::ActionButton( TControlBar* cbar,
    if (requiredKey != "") {
       Bool_t found = kFALSE;
       TIter next( TMVAGui_keyContent );
-      TKey* key(0);
+      TKey* key(nullptr);
       while ((key = (TKey*)next())) {
          if (TString(key->GetName()).Contains( requiredKey )) { found = kTRUE; break; }
       }
@@ -133,7 +133,7 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    // find all input variables types
    TList* keylist = GetKeyList( "InputVariables" );
    TListIter it( keylist );
-   TObjString* str = 0;
+   TObjString* str = nullptr;
    char ch = 'a';
    while ((str = (TObjString*)it())) {
       TString tmp   = str->GetString();

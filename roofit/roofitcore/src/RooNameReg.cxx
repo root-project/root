@@ -61,7 +61,7 @@ RooNameReg& RooNameReg::instance()
 const TNamed* RooNameReg::constPtr(const char* inStr) 
 {
   // Handle null pointer case explicitly
-  if (inStr==0) return 0 ;
+  if (inStr==nullptr) return nullptr ;
 
   // See if name is already registered ;
   auto elm = _map.find(inStr) ;
@@ -83,7 +83,7 @@ const TNamed* RooNameReg::constPtr(const char* inStr)
 const char* RooNameReg::constStr(const TNamed* namePtr) 
 {
   if (namePtr) return namePtr->GetName() ;
-  return 0 ;  
+  return nullptr ;  
 }
 
 
@@ -92,7 +92,7 @@ const char* RooNameReg::constStr(const TNamed* namePtr)
 
 const TNamed* RooNameReg::ptr(const char* stringPtr) 
 { 
-  if (stringPtr==0) return 0 ;
+  if (stringPtr==nullptr) return nullptr ;
   return instance().constPtr(stringPtr) ; 
 }
 
@@ -102,7 +102,7 @@ const TNamed* RooNameReg::ptr(const char* stringPtr)
 
 const char* RooNameReg::str(const TNamed* ptr) 
 { 
-  if (ptr==0) return 0 ;
+  if (ptr==nullptr) return nullptr ;
   return instance().constStr(ptr) ; 
 }
 
@@ -113,7 +113,7 @@ const char* RooNameReg::str(const TNamed* ptr)
 const TNamed* RooNameReg::known(const char* inStr)
 {
   // Handle null pointer case explicitly
-  if (inStr==0) return 0 ;
+  if (inStr==nullptr) return nullptr ;
   RooNameReg& reg = instance();
   const auto elm = reg._map.find(inStr);
   return elm != reg._map.end() ? elm->second.get() : nullptr;

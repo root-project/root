@@ -259,7 +259,7 @@ void TBufferFile::ReadStdString(std::string *obj)
 
 void TBufferFile::WriteStdString(const std::string *obj)
 {
-   if (obj==0) {
+   if (obj==nullptr) {
       *this << (UChar_t)0;
       WriteFastArray("",0);
       return;
@@ -363,7 +363,7 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
    if (Long_t(fBufCur) != endpos) {
       offset = Int_t(Long_t(fBufCur) - endpos);
 
-      const char *name = clss ? clss->GetName() : classname ? classname : 0;
+      const char *name = clss ? clss->GetName() : classname ? classname : nullptr;
 
       if (name) {
          if (offset < 0) {
@@ -2374,7 +2374,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
                   clCast->GetName(), clRef->GetName());
 
             CheckByteCount(startpos, tag, (TClass *)nullptr); // avoid mis-leading byte count error message
-            return 0; // We better return at this point
+            return nullptr; // We better return at this point
          }
          baseOffset = 0; // For now we do not support requesting from a class that is the base of one of the class for which there is transformation to ....
 
@@ -2387,7 +2387,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          Error("ReadObject", "trying to read an emulated class (%s) to store in a compiled pointer (%s)",
                clRef->GetName(),clCast->GetName());
          CheckByteCount(startpos, tag, (TClass *)nullptr); // avoid mis-leading byte count error message
-         return 0;
+         return nullptr;
       }
    }
 
@@ -2405,13 +2405,13 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
 
    // unknown class, skip to next object and return 0 obj
    if (clRef == (TClass*) -1) {
-      if (fBufCur >= fBufMax) return 0;
+      if (fBufCur >= fBufMax) return nullptr;
       if (fVersion > 0)
          MapObject((TObject*) -1, startpos+kMapOffset);
       else
          MapObject((void*)nullptr, nullptr, fMapCount);
       CheckByteCount(startpos, tag, (TClass *)nullptr);
-      return 0;
+      return nullptr;
    }
 
    if (!clRef) {
@@ -2423,7 +2423,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
       } else {
          if (tag > (UInt_t)fMap->GetSize()) {
             Error("ReadObject", "object tag too large, I/O buffer corrupted");
-            return 0;
+            return nullptr;
             // exception
          }
       }
@@ -2457,7 +2457,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          Error("ReadObject", "could not create object of class %s",
                clRef->GetName());
          // exception
-         return 0;
+         return nullptr;
       }
 
       // add to fMap before reading rest of object
@@ -2587,7 +2587,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
    // in case tag is object tag return tag
    if (!(tag & kClassMask)) {
       if (objTag) *objTag = tag;
-      return 0;
+      return nullptr;
    }
 
    if (tag == kNewClassTag) {
@@ -2732,7 +2732,7 @@ void TBufferFile::SkipVersion(const TClass *cl)
              Class_Has_StreamerInfo(cl) ) {
 
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
-            const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;
+            const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : nullptr;
             if ( local )  {
                UInt_t checksum = local->GetCheckSum();
                TStreamerInfo *vinfo = (TStreamerInfo*)cl->FindStreamerInfo(checksum);
@@ -2836,7 +2836,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
              Class_Has_StreamerInfo(cl) ) {
 
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
-            const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;
+            const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : nullptr;
             if ( local )  {
                UInt_t checksum = local->GetCheckSum();
                TStreamerInfo *vinfo = (TStreamerInfo*)cl->FindStreamerInfo(checksum);
@@ -2947,7 +2947,7 @@ Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
          if ((!cl->IsLoaded() || cl->IsForeign()) && Class_Has_StreamerInfo(cl) ) {
 
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
-            const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;
+            const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : nullptr;
             if ( local )  {
                UInt_t checksum = local->GetCheckSum();
                TStreamerInfo *vinfo = (TStreamerInfo*)cl->FindStreamerInfo(checksum);
@@ -3619,7 +3619,7 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       // Get the address of the first item for the PrintDebug.
       // (Performance is not essential here since we are going to print to
       // the screen anyway).
-      void *arr0 = start_collection ? loopconfig->GetFirstAddress(start_collection,end_collection) : 0;
+      void *arr0 = start_collection ? loopconfig->GetFirstAddress(start_collection,end_collection) : nullptr;
       // loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();

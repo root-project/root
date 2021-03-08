@@ -108,7 +108,7 @@ TProofNodeInfo *TProofResourcesStatic::GetMaster()
    if (fFoundMaster)
       return fMaster;
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -204,7 +204,7 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
 
          // Unless this line was empty or a comment, interpret the line
          if ( !((line(0,1) == "#") || (line == "")) ) {
-            TProofNodeInfo *nodeinfo = 0;
+            TProofNodeInfo *nodeinfo = nullptr;
 
             // Reset boolean (condorworkers are treated as a workers)
             isMaster = kFALSE;

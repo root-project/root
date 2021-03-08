@@ -56,8 +56,8 @@ int TGHtml::CellSpacing(TGHtmlElement *pTable)
    int relief;
    int cellSpacing;
 
-   z = pTable->MarkupArg("cellspacing", 0);
-   if (z == 0) {
+   z = pTable->MarkupArg("cellspacing", nullptr);
+   if (z == nullptr) {
       relief = fTableRelief;
       if (relief == HTML_RELIEF_RAISED || relief == HTML_RELIEF_SUNKEN) {
          cellSpacing = DFLT_CELLSPACING_3D;
@@ -133,7 +133,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
    if (pTable->fType != Html_TABLE) return str;
    if (!(pEnd = pTable->fPEnd)) {
       delete str;
-      return 0;
+      return nullptr;
    }
 
    str->Append("{ ");  // start sublist
@@ -162,14 +162,14 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
 
       switch (p->fType) {
          case Html_TABLE:
-            if (!(p = FindEndNest(p, Html_EndTABLE, 0))) {
+            if (!(p = FindEndNest(p, Html_EndTABLE, nullptr))) {
                delete str;
-               return 0;
+               return nullptr;
             }
             break;
 
          case Html_EndTABLE:
-            p = 0;
+            p = nullptr;
             break;
 
          case Html_TR:
@@ -200,10 +200,10 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
 
          case Html_TD:
          case Html_TH:
-            if ((!(cp = p->MarkupArg("colspan", 0))) || (cspans = atoi(cp)) <= 0) {
+            if ((!(cp = p->MarkupArg("colspan", nullptr))) || (cspans = atoi(cp)) <= 0) {
                cspans = 1;
             }
-            if ((cp = p->MarkupArg("rowspan", 0)) && (j = atoi(cp)) > 0 &&
+            if ((cp = p->MarkupArg("rowspan", nullptr)) && (j = atoi(cp)) > 0 &&
                 cols < HTML_MAX_COLUMNS) {
                rspans[cols] = j;
                rspanstart = 1;
@@ -269,7 +269,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
             break;
 
          case Html_CAPTION:  // Should do something with Caption?
-            if (!(pEnd = FindEndNest(p, Html_EndCAPTION, 0))) {
+            if (!(pEnd = FindEndNest(p, Html_EndCAPTION, nullptr))) {
                p = pEnd;
             }
             break;
@@ -323,7 +323,7 @@ TGHtmlElement *TGHtml::FindEndNest(TGHtmlElement *sp, int en,
    n = sp->fType;
 
    while (p) {
-      if (p == lp) return 0;
+      if (p == lp) return nullptr;
       if (n == Html_LI) {
          if (p->fType == Html_LI || p->fType == Html_EndUL ||
              p->fType == Html_EndOL) {
@@ -346,7 +346,7 @@ TGHtmlElement *TGHtml::FindEndNest(TGHtmlElement *sp, int en,
       }
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -377,7 +377,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    TGHtmlElement *fPNext;              // Next element to process
    int iCol1 = 0;                     // Current column number.  1..N
    int iRow = 0;                      // Current row number
-   TGHtmlElement *inRow = 0;          // Pointer to <TR>
+   TGHtmlElement *inRow = nullptr;          // Pointer to <TR>
    int i, j;                          // Loop counters
    int n;                             // Number of columns
    int minW, maxW, requestedW;        // min, max, requested width for a cell
@@ -409,7 +409,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
 # define ColMin(A,B) colMin[(A)-1][(B)-1]
 # define ColReq(A,B) colMin[(B)-1][(A)-1]
 
-   if (pStart == 0 || pStart->fType != Html_TABLE) return pStart;
+   if (pStart == nullptr || pStart->fType != Html_TABLE) return pStart;
 
    if (pStart->fBgImage) pStart->fHasbg = 1;
 
@@ -420,7 +420,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    pStart->fNCol = 0;
    pStart->fNRow = 0;
 
-   z = pStart->MarkupArg("border", 0);
+   z = pStart->MarkupArg("border", nullptr);
    if (z && *z == 0) z = "2";
 
    tbw = z ? atoi(z) : DFLT_BORDER;
@@ -429,7 +429,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
 
    cbw = (tbw > 0);
 
-   z = pStart->MarkupArg("cellpadding", 0);
+   z = pStart->MarkupArg("cellpadding", nullptr);
    cellPadding = z ? atoi(z) : DFLT_CELLPADDING;
    cellSpacing = CellSpacing(pStart);
 
@@ -449,11 +449,11 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    separation = cellSpacing + 2 * (cellPadding + cbw);
    margin = tbw + cellSpacing + cbw + cellPadding;
 
-   z = pStart->MarkupArg("hspace", 0);
+   z = pStart->MarkupArg("hspace", nullptr);
    // hspace = z ? atoi(z) : DFLT_HSPACE;
 
    // Figure out the maximum space available
-   z = pStart->MarkupArg("width", 0);
+   z = pStart->MarkupArg("width", nullptr);
    if (z) {
       int len = strlen(z);
       if (len > 0 && z[len-1] == '%') {
@@ -489,7 +489,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
 
          case Html_EndTR:
             ((TGHtmlRef *)p)->fPOther = pStart;
-            inRow = 0;
+            inRow = nullptr;
             break;
 
          case Html_TR:
@@ -512,8 +512,8 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
             // inCol = p;
             if (!inRow) {
                // If the <TR> markup is omitted, insert it.
-               TGHtmlElement *pNew = new TGHtmlRef(Html_TR, 1, 0, 0);
-               if (pNew == 0) break;
+               TGHtmlElement *pNew = new TGHtmlRef(Html_TR, 1, nullptr, nullptr);
+               if (pNew == nullptr) break;
                //pNew->fType = Html_TR;
                pNew->fCount = 0;
                pNew->fStyle = p->fStyle;
@@ -548,13 +548,13 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
                }
                pStart->fNCol = nCol;
             }
-            noWrap = (p->MarkupArg("nowrap", 0) != 0);
+            noWrap = (p->MarkupArg("nowrap", nullptr) != nullptr);
             hasbg = (pStart->fHasbg || ((TGHtmlRef *)cell->fPRow)->fBgImage ||
                      cell->fBgImage);
             fPNext = MinMax(p, &minW, &maxW, availWidth, hasbg);
             cell->fPEnd = fPNext;
             requestedW = 0;
-            if ((z = p->MarkupArg("width", 0)) != 0) {
+            if ((z = p->MarkupArg("width", nullptr)) != nullptr) {
                for (i = 0; isdigit(z[i]) || z[i] == '.'; i++) {}
                if (strcmp(z, "*") == 0) {
                   requestedW = availWidth;
@@ -572,7 +572,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
 
             if (noWrap) {
                // coverity[returned_pointer]
-               if ((z = p->MarkupArg("rowspan", 0)) == 0) { // Hack ???
+               if ((z = p->MarkupArg("rowspan", nullptr)) == nullptr) { // Hack ???
                //minW = (requestedW > 0 ? requestedW : maxW);
                } else {
                   minW = maxW;
@@ -774,7 +774,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    }
 
    // Possibly widen or narrow the table to accomodate a "width=" attribute
-   z = pStart->MarkupArg("width", 0);
+   z = pStart->MarkupArg("width", nullptr);
    if (z) {
       int len = strlen(z);
       int totalWidth;
@@ -890,7 +890,7 @@ TGHtmlElement *TGHtml::MinMax(TGHtmlElement *p, int *pMin, int *pMax,
    TGHtmlElement *fPNext;     // Next element in the list
    int wstyle = 0;          // Current style for nowrap
 
-   if (p->MarkupArg("nowrap", 0) != 0) {
+   if (p->MarkupArg("nowrap", nullptr) != nullptr) {
       wstyle |= STY_NoBreak;
    }
 
@@ -1093,8 +1093,8 @@ int TGHtmlMarkupElement::GetVerticalAlignment(int dflt)
    const char *z;
    int rc;
 
-   z = MarkupArg("valign", 0);
-   if (z == 0) {
+   z = MarkupArg("valign", nullptr);
+   if (z == nullptr) {
       rc = dflt;
    } else if (strcasecmp(z, "top") == 0) {
       rc = VAlign_Top;
@@ -1120,7 +1120,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    TGHtmlElement *pEnd1;       // The </table> element
    TGHtmlElement *p;           // For looping thru elements of the table
    TGHtmlElement *fPNext;       // Next element in the loop
-   TGHtmlElement *pCaption=0;  // Start of the caption text.  The <caption>
+   TGHtmlElement *pCaption=nullptr;  // Start of the caption text.  The <caption>
    // TGHtmlElement *pEndCaption; // End of the caption.  The </caption>
    int width;               // Width of the table as drawn
    int cellSpacing;         // Value of cellspacing= parameter to <table>
@@ -1149,7 +1149,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    int x[N]={0};            // Left edge of each cell's content
    int w[N]={0};            // Width of each cell's content
    int ymax[N]={0};         // Bottom edge of cell's content if valign=top
-   TGHtmlElement *apElem[N]={0}; // The <td> or <th> for each cell in a row
+   TGHtmlElement *apElem[N]={nullptr}; // The <td> or <th> for each cell in a row
    // int firstRow[N]={0};     // First row on which a cell appears
    int lastRow[N]={0};      // Row to which each cell span's
    int valign[N]={0};       // Vertical alignment for each cell
@@ -1159,7 +1159,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    extern int HtmlLineWasBlank;
 #endif // TABLE_TRIM_BLANK
 
-   if (pTable == 0 || pTable->fType != Html_TABLE) return pTable;
+   if (pTable == nullptr || pTable->fType != Html_TABLE) return pTable;
 
    TRACE_PUSH(HtmlTrace_Table2);
    TRACE(HtmlTrace_Table2, ("Starting TableLayout() at %s\n",
@@ -1194,7 +1194,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    savedContext = *this;
 
   // Figure out how wide to draw the table
-   z = pTable->MarkupArg("width", 0);
+   z = pTable->MarkupArg("width", nullptr);
    if (z) {
       int len = strlen(z);
       if (len > 0 && z[len-1] == '%') {
@@ -1216,14 +1216,14 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    // Compute the width and left edge position of every column in
    // the table
 
-   z = pTable->MarkupArg("cellpadding", 0);
+   z = pTable->MarkupArg("cellpadding", nullptr);
    cellPadding = z ? atoi(z) : DFLT_CELLPADDING;
    cellSpacing = fHtml->CellSpacing(pTable);
 
-   z = pTable->MarkupArg("vspace", 0);
+   z = pTable->MarkupArg("vspace", nullptr);
    vspace = z ? atoi(z) : DFLT_VSPACE;
 
-   z = pTable->MarkupArg("hspace", 0);
+   z = pTable->MarkupArg("hspace", nullptr);
    // hspace = z ? atoi(z) : DFLT_HSPACE;
 
 #ifdef DEBUG
@@ -1305,7 +1305,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    for (i = 1; i <= n; i++) {
       // firstRow[i] = 0;
       lastRow[i] = 0;
-      apElem[i] = 0;
+      apElem[i] = nullptr;
    }
    p = pTable->fPNext;
    rowBottom = btm;
@@ -1326,7 +1326,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
 
          if (p) p = p->fPNext;
       }
-      if (p == 0) break;
+      if (p == nullptr) break;
 
       // Record default vertical alignment flag for this row
       defaultVAlign = p->GetVerticalAlignment(VAlign_Center);
@@ -1396,8 +1396,8 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
                   }
                   cellContext.fMaxX = 0;
                   cellContext.fMaxY = 0;
-                  cellContext.fLeftMargin = 0;
-                  cellContext.fRightMargin = 0;
+                  cellContext.fLeftMargin = nullptr;
+                  cellContext.fRightMargin = nullptr;
                   cellContext.LayoutBlock();
 #ifdef TABLE_TRIM_BLANK
                   // Cancel any trailing vertical whitespace caused
@@ -1459,7 +1459,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
 
          // Skip any unused cells or cells that extend down thru
          // subsequent rows
-         if (apElem[iCol] == 0 ||
+         if (apElem[iCol] == nullptr ||
              (iRow != pTable->fNRow && lastRow[iCol] > iRow)) continue;
 
             // Align the contents of the cell vertically.
@@ -1486,7 +1486,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
 
             // Record the height of the cell so that the border can be drawn
             apCell->fH = rowBottom + pad - apCell->fY;
-            apElem[iCol] = 0;
+            apElem[iCol] = nullptr;
          }
 
          // Update btm to the height of the row we just finished setting

@@ -91,7 +91,7 @@ Bool_t ToyMCStudy::finalize(void) {
    coutP(Generation) << "ToyMCStudy::finalize" << endl;
 
    if(fToyMCSampler) delete fToyMCSampler;
-   fToyMCSampler = NULL;
+   fToyMCSampler = nullptr;
 
    return kFALSE;
 }
@@ -100,15 +100,15 @@ Bool_t ToyMCStudy::finalize(void) {
 
 RooDataSet* ToyMCStudy::merge() {
 
-   RooDataSet* samplingOutput = NULL;
+   RooDataSet* samplingOutput = nullptr;
 
    if(!detailedData()) {
       coutE(Generation) << "ToyMCStudy::merge No detailed output present." << endl;
-      return NULL;
+      return nullptr;
    }
 
    RooLinkedListIter iter = detailedData()->iterator();
-   TObject *o = NULL;
+   TObject *o = nullptr;
    int i = 0;
    while((o = iter.Next())) {
       ToyMCPayload *oneWorker = dynamic_cast< ToyMCPayload* >(o);

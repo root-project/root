@@ -429,7 +429,7 @@ Bool_t TGedPatternPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 TGedSelect::TGedSelect(const TGWindow *p, Int_t id)
    : TGCheckButton(p, "", id)
 {
-   fPopup = 0;
+   fPopup = nullptr;
 
    GCValues_t gcv;
    gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |

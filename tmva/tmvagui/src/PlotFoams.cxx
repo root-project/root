@@ -81,7 +81,7 @@ void TMVA::Plot(TString fileName, TMVA::ECellValue cv, TString cv_long, bool use
       foam_list.Add(new TPair(DiscrFoam, new TObjString("Discriminator Foam")));
    } else if (MultiClassFoam0) {
       UInt_t cls = 0;
-      TMVA::PDEFoam *fm = NULL;
+      TMVA::PDEFoam *fm = nullptr;
       while ((fm = (TMVA::PDEFoam*) gDirectory->Get(Form("MultiClassFoam%u", cls)))) {
          foam_list.Add(new TPair(fm, new TObjString(Form("Discriminator Foam %u",cls))));
          cls++;
@@ -99,7 +99,7 @@ void TMVA::Plot(TString fileName, TMVA::ECellValue cv, TString cv_long, bool use
 
    // loop over all foams and print out a debug message
    TListIter foamIter(&foam_list);
-   TPair *fm_pair = NULL;
+   TPair *fm_pair = nullptr;
    Int_t kDim = 0; // foam dimensions
    while ((fm_pair = (TPair*) foamIter())) {
       kDim = ((TMVA::PDEFoam*) fm_pair->Key())->GetTotDim();
@@ -126,12 +126,12 @@ void TMVA::Plot1DimFoams(TList& foam_list, TMVA::ECellValue cell_value,
                          TMVA::PDEFoamKernelBase* kernel)
 {
    // visualize a 1 dimensional PDEFoam via a histogram
-   TCanvas* canvas = NULL;
-   TH1D* projection = NULL;
+   TCanvas* canvas = nullptr;
+   TH1D* projection = nullptr;
 
    // loop over all foams and draw the histogram
    TListIter it(&foam_list);
-   TPair* fm_pair = NULL;    // the (foam, caption) pair
+   TPair* fm_pair = nullptr;    // the (foam, caption) pair
    while ((fm_pair = (TPair*) it())) {
       TMVA::PDEFoam* foam = (TMVA::PDEFoam*) fm_pair->Key();
       if (!foam) continue;
@@ -145,7 +145,7 @@ void TMVA::Plot1DimFoams(TList& foam_list, TMVA::ECellValue cell_value,
       projection->SetTitle(cell_value_description + " of " + foam_caption
                            + ";" + variable_name);
       projection->Draw();
-      projection->SetDirectory(0);
+      projection->SetDirectory(nullptr);
 
       canvas->Update();
    }
@@ -157,12 +157,12 @@ void TMVA::PlotNDimFoams(TList& foam_list, TMVA::ECellValue cell_value,
                          TMVA::PDEFoamKernelBase* kernel)
 {
    // draw 2 dimensional PDEFoam projections
-   TCanvas* canvas = NULL;
-   TH2D* projection = NULL;
+   TCanvas* canvas = nullptr;
+   TH2D* projection = nullptr;
 
    // loop over all foams and draw the projection
    TListIter it(&foam_list);
-   TPair* fm_pair = NULL;    // the (foam, caption) pair
+   TPair* fm_pair = nullptr;    // the (foam, caption) pair
    while ((fm_pair = (TPair*) it())) {
       TMVA::PDEFoam* foam = (TMVA::PDEFoam*) fm_pair->Key();
       if (!foam) continue;
@@ -189,7 +189,7 @@ void TMVA::PlotNDimFoams(TList& foam_list, TMVA::ECellValue cell_value,
             projection = foam->Project2(i, k, cell_value, kernel);
             projection->SetTitle(title);
             projection->Draw("COLZ");
-            projection->SetDirectory(0);
+            projection->SetDirectory(nullptr);
 
             canvas->Update();
          }
@@ -209,8 +209,8 @@ void TMVA::PlotCellTree(TString fileName, TString cv_long, bool useTMVAStyle )
 
    // find foams
    TListIter foamIter(gDirectory->GetListOfKeys());
-   TKey *foam_key = NULL; // the foam key
-   TCanvas *canv = NULL;  // the canvas
+   TKey *foam_key = nullptr; // the foam key
+   TCanvas *canv = nullptr;  // the canvas
    while ((foam_key = (TKey*) foamIter())) {
       TString name(foam_key->GetName());
       TString class_name(foam_key->GetClassName());
@@ -241,13 +241,13 @@ void TMVA::DrawCell( TMVA::PDEFoamCell *cell, TMVA::PDEFoam *foam,
    Float_t xsize = xscale*1.5;
    Float_t ysize = yscale/3;
    if (xsize > 0.15) xsize=0.1; //xscale/2;
-   if (cell->GetDau0() != NULL) {
+   if (cell->GetDau0() != nullptr) {
       TLine *a1 = new TLine(x-xscale/4, y-ysize, x-xscale, y-ysize*2);
       a1->SetLineWidth(2);
       a1->Draw();
       DrawCell(cell->GetDau0(), foam, x-xscale, y-yscale, xscale/2, yscale);
    }
-   if (cell->GetDau1() != NULL){
+   if (cell->GetDau1() != nullptr){
       TLine *a1 = new TLine(x+xscale/4, y-ysize, x+xscale, y-ysize*2);
       a1->SetLineWidth(2);
       a1->Draw();

@@ -198,7 +198,7 @@ void *operator new(size_t size)
       vp = ::mcalloc(ROOT::Internal::gMmallocDesc, RealSize(size), sizeof(char));
    else
       vp = ::calloc(RealSize(size), sizeof(char));
-   if (vp == 0)
+   if (vp == nullptr)
       Fatal(where, gSpaceErr, RealSize(size));
    StoreSizeMagic(vp, size, where);
    return ExtStart(vp);
@@ -403,7 +403,7 @@ void *CustomReAlloc1(void *ovp, size_t size)
 
    static const char *where = "CustomReAlloc1";
 
-   if (ovp == 0)
+   if (ovp == nullptr)
       return ::operator new(size);
 
    if (!gNewInit)
@@ -418,7 +418,7 @@ void *CustomReAlloc1(void *ovp, size_t size)
       vp = ::mrealloc(ROOT::Internal::gMmallocDesc, RealStart(ovp), RealSize(size));
    else
       vp = ::realloc((char*)RealStart(ovp), RealSize(size));
-   if (vp == 0)
+   if (vp == nullptr)
       Fatal(where, gSpaceErr, RealSize(size));
    if (size > oldsize)
       MemClearRe(ExtStart(vp), oldsize, size-oldsize);
@@ -439,7 +439,7 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
 
    static const char *where = "CustomReAlloc2";
 
-   if (ovp == 0)
+   if (ovp == nullptr)
       return ::operator new(size);
 
    if (!gNewInit)
@@ -458,7 +458,7 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
       vp = ::mrealloc(ROOT::Internal::gMmallocDesc, RealStart(ovp), RealSize(size));
    else
       vp = ::realloc((char*)RealStart(ovp), RealSize(size));
-   if (vp == 0)
+   if (vp == nullptr)
       Fatal(where, gSpaceErr, RealSize(size));
    if (size > oldsize)
       MemClearRe(ExtStart(vp), oldsize, size-oldsize);

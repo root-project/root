@@ -38,7 +38,7 @@ TArrowEditor::TArrowEditor(const TGWindow *p, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fArrow = 0;
+   fArrow = nullptr;
 
    MakeTitle("Arrow");
 
@@ -149,7 +149,7 @@ void TArrowEditor::DoAngle()
 void TArrowEditor::DoOption(Int_t id)
 {
    if (fAvoidSignal) return;
-   const char* opt=0;
+   const char* opt=nullptr;
    switch (id) {
       case 1:
          opt = "|>";

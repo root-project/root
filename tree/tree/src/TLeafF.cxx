@@ -31,8 +31,8 @@ TLeafF::TLeafF(): TLeaf()
    fLenType = 4;
    fMinimum = 0;
    fMaximum = 0;
-   fValue   = 0;
-   fPointer = 0;
+   fValue   = nullptr;
+   fPointer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,8 +44,8 @@ TLeafF::TLeafF(TBranch *parent, const char *name, const char *type)
    fLenType = 4;
    fMinimum = 0;
    fMaximum = 0;
-   fValue   = 0;
-   fPointer = 0;
+   fValue   = nullptr;
+   fPointer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ TLeafF::TLeafF(TBranch *parent, const char *name, const char *type)
 
 TLeafF::~TLeafF()
 {
-   if (ResetAddress(0,kTRUE)) delete [] fValue;
+   if (ResetAddress(nullptr,kTRUE)) delete [] fValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +186,7 @@ void TLeafF::SetAddress(void *add)
          Int_t ncountmax = fLen;
          if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
          if ((fLeafCount && ncountmax > Int_t(fLeafCount->GetValue())) ||
-             ncountmax > fNdata || *fPointer == 0) {
+             ncountmax > fNdata || *fPointer == nullptr) {
             if (*fPointer) delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
             *fPointer = new Float_t[fNdata];

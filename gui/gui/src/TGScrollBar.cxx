@@ -93,7 +93,7 @@ TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic,
 {
    fPic = fPicN = pic;
    fState = kButtonUp;
-   fPicD = 0;
+   fPicD = nullptr;
    fStyle = 0;
    if ((gClient->GetStyle() > 1) || (p && p->InheritsFrom("TGScrollBar")))
       fStyle = gClient->GetStyle();
@@ -210,7 +210,7 @@ void TGScrollBarElement::DrawBorder()
                gVirtualX->DrawRectangle(fId, GetShadowGC()(), 0, 0, fWidth-1, fHeight-1);
             }
             else {
-               if (fPic == 0)
+               if (fPic == nullptr)
                   gVirtualX->DrawRectangle(fId, GetShadowGC()(), 0, 0, fWidth-1, fHeight-1);
                else
                   gVirtualX->DrawRectangle(fId, GetBckgndGC()(), 0, 0, fWidth-1, fHeight-1);
@@ -262,8 +262,8 @@ void TGScrollBarElement::DrawBorder()
 Bool_t TGScrollBarElement::HandleCrossing(Event_t *event)
 {
    if (fStyle > 0) {
-      TGScrollBarElement *el = 0;
-      TGScrollBar *bar = 0;
+      TGScrollBarElement *el = nullptr;
+      TGScrollBar *bar = nullptr;
       if ((event->fType == kEnterNotify) && (fState != kButtonDisabled)) {
          fBgndColor = fHighColor;
       } else {
@@ -302,8 +302,8 @@ TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    TGFrame(p, w, h, options | kOwnBackground, back),
    fX0(0), fY0(0), fXp(0), fYp(0), fDragging(kFALSE), fGrabPointer(kTRUE),
    fRange(0), fPsize(0), fPos(0), fSliderSize(0), fSliderRange(0),
-   fSmallInc(1), fHead(0), fTail(0), fSlider(0), fHeadPic(0),
-   fTailPic(0), fRepeat(0), fSubw()
+   fSmallInc(1), fHead(nullptr), fTail(nullptr), fSlider(nullptr), fHeadPic(nullptr),
+   fTailPic(nullptr), fRepeat(nullptr), fSubw()
 {
    fAccelerated = kFALSE;
 
@@ -327,7 +327,7 @@ TGScrollBar::~TGScrollBar()
    delete fSlider;
    if (fHeadPic) fClient->FreePicture(fHeadPic);
    if (fTailPic) fClient->FreePicture(fTailPic);
-   if (fRepeat) { delete fRepeat; fRepeat = 0; }
+   if (fRepeat) { delete fRepeat; fRepeat = nullptr; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -433,7 +433,7 @@ TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                                     kRaisedFrame);
    fTail   = new TGScrollBarElement(this, fTailPic, fgScrollBarWidth, fgScrollBarWidth,
                                     kRaisedFrame);
-   fSlider = new TGScrollBarElement(this, 0, fgScrollBarWidth, 50,
+   fSlider = new TGScrollBarElement(this, nullptr, fgScrollBarWidth, 50,
                                     kRaisedFrame);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |
@@ -690,7 +690,7 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                                     kRaisedFrame);
    fTail   = new TGScrollBarElement(this, fTailPic, fgScrollBarWidth, fgScrollBarWidth,
                                     kRaisedFrame);
-   fSlider = new TGScrollBarElement(this, 0, fgScrollBarWidth, 50,
+   fSlider = new TGScrollBarElement(this, nullptr, fgScrollBarWidth, 50,
                                     kRaisedFrame);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |

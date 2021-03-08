@@ -28,7 +28,7 @@ namespace Math {
 
 DistSampler::~DistSampler() {
    // destructor
-   if (fOwnFunc && fFunc != 0) delete fFunc;
+   if (fOwnFunc && fFunc != nullptr) delete fFunc;
    if (fRange) delete fRange;
 }
 
@@ -63,7 +63,7 @@ void DistSampler::SetRange(const ROOT::Fit::DataRange & range) {
 void DistSampler::DoSetFunction(const ROOT::Math::IMultiGenFunction & func, bool copy) {
    // set the internal function
    // if a range exists and it is compatible it will be re-used
-   if (fOwnFunc && fFunc != 0) delete fFunc;
+   if (fOwnFunc && fFunc != nullptr) delete fFunc;
    if (copy) {
       fOwnFunc = true;
       fFunc = func.Clone();
@@ -76,7 +76,7 @@ void DistSampler::DoSetFunction(const ROOT::Math::IMultiGenFunction & func, bool
    // delete a range if exists and it is not compatible
    if (fRange && fRange->NDim() != fData.size() ) {
       delete fRange;
-      fRange = 0;
+      fRange = nullptr;
    }
    if (!fRange) fRange = new ROOT::Fit::DataRange(func.NDim() );
 }
@@ -85,7 +85,7 @@ bool DistSampler::IsInitialized()  {
    // test if sampler is initialized
    // tryying to generate one event (for this cannot be const)
    if (NDim() == 0) return false;
-   if (fFunc == 0) return false;
+   if (fFunc == nullptr) return false;
    if (fFunc->NDim() != NDim() ) return false;
    // test one event
    if (!Sample(&fData[0]) ) return false;
@@ -113,7 +113,7 @@ bool DistSampler::Generate(unsigned int nevt, ROOT::Fit::UnBinData & data) {
    // generate a bin data set from given bin center values
    // bin center values must be present in given data set
    //if (!IsInitialized()) {
-   if (NDim() == 0 || fFunc == 0 ) {
+   if (NDim() == 0 || fFunc == nullptr ) {
       MATH_WARN_MSG("DistSampler::Generate","sampler has not been initialized correctly");
       return false;
    }

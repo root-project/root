@@ -67,7 +67,7 @@ int main(int argc, char **argv)
 
    // Redirect the output
    TString logfile;
-   FILE *fLog = RedirectOutput(logfile, ((loglevel > 1) ? gAppName : 0));
+   FILE *fLog = RedirectOutput(logfile, ((loglevel > 1) ? gAppName : nullptr));
    if (fLog) {
       if (loglevel > 0)
          fprintf(stderr,"%s: output redirected to %s\n", gAppName, logfile.Data());
@@ -83,8 +83,8 @@ int main(int argc, char **argv)
    gROOT->SetBatch();
 
    // Instantiate the TApplication object to be run
-   TPluginHandler *h = 0;
-   TApplication *theApp = 0;
+   TPluginHandler *h = nullptr;
+   TApplication *theApp = nullptr;
    if ((h = gROOT->GetPluginManager()->FindHandler("TApplication","server"))) {
       if (h->LoadPlugin() == 0) {
          theApp = (TApplication *) h->ExecPlugin(4, &argc, argv, fLog, logfile.Data());
@@ -129,14 +129,14 @@ FILE *RedirectOutput(TString &logfile, const char *loc)
    FILE *flog = freopen(lfn, "w", stdout);
    if (!flog) {
       fprintf(stderr,"%s: RedirectOutput: could not freopen stdout\n", loc);
-      return 0;
+      return nullptr;
    }
 
    if (loc)
       fprintf(stderr,"%s: RedirectOutput: dup2 ...\n", loc);
    if ((dup2(fileno(stdout), fileno(stderr))) < 0) {
       fprintf(stderr,"%s: RedirectOutput: could not redirect stderr\n", loc);
-      return 0;
+      return nullptr;
    }
 
    if (loc)
@@ -144,7 +144,7 @@ FILE *RedirectOutput(TString &logfile, const char *loc)
    FILE *fLog = fopen(lfn, "r");
    if (!fLog) {
       fprintf(stderr,"%s: RedirectOutput: could not open logfile %s\n", loc, lfn);
-      return 0;
+      return nullptr;
    }
 
    if (loc)

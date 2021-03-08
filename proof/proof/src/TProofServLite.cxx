@@ -193,7 +193,7 @@ extern "C" {
 TProofServLite::TProofServLite(Int_t *argc, char **argv, FILE *flog)
             : TProofServ(argc, argv, flog)
 {
-   fInterruptHandler = 0;
+   fInterruptHandler = nullptr;
    fTerminated = kFALSE;
 }
 
@@ -280,7 +280,7 @@ Int_t TProofServLite::CreateServer()
 
    // Load user functions
    const char *logon;
-   logon = gEnv->GetValue("Proof.Load", (char *)0);
+   logon = gEnv->GetValue("Proof.Load", (char *)nullptr);
    if (logon) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
@@ -289,7 +289,7 @@ Int_t TProofServLite::CreateServer()
    }
 
    // Execute logon macro
-   logon = gEnv->GetValue("Proof.Logon", (char *)0);
+   logon = gEnv->GetValue("Proof.Logon", (char *)nullptr);
    if (logon && !NoLogOpt()) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
@@ -535,7 +535,7 @@ Int_t TProofServLite::SetupOnFork(const char *ord)
    void *dirp = gSystem->OpenDirectory(sdir);
    if (dirp) {
       TString ent;
-      const char *e = 0;
+      const char *e = nullptr;
       while ((e = gSystem->GetDirEntry(dirp))) {
          ent.Form("%s/%s", sdir.Data(), e);
          FileStat_t st;
@@ -551,7 +551,7 @@ Int_t TProofServLite::SetupOnFork(const char *ord)
    }
 
    // The session tag
-   fSessionTag.Form("%s-%d-%d", gSystem->HostName(), (int)time(0), gSystem->GetPid());
+   fSessionTag.Form("%s-%d-%d", gSystem->HostName(), (int)time(nullptr), gSystem->GetPid());
 
    // Create new symlink
    TString logfile = gSystem->Getenv("ROOTPROOFLOGFILE");

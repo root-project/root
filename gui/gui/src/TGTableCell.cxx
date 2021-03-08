@@ -30,8 +30,8 @@ ClassImp(TGTableCell);
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-const TGGC *TGTableCell::fgDefaultGC = 0;
-const TGFont *TGTableCell::fgDefaultFont = 0;
+const TGGC *TGTableCell::fgDefaultGC = nullptr;
+const TGFont *TGTableCell::fgDefaultFont = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTableCell constructor.
@@ -40,8 +40,8 @@ TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, TGString *label,
                          UInt_t row, UInt_t column, UInt_t width, UInt_t height,
                          GContext_t norm, FontStruct_t font, UInt_t option,
                          Bool_t resize)
-   : TGFrame(p, width, height, option), fTip(0), fReadOnly(kFALSE),
-     fEnabled(kTRUE), fTMode(kTextRight | kTextCenterY), fImage(0),
+   : TGFrame(p, width, height, option), fTip(nullptr), fReadOnly(kFALSE),
+     fEnabled(kTRUE), fTMode(kTextRight | kTextCenterY), fImage(nullptr),
      fFontStruct(font), fHasOwnFont(kFALSE), fColumn(column), fRow(row),
      fTable(table)
 {
@@ -62,8 +62,8 @@ TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, const char *label,
                          UInt_t row, UInt_t column, UInt_t width, UInt_t height,
                          GContext_t norm, FontStruct_t font, UInt_t option,
                          Bool_t resize)
-   : TGFrame(p, width, height, option), fTip(0), fReadOnly(kFALSE),
-     fEnabled(kTRUE), fTMode(kTextRight | kTextCenterY), fImage(0),
+   : TGFrame(p, width, height, option), fTip(nullptr), fReadOnly(kFALSE),
+     fEnabled(kTRUE), fTMode(kTextRight | kTextCenterY), fImage(nullptr),
      fFontStruct(font), fHasOwnFont(kFALSE), fColumn(column), fRow(row),
      fTable(table)
 {
@@ -143,8 +143,8 @@ void TGTableCell::Init(Bool_t resize)
 
    if (fTable) {
       // Original from here
-      TGTableHeader *chdr = 0;
-      TGTableHeader *rhdr = 0;
+      TGTableHeader *chdr = nullptr;
+      TGTableHeader *rhdr = nullptr;
       if(resize) {
          chdr = fTable->GetColumnHeader(fColumn);
          rhdr = fTable->GetRowHeader(fRow);

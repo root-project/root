@@ -97,7 +97,7 @@ extern "C" {
          new TCanvas(name, "FeedBack", 800,30,700,500);
       } else {
          TCanvas *c = (gROOT->GetListOfCanvases()) ?
-            (TCanvas *) gROOT->GetListOfCanvases()->FindObject(name) : 0;
+            (TCanvas *) gROOT->GetListOfCanvases()->FindObject(name) : nullptr;
          if (c) delete c;
       }
       // Done
@@ -111,15 +111,15 @@ ClassImp(TProofDraw);
 /// Constructor.
 
 TProofDraw::TProofDraw()
-   : fStatus(0), fManager(0), fTree(0)
+   : fStatus(nullptr), fManager(nullptr), fTree(nullptr)
 {
-   fVar[0]         = 0;
-   fVar[1]         = 0;
-   fVar[2]         = 0;
-   fVar[3]         = 0;
-   fManager        = 0;
+   fVar[0]         = nullptr;
+   fVar[1]         = nullptr;
+   fVar[2]         = nullptr;
+   fVar[3]         = nullptr;
+   fManager        = nullptr;
    fMultiplicity   = 0;
-   fSelect         = 0;
+   fSelect         = nullptr;
    fObjEval        = kFALSE;
    fDimension      = 0;
    fWeight         = 1.;
@@ -152,7 +152,7 @@ void TProofDraw::Init(TTree *tree)
 Bool_t TProofDraw::Notify()
 {
    PDB(kDraw,1) Info("Notify","Enter");
-   if (fStatus == 0) {
+   if (fStatus == nullptr) {
       if (!fOutput || (fOutput &&
          !(fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status")))))
          return kFALSE;
@@ -186,7 +186,7 @@ void TProofDraw::Begin(TTree *tree)
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
-   fTree = 0;
+   fTree = nullptr;
 }
 
 
@@ -273,9 +273,9 @@ void TProofDraw::SlaveTerminate(void)
 void TProofDraw::Terminate(void)
 {
    PDB(kDraw,1) Info("Terminate","Enter");
-   if (fStatus == 0) {
+   if (fStatus == nullptr) {
       fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
-      if (fStatus == 0) {
+      if (fStatus == nullptr) {
          // did not run selector, error messages were already printed
          return;
       }
@@ -297,7 +297,7 @@ void TProofDraw::ClearFormula()
    for (Int_t i = 0; i < 4; i++)
       SafeDelete(fVar[i]);
    SafeDelete(fSelect);
-   fManager = 0;  // This is intentional. The manager is deleted when the last formula it manages
+   fManager = nullptr;  // This is intentional. The manager is deleted when the last formula it manages
                   // is deleted. This is unusual but was usefull for backward compatibility.
    fMultiplicity = 0;
 }
@@ -382,7 +382,7 @@ void TProofDraw::SetDrawAtt(TObject *o)
 
 void TProofDraw::SetError(const char *sub, const char *mesg)
 {
-   if (fStatus == 0) {
+   if (fStatus == nullptr) {
       if (!(fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"))))
          return;
    }
@@ -424,7 +424,7 @@ Bool_t TProofDraw::CompileVariables()
    if (strlen(fTreeDrawArgsParser.GetSelection())) {
       fSelect = new TTreeFormula("Selection", fTreeDrawArgsParser.GetSelection(), fTree);
       fSelect->SetQuickLoad(kTRUE);
-      if (!fSelect->GetNdim()) {delete fSelect; fSelect = 0; return kFALSE; }
+      if (!fSelect->GetNdim()) {delete fSelect; fSelect = nullptr; return kFALSE; }
    }
 
    fManager = new TTreeFormulaManager();
@@ -554,7 +554,7 @@ void TProofDrawHist::Begin(TTree *tree)
    }
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
-   fTree = 0;
+   fTree = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -564,7 +564,7 @@ void TProofDrawHist::DefVar1D()
 {
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 1);
 
-   fTreeDrawArgsParser.SetOriginal(0);
+   fTreeDrawArgsParser.SetOriginal(nullptr);
    TString exp = fTreeDrawArgsParser.GetVarExp();
    exp += ">>";
    double binsx, minx, maxx;
@@ -599,7 +599,7 @@ void TProofDrawHist::DefVar2D()
 {
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 2);
 
-   fTreeDrawArgsParser.SetOriginal(0);
+   fTreeDrawArgsParser.SetOriginal(nullptr);
    TString exp = fTreeDrawArgsParser.GetVarExp();
    exp += ">>";
    double binsx, minx, maxx;
@@ -645,7 +645,7 @@ void TProofDrawHist::DefVar3D()
 {
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
 
-   fTreeDrawArgsParser.SetOriginal(0);
+   fTreeDrawArgsParser.SetOriginal(nullptr);
    TString exp = fTreeDrawArgsParser.GetVarExp();
    exp += ">>";
    double binsx, minx, maxx;
@@ -731,7 +731,7 @@ void TProofDrawHist::DefVar()
    }
    PDB(kDraw,1) Info("DefVar","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("DefVar","varexp: %s", fInitialExp.Data());
-   fTree = 0;
+   fTree = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,7 +740,7 @@ void TProofDrawHist::DefVar()
 void TProofDrawHist::Init(TTree *tree)
 {
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
-   if (fTree == 0) {
+   if (fTree == nullptr) {
       if (!dynamic_cast<TH1*> (fTreeDrawArgsParser.GetOriginal())) {
          fHistogram->SetLineColor(tree->GetLineColor());
          fHistogram->SetLineWidth(tree->GetLineWidth());
@@ -837,11 +837,11 @@ void TProofDrawHist::SlaveBegin(TTree *tree)
                fHistogram->SetCanExtend(TH1::kAllAxes);
          }
       }
-      fHistogram->SetDirectory(0);   // take ownership
+      fHistogram->SetDirectory(nullptr);   // take ownership
       fOutput->Add(fHistogram);      // release ownership
    }
 
-   fTree = 0;
+   fTree = nullptr;
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
 }
@@ -874,7 +874,7 @@ void TProofDrawHist::Terminate(void)
    fHistogram = (TH1F *) fOutput->FindObject(fTreeDrawArgsParser.GetObjectName());
    if (fHistogram) {
       SetStatus((Int_t) fHistogram->GetEntries());
-      TH1 *h = 0;
+      TH1 *h = nullptr;
       if ((h = dynamic_cast<TH1*> (fTreeDrawArgsParser.GetOriginal()))) {
          if (!fTreeDrawArgsParser.GetAdd())
             h->Reset();
@@ -897,7 +897,7 @@ void TProofDrawHist::Terminate(void)
          h->Draw(fOption.Data());
       }
    }
-   fHistogram = 0;
+   fHistogram = nullptr;
 }
 
 ClassImp(TProofDrawEventList);
@@ -942,7 +942,7 @@ void TProofDrawEventList::SlaveBegin(TTree *tree)
       SafeDelete(fEventLists);
 
       fDimension = 0;
-      fTree = 0;
+      fTree = nullptr;
       fEventLists = new TList();
       fEventLists->SetName("PROOF_EventListsList");
       fOutput->Add(fEventLists);
@@ -1035,7 +1035,7 @@ void TProofDrawEntryList::SlaveBegin(TTree *tree)
       SafeDelete(fElist);
 
       fDimension = 0;
-      fTree = 0;
+      fTree = nullptr;
       fElist = new TEntryList("PROOF_EntryList", "PROOF_EntryList");
       fOutput->Add(fElist);
    }
@@ -1099,7 +1099,7 @@ void TProofDrawProfile::Init(TTree *tree)
 {
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
 
-   if (fTree == 0) {
+   if (fTree == nullptr) {
       if (!dynamic_cast<TProfile*> (fTreeDrawArgsParser.GetOriginal())) {
          fProfile->SetLineColor(tree->GetLineColor());
          fProfile->SetLineWidth(tree->GetLineWidth());
@@ -1138,7 +1138,7 @@ void TProofDrawProfile::DefVar()
 
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 2);
 
-   fTreeDrawArgsParser.SetOriginal(0);
+   fTreeDrawArgsParser.SetOriginal(nullptr);
    TString exp = fTreeDrawArgsParser.GetVarExp();
    exp += ">>";
    double binsx, minx, maxx;
@@ -1199,7 +1199,7 @@ void TProofDrawProfile::Begin(TTree *tree)
    }
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
-   fTree = 0;
+   fTree = nullptr;
 }
 
 
@@ -1265,10 +1265,10 @@ void TProofDrawProfile::SlaveBegin(TTree *tree)
          if (strstr(opt->GetTitle(), "rebin"))
             fProfile->SetCanExtend(TH1::kAllAxes);
       }
-      fProfile->SetDirectory(0);   // take ownership
+      fProfile->SetDirectory(nullptr);   // take ownership
       fOutput->Add(fProfile);      // release ownership
    }
-   fTree = 0;
+   fTree = nullptr;
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
 }
@@ -1296,7 +1296,7 @@ void TProofDrawProfile::Terminate(void)
    fProfile = (TProfile *) fOutput->FindObject(fTreeDrawArgsParser.GetObjectName());
    if (fProfile) {
       SetStatus((Int_t) fProfile->GetEntries());
-      TProfile *pf = 0;
+      TProfile *pf = nullptr;
       if ((pf = dynamic_cast<TProfile*> (fTreeDrawArgsParser.GetOriginal()))) {
          if (!fTreeDrawArgsParser.GetAdd())
             pf->Reset();
@@ -1318,7 +1318,7 @@ void TProofDrawProfile::Terminate(void)
          pf->Draw(fOption.Data());
       }
    }
-   fProfile = 0;
+   fProfile = nullptr;
 }
 
 
@@ -1330,7 +1330,7 @@ ClassImp(TProofDrawProfile2D);
 void TProofDrawProfile2D::Init(TTree *tree)
 {
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
-   if (fTree == 0) {
+   if (fTree == nullptr) {
       if (!dynamic_cast<TProfile2D*> (fTreeDrawArgsParser.GetOriginal())) {
          fProfile->SetLineColor(tree->GetLineColor());
          fProfile->SetLineWidth(tree->GetLineWidth());
@@ -1369,7 +1369,7 @@ void TProofDrawProfile2D::DefVar()
    }
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
 
-   fTreeDrawArgsParser.SetOriginal(0);
+   fTreeDrawArgsParser.SetOriginal(nullptr);
    TString exp = fTreeDrawArgsParser.GetVarExp();
    exp += ">>";
    double binsx, minx, maxx;
@@ -1508,10 +1508,10 @@ void TProofDrawProfile2D::SlaveBegin(TTree *tree)
          if (strstr(opt->GetTitle(), "rebin"))
             fProfile->SetCanExtend(TH1::kAllAxes);
       }
-      fProfile->SetDirectory(0);   // take ownership
+      fProfile->SetDirectory(nullptr);   // take ownership
       fOutput->Add(fProfile);      // release ownership
    }
-   fTree = 0;
+   fTree = nullptr;
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
 }
@@ -1539,7 +1539,7 @@ void TProofDrawProfile2D::Terminate(void)
    fProfile = (TProfile2D *) fOutput->FindObject(fTreeDrawArgsParser.GetObjectName());
    if (fProfile) {
       SetStatus((Int_t) fProfile->GetEntries());
-      TProfile2D *pf = 0;
+      TProfile2D *pf = nullptr;
       if ((pf = dynamic_cast<TProfile2D*> (fTreeDrawArgsParser.GetOriginal()))) {
          if (!fTreeDrawArgsParser.GetAdd())
             pf->Reset();
@@ -1561,7 +1561,7 @@ void TProofDrawProfile2D::Terminate(void)
          pf->Draw(fOption.Data());
       }
    }
-   fProfile = 0;
+   fProfile = nullptr;
 }
 
 
@@ -1574,7 +1574,7 @@ void TProofDrawGraph::Init(TTree *tree)
 {
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
 
-   if (fTree == 0) {
+   if (fTree == nullptr) {
       R__ASSERT(fGraph);
       fGraph->SetMarkerStyle(tree->GetMarkerStyle());
       fGraph->SetMarkerColor(tree->GetMarkerColor());
@@ -1643,9 +1643,9 @@ void TProofDrawGraph::Terminate(void)
       SetStatus((Int_t) fGraph->GetN());
       TH2F* hist;
       TObject *orig = fTreeDrawArgsParser.GetOriginal();
-      if ( (hist = dynamic_cast<TH2F*> (orig)) == 0 ) {
+      if ( (hist = dynamic_cast<TH2F*> (orig)) == nullptr ) {
          delete orig;
-         fTreeDrawArgsParser.SetOriginal(0);
+         fTreeDrawArgsParser.SetOriginal(nullptr);
          double binsx, minx, maxx;
          double binsy, miny, maxy;
          if (fTreeDrawArgsParser.IsSpecified(0))
@@ -1709,7 +1709,7 @@ void TProofDrawGraph::Terminate(void)
          }
       }
    }
-   fGraph = 0;
+   fGraph = nullptr;
 }
 
 
@@ -1722,7 +1722,7 @@ void TProofDrawPolyMarker3D::Init(TTree *tree)
 {
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
 
-   if (fTree == 0) {
+   if (fTree == nullptr) {
       R__ASSERT(fPolyMarker3D);
       fPolyMarker3D->SetMarkerStyle(tree->GetMarkerStyle());
       fPolyMarker3D->SetMarkerColor(tree->GetMarkerColor());
@@ -1781,7 +1781,7 @@ void TProofDrawPolyMarker3D::Terminate(void)
    if (!fStatus)
       return;
 
-   fPolyMarker3D = 0;
+   fPolyMarker3D = nullptr;
    TIter next(fOutput);
    while (TObject* o = next()) {
       if (dynamic_cast<TPolyMarker3D*> (o)) {
@@ -1795,9 +1795,9 @@ void TProofDrawPolyMarker3D::Terminate(void)
       SetStatus((Int_t) fPolyMarker3D->Size());
       TH3F* hist;
       TObject *orig = fTreeDrawArgsParser.GetOriginal();
-      if ( (hist = dynamic_cast<TH3F*> (orig)) == 0 ) {
+      if ( (hist = dynamic_cast<TH3F*> (orig)) == nullptr ) {
          delete orig;
-         fTreeDrawArgsParser.SetOriginal(0);
+         fTreeDrawArgsParser.SetOriginal(nullptr);
          if (fOption.Contains("same")) {
             // Check existing histogram
             hist = dynamic_cast<TH3F *> (gDirectory->Get(fTreeDrawArgsParser.GetObjectName()));
@@ -1968,9 +1968,9 @@ void TProofDrawListOfGraphs::Terminate(void)
       SetStatus((Int_t) points->size());
       TH2F* hist;
       TObject *orig = fTreeDrawArgsParser.GetOriginal();
-      if ( (hist = dynamic_cast<TH2F*> (orig)) == 0 ) {
+      if ( (hist = dynamic_cast<TH2F*> (orig)) == nullptr ) {
          delete orig;
-         fTreeDrawArgsParser.SetOriginal(0);
+         fTreeDrawArgsParser.SetOriginal(nullptr);
          double binsx, minx, maxx;
          double binsy, miny, maxy;
          if (fTreeDrawArgsParser.IsSpecified(0))
@@ -2124,9 +2124,9 @@ void TProofDrawListOfPolyMarkers3D::Terminate(void)
       SetStatus((Int_t) points->size());
       TH3F* hist;
       TObject *orig = fTreeDrawArgsParser.GetOriginal();
-      if ( (hist = dynamic_cast<TH3F*> (orig)) == 0 || fTreeDrawArgsParser.GetNoParameters() != 0) {
+      if ( (hist = dynamic_cast<TH3F*> (orig)) == nullptr || fTreeDrawArgsParser.GetNoParameters() != 0) {
          delete orig;
-         fTreeDrawArgsParser.SetOriginal(0);
+         fTreeDrawArgsParser.SetOriginal(nullptr);
          double binsx, minx, maxx;
          double binsy, miny, maxy;
          double binsz, minz, maxz;

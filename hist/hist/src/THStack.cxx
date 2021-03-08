@@ -134,9 +134,9 @@ End_Macro
 
 THStack::THStack(): TNamed()
 {
-   fHists     = 0;
-   fStack     = 0;
-   fHistogram = 0;
+   fHists     = nullptr;
+   fStack     = nullptr;
+   fHistogram = nullptr;
    fMaximum   = -1111;
    fMinimum   = -1111;
 }
@@ -147,9 +147,9 @@ THStack::THStack(): TNamed()
 THStack::THStack(const char *name, const char *title)
        : TNamed(name,title)
 {
-   fHists     = 0;
-   fStack     = 0;
-   fHistogram = 0;
+   fHists     = nullptr;
+   fStack     = nullptr;
+   fHistogram = nullptr;
    fMaximum   = -1111;
    fMinimum   = -1111;
    R__LOCKGUARD(gROOTMutex);
@@ -191,9 +191,9 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
                  Int_t firstbin /*=1*/, Int_t lastbin /*=-1*/,
                  Int_t firstbin2 /*=1*/, Int_t lastbin2 /*=-1*/,
                  Option_t* proj_option /*=""*/, Option_t* draw_option /*=""*/): TNamed(name, title) {
-   fHists     = 0;
-   fStack     = 0;
-   fHistogram = 0;
+   fHists     = nullptr;
+   fStack     = nullptr;
+   fHistogram = nullptr;
    fMaximum   = -1111;
    fMinimum   = -1111;
    {
@@ -242,7 +242,7 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
       if (lastbin  < 0) lastbin  = nbins;
       if (lastbin  > nbins+1) lastbin = nbins;
       for (Int_t iBin=firstbin; iBin<=lastbin; iBin++) {
-         TH1* hProj=0;
+         TH1* hProj=nullptr;
          if (useX) hProj=hist2->ProjectionX(Form("%s_px%d",hist2->GetName(), iBin),
                                             iBin, iBin, proj_option);
          else hProj=hist2->ProjectionY(Form("%s_py%d",hist2->GetName(), iBin),
@@ -261,7 +261,7 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
       }
 
       if (dim==1) {
-         TAxis* haxis = 0;
+         TAxis* haxis = nullptr;
          // look for the haxis _not_ in axis
          if (sAxis.First('x')==kNPOS)
             haxis=hist->GetXaxis();
@@ -290,8 +290,8 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
          haxis->SetRange(iFirstOld, iLastOld);
       }  else {
          // if dim==2
-         TAxis* haxis1 = 0;
-         TAxis* haxis2 = 0;
+         TAxis* haxis1 = nullptr;
+         TAxis* haxis2 = nullptr;
          // look for the haxis _not_ in axis
          if (sAxis.First('x')!=kNPOS) {
             haxis1=hist->GetYaxis();
@@ -349,10 +349,10 @@ THStack::~THStack()
    if (!fHists) return;
    fHists->Clear("nodelete");
    delete fHists;
-   fHists = 0;
+   fHists = nullptr;
    if (fStack) {fStack->Delete(); delete fStack;}
    delete fHistogram;
-   fHistogram = 0;
+   fHistogram = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -360,9 +360,9 @@ THStack::~THStack()
 
 THStack::THStack(const THStack &hstack) :
    TNamed(hstack),
-   fHists(0),
-   fStack(0),
-   fHistogram(0),
+   fHists(nullptr),
+   fStack(nullptr),
+   fHistogram(nullptr),
    fMaximum(hstack.fMaximum),
    fMinimum(hstack.fMinimum)
 {
@@ -440,7 +440,7 @@ Int_t THStack::DistancetoPrimitive(Int_t px, Int_t py)
 
    //*-*- Loop on the list of histograms
    if (!fHists) return distance;
-   TH1 *h = 0;
+   TH1 *h = nullptr;
    const char *doption = GetDrawOption();
    Int_t nhists = fHists->GetSize();
    for (Int_t i=0;i<nhists;i++) {
@@ -498,7 +498,7 @@ void THStack::Draw(Option_t *option)
 TH1 *THStack::GetHistogram() const
 {
    if (fHistogram) return fHistogram;
-   if (!gPad) return 0;
+   if (!gPad) return nullptr;
    gPad->Modified();
    gPad->Update();
    if (fHistogram) return fHistogram;
@@ -622,9 +622,9 @@ TObjArray *THStack::GetStack()
 
 TAxis *THStack::GetXaxis() const
 {
-   if (!gPad) return 0;
+   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetXaxis();
 }
 
@@ -637,9 +637,9 @@ TAxis *THStack::GetXaxis() const
 
 TAxis *THStack::GetYaxis() const
 {
-   if (!gPad) return 0;
+   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetYaxis();
 }
 
@@ -661,7 +661,7 @@ void THStack::ls(Option_t *option) const
 
 Long64_t THStack::Merge(TCollection* li, TFileMergeInfo * /* info */)
 {
-   if (li==0 || li->GetEntries()==0) {
+   if (li==nullptr || li->GetEntries()==0) {
       return fHists->GetEntries();
    }
    TIter next(li);
@@ -687,9 +687,9 @@ void THStack::Modified()
    if (!fStack) return;
    fStack->Delete();
    delete fStack;
-   fStack = 0;
+   fStack = nullptr;
    delete fHistogram;
-   fHistogram = 0;
+   fHistogram = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -45,14 +45,14 @@ TCondor::TCondor(const char *pool) : fPool(pool), fState(kFree)
 
    // Setup Condor
 
-   TString condorHome = gEnv->GetValue("Proof.CondorHome", (char*)0);
+   TString condorHome = gEnv->GetValue("Proof.CondorHome", (char*)nullptr);
    if (condorHome != "") {
       TString path = gSystem->Getenv("PATH");
       path = condorHome + "/bin:" + path;
       gSystem->Setenv("PATH",path);
    }
 
-   TString condorConf = gEnv->GetValue("Proof.CondorConfig", (char*)0);
+   TString condorConf = gEnv->GetValue("Proof.CondorConfig", (char*)nullptr);
    if (condorConf != "") {
       gSystem->Setenv("CONDOR_CONFIG",condorConf);
    }
@@ -110,7 +110,7 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
 
    if (!pipe) {
       SysError("ClaimVM","cannot run command: %s", claimCmd.Data());
-      return 0;
+      return nullptr;
    }
 
    TString claimId;
@@ -133,7 +133,7 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
    Int_t r = gSystem->ClosePipe(pipe);
    if (r) {
       Error("ClaimVM","command: %s returned %d", claimCmd.Data(), r);
-      return 0;
+      return nullptr;
    } else {
       PDB(kCondor,1) Info("ClaimVM","command: %s returned %d", claimCmd.Data(), r);
    }
@@ -141,7 +141,7 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
    TString jobad("jobad");
    FILE *jf = gSystem->TempFileName(jobad);
 
-   if (jf == 0) return 0;
+   if (jf == nullptr) return nullptr;
 
    TString str(cmd);
    str.ReplaceAll("$(Port)", Form("%d", port));
@@ -157,7 +157,7 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
 
    if (!pipe) {
       SysError("ClaimVM","cannot run command: %s", activateCmd.Data());
-      return 0;
+      return nullptr;
    }
 
    while (line.Gets(pipe)) {
@@ -202,7 +202,7 @@ TList *TCondor::GetVirtualMachines() const
 
    if (!pipe) {
       SysError("GetVirtualMachines","cannot run command: %s", cmd.Data());
-      return 0;
+      return nullptr;
    }
 
    TString line;
@@ -216,7 +216,7 @@ TList *TCondor::GetVirtualMachines() const
    if (r) {
       delete l;
       Error("GetVirtualMachines","command: %s returned %d", cmd.Data(), r);
-      return 0;
+      return nullptr;
    } else {
       PDB(kCondor,1) Info("GetVirtualMachines","command: %s returned %d", cmd.Data(), r);
    }
@@ -234,15 +234,15 @@ TList *TCondor::Claim(Int_t n, const char *cmd)
 {
    if (fState != kFree) {
       Error("Claim","not in state Free");
-      return 0;
+      return nullptr;
    }
 
    TList *vms = GetVirtualMachines();
    TIter next(vms);
    TObjString *vm;
-   for(Int_t i=0; i < n && (vm = (TObjString*) next()) != 0; i++ ) {
+   for(Int_t i=0; i < n && (vm = (TObjString*) next()) != nullptr; i++ ) {
       TCondorSlave *claim = ClaimVM(vm->GetName(), cmd);
-      if (claim != 0) {
+      if (claim != nullptr) {
          if ( !GetVmInfo(vm->GetName(), claim->fImage, claim->fPerfIdx) ) {
             // assume vm is gone
             delete claim;
@@ -269,11 +269,11 @@ TCondorSlave *TCondor::Claim(const char *vmname, const char *cmd)
 {
    if (fState != kFree && fState != kActive) {
       Error("Claim","not in state Free or Active");
-      return 0;
+      return nullptr;
    }
 
    TCondorSlave *claim = ClaimVM(vmname, cmd);
-   if (claim != 0) {
+   if (claim != nullptr) {
       fClaims->Add(claim);
       fState = kActive;
    }
@@ -291,7 +291,7 @@ Bool_t TCondor::SetState(EState state)
                        state == kSuspended ? "kSuspended" : "kActive", Long64_t(gSystem->Now()));
    TIter next(fClaims);
    TCondorSlave *claim;
-   while((claim = (TCondorSlave*) next()) != 0) {
+   while((claim = (TCondorSlave*) next()) != nullptr) {
       TString cmd = Form("condor_cod %s -id '%s'",
                          state == kSuspended ? "suspend" : "resume",
                          claim->fClaimID.Data());
@@ -362,7 +362,7 @@ Bool_t TCondor::Release()
    }
 
    TCondorSlave *claim;
-   while((claim = (TCondorSlave*) fClaims->First()) != 0) {
+   while((claim = (TCondorSlave*) fClaims->First()) != nullptr) {
       TString cmd = Form("condor_cod release -id '%s'", claim->fClaimID.Data());
 
       PDB(kCondor,2) Info("SetState","command: %s", cmd.Data());

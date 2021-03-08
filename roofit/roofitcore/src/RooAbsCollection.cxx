@@ -211,7 +211,7 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   Bool_t error = snapshot(*output,deepCopy) ;
   if (error) {
     delete output ;
-    return 0 ;
+    return nullptr ;
   }
 
   return output ;
@@ -414,7 +414,7 @@ RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent)
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::addClone: can only add to an owned list" << endl;
-    return 0;
+    return nullptr;
   }
   _ownCont= kTRUE;
 
@@ -552,7 +552,7 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   // is var2's name already in this list?
   if (dynamic_cast<RooArgSet*>(this)) {
     RooAbsArg *other = find(var2);
-    if(other != 0 && other != &var1) {
+    if(other != nullptr && other != &var1) {
       coutE(ObjectHandling) << "RooAbsCollection: cannot replace \"" << name
 	   << "\" with already existing \"" << var2.GetName() << "\"" << endl;
       return kFALSE;
@@ -566,7 +566,7 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   }
   *var1It = const_cast<RooAbsArg*>(&var2); //FIXME try to get rid of const_cast
 
-  if (_allRRV && dynamic_cast<const RooRealVar*>(&var2)==0) {
+  if (_allRRV && dynamic_cast<const RooRealVar*>(&var2)==nullptr) {
     _allRRV=kFALSE ;
   }
 
@@ -747,7 +747,7 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t ve
 	sel->add(*arg) ;
       }
     }
-    wcExpr = strtok(0,",") ;
+    wcExpr = strtok(nullptr,",") ;
   }
   delete[] buf ;
 
@@ -1036,7 +1036,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
   pc.defineString("outputFile","OutputFile",0,"") ;
   pc.defineString("format","Format",0,"NEYVU") ;
   pc.defineInt("sigDigit","Format",0,1) ;
-  pc.defineObject("siblings","Sibling",0,0,kTRUE) ;
+  pc.defineObject("siblings","Sibling",0,nullptr,kTRUE) ;
   pc.defineInt("dummy","FormatArgs",0,0) ;
   pc.defineMutex("Format","FormatArgs") ;
 
@@ -1059,7 +1059,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
     if (pc.hasProcessed("FormatArgs")) {
       RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
       formatCmd->addArg(RooFit::LatexTableStyle()) ;
-      printLatex(ofs,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;
+      printLatex(ofs,pc.getInt("ncol"),nullptr,0,pc.getObjectList("siblings"),formatCmd) ;
     } else {
       printLatex(ofs,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
     }
@@ -1067,7 +1067,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
     if (pc.hasProcessed("FormatArgs")) {
       RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
       formatCmd->addArg(RooFit::LatexTableStyle()) ;
-      printLatex(cout,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;
+      printLatex(cout,pc.getInt("ncol"),nullptr,0,pc.getObjectList("siblings"),formatCmd) ;
     } else {
       printLatex(cout,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
     }
@@ -1117,7 +1117,7 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
 
   // Make list of RRV-only components
   RooFIter lIter = listList.fwdIterator() ;
-  RooArgList* prevList = 0 ;
+  RooArgList* prevList = nullptr ;
   while((col=(RooAbsCollection*)lIter.next())) {
     RooArgList* list = new RooArgList ;
     RooFIter iter = col->fwdIterator() ;
@@ -1201,7 +1201,7 @@ Bool_t RooAbsCollection::allInRange(const char* rangeSpec) const
   // Parse rangeSpec specification
   vector<string> cutVec ;
   if (rangeSpec && strlen(rangeSpec)>0) {
-    if (strchr(rangeSpec,',')==0) {
+    if (strchr(rangeSpec,',')==nullptr) {
       cutVec.push_back(rangeSpec) ;
     } else {
       const size_t bufSize = strlen(rangeSpec)+1;
@@ -1210,7 +1210,7 @@ Bool_t RooAbsCollection::allInRange(const char* rangeSpec) const
       const char* oneRange = strtok(buf,",") ;
       while(oneRange) {
 	cutVec.push_back(oneRange) ;
-	oneRange = strtok(0,",") ;
+	oneRange = strtok(nullptr,",") ;
       }
       delete[] buf ;
     }
@@ -1299,7 +1299,7 @@ std::unique_ptr<RooAbsCollection::LegacyIterator_t> RooAbsCollection::makeLegacy
 void RooAbsCollection::insert(RooAbsArg* item) {
   _list.push_back(item);
 
-  if (_allRRV && dynamic_cast<const RooRealVar*>(item)==0) {
+  if (_allRRV && dynamic_cast<const RooRealVar*>(item)==nullptr) {
     _allRRV= false;
   }
 

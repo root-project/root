@@ -47,7 +47,7 @@ ClassImp(RooProdGenContext);
 
 RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, 
 				     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _uniIter(0), _pdf(&model)
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _uniIter(nullptr), _pdf(&model)
 {
   // Constructor of optimization generator context for RooProdPdf objects
 
@@ -108,7 +108,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
       impDeps = (RooArgSet*)impIter->Next() ;
       termDeps = (RooArgSet*)normIter->Next() ;
-      if (impDeps==0 || termDeps==0) {
+      if (impDeps==nullptr || termDeps==nullptr) {
 	break ;
       }
 
@@ -169,7 +169,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	
 	// Composite term
 	if (termDeps->getSize()>0) {
-	  const std::string name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),0) ;      
+	  const std::string name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),nullptr) ;      
 	  
 	  // Construct auxiliary PDF expressing product of composite terms, 
 	  // following Conditional component specification of input model
@@ -244,7 +244,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       trailerTermDeps.add(*termDeps) ;
     }
 
-    const std::string name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet(),0) ;      
+    const std::string name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet(),nullptr) ;      
       
     // Construct auxiliary PDF expressing product of composite terms, 
     // following Partial/Full component specification of input model

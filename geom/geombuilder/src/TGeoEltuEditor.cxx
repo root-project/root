@@ -46,7 +46,7 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape   = nullptr;
    fAi = fBi = fDzi = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -152,7 +152,7 @@ void TGeoEltuEditor::ConnectSignals2Slots()
 
 void TGeoEltuEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoEltu::Class())) {
+   if (obj == nullptr || (obj->IsA()!=TGeoEltu::Class())) {
       SetActive(kFALSE);
       return;
    }

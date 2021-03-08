@@ -98,7 +98,7 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
    }
 
    DataType *args = tuple.GetArgs();
-   assert(args != 0 && "FillNtupleFromStream, args buffer is a null");
+   assert(args != nullptr && "FillNtupleFromStream, args buffer is a null");
 
    Long64_t nLines = 0;
 

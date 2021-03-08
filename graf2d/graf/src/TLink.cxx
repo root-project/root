@@ -33,7 +33,7 @@ Clicking on one link, inspect the corresponding object.
 
 TLink::TLink() : TText()
 {
-   fLink  = 0;
+   fLink  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

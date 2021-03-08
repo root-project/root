@@ -551,7 +551,7 @@ TGeoManager *REveManager::GetGeometry(const TString &filename)
          Warning("REveManager::GetGeometry", "TGeoManager is locked ... unlocking it.");
          TGeoManager::UnlockGeometry();
       }
-      if (TGeoManager::Import(filename) == 0) {
+      if (TGeoManager::Import(filename) == nullptr) {
          throw eh + "TGeoManager::Import() failed for '" + exp_filename + "'.";
       }
       if (locked) {

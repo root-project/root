@@ -38,7 +38,7 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
                            Long64_t entries, Long64_t first, const char *selec)
              : fSeqNum(seqnum), fStatus(kSubmitted), fUsedCPU(0.), fOptions(opt),
                fEntries(entries), fFirst(first),
-               fBytes(0), fParList("-"), fOutputList(0),
+               fBytes(0), fParList("-"), fOutputList(nullptr),
                fFinalized(kFALSE), fArchived(kFALSE), fResultFile("-"),
                fPrepTime(0.), fInitTime(0.), fProcTime(0.), fMergeTime(0.),
                fRecvTime(-1), fTermTime(-1), fNumWrks(-1), fNumMergers(-1)
@@ -53,7 +53,7 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
    fEnd.Set(fStart.Convert()-1);
 
    // Save input list
-   fInputList = 0;
+   fInputList = nullptr;
    if (inlist) {
       fInputList = (TList *) (inlist->Clone());
       fInputList->SetOwner();
@@ -70,7 +70,7 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
       TString varsel;
       if (fInputList) {
          TIter nxo(fInputList);
-         TObject *o = 0;
+         TObject *o = nullptr;
          while ((o = nxo())) {
             if (!strcmp(o->GetName(),"varexp")) {
                varsel = o->GetTitle();
@@ -90,7 +90,7 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
       }
       // Standard draw action: save only the name
       fSelecImp = new TMacro(selec, varsel);
-      fSelecHdr = 0;
+      fSelecHdr = nullptr;
    } else {
       // Save selector file
       fSelecHdr = new TMacro;
@@ -124,8 +124,8 @@ TQueryResult::~TQueryResult()
 TQueryResult *TQueryResult::CloneInfo()
 {
    // Create instance
-   TQueryResult *qr = new TQueryResult(fSeqNum, fOptions, 0, fEntries,
-                                       fFirst, 0);
+   TQueryResult *qr = new TQueryResult(fSeqNum, fOptions, nullptr, fEntries,
+                                       fFirst, nullptr);
 
    // Correct fields
    qr->fStatus = fStatus;
@@ -147,13 +147,13 @@ TQueryResult *TQueryResult::CloneInfo()
    qr->fNumWrks = fNumWrks;
    qr->fNumMergers = fNumMergers;
 
-   qr->fSelecHdr = 0;
+   qr->fSelecHdr = nullptr;
    if (GetSelecHdr()) {
       qr->fSelecHdr = new TMacro();
       qr->fSelecHdr->SetName(GetSelecHdr()->GetName());
       qr->fSelecHdr->SetTitle(GetSelecHdr()->GetTitle());
    }
-   qr->fSelecImp = 0;
+   qr->fSelecImp = nullptr;
    if (GetSelecImp()) {
       qr->fSelecImp = new TMacro();
       qr->fSelecImp->SetName(GetSelecImp()->GetName());
@@ -439,7 +439,7 @@ void TQueryResult::SetInputList(TList *in, Bool_t adopt)
       } else {
          fInputList = new TList;
          TIter nxi(in);
-         TObject *o = 0;
+         TObject *o = nullptr;
          while ((o = nxi()))
             fInputList->Add(o);
          in->SetOwner(kFALSE);
@@ -462,7 +462,7 @@ void TQueryResult::SetOutputList(TList *out, Bool_t adopt)
    }
 
    if (out && out != fOutputList) {
-      TObject *o = 0;
+      TObject *o = nullptr;
       if (fOutputList) {
          TIter nxoo(fOutputList);
          while ((o = nxoo())) {
@@ -475,7 +475,7 @@ void TQueryResult::SetOutputList(TList *out, Bool_t adopt)
       } else {
          fOutputList = new TList;
          TIter nxo(out);
-         o = 0;
+         o = nullptr;
          while ((o = nxo()))
             fOutputList->Add(o);
          out->SetOwner(kFALSE);
@@ -515,7 +515,7 @@ Bool_t TQueryResult::Matches(const char *ref)
 
 TObject *TQueryResult::GetInputObject(const char *classname) const
 {
-   TObject *o = 0;
+   TObject *o = nullptr;
    if (classname && fInputList) {
       TIter nxi(fInputList);
       while ((o = nxi()))

@@ -56,7 +56,7 @@ ClassImp(RooDLLSignificanceMCSModule);
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param, Double_t nullHypoValue) : 
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",param.GetName()),Form("RooDLLSignificanceMCSModule_%s",param.GetName())),
   _parName(param.GetName()), 
-  _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(nullHypoValue)
+  _data(nullptr), _nll0h(nullptr), _dll0h(nullptr), _sig0h(nullptr), _nullValue(nullHypoValue)
 {
 }
 
@@ -69,7 +69,7 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, Double_t nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",parName),Form("RooDLLSignificanceMCSModule_%s",parName)),
   _parName(parName), 
-  _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(nullHypoValue)
+  _data(nullptr), _nll0h(nullptr), _dll0h(nullptr), _sig0h(nullptr), _nullValue(nullHypoValue)
 {
 }
 
@@ -81,7 +81,7 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, Do
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooDLLSignificanceMCSModule& other) : 
   RooAbsMCStudyModule(other), 
   _parName(other._parName),
-  _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(other._nullValue)
+  _data(nullptr), _nll0h(nullptr), _dll0h(nullptr), _sig0h(nullptr), _nullValue(other._nullValue)
 {
 }
 

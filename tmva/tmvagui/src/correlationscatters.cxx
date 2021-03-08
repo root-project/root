@@ -42,7 +42,7 @@ void TMVA::correlationscatters(TString dataset, TString fin , TString var,
    Int_t noVars = TMVAGlob::GetNumberOfInputVariables( vardir ); // subtraction of target(s) no longer necessary
 
    TDirectory* dir = (TDirectory*)file->GetDirectory(dataset.Data())->Get( dirName );
-   if (dir==0) {
+   if (dir==nullptr) {
       cout << "No information about " << extension << " available in " << fin << endl;
       return;
    }
@@ -85,8 +85,8 @@ void TMVA::correlationscatters(TString dataset, TString fin , TString var,
    for (UInt_t itype = 0; itype < 2; itype++) {
 
       TIter next(gDirectory->GetListOfKeys());
-      TKey   * key  = 0;
-      TCanvas* canv = 0;
+      TKey   * key  = nullptr;
+      TCanvas* canv = nullptr;
 
       Int_t countPad    = 0;
    
@@ -128,7 +128,7 @@ void TMVA::correlationscatters(TString dataset, TString fin , TString var,
          TString bgname = hname;
          bgname.ReplaceAll("scat_","prof_");
          TH1 *prof = (TH1*)gDirectory->Get(bgname);
-         if (prof == NULL) {
+         if (prof == nullptr) {
             cout << "ERROR!!! couldn't find background histo for" << hname << endl;
             //exit(1);
             return;

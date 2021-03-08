@@ -180,7 +180,7 @@ const char *TPrimary::GetTitle() const
 void TPrimary::Paint(Option_t *option)
 {
    Float_t rmin[3], rmax[3];
-   static TPolyLine3D *pline = 0;
+   static TPolyLine3D *pline = nullptr;
    if (!pline) {
       pline = new TPolyLine3D(2);
    }

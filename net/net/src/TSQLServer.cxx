@@ -65,7 +65,7 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 
    if ((h = gROOT->GetPluginManager()->FindHandler("TSQLServer", db))) {
       if (h->LoadPlugin() == -1)
-         return 0;
+         return nullptr;
       serv = (TSQLServer *) h->ExecPlugin(3, db, uid, pw);
    }
 
@@ -130,7 +130,7 @@ void TSQLServer::SetError(Int_t code, const char* msg, const char* method)
 {
    fErrorCode = code;
    fErrorMsg = msg;
-   if ((method!=0) && fErrorOut)
+   if ((method!=nullptr) && fErrorOut)
       Error(method,"Code: %d  Msg: %s", code, (msg ? msg : "No message"));
 }
 
@@ -235,7 +235,7 @@ Bool_t TSQLServer::HasTable(const char* tablename)
 
 TSQLTableInfo* TSQLServer::GetTableInfo(const char* tablename)
 {
-   if (!tablename || (*tablename==0)) return 0;
+   if (!tablename || (*tablename==0)) return nullptr;
 
    TSQLResult* res = GetColumns(fDB.Data(), tablename);
    if (!res) return nullptr;

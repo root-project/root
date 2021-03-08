@@ -44,7 +44,7 @@ To use this file, try the following session on your Tree T:
 /// Default, constructor.
 
 TSelectorEntries::TSelectorEntries(TTree *tree, const char *selection) :
-   fOwnInput(kFALSE), fChain(tree), fSelect(0), fSelectedRows(0), fSelectMultiple(kFALSE)
+   fOwnInput(kFALSE), fChain(tree), fSelect(nullptr), fSelectedRows(0), fSelectMultiple(kFALSE)
 {
    if (selection && selection[0]) {
       TSelectorEntries::SetSelection(selection);
@@ -55,7 +55,7 @@ TSelectorEntries::TSelectorEntries(TTree *tree, const char *selection) :
 /// Constructor.
 
 TSelectorEntries::TSelectorEntries(const char *selection) :
-   fOwnInput(kFALSE), fChain(0), fSelect(0), fSelectedRows(0), fSelectMultiple(kFALSE)
+   fOwnInput(kFALSE), fChain(nullptr), fSelect(nullptr), fSelectedRows(0), fSelectMultiple(kFALSE)
 {
    TSelectorEntries::SetSelection(selection);
 }
@@ -102,7 +102,7 @@ void TSelectorEntries::SlaveBegin(TTree *tree)
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection",selection,fChain);
       fSelect->SetQuickLoad(kTRUE);
-      if (!fSelect->GetNdim()) {delete fSelect; fSelect = 0; return; }
+      if (!fSelect->GetNdim()) {delete fSelect; fSelect = nullptr; return; }
    }
    if (fSelect && fSelect->GetMultiplicity()) fSelectMultiple = kTRUE;
 

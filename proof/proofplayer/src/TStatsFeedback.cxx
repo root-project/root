@@ -38,10 +38,10 @@ ClassImp(TStatsFeedback);
 
 TStatsFeedback::TStatsFeedback(TProof *proof)
 {
-   if (proof == 0) proof = gProof;
+   if (proof == nullptr) proof = gProof;
 
    TProof *p = dynamic_cast<TProof*>(proof);
-   if (p == 0) {
+   if (p == nullptr) {
       Error("TStatsFeedback", "no valid proof session found");
       SetBit(TObject::kInvalidObject);
       return;
@@ -78,10 +78,10 @@ void TStatsFeedback::Feedback(TList *objs)
    PDB(kFeedback,1) Info("Feedback", "%d Objects", objs->GetSize());
 
    // Attach to the histograms we want to plot
-   TH1D *hevt = 0, *hpck = 0;
-   TH1I *hass = 0;
+   TH1D *hevt = nullptr, *hpck = nullptr;
+   TH1I *hass = nullptr;
    TIter next(objs);
-   TObject *o = 0;
+   TObject *o = nullptr;
    while((o = next())) {
       if (!strcmp(o->GetName(), "PROOF_EventsHist")) {
          hevt = dynamic_cast<TH1D *>(o);
@@ -102,7 +102,7 @@ void TStatsFeedback::Feedback(TList *objs)
    if (!hass) nh = 2;
    // Create or attach to canvas
    TString cvnm = TString::Format("Stats: %s", fProof->GetSessionTag());
-   TVirtualPad *cv = 0;
+   TVirtualPad *cv = nullptr;
    if (gROOT->GetListOfCanvases())
       cv = (TVirtualPad *) canvases->FindObject(cvnm.Data());
    if (cv && nh == 3 && !cv->GetPad(3)) SafeDelete(cv);
@@ -123,7 +123,7 @@ void TStatsFeedback::Feedback(TList *objs)
    }
    TVirtualPad *pd1 = (TVirtualPad *) cv->GetPad(1);
    TVirtualPad *pd2 = (TVirtualPad *) cv->GetPad(2);
-   TVirtualPad *pd3 = (nh == 3) ? (TVirtualPad *) cv->GetPad(3) : 0;
+   TVirtualPad *pd3 = (nh == 3) ? (TVirtualPad *) cv->GetPad(3) : nullptr;
 
    UInt_t optstat = gStyle->GetOptStat();
    gStyle->SetOptStat(11);

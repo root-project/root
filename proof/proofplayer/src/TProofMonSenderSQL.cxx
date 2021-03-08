@@ -41,9 +41,9 @@ TProofMonSenderSQL::TProofMonSenderSQL(const char *serv, const char *user,
                     fDSetSendOpts("bulk,table=proofquerydsets"),
                     fFilesSendOpts("bulk,table=proofqueryfiles")
 {
-   fWriter = 0;
+   fWriter = nullptr;
    // Init the sender instance using the plugin manager
-   TPluginHandler *h = 0;
+   TPluginHandler *h = nullptr;
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualMonitoringWriter", "SQL"))) {
       if (h->LoadPlugin() != -1) {
          fWriter = (TVirtualMonitoringWriter *) h->ExecPlugin(4, serv, user, pass, table);
@@ -174,8 +174,8 @@ Int_t TProofMonSenderSQL::SendSummary(TList *recs, const char *dumid)
    }
    TList *xrecs = recs;
 
-   TObject *dsn = 0;
-   TNamed *nm = 0;
+   TObject *dsn = nullptr;
+   TNamed *nm = nullptr;
    // We may need to correct some variable names first
    if (fSummaryVrs > 1) {
       if ((nm = (TNamed *) recs->FindObject("user"))) nm->SetName("proofuser");
@@ -187,7 +187,7 @@ Int_t TProofMonSenderSQL::SendSummary(TList *recs, const char *dumid)
       xrecs = new TList;
       xrecs->SetOwner(kFALSE);
       TIter nxr(recs);
-      TObject *o = 0;
+      TObject *o = nullptr;
       while ((o = nxr())) {
          if (!strcmp(o->GetName(), "vmemmxw")) break;
          xrecs->Add(o);
@@ -286,11 +286,11 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
    }
 
    // Now try to count the files
-   TDSetPlet *plet = 0;
+   TDSetPlet *plet = nullptr;
    TIter nxpl(&plets);
-   TObject *o = 0;
-   TDSetElement *e = 0, *ee = 0;
-   TDSet *dsete = 0;
+   TObject *o = nullptr;
+   TDSetElement *e = nullptr, *ee = nullptr;
+   TDSet *dsete = nullptr;
    TIter nxe(dset->GetListOfElements());
    TString dse;
    while ((o = nxe())) {
@@ -330,7 +330,7 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
 
    // Now try to include the missing files info
    if (missing) {
-      TFileInfo *fi = 0;
+      TFileInfo *fi = nullptr;
       TIter nxm(missing);
       TString dsfi, fn;
       while ((fi = (TFileInfo *) nxm())) {
@@ -439,7 +439,7 @@ Int_t TProofMonSenderSQL::SendFileInfo(TDSet *dset, TList *missing,
    THashList hmiss;
    if (missing) {
       TIter nxfm(missing);
-      TFileInfo *fi = 0;
+      TFileInfo *fi = nullptr;
       while ((fi = (TFileInfo *)nxfm())) {
          hmiss.Add(new TObjString(fi->GetCurrentUrl()->GetUrl()));
       }
@@ -452,9 +452,9 @@ Int_t TProofMonSenderSQL::SendFileInfo(TDSet *dset, TList *missing,
    values.Add(new TObjString(ent.Data()));
 
    // Create the file-plets
-   TObject *o = 0;
-   TDSetElement *e = 0, *ee = 0;
-   TDSet *dsete = 0;
+   TObject *o = nullptr;
+   TDSetElement *e = nullptr, *ee = nullptr;
+   TDSet *dsete = nullptr;
    TIter nxe(dset->GetListOfElements());
    TString fne, status;
    while ((o = nxe())) {

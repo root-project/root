@@ -128,10 +128,10 @@ void TGFileInfo::SetIniDir(const char *inidir)
 
 TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
                            EFileDialogMode dlg_type, TGFileInfo *file_info) :
-   TGTransientFrame(p, main, 10, 10, kVerticalFrame), fTbfname(0), fName(0),
-   fTypes(0), fTreeLB(0), fCdup(0), fNewf(0), fList(0), fDetails(0), fCheckB(0),
-   fPcdup(0), fPnewf(0), fPlist(0), fPdetails(0), fOk(0), fCancel(0), fFv(0),
-   fFc(0), fFileInfo(0), fDlgType(dlg_type)
+   TGTransientFrame(p, main, 10, 10, kVerticalFrame), fTbfname(nullptr), fName(nullptr),
+   fTypes(nullptr), fTreeLB(nullptr), fCdup(nullptr), fNewf(nullptr), fList(nullptr), fDetails(nullptr), fCheckB(nullptr),
+   fPcdup(nullptr), fPnewf(nullptr), fPlist(nullptr), fPdetails(nullptr), fOk(nullptr), fCancel(nullptr), fFv(nullptr),
+   fFc(nullptr), fFileInfo(nullptr), fDlgType(dlg_type)
 {
    SetCleanup(kDeepCleanup);
    Connect("CloseWindow()", "TGFileDialog", this, "CloseWindow()");
@@ -286,7 +286,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fTypes->Resize(230, fName->GetDefaultHeight());
 
    TString s;
-   for (i = 0; fFileInfo->fFileTypes[i] != 0; i += 2) {
+   for (i = 0; fFileInfo->fFileTypes[i] != nullptr; i += 2) {
       s.Form("%s (%s)", fFileInfo->fFileTypes[i], fFileInfo->fFileTypes[i+1]);
       fTypes->AddEntry(s.Data(), i);
    }
@@ -428,7 +428,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    TGTreeLBEntry *e;
    TGTextLBEntry *te;
    TGFileItem *f;
-   void *p = 0;
+   void *p = nullptr;
    TString txt;
    TString sdir = gSystem->WorkingDirectory();
 

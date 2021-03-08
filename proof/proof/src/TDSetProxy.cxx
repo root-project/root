@@ -28,7 +28,7 @@ ClassImp(TDSetProxy);
 
 TDSetProxy::TDSetProxy()
 {
-   fServ = 0;
+   fServ = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,8 +37,8 @@ TDSetProxy::TDSetProxy()
 TDSetProxy::TDSetProxy(const char *type, const char *objname, const char *dir)
    : TDSet(type,objname,dir)
 {
-   fServ = 0;
-   fCurrent = 0;
+   fServ = nullptr;
+   fCurrent = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ TDSetProxy::TDSetProxy(const char *type, const char *objname, const char *dir)
 void TDSetProxy::SetProofServ(TProofServ *serv)
 {
    fServ = serv;
-   fCurrent = 0;
+   fCurrent = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ void TDSetProxy::SetProofServ(TProofServ *serv)
 
 void TDSetProxy::Reset()
 {
-   delete fCurrent; fCurrent = 0;
+   delete fCurrent; fCurrent = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

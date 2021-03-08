@@ -295,7 +295,7 @@ Int_t RooRealSumFunc::getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &ana
 
    // Select subset of allVars that are actual dependents
    analVars.add(allVars);
-   RooArgSet *normSet = normSet2 ? getObservables(normSet2) : 0;
+   RooArgSet *normSet = normSet2 ? getObservables(normSet2) : nullptr;
 
    // Check if this configuration was created before
    Int_t sterileIdx(-1);
@@ -351,7 +351,7 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
 
    // WVE needs adaptation for rangeName feature
    CacheElem *cache = (CacheElem *)_normIntMgr.getObjByIndex(code - 1);
-   if (cache == 0) { // revive the (sterilized) cache
+   if (cache == nullptr) { // revive the (sterilized) cache
       // cout <<
       // "RooRealSumFunc("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>")
       // << ": reviving cache "<< endl;
@@ -363,13 +363,13 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
       assert(code == code2); // must have revived the right (sterilized) slot...
       (void)code2;
       cache = (CacheElem *)_normIntMgr.getObjByIndex(code - 1);
-      assert(cache != 0);
+      assert(cache != nullptr);
    }
 
    RooFIter funcIntIter = cache->_funcIntList.fwdIterator();
    RooFIter coefIter = _coefList.fwdIterator();
    RooFIter funcIter = _funcList.fwdIterator();
-   RooAbsReal *coef(0), *funcInt(0), *func(0);
+   RooAbsReal *coef(nullptr), *funcInt(nullptr), *func(nullptr);
    Double_t value(0);
 
    // N funcs, N-1 coefficients
@@ -380,7 +380,7 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
       Double_t coefVal = coef->getVal(normSet2);
       if (coefVal) {
          assert(func);
-         if (normSet2 == 0 || func->isSelectedComp()) {
+         if (normSet2 == nullptr || func->isSelectedComp()) {
             assert(funcInt);
             value += funcInt->getVal() * coefVal;
          }
@@ -391,7 +391,7 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
    if (!_haveLastCoef) {
       // Add last func with correct coefficient
       funcInt = (RooAbsReal *)funcIntIter.next();
-      if (normSet2 == 0 || func->isSelectedComp()) {
+      if (normSet2 == nullptr || func->isSelectedComp()) {
          assert(funcInt);
          value += funcInt->getVal() * lastCoef;
       }
@@ -434,7 +434,7 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
 //_____________________________________________________________________________
 std::list<Double_t> *RooRealSumFunc::binBoundaries(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
 {
-   list<Double_t> *sumBinB = 0;
+   list<Double_t> *sumBinB = nullptr;
    Bool_t needClean(kFALSE);
 
    RooFIter iter = _funcList.fwdIterator();
@@ -493,7 +493,7 @@ Bool_t RooRealSumFunc::isBinnedDistribution(const RooArgSet &obs) const
 //_____________________________________________________________________________
 std::list<Double_t> *RooRealSumFunc::plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
 {
-   list<Double_t> *sumHint = 0;
+   list<Double_t> *sumHint = nullptr;
    Bool_t needClean(kFALSE);
 
    RooFIter iter = _funcList.fwdIterator();

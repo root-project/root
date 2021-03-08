@@ -51,7 +51,7 @@ ClassImp(RooDerivative);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooDerivative::RooDerivative() : _order(1), _eps(1e-7), _ftor(0), _rd(0)
+RooDerivative::RooDerivative() : _order(1), _eps(1e-7), _ftor(nullptr), _rd(nullptr)
 {
 }
 
@@ -66,8 +66,8 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
   _nset("nset","nset",this,kFALSE,kFALSE),
   _func("function","function",this,func),
   _x("x","x",this,x),
-  _ftor(0),
-  _rd(0)
+  _ftor(nullptr),
+  _rd(nullptr)
 {
   if (_order<0 || _order>3 ) {
     throw std::string(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
@@ -83,8 +83,8 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
   _nset("nset","nset",this,kFALSE,kFALSE),
   _func("function","function",this,func),
   _x("x","x",this,x),
-  _ftor(0),
-  _rd(0)
+  _ftor(nullptr),
+  _rd(nullptr)
 {
   if (_order<0 || _order>3) { 
     throw std::string(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
@@ -103,8 +103,8 @@ RooDerivative::RooDerivative(const RooDerivative& other, const char* name) :
   _nset("nset",this,other._nset),
   _func("function",this,other._func),
   _x("x",this,other._x),
-  _ftor(0),
-  _rd(0)
+  _ftor(nullptr),
+  _rd(nullptr)
 {
 }
 
@@ -149,7 +149,7 @@ Bool_t RooDerivative::redirectServersHook(const RooAbsCollection& /*newServerLis
 {
   delete _ftor ;
   delete _rd ; 
-  _ftor = 0 ;
-  _rd = 0 ;
+  _ftor = nullptr ;
+  _rd = nullptr ;
   return kFALSE ;
 }

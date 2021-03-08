@@ -44,7 +44,7 @@ RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
   // Reset the *largest* negative log-likelihood value we have seen so far
   _maxFCN(-std::numeric_limits<double>::infinity()), _numBadNLL(0),
   _printEvalErrors(10),
-  _nDim(0), _logfile(0),
+  _nDim(0), _logfile(nullptr),
   _verbose(verbose)
 {
   
@@ -417,14 +417,14 @@ Bool_t RooMinimizerFcn::SetLogFile(const char* inLogfile)
     oocoutI(_context,Minimization) << "RooMinimizerFcn::setLogFile: closing previous log file" << endl ;
     _logfile->close() ;
     delete _logfile ;
-    _logfile = 0 ;
+    _logfile = nullptr ;
   }
   _logfile = new ofstream(inLogfile) ;
   if (!_logfile->good()) {
     oocoutI(_context,Minimization) << "RooMinimizerFcn::setLogFile: cannot open file " << inLogfile << endl ;
     _logfile->close() ;
     delete _logfile ;
-    _logfile= 0;
+    _logfile= nullptr;
   }  
   
   return kFALSE ;

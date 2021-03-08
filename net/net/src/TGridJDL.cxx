@@ -58,11 +58,11 @@ void TGridJDL::SetValue(const char *key, const char *value)
 
          fMap.Remove(oldObject);
          delete oldObject;
-         oldObject = 0;
+         oldObject = nullptr;
 
          if (oldValue) {
             delete oldValue;
-            oldValue = 0;
+            oldValue = nullptr;
          }
       }
    }
@@ -77,23 +77,23 @@ void TGridJDL::SetValue(const char *key, const char *value)
 const char *TGridJDL::GetValue(const char *key)
 {
    if (!key)
-      return 0;
+      return nullptr;
 
    TObject *object = fMap.FindObject(key);
    if (!object)
-      return 0;
+      return nullptr;
 
    TPair *pair = dynamic_cast<TPair*>(object);
    if (!pair)
-      return 0;
+      return nullptr;
 
    TObject *value = pair->Value();
    if (!value)
-      return 0;
+      return nullptr;
 
    TObjString *string = dynamic_cast<TObjString*>(value);
    if (!string)
-      return 0;
+      return nullptr;
 
    return string->GetName();
 }
@@ -112,11 +112,11 @@ void TGridJDL::SetDescription(const char *key, const char* description)
 
          fDescriptionMap.Remove(oldObject);
          delete oldObject;
-         oldObject = 0;
+         oldObject = nullptr;
 
          if (oldValue) {
             delete oldValue;
-            oldValue = 0;
+            oldValue = nullptr;
          }
       }
    }
@@ -131,23 +131,23 @@ void TGridJDL::SetDescription(const char *key, const char* description)
 const char *TGridJDL::GetDescription(const char *key)
 {
    if (!key)
-      return 0;
+      return nullptr;
 
    TObject *object = fDescriptionMap.FindObject(key);
    if (!object)
-      return 0;
+      return nullptr;
 
    TPair *pair = dynamic_cast<TPair*>(object);
    if (!pair)
-      return 0;
+      return nullptr;
 
    TObject *value = pair->Value();
    if (!value)
-      return 0;
+      return nullptr;
 
    TObjString *string = dynamic_cast<TObjString*>(value);
    if (!string)
-      return 0;
+      return nullptr;
 
    return string->GetName();
 }
@@ -211,8 +211,8 @@ TString TGridJDL::Generate()
 
    TIter next(&fMap);
    TIter nextDescription(&fDescriptionMap);
-   TObject *object = 0;
-   TObject *objectD = 0;
+   TObject *object = nullptr;
+   TObject *objectD = nullptr;
    while ((object = next())) {
       TObjString *key = dynamic_cast<TObjString*>(object);
       if (key) {

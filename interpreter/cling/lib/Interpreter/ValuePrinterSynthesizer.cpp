@@ -97,7 +97,7 @@ namespace cling {
         if (ParenExpr* PE = dyn_cast<ParenExpr>(To))
           To = PE->getSubExpr();
 
-        Expr* Result = 0;
+        Expr* Result = nullptr;
         // if (!m_Sema->getLangOpts().CPlusPlus)
         //   Result = SynthesizeVP(To);
 
@@ -126,7 +126,7 @@ namespace cling {
     QualType QT = E->getType();
     // For now we skip void and function pointer types.
     if (!QT.isNull() && (QT->isVoidType() || QT->isFunctionType()))
-      return 0;
+      return nullptr;
 
     // Find cling_PrintValue
     if (!m_LookupResult)

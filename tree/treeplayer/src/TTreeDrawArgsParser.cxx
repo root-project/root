@@ -68,7 +68,7 @@ void TTreeDrawArgsParser::ClearPrevious()
       fParameters[i] = 0;
    }
    fShouldDraw = kTRUE;
-   fOriginal = 0;
+   fOriginal = nullptr;
    fDrawProfile = kFALSE;
    fOptionSame = kFALSE;
    fEntryList = kFALSE;
@@ -253,7 +253,7 @@ Bool_t TTreeDrawArgsParser::Parse(const char *varexp, const char *selection, Opt
       fOriginal = gDirectory->Get(fName);
    }
    else
-      fOriginal = 0;
+      fOriginal = nullptr;
 
    DefineType();
 

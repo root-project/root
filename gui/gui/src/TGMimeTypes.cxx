@@ -128,7 +128,7 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
             char *tmppattern = strtok(pattern, " ");
             while (tmppattern && (*tmppattern != ' ')) {
                AddType(mime, tmppattern, icon, sicon, action);
-               tmppattern = strtok(0, " ");
+               tmppattern = strtok(nullptr, " ");
             }
          } else {
             AddType(mime, pattern, icon, sicon, action);
@@ -184,7 +184,7 @@ TGMimeTypes& TGMimeTypes::operator=(const TGMimeTypes& gmt)
 
 TGMime *TGMimeTypes::Find(const char *filename)
 {
-   if (!filename) return 0;
+   if (!filename) return nullptr;
 
    TString fn = filename;
 
@@ -194,7 +194,7 @@ TGMime *TGMimeTypes::Find(const char *filename)
    while ((mime = (TGMime *) next()))
       if (fn.Index(*(mime->fReg)) != kNPOS) return mime;
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +203,7 @@ TGMime *TGMimeTypes::Find(const char *filename)
 const TGPicture *TGMimeTypes::GetIcon(const char *filename, Bool_t small_icon)
 {
    TGMime *mime;
-   const TGPicture *mypic = 0;
+   const TGPicture *mypic = nullptr;
 
    if ((mime = Find(filename))) {
       Bool_t thumb = (mime->fType == "[thumbnail]");
@@ -216,7 +216,7 @@ const TGPicture *TGMimeTypes::GetIcon(const char *filename, Bool_t small_icon)
       }
       return mypic;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

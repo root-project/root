@@ -64,14 +64,14 @@ TCanvasImp *TWebGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t
 
 TBrowserImp *TWebGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height)
 {
-   return CreateBrowserImp(b, title, width, height, (Option_t *)0);
+   return CreateBrowserImp(b, title, width, height, (Option_t *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TBrowserImp *TWebGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-  return CreateBrowserImp(b, title, x, y, width, height, (Option_t *)0);
+  return CreateBrowserImp(b, title, x, y, width, height, (Option_t *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

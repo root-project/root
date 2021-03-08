@@ -71,7 +71,7 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
                      UInt_t options, ULong_t back) :
    TGFrame(p, 10, 10, options, back)
 {
-   fSelPic = 0;
+   fSelPic = nullptr;
 
    fCurrent  =
    fBigPic   = bigpic;
@@ -82,10 +82,10 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
 
    fItemName = name;
    fSubnames = subnames;
-   fUserData = 0;
+   fUserData = nullptr;
 
    fCpos  =
-   fJmode = 0;
+   fJmode = nullptr;
 
    fActive = kFALSE;
 
@@ -101,16 +101,16 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
 
    if (fSubnames) {
       Int_t i;
-      for (i = 0; fSubnames[i] != 0; ++i)
+      for (i = 0; fSubnames[i] != nullptr; ++i)
          ;
       fCtw = new int[i+1];
       fCtw[i] = 0;
-      for (i = 0; fSubnames[i] != 0; ++i) {
+      for (i = 0; fSubnames[i] != nullptr; ++i) {
          fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                         fSubnames[i]->GetLength());
       }
    } else {
-      fCtw = 0;
+      fCtw = nullptr;
    }
 
    fViewMode = (EListViewMode)-1;
@@ -129,7 +129,7 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
                      UInt_t options, Pixel_t back) :
    TGFrame(p, 10, 10, options, back)
 {
-   fSelPic = 0;
+   fSelPic = nullptr;
 
    fCurrent  =
    fBigPic   = fClient->GetMimeTypeList()->GetIcon(cname, kFALSE);
@@ -146,10 +146,10 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
 
    fItemName = new TGString(name);
    fSubnames = subnames;
-   fUserData = 0;
+   fUserData = nullptr;
 
    fCpos  =
-   fJmode = 0;
+   fJmode = nullptr;
 
    fActive = kFALSE;
 
@@ -163,16 +163,16 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
 
    if (fSubnames) {
       Int_t i;
-      for (i = 0; fSubnames[i] != 0; ++i)
+      for (i = 0; fSubnames[i] != nullptr; ++i)
          ;
       fCtw = new int[i+1];
       fCtw[i] = 0;
-      for (i = 0; fSubnames[i] != 0; ++i) {
+      for (i = 0; fSubnames[i] != nullptr; ++i) {
          fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                         fSubnames[i]->GetLength());
       }
    } else {
-      fCtw = 0;
+      fCtw = nullptr;
    }
 
    fViewMode = (EListViewMode)-1;
@@ -187,7 +187,7 @@ TGLVEntry::~TGLVEntry()
    if (fItemName) delete fItemName;
    if (fSelPic) delete fSelPic;
    if (fSubnames) {
-      for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
+      for (Int_t i = 0; fSubnames[i] != nullptr; ++i) delete fSubnames[i];
       delete [] fSubnames;
       delete [] fCtw;
    }
@@ -202,13 +202,13 @@ void TGLVEntry::SetSubnames(const char* n1,const char* n2,const char* n3,
                             const char* n10,const char* n11,const char* n12)
 {
    if (fSubnames) {
-      for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
+      for (Int_t i = 0; fSubnames[i] != nullptr; ++i) delete fSubnames[i];
       delete [] fSubnames;
       delete [] fCtw;
    }
 
    Int_t ncol = 0;
-   fSubnames = 0;
+   fSubnames = nullptr;
 
    if (n12 && strlen(n12)) ncol=12;
    else if (n11 && strlen(n11)) ncol=11;
@@ -239,7 +239,7 @@ void TGLVEntry::SetSubnames(const char* n1,const char* n2,const char* n3,
    if (ncol>2) fSubnames[2] = new TGString(n3);
    if (ncol>1) fSubnames[1] = new TGString(n2);
    if (ncol>0) fSubnames[0] = new TGString(n1);
-   fSubnames[ncol] = 0;
+   fSubnames[ncol] = nullptr;
 
    fCtw = new int[ncol];
    fCtw[ncol-1] = 0;
@@ -262,7 +262,7 @@ void TGLVEntry::Activate(Bool_t a)
       fSelPic = new TGSelectedPicture(gClient, fCurrent);
    } else {
       if (fSelPic) delete fSelPic;
-      fSelPic = 0;
+      fSelPic = nullptr;
    }
    DoRedraw();
 }
@@ -426,7 +426,7 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
             gVirtualX->SetForeground(fNormGC, fgBlackPixel);
          }
          // Again fixes the size of the strings
-         for (i = 0; fSubnames[i] != 0; ++i) {
+         for (i = 0; fSubnames[i] != nullptr; ++i) {
             TString tmpString = *fSubnames[i];
             Int_t ftmpWidth = gVirtualX->TextWidth(fFontStruct, tmpString,
                                                    tmpString.Length());
@@ -518,9 +518,9 @@ TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
                              UInt_t options, ULong_t back) :
    TGContainer(p, w, h, options, back)
 {
-   fListView = 0;
-   fLastActive = 0;
-   fCpos = fJmode = 0;
+   fListView = nullptr;
+   fLastActive = nullptr;
+   fCpos = fJmode = nullptr;
    fMultiSelect = kFALSE;
 
    fViewMode = kLVLargeIcons;
@@ -537,9 +537,9 @@ TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
 TGLVContainer::TGLVContainer(TGCanvas *p,UInt_t options, ULong_t back) :
    TGContainer(p,options, back)
 {
-   fListView = 0;
-   fLastActive = 0;
-   fCpos = fJmode = 0;
+   fListView = nullptr;
+   fLastActive = nullptr;
+   fCpos = fJmode = nullptr;
    fMultiSelect = kFALSE;
 
    fViewMode = kLVLargeIcons;
@@ -1174,11 +1174,11 @@ TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
 {
    fViewMode    = kLVLargeIcons;
    fNColumns    = 0;
-   fColumns     = 0;
-   fJmode       = 0;
-   fColHeader   = 0;
-   fColNames    = 0;
-   fSplitHeader = 0;
+   fColumns     = nullptr;
+   fJmode       = nullptr;
+   fColHeader   = nullptr;
+   fColNames    = nullptr;
+   fSplitHeader = nullptr;
    fJustChanged = kFALSE;
    fMinColumnSize = 25;
    fFontStruct = GetDefaultFontStruct();
@@ -1262,7 +1262,7 @@ void TGListView::SetHeaders(Int_t ncolumns)
    fSplitHeader = new TGVFileSplitter* [fNColumns];
 
    for (int i = 0; i < fNColumns; i++) {
-      fColHeader[i] = 0;
+      fColHeader[i] = nullptr;
       fJmode[i] = kTextLeft;
       fSplitHeader[i] = new TGVFileSplitter(fHeader, 10);
       fSplitHeader[i]->Connect("LayoutListView()", "TGListView",
@@ -1339,7 +1339,7 @@ const char *TGListView::GetHeader(Int_t idx) const
 {
    if (idx >= 0 && idx < fNColumns-1 && fColHeader[idx])
       return (const char*) fColNames[idx];
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1538,7 +1538,7 @@ void TGListView::LayoutHeader(TGFrame *head)
    Int_t  i, xl = 0;
    UInt_t w, h = 0;
    static Int_t oldPos = 0;
-   if (head == 0) oldPos = 0;
+   if (head == nullptr) oldPos = 0;
 
    TGLVContainer *container = (TGLVContainer *) fVport->GetContainer();
 
@@ -1607,13 +1607,13 @@ Bool_t TGListView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    TGLVContainer *cnt = (TGLVContainer*)GetContainer();
 
    const TGLVEntry *entry;
-   void *p = 0;
+   void *p = nullptr;
 
    entry = (TGLVEntry *) cnt->GetNextSelected(&p);
 
    switch (GET_SUBMSG(msg)) {
       case kCT_ITEMCLICK:
-         if ((cnt->NumSelected() == 1) && (entry != 0)) {
+         if ((cnt->NumSelected() == 1) && (entry != nullptr)) {
             Int_t x = (Int_t)(parm2 & 0xffff);
             Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
             Clicked((TGLVEntry*)entry, (Int_t)parm1);
@@ -1621,7 +1621,7 @@ Bool_t TGListView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          }
          break;
       case kCT_ITEMDBLCLICK:
-         if ((cnt->NumSelected() == 1) && (entry!=0)) {
+         if ((cnt->NumSelected() == 1) && (entry!=nullptr)) {
             Int_t x = (Int_t)(parm2 & 0xffff);
             Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
             DoubleClicked((TGLVEntry*)entry, (Int_t)parm1);

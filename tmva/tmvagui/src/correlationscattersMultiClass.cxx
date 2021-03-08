@@ -42,7 +42,7 @@ void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString 
    Int_t noVars = TMVAGlob::GetNumberOfInputVariablesMultiClass( vardir );
 
    TDirectory* dir = (TDirectory*)file->GetDirectory(dataset.Data())->Get( dirName );
-   if (dir==0) {
+   if (dir==nullptr) {
       cout << "No information about " << extension << " available in " << fin << endl;
       return;
    }
@@ -87,8 +87,8 @@ void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString 
    for (UInt_t itype = 0; itype < ncls; itype++) {
 
       TIter next(gDirectory->GetListOfKeys());
-      TKey   * key  = 0;
-      TCanvas* canv = 0;
+      TKey   * key  = nullptr;
+      TCanvas* canv = nullptr;
 
       Int_t countPad    = 0;
    
@@ -131,7 +131,7 @@ void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString 
          TString bgname = hname;
          bgname.ReplaceAll("scat_","prof_");
          TH1 *prof = (TH1*)gDirectory->Get(bgname);
-         if (prof == NULL) {
+         if (prof == nullptr) {
             cout << "ERROR!!! couldn't find profile plot for" << hname << endl;
             //exit(1);
             return;

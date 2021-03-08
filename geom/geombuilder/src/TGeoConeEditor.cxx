@@ -48,7 +48,7 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape   = nullptr;
    fRmini1 = fRmaxi1 = fRmini2 = fRmaxi2 = fDzi = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -188,7 +188,7 @@ void TGeoConeEditor::ConnectSignals2Slots()
 
 void TGeoConeEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoCone::Class())) {
+   if (obj == nullptr || (obj->IsA()!=TGeoCone::Class())) {
       SetActive(kFALSE);
       return;
    }
@@ -456,7 +456,7 @@ void TGeoConeSegEditor::ConnectSignals2Slots()
 
 void TGeoConeSegEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoConeSeg::Class())) {
+   if (obj == nullptr || (obj->IsA()!=TGeoConeSeg::Class())) {
       SetActive(kFALSE);
       return;
    }

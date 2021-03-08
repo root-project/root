@@ -80,9 +80,9 @@ End_Macro
 
 TGraph2DErrors::TGraph2DErrors(): TGraph2D()
 {
-   fEX = 0;
-   fEY = 0;
-   fEZ = 0;
+   fEX = nullptr;
+   fEY = nullptr;
+   fEZ = nullptr;
 }
 
 
@@ -152,7 +152,7 @@ TGraph2DErrors::~TGraph2DErrors()
 /// Copy everything except list of functions
 
 TGraph2DErrors::TGraph2DErrors(const TGraph2DErrors &g)
-: TGraph2D(g), fEX(0), fEY(0), fEZ(0)
+: TGraph2D(g), fEX(nullptr), fEY(nullptr), fEZ(nullptr)
 {
    if (fSize > 0) {
       fEX = new Double_t[fSize];
@@ -182,9 +182,9 @@ TGraph2DErrors & TGraph2DErrors::operator=(const TGraph2DErrors &g)
    if (fEY) delete [] fEY;
    if (fEZ) delete [] fEZ;
 
-   fEX   = (fSize > 0) ? new Double_t[fSize] : 0;
-   fEY   = (fSize > 0) ? new Double_t[fSize] : 0;
-   fEZ   = (fSize > 0) ? new Double_t[fSize] : 0;
+   fEX   = (fSize > 0) ? new Double_t[fSize] : nullptr;
+   fEY   = (fSize > 0) ? new Double_t[fSize] : nullptr;
+   fEZ   = (fSize > 0) ? new Double_t[fSize] : nullptr;
 
 
    // copy error arrays

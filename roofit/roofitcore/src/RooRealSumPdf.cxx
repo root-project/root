@@ -313,7 +313,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
   // Select subset of allVars that are actual dependents
   analVars.add(allVars) ;
-  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : 0 ;
+  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : nullptr ;
 
 
   // Check if this configuration was created before
@@ -366,7 +366,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 
   // WVE needs adaptation for rangeName feature
   CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
-  if (cache==0) { // revive the (sterilized) cache
+  if (cache==nullptr) { // revive the (sterilized) cache
      //cout << "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << ": reviving cache "<< endl;
      std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
      std::unique_ptr<RooArgSet> iset(  _normIntMgr.nameSet2ByIndex(code-1)->select(*vars) );
@@ -375,7 +375,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
      Int_t code2 = getAnalyticalIntegralWN(*iset,dummy,nset.get(),rangeName);
      R__ASSERT(code==code2); // must have revived the right (sterilized) slot...
      cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
-     R__ASSERT(cache!=0);
+     R__ASSERT(cache!=nullptr);
   }
 
   Double_t value(0) ;
@@ -393,7 +393,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     Double_t coefVal = coef->getVal(normSet2) ;
     if (coefVal) {
       assert(func);
-      if (normSet2 ==0 || func->isSelectedComp()) {
+      if (normSet2 ==nullptr || func->isSelectedComp()) {
 	assert(funcInt);
 	value += funcInt->getVal()*coefVal ;
       }
@@ -407,7 +407,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     const auto funcInt = static_cast<RooAbsReal*>(*funcIntIt);
     assert(func);
 
-    if (normSet2 ==0 || func->isSelectedComp()) {
+    if (normSet2 ==nullptr || func->isSelectedComp()) {
       assert(funcInt);
       value += funcInt->getVal()*lastCoef ;
     }
@@ -467,7 +467,7 @@ Double_t RooRealSumPdf::expectedEvents(const RooArgSet* nset) const
 
 std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  list<Double_t>* sumBinB = 0 ;
+  list<Double_t>* sumBinB = nullptr ;
   Bool_t needClean(kFALSE) ;
   
   // Loop over components pdf
@@ -532,7 +532,7 @@ Bool_t RooRealSumPdf::isBinnedDistribution(const RooArgSet& obs) const
 
 std::list<Double_t>* RooRealSumPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  list<Double_t>* sumHint = 0 ;
+  list<Double_t>* sumHint = nullptr ;
   Bool_t needClean(kFALSE) ;
   
   // Loop over components pdf

@@ -81,7 +81,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode()
    }
    else {
       //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
-      fTrainInfo = 0;
+      fTrainInfo = nullptr;
    }
 }
 
@@ -105,7 +105,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
    }
    else {
       //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
-      fTrainInfo = 0;
+      fTrainInfo = nullptr;
    }
 }
 
@@ -126,10 +126,10 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
      fIsTerminalNode( n.fIsTerminalNode )
 {
    this->SetParent( parent );
-   if (n.GetLeft() == 0 ) this->SetLeft(NULL);
+   if (n.GetLeft() == nullptr ) this->SetLeft(nullptr);
    else this->SetLeft( new DecisionTreeNode( *((DecisionTreeNode*)(n.GetLeft())),this));
 
-   if (n.GetRight() == 0 ) this->SetRight(NULL);
+   if (n.GetRight() == nullptr ) this->SetRight(nullptr);
    else this->SetRight( new DecisionTreeNode( *((DecisionTreeNode*)(n.GetRight())),this));
 
    if (DecisionTreeNode::fgIsTraining){
@@ -138,7 +138,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
    }
    else {
       //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
-      fTrainInfo = 0;
+      fTrainInfo = nullptr;
    }
 }
 
@@ -228,9 +228,9 @@ void TMVA::DecisionTreeNode::Print(std::ostream& os) const
       << std::endl;
 
    os << "My address is " << long(this) << ", ";
-   if (this->GetParent() != NULL) os << " parent at addr: "         << long(this->GetParent()) ;
-   if (this->GetLeft()   != NULL) os << " left daughter at addr: "  << long(this->GetLeft());
-   if (this->GetRight()  != NULL) os << " right daughter at addr: " << long(this->GetRight()) ;
+   if (this->GetParent() != nullptr) os << " parent at addr: "         << long(this->GetParent()) ;
+   if (this->GetLeft()   != nullptr) os << " left daughter at addr: "  << long(this->GetLeft());
+   if (this->GetRight()  != nullptr) os << " right daughter at addr: " << long(this->GetRight()) ;
 
    os << " **** > " << std::endl;
 }
@@ -262,8 +262,8 @@ void TMVA::DecisionTreeNode::PrintRec(std::ostream& os) const
    if (this->GetCC() > 10000000000000.) os << " CC: " << 100000. << std::endl;
    else os << " CC: "  << this->GetCC() << std::endl;
 
-   if (this->GetLeft()  != NULL) this->GetLeft() ->PrintRec(os);
-   if (this->GetRight() != NULL) this->GetRight()->PrintRec(os);
+   if (this->GetLeft()  != nullptr) this->GetLeft() ->PrintRec(os);
+   if (this->GetRight() != nullptr) this->GetRight()->PrintRec(os);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -355,8 +355,8 @@ void TMVA::DecisionTreeNode::ClearNodeAndAllDaughters()
    SetSeparationGain(-1);
    SetPurity();
 
-   if (this->GetLeft()  != NULL) ((DecisionTreeNode*)(this->GetLeft()))->ClearNodeAndAllDaughters();
-   if (this->GetRight() != NULL) ((DecisionTreeNode*)(this->GetRight()))->ClearNodeAndAllDaughters();
+   if (this->GetLeft()  != nullptr) ((DecisionTreeNode*)(this->GetLeft()))->ClearNodeAndAllDaughters();
+   if (this->GetRight() != nullptr) ((DecisionTreeNode*)(this->GetRight()))->ClearNodeAndAllDaughters();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -369,7 +369,7 @@ void TMVA::DecisionTreeNode::ResetValidationData( ) {
    SetSumTarget( 0 );
    SetSumTarget2( 0 );
 
-   if(GetLeft() != NULL && GetRight() != NULL) {
+   if(GetLeft() != nullptr && GetRight() != nullptr) {
       GetLeft()->ResetValidationData();
       GetRight()->ResetValidationData();
    }
@@ -392,7 +392,7 @@ void TMVA::DecisionTreeNode::PrintPrune( std::ostream& os ) const {
 
 void TMVA::DecisionTreeNode::PrintRecPrune( std::ostream& os ) const {
    this->PrintPrune(os);
-   if(this->GetLeft() != NULL && this->GetRight() != NULL) {
+   if(this->GetLeft() != nullptr && this->GetRight() != nullptr) {
       ((DecisionTreeNode*)this->GetLeft())->PrintRecPrune(os);
       ((DecisionTreeNode*)this->GetRight())->PrintRecPrune(os);
    }

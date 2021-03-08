@@ -105,13 +105,13 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    if (strlen(fUrl.GetUser()) > 0 && user != fUrl.GetUser())
       fName.Insert(0,Form("%s@", fUrl.GetUser()));
 
-   fIntHandler = 0;
-   fSocket = 0;
-   fMonitor = 0;
-   fFileList = 0;
-   fWorkingDir = 0;
-   fRootFiles = 0;
-   fReceivedObject = 0;
+   fIntHandler = nullptr;
+   fSocket = nullptr;
+   fMonitor = nullptr;
+   fFileList = nullptr;
+   fWorkingDir = nullptr;
+   fRootFiles = nullptr;
+   fReceivedObject = nullptr;
    ResetBit(kCollecting);
 
    // Create server socket; generate randomly a port to find a free one
@@ -120,7 +120,7 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    Long64_t now = gSystem->Now();
    std::default_random_engine randomEngine(now);
    std::uniform_int_distribution<Int_t> randomPort(fgPortLower, fgPortUpper);
-   TServerSocket *ss = 0;
+   TServerSocket *ss = nullptr;
    while (na--) {
       port = randomPort(randomEngine);
       ss = new TServerSocket(port);
@@ -215,7 +215,7 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
       Info("TApplicationRemote","server runs a different protocol version: %d (vs %d)",
                      fProtocol, kRRemote_Protocol);
 
-   TMessage *msg = 0;
+   TMessage *msg = nullptr;
    // Receive the protocol version run remotely
    if (fSocket->Recv(msg) < 0 || msg->What() != kMESS_ANY) {
       Error("TApplicationRemote", "failed to receive server info - protocol error");
@@ -429,7 +429,7 @@ Int_t TApplicationRemote::CollectInput()
             else if (TString(o->ClassName()) == "TRemoteObject") {
                TRemoteObject *robj = (TRemoteObject *)o;
                if (TString(robj->GetClassName()) == "TSystemDirectory") {
-                  if (fWorkingDir == 0) {
+                  if (fWorkingDir == nullptr) {
                      fWorkingDir = (TRemoteObject *)o;
                   }
                }
@@ -681,7 +681,7 @@ Bool_t TApplicationRemote::CheckFile(const char *file, Long_t modtime)
    TString fn = gSystem->BaseName(file);
 
    // Check if the file is already in the cache
-   TARFileStat *fs = 0;
+   TARFileStat *fs = nullptr;
    if (fFileList && (fs = (TARFileStat *) fFileList->FindObject(fn))) {
       // File in cache
       if (fs->fModtime != modtime) {
@@ -898,7 +898,7 @@ Long_t TApplicationRemote::ProcessLine(const char *line, Bool_t, Int_t *)
       return 1;
    }
 
-   fReceivedObject = 0;
+   fReceivedObject = nullptr;
 
    // Init graphics
    InitializeGraphics();

@@ -56,7 +56,7 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
 TProofProgressLog::TProofProgressLog(const char *url, Int_t idx, Int_t w, Int_t h) :
    TGTransientFrame(gClient->GetRoot(), gClient->GetRoot(), w, h)
 {
-   fDialog = 0;
+   fDialog = nullptr;
    fSessionUrl = url;
    fSessionIdx = (idx > 0) ? -idx : idx;
 
@@ -68,7 +68,7 @@ TProofProgressLog::TProofProgressLog(const char *url, Int_t idx, Int_t w, Int_t 
 
 void TProofProgressLog::Init(Int_t w, Int_t h)
 {
-   fProofLog = 0;
+   fProofLog = nullptr;
    fFullText = kFALSE;
    fTextType = kStd;
    // use hierarchical cleaning
@@ -108,7 +108,7 @@ void TProofProgressLog::Init(Int_t w, Int_t h)
    fVworkers->AddFrame(nent, new TGLayoutHints(kLHintsTop | kLHintsLeft, 4, 0, 0, 0));
 
    //The list of workers
-   fLogList = 0;
+   fLogList = nullptr;
    BuildLogList(kTRUE);
    fLogList->Resize(102,52);
    fLogList->SetMultipleSelections(kTRUE);
@@ -250,7 +250,7 @@ TProofProgressLog::~TProofProgressLog()
 
    // Detach from owner dialog
    if (fDialog) {
-      fDialog->fLogWindow = 0;
+      fDialog->fLogWindow = nullptr;
       fDialog->fProof->Disconnect("LogMessage(const char*,Bool_t)", this,
                                  "LogMessage(const char*,Bool_t)");
    }
@@ -359,10 +359,10 @@ void TProofProgressLog::BuildLogList(Bool_t create)
 
    TList *elem = fProofLog->GetListOfLogs();
    TIter next(elem);
-   TProofLogElem *pe = 0;
+   TProofLogElem *pe = nullptr;
 
    Int_t is = 0;
-   TGLBEntry *ent = 0;
+   TGLBEntry *ent = nullptr;
    TString buf;
    while ((pe=(TProofLogElem*)next())){
       TUrl url(pe->GetTitle());
@@ -415,7 +415,7 @@ void TProofProgressLog::DoLog(Bool_t grep)
 
    // Create the TProofLog instance
    if (!fProofLog) {
-      TProofMgr *mgr = 0;
+      TProofMgr *mgr = nullptr;
       if ((mgr = TProof::Mgr(fSessionUrl.Data()))) {
          if (!(fProofLog = mgr->GetSessionLogs(fSessionIdx, "NR"))) {
             Warning("DoLog", "unable to instantiate TProofLog for %s",
@@ -494,13 +494,13 @@ void TProofProgressLog::DoLog(Bool_t grep)
             if (fTextType == kRaw) {
                if (gDebug >= 2)
                   Info("DoLog", "Retrieving unfiltered log for %s", ord.Data());
-               fProofLog->Retrieve(ord.Data(), TProofLog::kTrailing, 0, 0);
+               fProofLog->Retrieve(ord.Data(), TProofLog::kTrailing, nullptr, nullptr);
             }
             else {
                if (gDebug >= 2)
                   Info("DoLog", "Retrieving log for %s filtered with %s",
                      ord.Data(), pipeCommand.Data());
-               fProofLog->Retrieve(ord.Data(), TProofLog::kGrep, 0, pipeCommand.Data());
+               fProofLog->Retrieve(ord.Data(), TProofLog::kGrep, nullptr, pipeCommand.Data());
             }
             selentry->SetBit(kLogElemFilled);
          }
@@ -615,7 +615,7 @@ void TProofProgressLog::Select(Int_t id, Bool_t all)
    Int_t nen = fLogList->GetNumberOfEntries();
    Bool_t sel = id ? 0 : 1;
 
-   TGLBEntry *ent = 0;
+   TGLBEntry *ent = nullptr;
    for (Int_t ie=0; ie<nen; ie++) {
       if (all) {
          fLogList->Select(ie, sel);

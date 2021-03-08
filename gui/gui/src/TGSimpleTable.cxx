@@ -36,7 +36,7 @@ End_Html
 
 TGSimpleTable::TGSimpleTable(TGWindow *p, Int_t id, Double_t **data,
                              UInt_t nrows, UInt_t ncolumns)
-   : TGTable(p, id, 0, nrows, ncolumns)
+   : TGTable(p, id, nullptr, nrows, ncolumns)
 {
    TGSimpleTableInterface *iface = new TGSimpleTableInterface(data, nrows,
                                                               ncolumns);

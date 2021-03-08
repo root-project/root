@@ -112,7 +112,7 @@ static clang::NestedNameSpecifier* AddDefaultParametersNNS(const clang::ASTConte
                                                            clang::NestedNameSpecifier* scope,
                                                            const cling::Interpreter &interpreter,
                                                            const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) {
-   if (!scope) return 0;
+   if (!scope) return nullptr;
 
    const clang::Type* scope_type = scope->getAsType();
    if (scope_type) {
@@ -161,7 +161,7 @@ static clang::NestedNameSpecifier* ReSubstTemplateArgNNS(const clang::ASTContext
                                                          clang::NestedNameSpecifier *scope,
                                                          const clang::Type *instance)
 {
-   if (!scope) return 0;
+   if (!scope) return nullptr;
 
    const clang::Type* scope_type = scope->getAsType();
    if (scope_type) {
@@ -210,7 +210,7 @@ static const clang::FieldDecl *GetDataMemberFromAll(const clang::CXXRecordDecl &
          return *field_iter;
       }
    }
-   return 0;
+   return nullptr;
 
 }
 
@@ -223,7 +223,7 @@ static bool CXXRecordDecl__FindOrdinaryMember(const clang::CXXBaseSpecifier *Spe
    clang::RecordDecl *BaseRecord = Specifier->getType()->getAs<clang::RecordType>()->getDecl();
 
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(BaseRecord);
-   if (clxx == 0) return false;
+   if (clxx == nullptr) return false;
 
    const clang::FieldDecl *found = GetDataMemberFromAll(*clxx,(const char*)Name);
    if (found) {
@@ -271,7 +271,7 @@ static const clang::FieldDecl *GetDataMemberFromAllParents(const clang::CXXRecor
          return found;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 static
@@ -592,7 +592,7 @@ bool TClingLookupHelper::IsAlreadyPartiallyDesugaredName(const std::string &nond
 bool TClingLookupHelper::IsDeclaredScope(const std::string &base, bool &isInlined)
 {
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-   const clang::Decl *scope = lh.findScope(base.c_str(), ToLHDS(WantDiags()), 0);
+   const clang::Decl *scope = lh.findScope(base.c_str(), ToLHDS(WantDiags()), nullptr);
 
    if (!scope) {
       // the nesting namespace is not declared
@@ -855,7 +855,7 @@ bool ROOT::TMetaUtils::IsBase(const clang::FieldDecl &m, const char* basename, c
    }
 
    const clang::NamedDecl *base
-      = ScopeSearch(basename, interp, true /*diagnose*/, 0);
+      = ScopeSearch(basename, interp, true /*diagnose*/, nullptr);
 
    if (base) {
       return IsBase(CRD, llvm::dyn_cast<clang::CXXRecordDecl>( base ),
@@ -874,7 +874,7 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
                                       const char *tcl)
 {
    static const clang::CXXRecordDecl *TObject_decl
-      = ROOT::TMetaUtils::ScopeSearch("TObject", interp, true /*diag*/, 0);
+      = ROOT::TMetaUtils::ScopeSearch("TObject", interp, true /*diag*/, nullptr);
    enum {
       kBIT_ISTOBJECT     = 0x10000000,
       kBIT_HASSTREAMER   = 0x20000000,
@@ -912,7 +912,7 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
    if (tiName == "string*") kase |= kBIT_ISSTRING;
 
 
-   if (tcl == 0) {
+   if (tcl == nullptr) {
       tcl = " internal error in rootcling ";
    }
    //    if (strcmp(objType,"string")==0) RStl::Instance().GenerateTClassFor( "string", interp, normCtxt  );
@@ -1616,7 +1616,7 @@ bool ROOT::TMetaUtils::hasOpaqueTypedef(clang::QualType instanceType, const ROOT
       // do the template thing.
       const clang::TemplateSpecializationType* TST
       = llvm::dyn_cast<const clang::TemplateSpecializationType>(instanceType.getTypePtr());
-      if (TST==0) {
+      if (TST==nullptr) {
    //         std::string type_name;
    //         type_name =  GetQualifiedName( instanceType, *clxx );
    //         fprintf(stderr,"ERROR: Could not findS TST for %s\n",type_name.c_str());
@@ -1845,7 +1845,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
          std::string error_string;
          if( !HasValidDataMembers( *rIt, nameTypeMap, error_string ) ) {
-            Warning(0, "%s", error_string.c_str());
+            Warning(nullptr, "%s", error_string.c_str());
             rIt = rulesIt1->second.erase(rIt);
             continue;
          }
@@ -1880,7 +1880,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
          std::string error_string;
          if( !HasValidDataMembers( *rIt, nameTypeMap, error_string ) ) {
-            Warning(0, "%s", error_string.c_str());
+            Warning(nullptr, "%s", error_string.c_str());
             rIt = rulesIt2->second.erase(rIt);
             continue;
          }
@@ -2007,7 +2007,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
               (stl != ROOT::kSTLbitset && stl !=-ROOT::kSTLbitset) ){     // is no bitset
       int idx = classname.find("<");
       int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx)) : 0;
-      const char* methodTCP=0;
+      const char* methodTCP=nullptr;
       switch(stlType)  {
          case ROOT::kSTLvector:
          case ROOT::kSTLlist:
@@ -2156,7 +2156,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
             // Check the name of the decl
             clang::NamedDecl* namedInternalDecl = clang::dyn_cast<clang::NamedDecl> (*internalDeclIt);
             if (!namedInternalDecl) {
-               TMetaUtils::Error(0,"Cannot convert field declaration to clang::NamedDecl");
+               TMetaUtils::Error(nullptr,"Cannot convert field declaration to clang::NamedDecl");
                continue;
             };
             const std::string memberName(namedInternalDecl->getName());
@@ -2229,7 +2229,7 @@ bool ROOT::TMetaUtils::GetNameWithinNamespace(std::string &fullname,
       const clang::NamedDecl *namedCtxt = llvm::dyn_cast<clang::NamedDecl>(ctxt);
       if (namedCtxt && namedCtxt!=cl) {
          const clang::NamespaceDecl *nsdecl = llvm::dyn_cast<clang::NamespaceDecl>(namedCtxt);
-         if (nsdecl != 0 && !nsdecl->isAnonymousNamespace()) {
+         if (nsdecl != nullptr && !nsdecl->isAnonymousNamespace()) {
             ROOT::TMetaUtils::GetQualifiedName(nsname,*nsdecl);
             clsname.erase (0, nsname.size() + 2);
             return true;
@@ -2321,8 +2321,8 @@ bool ROOT::TMetaUtils::HasCustomOperatorNewPlacement(const char *which, const cl
                                            name, protoPlacement, interp,
                                            cling::LookupHelper::NoDiagnostics);
 
-   const clang::DeclContext *ctxtnew = 0;
-   const clang::DeclContext *ctxtnewPlacement = 0;
+   const clang::DeclContext *ctxtnew = nullptr;
+   const clang::DeclContext *ctxtnewPlacement = nullptr;
 
    if (operatornew) {
       ctxtnew = operatornew->getParent();
@@ -2345,10 +2345,10 @@ bool ROOT::TMetaUtils::HasCustomOperatorNewPlacement(const char *which, const cl
       ctxtnewPlacement = operatornewPlacement->getParent();
    }
 
-   if (ctxtnewPlacement == 0) {
+   if (ctxtnewPlacement == nullptr) {
       return false;
    }
-   if (ctxtnew == 0) {
+   if (ctxtnew == nullptr) {
       // Only a new with placement, no hiding
       return true;
    }
@@ -2359,17 +2359,17 @@ bool ROOT::TMetaUtils::HasCustomOperatorNewPlacement(const char *which, const cl
    }
    const clang::CXXRecordDecl* clnew = llvm::dyn_cast<clang::CXXRecordDecl>(ctxtnew);
    const clang::CXXRecordDecl* clnewPlacement = llvm::dyn_cast<clang::CXXRecordDecl>(ctxtnewPlacement);
-   if (clnew == 0 && clnewPlacement == 0) {
+   if (clnew == nullptr && clnewPlacement == nullptr) {
       // They are both in different namespaces, I am not sure of the rules.
       // we probably ought to find which one is closest ... for now bail
       // (because rootcling was also bailing on that).
       return true;
    }
-   if (clnew != 0 && clnewPlacement == 0) {
+   if (clnew != nullptr && clnewPlacement == nullptr) {
       // operator new is class method hiding the outer scope operator new with placement.
       return false;
    }
-   if (clnew == 0 && clnewPlacement != 0) {
+   if (clnew == nullptr && clnewPlacement != nullptr) {
       // operator new is a not class method and can not hide new with placement which is a method
       return true;
    }
@@ -2522,7 +2522,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
 
 
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
-   if (clxx == 0) return;
+   if (clxx == nullptr) return;
 
    // We also need to look at the base classes.
    for(clang::CXXRecordDecl::base_class_const_iterator iter = clxx->bases_begin(), end = clxx->bases_end();
@@ -2845,7 +2845,7 @@ clang::RecordDecl *ROOT::TMetaUtils::GetUnderlyingRecordDecl(clang::QualType typ
 
    if (rawtype->isFundamentalType() || rawtype->isEnumeralType()) {
       // not an object.
-      return 0;
+      return nullptr;
    }
    return rawtype->getAsCXXRecordDecl();
 }
@@ -2882,9 +2882,9 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
       if (!(cl.RequestNoStreamer())) {
          (*WriteStreamerFunc)(cl, interp, normCtxt, dictStream, isGenreflex || cl.RequestStreamerInfo());
       } else
-         ROOT::TMetaUtils::Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n",fullname.c_str());
+         ROOT::TMetaUtils::Info(nullptr, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n",fullname.c_str());
    } else {
-      ROOT::TMetaUtils::Info(0, "Class %s: Streamer() not declared\n", fullname.c_str());
+      ROOT::TMetaUtils::Info(nullptr, "Class %s: Streamer() not declared\n", fullname.c_str());
 
       // See comment above about the !isGenreflex
       if (cl.RequestStreamerInfo() && !isGenreflex) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt);
@@ -2947,7 +2947,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    // Treat the Scope.
    bool prefix_changed = false;
-   clang::NestedNameSpecifier* prefix = 0;
+   clang::NestedNameSpecifier* prefix = nullptr;
    clang::Qualifiers prefix_qualifiers = instanceType.getLocalQualifiers();
    const clang::ElaboratedType* etype
       = llvm::dyn_cast<clang::ElaboratedType>(instanceType.getTypePtr());
@@ -2995,7 +2995,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       for(clang::TemplateSpecializationType::iterator
              I = TST->begin(), E = TST->end();
           Idecl != Edecl;
-          I!=E ? ++I : 0, ++Idecl, ++Param) {
+          I!=E ? ++I : nullptr, ++Idecl, ++Param) {
 
          if (I != E) {
 
@@ -3170,7 +3170,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
    char *current = const_cast<char*>(working.c_str());
    current = strtok(current,tokenlist); // this method does not need to be reentrant
 
-   while (current!=0) {
+   while (current!=nullptr) {
       // Check the token
       if (isdigit(current[0])) {
          for(i=0;i<strlen(current);i++) {
@@ -3188,7 +3188,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
          // first let's see if it is a data member:
          int found = 0;
          const clang::CXXRecordDecl *parent_clxx = llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext());
-         const clang::FieldDecl *index1 = 0;
+         const clang::FieldDecl *index1 = nullptr;
          if (parent_clxx)
             index1 = GetDataMemberFromAll(*parent_clxx, current );
          if ( index1 ) {
@@ -3264,7 +3264,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
          } // end of if is a data member of the class
       } // end of if isdigit
 
-      current = strtok(0,tokenlist);
+      current = strtok(nullptr,tokenlist);
    } // end of while loop on tokens
 
    return indexvar;
@@ -3384,18 +3384,18 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
 
    const FileEntry *headerFE = sourceManager.getFileEntryForID(headerFID);
    while (includeLoc.isValid() && sourceManager.isInSystemHeader(includeLoc)) {
-      const DirectoryLookup *foundDir = 0;
+      const DirectoryLookup *foundDir = nullptr;
       // use HeaderSearch on the basename, to make sure it takes a header from
       // the include path (e.g. not from /usr/include/bits/)
       assert(headerFE && "Couldn't find FileEntry from FID!");
       const FileEntry *FEhdr
          = HdrSearch.LookupFile(llvm::sys::path::filename(headerFE->getName()),
                                 SourceLocation(),
-                                true /*isAngled*/, 0/*FromDir*/, foundDir,
+                                true /*isAngled*/, nullptr/*FromDir*/, foundDir,
                                 ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
-                                0/*Searchpath*/, 0/*RelPath*/,
-                                0/*SuggestedModule*/, 0/*RequestingModule*/,
-                                0/*IsMapped*/, nullptr /*IsFrameworkFound*/,
+                                nullptr/*Searchpath*/, nullptr/*RelPath*/,
+                                nullptr/*SuggestedModule*/, nullptr/*RequestingModule*/,
+                                nullptr/*IsMapped*/, nullptr /*IsFrameworkFound*/,
                                 false /*SkipCache*/,
                                 false /*BuildSystemModule*/,
                                 false /*OpenFile*/, true /*CacheFailures*/);
@@ -3429,7 +3429,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
    // points to the same file as the long version. If such a short version
    // exists it will be returned. If it doesn't the long version is returned.
    bool isAbsolute = llvm::sys::path::is_absolute(headerFileName);
-   const FileEntry* FELong = 0;
+   const FileEntry* FELong = nullptr;
    // Find the longest available match.
    for (llvm::sys::path::const_iterator
            IDir = llvm::sys::path::begin(headerFileName),
@@ -3445,13 +3445,13 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       assert(trailingPart.data() + trailingPart.size()
              == headerFileName.data() + headerFileName.size()
              && "Mismatched partitioning of file name!");
-      const DirectoryLookup* FoundDir = 0;
+      const DirectoryLookup* FoundDir = nullptr;
       FELong = HdrSearch.LookupFile(trailingPart, SourceLocation(),
-                                    true /*isAngled*/, 0/*FromDir*/, FoundDir,
+                                    true /*isAngled*/, nullptr/*FromDir*/, FoundDir,
                                     ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
-                                    0/*Searchpath*/, 0/*RelPath*/,
-                                    0/*SuggestedModule*/, 0/*RequestingModule*/,
-                                    0/*IsMapped*/, nullptr /*IsFrameworkFound*/);
+                                    nullptr/*Searchpath*/, nullptr/*RelPath*/,
+                                    nullptr/*SuggestedModule*/, nullptr/*RequestingModule*/,
+                                    nullptr/*IsMapped*/, nullptr /*IsFrameworkFound*/);
    }
 
    if (!FELong) {
@@ -3469,15 +3469,15 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       assert(trailingPart.data() + trailingPart.size()
              == headerFileName.data() + headerFileName.size()
              && "Mismatched partitioning of file name!");
-      const DirectoryLookup* FoundDir = 0;
+      const DirectoryLookup* FoundDir = nullptr;
       // Can we find it, and is it the same file as the long version?
       // (or are we back to the previously found spelling, which is fine, too)
       if (HdrSearch.LookupFile(trailingPart, SourceLocation(),
-                               true /*isAngled*/, 0/*FromDir*/, FoundDir,
+                               true /*isAngled*/, nullptr/*FromDir*/, FoundDir,
                                ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
-                               0/*Searchpath*/, 0/*RelPath*/,
-                               0/*SuggestedModule*/, 0/*RequestingModule*/,
-                               0/*IsMapped*/, nullptr /*IsFrameworkFound*/) == FELong) {
+                               nullptr/*Searchpath*/, nullptr/*RelPath*/,
+                               nullptr/*SuggestedModule*/, nullptr/*RequestingModule*/,
+                               nullptr/*IsMapped*/, nullptr /*IsFrameworkFound*/) == FELong) {
          return trailingPart;
       }
    }
@@ -4420,7 +4420,7 @@ bool ROOT::TMetaUtils::MatchWithDeclOrAnyOfPrevious(const clang::CXXRecordDecl &
    const  clang::CXXRecordDecl* previous = currentCl.getPreviousDecl();
 
    // There is no previous decl, so we cannot possibly find it
-   if (NULL == previous){
+   if (nullptr == previous){
       return false;
    }
 
@@ -4558,7 +4558,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       // We have to also handle the prefix.
 
       clang::Qualifiers scope_qualifiers = input.getLocalQualifiers();
-      assert(instance->getAsCXXRecordDecl()!=0 && "ReSubstTemplateArg only makes sense with a type representing a class.");
+      assert(instance->getAsCXXRecordDecl()!=nullptr && "ReSubstTemplateArg only makes sense with a type representing a class.");
 
       clang::NestedNameSpecifier *scope = ReSubstTemplateArgNNS(Ctxt,etype->getQualifier(),instance);
       clang::QualType subTy = ReSubstTemplateArg(clang::QualType(etype->getNamedType().getTypePtr(),0),instance);
@@ -4674,7 +4674,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
    if (substType) {
       // Make sure it got replaced from this template
-      const clang::ClassTemplateDecl *replacedCtxt = 0;
+      const clang::ClassTemplateDecl *replacedCtxt = nullptr;
 
       const clang::DeclContext *replacedDeclCtxt = substType->getReplacedParameter()->getDecl()->getDeclContext();
       const clang::CXXRecordDecl *decl = llvm::dyn_cast<clang::CXXRecordDecl>(replacedDeclCtxt);
@@ -4826,7 +4826,7 @@ ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
 {
    static const char *stls[] =                  //container names
       {"any","vector","list", "deque","map","multimap","set","multiset","bitset",
-         "forward_list","unordered_set","unordered_multiset","unordered_map","unordered_multimap",0};
+         "forward_list","unordered_set","unordered_multiset","unordered_map","unordered_multimap",nullptr};
    static const ROOT::ESTLType values[] =
       {ROOT::kNotSTL, ROOT::kSTLvector,
        ROOT::kSTLlist, ROOT::kSTLdeque,
@@ -4848,7 +4848,7 @@ ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
 const clang::TypedefNameDecl* ROOT::TMetaUtils::GetAnnotatedRedeclarable(const clang::TypedefNameDecl* TND)
 {
    if (!TND)
-      return 0;
+      return nullptr;
 
    TND = TND->getMostRecentDecl();
    while (TND && !(TND->hasAttrs()))
@@ -4862,7 +4862,7 @@ const clang::TypedefNameDecl* ROOT::TMetaUtils::GetAnnotatedRedeclarable(const c
 const clang::TagDecl* ROOT::TMetaUtils::GetAnnotatedRedeclarable(const clang::TagDecl* TD)
 {
    if (!TD)
-      return 0;
+      return nullptr;
 
    TD = TD->getMostRecentDecl();
    while (TD && !(TD->hasAttrs() && TD->isThisDeclarationADefinition()))
@@ -4925,7 +4925,7 @@ const clang::RecordDecl* ROOT::TMetaUtils::ExtractEnclosingScopes(const clang::D
                                                                   std::list<std::pair<std::string,unsigned int> >& enclosingSc)
 {
    const clang::DeclContext* enclosingDeclCtxt = decl.getDeclContext();
-   if (!enclosingDeclCtxt) return 0;
+   if (!enclosingDeclCtxt) return nullptr;
 
    unsigned int scopeType;
 
@@ -4962,7 +4962,7 @@ static void replaceEnvVars(const char* varname, std::string& txt)
          endVarName = txt.find(')', beginVarName);
          ++beginVarName;
          if (endVarName == std::string::npos) {
-            ROOT::TMetaUtils::Error(0, "Missing ')' for '$(' in $%s at %s\n",
+            ROOT::TMetaUtils::Error(nullptr, "Missing ')' for '$(' in $%s at %s\n",
                                     varname, txt.c_str() + beginVar);
             return;
          }
@@ -5221,7 +5221,7 @@ int ROOT::TMetaUtils::AST2SourceTools::PrepareArgsForFwdDecl(std::string& templa
             llvm::raw_string_ostream ostream(astDump);
             nttpd->dump(ostream);
             ostream.flush();
-            ROOT::TMetaUtils::Warning(0,"Forward declarations of templates with enums as template parameters. The responsible class is: %s\n", astDump.c_str());
+            ROOT::TMetaUtils::Warning(nullptr,"Forward declarations of templates with enums as template parameters. The responsible class is: %s\n", astDump.c_str());
             return 1;
          } else {
             ROOT::TMetaUtils::GetFullyQualifiedTypeName(typeName,
@@ -5237,7 +5237,7 @@ int ROOT::TMetaUtils::AST2SourceTools::PrepareArgsForFwdDecl(std::string& templa
             llvm::raw_string_ostream ostream(astDump);
             ttpd->dump(ostream);
             ostream.flush();
-            ROOT::TMetaUtils::Error(0,"Cannot reconstruct template template parameter forward declaration for %s\n", astDump.c_str());
+            ROOT::TMetaUtils::Error(nullptr,"Cannot reconstruct template template parameter forward declaration for %s\n", astDump.c_str());
             return 1;
          }
       }
@@ -5259,7 +5259,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::Template
    std::string templatePrefixString;
    auto tmplParamList= templDecl.getTemplateParameters();
    if (!tmplParamList){ // Should never happen
-      Error(0,
+      Error(nullptr,
             "Cannot extract template parameter list for %s",
             templDecl.getNameAsString().c_str());
       return 1;
@@ -5267,7 +5267,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::Template
 
    int retCode = PrepareArgsForFwdDecl(templatePrefixString,*tmplParamList,interpreter);
    if (retCode!=0){
-      Warning(0,
+      Warning(nullptr,
                "Problems with arguments for forward declaration of class %s\n",
                templDecl.getNameAsString().c_str());
       return retCode;

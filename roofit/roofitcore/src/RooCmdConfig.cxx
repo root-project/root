@@ -234,7 +234,7 @@ const char* RooCmdConfig::missingArgs() const
     ret.Append(s->String()) ;
   }
 
-  return ret.Length() ? ret.Data() : 0 ;
+  return ret.Length() ? ret.Data() : nullptr ;
 }
 
 
@@ -715,7 +715,7 @@ Double_t RooCmdConfig::getDouble(const char* name, Double_t defVal)
 const char* RooCmdConfig::getString(const char* name, const char* defVal, Bool_t convEmptyToNull) 
 {
   RooStringVar* rs = (RooStringVar*) _sList.FindObject(name) ;
-  return rs ? ((convEmptyToNull && strlen(rs->getVal())==0) ? 0 : ((const char*)rs->getVal()) ) : defVal ;
+  return rs ? ((convEmptyToNull && strlen(rs->getVal())==0) ? nullptr : ((const char*)rs->getVal()) ) : defVal ;
 }
 
 
@@ -791,7 +791,7 @@ void RooCmdConfig::stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge)
   while(name) {
     TObject* cmd = cmdList.FindObject(name) ;
     if (cmd) cmdList.Remove(cmd) ;
-    name = strtok(0,",") ;
+    name = strtok(nullptr,",") ;
   }
 
 }
@@ -820,7 +820,7 @@ RooLinkedList RooCmdConfig::filterCmdList(RooLinkedList& cmdInList, const char* 
       }
       filterList.Add(cmd) ;
     }
-    name = strtok(0,",") ;
+    name = strtok(nullptr,",") ;
   }
   return filterList ;  
 }
@@ -862,7 +862,7 @@ std::string RooCmdConfig::decodeStringOnTheFly(const char* callerID, const char*
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
   pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
-  const char* ret =  pc.getString("theString",0,kTRUE) ;
+  const char* ret =  pc.getString("theString",nullptr,kTRUE) ;
 
   if (ret)
     return std::string(ret);

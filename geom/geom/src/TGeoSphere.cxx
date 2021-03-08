@@ -1002,7 +1002,7 @@ TGeoVolume *TGeoSphere::Divide(TGeoVolume * voldiv, const char * divname, Int_t 
          return vmulti;
       default:
          Error("Divide", "In shape %s wrong axis type for division", GetName());
-         return 0;
+         return nullptr;
    }
 }
 

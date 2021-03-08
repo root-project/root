@@ -39,8 +39,8 @@ TFileCacheWrite::TFileCacheWrite() : TObject()
    fBufferSize  = 0;
    fNtot        = 0;
    fSeekStart   = 0;
-   fFile        = 0;
-   fBuffer      = 0;
+   fFile        = nullptr;
+   fBuffer      = nullptr;
    fRecursive   = kFALSE;
 }
 

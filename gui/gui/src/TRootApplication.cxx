@@ -35,7 +35,7 @@ TRootApplication::TRootApplication(const char *appClassName,
                                    Int_t *argc, char **argv)
 {
    fApplicationName = appClassName;
-   fDisplay         = 0;
+   fDisplay         = nullptr;
 
    GetOptions(argc, argv);
 
@@ -47,7 +47,7 @@ TRootApplication::TRootApplication(const char *appClassName,
 
    if (fClient->IsZombie()) {
       delete fClient;
-      fClient = 0;
+      fClient = nullptr;
    }
 }
 
@@ -82,8 +82,8 @@ void TRootApplication::GetOptions(Int_t *argc, char **argv)
       if (!strcmp(argv[i], "-display")) {
          if (argv[i+1] && strlen(argv[i+1]) && argv[i+1][0] != '-') {
             fDisplay  = StrDup(argv[i+1]);
-            argv[i]   = 0;
-            argv[i+1] = 0;
+            argv[i]   = nullptr;
+            argv[i+1] = nullptr;
             i++;
          }
       }

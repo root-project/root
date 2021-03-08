@@ -93,8 +93,8 @@
 ClassImp(TGuiBuilder);
 ClassImp(TGuiBldAction);
 
-TGuiBuilder *gGuiBuilder = 0;
-static TPluginHandler *gHandler = 0;
+TGuiBuilder *gGuiBuilder = nullptr;
+static TPluginHandler *gHandler = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
@@ -103,8 +103,8 @@ TGuiBldAction::TGuiBldAction(const char *name, const char *title,
                Int_t type,  TGLayoutHints *hints) :
    TNamed(name, title), fType(type), fHints(hints)
 {
-   fPicture = 0;
-   fPic = 0;
+   fPicture = nullptr;
+   fPic = nullptr;
    fAct = "";
 }
 
@@ -120,7 +120,7 @@ TGuiBldAction::~TGuiBldAction()
 
 TGuiBuilder::TGuiBuilder()
 {
-   fAction = 0;
+   fAction = nullptr;
    // load plugin
    if (!gGuiBuilder) {
       gHandler = gROOT->GetPluginManager()->FindHandler("TGuiBuilder");

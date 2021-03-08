@@ -60,7 +60,7 @@ enum EMyMessageTypes {
 static const char *gHtmlFTypes[] = {
    "HTML files",    "*.htm*",
    "All files",     "*",
-    0,               0
+    nullptr,               nullptr
 };
 
 const char *HtmlError[] = {
@@ -112,7 +112,7 @@ const char *HtmlError[] = {
 "        for the website's domain.  ",
 "      <P></P> ",
 "      <P></P></DIV></TD></TR></TBODY></TABLE></BODY></HTML> ",
-0
+nullptr
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,31 +126,31 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fMenuBar = new TGMenuBar(this, 35, 50, kHorizontalFrame);
 
    fMenuFile = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuFile->AddEntry(" &Open...\tCtrl+O", kM_FILE_OPEN, 0,
+   fMenuFile->AddEntry(" &Open...\tCtrl+O", kM_FILE_OPEN, nullptr,
                        gClient->GetPicture("ed_open.png"));
-   fMenuFile->AddEntry(" Save &As...\tCtrl+A", kM_FILE_SAVEAS, 0,
+   fMenuFile->AddEntry(" Save &As...\tCtrl+A", kM_FILE_SAVEAS, nullptr,
                        gClient->GetPicture("ed_save.png"));
    fMenuFile->AddEntry(" &Browse...\tCtrl+B", kM_FILE_BROWSE);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry(" E&xit\tCtrl+Q", kM_FILE_EXIT, 0,
+   fMenuFile->AddEntry(" E&xit\tCtrl+Q", kM_FILE_EXIT, nullptr,
                        gClient->GetPicture("bld_exit.png"));
    fMenuFile->Associate(this);
 
    fMenuFavorites = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuFavorites->AddEntry("&Add to Favorites", kM_FAVORITES_ADD, 0,
+   fMenuFavorites->AddEntry("&Add to Favorites", kM_FAVORITES_ADD, nullptr,
                             gClient->GetPicture("bld_plus.png"));
    fMenuFavorites->AddSeparator();
-   fMenuFavorites->AddEntry("http://root.cern.ch", fNbFavorites++, 0,
+   fMenuFavorites->AddEntry("http://root.cern.ch", fNbFavorites++, nullptr,
                             gClient->GetPicture("htmlfile.gif"));
    fMenuFavorites->Associate(this);
 
    fMenuTools = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuTools->AddEntry("&Clear History", kM_TOOLS_CLEARHIST, 0,
+   fMenuTools->AddEntry("&Clear History", kM_TOOLS_CLEARHIST, nullptr,
                         gClient->GetPicture("ed_delete.png"));
    fMenuTools->Associate(this);
 
    fMenuHelp = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuHelp->AddEntry(" &About...", kM_HELP_ABOUT, 0, gClient->GetPicture("about.xpm"));
+   fMenuHelp->AddEntry(" &About...", kM_HELP_ABOUT, nullptr, gClient->GetPicture("about.xpm"));
    fMenuHelp->Associate(this);
 
    fMenuBar->AddPopup("&File", fMenuFile, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
@@ -304,7 +304,7 @@ Ssiz_t ReadSize(const char *url)
 
 static char *ReadRemote(const char *url)
 {
-   static char *buf = 0;
+   static char *buf = nullptr;
    TUrl fUrl(url);
 
    Ssiz_t size = ReadSize(url);
@@ -323,7 +323,7 @@ static char *ReadRemote(const char *url)
    TSocket *s;
    TString uri(url);
    if (!uri.BeginsWith("http://") && !uri.BeginsWith("https://"))
-      return 0;
+      return nullptr;
    if (uri.BeginsWith("https://")) {
 #ifdef R__SSL
       s = new TSSLSocket(fUrl.GetHost(), fUrl.GetPort());
@@ -337,17 +337,17 @@ static char *ReadRemote(const char *url)
    }
    if (!s->IsValid()) {
       delete s;
-      return 0;
+      return nullptr;
    }
    if (s->SendRaw(msg.Data(), msg.Length()) == -1) {
       delete s;
-      return 0;
+      return nullptr;
    }
    buf = (char *)calloc(size+1, sizeof(char));
    if (s->RecvRaw(buf, size) == -1) {
       free(buf);
       delete s;
-      return 0;
+      return nullptr;
    }
    delete s;
    return buf;
@@ -358,7 +358,7 @@ static char *ReadRemote(const char *url)
 
 void TGHtmlBrowser::Selected(const char *uri)
 {
-   char *buf = 0;
+   char *buf = nullptr;
    FILE *f;
 
    if (CheckAnchors(uri))
@@ -652,7 +652,7 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case kM_FAVORITES_ADD:
                      fMenuFavorites->AddEntry(Form("%s",
-                           fURL->GetText()), fNbFavorites++, 0,
+                           fURL->GetText()), fNbFavorites++, nullptr,
                            gClient->GetPicture("htmlfile.gif"));
                      break;
 

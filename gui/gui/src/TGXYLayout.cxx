@@ -254,7 +254,7 @@ void TGXYLayout::Layout()
    while ((ptr = (TGFrameElement *) next()))  {
       if (ptr->fState & kIsVisible) {
          layout = (TGXYLayoutHints*)ptr->fLayout;
-         if (layout == 0)
+         if (layout == nullptr)
             continue;
 
          temp = layout->GetX() * fTWidth ;

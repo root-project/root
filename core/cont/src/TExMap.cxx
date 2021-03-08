@@ -78,7 +78,7 @@ TExMap& TExMap::operator=(const TExMap &map)
 
 TExMap::~TExMap()
 {
-   delete [] fTable; fTable = 0;
+   delete [] fTable; fTable = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -143,8 +143,8 @@ TGResourcePool::TGResourcePool(TGClient *client)
    // Create picture pool and pre-load some pictures...
    fPicturePool = new TGPicturePool(fClient, icon_path);
 
-   fDefaultBackPicture    = 0;
-   fDefaultDocBackPicture = 0;
+   fDefaultBackPicture    = nullptr;
+   fDefaultDocBackPicture = nullptr;
    if (!framebgpixmap.IsNull())
       fDefaultBackPicture = fPicturePool->GetPicture(framebgpixmap);
    if (!docbgpixmap.IsNull())

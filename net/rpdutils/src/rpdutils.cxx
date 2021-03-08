@@ -217,9 +217,9 @@ namespace ROOT {
 
 //
 // rpdutils module globals
-ErrorHandler_t gErrSys   = 0;
-ErrorHandler_t gErrFatal = 0;
-ErrorHandler_t gErr      = 0;
+ErrorHandler_t gErrSys   = nullptr;
+ErrorHandler_t gErrFatal = nullptr;
+ErrorHandler_t gErr      = nullptr;
 bool gSysLog = 0;
 std::string gServName[3] = { "sockd", "rootd", "proofd" };
 
@@ -276,7 +276,7 @@ static rsa_NUMBER gRSA_n;
 static int gRSAInit = 0;
 static int gRSAKey = 0;
 static rsa_KEY gRSAPriKey;
-static rsa_KEY_export gRSAPubExport[2] = {{0,0},{0,0}};
+static rsa_KEY_export gRSAPubExport[2] = {{0,nullptr},{0,nullptr}};
 static rsa_KEY gRSAPubKey;
 #ifdef R__SSL
 static BF_KEY gBFKey;            // Session symmetric key
@@ -288,10 +288,10 @@ static int gServerProtocol = -1;
 static EService gService = kROOTD;
 static int gTriedMeth[kMAXSEC];
 static char gUser[64] = { 0 };
-static char *gUserAllow[kMAXSEC] = { 0 };          // User access control
+static char *gUserAllow[kMAXSEC] = { nullptr };          // User access control
 static unsigned int gUserAlwLen[kMAXSEC] = { 0 };
 static unsigned int gUserIgnLen[kMAXSEC] = { 0 };
-static char *gUserIgnore[kMAXSEC] = { 0 };
+static char *gUserIgnore[kMAXSEC] = { nullptr };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// rand() implementation using /udev/random or /dev/random, if available
@@ -310,7 +310,7 @@ static int rpd_rand()
    }
    ErrorInfo("+++ERROR+++ : rpd_rand: neither /dev/urandom nor /dev/random are available or readable!");
    struct timeval tv;
-   if (gettimeofday(&tv,0) == 0) {
+   if (gettimeofday(&tv,nullptr) == 0) {
       int t1, t2;
       memcpy((void *)&t1, (void *)&tv.tv_sec, sizeof(int));
       memcpy((void *)&t2, (void *)&tv.tv_usec, sizeof(int));
@@ -786,11 +786,11 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
       if ((int)(fsize+strlen(line)) > gMAXTABSIZE) {
 
          // If it is going to be too big, cleanup or truncate first
-         fsize = RpdUpdateAuthTab(0,(const char *)0,0,itab);
+         fsize = RpdUpdateAuthTab(0,(const char *)nullptr,nullptr,itab);
 
          // If still too big: delete everything
          if ((int)(fsize+strlen(line)) > gMAXTABSIZE)
-            fsize = RpdUpdateAuthTab(-1,(const char *)0,0,itab);
+            fsize = RpdUpdateAuthTab(-1,(const char *)nullptr,nullptr,itab);
       }
       // We are going to write at the end
       retval = lseek(itab, 0, SEEK_END);
@@ -1141,7 +1141,7 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
                 Host, RemId, *OffSet);
 
    // Check OffSet first
-   char *tkn = 0, *user =0;
+   char *tkn = nullptr, *user =nullptr;
    int shmid;
    bool goodOfs = RpdCheckOffSet(Sec,User,Host,RemId,
                                  OffSet,&tkn,&shmid,&user);
@@ -1175,7 +1175,7 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
 
    // Now Receive Token
    int ofs = *OffSet;
-   char *token = 0;
+   char *token = nullptr;
    if (gRSAKey > 0) {
       if (RpdSecureRecv(&token) == -1) {
          ErrorInfo("RpdCheckAuthTab: problems secure-"
@@ -1551,7 +1551,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
       if (getuid()) {
          // Check if user has a private daemon access file ...
          struct passwd *pw = getpwuid(getuid());
-         if (pw != 0) {
+         if (pw != nullptr) {
             theDaemonRc = std::string(pw->pw_dir).append("/");
             theDaemonRc.append(gDaemonRc);
          } else {
@@ -1600,7 +1600,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
 
       // Open file
       FILE *ftab = fopen(theDaemonRc.c_str(), "r");
-      if (ftab == 0) {
+      if (ftab == nullptr) {
          if (GetErrno() == ENOENT)
             ErrorInfo("RpdCheckAuthAllow: file %s does not exist",
                       theDaemonRc.c_str());
@@ -1675,9 +1675,9 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
             continue;
          }
 
-         while (pstr != 0) {
+         while (pstr != nullptr) {
             int tmet = -1;
-            char *pd = 0, *pd2 = 0;
+            char *pd = nullptr, *pd2 = nullptr;
             cmth[0] = '\0';
             rest[0] = '\0';
             nw = sscanf(pstr, "%4095s %4095s", cmth, rest);
@@ -1688,7 +1688,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
             pd = strchr(cmth, ':');
             // Parse the method
             char tmp[20];
-            if (pd != 0) {
+            if (pd != nullptr) {
                int mlen = pd - cmth;
                strncpy(tmp, cmth, mlen);
                tmp[mlen] = '\0';
@@ -1738,12 +1738,12 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                nmet++;
             }
             // Now parse users list, if any ...
-            while (pd != 0 && (int) (pd[1]) != 32) {
+            while (pd != nullptr && (int) (pd[1]) != 32) {
                pd2 = strchr(pd + 1, ':');
                if (pd[1] == '-') {
                   pd += 2;
                   // Ignore
-                  if (gUserIgnore[mth[jm]] == 0) {
+                  if (gUserIgnore[mth[jm]] == nullptr) {
                      gUserIgnLen[mth[jm]] = kMAXPATHLEN;
                      gUserIgnore[mth[jm]] = new char[gUserIgnLen[mth[jm]]];
                      gUserIgnore[mth[jm]][0] = '\0';
@@ -1758,7 +1758,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                      free(tmpUI);
                   }
                   char usr[256];
-                  if (pd2 != 0) {
+                  if (pd2 != nullptr) {
                      int ulen = pd2 - pd;
                      strncpy(usr, pd, ulen);
                      usr[ulen] = '\0';
@@ -1766,7 +1766,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                      strlcpy(usr, pd, sizeof(usr));
                   }
                   struct passwd *pw = getpwnam(usr);
-                  if (pw != 0)
+                  if (pw != nullptr)
                      SPrintf(gUserIgnore[mth[jm]], gUserIgnLen[mth[jm]], "%s %d",
                              gUserIgnore[mth[jm]], (int)pw->pw_uid);
                } else {
@@ -1774,7 +1774,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                   if (pd[1] == '+')
                      pd += 1;
                   // Keep
-                  if (gUserAllow[mth[jm]] == 0) {
+                  if (gUserAllow[mth[jm]] == nullptr) {
                      gUserAlwLen[mth[jm]] = kMAXPATHLEN;
                      gUserAllow[mth[jm]] = new char[gUserAlwLen[mth[jm]]];
                      gUserAllow[mth[jm]][0] = '\0';
@@ -1789,7 +1789,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                      free(tmpUI);
                   }
                   char usr[256];
-                  if (pd2 != 0) {
+                  if (pd2 != nullptr) {
                      int ulen = pd2 - pd;
                      strncpy(usr, pd, ulen);
                      usr[ulen] = '\0';
@@ -1797,7 +1797,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                      strlcpy(usr, pd, sizeof(usr));
                   }
                   struct passwd *pw = getpwnam(usr);
-                  if (pw != 0)
+                  if (pw != nullptr)
                      SPrintf(gUserAllow[mth[jm]], gUserAlwLen[mth[jm]], "%s %d",
                              gUserAllow[mth[jm]], (int)pw->pw_uid);
                }
@@ -1810,7 +1810,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
             } else {
                if ((int) rest[0] == 92)
                   cont = 1;
-               pstr = 0;
+               pstr = nullptr;
             }
          }
          if (gDebug > 2) {
@@ -1960,7 +1960,7 @@ int RpdCheckHost(const char *Host, const char *host)
       if (ps == hh + strlen(hh) - strlen(tk))
          ends = 1;
 
-      tk = strtok(0,"*");
+      tk = strtok(nullptr,"*");
 
    }
    delete[] h;
@@ -1983,9 +1983,9 @@ char *RpdGetIP(const char *host)
    unsigned char ip_fld[4];
 
    // Check server name
-   if ((h = gethostbyname(host)) == 0) {
+   if ((h = gethostbyname(host)) == nullptr) {
       ErrorInfo("RpdGetIP: unknown host %s", host);
-      return 0;
+      return nullptr;
    }
    // Decode ...
    ip = ntohl(*(unsigned long *) h->h_addr_list[0]);
@@ -2395,7 +2395,7 @@ int RpdPass(const char *pass, int errheq)
    if (gClientProtocol > 8) {
       // Set an entry in the auth tab file for later (re)use, if required ...
       int offset = -1;
-      char *token = 0;
+      char *token = nullptr;
       char line[kMAXPATHLEN];
       if ((gReUseAllow & gAUTH_CLR_MSK) && gReUseRequired) {
 
@@ -2507,7 +2507,7 @@ void RpdAuthCleanup(const char *sstr, int opt)
                    gOpenHost.c_str(), rpid);
       } else if (nw == 4) {
          // (host,usr,method) specific cleanup
-         if (RpdCheckOffSet(sec,usr,gOpenHost.c_str(),rpid,&offs,0,0,0)) {
+         if (RpdCheckOffSet(sec,usr,gOpenHost.c_str(),rpid,&offs,nullptr,nullptr,nullptr)) {
             RpdCleanupAuthTab(gOpenHost.c_str(), rpid, offs);
             ErrorInfo("RpdAuthCleanup: cleanup (%s,%d,%d,%d,%s) done",
                       gOpenHost.c_str(), rpid, sec, offs, usr);
@@ -2589,7 +2589,7 @@ int RpdCheckDaemon(const char *daemon)
       ErrorInfo("RpdCheckDaemon: Enter ... %s", daemon);
 
    // Return if empty
-   if (daemon == 0 || !daemon[0])
+   if (daemon == nullptr || !daemon[0])
       return cnt;
 
    // Build command
@@ -2597,14 +2597,14 @@ int RpdCheckDaemon(const char *daemon)
 
    // Run it ...
    FILE *fp = popen(cmd, "r");
-   if (fp != 0) {
+   if (fp != nullptr) {
       for (ch = fgetc(fp); ch != EOF; ch = fgetc(fp)) {
          if (ch != 10) {
             cmd[i++] = ch;
          } else {
             cmd[i] = '\0';
-            if (strstr(cmd, "grep") == 0 && strstr(cmd, "rootd") == 0
-                && strstr(cmd, "proofd") == 0) {
+            if (strstr(cmd, "grep") == nullptr && strstr(cmd, "rootd") == nullptr
+                && strstr(cmd, "proofd") == nullptr) {
                cnt++;
             }
             i = 0;
@@ -2688,7 +2688,7 @@ int RpdUser(const char *sstr)
       }
    }
 
-   if ((pw = getpwnam(user)) == 0) {
+   if ((pw = getpwnam(user)) == nullptr) {
       NetSend(err, kROOTD_ERR);
       ErrorInfo("RpdUser: user %s unknown", user);
       return auth;
@@ -2706,14 +2706,14 @@ int RpdUser(const char *sstr)
    // Check if the administrator allows authentication
    char cuid[20];
    SPrintf(cuid, 20, "%d", (int)pw->pw_uid);
-   if (gUserIgnLen[0] > 0 && strstr(gUserIgnore[0], cuid) != 0) {
+   if (gUserIgnLen[0] > 0 && strstr(gUserIgnore[0], cuid) != nullptr) {
       NetSend(kErrNotAllowed, kROOTD_ERR);
       ErrorInfo
           ("RpdUser: user (%d,%s) not authorized to use UsrPwd method",
            uid, pw->pw_name);
       return auth;
    }
-   if (gUserAlwLen[0] > 0 && strstr(gUserAllow[0], cuid) == 0) {
+   if (gUserAlwLen[0] > 0 && strstr(gUserAllow[0], cuid) == nullptr) {
       NetSend(kErrNotAllowed, kROOTD_ERR);
       ErrorInfo
           ("RpdUser: user (%d,%s) not authorized to use UsrPwd method",
@@ -2889,7 +2889,7 @@ int RpdUser(const char *sstr)
       return auth;
    }
    // Get passwd
-   char *passwd = 0;
+   char *passwd = nullptr;
    int lpwd = 0;
    if (gAnon == 0 && gClientProtocol > 8 && gCryptRequired) {
 
@@ -3076,8 +3076,8 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
    if (!pubkey)
       return keytype;
 
-   char *theKey = 0;
-   FILE *fKey = 0;
+   char *theKey = nullptr;
+   FILE *fKey = nullptr;
    // Parse input type
    if (Opt == 1) {
 
@@ -3086,7 +3086,7 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
       if (!fKey) {
          if (GetErrno() == EACCES) {
             struct passwd *pw = getpwuid(getuid());
-            char *usr = 0;
+            char *usr = nullptr;
             if (pw)
                usr = pw->pw_name;
             ErrorInfo("RpdGetRSAKeys: access to key file %s denied"
@@ -3131,7 +3131,7 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
       keytype = gRSAKey;
 
       // The format of keytype 1 is #<hex_n>#<hex_d>#
-      char *pd1 = 0, *pd2 = 0, *pd3 = 0;
+      char *pd1 = nullptr, *pd2 = nullptr, *pd3 = nullptr;
       pd1 = strstr(theKey, "#");
       if (pd1) pd2 = strstr(pd1 + 1, "#");
       if (pd2) pd3 = strstr(pd2 + 1, "#");
@@ -3743,7 +3743,7 @@ void RpdInitRand()
    } else {
       if (gDebug > 2)
          ErrorInfo("RpdInitRand: %s not available: using time()", randdev);
-      seed = time(0);   //better use times() + win32 equivalent
+      seed = time(nullptr);   //better use times() + win32 equivalent
    }
    srand(seed);
 }
@@ -3945,7 +3945,7 @@ int RpdProtocol(int ServType)
       ErrorInfo("RpdProtocol: kind: %d %d",kind,len);
    if (kind == kROOTD_PROTOCOL || kind == kROOTD_CLEANUP) {
       // Receive the rest
-      char *buf = 0;
+      char *buf = nullptr;
       len -= sizeof(int);
       if (gDebug > 1)
          ErrorInfo("RpdProtocol: len: %d",len);
@@ -4383,8 +4383,8 @@ int RpdNoAuth(int servtype)
       if (nw == 1)
          snprintf(user,kMAXUSERLEN,"%s",ruser);
 
-      struct passwd *pw = 0;
-      if ((pw = getpwnam(user)) == 0) {
+      struct passwd *pw = nullptr;
+      if ((pw = getpwnam(user)) == nullptr) {
          NetSend(kErrNoUser, kROOTD_ERR);
          ErrorInfo("RpdNoAuth: user %s unknown", user);
          goto quit;

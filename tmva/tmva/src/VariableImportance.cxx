@@ -173,7 +173,7 @@ TH1F* TMVA::VariableImportance::GetImportance(const UInt_t nbits,std::vector<Flo
     vihist->GetYaxis()->SetTitleOffset(1.24);
 
     vihist->GetYaxis()->SetRangeUser(-7, 50);
-    vihist->SetDirectory(0);
+    vihist->SetDirectory(nullptr);
 
     return vihist;
 }

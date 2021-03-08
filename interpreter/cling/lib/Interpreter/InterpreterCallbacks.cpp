@@ -232,7 +232,7 @@ namespace cling {
 
   public:
     InterpreterExternalSemaSource(InterpreterCallbacks* C)
-      : m_Callbacks(C), m_Sema(0) {}
+      : m_Callbacks(C), m_Sema(nullptr) {}
 
     ~InterpreterExternalSemaSource() {
       // FIXME: Another gross hack due to the missing multiplexing AST external
@@ -250,7 +250,7 @@ namespace cling {
     }
 
     virtual void ForgetSema() {
-      m_Sema = 0;
+      m_Sema = nullptr;
     }
 
     InterpreterCallbacks* getCallbacks() const { return m_Callbacks; }
@@ -297,7 +297,7 @@ namespace cling {
                              bool enableExternalSemaSourceCallbacks/* = false*/,
                         bool enableDeserializationListenerCallbacks/* = false*/,
                                              bool enablePPCallbacks/* = false*/)
-    : m_Interpreter(interp), m_ExternalSemaSource(0), m_PPCallbacks(0),
+    : m_Interpreter(interp), m_ExternalSemaSource(nullptr), m_PPCallbacks(nullptr),
       m_IsRuntime(false) {
     Sema& SemaRef = interp->getSema();
     ASTReader* Reader = m_Interpreter->getCI()->getModuleManager().get();
@@ -427,7 +427,7 @@ namespace cling {
 #include "clang/Sema/Scope.h"
 namespace cling {
 namespace test {
-  TestProxy* Tester = 0;
+  TestProxy* Tester = nullptr;
 
   extern "C" int printf(const char* fmt, ...);
   TestProxy::TestProxy(){}
@@ -470,7 +470,7 @@ namespace test {
 
   SymbolResolverCallback::SymbolResolverCallback(Interpreter* interp,
                                                  bool resolve)
-    : InterpreterCallbacks(interp), m_Resolve(resolve), m_TesterDecl(0) {
+    : InterpreterCallbacks(interp), m_Resolve(resolve), m_TesterDecl(nullptr) {
     m_Interpreter->process("cling::test::Tester = new cling::test::TestProxy();");
   }
 
@@ -500,7 +500,7 @@ namespace test {
     // We are currently NOT parsing an EvaluateT() expression.
     // Escape the expression into an EvaluateT() expression.
     ASTContext& C = R.getSema().getASTContext();
-    DeclContext* DC = 0;
+    DeclContext* DC = nullptr;
     // For DeclContext-less scopes like if (dyn_expr) {}
     while (!DC) {
       DC = static_cast<DeclContext*>(S->getEntity());
@@ -520,7 +520,7 @@ namespace test {
     IdentifierInfo* II = Name.getAsIdentifierInfo();
     SourceLocation Loc = R.getNameLoc();
     VarDecl* Res = VarDecl::Create(C, DC, Loc, Loc, II, C.DependentTy,
-        /*TypeSourceInfo*/0, SC_None);
+        /*TypeSourceInfo*/nullptr, SC_None);
 
     // Annotate the decl to give a hint in cling. FIXME: Current implementation
     // is a gross hack, because TClingCallbacks shouldn't know about

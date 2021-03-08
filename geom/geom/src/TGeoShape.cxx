@@ -156,7 +156,7 @@ are interpreted and which is their result inside specific shape classes.
 
 ClassImp(TGeoShape);
 
-TGeoMatrix *TGeoShape::fgTransform = NULL;
+TGeoMatrix *TGeoShape::fgTransform = nullptr;
 Double_t    TGeoShape::fgEpsMch = 2.220446049250313e-16;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -641,7 +641,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
 
       // Set up local -> master translation matrix
       if (localFrame) {
-         TGeoMatrix * localMasterMat = 0;
+         TGeoMatrix * localMasterMat = nullptr;
          if (TGeoShape::GetTransform()) {
             localMasterMat = TGeoShape::GetTransform();
          } else {

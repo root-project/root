@@ -96,7 +96,7 @@ int TGHtml::TokenNumber(TGHtmlElement *p)
 
 void TGHtml::MaxIndex(TGHtmlElement *p, int *pIndex, int isLast)
 {
-   if (p == 0) {
+   if (p == nullptr) {
       *pIndex = 0;
    } else {
       switch (p->fType) {
@@ -162,7 +162,7 @@ void TGHtml::FindIndexInBlock(TGHtmlBlock *pBlock, int x,
    }
    n = font->MeasureChars(pBlock->fZ, pBlock->fN, x - pBlock->fLeft, 0, &len);
    *pIndex = 0;
-   *ppToken = 0;
+   *ppToken = nullptr;
    while (p && n >= 0) {
       switch (p->fType) {
          case Html_Text:
@@ -212,8 +212,8 @@ void TGHtml::IndexToBlockIndex(SHtmlIndex_t sIndex,
    int n = sIndex.fI;
    TGHtmlElement *p;
 
-   if (sIndex.fP == 0) {
-      *ppBlock = 0;
+   if (sIndex.fP == nullptr) {
+      *ppBlock = nullptr;
       *piIndex = 0;
       return;
    }
@@ -253,7 +253,7 @@ int TGHtml::IndexMod(TGHtmlElement **pp, int *ip, char *cp)
    char nbuf[50];
    int i, x, cnt, ccnt[2], cflag[2];
 
-   if (pp == 0 || !*pp) return -1;
+   if (pp == nullptr || !*pp) return -1;
    ccnt[0] = ccnt[1] = cflag[0] = cflag[1] = 0;
    x = 0;
    while (*cp && x < 2) {
@@ -343,7 +343,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
                             TGHtmlElement **ppToken, int *pIndex)
 {
    int i, n, x, y;
-   TGHtmlElement *p = 0;
+   TGHtmlElement *p = nullptr;
    TGHtmlBlock *pBlock;
    TGHtmlBlock *pNearby;
    int dist = 1000000;
@@ -380,7 +380,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
                (*pIndex)++;
             } else {
                if (n == 1 && p && p->IsMarkup() && base[i] == '.' &&
-                   p->MarkupArg(fZBase + i + 1, 0)) {
+                   p->MarkupArg(fZBase + i + 1, nullptr)) {
                   *pIndex = 0;
                } else {
                   rc = 1;
@@ -455,7 +455,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
          }
          x += fVisible.fX;
          y += fVisible.fY;
-         pNearby = 0;
+         pNearby = nullptr;
          *ppToken = fPLast;
          *pIndex = 0;
          for (pBlock = fFirstBlock; pBlock; pBlock = pBlock->fBNext) {
@@ -515,7 +515,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
                }
             }
          }
-         if (pBlock == 0) {
+         if (pBlock == nullptr) {
             if (pNearby) {
                FindIndexInBlock(pNearby, x, ppToken, pIndex);
             }

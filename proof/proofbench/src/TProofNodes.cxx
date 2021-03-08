@@ -28,7 +28,7 @@ ClassImp(TProofNodes);
 /// Constructor
 
 TProofNodes::TProofNodes(TProof* proof)
-            : fProof(proof), fNodes(0), fActiveNodes(0),
+            : fProof(proof), fNodes(nullptr), fActiveNodes(nullptr),
               fMaxWrksNode(-1), fMinWrksNode(-1),
               fNNodes(0), fNWrks(0), fNActiveWrks(0), fNCores(0)
 {
@@ -68,9 +68,9 @@ void TProofNodes::Build()
 
    TList *slaves = fProof->GetListOfSlaveInfos();
    TIter nxtslave(slaves);
-   TSlaveInfo *si = 0;
-   TList *node = 0;
-   TPair *pair = 0;
+   TSlaveInfo *si = nullptr;
+   TList *node = nullptr;
+   TPair *pair = nullptr;
    while ((si = (TSlaveInfo *)(nxtslave()))) {
       TSlaveInfo *si_copy = (TSlaveInfo *)(si->Clone());
       if (!(pair = (TPair *) fNodes->FindObject(si->GetName()))) {
@@ -92,15 +92,15 @@ void TProofNodes::Build()
    }
    fActiveNodes = new TMap;
    fActiveNodes->SetOwner(kTRUE);
-   TList *actnode = 0;
+   TList *actnode = nullptr;
    fMaxWrksNode = -1;
    fMinWrksNode = -1;
    fNNodes = 0;
    fNWrks = 0;
    fNActiveWrks = 0;
    TIter nxk(fNodes);
-   TObject *key = 0;
-   while ((key = nxk()) != 0) {
+   TObject *key = nullptr;
+   while ((key = nxk()) != nullptr) {
       node = dynamic_cast<TList *>(fNodes->GetValue(key));
       if (node) {
          fNNodes++;
@@ -190,12 +190,12 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
    }
    Int_t nworkersnode = sworkers.Atoi();
    Int_t ret = nworkersnode;
-   TSlaveInfo *si = 0;
-   TList *node = 0;
-   TObject *key = 0;
+   TSlaveInfo *si = nullptr;
+   TList *node = nullptr;
+   TObject *key = nullptr;
 
    TIter nxk(fNodes);
-   while ((key = nxk()) != 0) {
+   while ((key = nxk()) != nullptr) {
       if ((node = dynamic_cast<TList *>(fNodes->GetValue(key)))) {
          TIter nxtworker(node);
          Int_t nactiveworkers = 0;
@@ -243,7 +243,7 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
 
    // Build() destroyes fNodes so we need to re-create the iterator, resetting is not enough ...
    TIter nxkn(fNodes);
-   while ((key = nxkn()) != 0) {
+   while ((key = nxkn()) != nullptr) {
       if ((node = dynamic_cast<TList *>(fNodes->GetValue(key)))) {
          TIter nxtworker(node);
          Int_t nactiveworkers = 0;
@@ -271,8 +271,8 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
 void TProofNodes::Print(Option_t* option) const
 {
    TIter nxk(fNodes);
-   TObject *key = 0;
-   while ((key = nxk()) != 0) {
+   TObject *key = nullptr;
+   while ((key = nxk()) != nullptr) {
       TList *node = dynamic_cast<TList *>(fNodes->GetValue(key));
       if (node) {
          node->Print(option);

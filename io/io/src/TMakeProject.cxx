@@ -106,7 +106,7 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
                TString nsname(name, i);
                TClass *cl = gROOT->GetClass(nsname);
                Bool_t definedInParent = !includeNested && cl && (cl->Size() != 0 || (cl->Size()==0 && !cl->HasInterpreterInfo() /*empty 'base' class on file*/));
-               if (!definedInParent && cl==0 && extrainfos!=0) {
+               if (!definedInParent && cl==nullptr && extrainfos!=nullptr) {
                   TStreamerInfo *clinfo = (TStreamerInfo*)extrainfos->FindObject(nsname);
                   if (clinfo && clinfo->GetClassVersion() == -5) {
                      definedInParent = kTRUE;
@@ -188,16 +188,16 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
                      TString nsname(clname, cur);
                      TClass *cl = gROOT->GetClass(nsname);
                      if (top) {
-                        if (cl == 0 || (cl && cl->Size() == 0)) {
+                        if (cl == nullptr || (cl && cl->Size() == 0)) {
                            TString last(name, cur - (name - clname));
-                           if ((numberOfClasses == 0 || *numberOfClasses == 0) && strchr(last.Data(), '<') == 0) {
+                           if ((numberOfClasses == nullptr || *numberOfClasses == 0) && strchr(last.Data(), '<') == nullptr) {
                               fprintf(fp, "namespace %s {\n", last.Data());
                               ++numberOfNamespaces;
                            } else {
-                              TString headername(GetHeaderName(last,0));
+                              TString headername(GetHeaderName(last,nullptr));
                               fprintf(fp, "#ifndef %s_h\n", headername.Data());
                               fprintf(fp, "#define %s_h\n", headername.Data());
-                              GenerateClassPrefix(fp, last.Data(), top, protoname, 0);
+                              GenerateClassPrefix(fp, last.Data(), top, protoname, nullptr);
                               fprintf(fp, "{\n");
                               fprintf(fp, "public:\n");
                               if (numberOfClasses) ++(*numberOfClasses);
@@ -216,13 +216,13 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
       }
       clname = name;
    } else {
-      istemplate = strstr(clname, "<") != 0;
+      istemplate = strstr(clname, "<") != nullptr;
    }
 
    protoname = clname;
 
    if (implementEmptyClass==1) {
-      TString headername(GetHeaderName(fullname,0));
+      TString headername(GetHeaderName(fullname,nullptr));
       fprintf(fp, "#ifndef %s_h\n", headername.Data());
       fprintf(fp, "#define %s_h\n", headername.Data());
    }
@@ -293,7 +293,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
          // The nesting space of this class may not be #pragma declared (and without it
          // the dictionary is broken), so for now skip those
          if (implementEmptyClass==1) {
-            if (strchr(fullname, ':') == 0) {
+            if (strchr(fullname, ':') == nullptr) {
                // yes this is too aggressive, this needs to be fixed properly by moving the #pragma out of band.
                fprintf(fp, "#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", fullname);
             }
@@ -317,7 +317,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
 
 void TMakeProject::GenerateMissingStreamerInfo(TList *extrainfos, const char *clname, Bool_t iscope)
 {
-   if (!TClassEdit::IsStdClass(clname) && !TClass::GetClass(clname) && gROOT->GetType(clname) == 0) {
+   if (!TClassEdit::IsStdClass(clname) && !TClass::GetClass(clname) && gROOT->GetType(clname) == nullptr) {
 
       TStreamerInfo *info = (TStreamerInfo*)extrainfos->FindObject(clname);
       if (!info) {
@@ -549,7 +549,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                         incName.Append(".h");
                         AddInclude(fp, incName, kFALSE, inclist);
                      }
-                  } else if (incName.Length() && incName[0] != ' ' && gROOT->GetType(incName) == 0) {
+                  } else if (incName.Length() && incName[0] != ' ' && gROOT->GetType(incName) == nullptr) {
                      Bool_t emptyclass = !cl;
                      if (emptyclass && extrainfos) {
                         TStreamerInfo *info = (TStreamerInfo*)extrainfos->FindObject(incName);
@@ -585,7 +585,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                   what.ReplaceAll("std::","");
                   // Only ask for it if needed.
                   TClass *paircl = TClass::GetClass(what.Data());
-                  if (paircl == 0 || !paircl->HasInterpreterInfo()) {
+                  if (paircl == nullptr || !paircl->HasInterpreterInfo()) {
                      AddUniqueStatement(fp, TString::Format("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", what.Data()), inclist);
                   }
                   break;
@@ -632,7 +632,7 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
          if (what.Length()) {
             // Only ask for it if needed.
             TClass *paircl = TClass::GetClass(what.Data());
-            if (paircl == 0 || !paircl->HasInterpreterInfo()) {
+            if (paircl == nullptr || !paircl->HasInterpreterInfo()) {
                AddUniqueStatement(fp, TString::Format("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n",what.Data()), inclist);
             }
          }
@@ -661,7 +661,7 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
    if (strncmp(name, "auto_ptr<", auto_ptr_len) == 0) {
       newname = "unique_ptr<";
       newname += (name + auto_ptr_len);
-   } else if (strchr(name,'<')!=0) {
+   } else if (strchr(name,'<')!=nullptr) {
       std::vector<std::string> inside;
       int nestedLoc;
       unsigned int narg = TClassEdit::GetSplit( name, inside, nestedLoc, TClassEdit::kLong64 );

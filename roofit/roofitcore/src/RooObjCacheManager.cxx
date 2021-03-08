@@ -54,7 +54,7 @@ RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, Bool_t c
   _clearOnRedirect(clearCacheOnServerRedirect), 
   _allowOptimize(allowOptimize),
   _optCacheModeSeen(kFALSE),
-  _optCacheObservables(0)
+  _optCacheObservables(nullptr)
 {
 }
 
@@ -67,7 +67,7 @@ RooObjCacheManager::RooObjCacheManager(const RooObjCacheManager& other, RooAbsAr
   _clearOnRedirect(other._clearOnRedirect),
   _allowOptimize(other._allowOptimize),
   _optCacheModeSeen(kFALSE), // cache mode properties are not transferred in copy ctor
-  _optCacheObservables(0)
+  _optCacheObservables(nullptr)
 {
 }
 
@@ -166,7 +166,7 @@ void RooObjCacheManager::sterilize()
 
   if (_optCacheObservables && _clearObsList) {
     delete _optCacheObservables ;
-    _optCacheObservables = 0 ;
+    _optCacheObservables = nullptr ;
     _optCacheModeSeen = kFALSE ;
   }
   

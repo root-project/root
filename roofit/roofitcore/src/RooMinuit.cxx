@@ -84,7 +84,7 @@ void RooMinuit::cleanup()
 {
   if (_theFitter) {
     delete _theFitter ;
-    _theFitter =0 ;
+    _theFitter =nullptr ;
   }
 }
 
@@ -108,9 +108,9 @@ RooMinuit::RooMinuit(RooAbsReal& function)
 
   // Store function reference
   _evalCounter = 0 ;
-  _extV = 0 ;
+  _extV = nullptr ;
   _func = &function ;
-  _logfile = 0 ;
+  _logfile = nullptr ;
   _optConst = kFALSE ;
   _verbose = kFALSE ;
   _profile = kFALSE ;
@@ -269,7 +269,7 @@ void RooMinuit::setOffsetting(Bool_t flag)
 RooFitResult* RooMinuit::fit(const char* options)
 {
   if (_floatParamList->getSize()==0) {
-    return 0 ;
+    return nullptr ;
   }
 
   _theFitter->SetObjectFit(this) ;
@@ -291,7 +291,7 @@ RooFitResult* RooMinuit::fit(const char* options)
   if (opts.Contains("h")||!opts.Contains("m")) hesse() ;
   if (!opts.Contains("m")) minos() ;
 
-  return (opts.Contains("r")) ? save() : 0 ;
+  return (opts.Contains("r")) ? save() : nullptr ;
 }
 
 
@@ -948,14 +948,14 @@ RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Dou
   if(index1 < 0) {
     coutE(Minimization) << "RooMinuit::contour(" << GetName()
 			<< ") ERROR: " << var1.GetName() << " is not a floating parameter of " << _func->GetName() << endl ;
-    return 0;
+    return nullptr;
   }
 
   Int_t index2= _floatParamList->index(&var2);
   if(index2 < 0) {
     coutE(Minimization) << "RooMinuit::contour(" << GetName()
 			<< ") ERROR: " << var2.GetName() << " is not a floating parameter of PDF " << _func->GetName() << endl ;
-    return 0;
+    return nullptr;
   }
 
   // create and draw a frame
@@ -1014,14 +1014,14 @@ Bool_t RooMinuit::setLogFile(const char* inLogfile)
     coutI(Minimization) << "RooMinuit::setLogFile: closing previous log file" << endl ;
     _logfile->close() ;
     delete _logfile ;
-    _logfile = 0 ;
+    _logfile = nullptr ;
   }
   _logfile = new ofstream(inLogfile) ;
   if (!_logfile->good()) {
     coutI(Minimization) << "RooMinuit::setLogFile: cannot open file " << inLogfile << endl ;
     _logfile->close() ;
     delete _logfile ;
-    _logfile= 0;
+    _logfile= nullptr;
   }
   return kFALSE ;
 }

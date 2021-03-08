@@ -73,7 +73,7 @@ const char* TDictAttributeMap::GetPropertyAsString(const char* key) const
       //Show an error message if the key is not found.
       Error("GetPropertyAsString"
       , "Could not find property with String value for this key: %s", key);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

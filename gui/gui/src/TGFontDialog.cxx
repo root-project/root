@@ -50,11 +50,11 @@ static const char *gFDLG_DEFAULTSAMPLE = "AaBbCcYyZz 1234567890";
 static const char *gFontSizes[] = {
     "8",  "9", "10", "11", "12", "13", "14", "16",
    "18", "20", "22", "24", "26", "28", "30", "32",
-   "34", "36", "48", "72", 0
+   "34", "36", "48", "72", nullptr
 };
 
 static const char *gFontStyles[] = {
-   "Normal", "Bold", "Italic", "Bold Italic", 0
+   "Normal", "Bold", "Italic", "Bold Italic", nullptr
 };
 
 static TString gFontStylesReal[4];
@@ -64,7 +64,7 @@ static const char *gAlignTypes[] = {
     "top left", "top center", "top right",
     "middle left", "middle center", "middle right",
     "bottom left", "bottom center", "bottom right",
-    0
+    nullptr
 };
 
 static const Int_t gAlignValues[] = {
@@ -124,8 +124,8 @@ ClassImp(TGFontDialog);
 TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
                            FontProp_t *fontProp, const TString &sample,
                            char **fontList, Bool_t wait) :
-   TGTransientFrame(p, t, 100, 100), fFontNames(0), fFontSizes(0), fFontStyles(0),
-   fTextAligns(0), fColorSelect(0), fFontProp(0), fItalic(0), fBold(0), fSize(0),
+   TGTransientFrame(p, t, 100, 100), fFontNames(nullptr), fFontSizes(nullptr), fFontStyles(nullptr),
+   fTextAligns(nullptr), fColorSelect(nullptr), fFontProp(nullptr), fItalic(0), fBold(0), fSize(0),
    fTextAlign(0), fTextColor(0), fNumberOfFonts(0)
 {
    TGLabel *lbl;
@@ -134,12 +134,12 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    Int_t i, w;
    UInt_t width = 0, height = 0;
 
-   fSampleTextGC = 0;
-   fLabelFont    = 0;
-   fSample       = 0;
+   fSampleTextGC = nullptr;
+   fLabelFont    = nullptr;
+   fSample       = nullptr;
    fHitOK        = kFALSE;
    fWaitFor      = wait;
-   fInitFont     = 0;
+   fInitFont     = nullptr;
    fInitColor    = 0;
    fInitAlign    = 0;
 
@@ -271,7 +271,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
 
    Build(fontList, cnt);
 
-   for (i = 0; gAlignTypes[i] != 0; ++i) {
+   for (i = 0; gAlignTypes[i] != nullptr; ++i) {
       fTextAligns->AddEntry(new TGString(gAlignTypes[i]), i);
    }
 
@@ -307,7 +307,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    else
       fSampleText = sample;
 
-   for (i = 0; gFontSizes[i] != 0; ++i) {
+   for (i = 0; gFontSizes[i] != nullptr; ++i) {
       if (fSize == atoi(gFontSizes[i])) {
          fFontSizes->Select(i);
          break;
@@ -560,7 +560,7 @@ void TGFontDialog::UpdateStyleSize(const char *family)
    Int_t i = 0;
 
    TString fname;
-   char **fontList = 0;
+   char **fontList = nullptr;
 
    fname = TString::Format("-*-%s-*-*", family);
    fontList = gVirtualX->ListFonts(fname.Data(), 1000, cnt);
@@ -678,7 +678,7 @@ void TGFontDialog::UpdateStyleSize(const char *family)
    gVirtualX->FreeFontNames(fontList);
 
    Bool_t nostyles = kTRUE;
-   for (i = 0; gFontStyles[i] != 0; ++i) {
+   for (i = 0; gFontStyles[i] != nullptr; ++i) {
       if (all_styles || styles[i]) {
          nostyles = kFALSE;
          fFontStyles->AddEntry(new TGString(gFontStyles[i]), i);
@@ -718,7 +718,7 @@ void TGFontDialog::UpdateStyleSize(const char *family)
       sz = " " + sz;
    }
 
-   for (i = 0; gFontSizes[i] != 0; ++i) {
+   for (i = 0; gFontSizes[i] != nullptr; ++i) {
       if (all_sizes && !fFontSizes->FindEntry(gFontSizes[i])) {
          fFontSizes->AddEntry(new TGString(gFontSizes[i]), i);
       }

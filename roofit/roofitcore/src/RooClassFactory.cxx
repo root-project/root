@@ -96,7 +96,7 @@ Bool_t RooClassFactory::makeAndCompilePdf(const char* name, const char* expressi
       if (catArgNames.size()>0) catArgNames += "," ;
       catArgNames += arg->GetName() ;
     } else {
-      oocoutE((RooAbsArg*)0,InputArguments) << "RooClassFactory::makeAndCompilePdf ERROR input argument " << arg->GetName()
+      oocoutE((RooAbsArg*)nullptr,InputArguments) << "RooClassFactory::makeAndCompilePdf ERROR input argument " << arg->GetName()
 					      << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl ;
     }
   }
@@ -140,7 +140,7 @@ Bool_t RooClassFactory::makeAndCompileFunction(const char* name, const char* exp
       if (catArgNames.size()>0) catArgNames += "," ;
       catArgNames += arg->GetName() ;
     } else {
-      oocoutE((RooAbsArg*)0,InputArguments) << "RooClassFactory::makeAndCompileFunction ERROR input argument " << arg->GetName()
+      oocoutE((RooAbsArg*)nullptr,InputArguments) << "RooClassFactory::makeAndCompileFunction ERROR input argument " << arg->GetName()
 					    << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl ;
     }
   }
@@ -416,22 +416,22 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
 {
   // Check that arguments were given
   if (!baseName) {
-    oocoutE((TObject*)0,InputArguments) << "RooClassFactory::makeClass: ERROR: a base class name must be given" << endl ;
+    oocoutE((TObject*)nullptr,InputArguments) << "RooClassFactory::makeClass: ERROR: a base class name must be given" << endl ;
     return kTRUE ;
   }
 
   if (!className) {
-    oocoutE((TObject*)0,InputArguments) << "RooClassFactory::makeClass: ERROR: a class name must be given" << endl ;
+    oocoutE((TObject*)nullptr,InputArguments) << "RooClassFactory::makeClass: ERROR: a class name must be given" << endl ;
     return kTRUE ;
   }
 
   if ((!realArgNames || !*realArgNames) && (!catArgNames || !*catArgNames)) {
-    oocoutE((TObject*)0,InputArguments) << "RooClassFactory::makeClass: ERROR: A list of input argument names must be given" << endl ;
+    oocoutE((TObject*)nullptr,InputArguments) << "RooClassFactory::makeClass: ERROR: A list of input argument names must be given" << endl ;
     return kTRUE ;
   }
 
   if (intExpression && !hasAnaInt) {
-    oocoutE((TObject*)0,InputArguments) << "RooClassFactory::makeClass: ERROR no analytical integration code requestion, but expression for analytical integral provided" << endl ;
+    oocoutE((TObject*)nullptr,InputArguments) << "RooClassFactory::makeClass: ERROR no analytical integration code requestion, but expression for analytical integral provided" << endl ;
     return kTRUE ;
   }
 
@@ -447,7 +447,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
     while(token) {
       alist.push_back(token) ;
       isCat.push_back(false) ;
-      token = strtok(0,",") ;
+      token = strtok(nullptr,",") ;
     }
     delete[] buf ;
   }
@@ -459,7 +459,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
     while(token) {
       alist.push_back(token) ;
       isCat.push_back(true) ;
-      token = strtok(0,",") ;
+      token = strtok(nullptr,",") ;
     }
     delete[] buf ;
   }
@@ -646,8 +646,8 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
       char* ptr = strtok(buf,":") ;
       while(ptr) {
 	intObs.push_back(ptr) ;
-	intExpr.push_back(strtok(0,";")) ;
-	ptr = strtok(0,":") ;
+	intExpr.push_back(strtok(nullptr,";")) ;
+	ptr = strtok(nullptr,":") ;
       }
       delete[] buf ;
     }

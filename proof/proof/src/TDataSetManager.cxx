@@ -47,7 +47,7 @@
 
 // Name for common datasets
 TString TDataSetManager::fgCommonDataSetTag = "COMMON";
-TList   *TDataSetManager::fgDataSetSrvMaps = 0;
+TList   *TDataSetManager::fgDataSetSrvMaps = nullptr;
 
 ClassImp(TDataSetManager);
 
@@ -421,7 +421,7 @@ Long64_t TDataSetManager::ToBytes(const char *size)
 TFileCollection *TDataSetManager::GetDataSet(const char *, const char *)
 {
    AbstractMethod("GetDataSet");
-   return (TFileCollection *)0;
+   return (TFileCollection *)nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -465,7 +465,7 @@ TMap *TDataSetManager::GetDataSets(const char *, UInt_t)
 {
    AbstractMethod("GetDataSets");
 
-   return (TMap *)0;
+   return (TMap *)nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Scans the dataset indicated by 'uri' following the 'opts' directives
@@ -593,7 +593,7 @@ void TDataSetManager::ShowQuota(const char *opt)
 
    Bool_t noInfo = kTRUE;
    TIter iter(groupQuotaMap);
-   TObjString *group = 0;
+   TObjString *group = nullptr;
    while ((group = dynamic_cast<TObjString*> (iter.Next()))) {
       noInfo = kFALSE;
       Long64_t groupQuota = GetGroupQuota(group->String());
@@ -612,7 +612,7 @@ void TDataSetManager::ShowQuota(const char *opt)
          continue;
 
       TIter iter2(userMap);
-      TObjString *user = 0;
+      TObjString *user = nullptr;
       while ((user = dynamic_cast<TObjString*> (iter2.Next()))) {
          TParameter<Long64_t> *size2 =
             dynamic_cast<TParameter<Long64_t>*> (userMap->GetValue(user->String().Data()));
@@ -640,7 +640,7 @@ void TDataSetManager::PrintUsedSpace()
    Info("PrintUsedSpace", "listing used space");
 
    TIter iter(&fUserUsed);
-   TObjString *group = 0;
+   TObjString *group = nullptr;
    while ((group = dynamic_cast<TObjString*> (iter.Next()))) {
       TMap *userMap = dynamic_cast<TMap*> (fUserUsed.GetValue(group->String()));
 
@@ -652,7 +652,7 @@ void TDataSetManager::PrintUsedSpace()
                                       (Float_t) size->GetVal() / DSM_ONE_GB);
 
          TIter iter2(userMap);
-         TObjString *user = 0;
+         TObjString *user = nullptr;
          while ((user = dynamic_cast<TObjString*> (iter2.Next()))) {
             TParameter<Long64_t> *size2 =
                dynamic_cast<TParameter<Long64_t>*> (userMap->GetValue(user->String().Data()));
@@ -675,7 +675,7 @@ void TDataSetManager::MonitorUsedSpace(TVirtualMonitoringWriter *monitoring)
    Info("MonitorUsedSpace", "sending used space to monitoring server");
 
    TIter iter(&fUserUsed);
-   TObjString *group = 0;
+   TObjString *group = nullptr;
    while ((group = dynamic_cast<TObjString*> (iter.Next()))) {
       TMap *userMap = dynamic_cast<TMap*> (fUserUsed.GetValue(group->String()));
       TParameter<Long64_t> *size =
@@ -692,7 +692,7 @@ void TDataSetManager::MonitorUsedSpace(TVirtualMonitoringWriter *monitoring)
          list->Add(new TParameter<Long64_t>("_QUOTA_", groupQuota));
 
       TIter iter2(userMap);
-      TObjString *user = 0;
+      TObjString *user = nullptr;
       while ((user = dynamic_cast<TObjString*> (iter2.Next()))) {
          TParameter<Long64_t> *size2 =
             dynamic_cast<TParameter<Long64_t>*> (userMap->GetValue(user->String().Data()));
@@ -1005,7 +1005,7 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
 
 TMap *TDataSetManager::GetSubDataSets(const char *ds, const char *exclude)
 {
-   TMap *map = (TMap *)0;
+   TMap *map = (TMap *)nullptr;
 
    if (!ds || strlen(ds) <= 0) {
       Info("GetDataSets", "dataset name undefined!");
@@ -1058,7 +1058,7 @@ void TDataSetManager::PrintDataSet(TFileCollection *fc, Int_t popt)
       Printf("+++ Files:");
       Int_t nf = 0;
       TIter nxfi(fc->GetList());
-      TFileInfo *fi = 0;
+      TFileInfo *fi = nullptr;
       while ((fi = (TFileInfo *)nxfi())) {
          if (u == 1)
             Printf("+++ %5d. %s", ++nf, fi->GetCurrentUrl()->GetUrl());
@@ -1097,7 +1097,7 @@ void TDataSetManager::PrintDataSet(TFileCollection *fc, Int_t popt)
 
 void TDataSetManager::ShowDataSets(const char *uri, const char *opt)
 {
-   TFileCollection *fc = 0;
+   TFileCollection *fc = nullptr;
    TString o(opt);
    Int_t popt = 0;
    if (o.Contains("full:")) {
@@ -1122,7 +1122,7 @@ void TDataSetManager::ShowDataSets(const char *uri, const char *opt)
       TMap *dsmap = GetSubDataSets(uri, o.Data());
       if (dsmap) {
          TIter nxk(dsmap);
-         TObject *k = 0;
+         TObject *k = nullptr;
          while ((k = nxk()) && (fc = (TFileCollection *) dsmap->GetValue(k))) {
             PrintDataSet(fc, popt);
          }
@@ -1132,7 +1132,7 @@ void TDataSetManager::ShowDataSets(const char *uri, const char *opt)
       TString u(uri), grp, usr, dsn;
       // Support for "*" or "/*"
       if (u == "" || u == "*" || u == "/*" || u == "/*/" || u == "/*/*") u = "/*/*/";
-      if (!ParseUri(u.Data(), &grp, &usr, &dsn, 0, kFALSE, kTRUE))
+      if (!ParseUri(u.Data(), &grp, &usr, &dsn, nullptr, kFALSE, kTRUE))
          Warning("ShowDataSets", "problems parsing URI '%s'", uri);
       // Scan the existing datasets and print the content
       UInt_t xopt = (UInt_t)(TDataSetManager::kPrint);
@@ -1256,9 +1256,9 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
 
    Bool_t bchanged_ds = kFALSE;
 
-   TList *newStagedFiles = 0;
-   TFileInfo *fileInfo = 0;
-   TFileStager *stager = 0;
+   TList *newStagedFiles = nullptr;
+   TFileInfo *fileInfo = nullptr;
+   TFileStager *stager = nullptr;
    Bool_t createStager = kFALSE;
 
    if (doall || getlistonly) {
@@ -1267,7 +1267,7 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
       newStagedFiles = (!doall && getlistonly && flist) ? flist : new TList;
       if (newStagedFiles != flist) newStagedFiles->SetOwner(kFALSE);
 
-      stager = (mss && strlen(mss) > 0) ? TFileStager::Open(mss) : 0;
+      stager = (mss && strlen(mss) > 0) ? TFileStager::Open(mss) : nullptr;
       createStager = (stager) ? kFALSE : kTRUE;
 
       Bool_t bchanged_fi = kFALSE;
@@ -1326,7 +1326,7 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
 
       // If staging files, prepare the stager
       if (locateonly || stageonly) {
-         stager = (mss && strlen(mss) > 0) ? TFileStager::Open(mss) : 0;
+         stager = (mss && strlen(mss) > 0) ? TFileStager::Open(mss) : nullptr;
          createStager = (stager) ? kFALSE : kTRUE;
       }
 
@@ -1662,7 +1662,7 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
 
    TUrl *url = fileinfo->GetCurrentUrl();
 
-   TFile *file = 0;
+   TFile *file = nullptr;
    Bool_t anchor = kFALSE;
 
    // Get timeout settings (default none)
@@ -1809,7 +1809,7 @@ Int_t TDataSetManager::FillMetaData(TFileInfo *fi, TDirectory *d, const char *rd
 
    if (d->GetListOfKeys()) {
       TIter nxk(d->GetListOfKeys());
-      TKey *k = 0;
+      TKey *k = nullptr;
       while ((k = dynamic_cast<TKey *> (nxk()))) {
 
          if (TClass::GetClass(k->GetClassName())->InheritsFrom(TDirectory::Class())) {
@@ -1866,7 +1866,7 @@ Int_t TDataSetManager::FillMetaData(TFileInfo *fi, TDirectory *d, const char *rd
 
 TList *TDataSetManager::ParseDataSetSrvMaps(const TString &srvmaps)
 {
-   TList *srvmapslist = 0;
+   TList *srvmapslist = nullptr;
    if (srvmaps.IsNull()) {
       ::Warning("TDataSetManager::ParseDataSetSrvMaps",
                 "called with an empty string! - nothing to do");
@@ -1893,7 +1893,7 @@ TList *TDataSetManager::ParseDataSetSrvMaps(const TString &srvmaps)
       }
       // TUrl if wildcards or TObjString
       TString sp;
-      TUrl *u = 0;
+      TUrl *u = nullptr;
       if (!(sf.IsNull()) && sf.Contains("*")) {
          u = new TUrl(sf);
          if (!(sf.BeginsWith(u->GetProtocol()))) u->SetProtocol("root");
@@ -1936,7 +1936,7 @@ Bool_t TDataSetManager::CheckDataSetSrvMaps(TUrl *furl, TString &file1, TList *s
    TList *mlist = (srvmaplist) ? srvmaplist : fgDataSetSrvMaps;
    if (mlist && mlist->GetSize() > 0) {
       TIter nxm(mlist);
-      TPair *pr = 0;
+      TPair *pr = nullptr;
       while ((pr = (TPair *) nxm())) {
          Bool_t replace = kFALSE;
          // If TUrl apply reg exp on host

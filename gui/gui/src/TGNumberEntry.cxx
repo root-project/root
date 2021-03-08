@@ -235,8 +235,8 @@ static char *EliminateGarbage(char *text,
                               TGNumberFormat::EStyle style,
                               TGNumberFormat::EAttribute attr)
 {
-   if (text == 0) {
-      return 0;
+   if (text == nullptr) {
+      return nullptr;
    }
    for (Int_t i = strlen(text) - 1; i >= 0; i--) {
       if (!IsGoodChar(text[i], style, attr)) {
@@ -292,8 +292,8 @@ static TString StringInt(Long_t i, Int_t digits)
 static char *RealToStr(char *text, const RealInfo_t & ri)
 {
    char *p = text;
-   if (text == 0) {
-      return 0;
+   if (text == nullptr) {
+      return nullptr;
    }
    strlcpy(p, "", 256);
    if (ri.fSign < 0) {
@@ -327,7 +327,7 @@ static Double_t StrToReal(const char *text, RealInfo_t & ri)
    char *minus;
    char buf[256];
 
-   if ((text == 0) || (!text[0])) {
+   if ((text == nullptr) || (!text[0])) {
       ri.fStyle = kRSInt;
       ri.fIntNum = 0;
       ri.fSign = 1;
@@ -336,41 +336,41 @@ static Double_t StrToReal(const char *text, RealInfo_t & ri)
    strlcpy(buf, text, sizeof(buf));
    s = buf;
    frac = strchr(s, '.');
-   if (frac == 0) {
+   if (frac == nullptr) {
       frac = strchr(s, ',');
    }
    expo = strchr(s, 'e');
    minus = strchr(s, '-');
-   if (expo == 0) {
+   if (expo == nullptr) {
       expo = strchr(s, 'E');
    }
-   if ((frac != 0) && (expo != 0) && (frac > expo)) {
-      frac = 0;
+   if ((frac != nullptr) && (expo != nullptr) && (frac > expo)) {
+      frac = nullptr;
    }
-   if ((minus != 0) && ((expo == 0) || (minus < expo))) {
+   if ((minus != nullptr) && ((expo == nullptr) || (minus < expo))) {
       ri.fSign = -1;
    } else {
       ri.fSign = 1;
    }
-   if ((frac == 0) && (expo == 0)) {
+   if ((frac == nullptr) && (expo == nullptr)) {
       ri.fStyle = kRSInt;
-   } else if (frac == 0) {
+   } else if (frac == nullptr) {
       ri.fStyle = kRSExpo;
-   } else if (expo == 0) {
+   } else if (expo == nullptr) {
       ri.fStyle = kRSFrac;
    } else {
       ri.fStyle = kRSFracExpo;
    }
-   if (frac != 0) {
+   if (frac != nullptr) {
       *frac = 0;
       frac++;
    }
-   if (expo != 0) {
+   if (expo != nullptr) {
       *expo = 0;
       expo++;
    }
    ri.fIntNum = TMath::Abs(IntStr(s));
-   if (expo != 0) {
+   if (expo != nullptr) {
       ri.fExpoNum = IntStr(expo);
    } else {
       ri.fExpoNum = 0;
@@ -384,7 +384,7 @@ static Double_t StrToReal(const char *text, RealInfo_t & ri)
    ri.fFracDigits = 0;
    ri.fFracBase = 1;
    ri.fFracNum = 0;
-   if (frac != 0) {
+   if (frac != nullptr) {
       for (UInt_t i = 0; i < strlen(frac); i++) {
          if (isdigit(frac[i])) {
             if (ri.fFracNum + 9 < kMaxInt / 10) {
@@ -528,7 +528,7 @@ static void GetNumbers(const char *s, Int_t & Sign,
    if (!isdigit(*s) && !strchr(Delimiters, *s)) {
       return;
    }
-   while ((*s != 0) && ((strchr(Delimiters, *s) == 0) || (maxd2 == 0))) {
+   while ((*s != 0) && ((strchr(Delimiters, *s) == nullptr) || (maxd2 == 0))) {
       if (isdigit(*s) && (d < maxd1)) {
          if (n1 < kMaxLong) {
             n1 = 10 * n1 + (*s - '0');
@@ -561,10 +561,10 @@ static void AppendFracZero(char *text, Int_t digits)
    char *p;
    Int_t found = 0;
    p = strchr(text, '.');
-   if (p == 0) {
+   if (p == nullptr) {
       p = strchr(text, ',');
    }
-   if (p == 0) {
+   if (p == nullptr) {
       return;
    }
    p++;
@@ -724,7 +724,7 @@ static char *TranslateToStr(char *text, Long_t l,
    case TGNumberFormat::kNESHex:
       return IntToHexStr(text, (ULong_t) l);
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1764,7 +1764,7 @@ void TGNumberEntryField::Layout()
 
 void TGNumberEntryLayout::Layout()
 {
-   if (fBox == 0) {
+   if (fBox == nullptr) {
       return;
    }
    UInt_t w = fBox->GetWidth();
@@ -1844,7 +1844,7 @@ protected:
 public:
    TGRepeatFireButton(const TGWindow *p, const TGPicture *pic,
                       Int_t id, Bool_t logstep)
-    : TGPictureButton(p, pic, id), fTimer(0), fIgnoreNextFire(0),
+    : TGPictureButton(p, pic, id), fTimer(nullptr), fIgnoreNextFire(0),
        fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep), fDoLogStep(logstep)
        { fEditDisabled = kEditDisable | kEditDisableGrab; }
    virtual ~TGRepeatFireButton() { delete fTimer; }
@@ -1907,14 +1907,14 @@ Bool_t TGRepeatFireButton::HandleButton(Event_t * event)
       FireButton();
       fIgnoreNextFire = 2;
 
-      if (fTimer == 0) {
+      if (fTimer == nullptr) {
          fTimer = new TRepeatTimer(this, t0);
       }
       fTimer->Reset();
       gSystem->AddTimer(fTimer);
    } else {
       SetState(kButtonUp);
-      if (fTimer != 0) {
+      if (fTimer != nullptr) {
          fTimer->Remove();
          fTimer->SetTime(t0);
       }
@@ -1974,15 +1974,15 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
    fNumericEntry->Connect("ReturnPressed()", "TGNumberEntry", this,
                           "Modified()");
    fNumericEntry->Associate(fMsgWindow);
-   AddFrame(fNumericEntry, 0);
+   AddFrame(fNumericEntry, nullptr);
    fButtonUp = new TGRepeatFireButton(this, fPicUp, 1,
                                       fNumericEntry->IsLogStep());
    fButtonUp->Associate(this);
-   AddFrame(fButtonUp, 0);
+   AddFrame(fButtonUp, nullptr);
    fButtonDown = new TGRepeatFireButton(this, fPicDown, 2,
                                         fNumericEntry->IsLogStep());
    fButtonDown->Associate(this);
-   AddFrame(fButtonDown, 0);
+   AddFrame(fButtonDown, nullptr);
 
    // resize
    Int_t h = fNumericEntry->GetDefaultHeight();

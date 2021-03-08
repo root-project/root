@@ -19,6 +19,6 @@
 
 #include "TGridJobStatusList.h"
 
-TGridJobStatusList *gGridJobStatusList = 0;
+TGridJobStatusList *gGridJobStatusList = nullptr;
 
 

@@ -40,9 +40,9 @@ TProofMonSenderML::TProofMonSenderML(const char *serv, const char *tag,
                                      const char *opt)
                   : TProofMonSender(serv, "ProofMonSenderML")
 {
-   fWriter = 0;
+   fWriter = nullptr;
    // Init the sender instance using the plugin manager
-   TPluginHandler *h = 0;
+   TPluginHandler *h = nullptr;
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualMonitoringWriter", "MonaLisa"))) {
       if (h->LoadPlugin() != -1) {
          fWriter = (TVirtualMonitoringWriter *) h->ExecPlugin(5, serv, tag, id, subid, opt);
@@ -160,7 +160,7 @@ Int_t TProofMonSenderML::SendSummary(TList *recs, const char *id)
    TObject *qtag = recs->FindObject("querytag");
    if (qtag) recs->Remove(qtag);
 
-   TObject *dsn = 0;
+   TObject *dsn = nullptr;
    // We may need to correct some variable names first
    if (fSummaryVrs > 1) {
       if ((dsn = recs->FindObject("dataset"))) recs->Remove(dsn);
@@ -169,7 +169,7 @@ Int_t TProofMonSenderML::SendSummary(TList *recs, const char *id)
       xrecs = new TList;
       xrecs->SetOwner(kFALSE);
       TIter nxr(recs);
-      TObject *o = 0;
+      TObject *o = nullptr;
       while ((o = nxr())) {
          if (!strcmp(o->GetName(), "vmemmxw")) break;
          xrecs->Add(o);
@@ -269,11 +269,11 @@ Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
       plets.Add(new TDSetPlet(ds.Data()));
    }
    // Now try to count the files
-   TDSetPlet *plet = 0;
+   TDSetPlet *plet = nullptr;
    TIter nxpl(&plets);
-   TObject *o = 0;
-   TDSetElement *e = 0, *ee = 0;
-   TDSet *dsete = 0;
+   TObject *o = nullptr;
+   TDSetElement *e = nullptr, *ee = nullptr;
+   TDSet *dsete = nullptr;
    TIter nxe(dset->GetListOfElements());
    TString dse;
    while ((o = nxe())) {
@@ -313,7 +313,7 @@ Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
 
    // Now try to include the missing files info
    if (missing) {
-      TFileInfo *fi = 0;
+      TFileInfo *fi = nullptr;
       TIter nxm(missing);
       TString dsfi, fn;
       while ((fi = (TFileInfo *) nxm())) {
@@ -339,7 +339,7 @@ Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
    values.Add(nm_dsn);
    TNamed *nm_querytag = new TNamed("querytag", qid);
    values.Add(nm_querytag);
-   TNamed *nm_begin = 0;
+   TNamed *nm_begin = nullptr;
    if (fDataSetInfoVrs > 0) {
       nm_begin = new TNamed("begin", begin);
       values.Add(nm_begin);
@@ -425,7 +425,7 @@ Int_t TProofMonSenderML::SendFileInfo(TDSet *dset, TList *missing,
    THashList hmiss;
    if (missing) {
       TIter nxfm(missing);
-      TFileInfo *fi = 0;
+      TFileInfo *fi = nullptr;
       while ((fi = (TFileInfo *)nxfm())) {
          hmiss.Add(new TObjString(fi->GetCurrentUrl()->GetUrl()));
       }
@@ -440,7 +440,7 @@ Int_t TProofMonSenderML::SendFileInfo(TDSet *dset, TList *missing,
    values.Add(nm_path);
    TNamed *nm_querytag = new TNamed("querytag", qid);
    values.Add(nm_querytag);
-   TNamed *nm_begin = 0;
+   TNamed *nm_begin = nullptr;
    if (fFileInfoVrs > 0) {
       nm_begin = new TNamed("begin", begin);
       values.Add(nm_begin);
@@ -454,9 +454,9 @@ Int_t TProofMonSenderML::SendFileInfo(TDSet *dset, TList *missing,
 
    // Loop over files
    Bool_t rc = kTRUE;
-   TObject *o = 0;
-   TDSetElement *e = 0, *ee = 0;
-   TDSet *dsete = 0;
+   TObject *o = nullptr;
+   TDSetElement *e = nullptr, *ee = nullptr;
+   TDSet *dsete = nullptr;
    TIter nxe(dset->GetListOfElements());
    TString fne, fneh;
    Int_t status = -1;

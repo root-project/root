@@ -77,7 +77,7 @@ TMVA::GeneticPopulation::GeneticPopulation(const std::vector<Interval*>& ranges,
 
 TMVA::GeneticPopulation::~GeneticPopulation()
 {
-   if (fRandomGenerator != NULL) delete fRandomGenerator;
+   if (fRandomGenerator != nullptr) delete fRandomGenerator;
 
    std::vector<GeneticRange*>::iterator it = fRanges.begin();
    for (;it!=fRanges.end(); ++it) delete *it;

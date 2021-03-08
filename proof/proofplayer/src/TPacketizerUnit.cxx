@@ -92,7 +92,7 @@ TPacketizerUnit::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
 {
    // Initialize the circularity ntple for speed calculations
    fCircNtp = new TNtupleD("Speed Circ Ntp", "Circular process info","tm:ev");
-   fCircNtp->SetDirectory(0);
+   fCircNtp->SetDirectory(nullptr);
    TProof::GetParameter(input, "PROOF_TPacketizerUnitCircularity", fCircLvl);
    fCircLvl = (fCircLvl > 0) ? fCircLvl : 5;
    fCircNtp->SetCircular(fCircLvl);
@@ -157,7 +157,7 @@ TProofProgressStatus *TPacketizerUnit::TSlaveStat::AddProcessed(TProofProgressSt
       return diff;
    } else {
       Error("AddProcessed", "status arg undefined");
-      return 0;
+      return nullptr;
    }
 }
 
@@ -175,8 +175,8 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    PDB(kPacketizer,1) Info("TPacketizerUnit", "enter (num %lld)", num);
 
    // Init pointer members
-   fWrkStats = 0;
-   fPackets = 0;
+   fWrkStats = nullptr;
+   fPackets = nullptr;
    fInput = input;
 
    fFixedNum = kFALSE;
@@ -226,7 +226,7 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
 
    fWrkStats = new TMap;
    fWrkStats->SetOwner(kFALSE);
-   fWrkExcluded = 0;
+   fWrkExcluded = nullptr;
 
    TSlave *slave;
    TIter si(slaves);
@@ -246,7 +246,7 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
 
    fTotalEntries = 0;
    fNumPerWorker = -1;
-   if (num > 0 && AssignWork(0,0,num) != 0)
+   if (num > 0 && AssignWork(nullptr,0,num) != 0)
       Warning("TPacketizerUnit", "some problems assigning work");
 
    // Save the config parameters in the dedicated list so that they will be saved
@@ -327,7 +327,7 @@ Float_t TPacketizerUnit::GetCurrentRate(Bool_t &all)
    if (fWrkStats && fWrkStats->GetSize() > 0) {
       TIter nxw(fWrkStats);
       TObject *key;
-      while ((key = nxw()) != 0) {
+      while ((key = nxw()) != nullptr) {
          TSlaveStat *slstat = (TSlaveStat *) fWrkStats->GetValue(key);
          if (slstat && slstat->GetProgressStatus() && slstat->GetEntriesProcessed() > 0) {
             // Sum-up the current rates
@@ -347,14 +347,14 @@ Float_t TPacketizerUnit::GetCurrentRate(Bool_t &all)
 TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
 {
    if (!fValid)
-      return 0;
+      return nullptr;
 
    // Find slave
    TSlaveStat *slstat = (TSlaveStat*) fWrkStats->GetValue(sl);
    if (!slstat) {
       Warning("GetNextPacket", "Received a packet request from an unknown slave: %s:%s",
          sl->GetName(), sl->GetOrdinal());
-      return 0;
+      return nullptr;
    }
 
    PDB(kPacketizer,2)
@@ -367,13 +367,13 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    Long64_t totev = 0;
    Long64_t numev = -1;
 
-   TProofProgressStatus *status = 0;
+   TProofProgressStatus *status = nullptr;
    if (sl->GetProtocol() > 18) {
       (*r) >> latency;
       (*r) >> status;
 
       // Calculate the progress made in the last packet
-      TProofProgressStatus *progress = 0;
+      TProofProgressStatus *progress = nullptr;
       if (status) {
          // update the worker status
          numev = status->GetEntries() - slstat->GetEntriesProcessed();
@@ -413,7 +413,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
                            sl->GetOrdinal(), sl->GetName(),
                            numev, latency, proctime, proccpu, bytesRead);
 
-   if (gPerfStats != 0) {
+   if (gPerfStats != nullptr) {
       gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(), "", numev,
                               latency, proctime, proccpu, bytesRead);
    }
@@ -422,7 +422,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
       PDB(kPacketizer,2)
          Info("GetNextPacket","worker-%s (%s) is done (%lld cycles)",
                            sl->GetOrdinal(), sl->GetName(), slstat->GetEntriesProcessed());
-      return 0;
+      return nullptr;
    }
 
    if (fAssigned == fTotalEntries) {
@@ -431,7 +431,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
       if (gProofServ && gProofServ->IsMaster() && !gProofServ->IsTopMaster()) {
          TDSetElement *nxe = gProofServ->GetNextPacket();
          if (nxe) {
-            if (AssignWork(0,0,nxe->GetNum()) == 0) {
+            if (AssignWork(nullptr,0,nxe->GetNum()) == 0) {
                if (fAssigned < fTotalEntries) done = kFALSE;
             } else {
                Error("GetNextPacket", "problems assigning additional work: stop");
@@ -441,15 +441,15 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
       }
       if (done) {
          // Send last timer message
-         HandleTimer(0);
-         return 0;
+         HandleTimer(nullptr);
+         return nullptr;
       }
    }
 
    if (fStop) {
       // Send last timer message
-      HandleTimer(0);
-      return 0;
+      HandleTimer(nullptr);
+      return nullptr;
    }
 
 
@@ -490,8 +490,8 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
          Int_t nrm = 0;
          Double_t sumRate = 0.;
          TIter nxwrk(fWrkStats);
-         TSlaveStat *wrkStat = 0;
-         TSlave *tmpWrk = 0;
+         TSlaveStat *wrkStat = nullptr;
+         TSlave *tmpWrk = nullptr;
          while ((tmpWrk = (TSlave *)nxwrk())) {
             if ((wrkStat = dynamic_cast<TSlaveStat *>(fWrkStats->GetValue(tmpWrk)))) {
                if (wrkStat->fRate > 0) {
@@ -510,7 +510,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
          // Check consistency
          if (nrm <= 0) {
             Error("GetNextPacket", "no worker has consistent information: stop processing!");
-            return (TDSetElement *)0;
+            return (TDSetElement *)nullptr;
          }
 
          Double_t avgRate = sumRate / nrm;

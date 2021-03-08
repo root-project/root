@@ -126,7 +126,7 @@ namespace cling {
 
     // Check if there is a function named after the file.
     assert(!args.empty() && "Arguments must be provided (at least \"()\"");
-    cling::Transaction* T = 0;
+    cling::Transaction* T = nullptr;
     MetaSema::ActionResult actionResult = actOnLCommand(file, &T);
     // T can be nullptr if there is no code (but comments)
     if (actionResult == AR_Success && T) {
@@ -200,7 +200,7 @@ namespace cling {
         bool found = false;
         //for (auto t : m_Interpreter.m_IncrParser->getAllTransactions()) {
         for(const Transaction *t = m_Interpreter.getFirstTransaction();
-            t != 0; t = t->getNext()) {
+            t != nullptr; t = t->getNext()) {
            //fprintf(stderr,"DEBUG: On unload check For %s unloadPoint is %p are t == %p\n",file.str().c_str(),unloadPoint, t);
           if (t == unloadPoint ) {
             found = true;

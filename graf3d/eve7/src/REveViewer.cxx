@@ -329,7 +329,7 @@ void REveViewerList::OnReMouseOver(TObject *obj, UInt_t /*state*/)
 {
    REveElement* el = dynamic_cast<REveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
 
    // void *qsender = gTQSender;
    // REX::gEve->GetHighlight()->UserRePickedElement(el);
@@ -351,7 +351,7 @@ void REveViewerList::OnUnMouseOver(TObject *obj, UInt_t /*state*/)
 {
    REveElement* el = dynamic_cast<REveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
 
    // void *qsender = gTQSender;
    // REX::gEve->GetHighlight()->UserUnPickedElement(el);
@@ -373,7 +373,7 @@ void REveViewerList::OnClicked(TObject *obj, UInt_t /*button*/, UInt_t state)
 {
    REveElement* el = dynamic_cast<REveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
    REX::gEve->GetSelection()->UserPickedElement(el, state & kKeyControlMask);
 }
 
@@ -390,7 +390,7 @@ void REveViewerList::OnReClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
 {
    REveElement* el = dynamic_cast<REveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
    REX::gEve->GetSelection()->UserRePickedElement(el);
 }
 
@@ -407,7 +407,7 @@ void REveViewerList::OnUnClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
 {
    REveElement* el = dynamic_cast<REveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
    REX::gEve->GetSelection()->UserUnPickedElement(el);
 }
 

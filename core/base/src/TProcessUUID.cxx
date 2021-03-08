@@ -66,8 +66,8 @@ TProcessUUID::TProcessUUID() : TProcessID()
 TProcessUUID::~TProcessUUID()
 {
    fUUIDs->Delete();
-   delete fUUIDs;  fUUIDs  = 0;
-   delete fActive; fActive = 0;
+   delete fUUIDs;  fUUIDs  = nullptr;
+   delete fActive; fActive = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +87,7 @@ UInt_t TProcessUUID::AddUUID(TUUID &uuid, TObject *obj)
       obj->SetUniqueID(number);
       obj->SetBit(kHasUUID);
       if (number >= (UInt_t)fObjects->GetSize()) fObjects->AddAtAndExpand(obj,number);
-      if (fObjects->UncheckedAt(number) == 0) fObjects->AddAt(obj,number);
+      if (fObjects->UncheckedAt(number) == nullptr) fObjects->AddAt(obj,number);
       return number;
    }
 
@@ -133,7 +133,7 @@ TObjString *TProcessUUID::FindUUID(UInt_t number) const
       if (obj->GetUniqueID() == number) return (TObjString*)obj;
       lnk = lnk->Next();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,7 +149,7 @@ void TProcessUUID::RemoveUUID(UInt_t number)
          fUUIDs->Remove(lnk);
          delete obj;
          fActive->ResetBitNumber(number);
-         fObjects->AddAt(0,number);
+         fObjects->AddAt(nullptr,number);
          return;
       }
       lnk = lnk->Next();

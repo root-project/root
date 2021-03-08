@@ -117,12 +117,12 @@ Bool_t TSQLMonitoringWriter::SendParameters(TList *values, const char *opt)
    }
 
    TIter nxi(values);
-   TObject *o = 0;
+   TObject *o = nullptr;
 
    // now prepare the strings
    TString sql = TString::Format("INSERT INTO %s", table.Data());
 
-   TSQLResult *res = 0;
+   TSQLResult *res = nullptr;
    if (!bulk) {
 
       // the column and values strings

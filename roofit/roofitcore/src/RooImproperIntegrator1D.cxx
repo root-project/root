@@ -64,7 +64,7 @@ void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 
 RooImproperIntegrator1D::RooImproperIntegrator1D() :  
   _case(ClosedBothEnds), _xmin(-10), _xmax(10), _useIntegrandLimits(kTRUE),
-  _origFunc(0), _function(0), _integrator1(0), _integrator2(0), _integrator3(0)
+  _origFunc(nullptr), _function(nullptr), _integrator1(nullptr), _integrator2(nullptr), _integrator3(nullptr)
 {
 }
 
@@ -77,10 +77,10 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
   RooAbsIntegrator(function),
   _useIntegrandLimits(kTRUE),
   _origFunc((RooAbsFunc*)&function),
-  _function(0),
-  _integrator1(0),
-  _integrator2(0),
-  _integrator3(0)
+  _function(nullptr),
+  _integrator1(nullptr),
+  _integrator2(nullptr),
+  _integrator3(nullptr)
 {
   initialize(&function) ;
 }
@@ -95,11 +95,11 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, con
   RooAbsIntegrator(function),
   _useIntegrandLimits(kTRUE),
   _origFunc((RooAbsFunc*)&function),
-  _function(0),
+  _function(nullptr),
   _config(config),
-  _integrator1(0),
-  _integrator2(0),
-  _integrator3(0)
+  _integrator1(nullptr),
+  _integrator2(nullptr),
+  _integrator3(nullptr)
 {
   initialize(&function) ;
 }
@@ -115,11 +115,11 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, Dou
   _xmax(xmax),
   _useIntegrandLimits(kFALSE),
   _origFunc((RooAbsFunc*)&function),
-  _function(0),
+  _function(nullptr),
   _config(config),
-  _integrator1(0),
-  _integrator2(0),
-  _integrator3(0)
+  _integrator1(nullptr),
+  _integrator2(nullptr),
+  _integrator3(nullptr)
 {
   initialize(&function) ;
 }
@@ -142,7 +142,7 @@ RooAbsIntegrator* RooImproperIntegrator1D::clone(const RooAbsFunc& function, con
 void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
 {
   if(!isValid()) {
-    oocoutE((TObject*)0,Integration) << "RooImproperIntegrator: cannot integrate invalid function" << endl;
+    oocoutE((TObject*)nullptr,Integration) << "RooImproperIntegrator: cannot integrate invalid function" << endl;
     return;
   }
   // Create a new function object that uses the change of vars: x -> 1/x
@@ -152,15 +152,15 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
     function = _origFunc ;
     if (_integrator1) {
       delete _integrator1 ; 
-      _integrator1 = 0 ;
+      _integrator1 = nullptr ;
     }
     if (_integrator2) {
       delete _integrator2 ; 
-      _integrator2 = 0 ;
+      _integrator2 = nullptr ;
     }
     if (_integrator3) {
       delete _integrator3 ; 
-      _integrator3 = 0 ;
+      _integrator3 = nullptr ;
     }
   }
 
@@ -209,10 +209,10 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
 
 RooImproperIntegrator1D::~RooImproperIntegrator1D() 
 {
-  if(0 != _integrator1) delete _integrator1;
-  if(0 != _integrator2) delete _integrator2;
-  if(0 != _integrator3) delete _integrator3;
-  if(0 != _function) delete _function;
+  if(nullptr != _integrator1) delete _integrator1;
+  if(nullptr != _integrator2) delete _integrator2;
+  if(nullptr != _integrator3) delete _integrator3;
+  if(nullptr != _function) delete _function;
 }
 
 
@@ -224,7 +224,7 @@ RooImproperIntegrator1D::~RooImproperIntegrator1D()
 Bool_t RooImproperIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax) 
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    oocoutE((TObject*)nullptr,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
   }
 
@@ -289,7 +289,7 @@ Bool_t RooImproperIntegrator1D::checkLimits() const
 RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const 
 {
   // Analyze the specified limits to determine which case applies.
-  if(0 == integrand() || !integrand()->isValid()) return Invalid;
+  if(nullptr == integrand() || !integrand()->isValid()) return Invalid;
 
   if (_useIntegrandLimits) {
     _xmin= integrand()->getMinLimit(0);
@@ -332,8 +332,8 @@ RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const
 Double_t RooImproperIntegrator1D::integral(const Double_t* yvec) 
 {
   Double_t result(0);
-  if(0 != _integrator1) result+= _integrator1->integral(yvec);
-  if(0 != _integrator2) result+= _integrator2->integral(yvec);
-  if(0 != _integrator3) result+= _integrator3->integral(yvec);
+  if(nullptr != _integrator1) result+= _integrator1->integral(yvec);
+  if(nullptr != _integrator2) result+= _integrator2->integral(yvec);
+  if(nullptr != _integrator3) result+= _integrator3->integral(yvec);
   return result;  
 }

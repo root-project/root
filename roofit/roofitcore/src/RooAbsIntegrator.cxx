@@ -41,7 +41,7 @@ ClassImp(RooAbsIntegrator);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsIntegrator::RooAbsIntegrator() : _function(0), _valid(kFALSE), _printEvalCounter(kFALSE) 
+RooAbsIntegrator::RooAbsIntegrator() : _function(nullptr), _valid(kFALSE), _printEvalCounter(kFALSE) 
 {
 }
 

@@ -107,13 +107,13 @@ namespace cling {
       auto addFile = [this,decl](llvm::StringRef FileName, bool warn) {
         if (FileName.empty()) return (const FileEntry*)nullptr;
 
-        const FileEntry* FE = 0;
+        const FileEntry* FE = nullptr;
         SourceLocation fileNameLoc;
         // Remember this file wth full path, not "./File.h" (ROOT-8863).
         bool isAngled = true;
-        const DirectoryLookup* FromDir = 0;
-        const FileEntry* FromFile = 0;
-        const DirectoryLookup* CurDir = 0;
+        const DirectoryLookup* FromDir = nullptr;
+        const FileEntry* FromFile = nullptr;
+        const DirectoryLookup* CurDir = nullptr;
         bool needCacheUpdate = false;
 
         if (FileName.equals(m_PrevFileName.first))
@@ -122,9 +122,9 @@ namespace cling {
           FE = m_PrevFE.second;
         else {
           FE = m_PP->LookupFile(fileNameLoc, FileName, isAngled,
-                                FromDir, FromFile, CurDir, /*SearchPath*/0,
-                                /*RelativePath*/ 0, /*suggestedModule*/0,
-                                /*IsMapped*/0, /*IsFrameworkFound*/ nullptr,
+                                FromDir, FromFile, CurDir, /*SearchPath*/nullptr,
+                                /*RelativePath*/ nullptr, /*suggestedModule*/nullptr,
+                                /*IsMapped*/nullptr, /*IsFrameworkFound*/ nullptr,
                                 /*SkipCache*/ false,
                                 /*OpenFile*/ false, /*CacheFail*/ true);
           needCacheUpdate = true;
@@ -175,8 +175,8 @@ namespace cling {
 
   public:
     AutoLoadingVisitor():
-      m_IsStoringState(false), m_IsAutloadEntry(false), m_Map(0), m_PP(0),
-    m_Sema(0), m_PrevFE({nullptr,nullptr})
+      m_IsStoringState(false), m_IsAutloadEntry(false), m_Map(nullptr), m_PP(nullptr),
+    m_Sema(nullptr), m_PrevFE({nullptr,nullptr})
     {}
 
     void RemoveDefaultArgsOf(Decl* D, Sema* S) {
@@ -198,8 +198,8 @@ namespace cling {
       m_Map = &map;
       m_PP = &PP;
       TraverseDecl(D);
-      m_PP = 0;
-      m_Map = 0;
+      m_PP = nullptr;
+      m_Map = nullptr;
       m_IsStoringState = false;
     }
 

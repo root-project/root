@@ -67,9 +67,9 @@ TDatabasePDG** GetInstancePtr()
 
 TDatabasePDG::TDatabasePDG(): TNamed("PDGDB","The PDG particle data base")
 {
-   fParticleList  = 0;
-   fPdgMap        = 0;
-   fListOfClasses = 0;
+   fParticleList  = nullptr;
+   fPdgMap        = nullptr;
+   fListOfClasses = nullptr;
    auto fgInstance = GetInstancePtr();
    if (*fgInstance != nullptr) {
       Warning("TDatabasePDG", "object already instantiated");
@@ -152,7 +152,7 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
 
    if (old) {
       printf(" *** TDatabasePDG::AddParticle: particle with PDGcode=%d already defined\n",PDGcode);
-      return 0;
+      return nullptr;
    }
 
    TParticlePDG* p = new TParticlePDG(name, title, mass, stable, width,
@@ -183,7 +183,7 @@ TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
 
    if (old) {
       printf(" *** TDatabasePDG::AddAntiParticle: can't redefine parameters\n");
-      return NULL;
+      return nullptr;
    }
 
    Int_t pdg_code  = abs(PdgCode);
@@ -191,7 +191,7 @@ TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
 
    if (!p) {
       printf(" *** TDatabasePDG::AddAntiParticle: particle with pdg code %d not known\n", pdg_code);
-      return NULL;
+      return nullptr;
    }
 
    TParticlePDG* ap = AddParticle(Name,
@@ -215,7 +215,7 @@ TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
 
 TParticlePDG *TDatabasePDG::GetParticle(const char *name) const
 {
-   if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
+   if (fParticleList == nullptr)  ((TDatabasePDG*)this)->ReadPDGTable();
 
    TParticlePDG *def = (TParticlePDG *)fParticleList->FindObject(name);
 //     if (!def) {
@@ -231,8 +231,8 @@ TParticlePDG *TDatabasePDG::GetParticle(const char *name) const
 
 TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode) const
 {
-   if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
-   if (fPdgMap       == 0)  BuildPdgMap();
+   if (fParticleList == nullptr)  ((TDatabasePDG*)this)->ReadPDGTable();
+   if (fPdgMap       == nullptr)  BuildPdgMap();
 
    return (TParticlePDG*) (Long_t)fPdgMap->GetValue((Long_t)PDGcode);
 }
@@ -242,7 +242,7 @@ TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode) const
 
 void TDatabasePDG::Print(Option_t *option) const
 {
-   if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
+   if (fParticleList == nullptr)  ((TDatabasePDG*)this)->ReadPDGTable();
 
    TIter next(fParticleList);
    TParticlePDG *p;
@@ -558,7 +558,7 @@ Int_t TDatabasePDG::ConvertIsajetToPdg(Int_t isaNumber) const
 
 void TDatabasePDG::ReadPDGTable(const char *FileName)
 {
-   if (fParticleList == 0) {
+   if (fParticleList == nullptr) {
       fParticleList  = new THashList;
       fListOfClasses = new TObjArray;
    }
@@ -575,7 +575,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
    }
 
    FILE* file = fopen(fn,"r");
-   if (file == 0) {
+   if (file == nullptr) {
       Error("ReadPDGTable","Could not open PDG particle file %s",fn);
       return;
    }
@@ -744,14 +744,14 @@ void TDatabasePDG::Browse(TBrowser* b)
 
 Int_t TDatabasePDG::WritePDGTable(const char *filename)
 {
-   if (fParticleList == 0) {
+   if (fParticleList == nullptr) {
       Error("WritePDGTable","Do not have a valid PDG particle list;"
                             " consider loading it with ReadPDGTable first.");
       return -1;
    }
 
    FILE *file = fopen(filename,"w");
-   if (file == 0) {
+   if (file == nullptr) {
       Error("WritePDGTable","Could not open PDG particle file %s",filename);
       return -1;
    }

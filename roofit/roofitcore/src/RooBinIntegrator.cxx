@@ -64,7 +64,7 @@ void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooBinIntegrator::RooBinIntegrator() : _numBins(0), _useIntegrandLimits(kFALSE), _x(0)
+RooBinIntegrator::RooBinIntegrator() : _numBins(0), _useIntegrandLimits(kFALSE), _x(nullptr)
 {
 }
 
@@ -76,7 +76,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
   RooAbsIntegrator(function)
 {
   _useIntegrandLimits= kTRUE;
-  assert(0 != integrand() && integrand()->isValid());
+  assert(nullptr != integrand() && integrand()->isValid());
 
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
@@ -92,7 +92,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
     // Retrieve bin configuration from integrand
     list<Double_t>* tmp = integrand()->binBoundaries(i) ;
     if (!tmp) {
-      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
+      oocoutW((TObject*)nullptr,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
 				     << i << " substituting default binning of " << _numBins << " bins" << endl ;
       tmp = new list<Double_t> ;
       for (Int_t j=0 ; j<=_numBins ; j++) {
@@ -115,7 +115,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
   _useIntegrandLimits= kTRUE;
   _numBins = (Int_t) configSet.getRealValue("numBins") ;
-  assert(0 != integrand() && integrand()->isValid());
+  assert(nullptr != integrand() && integrand()->isValid());
   
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
@@ -127,7 +127,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
     // Retrieve bin configuration from integrand
     list<Double_t>* tmp = integrand()->binBoundaries(i) ;
     if (!tmp) {
-      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
+      oocoutW((TObject*)nullptr,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
 				     << i << " substituting default binning of " << _numBins << " bins" << endl ;
       tmp = new list<Double_t> ;
       for (Int_t j=0 ; j<=_numBins ; j++) {
@@ -174,7 +174,7 @@ RooBinIntegrator::~RooBinIntegrator()
 Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax) 
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << endl;
+    oocoutE((TObject*)nullptr,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
   }
   _xmin[0]= *xmin;
@@ -190,7 +190,7 @@ Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax)
 Bool_t RooBinIntegrator::checkLimits() const 
 {
   if(_useIntegrandLimits) {
-    assert(0 != integrand() && integrand()->isValid());
+    assert(nullptr != integrand() && integrand()->isValid());
     _xmin.resize(_function->getDimension()) ;
     _xmax.resize(_function->getDimension()) ;
     for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
@@ -200,7 +200,7 @@ Bool_t RooBinIntegrator::checkLimits() const
   }
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
     if (_xmax[i]<=_xmin[i]) {
-      oocoutE((TObject*)0,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin[i] << " _xmax = " << _xmax[i] << ")" << endl;
+      oocoutE((TObject*)nullptr,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin[i] << " _xmax = " << _xmax[i] << ")" << endl;
       return kFALSE;
     }
     if (RooNumber::isInfinite(_xmin[i]) || RooNumber::isInfinite(_xmax[i])) {

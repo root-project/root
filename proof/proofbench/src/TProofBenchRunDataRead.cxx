@@ -64,14 +64,14 @@ TProofBenchRunDataRead::TProofBenchRunDataRead(TProofBenchDataSet *pbds, TPBRead
                          fNEvents(nevents), fNTries(ntries), fStart(start), fStop(stop), fStep(step),
                          fDebug(debug), fFilesPerWrk(2), fReleaseCache(kTRUE),
                          fDirProofBench(dirproofbench), fNodes(nodes),
-                         fListPerfPlots(0), fProfile_perfstat_event(0), fHist_perfstat_event(0),
-                         fProfile_perfstat_evtmax(0), fNorm_perfstat_evtmax(0),
-                         fProfile_queryresult_event(0), fNorm_queryresult_event(0),
-                         fProfile_perfstat_IO(0), fHist_perfstat_IO(0),
-                         fProfile_perfstat_IOmax(0), fNorm_perfstat_IOmax(0),
-                         fProfile_queryresult_IO(0), fNorm_queryresult_IO(0), fProfile_cpu_eff(0),
-                         fProfLegend_evt(0), fNormLegend_evt(0), fProfLegend_mb(0), fNormLegend_mb(0),
-                         fCPerfProfiles(0), fName(0)
+                         fListPerfPlots(nullptr), fProfile_perfstat_event(nullptr), fHist_perfstat_event(nullptr),
+                         fProfile_perfstat_evtmax(nullptr), fNorm_perfstat_evtmax(nullptr),
+                         fProfile_queryresult_event(nullptr), fNorm_queryresult_event(nullptr),
+                         fProfile_perfstat_IO(nullptr), fHist_perfstat_IO(nullptr),
+                         fProfile_perfstat_IOmax(nullptr), fNorm_perfstat_IOmax(nullptr),
+                         fProfile_queryresult_IO(nullptr), fNorm_queryresult_IO(nullptr), fProfile_cpu_eff(nullptr),
+                         fProfLegend_evt(nullptr), fNormLegend_evt(nullptr), fProfLegend_mb(nullptr), fNormLegend_mb(nullptr),
+                         fCPerfProfiles(nullptr), fName(0)
 {
    // Default constructor
 
@@ -97,8 +97,8 @@ TProofBenchRunDataRead::TProofBenchRunDataRead(TProofBenchDataSet *pbds, TPBRead
 
 TProofBenchRunDataRead::~TProofBenchRunDataRead()
 {
-   fProof=0;
-   fDirProofBench=0;
+   fProof=nullptr;
+   fDirProofBench=nullptr;
    SafeDelete(fListPerfPlots);
    if (fCPerfProfiles) delete fCPerfProfiles;
    SafeDelete(fProfLegend_evt);
@@ -292,7 +292,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
 
          //save perfstats
          TString perfstats_name = "PROOF_PerfStats";
-         TTree *t = 0;
+         TTree *t = nullptr;
          if (l) t = dynamic_cast<TTree*>(l->FindObject(perfstats_name.Data()));
          if (t) {
             drawpf = kTRUE;
@@ -507,7 +507,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
       if (!fDirProofBench->GetDirectory(dirn))
          fDirProofBench->mkdir(dirn, "RunDataRead results");
       if (fDirProofBench->cd(dirn)) {
-         fListPerfPlots->Write(0, kOverwrite);
+         fListPerfPlots->Write(nullptr, kOverwrite);
          fListPerfPlots->SetOwner(kFALSE);
          fListPerfPlots->Clear();
       } else {
@@ -525,7 +525,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
 TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
                                                     Int_t nact, Bool_t nx)
 {
-   TFileCollection *fcsub = 0;
+   TFileCollection *fcsub = nullptr;
 
    // Dataset must exists
    if (!fProof || (fProof && !fProof->ExistsDataSet(dset))) {
@@ -571,13 +571,13 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
 
    // Order reference sub-collections
    TIter nxnd(mpnodes);
-   TObject *key = 0;
-   TFileInfo *fi = 0;
-   TFileCollection *xfc = 0;
-   TList *lswrks = 0;
+   TObject *key = nullptr;
+   TFileInfo *fi = nullptr;
+   TFileCollection *xfc = nullptr;
+   TList *lswrks = nullptr;
    while ((key = nxnd())) {
       TIter nxsrv(mpref);
-      TObject *ksrv = 0;
+      TObject *ksrv = nullptr;
       while ((ksrv = nxsrv())) {
          TUrl urlsrv(ksrv->GetName());
          if (TString(urlsrv.GetHostFQDN()).IsNull())
@@ -711,7 +711,7 @@ void TProofBenchRunDataRead::DrawPerfProfiles()
 
    Int_t npad=1;
    TIter nxt(fListPerfPlots);
-   TProfile* profile=0;
+   TProfile* profile=nullptr;
    while ((profile=(TProfile*)(nxt()))){
       fCPerfProfiles->cd(npad++);
       profile->Draw();
@@ -783,7 +783,7 @@ Int_t TProofBenchRunDataRead::DeleteParameters()
 
 void TProofBenchRunDataRead::BuildHistos(Int_t start, Int_t stop, Int_t step, Bool_t nx)
 {
-   TObject *o = 0;
+   TObject *o = nullptr;
    Int_t quotient = (stop - start) / step;
    Int_t ndiv = quotient + 1;
    Double_t ns_min = start - step/2.;

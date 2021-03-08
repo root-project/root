@@ -172,7 +172,7 @@ int main(int argc, char **argv)
    if (test > 0) {
       // Do TProof::Open in "masteronly" mode
       if (rc == 0) {
-         if (!logfile.IsNull()) gSystem->RedirectOutput(0, 0, &redirH);
+         if (!logfile.IsNull()) gSystem->RedirectOutput(nullptr, nullptr, &redirH);
          rc = proof_open(u.GetUrl(), timeout);
          if (!logfile.IsNull()) gSystem->RedirectOutput(logfile, "a", &redirH);
          if (rc != 0)
@@ -183,9 +183,9 @@ int main(int argc, char **argv)
          if (rc == 0) {
 
             // Scan sandbox dir
-            time_t now = time(0);
+            time_t now = time(nullptr);
             void *dirp = gSystem->OpenDirectory(sboxdir.Data());
-            const char *ent = 0;
+            const char *ent = nullptr;
             TString dent;
             while ((ent = gSystem->GetDirEntry(dirp))) {
                if (!strcmp(ent, "..") || !strcmp(ent, ".")) continue;
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
                if (span < 0 || st.fMtime > (now - span)) {
                   u.SetUser(ent);
                   fprintf(stderr, "proof_open: url: '%s'\n", u.GetUrl());
-                  if (!logfile.IsNull()) gSystem->RedirectOutput(0, 0, &redirH);
+                  if (!logfile.IsNull()) gSystem->RedirectOutput(nullptr, nullptr, &redirH);
                   rc = proof_open(u.GetUrl(), timeout);
                   if (!logfile.IsNull()) gSystem->RedirectOutput(logfile, "a", &redirH);
                   if (rc != 0) {
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
       }
    }
    if (!logfile.IsNull()) {
-      gSystem->RedirectOutput(0, 0, &redirH);
+      gSystem->RedirectOutput(nullptr, nullptr, &redirH);
       if (rc == 0 && !keep) gSystem->Unlink(logfile);
    }
    gSystem->Exit(rc);
@@ -247,12 +247,12 @@ int parse_args(int argc, char **argv,
    }
    if (getenv("XPDTEST_TIMESPAN")) {
       errno = 0;
-      long xspan = strtol(getenv("XPDTEST_TIMESPAN"), 0, 10);
+      long xspan = strtol(getenv("XPDTEST_TIMESPAN"), nullptr, 10);
       if (errno == 0) span = (time_t) xspan;
    }
    if (getenv("XPDTEST_TEST")) {
       errno = 0;
-      long xtest = strtol(getenv("XPDTEST_TEST"), 0, 10);
+      long xtest = strtol(getenv("XPDTEST_TEST"), nullptr, 10);
       if (errno == 0 && xtest >= 0 && xtest <= 2) sscanf(getenv("XPDTEST_TEST"), "%d", &test);
    }
    if (getenv("XPDTEST_LOGFILE")) {
@@ -266,7 +266,7 @@ int parse_args(int argc, char **argv,
    }
    if (getenv("XPDTEST_TIMEOUT")) {
       errno = 0;
-      long xto = strtol(getenv("XPDTEST_TIMEOUT"), 0, 10);
+      long xto = strtol(getenv("XPDTEST_TIMEOUT"), nullptr, 10);
       if (errno == 0 && xto > 0) sscanf(getenv("XPDTEST_TIMEOUT"), "%ld", &to);
    }
    if (getenv("XPDTEST_PIDFILE")) {
@@ -308,7 +308,7 @@ int parse_args(int argc, char **argv,
          } else if (!strcmp(argv[i], "-s")) {
             if (argv[++i]) {
                errno = 0;
-               long xspan = strtol(argv[i], 0, 10);
+               long xspan = strtol(argv[i], nullptr, 10);
                if (errno == 0 && xspan > 0) {
                   span = (time_t) xspan;
                } else {
@@ -325,7 +325,7 @@ int parse_args(int argc, char **argv,
          } else if (!strcmp(argv[i], "-t")) {
             if (argv[++i]) {
                errno = 0;
-               long xtest = strtol(argv[i], 0, 10);
+               long xtest = strtol(argv[i], nullptr, 10);
                if (errno == 0 && xtest >= 0 && xtest <= 2) {
                   sscanf(argv[i], "%d", &test);
                } else {
@@ -342,7 +342,7 @@ int parse_args(int argc, char **argv,
          } else if (!strcmp(argv[i], "-T")) {
             if (argv[++i]) {
                errno = 0;
-               long xto = strtol(argv[i], 0, 10);
+               long xto = strtol(argv[i], nullptr, 10);
                if (errno == 0 && xto > 0) {
                   to = (time_t) xto;
                } else {
@@ -422,7 +422,7 @@ int proof_open(const char *master, long to)
    set_timer(1, to);
    TProof *p = TProof::Open(master, "masteronly");
    set_timer(0);
-   gSystem->RedirectOutput(0, 0, &rh);
+   gSystem->RedirectOutput(nullptr, nullptr, &rh);
    if (!p || (p && !p->IsValid())) {
       TMacro m;
       m.ReadFile(popenfile);
@@ -468,7 +468,7 @@ int set_timer(bool on, long to)
       signal(SIGALRM, ignore_signal);
    }
    errno = 0;
-   return setitimer(ITIMER_REAL, &itv, 0);
+   return setitimer(ITIMER_REAL, &itv, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

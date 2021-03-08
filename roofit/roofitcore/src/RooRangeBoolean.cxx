@@ -99,7 +99,7 @@ Double_t RooRangeBoolean::evaluate() const
 std::list<Double_t>* RooRangeBoolean::plotSamplingHint(RooAbsRealLValue& obs, Double_t /*xlo*/, Double_t /*xhi*/) const 
 {
   if (string(obs.GetName())!=_x.arg().GetName()) {
-    return 0 ;
+    return nullptr ;
   }
 
   list<Double_t>* hint = new list<Double_t> ;

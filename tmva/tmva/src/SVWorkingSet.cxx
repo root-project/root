@@ -49,12 +49,12 @@ Working class for Support Vector Machine
 
 TMVA::SVWorkingSet::SVWorkingSet()
    : fdoRegression(kFALSE),
-     fInputData(0),
-     fSupVec(0),
-     fKFunction(0),
-     fKMatrix(0),
-     fTEventUp(0),
-     fTEventLow(0),
+     fInputData(nullptr),
+     fSupVec(nullptr),
+     fKFunction(nullptr),
+     fKMatrix(nullptr),
+     fTEventUp(nullptr),
+     fTEventLow(nullptr),
      fB_low(1.),
      fB_up(-1.),
      fTolerance(0.01),
@@ -69,10 +69,10 @@ TMVA::SVWorkingSet::SVWorkingSet(std::vector<TMVA::SVEvent*>*inputVectors, SVKer
                                  Float_t tol, Bool_t doreg)
    : fdoRegression(doreg),
      fInputData(inputVectors),
-     fSupVec(0),
+     fSupVec(nullptr),
      fKFunction(kernelFunction),
-     fTEventUp(0),
-     fTEventLow(0),
+     fTEventUp(nullptr),
+     fTEventLow(nullptr),
      fB_low(1.),
      fB_up(-1.),
      fTolerance(tol),
@@ -119,7 +119,7 @@ TMVA::SVWorkingSet::SVWorkingSet(std::vector<TMVA::SVEvent*>*inputVectors, SVKer
 
 TMVA::SVWorkingSet::~SVWorkingSet()
 {
-   if (fKMatrix   != 0) {delete fKMatrix; fKMatrix = 0;}
+   if (fKMatrix   != nullptr) {delete fKMatrix; fKMatrix = nullptr;}
    delete fLogger;
 }
 
@@ -127,7 +127,7 @@ TMVA::SVWorkingSet::~SVWorkingSet()
 
 Bool_t TMVA::SVWorkingSet::ExamineExample( TMVA::SVEvent* jevt )
 {
-   SVEvent* ievt=0;
+   SVEvent* ievt=nullptr;
    Float_t fErrorC_J = 0.;
    if( jevt->GetIdx()==0) fErrorC_J = jevt->GetErrorCache();
    else{
@@ -469,7 +469,7 @@ void TMVA::SVWorkingSet::PrintStat()
 std::vector<TMVA::SVEvent*>* TMVA::SVWorkingSet::GetSupportVectors()
 {
    std::vector<TMVA::SVEvent*>::iterator idIter;
-   if( fSupVec != 0) {delete fSupVec; fSupVec = 0; }
+   if( fSupVec != nullptr) {delete fSupVec; fSupVec = nullptr; }
    fSupVec = new std::vector<TMVA::SVEvent*>(0);
 
    for( idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
@@ -679,7 +679,7 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
 Bool_t TMVA::SVWorkingSet::ExamineExampleReg(TMVA::SVEvent* jevt)
 {
    Float_t feps = 1e-7;// TODO check which value is the best
-   SVEvent* ievt=0;
+   SVEvent* ievt=nullptr;
    Float_t fErrorC_J = 0.;
    if( jevt->IsInI0()) {
       fErrorC_J = jevt->GetErrorCache();

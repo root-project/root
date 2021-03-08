@@ -106,7 +106,7 @@ and py = 0
 
 TSlider::TSlider(): TPad()
 {
-   fObject  = 0;
+   fObject  = nullptr;
    fMethod  = "";
    fMinimum = 0;
    fMaximum = 1;
@@ -138,7 +138,7 @@ TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,D
 
    fMinimum = 0;
    fMaximum = 1;
-   fObject  = 0;
+   fObject  = nullptr;
    fMethod  = "";
    Double_t dx = PixeltoX(bordersize);
    Double_t dy = PixeltoY(-bordersize);

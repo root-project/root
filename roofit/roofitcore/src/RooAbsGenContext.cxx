@@ -54,11 +54,11 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 				   const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   TNamed(model), 
   _prototype(prototype), 
-  _theEvent(0), 
+  _theEvent(nullptr), 
   _isValid(kTRUE),
   _verbose(verbose),
-  _protoOrder(0),
-  _genData(0)
+  _protoOrder(nullptr),
+  _genData(nullptr)
 {
   // Check PDF dependents 
   if (model.recursiveCheckObservables(&vars)) {
@@ -72,9 +72,9 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 
   // Analyze the prototype dataset, if one is specified
   _nextProtoIndex= 0;
-  if(0 != _prototype) {
+  if(nullptr != _prototype) {
     TIterator *protoIterator= _prototype->get()->createIterator();
-    const RooAbsArg *proto = 0;
+    const RooAbsArg *proto = nullptr;
     while((proto= (const RooAbsArg*)protoIterator->Next())) {
       // is this variable being generated or taken from the prototype?
       if(!_theEvent->contains(*proto)) {
@@ -112,7 +112,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 
 RooAbsGenContext::~RooAbsGenContext()
 {
-  if(0 != _theEvent) delete _theEvent;
+  if(nullptr != _theEvent) delete _theEvent;
   if (_protoOrder) delete[] _protoOrder ;
 }
 
@@ -153,7 +153,7 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
 {
   if(!isValid()) {
     coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << endl;
-    return 0;
+    return nullptr;
   }
 
   // Calculate the expected number of events if necessary
@@ -165,14 +165,14 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
       if (_extendMode == RooAbsPdf::CanNotBeExtended) {
 	coutE(Generation) << ClassName() << "::" << GetName()
 	     << ":generate: PDF not extendable: cannot calculate expected number of events" << endl;
-	return 0;	
+	return nullptr;	
       }
       nEvents= _expectedEvents;
     }
     if(nEvents <= 0) {
       coutE(Generation) << ClassName() << "::" << GetName()
 			<< ":generate: cannot calculate expected number of events" << endl;
-      return 0;
+      return nullptr;
     }
     coutI(Generation) << ClassName() << "::" << GetName() << ":generate: will generate "
 		      << nEvents << " events" << endl;
@@ -191,7 +191,7 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
   if(_prototype) {
     const RooArgSet *vars= _prototype->get();
     TIterator *iterator= _protoVars.createIterator();
-    const RooAbsArg *arg = 0;
+    const RooAbsArg *arg = nullptr;
     Bool_t ok(kTRUE);
     while((arg= (const RooAbsArg*)iterator->Next())) {
       if(vars->contains(*arg)) continue;
@@ -203,7 +203,7 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
     }
     delete iterator;
     // coverity[DEADCODE]
-    if(!ok) return 0;
+    if(!ok) return nullptr;
   }
 
   if (_verbose) Print("v") ;
@@ -227,20 +227,20 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
   while(_genData->numEntries()<nEvents) {
     
     // first, load values from the prototype dataset, if one was provided
-    if(0 != _prototype) {
+    if(nullptr != _prototype) {
       if(_nextProtoIndex >= _prototype->numEntries()) _nextProtoIndex= 0;
 
       Int_t actualProtoIdx = _protoOrder ? _protoOrder[_nextProtoIndex] : _nextProtoIndex ;
 
       const RooArgSet *subEvent= _prototype->get(actualProtoIdx);
       _nextProtoIndex++;
-      if(0 != subEvent) {
+      if(nullptr != subEvent) {
 	*_theEvent= *subEvent;
       }
       else {
 	coutE(Generation) << ClassName() << "::" << GetName() << ":generate: cannot load event "
 			  << actualProtoIdx << " from prototype dataset" << endl;
-	return 0;
+	return nullptr;
       }
     }
 
@@ -258,7 +258,7 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
   }
 
   RooDataSet* output = _genData ;
-  _genData = 0 ;
+  _genData = nullptr ;
   output->setDirtyProp(kTRUE) ;
 
   return output;
@@ -350,7 +350,7 @@ void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
   // Delete any previous lookup table
   if (_protoOrder) {
     delete[] _protoOrder ;
-    _protoOrder = 0 ;
+    _protoOrder = nullptr ;
   }
   
   // Copy new lookup table if provided and needed

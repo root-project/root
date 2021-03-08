@@ -31,7 +31,7 @@ ClassImp(TKeyMapFile);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TKeyMapFile::TKeyMapFile() : TNamed(), fMapFile(0)
+TKeyMapFile::TKeyMapFile() : TNamed(), fMapFile(nullptr)
 {
 }
 
@@ -51,7 +51,7 @@ void TKeyMapFile::Browse(TBrowser *b)
 {
    TObject *obj = gDirectory->Get((char*)GetName());
    delete obj;
-   obj = fMapFile->Get(GetName(),0);
+   obj = fMapFile->Get(GetName(),nullptr);
 
    if( b && obj )
       obj->Browse( b );

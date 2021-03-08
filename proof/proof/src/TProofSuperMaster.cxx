@@ -165,7 +165,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t)
    // Here we finalize the server startup: in this way the bulk
    // of remote operations are almost parallelized
    TIter nxsc(&validPairs);
-   TPair *sc = 0;
+   TPair *sc = nullptr;
    while ((sc = (TPair *) nxsc())) {
       // Finalize setup of the server
       TSlave *sl = (TSlave *) sc->Key();
@@ -262,7 +262,7 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
    // build nodelist with slaves and elements
    TIter nextSubmaster(GetListOfActiveSlaves());
    while (TSlave *sl = dynamic_cast<TSlave*>(nextSubmaster())) {
-      TList *smlist = 0;
+      TList *smlist = nullptr;
       TPair *p = dynamic_cast<TPair*>(msds.FindObject(sl->GetMsd()));
       if (!p) {
          smlist = new TList;
@@ -313,7 +313,7 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
                     j < ((i+1)*nelements)/nsms;
                     j++) {
             TDSetElement *elem = setelements ?
-               dynamic_cast<TDSetElement*>(setelements->At(j)) : (TDSetElement *)0;
+               dynamic_cast<TDSetElement*>(setelements->At(j)) : (TDSetElement *)nullptr;
             if (elem) {
                set.Add(elem->GetFileName(), elem->GetObjName(),
                      elem->GetDirectory(), elem->GetFirst(),
@@ -344,7 +344,7 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
    PDB(kGlobal,1)
       Info("ValidateDSet","Calling Collect");
    Collect(&usedsms);
-   SetDSet(0);
+   SetDSet(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

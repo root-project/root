@@ -226,7 +226,7 @@ std::uint32_t DeserializeFrame(std::uint16_t protocolVersion, const void *buffer
 
 std::uint32_t SerializeVersion(const ROOT::Experimental::RNTupleVersion &val, void *buffer)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : nullptr);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -261,7 +261,7 @@ std::uint32_t DeserializeVersion(const void *buffer, ROOT::Experimental::RNTuple
 
 std::uint32_t SerializeUuid(const ROOT::Experimental::RNTupleUuid &val, void *buffer)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : nullptr);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -288,7 +288,7 @@ std::uint32_t DeserializeUuid(const void *buffer, ROOT::Experimental::RNTupleUui
 
 std::uint32_t SerializeColumnModel(const ROOT::Experimental::RColumnModel &val, void *buffer)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : nullptr);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -399,7 +399,7 @@ void VerifyCrc32(const unsigned char *data, std::uint32_t length)
 
 std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &val, void *buffer)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : nullptr);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -427,7 +427,7 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &val, vo
 
 std::uint32_t SerializeColumn(const ROOT::Experimental::RColumnDescriptor &val, void *buffer)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : nullptr);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -448,7 +448,7 @@ std::uint32_t SerializeColumn(const ROOT::Experimental::RColumnDescriptor &val, 
 
 std::uint32_t SerializeClusterSummary(const ROOT::Experimental::RClusterDescriptor &val, void *buffer)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : nullptr);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -550,7 +550,7 @@ bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &
 
 std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeader(void* buffer) const
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : nullptr);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -586,7 +586,7 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeader(void* buffe
 
 std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffer) const
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : nullptr);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 

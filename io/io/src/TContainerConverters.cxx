@@ -45,7 +45,7 @@ TConvertClonesArrayToProxy::TConvertClonesArrayToProxy(
    Bool_t isPointer, Bool_t isPrealloc) :
       fIsPointer(isPointer),
       fIsPrealloc(isPrealloc),
-      fCollectionClass(proxy?proxy->GetCollectionClass():0)
+      fCollectionClass(proxy?proxy->GetCollectionClass():nullptr)
 {
    if (isPointer) fOffset = sizeof(TClonesArray*);
    else fOffset = sizeof(TClonesArray);
@@ -108,7 +108,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
          UInt_t tag;       // either tag or byte count
          TClass *clRef = b.ReadClass(TClonesArray::Class(), &tag);
 
-         if (clRef==0) {
+         if (clRef==nullptr) {
             // Got a reference to an already read object.
             if (b.GetBufferVersion() > 0) {
                tag += b.GetBufferDisplacement();
@@ -125,7 +125,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
                   "Object can not be found in the buffer's map (at %d)",tag);
                continue;
             }
-            if ( objptr == 0 ) {
+            if ( objptr == nullptr ) {
                if (b.GetBufferVersion()==0) continue;
 
                // No object found at this location in map. It might have been skipped
@@ -137,7 +137,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
                (*this)(b,&objptr,1);
                b.SetBufferOffset( currentpos);
 
-               if (objptr==0) continue;
+               if (objptr==nullptr) continue;
 
                clRef = fCollectionClass;
 
@@ -235,7 +235,7 @@ TConvertMapToProxy::TConvertMapToProxy(TClassStreamer *streamer,
    fIsPointer(isPointer),
    fIsPrealloc(isPrealloc),
    fSizeOf(0),
-   fCollectionClass(0)
+   fCollectionClass(nullptr)
 {
    TCollectionClassStreamer *middleman = dynamic_cast<TCollectionClassStreamer*>(streamer);
    if (middleman) {
@@ -247,12 +247,12 @@ TConvertMapToProxy::TConvertMapToProxy(TClassStreamer *streamer,
       if (isPointer) fSizeOf = sizeof(void*);
       else fSizeOf = fCollectionClass->Size();
 
-      if (proxy->GetValueClass()->GetStreamerInfo() == 0
-          || proxy->GetValueClass()->GetStreamerInfo()->GetElements()->At(1) == 0 ) {
+      if (proxy->GetValueClass()->GetStreamerInfo() == nullptr
+          || proxy->GetValueClass()->GetStreamerInfo()->GetElements()->At(1) == nullptr ) {
          // We do not have enough information on the pair (or its not a pair).
-         collStreamer = 0;
+         collStreamer = nullptr;
       }
-      if (!collStreamer) fCollectionClass = 0;
+      if (!collStreamer) fCollectionClass = nullptr;
    }
 }
 

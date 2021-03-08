@@ -41,13 +41,13 @@ ClassImp(TPackMgr);
 
 static void DefaultLogger(const char *msg) { Printf("%s", msg); }
 
-THashList *TPackMgr::fgGlobalPackMgrList = 0; // list of package managers for global packages
+THashList *TPackMgr::fgGlobalPackMgrList = nullptr; // list of package managers for global packages
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a PROOF package manager
 
 TPackMgr::TPackMgr(const char *dir, const char *key)
-         : fLogger(DefaultLogger), fName(key), fDir(dir), fLock(dir), fEnabledPackages(0)
+         : fLogger(DefaultLogger), fName(key), fDir(dir), fLock(dir), fEnabledPackages(nullptr)
 {
    // Work with full names
    if (gSystem->ExpandPathName(fDir))
@@ -231,7 +231,7 @@ Int_t TPackMgr::Load(const char *pack, TList *optls)
    // Which pack mgr has the package?
    if (!Has(pack)) {
       // Check the global packages
-      TPackMgr *packmgr = 0;
+      TPackMgr *packmgr = nullptr;
       if (!(packmgr = TPackMgr::GetPackMgr(pack, nullptr))) {
          // Package not found
          Log(TString::Format("error: TPackMgr::Load: failure locating %s ...", pack));
@@ -251,7 +251,7 @@ Int_t TPackMgr::Load(const char *pack, TList *optls)
       if (mdeps.ReadFile(deps) > 0) {
          Log(TString::Format("info: TPackMgr::Load: checking dependencies for package %s ...", pack));
          TIter nxl(mdeps.GetListOfLines());
-         TObjString *os = 0;
+         TObjString *os = nullptr;
          while ((os = (TObjString *)nxl())) {
             if (!TPackMgr::IsEnabled(os->GetName(), this)) {
                if (Load(os->GetName(), optls) < 0) {
@@ -339,7 +339,7 @@ Int_t TPackMgr::Load(const char *pack, TList *optls)
                      callEnv.SetParam((Long_t) optls);
                   } else if (argsig.BeginsWith("const char")) {
                      callEnv.ResetParam();
-                     TObjString *os = optls ? dynamic_cast<TObjString *>(optls->First()) : 0;
+                     TObjString *os = optls ? dynamic_cast<TObjString *>(optls->First()) : nullptr;
                      if (os) {
                         callEnv.SetParam((Long_t) os->GetName());
                      } else {
@@ -392,7 +392,7 @@ Int_t TPackMgr::Load(const char *pack, TList *optls)
       gROOT->ProcessLine(TString::Format(".I %s", pack));
 
       TPair *pck = (optls && optls->GetSize() > 0) ? new TPair(new TObjString(pack), optls->Clone())
-                                                   : new TPair(new TObjString(pack), 0);
+                                                   : new TPair(new TObjString(pack), nullptr);
       if (!fEnabledPackages) {
          fEnabledPackages = new TList;
          fEnabledPackages->SetOwner();
@@ -413,7 +413,7 @@ Int_t TPackMgr::Unload(const char *pack)
    Int_t rc = 0;
 
    if (fEnabledPackages && fEnabledPackages->GetSize() > 0) {
-      TPair *ppack = 0;
+      TPair *ppack = nullptr;
       if (pack && strlen(pack) > 0) {
          if ((ppack = (TPair *) fEnabledPackages->FindObject(pack))) {
 
@@ -504,7 +504,7 @@ void TPackMgr::GetEnabledPackages(TString &packlist)
    if (!fEnabledPackages) return;
 
    TIter nxp(fEnabledPackages);
-   TPair *pck= 0;
+   TPair *pck= nullptr;
    while ((pck = (TPair *)nxp())) {
       if (packlist.Length() <= 0)
          packlist = pck->GetName();
@@ -550,7 +550,7 @@ void TPackMgr::Show(const char *title)
    if (fgGlobalPackMgrList && fgGlobalPackMgrList->GetSize() > 0) {
       // Scan the list of global packages dirs
       TIter nxpm(fgGlobalPackMgrList);
-      TPackMgr *pm = 0;
+      TPackMgr *pm = nullptr;
       while ((pm = (TPackMgr *)nxpm())) {
          pm->Show(TString::Format("*** Global Package cache %s %s:%s ***\n",
                   pm->GetName(), gSystem->HostName(), pm->GetTitle()));
@@ -647,7 +647,7 @@ TList *TPackMgr::GetListOfEnabled() const
    if (fEnabledPackages && fEnabledPackages->GetSize() > 0) {
       epl = new TList;
       TIter nxp(fEnabledPackages);
-      TObject *o = 0;
+      TObject *o = nullptr;
       while ((o = nxp())) {
          epl->Add(new TObjString(o->GetName()));
       }
@@ -664,7 +664,7 @@ void TPackMgr::ShowEnabled(const char *title)
    if (fgGlobalPackMgrList && fgGlobalPackMgrList->GetSize() > 0) {
       // Scan the list of global packages dirs
       TIter nxpm(fgGlobalPackMgrList);
-      TPackMgr *pm = 0;
+      TPackMgr *pm = nullptr;
       while ((pm = (TPackMgr *)nxpm())) {
          pm->ShowEnabled(TString::Format("*** Global Package cache %s %s:%s ***\n",
                   pm->GetName(), gSystem->HostName(), pm->GetTitle()));
@@ -780,7 +780,7 @@ Int_t TPackMgr::Install(const char *parpath, Bool_t rmold)
    TString pack = parname(0, parname.Last('.'));
    TString dest = TString::Format("%s/%s", fDir.Data(), parname.Data());
    TString psrc = par, ssrc;
-   TMD5 *sums = 0, *md5 = 0, *md5d = 0;
+   TMD5 *sums = nullptr, *md5 = nullptr, *md5d = nullptr;
 
    // Check if we need to download: get the remote checksum
    // Retrieve the checksum of the file, if available
@@ -916,7 +916,7 @@ TPackMgr *TPackMgr::GetPackMgr(const char *pack, TPackMgr *packmgr)
    if (fgGlobalPackMgrList && fgGlobalPackMgrList->GetSize() > 0) {
       // Scan the list of global packages managers
       TIter nxpm(fgGlobalPackMgrList);
-      TPackMgr *pm = 0;
+      TPackMgr *pm = nullptr;
       while ((pm = (TPackMgr *)nxpm())) {
          if (pm->Has(pack)) return pm;
       }
@@ -940,7 +940,7 @@ Int_t TPackMgr::FindParPath(TPackMgr *packmgr, const char *pack, TString &par)
    if (fgGlobalPackMgrList && fgGlobalPackMgrList->GetSize() > 0) {
       // Scan the list of global packages dirs
       TIter nxpm(fgGlobalPackMgrList);
-      TPackMgr *pm = 0;
+      TPackMgr *pm = nullptr;
       while ((pm = (TPackMgr *)nxpm())) {
          if (pm->GetParPath(pack, par) == 0) {
             // Package found, stop searching
@@ -965,7 +965,7 @@ Bool_t TPackMgr::IsEnabled(const char *pack, TPackMgr *packmgr)
    if (fgGlobalPackMgrList && fgGlobalPackMgrList->GetSize() > 0) {
       // Scan the list of global packages managers
       TIter nxpm(fgGlobalPackMgrList);
-      TPackMgr *pm = 0;
+      TPackMgr *pm = nullptr;
       while ((pm = (TPackMgr *)nxpm())) {
          if (pm->IsPackageEnabled(pack)) return kTRUE;
       }

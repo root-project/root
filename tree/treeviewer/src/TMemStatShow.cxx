@@ -103,24 +103,24 @@ You can restrict the entry range to be analyzed via TMemStatShow::SetEntryRange
 #include "TGToolTip.h"
 #include "TRootCanvas.h"
 
-   TTree     *TMemStatShow::fgT = 0;         //TMemStat Tree
-   TH1D      *TMemStatShow::fgHalloc = 0;    //histogram with allocations
-   TH1D      *TMemStatShow::fgHfree = 0;     //histogram with frees
-   TH1D      *TMemStatShow::fgH = 0;         //histogram with allocations - frees
-   TH1I      *TMemStatShow::fgHleaks = 0;    //histogram with leaks
-   TH1I      *TMemStatShow::fgHentry = 0;    //histogram with entry numbers in the TObjArray
-   TH1I      *TMemStatShow::fgHdiff = 0;     //histogram with diff of entry number between alloc/free
+   TTree     *TMemStatShow::fgT = nullptr;         //TMemStat Tree
+   TH1D      *TMemStatShow::fgHalloc = nullptr;    //histogram with allocations
+   TH1D      *TMemStatShow::fgHfree = nullptr;     //histogram with frees
+   TH1D      *TMemStatShow::fgH = nullptr;         //histogram with allocations - frees
+   TH1I      *TMemStatShow::fgHleaks = nullptr;    //histogram with leaks
+   TH1I      *TMemStatShow::fgHentry = nullptr;    //histogram with entry numbers in the TObjArray
+   TH1I      *TMemStatShow::fgHdiff = nullptr;     //histogram with diff of entry number between alloc/free
 
-   TGToolTip *TMemStatShow::fgTip1 = 0;      //pointer to tool tip for canvas 1
-   TGToolTip *TMemStatShow::fgTip2 = 0;      //pointer to tool tip for canvas 2
-   TObjArray *TMemStatShow::fgBtidlist = 0;  //list of back trace ids
-   Double_t  *TMemStatShow::fgV1 = 0;        //pointer to V1 array of TTree::Draw (pos)
-   Double_t  *TMemStatShow::fgV2 = 0;        //pointer to V2 array of TTree::Draw (nbytes)
-   Double_t  *TMemStatShow::fgV3 = 0;        //pointer to V3 array of TTree::Draw (time)
-   Double_t  *TMemStatShow::fgV4 = 0;        //pointer to V4 array of TTree::Draw (btid)
-   TCanvas   *TMemStatShow::fgC1 = 0;        //pointer to canvas showing allocs/deallocs vs time
-   TCanvas   *TMemStatShow::fgC2 = 0;        //pointer to canvas with leaks in decreasing order
-   TCanvas   *TMemStatShow::fgC3 = 0;        //pointer to canvas showing the main leaks
+   TGToolTip *TMemStatShow::fgTip1 = nullptr;      //pointer to tool tip for canvas 1
+   TGToolTip *TMemStatShow::fgTip2 = nullptr;      //pointer to tool tip for canvas 2
+   TObjArray *TMemStatShow::fgBtidlist = nullptr;  //list of back trace ids
+   Double_t  *TMemStatShow::fgV1 = nullptr;        //pointer to V1 array of TTree::Draw (pos)
+   Double_t  *TMemStatShow::fgV2 = nullptr;        //pointer to V2 array of TTree::Draw (nbytes)
+   Double_t  *TMemStatShow::fgV3 = nullptr;        //pointer to V3 array of TTree::Draw (time)
+   Double_t  *TMemStatShow::fgV4 = nullptr;        //pointer to V4 array of TTree::Draw (btid)
+   TCanvas   *TMemStatShow::fgC1 = nullptr;        //pointer to canvas showing allocs/deallocs vs time
+   TCanvas   *TMemStatShow::fgC2 = nullptr;        //pointer to canvas with leaks in decreasing order
+   TCanvas   *TMemStatShow::fgC3 = nullptr;        //pointer to canvas showing the main leaks
 
    Long64_t TMemStatShow::fgEntryFirst   = 0; //first address to process
    Long64_t TMemStatShow::fgEntryN       = 0; //number of addresses in bytes to process
@@ -219,9 +219,9 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
 
 
    //initialize statics
-   fgTip1 = 0;
-   fgTip2 = 0;
-   fgBtidlist = 0;
+   fgTip1 = nullptr;
+   fgTip2 = nullptr;
+   fgBtidlist = nullptr;
 
    Long64_t ne = nfreebytes/32LL;
    if (ne < nentries) nentries = ne;
@@ -437,7 +437,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    // create the tooltip with a timeout of 250 ms
    if (!fgTip1) fgTip1 = new TGToolTip(gClient->GetDefaultRoot(), frm1, "", 250);
    fgC1->Connect("ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
-                "TMemStatShow", 0, "EventInfo1(Int_t, Int_t, Int_t, TObject*)");
+                "TMemStatShow", nullptr, "EventInfo1(Int_t, Int_t, Int_t, TObject*)");
    if (nbigleaks <= 0) return;
 
    //---------------------------------------------------------------------------
@@ -459,7 +459,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    // create the tooltip with a timeout of 250 ms
    if (!fgTip2) fgTip2 = new TGToolTip(gClient->GetDefaultRoot(), frm2, "", 250);
    fgC2->Connect("ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
-               "TMemStatShow", 0, "EventInfo2(Int_t, Int_t, Int_t, TObject*)");
+               "TMemStatShow", nullptr, "EventInfo2(Int_t, Int_t, Int_t, TObject*)");
 
    //---------------------------------------------------------------------------
    //open a third canvas and draw the histogram with the nbigleaks largest leaks
@@ -624,7 +624,7 @@ void TMemStatShow::FillBTString(Int_t entry,Int_t mode,TString &btstring)
    for (Int_t i=0;i<nbt;i++) {
       Int_t j = (Int_t)hbtids->GetBinContent(btid+i);
       TNamed *nm = (TNamed*)fgBtidlist->At(j);
-      if (nm==0) break;
+      if (nm==nullptr) break;
       char *title = (char*)nm->GetTitle();
       Int_t nch = strlen(title);
       if (nch < 10) continue;

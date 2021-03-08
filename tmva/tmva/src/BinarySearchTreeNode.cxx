@@ -60,11 +60,11 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e, UInt_t /* sign
 : TMVA::Node(),
    fEventV  ( std::vector<Float_t>() ),
    fTargets ( std::vector<Float_t>() ),
-   fWeight  ( e==0?0:e->GetWeight()  ),
-   fClass   ( e==0?0:e->GetClass() ), // see BinarySearchTree.h, line Mean() RMS() Min() and Max()
+   fWeight  ( e==nullptr?0:e->GetWeight()  ),
+   fClass   ( e==nullptr?0:e->GetClass() ), // see BinarySearchTree.h, line Mean() RMS() Min() and Max()
    fSelector( -1 )
 {
-   if (e!=0) {
+   if (e!=nullptr) {
       for (UInt_t ivar=0; ivar<e->GetNVariables(); ivar++) fEventV.push_back(e->GetValue(ivar));
       for (std::vector<Float_t>::const_iterator it = e->GetTargets().begin(); it < e->GetTargets().end(); ++it ) {
          fTargets.push_back( (*it) );
@@ -99,10 +99,10 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode ( const BinarySearchTreeNode &n
    fSelector( n.fSelector )
 {
    this->SetParent( parent );
-   if (n.GetLeft() == 0 ) this->SetLeft(NULL);
+   if (n.GetLeft() == nullptr ) this->SetLeft(nullptr);
    else this->SetLeft( new BinarySearchTreeNode( *((BinarySearchTreeNode*)(n.GetLeft())),this));
 
-   if (n.GetRight() == 0 ) this->SetRight(NULL);
+   if (n.GetRight() == nullptr ) this->SetRight(nullptr);
    else this->SetRight( new BinarySearchTreeNode( *((BinarySearchTreeNode*)(n.GetRight())),this));
 
 }
@@ -159,9 +159,9 @@ void TMVA::BinarySearchTreeNode::Print( std::ostream& os ) const
 
    os << "Selector: " <<  this->GetSelector() <<std::endl;
    os << "My address is " << long(this) << ", ";
-   if (this->GetParent() != NULL) os << " parent at addr: " << long(this->GetParent()) ;
-   if (this->GetLeft() != NULL) os << " left daughter at addr: " << long(this->GetLeft());
-   if (this->GetRight() != NULL) os << " right daughter at addr: " << long(this->GetRight()) ;
+   if (this->GetParent() != nullptr) os << " parent at addr: " << long(this->GetParent()) ;
+   if (this->GetLeft() != nullptr) os << " left daughter at addr: " << long(this->GetLeft());
+   if (this->GetRight() != nullptr) os << " right daughter at addr: " << long(this->GetRight()) ;
 
    os << " **** > "<< std::endl;
 }
@@ -179,8 +179,8 @@ void TMVA::BinarySearchTreeNode::PrintRec( std::ostream& os ) const
    os << "  EvtWeight " << std::setw(10) << fWeight;
    os << std::setw(10) << "Class: " << GetClass() << std::endl;
 
-   if (this->GetLeft() != NULL)this->GetLeft()->PrintRec(os) ;
-   if (this->GetRight() != NULL)this->GetRight()->PrintRec(os);
+   if (this->GetLeft() != nullptr)this->GetLeft()->PrintRec(os) ;
+   if (this->GetRight() != nullptr)this->GetRight()->PrintRec(os);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -81,7 +81,7 @@ void TMVA::plot_training_history(TString dataset, TFile* /*file*/, TDirectory* B
 
 
    // draw empty frame
-   if(gROOT->FindObject("frame")!=0) gROOT->FindObject("frame")->Delete();
+   if(gROOT->FindObject("frame")!=nullptr) gROOT->FindObject("frame")->Delete();
    TH2F* frame = new TH2F( "frame", ftit, 500, x1, x2, 500, y1, y2 );
    frame->GetXaxis()->SetTitle( xtit );
    frame->GetYaxis()->SetTitle( ytit );
@@ -135,17 +135,17 @@ void TMVA::plot_training_history(TString dataset, TFile* /*file*/, TDirectory* B
 
    while (hists.GetSize()) {
       TListIter hIt(&hists);
-      TH1* hist(0);
+      TH1* hist(nullptr);
       Double_t largestInt=-1;
-      TH1* histWithLargestInt(0);
-      while ((hist = (TH1*)hIt())!=0) {
+      TH1* histWithLargestInt(nullptr);
+      while ((hist = (TH1*)hIt())!=nullptr) {
          Double_t integral = hist->Integral(1,hist->FindBin(0.9999));
          if (integral>largestInt) {
             largestInt = integral;
             histWithLargestInt = hist;
          }
       }
-      if (histWithLargestInt == 0) {
+      if (histWithLargestInt == nullptr) {
          cout << "ERROR - unknown hist \"histWithLargestInt\" --> serious problem in ROOT file" << endl;
          break;
       }

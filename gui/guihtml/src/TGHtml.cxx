@@ -79,64 +79,64 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
    int i;
 
    fExiting = 0;
-   fPFirst = 0;
-   fPLast = 0;
+   fPFirst = nullptr;
+   fPLast = nullptr;
    fNToken = 0;
-   fLastSized = 0;
-   fNextPlaced = 0;
-   fFirstBlock = 0;
-   fLastBlock = 0;
-   fFirstInput = 0;
-   fLastInput = 0;
+   fLastSized = nullptr;
+   fNextPlaced = nullptr;
+   fFirstBlock = nullptr;
+   fLastBlock = nullptr;
+   fFirstInput = nullptr;
+   fLastInput = nullptr;
    fNInput = 0;
    fNForm = 0;
    fVarId = 0;  // do we need this??
    fInputIdx = 0;
    fRadioIdx = 0;
    fSelBegin.fI = 0;
-   fSelBegin.fP = 0;
+   fSelBegin.fP = nullptr;
    fSelEnd.fI = 0;
-   fSelEnd.fP = 0;
-   fPSelStartBlock = 0;
-   fPSelEndBlock = 0;
+   fSelEnd.fP = nullptr;
+   fPSelStartBlock = nullptr;
+   fPSelEndBlock = nullptr;
    fInsOnTime = DEF_HTML_INSERT_ON_TIME;
    fInsOffTime = DEF_HTML_INSERT_OFF_TIME;
    fInsStatus = 0;
-   fInsTimer = 0;
+   fInsTimer = nullptr;
    fIns.fI = 0;
-   fIns.fP = 0;
-   fPInsBlock = 0;
+   fIns.fP = nullptr;
+   fPInsBlock = nullptr;
    fInsIndex = 0;
-   fZText = 0;
+   fZText = nullptr;
    fNText = 0;
    fNAlloc = 0;
    fNComplete = 0;
    fICol = 0;
    fIPlaintext = 0;
-   fPScript = 0;
-   fIdle = 0;
-   fStyleStack = 0;
+   fPScript = nullptr;
+   fIdle = nullptr;
+   fStyleStack = nullptr;
    fParaAlignment = ALIGN_None;
    fRowAlignment = ALIGN_None;
    fAnchorFlags = 0;
    fInDt = 0;
    fInTr = 0;
    fInTd = 0;
-   fAnchorStart = 0;
-   fFormStart = 0;
-   fFormElemStart = 0;
-   fFormElemLast = 0;
-   fLoEndPtr = 0;
-   fLoFormStart = 0;
-   fInnerList = 0;
+   fAnchorStart = nullptr;
+   fFormStart = nullptr;
+   fFormElemStart = nullptr;
+   fFormElemLast = nullptr;
+   fLoEndPtr = nullptr;
+   fLoFormStart = nullptr;
+   fInnerList = nullptr;
    ResetLayoutContext();
    fHighlightWidth = 0;
-   fHighlightBgColorPtr = 0;
-   fHighlightColorPtr = 0;
-   for (i = 0; i < N_FONT; ++i) fAFont[i] = 0;
+   fHighlightBgColorPtr = nullptr;
+   fHighlightColorPtr = nullptr;
+   for (i = 0; i < N_FONT; ++i) fAFont[i] = nullptr;
    memset(fFontValid, 0, sizeof(fFontValid));
    for (i = 0; i < N_COLOR; ++i) {
-      fApColor[i] = 0;
+      fApColor[i] = nullptr;
       fIDark[i] = 0;
       fILight[i] = 0;
    }
@@ -152,7 +152,7 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
    fApColor[COLOR_Selection] = fSelectionColor;
    fApColor[COLOR_Background] = fBgColor;
 
-   fBgImage = 0;
+   fBgImage = nullptr;
 
    SetBackgroundColor(fApColor[COLOR_Background]->fPixel);
    SetBackgroundPixmap(0);  // force usage of solid color
@@ -169,9 +169,9 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
    fSelEndIndex =0;
    fSelStartIndex = 0;
    fGcNextToFree = 0;
-   fImageList = 0;
-   fZBaseHref = 0;
-   fInnerList = 0;
+   fImageList = nullptr;
+   fZBaseHref = nullptr;
+   fInnerList = nullptr;
    fFormPadding = 5;
    fOverrideFonts = 0;
    fOverrideColors = 0;
@@ -182,15 +182,15 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
    fVarind = 0;
    fIdind = 0;
    fInParse = 0;
-   fZGoto = 0;
-   fExts = 0;
+   fZGoto = nullptr;
+   fExts = nullptr;
    fUnderlineLinks = kTRUE;
    fExportSelection = DEF_HTML_EXPORT_SEL;
    fTableRelief = HTML_RELIEF_RAISED;
    fRuleRelief = HTML_RELIEF_SUNKEN;
    fRulePadding = 5;
-   fZBase = 0;
-   fZBaseHref = 0;
+   fZBase = nullptr;
+   fZBaseHref = nullptr;
    fCursor = kPointer;
    fMaxX = 0;
    fMaxY = 0;
@@ -208,7 +208,7 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
    fVsb->SetAccelerated();
    fHsb->SetAccelerated();
 
-   fLastUri = 0;
+   fLastUri = nullptr;
 
    AddInput(kExposureMask | kFocusChangeMask);
    AddInput(kButtonPressMask | kButtonReleaseMask | kPointerMotionMask);
@@ -226,7 +226,7 @@ TGHtml::~TGHtml()
    fExiting = 1;
    HClear();
    for (i = 0; i < N_FONT; i++) {
-      if (fAFont[i] != 0) fClient->FreeFont(fAFont[i]);
+      if (fAFont[i] != nullptr) fClient->FreeFont(fAFont[i]);
    }
    if (fInsTimer) delete fInsTimer;
    if (fIdle) delete fIdle;
@@ -315,9 +315,9 @@ void TGHtml::Clear(Option_t *)
 int TGHtml::ParseText(char *text, const char *index)
 {
    SHtmlIndex_t iStart;
-   TGHtmlElement *savePtr=0;
+   TGHtmlElement *savePtr=nullptr;
 
-   iStart.fP = 0;
+   iStart.fP = nullptr;
    iStart.fI = 0;
 
    fLoEndPtr = fPLast;
@@ -328,7 +328,7 @@ int TGHtml::ParseText(char *text, const char *index)
       if (iStart.fP) {
          savePtr = iStart.fP->fPNext;
          fPLast = iStart.fP;
-         iStart.fP->fPNext = 0;
+         iStart.fP->fPNext = nullptr;
       }
    }
 
@@ -351,9 +351,9 @@ int TGHtml::ParseText(char *text, const char *index)
       fRowAlignment = ALIGN_None;
       fAnchorFlags = 0;
       fInDt = 0;
-      fAnchorStart = 0;
-      fFormStart = 0;
-      fInnerList = 0;
+      fAnchorStart = nullptr;
+      fFormStart = nullptr;
+      fInnerList = nullptr;
       fNInput = 0;
       AddStyle(fPFirst);
    }
@@ -408,10 +408,10 @@ void TGHtml::UnderlineLinks(int onoff)
          if (p->fType == Html_A) {
             if (fAnchorStart) {
                style = PopStyleStack(Html_EndA);
-               fAnchorStart = 0;
+               fAnchorStart = nullptr;
                fAnchorFlags = 0;
             }
-            const char *z = p->MarkupArg("href", 0);
+            const char *z = p->MarkupArg("href", nullptr);
             if (z) {
                style.fColor = GetLinkColor(z);
                if (fUnderlineLinks) style.fFlags |= STY_Underline;
@@ -423,7 +423,7 @@ void TGHtml::UnderlineLinks(int onoff)
             if (fAnchorStart) {
                ((TGHtmlRef *)p)->fPOther = fAnchorStart;
                style = PopStyleStack(Html_EndA);
-               fAnchorStart = 0;
+               fAnchorStart = nullptr;
                fAnchorFlags = 0;
             }
          }
@@ -441,7 +441,7 @@ void TGHtml::UnderlineLinks(int onoff)
 void TGHtml::SetBaseUri(const char *uri)
 {
    if (fZBase) delete[] fZBase;
-   fZBase = 0;
+   fZBase = nullptr;
    if (uri) fZBase = StrDup(uri);
 }
 
@@ -455,7 +455,7 @@ int TGHtml::GotoAnchor(const char *name)
 
    for (p = fPFirst; p; p = p->fPNext) {
       if (p->fType == Html_A) {
-         z = p->MarkupArg("name", 0);
+         z = p->MarkupArg("name", nullptr);
          if (z && strcmp(z, name) == 0) {
             ScrollToPosition(TGLongPosition(fVisible.fX, ((TGHtmlAnchor *)p)->fY));
             return kTRUE;
@@ -481,7 +481,7 @@ const char *TGHtml::GetUid(const char *string)
 {
    //int dummy;
 
-   TObjString *obj = 0;
+   TObjString *obj = nullptr;
    obj = (TObjString*)fUidTable->FindObject(string);
 
    if (!obj) {
@@ -559,9 +559,9 @@ void TGHtml::Redraw()
    if ((fFlags & RESIZE_ELEMENTS) != 0 && (fFlags & STYLER_RUNNING) == 0) {
       TGHtmlImage *pImage;
       for (pImage = fImageList; pImage; pImage = pImage->fPNext) {
-         pImage->fPList = 0;
+         pImage->fPList = nullptr;
       }
-      fLastSized = 0;
+      fLastSized = nullptr;
       fFlags &= ~RESIZE_ELEMENTS;
       fFlags |= RELAYOUT;
    }
@@ -578,20 +578,20 @@ void TGHtml::Redraw()
 
    if ((fFlags & (RELAYOUT | EXTEND_LAYOUT)) != 0
       && (fFlags & STYLER_RUNNING) == 0) {
-      fNextPlaced = 0;
+      fNextPlaced = nullptr;
       //fNInput = 0;
       fVarId = 0;
       fMaxX = 0;
       fMaxY = 0;
       ResetLayoutContext();
-      fFirstBlock = 0;
-      fLastBlock = 0;
+      fFirstBlock = nullptr;
+      fLastBlock = nullptr;
       redoSelection = 1;
       fFlags &= ~RELAYOUT;
       fFlags |= HSCROLL | VSCROLL | REDRAW_TEXT | EXTEND_LAYOUT;
    }
 
-   if ((fFlags & EXTEND_LAYOUT) && fPFirst != 0) {
+   if ((fFlags & EXTEND_LAYOUT) && fPFirst != nullptr) {
       LayoutDoc();
       fFlags &= ~EXTEND_LAYOUT;
       FormBlocks();
@@ -765,7 +765,7 @@ Bool_t TGHtml::HandleIdleEvent(TGIdleHandler *idle)
    if (idle != fIdle) return kFALSE;
    Redraw();
    delete fIdle;
-   fIdle = NULL;
+   fIdle = nullptr;
    return kTRUE;
 }
 
@@ -827,15 +827,15 @@ Bool_t TGHtml::ItemLayout()
    fFlags |= RELAYOUT | VSCROLL | HSCROLL;
    Redraw(); //RedrawEverything();
 #else
-   fNextPlaced = 0;
+   fNextPlaced = nullptr;
    //fNInput = 0;
    fVarId = 0;
    fMaxX = 0;
    fMaxY = 0;
    ResetLayoutContext();
-   fFirstBlock = 0;
-   fLastBlock = 0;
-   if (fPFirst != 0) {
+   fFirstBlock = nullptr;
+   fLastBlock = nullptr;
+   if (fPFirst != nullptr) {
       LayoutDoc();
       FormBlocks();
       MapControls();
@@ -900,19 +900,19 @@ void TGHtml::HClear()
       fPNext = p->fPNext;
       delete p;
    }
-   fPFirst = 0;
-   fPLast = 0;
+   fPFirst = nullptr;
+   fPLast = nullptr;
    fNToken = 0;
    if (fZText) delete[] fZText;
-   fZText = 0;
+   fZText = nullptr;
    fNText = 0;
    fNAlloc = 0;
    fNComplete = 0;
    fIPlaintext = 0;
 
    for (i = 0; i < N_COLOR; ++i) {
-      if (fApColor[i] != 0) FreeColor(fApColor[i]);
-      fApColor[i] = 0;
+      if (fApColor[i] != nullptr) FreeColor(fApColor[i]);
+      fApColor[i] = nullptr;
       fIDark[i] = 0;
       fILight[i] = 0;
    }
@@ -942,7 +942,7 @@ void TGHtml::HClear()
    }
 
    if (fBgImage) delete fBgImage;
-   fBgImage = 0;
+   fBgImage = nullptr;
 
    while (fStyleStack) {
       SHtmlStyleStack_t *p2 = fStyleStack;
@@ -955,11 +955,11 @@ void TGHtml::HClear()
 //  fZBase = 0;
 
    if (fZBaseHref) delete [] fZBaseHref;
-   fZBaseHref = 0;
-   fLastSized = 0;
-   fNextPlaced = 0;
-   fFirstBlock = 0;
-   fLastBlock = 0;
+   fZBaseHref = nullptr;
+   fLastSized = nullptr;
+   fNextPlaced = nullptr;
+   fFirstBlock = nullptr;
+   fLastBlock = nullptr;
    fNInput = 0;
    fNForm = 0;
    fVarId = 0;
@@ -967,9 +967,9 @@ void TGHtml::HClear()
    fRowAlignment = ALIGN_None;
    fAnchorFlags = 0;
    fInDt = 0;
-   fAnchorStart = 0;
-   fFormStart = 0;
-   fInnerList = 0;
+   fAnchorStart = nullptr;
+   fFormStart = nullptr;
+   fInnerList = nullptr;
    fMaxX = 0;
    fMaxY = 0;
 #if 0  // in OXView::Clear()
@@ -977,15 +977,15 @@ void TGHtml::HClear()
    _virtualSize = TGDimension(0, 0);
    ScrollTTGPosition(fVisible);
 #endif
-   fPInsBlock = 0;
-   fIns.fP = 0;
-   fSelBegin.fP = 0;
-   fSelEnd.fP = 0;
-   fPSelStartBlock = 0;
-   fPSelEndBlock = 0;
+   fPInsBlock = nullptr;
+   fIns.fP = nullptr;
+   fSelBegin.fP = nullptr;
+   fSelEnd.fP = nullptr;
+   fPSelStartBlock = nullptr;
+   fPSelEndBlock = nullptr;
    fHasScript = 0;
    fHasFrames = 0;
-   fLastUri = 0;
+   fLastUri = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -995,7 +995,7 @@ Bool_t TGHtml::HandleTimer(TTimer *t)
 {
    if (t == fInsTimer) {
       if (fInsTimer) delete fInsTimer;
-      fInsTimer = NULL;
+      fInsTimer = nullptr;
       FlashCursor();
       return kTRUE;
    } else {
@@ -1015,7 +1015,7 @@ Bool_t TGHtml::HandleTimer(TTimer *t)
 
 void TGHtml::FlashCursor()
 {
-   if (fPInsBlock == 0 || fInsOnTime <= 0 || fInsOffTime <= 0) return;
+   if (fPInsBlock == nullptr || fInsOnTime <= 0 || fInsOffTime <= 0) return;
    RedrawBlock(fPInsBlock);
    if ((fFlags & GOT_FOCUS) == 0) {
       fInsStatus = 0;
@@ -1148,7 +1148,7 @@ TGHtmlInput *TGHtml::GetInputElement(int x, int y)
    vw = fCanvas->GetWidth();
    vh = fCanvas->GetHeight();
    for (p = fFirstInput; p; p = p->fINext) {
-      if (p->fFrame == 0) continue;
+      if (p->fFrame == nullptr) continue;
       if (p->fY < vy + vh && p->fY + p->fH > vy &&
           p->fX < vx + vw && p->fX + p->fW > vx) {
          if ((x > p->fX) && (y > p->fY) && (x < (p->fX + p->fW)) &&
@@ -1157,7 +1157,7 @@ TGHtmlInput *TGHtml::GetInputElement(int x, int y)
          }
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1191,8 +1191,8 @@ Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
                                    event->fX, event->fY, eventSt.fX,
                                    eventSt.fY, childdum);
 
-   const char *name = pr->MarkupArg("name", 0);
-   const char *val = pr->MarkupArg("value", 0);
+   const char *name = pr->MarkupArg("name", nullptr);
+   const char *val = pr->MarkupArg("value", nullptr);
    switch (pr->fItype) {
       case INPUT_TYPE_Submit:
       case INPUT_TYPE_Button: {
@@ -1407,7 +1407,7 @@ Bool_t TGHtml::HandleMotion(Event_t *event)
 
 TGFont *TGHtml::GetFont(int iFont)
 {
-   TGFont *toFree = 0;
+   TGFont *toFree = nullptr;
 
    if (iFont < 0) iFont = 0;
    if (iFont >= N_FONT) { iFont = N_FONT - 1; CANT_HAPPEN; }
@@ -1417,15 +1417,15 @@ TGFont *TGHtml::GetFont(int iFont)
    // a policy of allocate-before-free because xclass' font cache operates
    // much more efficiently that way.
 
-   if (!FontIsValid(iFont) && fAFont[iFont] != 0) {
+   if (!FontIsValid(iFont) && fAFont[iFont] != nullptr) {
       toFree = fAFont[iFont];
-      fAFont[iFont] = 0;
+      fAFont[iFont] = nullptr;
    }
 
    // If we need to allocate a font, first construct the font name then
    // allocate it.
 
-   if (fAFont[iFont] == 0) {
+   if (fAFont[iFont] == nullptr) {
       char name[200];         // Name of the font
       const char *familyStr = "";
       int iFamily;
@@ -1491,12 +1491,12 @@ TGFont *TGHtml::GetFont(int iFont)
       // Get the named font
       fAFont[iFont] = fClient->GetFont(name);
 
-      if (fAFont[iFont] == 0) {
+      if (fAFont[iFont] == nullptr) {
          fprintf(stderr, "TGHtml: could not get font \"%s\", trying fixed\n",
                  name);
          fAFont[iFont] = fClient->GetFont("fixed");
       }
-      if (fAFont[iFont] == 0 ){
+      if (fAFont[iFont] == nullptr ){
          fprintf(stderr, "TGHtml: could not get font \"fixed\", trying "
                  "\"helvetica -12\"\n");
          fAFont[iFont] = fClient->GetFont("helvetica -12");
@@ -1540,14 +1540,14 @@ TGHtmlElement *TGHtml::GetMap(const char *name)
 
    while (p) {
       if (p->fType == Html_MAP) {
-         z = p->MarkupArg("name", 0);
-         zb = p->MarkupArg("shape", 0);
-         if (zb && *zb != 'r') return 0;
+         z = p->MarkupArg("name", nullptr);
+         zb = p->MarkupArg("shape", nullptr);
+         if (zb && *zb != 'r') return nullptr;
          if (z && !strcmp(z, name)) return p;
       }
       p = p->fPNext;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1597,7 +1597,7 @@ int TGHtml::GetColorByName(const char *zColor)
    }
 
    pNew = AllocColor(name);
-   if (pNew == 0) {
+   if (pNew == nullptr) {
       return 0;      // Color 0 is always the default
    }
 
@@ -1733,7 +1733,7 @@ int TGHtml::GetColorByValue(ColorStruct_t *pRef)
 
    // No exact matches. Look for a completely unused slot
    for (i = N_PREDEFINED_COLOR; i < N_COLOR; i++) {
-      if (fApColor[i] == 0) {
+      if (fApColor[i] == nullptr) {
          fApColor[i] = AllocColorByValue(pRef);
          fColorUsed |= (1<<i);
          return i;
@@ -1787,8 +1787,8 @@ const char *TGHtml::GetHref(int x, int y, const char **target)
             while (pElem && pElem->fType != Html_EndMAP) {
                if (pElem->fType == Html_AREA) {
                   if (InArea((TGHtmlMapArea *) pElem, pBlock->fLeft, pBlock->fTop, x, y)) {
-                     if (target) *target = pElem->MarkupArg("target", 0);
-                     return pElem->MarkupArg("href", 0);
+                     if (target) *target = pElem->MarkupArg("target", nullptr);
+                     return pElem->MarkupArg("href", nullptr);
                   }
                }
                pElem = pElem->fPNext;
@@ -1802,16 +1802,16 @@ const char *TGHtml::GetHref(int x, int y, const char **target)
          case Html_Space:
          case Html_IMG:
             while (pElem && pElem->fType != Html_A) pElem = pElem->fPPrev;
-            if (pElem == 0 || pElem->fType != Html_A) break;
-            if (target) *target = pElem->MarkupArg("target", 0);
-            return pElem->MarkupArg("href", 0);
+            if (pElem == nullptr || pElem->fType != Html_A) break;
+            if (target) *target = pElem->MarkupArg("target", nullptr);
+            return pElem->MarkupArg("href", nullptr);
 
             default:
                break;
       }
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1854,10 +1854,10 @@ TGHtmlElement *TGHtml::AttrElem(const char *name, char *value)
 
    for (p = fPFirst; p; p = p->fPNext) {
       if (p->fType != Html_A) continue;
-      z = p->MarkupArg(name, 0);
+      z = p->MarkupArg(name, nullptr);
       if (z && (strcmp(z, value) == 0)) return p;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1875,7 +1875,7 @@ void TGHtml::UpdateSelection(int forceUpdate)
    int needUpdate = forceUpdate;
    int temp;
 
-   if (fSelEnd.fP == 0) fSelBegin.fP = 0;
+   if (fSelEnd.fP == nullptr) fSelBegin.fP = nullptr;
 
    IndexToBlockIndex(fSelBegin, &pBlock, &index);
    if (needUpdate || pBlock != fPSelStartBlock) {
@@ -1888,7 +1888,7 @@ void TGHtml::UpdateSelection(int forceUpdate)
       fSelStartIndex = index;
    }
 
-   if (fSelBegin.fP == 0) fSelEnd.fP = 0;
+   if (fSelBegin.fP == nullptr) fSelEnd.fP = nullptr;
 
    IndexToBlockIndex(fSelEnd, &pBlock, &index);
    if (needUpdate || pBlock != fPSelEndBlock) {
@@ -1971,10 +1971,10 @@ void TGHtml::LostSelection()
 {
    if (fExportSelection) {
       // clear selection
-      fPSelStartBlock = 0;
-      fPSelEndBlock = 0;
-      fSelBegin.fP = 0;
-      fSelEnd.fP = 0;
+      fPSelStartBlock = nullptr;
+      fPSelEndBlock = nullptr;
+      fSelBegin.fP = nullptr;
+      fSelEnd.fP = nullptr;
       UpdateSelectionDisplay();
    }
 }
@@ -2028,7 +2028,7 @@ void TGHtml::UpdateInsert()
 {
    IndexToBlockIndex(fIns, &fPInsBlock, &fInsIndex);
    RedrawBlock(fPInsBlock);
-   if (fInsTimer == 0) {
+   if (fInsTimer == nullptr) {
       fInsStatus = 0;
       FlashCursor();
    }
@@ -2044,8 +2044,8 @@ int TGHtml::SetInsert(const char *insIx)
    if (!insIx) {
       RedrawBlock(fPInsBlock);
       fInsStatus = 0;
-      fPInsBlock = 0;
-      fIns.fP = 0;
+      fPInsBlock = nullptr;
+      fIns.fP = nullptr;
    } else {
       if (GetIndex(insIx, &i.fP, &i.fI)) {
          // malformed index

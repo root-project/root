@@ -535,7 +535,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
 
       gSystem->RedirectOutput(pathtmp.str().c_str(), "a");
       gROOT->ProcessLine(msg.c_str());
-      gSystem->RedirectOutput(0);
+      gSystem->RedirectOutput(nullptr);
    } else if (kind == "GETHISTORY") {
 
       auto history = GetRootHistory();

@@ -36,7 +36,7 @@ ClassImp(THostAuth);
 
    THostAuth::THostAuth() : TObject()
 {
-   Create(0, 0);
+   Create(nullptr, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,12 +202,12 @@ THostAuth::THostAuth(const char *asstring) : TObject()
    strtmp.ReplaceAll(fHost,"");
    fHost.Remove(0,fHost.Index(":")+1);
 
-   fUser = TString((const char *)strtok(0," "));
+   fUser = TString((const char *)strtok(nullptr," "));
    strtmp.ReplaceAll(fUser,"");
    fUser.Remove(0,fUser.Index(":")+1);
 
    TString fNmet;
-   fNmet = TString((const char *)strtok(0," "));
+   fNmet = TString((const char *)strtok(nullptr," "));
    strtmp.ReplaceAll(fNmet,"");
    fNmet.Remove(0,fNmet.Index(":")+1);
 
@@ -455,7 +455,7 @@ void THostAuth::PrintEstablished() const
    // Check list
    if (fSecContexts->GetSize()>0) {
       TIter next(fSecContexts);
-      TSecContext *ctx = 0;
+      TSecContext *ctx = nullptr;
       Int_t k = 1;
       while ((ctx = (TSecContext *) next())) {
          TString opt;

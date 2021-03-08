@@ -543,7 +543,7 @@ int TClingDataMemberInfo::TypeSize() const
 const char *TClingDataMemberInfo::TypeName() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
 
    CheckForIoTypeAndName();
@@ -571,7 +571,7 @@ const char *TClingDataMemberInfo::TypeName() const
 const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
 
    CheckForIoTypeAndName();
@@ -601,7 +601,7 @@ const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormaliz
 const char *TClingDataMemberInfo::Name() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
 
    CheckForIoTypeAndName();
@@ -613,7 +613,7 @@ const char *TClingDataMemberInfo::Name() const
 const char *TClingDataMemberInfo::Title()
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
 
    //NOTE: We can't use it as a cache due to the "thoughtful" self iterator

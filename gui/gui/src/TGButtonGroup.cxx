@@ -157,10 +157,10 @@ void TGButtonGroup::Init()
 TGButtonGroup::~TGButtonGroup()
 {
    TIter next(fMapOfButtons);
-   TGButton *item = 0;
+   TGButton *item = nullptr;
 
    while ((item = (TGButton*)next())) {
-      item->SetGroup(0);
+      item->SetGroup(nullptr);
    }
 
    SafeDelete(fMapOfButtons);
@@ -317,7 +317,7 @@ void TGButtonGroup::SetState(Bool_t state)
    fState = state;
 
    TIter next(fMapOfButtons);
-   TGButton *item = 0;
+   TGButton *item = nullptr;
 
    while ((item = (TGButton*)next())) {    // loop over all buttons
       if (state) {
@@ -403,7 +403,7 @@ void TGButtonGroup::Remove(TGButton *button)
 {
    TGButton *item = (TGButton*) fMapOfButtons->Remove(button);
    if (item) {
-      button->SetGroup(0);
+      button->SetGroup(nullptr);
       button->Disconnect(this);
       button->DestroyWindow();
    }
@@ -418,7 +418,7 @@ void TGButtonGroup::Remove(TGButton *button)
 TGButton *TGButtonGroup::Find(Int_t id) const
 {
    TIter next(fMapOfButtons);
-   TGButton *item = 0;
+   TGButton *item = nullptr;
 
    while ((item = (TGButton*)next())) {
       if ((Long_t)fMapOfButtons->GetValue(item) == id) break;   // found
@@ -521,7 +521,7 @@ void TGButtonGroup::ReleaseButtons()
       return;
 
    TIter next(fMapOfButtons);
-   TGButton *item = 0;
+   TGButton *item = nullptr;
 
    while ((item = (TGButton*)next())) {    // loop over all buttons
       // coverity[returned_null]

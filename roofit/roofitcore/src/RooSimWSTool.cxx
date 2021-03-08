@@ -190,7 +190,7 @@ RooSimultaneous* RooSimWSTool::build(const char* simPdfName, const char* protoPd
 RooSimultaneous* RooSimWSTool::build(const char* simPdfName,BuildConfig& bc, Bool_t verbose) 
 {
   ObjBuildConfig* obc = validateConfig(bc) ;
-  if (!obc) return 0 ;
+  if (!obc) return nullptr ;
   
   if (verbose) {
     obc->print() ;
@@ -220,10 +220,10 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 			    << " does not contain a category named " << bc._masterCatName 
 			    << " that was designated as master index category in the build configuration" << endl ;
       delete obc ;
-      return 0 ;
+      return nullptr ;
     }
   } else {
-    obc->_masterCat = 0 ;
+    obc->_masterCat = nullptr ;
   }
   
   map<string,SplitRule>::iterator pdfiter ;
@@ -236,7 +236,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
       coutE(ObjectHandling) << "RooSimWSTool::build(" << GetName() << ") ERROR: associated workspace " << _ws->GetName() 
 			    << " does not contain a pdf named " << pdfiter->second.GetName() << endl ;
       delete obc ;
-      return 0 ;
+      return nullptr ;
     }      
 
     // Create empty object version of split rule set
@@ -255,7 +255,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 			      << " does not contain a variable named " << pariter->first.c_str() 
 			      << " as specified in splitting rule of parameter " << pariter->first << " of p.d.f " << pdf << endl ;
 	delete obc ;
-	return 0 ;
+	return nullptr ;
       } 
       
       // Check that given variable is indeed related to given p.d.f
@@ -263,7 +263,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 	coutE(ObjectHandling) << "RooSimWSTool::build(" << GetName() << ") ERROR: specified parameter " << pariter->first 
 			      << " in split is not function of p.d.f " << pdf->GetName() << endl ;
 	delete obc ;
-	return 0 ;
+	return nullptr ;
       }
       
       
@@ -276,7 +276,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 				<< " does not contain a category named " << catiter->c_str() 
 				<< " as specified in splitting rule of parameter " << pariter->first << " of p.d.f " << pdf << endl ;
 	  delete obc ;
-	  return 0 ;
+	  return nullptr ;
 	}
 	splitCatSet.add(*cat) ;
       }      
@@ -293,7 +293,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 				<< " depends on one or more of the other splitting categories in the composite split" << endl ;
 	  delete obc ;
 	  delete iter ;
-	  return 0 ;
+	  return nullptr ;
 	}
       }
       delete iter ;
@@ -303,7 +303,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 	if (!dynamic_cast<RooAbsReal*>(farg)) {
 	  coutE(InputArguments) << "RooSimWSTool::build(" << GetName() << ") ERROR: Constrained split specified in non real-valued parameter " << farg->GetName() << endl ;
 	  delete obc ;
-	  return 0 ;
+	  return nullptr ;
 	}
       }
 
@@ -316,12 +316,12 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 	list<string>::iterator misi ;
 	for (misi=sr._miStateNameList.begin() ; misi!=sr._miStateNameList.end() ; ++misi) {
 	  const RooCatType* ctype = obc->_masterCat->lookupType(misi->c_str(),kFALSE) ;
-	  if (ctype==0) {	  
+	  if (ctype==nullptr) {	  
 	    coutE(ObjectHandling) << "RooSimWSTool::build(" << GetName() << ") ERROR: master index category " << obc->_masterCat->GetName() 
 				  << " does not have a state named " << *misi << " which was specified as state associated with p.d.f " 
 				  << sr.GetName() << endl ;
 	    delete obc ;
-	    return 0 ;	    
+	    return nullptr ;	    
 	  }
 	  osr._miStateList.push_back(ctype) ;
 	}	
@@ -338,12 +338,12 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 	list<string>::iterator misi ;
 	for (misi=sr._miStateNameList.begin() ; misi!=sr._miStateNameList.end() ; ++misi) {
 	  const RooCatType* ctype = obc->_masterCat->lookupType(misi->c_str(),kFALSE) ;
-	  if (ctype==0) {	  
+	  if (ctype==nullptr) {	  
 	    coutE(ObjectHandling) << "RooSimWSTool::build(" << GetName() << ") ERROR: master index category " << obc->_masterCat->GetName() 
 				  << " does not have a state named " << *misi << " which was specified as state associated with p.d.f " 
 				  << sr.GetName() << endl ;
 	    delete obc ;
-	    return 0 ;	    
+	    return nullptr ;	    
 	  }
 	  osr._miStateList.push_back(ctype) ;
 	}	
@@ -363,7 +363,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 			    << " does not contain a category named " << riter->first
 			    << " for which build was requested to be restricted to states " << riter->second << endl ;
       delete obc ;
-      return 0 ;
+      return nullptr ;
     }	
 
     char buf[4096] ;
@@ -377,10 +377,10 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 	coutE(ObjectHandling) << "RooSimWSTool::build(" << GetName() << ") ERROR: restricted build category " << cat->GetName() 
 			      << " does not have state " << tok << " as specified in restriction list" << endl ;	
 	delete obc ;
-	return 0 ;
+	return nullptr ;
       }
       rlist.push_back(ctype) ;
-      tok = strtok(0,"{,}") ;
+      tok = strtok(nullptr,"{,}") ;
     }
     
     obc->_restr[cat] = rlist ;
@@ -484,7 +484,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
 	if (!splitCat->hasLabel(splitIter->second.second)) {
 	  coutE(InputArguments) << "RooSimWSTool::executeBuild(" << GetName() << ") ERROR: name of remainder state for constrained split, '" 
 				<< splitIter->second.second << "' , does not match any state name of (composite) split category " << splitCat->GetName() << endl ;
-	  return 0 ;
+	  return nullptr ;
 	}
 
 	// First build manually the specializations of all non-remainder states, as the remainder state depends on these
@@ -553,7 +553,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
 
   TIterator* fclIter = fitCatList.createIterator() ;
   string mcatname = string(simPdfName) + "_index" ;
-  RooAbsCategoryLValue* fitCat = 0 ;
+  RooAbsCategoryLValue* fitCat = nullptr ;
   if (fitCatList.getSize()>1) {
     fitCat = new RooSuperCategory(mcatname.c_str(),mcatname.c_str(),fitCatList) ;
     cleanupList.addOwned(*fitCat) ;
@@ -602,7 +602,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
     RooCustomizer* physCustomizer ;
     if (physCat) {      
       RooAbsPdf* pdf = stateMap[physCat->getCurrentLabel()] ;
-      if (pdf==0) {
+      if (pdf==nullptr) {
 	continue ;
       }
       physCustomizer = (RooCustomizer*) customizerList->FindObject(pdf->GetName());  
@@ -672,14 +672,14 @@ void RooSimWSTool::SplitRule::splitParameter(const char* paramNameList, const ch
   char* cat = strtok(catBuf,"{,}") ;
   while(cat) {
     catList.push_back(cat) ;
-    cat = strtok(0,"{,}") ;
+    cat = strtok(nullptr,"{,}") ;
   }
 
   // Now parse parameter list
   char* param = strtok(paramBuf,"{,}") ;
   while(param) {
     _paramSplitMap[param] = pair<list<string>,string>(catList,"") ;
-    param = strtok(0,"{,}") ;
+    param = strtok(nullptr,"{,}") ;
   }
 }
 
@@ -700,14 +700,14 @@ void RooSimWSTool::SplitRule::splitParameterConstrained(const char* paramNameLis
   char* cat = strtok(catBuf,"{,}") ;
   while(cat) {
     catList.push_back(cat) ;
-    cat = strtok(0,"{,}") ;
+    cat = strtok(nullptr,"{,}") ;
   }
 
   // Now parse parameter list
   char* param = strtok(paramBuf,"{,}") ;
   while(param) {
     _paramSplitMap[param] = pair<list<string>,string>(catList,remainderStateName) ;
-    param = strtok(0,"{,}") ;
+    param = strtok(nullptr,"{,}") ;
   }
 }
 
@@ -727,7 +727,7 @@ void RooSimWSTool::SplitRule::configure(const RooCmdArg& arg1,const RooCmdArg& a
   list<const RooCmdArg*>::iterator iter ;
   for (iter=cmdList.begin() ; iter!=cmdList.end() ; ++iter) {
 
-    if ((*iter)->opcode()==0) continue ;
+    if ((*iter)->opcode()==nullptr) continue ;
 
     string name = (*iter)->opcode() ;
 
@@ -771,7 +771,7 @@ RooSimWSTool::BuildConfig::BuildConfig(const char* pdfName, const RooCmdArg& arg
 
   list<const RooCmdArg*>::iterator iter ;
   for (iter=cmdList.begin() ; iter!=cmdList.end() ; ++iter) {
-    if ((*iter)->opcode()==0) continue ;
+    if ((*iter)->opcode()==nullptr) continue ;
     string name = (*iter)->opcode() ;
     if (name=="Restrict") {
       restrictBuild((*iter)->getString(0),(*iter)->getString(1)) ;
@@ -804,7 +804,7 @@ void RooSimWSTool::BuildConfig::internalAddPdf(const char* pdfName, const char* 
   char* tok = strtok(buf,",") ;
   while(tok) {
     sr._miStateNameList.push_back(tok) ;
-    tok = strtok(0,",") ;
+    tok = strtok(nullptr,",") ;
   }
     
   _pdfmap[pdfName] = sr ;  

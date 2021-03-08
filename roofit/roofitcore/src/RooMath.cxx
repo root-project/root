@@ -667,7 +667,7 @@ Double_t RooMath::interpolate(Double_t xa[], Double_t ya[], Int_t n, Double_t x)
       w=c[i+1]-d[i] ;
       den=ho-hp ;
       if (den==0.) {
-	oocoutE((TObject*)0,Eval) << "RooMath::interpolate ERROR: zero distance between points not allowed" << endl ;
+	oocoutE((TObject*)nullptr,Eval) << "RooMath::interpolate ERROR: zero distance between points not allowed" << endl ;
 	return 0 ;
       }
       den = w/den ;

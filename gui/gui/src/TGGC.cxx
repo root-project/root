@@ -964,7 +964,7 @@ TGGC *TGGCPool::FindGC(GContext_t gct)
       if (gc->fContext == gct)
          return gc;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -985,7 +985,7 @@ TGGC *TGGCPool::GetGC(GContext_t gct)
 
 TGGC *TGGCPool::GetGC(GCValues_t *values, Bool_t rw)
 {
-   TGGC *gc, *best_match = 0;
+   TGGC *gc, *best_match = nullptr;
    Int_t matching_bits, best_matching_bits = -1;
    Bool_t exact = kFALSE;
 

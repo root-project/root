@@ -26,7 +26,7 @@ void TMVA::variables(TString dataset, TString fin, TString dirName , TString tit
    TFile* file = TMVAGlob::OpenFile( fin );
 
    TDirectory* dir = (TDirectory*)file->GetDirectory(dataset.Data())->Get(dirName );
-   if (dir==0) {
+   if (dir==nullptr) {
       cout << "No information about " << title << " available in directory " << dirName << " of file " << fin << endl;
       return;
    }
@@ -62,8 +62,8 @@ void TMVA::variables(TString dataset, TString fin, TString dirName , TString tit
    Int_t countPad    = 0;
 
    // loop over all objects in directory
-   TCanvas* canv = 0;
-   TKey*    key  = 0;
+   TCanvas* canv = nullptr;
+   TKey*    key  = nullptr;
    Bool_t   createNewFig = kFALSE;
    TIter next(dir->GetListOfKeys());
    while ((key = (TKey*)next())) {
@@ -93,13 +93,13 @@ void TMVA::variables(TString dataset, TString fin, TString dirName , TString tit
       TString bgname = hname;
       bgname.ReplaceAll("__Signal","__Background");
       TH1 *bgd = (TH1*)dir->Get(bgname);
-      if (bgd == NULL) {
+      if (bgd == nullptr) {
          cout << "ERROR!!! couldn't find background histo for" << hname << endl;
          return;
       }
 
       // this is set but not stored during plot creation in MVA_Factory
-      TMVAGlob::SetSignalAndBackgroundStyle( sig, (isRegression ? 0 : bgd) );            
+      TMVAGlob::SetSignalAndBackgroundStyle( sig, (isRegression ? nullptr : bgd) );            
 
       sig->SetTitle( TString( htitle ) + ": " + sig->GetTitle() );
       TMVAGlob::SetFrameStyle( sig, 1.2 );

@@ -92,12 +92,12 @@ using namespace RooStats;
 
 HybridCalculatorOriginal::HybridCalculatorOriginal(const char *name) :
    TNamed(name,name),
-   fSbModel(0),
-   fBModel(0),
-   fObservables(0),
-   fNuisanceParameters(0),
-   fPriorPdf(0),
-   fData(0),
+   fSbModel(nullptr),
+   fBModel(nullptr),
+   fObservables(nullptr),
+   fNuisanceParameters(nullptr),
+   fPriorPdf(nullptr),
+   fData(nullptr),
    fGenerateBinned(false),
    fUsePriorPdf(false),   fTmpDoExtended(true)
 {
@@ -124,7 +124,7 @@ HybridCalculatorOriginal::HybridCalculatorOriginal( RooAbsPdf& sbModel,
    fBModel(&bModel),
    fNuisanceParameters(nuisance_parameters),
    fPriorPdf(priorPdf),
-   fData(0),
+   fData(nullptr),
    fGenerateBinned(GenerateBinned),
    fUsePriorPdf(false),
    fTmpDoExtended(true)
@@ -163,7 +163,7 @@ HybridCalculatorOriginal::HybridCalculatorOriginal( RooAbsData & data,
                                     int numToys) :
    fSbModel(&sbModel),
    fBModel(&bModel),
-   fObservables(0),
+   fObservables(nullptr),
    fNuisanceParameters(nuisance_parameters),
    fPriorPdf(priorPdf),
    fData(&data),
@@ -193,7 +193,7 @@ HybridCalculatorOriginal::HybridCalculatorOriginal( RooAbsData& data,
                                     int numToys) :
    fSbModel(sbModel.GetPdf()),
    fBModel(bModel.GetPdf()),
-   fObservables(0),  // no need to set them - can be taken from the data
+   fObservables(nullptr),  // no need to set them - can be taken from the data
    fNuisanceParameters((sbModel.GetNuisanceParameters()) ? sbModel.GetNuisanceParameters()  :  bModel.GetNuisanceParameters()),
    fPriorPdf((sbModel.GetPriorPdf()) ? sbModel.GetPriorPdf()  :  bModel.GetPriorPdf()),
    fData(&data),
@@ -420,7 +420,7 @@ void HybridCalculatorOriginal::RunToys(std::vector<double>& bVals, std::vector<d
 
       /// work-around in case of an empty dataset (TO DO: need a debug in RooFit?)
       bool bIsEmpty = false;
-      if (bData==NULL) {
+      if (bData==nullptr) {
          bIsEmpty = true;
          // if ( _verbose ) std::cout << "empty B-only dataset!\n";
          RooDataSet* bDataDummy=new RooDataSet("bDataDummy","empty dataset",*fObservables);
@@ -439,7 +439,7 @@ void HybridCalculatorOriginal::RunToys(std::vector<double>& bVals, std::vector<d
 
       /// work-around in case of an empty dataset (TO DO: need a debug in RooFit?)
       bool sbIsEmpty = false;
-      if (sbData==NULL) {
+      if (sbData==nullptr) {
          sbIsEmpty = true;
          // if ( _verbose ) std::cout << "empty S+B dataset!\n";
          RooDataSet* sbDataDummy=new RooDataSet("sbDataDummy","empty dataset",*fObservables);
@@ -582,11 +582,11 @@ HybridResult* HybridCalculatorOriginal::GetHypoTest() const {
    // perform the hypothesis test and return result of hypothesis test
 
    // check first that everything needed is there
-   if (!DoCheckInputs()) return 0;
+   if (!DoCheckInputs()) return nullptr;
    RooAbsData * treeData = dynamic_cast<RooAbsData *> (fData);
    if (!treeData) {
       std::cerr << "Error in HybridCalculatorOriginal::GetHypoTest - invalid data type - return NULL" << std::endl;
-      return 0;
+      return nullptr;
    }
    bool usePrior = (fUsePriorPdf && fPriorPdf );
    return Calculate( *treeData, fNToys, usePrior);

@@ -46,11 +46,11 @@ using namespace std;
 /// SamplingDistPlot default constructor with bin size
 
 SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
-   fHist(0),
-   fLegend(NULL),
+   fHist(nullptr),
+   fLegend(nullptr),
    fItems(),
    fOtherItems(),
-   fRooPlot(NULL),
+   fRooPlot(nullptr),
    fLogXaxis(kFALSE),
    fLogYaxis(kFALSE),
    fXMin(NaN), fXMax(NaN), fYMin(NaN), fYMax(NaN),
@@ -68,11 +68,11 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
 /// SamplingDistPlot constructor with bin size, min and max
 
 SamplingDistPlot::SamplingDistPlot(Int_t nbins, Double_t min, Double_t max) :
-   fHist(0),
-   fLegend(NULL),
+   fHist(nullptr),
+   fLegend(nullptr),
    fItems(),
    fOtherItems(),
-   fRooPlot(NULL),
+   fRooPlot(nullptr),
    fLogXaxis(kFALSE),
    fLogYaxis(kFALSE),
    fXMin(NaN), fXMax(NaN), fYMin(NaN), fYMax(NaN),
@@ -138,7 +138,7 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    if( !IsNaN(fXMax) ) xup = fXMax;
 
    fHist = new TH1F(samplingDist->GetName(), samplingDist->GetTitle(), fBins, xlow, xup);
-   fHist->SetDirectory(0);  // make the object managed by this class
+   fHist->SetDirectory(nullptr);  // make the object managed by this class
 
    if( fVarName.Length() == 0 ) fVarName = samplingDist->GetVarName();
    fHist->GetXaxis()->SetTitle(fVarName.Data());
@@ -190,7 +190,7 @@ Double_t SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistribut
    Double_t scaleFactor = AddSamplingDistribution(samplingDist, drawOptions);
 
    TH1F *shaded = (TH1F*)fHist->Clone((string(samplingDist->GetName())+string("_shaded")).c_str());
-   shaded->SetDirectory(0);
+   shaded->SetDirectory(nullptr);
    shaded->SetFillStyle(fFillStyle++);
    shaded->SetLineWidth(1);
 
@@ -229,7 +229,7 @@ void SamplingDistPlot::AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y
 void SamplingDistPlot::AddTH1(TH1* h, Option_t *drawOptions) {
    if(fLegend  &&  h->GetTitle()) fLegend->AddEntry(h, h->GetTitle(), "L");
    TH1 * hcopy = (TH1*) h->Clone();
-   hcopy->SetDirectory(0);
+   hcopy->SetDirectory(nullptr);
    addObject(hcopy, drawOptions);
 }
 void SamplingDistPlot::AddTF1(TF1* f, const char* title, Option_t *drawOptions) {
@@ -261,7 +261,7 @@ void SamplingDistPlot::SetSampleWeights(const SamplingDistribution* samplingDist
 void SamplingDistPlot::addObject(TObject *obj, Option_t *drawOptions)
 {
 
-  if(0 == obj) {
+  if(nullptr == obj) {
     std::cerr << fName << "::addObject: called with a null pointer" << std::endl;
     return;
   }
@@ -279,7 +279,7 @@ void SamplingDistPlot::addObject(TObject *obj, Option_t *drawOptions)
 
 void SamplingDistPlot::addOtherObject(TObject *obj, Option_t *drawOptions)
 {
-  if(0 == obj) {
+  if(nullptr == obj) {
      oocoutE(this,InputArguments) << fName << "::addOtherObject: called with a null pointer" << std::endl;
      return;
   }
@@ -329,7 +329,7 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    }
 
    fIterator->Reset();
-   TH1F *obj = 0;
+   TH1F *obj = nullptr;
    while ((obj = (TH1F*) fIterator->Next())) {
       //obj->Draw(fIterator->GetOption());
       // add cloned objects to avoid mem leaks
@@ -342,12 +342,12 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
          //coutI(InputArguments) << "Setting minimum of TH1 to " << theYMin << endl;
          cloneObj->SetMinimum(theYMin);
       }
-      cloneObj->SetDirectory(0);  // transfer ownership of the object
+      cloneObj->SetDirectory(nullptr);  // transfer ownership of the object
       fRooPlot->addTH1(cloneObj, fIterator->GetOption());
    }
 
    TIterator *otherIt = fOtherItems.MakeIterator();
-   TObject *otherObj = NULL;
+   TObject *otherObj = nullptr;
    while ((otherObj = otherIt->Next())) {
       TObject * cloneObj = otherObj->Clone();
       fRooPlot->addObject(cloneObj, otherIt->GetOption());
@@ -409,7 +409,7 @@ void SamplingDistPlot::GetAbsoluteInterval(Double_t &theMin, Double_t &theMax, D
    Double_t tmpYmax = -TMath::Infinity();
 
   fIterator->Reset();
-  TH1F *obj = 0;
+  TH1F *obj = nullptr;
   while((obj = (TH1F*)fIterator->Next())) {
     if(obj->GetXaxis()->GetXmin() < tmpmin) tmpmin = obj->GetXaxis()->GetXmin();
     if(obj->GetXaxis()->GetXmax() > tmpmax) tmpmax = obj->GetXaxis()->GetXmax();
@@ -428,11 +428,11 @@ void SamplingDistPlot::GetAbsoluteInterval(Double_t &theMin, Double_t &theMax, D
 /// fill color for the associated shaded TH1F.
 
 void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *samplDist) {
-   if (samplDist == 0) {
+   if (samplDist == nullptr) {
       fHist->SetLineColor(color);
 
       fIterator->Reset();
-      TH1F *obj = 0;
+      TH1F *obj = nullptr;
 
       TString shadedName(fHist->GetName());
       shadedName += "_shaded";
@@ -446,7 +446,7 @@ void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *s
       }
    } else {
       fIterator->Reset();
-      TH1F *obj = 0;
+      TH1F *obj = nullptr;
 
       TString shadedName(samplDist->GetName());
       shadedName += "_shaded";
@@ -471,12 +471,12 @@ void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *s
 
 void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->SetLineWidth(lwidth);
   }
   else{
     fIterator->Reset();
-    TH1F *obj = 0;
+    TH1F *obj = nullptr;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
    obj->SetLineWidth(lwidth);
@@ -492,12 +492,12 @@ void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *
 
 void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->SetLineStyle(style);
   }
   else{
     fIterator->Reset();
-    TH1F *obj = 0;
+    TH1F *obj = nullptr;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
    obj->SetLineStyle(style);
@@ -513,12 +513,12 @@ void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *s
 
 void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->SetMarkerStyle(style);
   }
   else{
     fIterator->Reset();
-    TH1F *obj = 0;
+    TH1F *obj = nullptr;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
    obj->SetMarkerStyle(style);
@@ -534,12 +534,12 @@ void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution 
 
 void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->SetMarkerColor(color);
   }
   else{
     fIterator->Reset();
-    TH1F *obj = 0;
+    TH1F *obj = nullptr;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
    obj->SetMarkerColor(color);
@@ -555,12 +555,12 @@ void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution 
 
 void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->SetMarkerSize(size);
   }
   else{
     fIterator->Reset();
-    TH1F *obj = 0;
+    TH1F *obj = nullptr;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
    obj->SetMarkerSize(size);
@@ -576,11 +576,11 @@ void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *sa
 
 TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
 {
-  if(samplDist == NULL){
+  if(samplDist == nullptr){
     return fHist;
   }else{
     fIterator->Reset();
-    TH1F *obj = 0;
+    TH1F *obj = nullptr;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
         return obj;
@@ -588,19 +588,19 @@ TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void SamplingDistPlot::RebinDistribution(Int_t rebinFactor, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->Rebin(rebinFactor);
   }
   else{
     fIterator->Reset();
-    TH1F *obj = 0;
+    TH1F *obj = nullptr;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
    obj->Rebin(rebinFactor);

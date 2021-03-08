@@ -33,7 +33,7 @@ ClassImp(RooExtendedBinding);
  Double_t RooExtendedBinding::evaluate() const 
  { 
    // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE 
-   return ((RooAbsPdf&)pdf.arg()).expectedEvents(0) ; 
+   return ((RooAbsPdf&)pdf.arg()).expectedEvents(nullptr) ; 
  } 
 
 

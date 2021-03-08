@@ -60,7 +60,7 @@ ClassImp(RooSimGenContext);
 
 RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet &vars, 
 				   const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model), _protoData(0)
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model), _protoData(nullptr)
 {
   // Determine if we are requested to generate the index category
   RooAbsCategory *idxCat = (RooAbsCategory*) model._indexCat.absArg() ;

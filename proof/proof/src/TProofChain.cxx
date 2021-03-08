@@ -34,9 +34,9 @@ ClassImp(TProofChain);
 
 TProofChain::TProofChain() : TChain()
 {
-   fChain        = 0;
-   fTree         = 0;
-   fSet          = 0;
+   fChain        = nullptr;
+   fTree         = nullptr;
+   fSet          = nullptr;
    fDirectory    = gDirectory;
    ResetBit(kOwnsChain);
 }
@@ -47,8 +47,8 @@ TProofChain::TProofChain() : TChain()
 TProofChain::TProofChain(TChain *chain, Bool_t gettreeheader) : TChain()
 {
    fChain        = chain;
-   fTree         = 0;
-   fSet          = chain ? new TDSet((const TChain &)(*chain)) : 0;
+   fTree         = nullptr;
+   fSet          = chain ? new TDSet((const TChain &)(*chain)) : nullptr;
    fDirectory    = gDirectory;
    if (gProof) {
       gProof->AddChain(chain);
@@ -62,8 +62,8 @@ TProofChain::TProofChain(TChain *chain, Bool_t gettreeheader) : TChain()
       }
    }
    ResetBit(kOwnsChain);
-   fEntryList = (chain) ? chain->GetEntryList() : 0;
-   fEventList = (chain) ? chain->GetEventList() : 0;
+   fEntryList = (chain) ? chain->GetEntryList() : nullptr;
+   fEventList = (chain) ? chain->GetEventList() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,8 +71,8 @@ TProofChain::TProofChain(TChain *chain, Bool_t gettreeheader) : TChain()
 
 TProofChain::TProofChain(TDSet *dset, Bool_t gettreeheader) : TChain()
 {
-   fChain        = 0;
-   fTree         = 0;
+   fChain        = nullptr;
+   fTree         = nullptr;
    fSet          = dset;
    fDirectory    = gDirectory;
    if (gProof) {
@@ -85,7 +85,7 @@ TProofChain::TProofChain(TDSet *dset, Bool_t gettreeheader) : TChain()
    if (fTree && fSet) {
       fChain = new TChain(fTree->GetName());
       TIter nxe(fSet->GetListOfElements());
-      TDSetElement *e = 0;
+      TDSetElement *e = nullptr;
       while ((e = (TDSetElement *) nxe())) {
          fChain->AddFile(e->GetName());
       }
@@ -93,7 +93,7 @@ TProofChain::TProofChain(TDSet *dset, Bool_t gettreeheader) : TChain()
       if (TestBit(kProofLite))
          fTree = fChain;
    }
-   TObject *en = (dset) ? dset->GetEntryList() : 0;
+   TObject *en = (dset) ? dset->GetEntryList() : nullptr;
    if (en) {
       if (en->InheritsFrom("TEntryList")) {
          fEntryList = (TEntryList *) en;
@@ -112,23 +112,23 @@ TProofChain::~TProofChain()
       SafeDelete(fSet);
       // Remove the chain from the private lists in the TProof objects
       TIter nxp(gROOT->GetListOfSockets());
-      TObject *o = 0;
-      TProof *p = 0;
+      TObject *o = nullptr;
+      TProof *p = nullptr;
       while ((o = nxp()))
          if ((p = dynamic_cast<TProof *>(o)))
             p->RemoveChain(fChain);
-      if (fTree == fChain) fTree = 0;
+      if (fTree == fChain) fTree = nullptr;
       if (TestBit(kOwnsChain)) {
          SafeDelete(fChain);
       } else {
-         fChain = 0;
+         fChain = nullptr;
       }
    } else {
       // Not owner
-      fSet = 0;
+      fSet = nullptr;
    }
    SafeDelete(fTree);
-   fDirectory    = 0;
+   fDirectory    = nullptr;
 
 }
 
@@ -164,7 +164,7 @@ Long64_t TProofChain::Draw(const char *varexp, const TCut &selection,
       fSet->SetEntryList(fEventList);
    } else {
       // Disable previous settings, if any
-      fSet->SetEntryList(0);
+      fSet->SetEntryList(nullptr);
    }
 
    // Fill drawing attributes
@@ -200,7 +200,7 @@ Long64_t TProofChain::Draw(const char *varexp, const char *selection,
       fSet->SetEntryList(fEventList);
    } else {
       // Disable previous settings, if any
-      fSet->SetEntryList(0);
+      fSet->SetEntryList(nullptr);
    }
 
    // Fill drawing attributes
@@ -222,20 +222,20 @@ void TProofChain::AddAliases()
    TList *al = fChain->GetListOfAliases();
    if (al && al->GetSize() > 0) {
       TIter nxa(al);
-      TNamed *nm = 0, *nmo = 0;
+      TNamed *nm = nullptr, *nmo = nullptr;
       TString names, nma;
       while ((nm = (TNamed *)nxa())) {
          names += nm->GetName();
          names += ",";
          nma.Form("alias:%s", nm->GetName());
-         nmo = (TNamed *)((gProof->GetInputList()) ? gProof->GetInputList()->FindObject(nma) : 0);
+         nmo = (TNamed *)((gProof->GetInputList()) ? gProof->GetInputList()->FindObject(nma) : nullptr);
          if (nmo) {
             nmo->SetTitle(nm->GetTitle());
          } else {
             gProof->AddInput(new TNamed(nma.Data(), nm->GetTitle()));
          }
       }
-      nmo = (TNamed *)((gProof->GetInputList()) ? gProof->GetInputList()->FindObject("PROOF_ListOfAliases") : 0);
+      nmo = (TNamed *)((gProof->GetInputList()) ? gProof->GetInputList()->FindObject("PROOF_ListOfAliases") : nullptr);
       if (nmo) {
          nmo->SetTitle(names.Data());
       } else {
@@ -298,7 +298,7 @@ void TProofChain::FillDrawAttributes(TProof *p)
 
 TBranch *TProofChain::FindBranch(const char* branchname)
 {
-   return (fTree ? fTree->FindBranch(branchname) : (TBranch *)0);
+   return (fTree ? fTree->FindBranch(branchname) : (TBranch *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -307,7 +307,7 @@ TBranch *TProofChain::FindBranch(const char* branchname)
 
 TLeaf *TProofChain::FindLeaf(const char* searchname)
 {
-   return (fTree ? fTree->FindLeaf(searchname) : (TLeaf *)0);
+   return (fTree ? fTree->FindLeaf(searchname) : (TLeaf *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -316,7 +316,7 @@ TLeaf *TProofChain::FindLeaf(const char* searchname)
 
 TBranch *TProofChain::GetBranch(const char *name)
 {
-   return (fTree ? fTree->GetBranch(name) : (TBranch *)0);
+   return (fTree ? fTree->GetBranch(name) : (TBranch *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -334,7 +334,7 @@ Bool_t TProofChain::GetBranchStatus(const char *branchname) const
 
 TVirtualTreePlayer *TProofChain::GetPlayer()
 {
-   return (fTree ? fTree->GetPlayer() : (TVirtualTreePlayer *)0);
+   return (fTree ? fTree->GetPlayer() : (TVirtualTreePlayer *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -347,7 +347,7 @@ Long64_t TProofChain::Process(const char *filename, Option_t *option,
                               Long64_t nentries, Long64_t firstentry)
 {
    // Set either the entry-list (priority) or the event-list
-   TObject *enl = 0;
+   TObject *enl = nullptr;
    if (fEntryList) {
       enl = fEntryList;
    } else if (fEventList) {
@@ -365,7 +365,7 @@ Long64_t TProofChain::Process(TSelector *selector, Option_t *option,
                               Long64_t nentries, Long64_t firstentry)
 {
    // Set either the entry-list (priority) or the event-list
-   TObject *enl = 0;
+   TObject *enl = nullptr;
    if (fEntryList) {
       enl = fEntryList;
    } else if (fEventList) {

@@ -231,9 +231,9 @@ void TGPack::FindFrames(TGFrame* splitter, TGFrameElementPack*& f0, TGFrameEleme
 void TGPack::AddFrameInternal(TGFrame* f, TGLayoutHints* l, Float_t weight)
 {
    // add splitter
-   TGFrameElementPack *sf = 0;
+   TGFrameElementPack *sf = nullptr;
    if (fUseSplitters) {
-      TGSplitter* s = 0;
+      TGSplitter* s = nullptr;
       if (fVertical)
          s = new TGHSplitter(this, GetWidth(), fSplitterLen, kTRUE);
       else
@@ -533,7 +533,7 @@ void TGPack::HandleSplitterResize(Int_t delta)
 
    TGSplitter *s = dynamic_cast<TGSplitter*>((TGFrame*) gTQSender);
 
-   TGFrameElementPack *f0=0, *f1=0;
+   TGFrameElementPack *f0=nullptr, *f1=nullptr;
    FindFrames(s, f0, f1);
 
    if (fDragOverflow < 0)

@@ -63,7 +63,7 @@ ClassImp(TGFontTypeComboBox);
 
 TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
                                  UInt_t options, ULong_t back) :
-   TGCompositeFrame (p, w, h, options, back), fListBox(0), fSelected(0)
+   TGCompositeFrame (p, w, h, options, back), fListBox(nullptr), fSelected(nullptr)
 {
    SetWindowAttributes_t wattr;
 
@@ -86,7 +86,7 @@ TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
 Bool_t TGComboBoxPopup::HandleButton(Event_t *event)
 {
    if (event->fType == kButtonPress && event->fCode == kButton1) {
-      if ((fListBox != 0) && (fSelected != 0) &&
+      if ((fListBox != nullptr) && (fSelected != nullptr) &&
           fListBox->GetSelectedEntry() != fSelected) {
          // in the case the combo box popup is closed by clicking outside the
          // list box, then select the previously selected entry
@@ -150,12 +150,12 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    }
 
    // remember the current selected entry
-   if (fListBox == 0) {
+   if (fListBox == nullptr) {
       // the listbox should be the first in the list
       TGFrameElement *el = (TGFrameElement *)fList->First();
       fListBox = dynamic_cast<TGListBox *>(el->fFrame);
    }
-   fSelected = fListBox ? fListBox->GetSelectedEntry() : 0;
+   fSelected = fListBox ? fListBox->GetSelectedEntry() : nullptr;
 
    MoveResize(x, y, w, h);
    MapSubwindows();
@@ -227,7 +227,7 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
 {
    fWidgetId  = id;
    fMsgWindow = p;
-   fTextEntry = 0;
+   fTextEntry = nullptr;
 
    fSelEntry = new TGTextLBEntry(this, new TGString(""), 0);
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
@@ -246,7 +246,7 @@ TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
 {
    fWidgetId  = id;
    fMsgWindow = p;
-   fSelEntry = 0;
+   fSelEntry = nullptr;
 
    fTextEntry = new TGTextEntry(this, text, id);
    fTextEntry->SetFrameDrawn(kFALSE);
@@ -377,7 +377,7 @@ void TGComboBox::EnableTextInput(Bool_t on)
          //h = fSelEntry->GetHeight();
          fSelEntry->DestroyWindow();
          delete fSelEntry;
-         fSelEntry = 0;
+         fSelEntry = nullptr;
       }
       if (!fTextEntry) {
          fTextEntry = new TGTextEntry(this, text.Data(), 0);
@@ -400,7 +400,7 @@ void TGComboBox::EnableTextInput(Bool_t on)
          //w = fTextEntry->GetWidth();
          //h = fTextEntry->GetHeight();
          delete fTextEntry;
-         fTextEntry = 0;
+         fTextEntry = nullptr;
       }
       if (!fSelEntry) {
          fSelEntry = new TGTextLBEntry(this, new TGString(text.Data()), 0);
@@ -421,7 +421,7 @@ void TGComboBox::EnableTextInput(Bool_t on)
 
 TGLBEntry *TGComboBox::FindEntry(const char *s) const
 {
-   TGLBEntry *sel = 0;
+   TGLBEntry *sel = nullptr;
    sel = fListBox->FindEntry(s);
    return sel;
 }
@@ -837,7 +837,7 @@ static const char *gFonts[][2] = {    //   unix name,     name
    { "-*-courier-bold-o-*-*-12-*-*-*-*-*-*-*",     "11. courier bold italic"  },
    { "-*-symbol-medium-r-*-*-12-*-*-*-*-*-*-*",    "12. symbol"               },
    { "-*-times-medium-r-*-*-12-*-*-*-*-*-*-*",     "13. times"                },
-   { 0, 0}
+   { nullptr, nullptr}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -849,7 +849,7 @@ TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
 {
    Int_t noFonts = 0;
 
-   for (Int_t i = 1; gFonts[i][0] != 0 && noFonts < kMaxFonts; i++) {
+   for (Int_t i = 1; gFonts[i][0] != nullptr && noFonts < kMaxFonts; i++) {
 
       fFonts[noFonts] = gVirtualX->LoadQueryFont(gFonts[i][0]);
 

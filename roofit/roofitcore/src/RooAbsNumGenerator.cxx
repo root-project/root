@@ -56,7 +56,7 @@ ClassImp(RooAbsNumGenerator);
 /// cloned and so will not be disturbed during the generation process.
 
 RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose, const RooAbsReal* maxFuncVal) :
-  TNamed(func), _cloneSet(0), _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose), _funcValStore(0), _funcValPtr(0), _cache(0)
+  TNamed(func), _cloneSet(nullptr), _funcClone(nullptr), _funcMaxVal(maxFuncVal), _verbose(verbose), _funcValStore(nullptr), _funcValPtr(nullptr), _cache(nullptr)
 {
   // Clone the function and all nodes that it depends on so that this generator
   // is independent of any existing objects.
@@ -76,8 +76,8 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   // space is finite.
   _isValid= kTRUE;
   TIterator *iterator= genVars.createIterator();
-  const RooAbsArg *found = 0;
-  const RooAbsArg *arg   = 0;
+  const RooAbsArg *found = nullptr;
+  const RooAbsArg *arg   = nullptr;
   while((arg= (const RooAbsArg*)iterator->Next())) {
     if(!arg->isFundamental()) {
       coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for derived \""
@@ -93,14 +93,14 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
       // clone any variables we generate that we haven't cloned already
       arg= _cloneSet->addClone(*arg);
     }
-    assert(0 != arg);
+    assert(nullptr != arg);
     // is this argument a category or a real?
     const RooCategory *catVar= dynamic_cast<const RooCategory*>(arg);
     const RooRealVar *realVar= dynamic_cast<const RooRealVar*>(arg);
-    if(0 != catVar) {
+    if(nullptr != catVar) {
       _catVars.add(*catVar);
     }
-    else if(0 != realVar) {
+    else if(nullptr != realVar) {
       if(realVar->hasMin() && realVar->hasMax()) {
 	_realVars.add(*realVar);
       }
@@ -124,18 +124,18 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
 
   // create a fundamental type for storing function values
   _funcValStore= dynamic_cast<RooRealVar*>(_funcClone->createFundamental());
-  assert(0 != _funcValStore);
+  assert(nullptr != _funcValStore);
 
   // create a new dataset to cache trial events and function values
   RooArgSet cacheArgs(_catVars);
   cacheArgs.add(_realVars);
   cacheArgs.add(*_funcValStore);
   _cache= new RooDataSet("cache","Accept-Reject Event Cache",cacheArgs);
-  assert(0 != _cache);
+  assert(nullptr != _cache);
 
   // attach our function clone to the cache dataset
   const RooArgSet *cacheVars= _cache->get();
-  assert(0 != cacheVars);
+  assert(nullptr != cacheVars);
   _funcClone->recursiveRedirectServers(*cacheVars,kFALSE);
 
   // update ours sets of category and real args to refer to the cache dataset

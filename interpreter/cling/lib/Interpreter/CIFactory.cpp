@@ -1532,7 +1532,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     // Build the virtual file, Give it a name that's likely not to ever
     // be #included (so we won't get a clash in clang's cache).
     const char* Filename = "<<< cling interactive line includer >>>";
-    const FileEntry* FE = FM.getVirtualFile(Filename, 1U << 15U, time(0));
+    const FileEntry* FE = FM.getVirtualFile(Filename, 1U << 15U, time(nullptr));
 
     // Tell ASTReader to create a FileID even if this file does not exist:
     SM->setFileIsTransient(FE);
@@ -1631,7 +1631,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     CI->setASTConsumer(std::move(multiConsumer));
 
     // Set up Sema
-    CodeCompleteConsumer* CCC = 0;
+    CodeCompleteConsumer* CCC = nullptr;
     // Make sure we inform Sema we compile a Module.
     CI->createSema(COpts.ModuleName.empty() ? TU_Complete : TU_Module, CCC);
 

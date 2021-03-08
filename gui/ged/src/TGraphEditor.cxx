@@ -64,7 +64,7 @@ TGraphEditor::TGraphEditor(const TGWindow *p, Int_t width,
 {
    // Constructor of graph editor.
 
-   fGraph = 0;
+   fGraph = nullptr;
    // TextEntry to change the title
    MakeTitle("Title");
 

@@ -711,7 +711,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
       if (method)
          call->Execute(obj_ptr, &txt);
       else
-         call->Execute(0, &txt); // here 0 is artificial, there is no proper signature
+         call->Execute(nullptr, &txt); // here 0 is artificial, there is no proper signature
       if (txt != nullptr) {
          if (resbuf)
             resbuf->WriteString(txt);

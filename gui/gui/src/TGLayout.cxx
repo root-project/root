@@ -74,7 +74,7 @@ ClassImp(TGListDetailsLayout);
 
 TGFrameElement::TGFrameElement(TGFrame *f, TGLayoutHints *l)
 {
-   fLayout = 0;
+   fLayout = nullptr;
    fFrame  = f;
    if (f) f->SetFrameElement(this);
 
@@ -1011,7 +1011,7 @@ void TGLayoutHints::SavePrimitive(std::ostream &out, Option_t * option/*= ""*/)
 
    if (!GetLayoutHints()) return;
 
-   if ((option == 0) || strcmp(option, "nocoma"))
+   if ((option == nullptr) || strcmp(option, "nocoma"))
       out << ", ";
 
    if ((fLayoutHints == kLHintsNormal) && (pad == 0)) {

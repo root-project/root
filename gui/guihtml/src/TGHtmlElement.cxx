@@ -47,7 +47,7 @@ extern void ToLower(char *z);
 
 TGHtmlElement::TGHtmlElement(int etype)
 {
-   fPNext = fPPrev = 0;
+   fPNext = fPPrev = nullptr;
    fStyle.fFont = 0;
    fStyle.fColor = 0;
    fStyle.fSubscript = 0;
@@ -106,13 +106,13 @@ TGHtmlMarkupElement::TGHtmlMarkupElement(int type2, int argc, int arglen[],
             if ((i & 1) == 1) ToLower(fArgv[i-1]);
          }
       }
-      fArgv[argc-1] = 0;
+      fArgv[argc-1] = nullptr;
 
       // Following is just a flag that this is unmodified
       fArgv[argc] = (char *) fArgv;
 
    } else {
-      fArgv = 0;
+      fArgv = nullptr;
    }
 }
 
@@ -149,7 +149,7 @@ const char *TGHtmlMarkupElement::MarkupArg(const char *tag, const char *zDefault
 
 int TGHtmlMarkupElement::GetAlignment(int dflt)
 {
-   const char *z = MarkupArg("align", 0);
+   const char *z = MarkupArg("align", nullptr);
    int rc = dflt;
 
    if (z) {
@@ -173,7 +173,7 @@ int TGHtmlMarkupElement::GetAlignment(int dflt)
 
 int TGHtmlMarkupElement::GetOrderedListType(int dflt)
 {
-   const char *z = MarkupArg("type", 0);
+   const char *z = MarkupArg("type", nullptr);
    if (z) {
       switch (*z) {
          case 'A': dflt = LI_TYPE_Enum_A; break;
@@ -195,7 +195,7 @@ int TGHtmlMarkupElement::GetOrderedListType(int dflt)
 
 int TGHtmlMarkupElement::GetUnorderedListType(int dflt)
 {
-   const char *z = MarkupArg("type", 0);
+   const char *z = MarkupArg("type", nullptr);
    if (z) {
       if (strcasecmp(z, "disc") == 0) {
          dflt = LI_TYPE_Bullet1;
@@ -221,8 +221,8 @@ TGHtmlTable::TGHtmlTable(int type2, int argc, int arglen[], char *argv2[]) :
    fNCol = 0;
    fNRow = 0;
    fX = 0; fY = 0; fW = 0; fH = 0;
-   fPEnd = 0;
-   fBgImage = 0;
+   fPEnd = nullptr;
+   fBgImage = nullptr;
    fHasbg = 0;
    for (int i=0;i<=HTML_MAX_COLUMNS;++i) {
       fMinW[i] = fMaxW[i] = 0;
@@ -246,10 +246,10 @@ TGHtmlCell::TGHtmlCell(int type2, int argc, int arglen[], char *argv2[]) :
    fRowspan = 0;
    fColspan = 0;
    fX = 0; fY = 0; fW = 0; fH = 0;
-   fPTable = 0;
-   fPRow = 0;
-   fPEnd = 0;
-   fBgImage = 0;
+   fPTable = nullptr;
+   fPRow = nullptr;
+   fPEnd = nullptr;
+   fBgImage = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -266,8 +266,8 @@ TGHtmlCell::~TGHtmlCell()
 TGHtmlRef::TGHtmlRef(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   fPOther = 0;
-   fBgImage = 0;
+   fPOther = nullptr;
+   fBgImage = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -301,7 +301,7 @@ TGHtmlListStart::TGHtmlListStart(int type2, int argc, int arglen[], char *argv2[
    fCompact = 0;
    fCnt = 0;
    fWidth = 0;
-   fLPrev = 0;
+   fLPrev = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -318,10 +318,10 @@ TGHtmlImageMarkup::TGHtmlImageMarkup(int type2, int argc,
    fX = 0; fY = 0; fW = 0; fH = 0;
    fAscent = 0;
    fDescent = 0;
-   fZAlt = 0;
-   fPImage = 0;
-   fPMap = 0;
-   fINext = 0;
+   fZAlt = nullptr;
+   fPImage = nullptr;
+   fPMap = nullptr;
+   fINext = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -333,8 +333,8 @@ TGHtmlForm::TGHtmlForm(int type2, int argc, int arglen[], char *argv2[]) :
    fFormId = 0;
    fElements = 0;
    fHasctl = 0;
-   fPFirst = 0;
-   fPEnd = 0;
+   fPFirst = nullptr;
+   fPEnd = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -373,7 +373,7 @@ TGHtmlMapArea::TGHtmlMapArea(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    fMType = 0;
-   fCoords = 0;
+   fCoords = nullptr;
    fNum = 0;
 }
 
@@ -398,11 +398,11 @@ TGHtmlBlock::~TGHtmlBlock()
 TGHtmlInput::TGHtmlInput(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   fPForm = 0;
-   fINext = 0;
-   fFrame = 0;
-   fHtml = 0;
-   fPEnd = 0;
+   fPForm = nullptr;
+   fINext = nullptr;
+   fFrame = nullptr;
+   fHtml = nullptr;
+   fPEnd = nullptr;
    fInpId = 0; fSubId = 0;
    fX = 0; fY = 0; fW = 0; fH = 0;
    fPadLeft = 0;
@@ -423,7 +423,7 @@ TGHtmlInput::TGHtmlInput(int type2, int argc, int arglen[], char *argv2[]) :
 
 void TGHtmlInput::Empty()
 {
-   fFrame = NULL;
+   fFrame = nullptr;
    fW = 0;
    fH = 0;
    fFlags &= ~HTML_Visible;

@@ -171,7 +171,7 @@ void TGDockHideButton::DoRedraw()
 /// Create the undocked (transient) frame.
 
 TGUndockedFrame::TGUndockedFrame(const TGWindow *p, TGDockableFrame *dockable) :
-   TGTransientFrame(p, dockable ? dockable->GetMainFrame() : 0, 10, 10)
+   TGTransientFrame(p, dockable ? dockable->GetMainFrame() : nullptr, 10, 10)
 {
    SetWindowName("");
    fDockable = dockable;
@@ -242,7 +242,7 @@ TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
    fEnableHide   = kTRUE;
    fEnableUndock = kTRUE;
    fHidden       = kFALSE;
-   fFrame        = 0;
+   fFrame        = nullptr;
    fDeleted      = kFALSE;
    fFixedSize    = kTRUE;
 
@@ -342,7 +342,7 @@ void TGDockableFrame::DockContainer(Int_t del)
    // destructor) so just set it NULL below to avoid eventual problems in
    // TGDockableFrame's destructor.
 
-   fFrame = 0;
+   fFrame = nullptr;
 
    SendMessage(fMsgWindow, MK_MSG(kC_DOCK, kDOCK_DOCK), fWidgetId, 0);
    Docked();

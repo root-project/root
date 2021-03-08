@@ -61,8 +61,8 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
                            UInt_t options, ULong_t back) :
    TGFrame(p, w, h, options, back)
 {
-   fClosePic     = 0;
-   fClosePicD    = 0;
+   fClosePic     = nullptr;
+   fClosePicD    = nullptr;
    fShowClose    = kFALSE;
    fActive       = kFALSE;
    fText         = text;
@@ -319,7 +319,7 @@ TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
    // we need this in order to avoid border blinking when switching tabs...
    fContainer = new TGCompositeFrame(this, fWidth, fHeight - fTabh,
                        kVerticalFrame | kRaisedFrame | kDoubleBorder);
-   AddFrame(fContainer, 0);
+   AddFrame(fContainer, nullptr);
 
    fEditDisabled = kEditDisable | kEditDisableLayout;
    fContainer->SetEditDisabled(kEditDisable | kEditDisableGrab);
@@ -343,10 +343,10 @@ TGTab::~TGTab()
 TGCompositeFrame *TGTab::AddTab(TGString *text)
 {
    TGTabElement *te = new TGTabElement(this, text, 50, 20, fNormGC, fFontStruct);
-   AddFrame(te, 0);
+   AddFrame(te, nullptr);
 
    TGCompositeFrame* cf = new TGCompositeFrame(this, fWidth, fHeight-21);
-   AddFrame(cf, 0);
+   AddFrame(cf, nullptr);
    cf->SetEditDisabled(kEditDisableResize);
 
    te->MapWindow();
@@ -378,9 +378,9 @@ void TGTab::AddTab(const char *text, TGCompositeFrame *cf)
 void TGTab::AddTab(TGString *text, TGCompositeFrame *cf)
 {
    TGTabElement *te = new TGTabElement(this, text, 50, 20, fNormGC, fFontStruct);
-   AddFrame(te, 0);
+   AddFrame(te, nullptr);
 
-   AddFrame(cf, 0);
+   AddFrame(cf, nullptr);
    cf->SetEditDisabled(kEditDisableResize);
 
    te->MapWindow();
@@ -538,7 +538,7 @@ Bool_t TGTab::SetTab(const char *name, Bool_t emit)
 {
    TGFrameElement *el;
    Int_t  count = 0;
-   TGTabElement *tab = 0;
+   TGTabElement *tab = nullptr;
 
    TIter next(fList);
    next();           // skip first container
@@ -564,7 +564,7 @@ Bool_t TGTab::SetTab(const char *name, Bool_t emit)
 
 TGCompositeFrame *TGTab::GetTabContainer(Int_t tabIndex) const
 {
-   if (tabIndex < 0) return 0;
+   if (tabIndex < 0) return nullptr;
 
    TGFrameElement *el;
    Int_t  count = 0;
@@ -579,7 +579,7 @@ TGCompositeFrame *TGTab::GetTabContainer(Int_t tabIndex) const
       count++;
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,8 +589,8 @@ TGCompositeFrame *TGTab::GetTabContainer(Int_t tabIndex) const
 TGCompositeFrame *TGTab::GetTabContainer(const char *name) const
 {
    TGFrameElement *el;
-   TGTabElement *tab = 0;
-   TGCompositeFrame *comp = 0;
+   TGTabElement *tab = nullptr;
+   TGCompositeFrame *comp = nullptr;
 
    TIter next(fList);
    next();
@@ -604,7 +604,7 @@ TGCompositeFrame *TGTab::GetTabContainer(const char *name) const
       }
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -613,7 +613,7 @@ TGCompositeFrame *TGTab::GetTabContainer(const char *name) const
 
 TGTabElement *TGTab::GetTabTab(Int_t tabIndex) const
 {
-   if (tabIndex < 0) return 0;
+   if (tabIndex < 0) return nullptr;
 
    TGFrameElement *el;
    Int_t  count = 0;
@@ -628,7 +628,7 @@ TGTabElement *TGTab::GetTabTab(Int_t tabIndex) const
       count++;
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -638,7 +638,7 @@ TGTabElement *TGTab::GetTabTab(Int_t tabIndex) const
 TGTabElement *TGTab::GetTabTab(const char *name) const
 {
    TGFrameElement *el;
-   TGTabElement *tab = 0;
+   TGTabElement *tab = nullptr;
 
    TIter next(fList);
    next();
@@ -651,7 +651,7 @@ TGTabElement *TGTab::GetTabTab(const char *name) const
       next();
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

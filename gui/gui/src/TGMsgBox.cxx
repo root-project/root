@@ -101,7 +101,7 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
          break;
 
       default:
-         icon_pic = 0;
+         icon_pic = nullptr;
          break;
    }
 
@@ -121,8 +121,8 @@ void TGMsgBox::PMsgBox(const char *title, const char *msg,
    UInt_t nb, width, height;
 
    fYes = fNo = fOK = fApply = fRetry = fIgnore = fCancel = fClose =
-   fYesAll = fNoAll = fNewer = fAppend = fDismiss   = 0;
-   fIcon      = 0;
+   fYesAll = fNoAll = fNewer = fAppend = fDismiss   = nullptr;
+   fIcon      = nullptr;
    fMsgList   = new TList;
    fRetCode   = ret_code;
    nb = width = 0;

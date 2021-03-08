@@ -485,7 +485,7 @@ Int_t TZIPFile::DecodeZip64ExtendedExtraField(TZIPMember *m, Bool_t global)
 
 Int_t TZIPFile::SetCurrentMember()
 {
-   fCurMember = 0;
+   fCurMember = nullptr;
 
    if (fMemberIndex > -1) {
       fCurMember = (TZIPMember *) fMembers->At(fMemberIndex);
@@ -568,9 +568,9 @@ ClassImp(TZIPMember);
 
 TZIPMember::TZIPMember()
 {
-   fLocal     = 0;
+   fLocal     = nullptr;
    fLocalLen  = 0;
-   fGlobal    = 0;
+   fGlobal    = nullptr;
    fGlobalLen = 0;
    fCRC32     = 0;
    fAttrInt   = 0;
@@ -585,9 +585,9 @@ TZIPMember::TZIPMember()
 TZIPMember::TZIPMember(const char *name)
    : TArchiveMember(name)
 {
-   fLocal     = 0;
+   fLocal     = nullptr;
    fLocalLen  = 0;
-   fGlobal    = 0;
+   fGlobal    = nullptr;
    fGlobalLen = 0;
    fCRC32     = 0;
    fAttrInt   = 0;
@@ -602,9 +602,9 @@ TZIPMember::TZIPMember(const char *name)
 TZIPMember::TZIPMember(const TZIPMember &member)
    : TArchiveMember(member)
 {
-   fLocal     = 0;
+   fLocal     = nullptr;
    fLocalLen  = member.fLocalLen;
-   fGlobal    = 0;
+   fGlobal    = nullptr;
    fGlobalLen = member.fGlobalLen;
    fCRC32     = member.fCRC32;
    fAttrInt   = member.fAttrInt;
@@ -633,9 +633,9 @@ TZIPMember &TZIPMember::operator=(const TZIPMember &rhs)
       delete [] (char*) fLocal;
       delete [] (char*) fGlobal;
 
-      fLocal     = 0;
+      fLocal     = nullptr;
       fLocalLen  = rhs.fLocalLen;
-      fGlobal    = 0;
+      fGlobal    = nullptr;
       fGlobalLen = rhs.fGlobalLen;
       fCRC32     = rhs.fCRC32;
       fAttrInt   = rhs.fAttrInt;

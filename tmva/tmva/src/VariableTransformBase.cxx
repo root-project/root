@@ -66,9 +66,9 @@ TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
                                                     const TString& trfName )
 : TObject(),
    fDsi(dsi),
-   fDsiOutput(NULL),
-   fTransformedEvent(0),
-   fBackTransformedEvent(0),
+   fDsiOutput(nullptr),
+   fTransformedEvent(nullptr),
+   fBackTransformedEvent(nullptr),
    fVariableTransform(tf),
    fEnabled( kTRUE ),
    fCreated( kFALSE ),
@@ -80,7 +80,7 @@ TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
    fNSpectators(0),
    fSortGet(kTRUE),
    fTMVAVersion(TMVA_VERSION_CODE),
-   fLogger( 0 )
+   fLogger( nullptr )
 {
    fLogger = new MsgLogger(this, kINFO);
    for (UInt_t ivar = 0; ivar < fDsi.GetNVariables(); ivar++) {
@@ -98,8 +98,8 @@ TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
 
 TMVA::VariableTransformBase::~VariableTransformBase()
 {
-   if (fTransformedEvent!=0)     delete fTransformedEvent;
-   if (fBackTransformedEvent!=0) delete fBackTransformedEvent;
+   if (fTransformedEvent!=nullptr)     delete fTransformedEvent;
+   if (fBackTransformedEvent!=nullptr) delete fBackTransformedEvent;
    // destructor
    delete fLogger;
 }

@@ -62,9 +62,9 @@ RooCmdArg::RooCmdArg() : TNamed("","")
 {
   _procSubArgs = kFALSE ;
   _prefixSubArgs = kTRUE ;
-  _c = 0 ;
-  _o[0] = 0 ;
-  _o[1] = 0 ; 
+  _c = nullptr ;
+  _o[0] = nullptr ;
+  _o[1] = nullptr ; 
   _i[0] = 0 ;
   _i[1] = 0 ;
   _d[0] = 0 ;
@@ -90,7 +90,7 @@ RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t
   if (s3) _s[2] = s3 ;
   _o[0] = (TObject*) o1 ;
   _o[1] = (TObject*) o2 ;
-  _c = 0 ;
+  _c = nullptr ;
 
   if (c1||c2) _c = new RooArgSet[2] ;
   if (c1) _c[0].add(*c1) ;
@@ -125,7 +125,7 @@ RooCmdArg::RooCmdArg(const RooCmdArg& other) :
     _c[0].add(other._c[0]) ;
     _c[1].add(other._c[1]) ;
   } else {
-    _c = 0 ;
+    _c = nullptr ;
   }
   
   _procSubArgs = other._procSubArgs ;
@@ -198,7 +198,7 @@ void RooCmdArg::addArg(const RooCmdArg& arg)
 /// Return RooArgSet stored in slot idx
 
 const RooArgSet* RooCmdArg::getSet(Int_t idx) const {
-    return _c ? &_c[idx] : 0 ;
+    return _c ? &_c[idx] : nullptr ;
   }
 
 

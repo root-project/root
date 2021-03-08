@@ -66,7 +66,7 @@ TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor)
 {
    fEditor = editor;
    fEditDisabled = 1;
-   fBgndFrame = 0;
+   fBgndFrame = nullptr;
 
    SetCleanup(kDeepCleanup);
 
@@ -136,7 +136,7 @@ TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGVerticalFrame(p, 1, 1)
 {
    TGHorizontalFrame *hf;
    TGVerticalFrame *vf;
-   fSelected = 0;
+   fSelected = nullptr;
    SetCleanup(kDeepCleanup);
 
    fNameFrame  = new TGuiBldNameFrame(this, this);
@@ -318,7 +318,7 @@ void TGuiBldEditor::ChangeSelected(TGFrame *frame)
    TGTabElement *tab = fTab->GetTabTab(fLayoutId);
 
    if (!frame) {
-      fNameFrame->ChangeSelected(0);
+      fNameFrame->ChangeSelected(nullptr);
       //fTab->SetTab(0);
       if (tab) {
          tab->SetEnabled(kFALSE);
@@ -348,7 +348,7 @@ void TGuiBldEditor::ChangeSelected(TGFrame *frame)
          fClient->NeedRedraw(tab);
       }
    } else {
-      fHintsFrame->ChangeSelected(0);
+      fHintsFrame->ChangeSelected(nullptr);
 
       if (tab) {
          fTab->SetTab(0);
@@ -479,7 +479,7 @@ void TGuiBldEditor::UpdateForeground(Pixel_t col)
 
 void TGuiBldEditor::Reset()
 {
-   fSelected = 0;
+   fSelected = nullptr;
    fNameFrame->Reset();
    TGTabElement *tab = fTab->GetTabTab(fLayoutId);
    if (tab) {
@@ -509,7 +509,7 @@ void TGuiBldEditor::SwitchLayout()
    TRootGuiBuilder *builder = (TRootGuiBuilder*)TRootGuiBuilder::Instance();
    TGFrame *frame = fSelected;
    TGCompositeFrame *cf = fNameFrame->GetMdi(frame);
-   if (cf == 0)
+   if (cf == nullptr)
       return;
    if (frame->IsLayoutBroken()) {
       Int_t retval;

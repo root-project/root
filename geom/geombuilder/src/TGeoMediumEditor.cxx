@@ -46,7 +46,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fMedium   = 0;
+   fMedium   = nullptr;
    fIsEditable = kFALSE;
    fIsModified = kFALSE;
    Pixel_t color;
@@ -83,7 +83,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    label->SetTextColor(color);
    AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
    f1 = new TGCompositeFrame(this, 155, 30, kHorizontalFrame);
-   fSelectedMaterial = 0;
+   fSelectedMaterial = nullptr;
    fLSelMaterial = new TGLabel(f1, "Select material");
    gClient->GetColorByName("#0000ff", color);
    fLSelMaterial->SetTextColor(color);
@@ -249,7 +249,7 @@ void TGeoMediumEditor::ConnectSignals2Slots()
 
 void TGeoMediumEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || !(obj->IsA()==TGeoMedium::Class())) {
+   if (obj == nullptr || !(obj->IsA()==TGeoMedium::Class())) {
       SetActive(kFALSE);
       return;
    }
