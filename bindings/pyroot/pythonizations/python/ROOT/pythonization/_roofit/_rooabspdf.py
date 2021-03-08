@@ -28,9 +28,11 @@ def __getter(k, v):
 
 
 def _fitTo(self, *args, **kwargs):
+    """
+    Docstring
+    """
     # Redefinition of `RooAbsPdf.fitTo` for keyword arguments.
     # the keywords must correspond to the CmdArg of the `fitTo` function.
-    # Unless `__cast(s)` is implemented such that the translation is made.
     # Parameters:
     # self: instance of `RooAbsPdf` class
     # *args: arguments passed to `fitTo`
