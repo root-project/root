@@ -9,13 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Input Dialog Widget                                                   //
-//                                                                       //
-// An Input dialog box                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGInputDialog
+    \ingroup guiwidgets
+
+Input Dialog Widget
+
+An Input dialog box
+
+*/
+
 
 #include "TGInputDialog.h"
 #include "TGButton.h"
@@ -26,28 +29,27 @@ ClassImp(TGInputDialog);
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create simple input dialog.
+///
+/// It is important to know that the case where the constructor in
+/// which all the variables are initialized to their default values is
+/// only used for the TBrowser to inspect on the classes. For normal
+/// use the only variable that should be free is options.
+///
+/// Variables prompt, defval are the content of the input dialog while
+/// retstr has to be initialized to a char[256]. In case these are not
+/// initialized, they will show default values while retstr will be
+/// automatically allocated by the dialog. However this will make
+/// impossible to retrieve the value entered by the dialog.
+///
+/// To see TGInputDialog in use see:
+/// $ROOTSYS/tutorials/testInputDialog.cxx
 
 TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
                              const char *prompt, const char *defval,
                              char *retstr, UInt_t options) :
       TGTransientFrame(p, main, 10, 10, options)
 {
-   /** Create simple input dialog.
-
-   It is important to know that the case where the constructor in
-   which all the variables are initialized to their default values is
-   only used for the TBrowser to inspect on the classes. For normal
-   use the only variable that should be free is options.
-
-   Variables prompt, defval are the content of the input dialog while
-   retstr has to be initialized to a char[256]. In case these are not
-   initialized, they will show default values while retstr will be
-   automatically allocated by the dialog. However this will make
-   impossible to retrieve the value entered by the dialog.
-
-   To see TGInputDialog in use see:
-   $ROOTSYS/tutorials/testInputDialog.cxx
-   */
 
    if (!p && !main) {
       MakeZombie();

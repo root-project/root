@@ -13,15 +13,6 @@
 #define ROOT_TGToolBar
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGToolBar                                                            //
-//                                                                      //
-// A toolbar is a composite frame that contains TGPictureButtons.       //
-// Often used in combination with a TGHorizontal3DLine.                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TGButton;

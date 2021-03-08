@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TF1Editor                                                           //
-//                                                                      //
-//  GUI for TF1 attributes and parameters.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TF1Editor
+    \ingroup ged
+
+GUI for TF1 attributes and parameters.
+
+*/
 
 #include "TF1Editor.h"
 #include "TGedEditor.h"

@@ -12,13 +12,6 @@
 #ifndef ROOT_TGButtonGroup
 #define ROOT_TGButtonGroup
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGButtonGroup, TGVButtonGroup and TGHButtonGroup                     //
-//                                                                      //
-// This header defines button group frames.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 

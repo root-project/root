@@ -12,15 +12,6 @@
 #ifndef ROOT_TProofProgressLog
 #define ROOT_TProofProgressLog
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// TProofProgressLog                                                     //
-//                                                                       //
-// Dialog used to display Proof session logs from the Proof progress     //
-// dialog.                                                               //
-// It uses TProofMgr::GetSessionLogs() mechanism internally              //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TString.h"

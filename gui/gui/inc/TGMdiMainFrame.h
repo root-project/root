@@ -33,13 +33,6 @@
 #ifndef ROOT_TGMdiMainFrame
 #define ROOT_TGMdiMainFrame
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiMainFrame.                                                      //
-//                                                                      //
-// This file contains the TGMdiMainFrame class.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGCanvas.h"
 #include "TGMenu.h"

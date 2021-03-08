@@ -9,15 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGApplication                                                        //
-//                                                                      //
-// This class initialize the ROOT GUI toolkit.                          //
-// This class must be instantiated exactly once in any given            //
-// application.                                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGApplication
+\ingroup guiwidgets
+
+This class initialize the ROOT GUI toolkit.
+This class must be instantiated exactly once in any given
+application.
+
+*/
+
 
 #include "RConfigure.h"
 

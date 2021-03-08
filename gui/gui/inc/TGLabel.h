@@ -13,14 +13,6 @@
 #define ROOT_TGLabel
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLabel                                                              //
-//                                                                      //
-// This class handles GUI labels.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGDimension.h"
 #include "TGString.h"

@@ -12,15 +12,6 @@
 #ifndef ROOT_TGMdiDecorFrame
 #define ROOT_TGMdiDecorFrame
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiDecorFrame, TGMdiTitleBar, TGMdiButtons, TGMdiTitleIcon,        //
-// TGMdiWinResizer, TGMdiVerticalWinResizer, TGMdiHorizontalWinResizer, //
-// and TGMdiCornerWinResizer.                                           //
-//                                                                      //
-// This header contains all different MDI frame decoration classes.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TGMenu.h"

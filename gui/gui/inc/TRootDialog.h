@@ -13,16 +13,6 @@
 #define ROOT_TRootDialog
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootDialog                                                          //
-//                                                                      //
-// A TRootDialog is used to prompt for the arguments of an object's     //
-// member function. A TRootDialog is created via the context menu's     //
-// when selecting a member function taking arguments.                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TRootContextMenu;

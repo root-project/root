@@ -12,13 +12,6 @@
 #ifndef ROOT_TPieEditor
 #define ROOT_TPieEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TPieEditor                                                          //
-//                                                                      //
-//  Editor for changing pie-chart attributes.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
 
@@ -35,22 +28,22 @@ class TGComboBox;
 class TPieEditor : public TGedFrame {
 
 protected:
-   char                 fDrawShape;   // Shape of the Graph (simple, smooth, bar)
-   TGTextEntry         *fTitle;       // Contains the title of the graph
-   Int_t                fTitlePrec;   // font precision level
-   TPie                *fPie;         // Pie object
-   TGButtonGroup       *fgr;          // Group the Radiobuttons:
-   TGRadioButton       *fLblDirH;       // Draw slice's labels horizontal
-   TGRadioButton       *fLblDirR;      // Draw slice's labels radial to the piechart
-   TGRadioButton       *fLblDirT;      // Draw slice's labels tangential to the piechart's circle
-   TGLayoutHints       *fShape1lh;    // layout-hints for fShape1
-   TGCheckButton       *fOutlineOnOff; // set piechart outline visible/unvisible
-   TGCheckButton       *fIs3D;      // set if is enabled the pseudo-3d mode
-   TGNumberEntry       *f3DHeight;  // set the 3D tickness
-   TGNumberEntry       *f3DAngle;   // set the pseudo 3D angle
-   TGColorSelect       *fColorSelect; // font color selector
-   TGFontTypeComboBox  *fTypeCombo; // font style
-   TGComboBox          *fSizeCombo; // font size
+   char                 fDrawShape;    ///< Shape of the Graph (simple, smooth, bar)
+   TGTextEntry         *fTitle;        ///< Contains the title of the graph
+   Int_t                fTitlePrec;    ///< font precision level
+   TPie                *fPie;          ///< Pie object
+   TGButtonGroup       *fgr;           ///< Group the Radiobuttons:
+   TGRadioButton       *fLblDirH;      ///< Draw slice's labels horizontal
+   TGRadioButton       *fLblDirR;      ///< Draw slice's labels radial to the piechart
+   TGRadioButton       *fLblDirT;      ///< Draw slice's labels tangential to the piechart's circle
+   TGLayoutHints       *fShape1lh;     ///< layout-hints for fShape1
+   TGCheckButton       *fOutlineOnOff; ///< set piechart outline visible/unvisible
+   TGCheckButton       *fIs3D;         ///< set if is enabled the pseudo-3d mode
+   TGNumberEntry       *f3DHeight;     ///< set the 3D tickness
+   TGNumberEntry       *f3DAngle;      ///< set the pseudo 3D angle
+   TGColorSelect       *fColorSelect;  ///< font color selector
+   TGFontTypeComboBox  *fTypeCombo;    ///< font style
+   TGComboBox          *fSizeCombo;    ///< font size
 
    virtual void ConnectSignals2Slots();
 

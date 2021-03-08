@@ -9,22 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootContextMenu                                                     //
-//                                                                      //
-// This class provides an interface to context sensitive popup menus.   //
-// These menus pop up when the user hits the right mouse button, and    //
-// are destroyed when the menu pops downs.                              //
-// The picture below shows a canvas with a pop-up menu.                 //
-//                                                                      //
-//Begin_Html <img src="gif/hsumMenu.gif"> End_Html                      //
-//                                                                      //
-// The picture below shows a canvas with a pop-up menu and a dialog box.//
-//                                                                      //
-//Begin_Html <img src="gif/hsumDialog.gif"> End_Html                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootContextMenu
+    \ingroup guiwidgets
+
+This class provides an interface to context sensitive popup menus.
+These menus pop up when the user hits the right mouse button, and
+are destroyed when the menu pops downs.
+The picture below shows a canvas with a pop-up menu.
+
+*/
+
 
 #include "TRootContextMenu.h"
 #include "TROOT.h"

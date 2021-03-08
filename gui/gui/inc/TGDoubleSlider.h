@@ -13,42 +13,6 @@
 #define ROOT_TGDoubleSlider
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGDoubleSlider, TGDoubleVSlider and TGDoubleHSlider                  //
-//                                                                      //
-// DoubleSlider widgets allow easy selection of a min and a max value   //
-// out of a range.                                                      //
-// DoubleSliders can be either horizontal or vertical oriented and      //
-// there is a choice of three different types of tick marks.            //
-//                                                                      //
-// To change the min value press the mouse near to the left / bottom    //
-// edge of the slider.                                                  //
-// To change the max value press the mouse near to the right / top      //
-// edge of the slider.                                                  //
-// To change both values simultaneously press the mouse near to the     //
-// center of the slider.                                                //
-//                                                                      //
-// TGDoubleSlider is an abstract base class. Use the concrete           //
-// TGDoubleVSlider and TGDoubleHSlider.                                 //
-//                                                                      //
-// Dragging the slider will generate the event:                         //
-// kC_VSLIDER, kSL_POS, slider id, 0  (for vertical slider)             //
-// kC_HSLIDER, kSL_POS, slider id, 0  (for horizontal slider)           //
-//                                                                      //
-// Pressing the mouse will generate the event:                          //
-// kC_VSLIDER, kSL_PRESS, slider id, 0  (for vertical slider)           //
-// kC_HSLIDER, kSL_PRESS, slider id, 0  (for horizontal slider)         //
-//                                                                      //
-// Releasing the mouse will generate the event:                         //
-// kC_VSLIDER, kSL_RELEASE, slider id, 0  (for vertical slider)         //
-// kC_HSLIDER, kSL_RELEASE, slider id, 0  (for horizontal slider)       //
-//                                                                      //
-// Use the functions GetMinPosition(), GetMaxPosition() and             //
-// GetPosition() to retrieve the position of the slider.                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGWidget.h"
 

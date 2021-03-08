@@ -13,14 +13,6 @@
 #define ROOT_TGFontDialog
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFontDialog.                                                        //
-//                                                                      //
-// The TGFontDialog allows easy font and font attribute selection.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 

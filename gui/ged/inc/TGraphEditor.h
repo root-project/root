@@ -12,13 +12,6 @@
 #ifndef ROOT_TGraphEditor
 #define ROOT_TGraphEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGraphEditor                                                        //
-//                                                                      //
-//  Editor for changing Graph attributes.                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
 
@@ -32,20 +25,20 @@ class TGLineWidthComboBox;
 class TGraphEditor : public TGedFrame {
 
 protected:
-   char                 fDrawShape;   // Shape of the Graph (simple, smooth, bar)
-   TGTextEntry         *fTitle;       // Contains the title of the graph
-   Int_t                fTitlePrec;   // font precision level
-   TGraph              *fGraph;       // Graph object
-   TGButtonGroup       *fgr;          // Group the Radiobuttons:
-   TGRadioButton       *fShape;       // just draw unconnected points
-   TGRadioButton       *fShape0;      // set smooth graph curve
-   TGRadioButton       *fShape1;      // set simple poly-line between every graph point
-   TGRadioButton       *fShape2;      // set graph draw mode to bar chart
-   TGRadioButton       *fShape3;      // set graph draw mode to fill area
-   TGLayoutHints       *fShape1lh;    // layout-hints for fShape1
-   TGCheckButton       *fMarkerOnOff; // set Marker visible/unvisible
-   TGLineWidthComboBox *fWidthCombo;  // Exclusion zone width
-   TGCheckButton       *fExSide;      // set the exclusion zone side
+   char                 fDrawShape;   ///< Shape of the Graph (simple, smooth, bar)
+   TGTextEntry         *fTitle;       ///< Contains the title of the graph
+   Int_t                fTitlePrec;   ///< font precision level
+   TGraph              *fGraph;       ///< Graph object
+   TGButtonGroup       *fgr;          ///< Group the Radiobuttons:
+   TGRadioButton       *fShape;       ///< just draw unconnected points
+   TGRadioButton       *fShape0;      ///< set smooth graph curve
+   TGRadioButton       *fShape1;      ///< set simple poly-line between every graph point
+   TGRadioButton       *fShape2;      ///< set graph draw mode to bar chart
+   TGRadioButton       *fShape3;      ///< set graph draw mode to fill area
+   TGLayoutHints       *fShape1lh;    ///< layout-hints for fShape1
+   TGCheckButton       *fMarkerOnOff; ///< set Marker visible/unvisible
+   TGLineWidthComboBox *fWidthCombo;  ///< Exclusion zone width
+   TGCheckButton       *fExSide;      ///< set the exclusion zone side
 
    virtual void ConnectSignals2Slots();
 

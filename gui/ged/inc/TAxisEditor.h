@@ -12,13 +12,6 @@
 #ifndef ROOT_TAxisEditor
 #define ROOT_TAxisEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAxisEditor                                                         //
-//                                                                      //
-//  Implements GUI for axis attributes.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
 
@@ -35,32 +28,32 @@ class TGFontTypeComboBox;
 class TAxisEditor : public TGedFrame {
 
 protected:
-   TAxis               *fAxis;         // axis object
-   TGColorSelect       *fAxisColor;    // color selection widget
-   TGCheckButton       *fLogAxis;      // logarithmic check box
-   TGNumberEntry       *fTickLength;   // tick length number entry
-   TGNumberEntry       *fDiv1;         // primary axis division number entry
-   TGNumberEntry       *fDiv2;         // secondary axis division number entry
-   TGNumberEntry       *fDiv3;         // tertiary axis division number entry
-   TGCheckButton       *fOptimize;     // tick optimization check box
-   TGCheckButton       *fTicksBoth;    // check box setting ticks on both axis sides
-   TGCheckButton       *fMoreLog;      // more logarithmic labels check box
-   Int_t                fTicksFlag;    // positive/negative ticks' flag
-   TGTextEntry         *fTitle;        // axis title input field
-   TGColorSelect       *fTitleColor;   // color selection widget
-   TGFontTypeComboBox  *fTitleFont;    // title font combo box
-   Int_t                fTitlePrec;    // font precision level
-   TGNumberEntry       *fTitleSize;    // title size number entry
-   TGNumberEntry       *fTitleOffset;  // title offset number entry
-   TGCheckButton       *fCentered;     // check button for centered title
-   TGCheckButton       *fRotated;      // check button for rotated title
-   TGColorSelect       *fLabelColor;   // color selection widget
-   TGFontTypeComboBox  *fLabelFont;    // label font combo box
-   Int_t                fLabelPrec;    // font precision level
-   TGNumberEntry       *fLabelSize;    // label size number entry
-   TGNumberEntry       *fLabelOffset;  // label offset number entry
-   TGCheckButton       *fNoExponent;   // check box for No exponent choice
-   TGCheckButton       *fDecimal;      // decimal part check box
+   TAxis               *fAxis;         ///< axis object
+   TGColorSelect       *fAxisColor;    ///< color selection widget
+   TGCheckButton       *fLogAxis;      ///< logarithmic check box
+   TGNumberEntry       *fTickLength;   ///< tick length number entry
+   TGNumberEntry       *fDiv1;         ///< primary axis division number entry
+   TGNumberEntry       *fDiv2;         ///< secondary axis division number entry
+   TGNumberEntry       *fDiv3;         ///< tertiary axis division number entry
+   TGCheckButton       *fOptimize;     ///< tick optimization check box
+   TGCheckButton       *fTicksBoth;    ///< check box setting ticks on both axis sides
+   TGCheckButton       *fMoreLog;      ///< more logarithmic labels check box
+   Int_t                fTicksFlag;    ///< positive/negative ticks' flag
+   TGTextEntry         *fTitle;        ///< axis title input field
+   TGColorSelect       *fTitleColor;   ///< color selection widget
+   TGFontTypeComboBox  *fTitleFont;    ///< title font combo box
+   Int_t                fTitlePrec;    ///< font precision level
+   TGNumberEntry       *fTitleSize;    ///< title size number entry
+   TGNumberEntry       *fTitleOffset;  ///< title offset number entry
+   TGCheckButton       *fCentered;     ///< check button for centered title
+   TGCheckButton       *fRotated;      ///< check button for rotated title
+   TGColorSelect       *fLabelColor;   ///< color selection widget
+   TGFontTypeComboBox  *fLabelFont;    ///< label font combo box
+   Int_t                fLabelPrec;    ///< font precision level
+   TGNumberEntry       *fLabelSize;    ///< label size number entry
+   TGNumberEntry       *fLabelOffset;  ///< label offset number entry
+   TGCheckButton       *fNoExponent;   ///< check box for No exponent choice
+   TGCheckButton       *fDecimal;      ///< decimal part check box
 
    virtual void ConnectSignals2Slots();
 

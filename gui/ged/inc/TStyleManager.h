@@ -12,16 +12,6 @@
 #ifndef ROOT_TStyleManager
 #define ROOT_TStyleManager
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TStyleManager                                                       //
-//                                                                      //
-//  This class provides a Graphical User Interface to manage styles     //
-//       in ROOT. It allows the user to edit styles, import / export    //
-//       them to macros, apply a style on the selected object or on     //
-//       all canvases, change gStyle.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TGNumberEntry.h"
@@ -64,269 +54,269 @@ class TVirtualPad;
 class TStyleManager : public TGMainFrame {
 
 private:
-   static TStyleManager *fgStyleManager;     // singleton style manager
+   static TStyleManager *fgStyleManager;     ///< singleton style manager
 
-   TStyle              *fCurSelStyle;        // current selected style
-   Bool_t               fLastChoice;         //=kTRUE if the user choose OK in the last TStyleDialog
-   Bool_t               fRealTimePreview;    //=kTRUE if auto refreshed preview
-   Int_t                fCurTabNum;          // current opened tab number
-   Int_t                fCurTabAxisNum;      // current opened axis tab number
-   UInt_t               fSMWidth;            // style manager's width
-   UInt_t               fSMHeight;           // style manager's height
-   Bool_t               fStyleChanged;       //=kTRUE if the style has been modified
+   TStyle              *fCurSelStyle;        ///< current selected style
+   Bool_t               fLastChoice;         ///< kTRUE if the user choose OK in the last TStyleDialog
+   Bool_t               fRealTimePreview;    ///< kTRUE if auto refreshed preview
+   Int_t                fCurTabNum;          ///< current opened tab number
+   Int_t                fCurTabAxisNum;      ///< current opened axis tab number
+   UInt_t               fSMWidth;            ///< style manager's width
+   UInt_t               fSMHeight;           ///< style manager's height
+   Bool_t               fStyleChanged;       ///< kTRUE if the style has been modified
 
-   Bool_t               fMoreAndNotLess;     //=kTRUE when editor is open
-   Bool_t               fSigSlotConnected;   //=kTRUE when signal/slots connected
-   Bool_t               fAllAndNotCurrent;   //=kTRUE when apply on 'All canvases'
-   TList               *fTrashListFrame;     // to avoid memory leak
-   TList               *fTrashListLayout;    // to avoid memory leak
+   Bool_t               fMoreAndNotLess;     ///< kTRUE when editor is open
+   Bool_t               fSigSlotConnected;   ///< kTRUE when signal/slots connected
+   Bool_t               fAllAndNotCurrent;   ///<kTRUE when apply on 'All canvases'
+   TList               *fTrashListFrame;     ///< to avoid memory leak
+   TList               *fTrashListLayout;    ///< to avoid memory leak
 
-   TGMenuBar           *fMenuBar;            // the main window menu bar
-   TGPopupMenu         *fMenuStyle;          // the 'Style' popup menu
-   TGPopupMenu         *fImportCascade;      // Cascaded menu 'Import'
-   TGPopupMenu         *fMenuHelp;           // the 'Help' popup menu
+   TGMenuBar           *fMenuBar;            ///< the main window menu bar
+   TGPopupMenu         *fMenuStyle;          ///< the 'Style' popup menu
+   TGPopupMenu         *fImportCascade;      ///< Cascaded menu 'Import'
+   TGPopupMenu         *fMenuHelp;           ///< the 'Help' popup menu
 
-   TGToolBar           *fToolBar;            // the tool bar
-   TGPictureButton     *fToolBarNew;         // tool bar 'New' button
-   TGPictureButton     *fToolBarDelete;      // tool bar 'Delete' button
-   TGPictureButton     *fToolBarImportCanvas;// tool bar 'Import from canvas' button
-   TGPictureButton     *fToolBarImportMacro; // tool bar 'Import from macro' button
-   TGPictureButton     *fToolBarExport;      // tool bar 'Export' button
-   TGPictureButton     *fToolBarHelp;        // tool bar 'Help' button
-   const TGPicture     *fToolBarNewPic;      // tool bar 'New' picture
-   const TGPicture     *fToolBarDeletePic;   // tool bar 'Delete' picture
-   const TGPicture     *fToolBarImportCanvasPic;// tool bar 'Import from canvas' picture
-   const TGPicture     *fToolBarImportMacroPic; // tool bar 'Import from macro' picture
-   const TGPicture     *fToolBarExportPic;   // tool bar 'Export' picture
-   const TGPicture     *fToolBarHelpPic;     // tool bar 'Help' picture
-   TGHorizontal3DLine  *fHorizontal3DLine;   // a line under the tool bar
+   TGToolBar           *fToolBar;            ///< the tool bar
+   TGPictureButton     *fToolBarNew;         ///< tool bar 'New' button
+   TGPictureButton     *fToolBarDelete;      ///< tool bar 'Delete' button
+   TGPictureButton     *fToolBarImportCanvas;///< tool bar 'Import from canvas' button
+   TGPictureButton     *fToolBarImportMacro; ///< tool bar 'Import from macro' button
+   TGPictureButton     *fToolBarExport;      ///< tool bar 'Export' button
+   TGPictureButton     *fToolBarHelp;        ///< tool bar 'Help' button
+   const TGPicture     *fToolBarNewPic;      ///< tool bar 'New' picture
+   const TGPicture     *fToolBarDeletePic;   ///< tool bar 'Delete' picture
+   const TGPicture     *fToolBarImportCanvasPic;///< tool bar 'Import from canvas' picture
+   const TGPicture     *fToolBarImportMacroPic; ///< tool bar 'Import from macro' picture
+   const TGPicture     *fToolBarExportPic;   ///< tool bar 'Export' picture
+   const TGPicture     *fToolBarHelpPic;     ///< tool bar 'Help' picture
+   TGHorizontal3DLine  *fHorizontal3DLine;   ///< a line under the tool bar
 
-   TGLabel             *fListLabel;          // label 'Available Styles:'
-   TGComboBox          *fListComboBox;       // list of available styles
-   TGFileInfo          *fCurMacro;           // current macro
-   TGLabel             *fCurStylabel;        // label 'gStyle is set to:'
-   TGTextEntry         *fCurStyle;           // label showing gStyle's name
-   TGLabel             *fCurPadLabel;        // label 'Canvas:'
-   TGTextEntry         *fCurPadTextEntry;    // label showing current pad's name
-   TVirtualPad         *fCurPad;             // current pad
-   TGLabel             *fCurObjLabel;        // label 'Object:'
-   TGTextEntry         *fCurObjTextEntry;    // label showing current object's name
-   TObject             *fCurObj;             // current object
-   TGCheckButton       *fPreviewButton;      // if checked, preview is visible
-   TGCheckButton       *fPreviewRealTime;    // if checked, real time preview
-   TStylePreview       *fPreviewWindow;      // preview
-   TGPictureButton     *fMakeDefault;        // selected style becom gStyle
-   const TGPicture     *fMakeDefaultPic;     // button picture
+   TGLabel             *fListLabel;          ///< label 'Available Styles:'
+   TGComboBox          *fListComboBox;       ///< list of available styles
+   TGFileInfo          *fCurMacro;           ///< current macro
+   TGLabel             *fCurStylabel;        ///< label 'gStyle is set to:'
+   TGTextEntry         *fCurStyle;           ///< label showing gStyle's name
+   TGLabel             *fCurPadLabel;        ///< label 'Canvas:'
+   TGTextEntry         *fCurPadTextEntry;    ///< label showing current pad's name
+   TVirtualPad         *fCurPad;             ///< current pad
+   TGLabel             *fCurObjLabel;        ///< label 'Object:'
+   TGTextEntry         *fCurObjTextEntry;    ///< label showing current object's name
+   TObject             *fCurObj;             ///< current object
+   TGCheckButton       *fPreviewButton;      ///< if checked, preview is visible
+   TGCheckButton       *fPreviewRealTime;    ///< if checked, real time preview
+   TStylePreview       *fPreviewWindow;      ///< preview
+   TGPictureButton     *fMakeDefault;        ///< selected style becom gStyle
+   const TGPicture     *fMakeDefaultPic;     ///< button picture
 
-   TGHButtonGroup      *fApplyOnGroup;       // 'Apply on' button group
-   TGRadioButton       *fApplyOnAll;         // 'Apply on' button group
-   TGRadioButton       *fApplyOnSel;         // 'Apply on' button group
-   TGTextButton        *fApplyOnButton;      // apply style on object(s)
+   TGHButtonGroup      *fApplyOnGroup;       ///< 'Apply on' button group
+   TGRadioButton       *fApplyOnAll;         ///< 'Apply on' button group
+   TGRadioButton       *fApplyOnSel;         ///< 'Apply on' button group
+   TGTextButton        *fApplyOnButton;      ///< apply style on object(s)
 
-   TGTextButton        *fMoreLess;           // open/close the editor
-   TGStatusBar         *fStatusBar;          // status bar
+   TGTextButton        *fMoreLess;           ///< open/close the editor
+   TGStatusBar         *fStatusBar;          ///< status bar
 
-   TGVerticalFrame     *fEditionFrame;       // editor
-   TGTab               *fEditionTab;         // editor's tabs
-   TGTab               *fHistosTab;          // histos' tabs
-   TGTab               *fAxisTab;            // axis' tabs
-   TGHorizontalFrame   *fEditionButtonFrame; // editor's buttons
+   TGVerticalFrame     *fEditionFrame;       ///< editor
+   TGTab               *fEditionTab;         ///< editor's tabs
+   TGTab               *fHistosTab;          ///< histos' tabs
+   TGTab               *fAxisTab;            ///< axis' tabs
+   TGHorizontalFrame   *fEditionButtonFrame; ///< editor's buttons
 
-   TGTextButton        *fEditionHelp;           // help button
-   TGTextButton        *fEditionUpdatePreview;  // update preview button
-   TGTextButton        *fEditionReset;          // reset button
+   TGTextButton        *fEditionHelp;           ///< help button
+   TGTextButton        *fEditionUpdatePreview;  ///< update preview button
+   TGTextButton        *fEditionReset;          ///< reset button
 
-   TGColorSelect       *fFillColor;          // general fill color selection widget
-   TGedPatternSelect   *fFillStyle;          // general fill pattern selection widget
-   TGLineWidthComboBox *fHatchesLineWidth;   // general hatches width combo box
-   TGNumberEntry       *fHatchesSpacing;     // general hatches spacing number entry
-   TGColorSelect       *fTextColor;          // general text color selection widget
-   TGNumberEntry       *fTextSize;           // general text size number entry
-   TGCheckButton       *fTextSizeInPixels;   // general text size check box
-   TGFontTypeComboBox  *fTextFont;           // general text font combo box
-   TGComboBox          *fTextAlign;          // general text align combo box
-   TGNumberEntry       *fTextAngle;          // general text angle number entry
-   TGColorSelect       *fLineColor;          // general line color selection widget
-   TGLineWidthComboBox *fLineWidth;          // general line width combo box
-   TGLineStyleComboBox *fLineStyle;          // general line style combo box
-   TGTextButton        *fLineStyleEdit;      // general line style editor open button
-   TGColorSelect       *fMarkerColor;        // general marker color selection widget
-   TGedMarkerSelect    *fMarkerStyle;        // general marker style entry
-   TGComboBox          *fMarkerSize;         // general marker size combo box
-   TGNumberEntry       *fScreenFactor;       // general screen factor number entry
-   TGColorSelect       *fCanvasColor;        // canvas fill color selection widget
-   TGNumberEntry       *fCanvasDefX;         // canvas abscissa number entry
-   TGNumberEntry       *fCanvasDefY;         // canvas ordinate number entry
-   TGNumberEntry       *fCanvasDefW;         // canvas width number entry
-   TGNumberEntry       *fCanvasDefH;         // canvas height number entry
-   TGButtonGroup       *fCanvasBorderMode;   // canvas border mode button group
-   TGLineWidthComboBox *fCanvasBorderSize;   // canvas border size combo box
-   TGCheckButton       *fOptDateBool;        // canvas date show/hide check box
-   TGColorSelect       *fAttDateTextColor;   // canvas date color selection widget
-   TGNumberEntry       *fAttDateTextSize;    // canvas date size number entry
-   TGCheckButton       *fAttDateTextSizeInPixels;  // canvas date size check box
-   TGComboBox          *fOptDateFormat;      // canvas date format text entry
-   TGFontTypeComboBox  *fAttDateTextFont;    // canvas date font combo box
-   TGNumberEntry       *fAttDateTextAngle;   // canvas date angle number entry
-   TGComboBox          *fAttDateTextAlign;   // canvas date align combo box
-   TGNumberEntry       *fDateX;              // canvas date abscissa number entry
-   TGNumberEntry       *fDateY;              // canvas date ordinate number entry
-   TGNumberEntry       *fPadLeftMargin;      // pad left margin number entry
-   TGNumberEntry       *fPadRightMargin;     // pad right margin number entry
-   TGNumberEntry       *fPadTopMargin;       // pad top margin number entry
-   TGNumberEntry       *fPadBottomMargin;    // pad bottom margin number entry
-   TGButtonGroup       *fPadBorderMode;      // pad border mode button group
-   TGLineWidthComboBox *fPadBorderSize;      // pad border size combo box
-   TGColorSelect       *fPadColor;           // pad fill color selection widget
-   TGCheckButton       *fPadTickX;           // pad ticks along X show/hide check box
-   TGCheckButton       *fPadTickY;           // pad ticks along Y show/hide check box
-   TGCheckButton       *fPadGridX;           // pad grid along X show/hide check box
-   TGCheckButton       *fPadGridY;           // pad grid along Y show/hide check box
-   TGColorSelect       *fGridColor;          // pad grid line color selection widget
-   TGLineWidthComboBox *fGridWidth;          // pad grid line width combo box
-   TGLineStyleComboBox *fGridStyle;          // pad grid line style combo box
-   TGColorSelect       *fHistFillColor;      // histograms fill color selection widget
-   TGedPatternSelect   *fHistFillStyle;      // histograms fill pattern selection widget
-   TGColorSelect       *fHistLineColor;      // histograms fill color selection widget
-   TGLineWidthComboBox *fHistLineWidth;      // histograms line width combo box
-   TGLineStyleComboBox *fHistLineStyle;      // histograms line style combo box
-   TGNumberEntry       *fBarWidth;           // histograms bar width number entry
-   TGNumberEntry       *fBarOffset;          // histograms bar offset number entry
-   TGCheckButton       *fHistMinimumZero;    // histograms minimum zero check box
-   TGTextEntry         *fPaintTextFormat;    // histograms format text entry
-   TGNumberEntry       *fNumberContours;     // histograms number of contours number entry
-   TGNumberEntry       *fLegoInnerR;         // histograms lego inner radius number entry
-   TGColorSelect       *fFrameFillColor;     // frame fill color selection widget
-   TGedPatternSelect   *fFrameFillStyle;     // frame fill pattern selection widget
-   TGColorSelect       *fFrameLineColor;     // frame line color selection widget
-   TGLineWidthComboBox *fFrameLineWidth;     // frame line width combo box
-   TGLineStyleComboBox *fFrameLineStyle;     // frame line style combo box
-   TGTextButton        *fPaletteEdit;        // palette editor open button
-   TGButtonGroup       *fFrameBorderMode;    // frame border mode button group
-   TGLineWidthComboBox *fFrameBorderSize;    // frame border size combo box
-   TGColorSelect       *fFuncColor;          // function color selection widget
-   TGLineWidthComboBox *fFuncWidth;          // function width number entry
-   TGLineStyleComboBox *fFuncStyle;          // function line style combo box
-   TGCheckButton       *fDrawBorder;         // function border show/hide check box
-   TGNumberEntry       *fEndErrorSize;       // end error size number entry
-   TGNumberEntry       *fErrorX;             // error along abscissa number entry
-   TGNumberEntry       *fTimeOffsetDate;     // axis time offset (mm/dd/yyyy) number entry
-   TGNumberEntry       *fTimeOffsetTime;     // axis time offset (hh:mm:ss) number entry
-   TGCheckButton       *fStripDecimals;      // axis label's decimal part show/hide check box
-   TGTextButton        *fApplyOnXYZ;         // axis apply on XYZ text button
-   TGNumberEntry       *fXTitleSize;         // X axis title size number entry
-   TGCheckButton       *fXTitleSizeInPixels; // X axis title size check box
-   TGColorSelect       *fXTitleColor;        // X axis title color selection widget
-   TGNumberEntry       *fXTitleOffset;       // X axis title offset number entry
-   TGFontTypeComboBox  *fXTitleFont;         // X axis title font combo box
-   TGNumberEntry       *fXLabelSize;         // X axis label size number entry
-   TGCheckButton       *fXLabelSizeInPixels; // X axis label size check box
-   TGColorSelect       *fXLabelColor;        // X axis label color selection widget
-   TGNumberEntry       *fXLabelOffset;       // X axis label offset number entry
-   TGFontTypeComboBox  *fXLabelFont;         // X axis label font combo box
-   TGColorSelect       *fXAxisColor;         // X axis color selection widget
-   TGNumberEntry       *fXTickLength;        // X axis tick length number entry
-   TGCheckButton       *fOptLogx;            // X axis logarithmic scale check box
-   TGNumberEntry       *fXNdivMain;          // X axis primary division number entry
-   TGNumberEntry       *fXNdivSub;           // X axis secondary division number entry
-   TGNumberEntry       *fXNdivSubSub;        // X axis tertiary division number entry
-   TGCheckButton       *fXNdivisionsOptimize;// X axis division optimization check box
-   TGNumberEntry       *fYTitleSize;         // Y axis title size number entry
-   TGCheckButton       *fYTitleSizeInPixels; // Y axis title size check box
-   TGColorSelect       *fYTitleColor;        // Y axis title color selection widget
-   TGNumberEntry       *fYTitleOffset;       // Y axis title offset number entry
-   TGFontTypeComboBox  *fYTitleFont;         // Y axis title font combo box
-   TGNumberEntry       *fYLabelSize;         // Y axis label size number entry
-   TGCheckButton       *fYLabelSizeInPixels; // Y axis label size check box
-   TGColorSelect       *fYLabelColor;        // Y axis label color selection widget
-   TGNumberEntry       *fYLabelOffset;       // Y axis label offset number entry
-   TGFontTypeComboBox  *fYLabelFont;         // Y axis label font combo box
-   TGColorSelect       *fYAxisColor;         // Y axis color selection widget
-   TGNumberEntry       *fYTickLength;        // Y axis tick length number entry
-   TGCheckButton       *fOptLogy;            // Y axis logarithmic scale check box
-   TGNumberEntry       *fYNdivMain;          // Y axis primary division number entry
-   TGNumberEntry       *fYNdivSub;           // Y axis secondary division number entry
-   TGNumberEntry       *fYNdivSubSub;        // Y axis tertiary division number entry
-   TGCheckButton       *fYNdivisionsOptimize;// Y axis division optimization check box
-   TGNumberEntry       *fZTitleSize;         // Z axis title size number entry
-   TGCheckButton       *fZTitleSizeInPixels; // Z axis title size check box
-   TGColorSelect       *fZTitleColor;        // Z axis title color selection widget
-   TGNumberEntry       *fZTitleOffset;       // Z axis title offset number entry
-   TGFontTypeComboBox  *fZTitleFont;         // Z axis title font combo box
-   TGNumberEntry       *fZLabelSize;         // Z axis label size number entry
-   TGCheckButton       *fZLabelSizeInPixels; // Z axis label size check box
-   TGColorSelect       *fZLabelColor;        // Z axis label color selection widget
-   TGNumberEntry       *fZLabelOffset;       // Z axis label offset number entry
-   TGFontTypeComboBox  *fZLabelFont;         // Z axis label font combo box
-   TGColorSelect       *fZAxisColor;         // Z axis color selection widget
-   TGNumberEntry       *fZTickLength;        // Z axis tick length number entry
-   TGCheckButton       *fOptLogz;            // Z axis logarithmic scale check box
-   TGNumberEntry       *fZNdivMain;          // Z axis primary division number entry
-   TGNumberEntry       *fZNdivSub;           // Z axis secondary division number entry
-   TGNumberEntry       *fZNdivSubSub;        // Z axis tertiary division number entry
-   TGCheckButton       *fZNdivisionsOptimize;// Z axis division optimization check box
-   TGCheckButton       *fOptTitle;           // title show/hide check box
-   TGColorSelect       *fTitleColor;         // title fill color selection widget
-   TGedPatternSelect   *fTitleStyle;         // title fill pattern selection widget
-   TGColorSelect       *fTitleTextColor;     // title text color selection widget
-   TGNumberEntry       *fTitleFontSize;      // title font size number entry
-   TGCheckButton       *fTitleFontSizeInPixels; // title font size check box
-   TGFontTypeComboBox  *fTitleFont;          // title font combo box
-   TGComboBox          *fTitleAlign;         // title align combo box
-   TGLabel             *fTitleBorderSizeLabel;  // label 'Title's'
-   TGLineWidthComboBox *fTitleBorderSize;    // title border size combo box
-   TGNumberEntry       *fTitleX;             // title abscissa number entry
-   TGNumberEntry       *fTitleY;             // title ordinate number entry
-   TGNumberEntry       *fTitleW;             // title width number entry
-   TGNumberEntry       *fTitleH;             // title height number entry
-   TGLabel             *fLegendBorderSizeLabel; // label 'Legend's'
-   TGLineWidthComboBox *fLegendBorderSize;   // legend border size combo box
-   TGColorSelect       *fStatColor;          // stats fill color selection widget
-   TGedPatternSelect   *fStatStyle;          // stats fill pattern selection widget
-   TGColorSelect       *fStatTextColor;      // stats text color selection widget
-   TGNumberEntry       *fStatFontSize;       // stats font size number entry
-   TGCheckButton       *fStatFontSizeInPixels;  // stats font size check box
-   TGFontTypeComboBox  *fStatFont;           // stats font type combo box
-   TGNumberEntry       *fStatX;              // stats abscissa number entry
-   TGNumberEntry       *fStatY;              // stats ordinate number entry
-   TGNumberEntry       *fStatW;              // stats width number entry
-   TGNumberEntry       *fStatH;              // stats height number entry
-   TGLabel             *fStatBorderSizeLabel;   // label 'stats' shadow
-   TGLineWidthComboBox *fStatBorderSize;     // stats border size combo box
-   TGCheckButton       *fOptStatName;        // stats name show/hide check box
-   TGCheckButton       *fOptStatEntries;     // stats entries show/hide check box
-   TGCheckButton       *fOptStatOverflow;    // stats overflow show/hide check box
-   TGCheckButton       *fOptStatMean;        // stats mean show/hide check box
-   TGCheckButton       *fOptStatUnderflow;   // stats underflow show/hide check box
-   TGCheckButton       *fOptStatRMS;         // stats RMS show/hide check box
-   TGCheckButton       *fOptStatSkewness;    // stats Skewness show/hide check box
-   TGCheckButton       *fOptStatIntegral;    // stats integral show/hide check box
-   TGCheckButton       *fOptStatKurtosis;    // stats kurtosis show/hide check box
-   TGCheckButton       *fOptStatErrors;      // stats errors check box
-   TGLabel             *fStatFormatLabel;    // label 'stats format'
-   TGTextEntry         *fStatFormat;         // stats format text entry
-   TGCheckButton       *fOptFitValues;       // fit values show/hide check box
-   TGCheckButton       *fOptFitErrors;       // fit errors check box
-   TGCheckButton       *fOptFitProbability;  // fit probability show/hide check box
-   TGCheckButton       *fOptFitChi;          // fit Chi show/hide check box
-   TGLabel             *fFitFormatLabel;     // label 'fit format'
-   TGTextEntry         *fFitFormat;          // fit format text entry
-   TGTextEntry         *fHeaderPS;           // ps/pdf header text entry
-   TGTextEntry         *fTitlePS;            // ps/pdf title text entry
-   TGButtonGroup       *fColorModelPS;       // ps/pdf color model button group
-   TGRadioButton       *fColorModelPSRGB;    // RGB radio button
-   TGRadioButton       *fColorModelPSCMYK;   // CMYB radio button
-   TGNumberEntry       *fLineScalePS;        // ps/pdf line scale number entry
-   TGComboBox          *fPaperSizePredef;    // ps/pdf paper size combo box
-   Bool_t               fPaperSizeEnCm;      //=kTRUE if the paper size is in cm
-   TGNumberEntry       *fPaperSizeX;         // ps/pdf paper size width number entry
-   TGNumberEntry       *fPaperSizeY;         // ps/pdf paper size height number entry
+   TGColorSelect       *fFillColor;          ///< general fill color selection widget
+   TGedPatternSelect   *fFillStyle;          ///< general fill pattern selection widget
+   TGLineWidthComboBox *fHatchesLineWidth;   ///< general hatches width combo box
+   TGNumberEntry       *fHatchesSpacing;     ///< general hatches spacing number entry
+   TGColorSelect       *fTextColor;          ///< general text color selection widget
+   TGNumberEntry       *fTextSize;           ///< general text size number entry
+   TGCheckButton       *fTextSizeInPixels;   ///< general text size check box
+   TGFontTypeComboBox  *fTextFont;           ///< general text font combo box
+   TGComboBox          *fTextAlign;          ///< general text align combo box
+   TGNumberEntry       *fTextAngle;          ///< general text angle number entry
+   TGColorSelect       *fLineColor;          ///< general line color selection widget
+   TGLineWidthComboBox *fLineWidth;          ///< general line width combo box
+   TGLineStyleComboBox *fLineStyle;          ///< general line style combo box
+   TGTextButton        *fLineStyleEdit;      ///< general line style editor open button
+   TGColorSelect       *fMarkerColor;        ///< general marker color selection widget
+   TGedMarkerSelect    *fMarkerStyle;        ///< general marker style entry
+   TGComboBox          *fMarkerSize;         ///< general marker size combo box
+   TGNumberEntry       *fScreenFactor;       ///< general screen factor number entry
+   TGColorSelect       *fCanvasColor;        ///< canvas fill color selection widget
+   TGNumberEntry       *fCanvasDefX;         ///< canvas abscissa number entry
+   TGNumberEntry       *fCanvasDefY;         ///< canvas ordinate number entry
+   TGNumberEntry       *fCanvasDefW;         ///< canvas width number entry
+   TGNumberEntry       *fCanvasDefH;         ///< canvas height number entry
+   TGButtonGroup       *fCanvasBorderMode;   ///< canvas border mode button group
+   TGLineWidthComboBox *fCanvasBorderSize;   ///< canvas border size combo box
+   TGCheckButton       *fOptDateBool;        ///< canvas date show/hide check box
+   TGColorSelect       *fAttDateTextColor;   ///< canvas date color selection widget
+   TGNumberEntry       *fAttDateTextSize;    ///< canvas date size number entry
+   TGCheckButton       *fAttDateTextSizeInPixels;  ///< canvas date size check box
+   TGComboBox          *fOptDateFormat;      ///< canvas date format text entry
+   TGFontTypeComboBox  *fAttDateTextFont;    ///< canvas date font combo box
+   TGNumberEntry       *fAttDateTextAngle;   ///< canvas date angle number entry
+   TGComboBox          *fAttDateTextAlign;   ///< canvas date align combo box
+   TGNumberEntry       *fDateX;              ///< canvas date abscissa number entry
+   TGNumberEntry       *fDateY;              ///< canvas date ordinate number entry
+   TGNumberEntry       *fPadLeftMargin;      ///< pad left margin number entry
+   TGNumberEntry       *fPadRightMargin;     ///< pad right margin number entry
+   TGNumberEntry       *fPadTopMargin;       ///< pad top margin number entry
+   TGNumberEntry       *fPadBottomMargin;    ///< pad bottom margin number entry
+   TGButtonGroup       *fPadBorderMode;      ///< pad border mode button group
+   TGLineWidthComboBox *fPadBorderSize;      ///< pad border size combo box
+   TGColorSelect       *fPadColor;           ///< pad fill color selection widget
+   TGCheckButton       *fPadTickX;           ///< pad ticks along X show/hide check box
+   TGCheckButton       *fPadTickY;           ///< pad ticks along Y show/hide check box
+   TGCheckButton       *fPadGridX;           ///< pad grid along X show/hide check box
+   TGCheckButton       *fPadGridY;           ///< pad grid along Y show/hide check box
+   TGColorSelect       *fGridColor;          ///< pad grid line color selection widget
+   TGLineWidthComboBox *fGridWidth;          ///< pad grid line width combo box
+   TGLineStyleComboBox *fGridStyle;          ///< pad grid line style combo box
+   TGColorSelect       *fHistFillColor;      ///< histograms fill color selection widget
+   TGedPatternSelect   *fHistFillStyle;      ///< histograms fill pattern selection widget
+   TGColorSelect       *fHistLineColor;      ///< histograms fill color selection widget
+   TGLineWidthComboBox *fHistLineWidth;      ///< histograms line width combo box
+   TGLineStyleComboBox *fHistLineStyle;      ///< histograms line style combo box
+   TGNumberEntry       *fBarWidth;           ///< histograms bar width number entry
+   TGNumberEntry       *fBarOffset;          ///< histograms bar offset number entry
+   TGCheckButton       *fHistMinimumZero;    ///< histograms minimum zero check box
+   TGTextEntry         *fPaintTextFormat;    ///< histograms format text entry
+   TGNumberEntry       *fNumberContours;     ///< histograms number of contours number entry
+   TGNumberEntry       *fLegoInnerR;         ///< histograms lego inner radius number entry
+   TGColorSelect       *fFrameFillColor;     ///< frame fill color selection widget
+   TGedPatternSelect   *fFrameFillStyle;     ///< frame fill pattern selection widget
+   TGColorSelect       *fFrameLineColor;     ///< frame line color selection widget
+   TGLineWidthComboBox *fFrameLineWidth;     ///< frame line width combo box
+   TGLineStyleComboBox *fFrameLineStyle;     ///< frame line style combo box
+   TGTextButton        *fPaletteEdit;        ///< palette editor open button
+   TGButtonGroup       *fFrameBorderMode;    ///< frame border mode button group
+   TGLineWidthComboBox *fFrameBorderSize;    ///< frame border size combo box
+   TGColorSelect       *fFuncColor;          ///< function color selection widget
+   TGLineWidthComboBox *fFuncWidth;          ///< function width number entry
+   TGLineStyleComboBox *fFuncStyle;          ///< function line style combo box
+   TGCheckButton       *fDrawBorder;         ///< function border show/hide check box
+   TGNumberEntry       *fEndErrorSize;       ///< end error size number entry
+   TGNumberEntry       *fErrorX;             ///< error along abscissa number entry
+   TGNumberEntry       *fTimeOffsetDate;     ///< axis time offset (mm/dd/yyyy) number entry
+   TGNumberEntry       *fTimeOffsetTime;     ///< axis time offset (hh:mm:ss) number entry
+   TGCheckButton       *fStripDecimals;      ///< axis label's decimal part show/hide check box
+   TGTextButton        *fApplyOnXYZ;         ///< axis apply on XYZ text button
+   TGNumberEntry       *fXTitleSize;         ///< X axis title size number entry
+   TGCheckButton       *fXTitleSizeInPixels; ///< X axis title size check box
+   TGColorSelect       *fXTitleColor;        ///< X axis title color selection widget
+   TGNumberEntry       *fXTitleOffset;       ///< X axis title offset number entry
+   TGFontTypeComboBox  *fXTitleFont;         ///< X axis title font combo box
+   TGNumberEntry       *fXLabelSize;         ///< X axis label size number entry
+   TGCheckButton       *fXLabelSizeInPixels; ///< X axis label size check box
+   TGColorSelect       *fXLabelColor;        ///< X axis label color selection widget
+   TGNumberEntry       *fXLabelOffset;       ///< X axis label offset number entry
+   TGFontTypeComboBox  *fXLabelFont;         ///< X axis label font combo box
+   TGColorSelect       *fXAxisColor;         ///< X axis color selection widget
+   TGNumberEntry       *fXTickLength;        ///< X axis tick length number entry
+   TGCheckButton       *fOptLogx;            ///< X axis logarithmic scale check box
+   TGNumberEntry       *fXNdivMain;          ///< X axis primary division number entry
+   TGNumberEntry       *fXNdivSub;           ///< X axis secondary division number entry
+   TGNumberEntry       *fXNdivSubSub;        ///< X axis tertiary division number entry
+   TGCheckButton       *fXNdivisionsOptimize;///< X axis division optimization check box
+   TGNumberEntry       *fYTitleSize;         ///< Y axis title size number entry
+   TGCheckButton       *fYTitleSizeInPixels; ///< Y axis title size check box
+   TGColorSelect       *fYTitleColor;        ///< Y axis title color selection widget
+   TGNumberEntry       *fYTitleOffset;       ///< Y axis title offset number entry
+   TGFontTypeComboBox  *fYTitleFont;         ///< Y axis title font combo box
+   TGNumberEntry       *fYLabelSize;         ///< Y axis label size number entry
+   TGCheckButton       *fYLabelSizeInPixels; ///< Y axis label size check box
+   TGColorSelect       *fYLabelColor;        ///< Y axis label color selection widget
+   TGNumberEntry       *fYLabelOffset;       ///< Y axis label offset number entry
+   TGFontTypeComboBox  *fYLabelFont;         ///< Y axis label font combo box
+   TGColorSelect       *fYAxisColor;         ///< Y axis color selection widget
+   TGNumberEntry       *fYTickLength;        ///< Y axis tick length number entry
+   TGCheckButton       *fOptLogy;            ///< Y axis logarithmic scale check box
+   TGNumberEntry       *fYNdivMain;          ///< Y axis primary division number entry
+   TGNumberEntry       *fYNdivSub;           ///< Y axis secondary division number entry
+   TGNumberEntry       *fYNdivSubSub;        ///< Y axis tertiary division number entry
+   TGCheckButton       *fYNdivisionsOptimize;///< Y axis division optimization check box
+   TGNumberEntry       *fZTitleSize;         ///< Z axis title size number entry
+   TGCheckButton       *fZTitleSizeInPixels; ///< Z axis title size check box
+   TGColorSelect       *fZTitleColor;        ///< Z axis title color selection widget
+   TGNumberEntry       *fZTitleOffset;       ///< Z axis title offset number entry
+   TGFontTypeComboBox  *fZTitleFont;         ///< Z axis title font combo box
+   TGNumberEntry       *fZLabelSize;         ///< Z axis label size number entry
+   TGCheckButton       *fZLabelSizeInPixels; ///< Z axis label size check box
+   TGColorSelect       *fZLabelColor;        ///< Z axis label color selection widget
+   TGNumberEntry       *fZLabelOffset;       ///< Z axis label offset number entry
+   TGFontTypeComboBox  *fZLabelFont;         ///< Z axis label font combo box
+   TGColorSelect       *fZAxisColor;         ///< Z axis color selection widget
+   TGNumberEntry       *fZTickLength;        ///< Z axis tick length number entry
+   TGCheckButton       *fOptLogz;            ///< Z axis logarithmic scale check box
+   TGNumberEntry       *fZNdivMain;          ///< Z axis primary division number entry
+   TGNumberEntry       *fZNdivSub;           ///< Z axis secondary division number entry
+   TGNumberEntry       *fZNdivSubSub;        ///< Z axis tertiary division number entry
+   TGCheckButton       *fZNdivisionsOptimize;///< Z axis division optimization check box
+   TGCheckButton       *fOptTitle;           ///< title show/hide check box
+   TGColorSelect       *fTitleColor;         ///< title fill color selection widget
+   TGedPatternSelect   *fTitleStyle;         ///< title fill pattern selection widget
+   TGColorSelect       *fTitleTextColor;     ///< title text color selection widget
+   TGNumberEntry       *fTitleFontSize;      ///< title font size number entry
+   TGCheckButton       *fTitleFontSizeInPixels; ///< title font size check box
+   TGFontTypeComboBox  *fTitleFont;          ///< title font combo box
+   TGComboBox          *fTitleAlign;         ///< title align combo box
+   TGLabel             *fTitleBorderSizeLabel;  ///< label 'Title's'
+   TGLineWidthComboBox *fTitleBorderSize;    ///< title border size combo box
+   TGNumberEntry       *fTitleX;             ///< title abscissa number entry
+   TGNumberEntry       *fTitleY;             ///< title ordinate number entry
+   TGNumberEntry       *fTitleW;             ///< title width number entry
+   TGNumberEntry       *fTitleH;             ///< title height number entry
+   TGLabel             *fLegendBorderSizeLabel; ///< label 'Legend's'
+   TGLineWidthComboBox *fLegendBorderSize;   ///< legend border size combo box
+   TGColorSelect       *fStatColor;          ///< stats fill color selection widget
+   TGedPatternSelect   *fStatStyle;          ///< stats fill pattern selection widget
+   TGColorSelect       *fStatTextColor;      ///< stats text color selection widget
+   TGNumberEntry       *fStatFontSize;       ///< stats font size number entry
+   TGCheckButton       *fStatFontSizeInPixels;  ///< stats font size check box
+   TGFontTypeComboBox  *fStatFont;           ///< stats font type combo box
+   TGNumberEntry       *fStatX;              ///< stats abscissa number entry
+   TGNumberEntry       *fStatY;              ///< stats ordinate number entry
+   TGNumberEntry       *fStatW;              ///< stats width number entry
+   TGNumberEntry       *fStatH;              ///< stats height number entry
+   TGLabel             *fStatBorderSizeLabel;   ///< label 'stats' shadow
+   TGLineWidthComboBox *fStatBorderSize;     ///< stats border size combo box
+   TGCheckButton       *fOptStatName;        ///< stats name show/hide check box
+   TGCheckButton       *fOptStatEntries;     ///< stats entries show/hide check box
+   TGCheckButton       *fOptStatOverflow;    ///< stats overflow show/hide check box
+   TGCheckButton       *fOptStatMean;        ///< stats mean show/hide check box
+   TGCheckButton       *fOptStatUnderflow;   ///< stats underflow show/hide check box
+   TGCheckButton       *fOptStatRMS;         ///< stats RMS show/hide check box
+   TGCheckButton       *fOptStatSkewness;    ///< stats Skewness show/hide check box
+   TGCheckButton       *fOptStatIntegral;    ///< stats integral show/hide check box
+   TGCheckButton       *fOptStatKurtosis;    ///< stats kurtosis show/hide check box
+   TGCheckButton       *fOptStatErrors;      ///< stats errors check box
+   TGLabel             *fStatFormatLabel;    ///< label 'stats format'
+   TGTextEntry         *fStatFormat;         ///< stats format text entry
+   TGCheckButton       *fOptFitValues;       ///< fit values show/hide check box
+   TGCheckButton       *fOptFitErrors;       ///< fit errors check box
+   TGCheckButton       *fOptFitProbability;  ///< fit probability show/hide check box
+   TGCheckButton       *fOptFitChi;          ///< fit Chi show/hide check box
+   TGLabel             *fFitFormatLabel;     ///< label 'fit format'
+   TGTextEntry         *fFitFormat;          ///< fit format text entry
+   TGTextEntry         *fHeaderPS;           ///< ps/pdf header text entry
+   TGTextEntry         *fTitlePS;            ///< ps/pdf title text entry
+   TGButtonGroup       *fColorModelPS;       ///< ps/pdf color model button group
+   TGRadioButton       *fColorModelPSRGB;    ///< RGB radio button
+   TGRadioButton       *fColorModelPSCMYK;   ///< CMYB radio button
+   TGNumberEntry       *fLineScalePS;        ///< ps/pdf line scale number entry
+   TGComboBox          *fPaperSizePredef;    ///< ps/pdf paper size combo box
+   Bool_t               fPaperSizeEnCm;      ///< kTRUE if the paper size is in cm
+   TGNumberEntry       *fPaperSizeX;         ///< ps/pdf paper size width number entry
+   TGNumberEntry       *fPaperSizeY;         ///< ps/pdf paper size height number entry
 
-   TGLayoutHints       *fLayoutExpandX;               // often used layout
-   TGLayoutHints       *fLayoutExpandXMargin;         // often used layout
-   TGLayoutHints       *fLayoutExpandXY;              // often used layout
-   TGLayoutHints       *fLayoutExpandXYMargin;        // often used layout
-   TGLayoutHints       *fLayoutExpandXCenterYMargin;  // often used layout
+   TGLayoutHints       *fLayoutExpandX;               ///< often used layout
+   TGLayoutHints       *fLayoutExpandXMargin;         ///< often used layout
+   TGLayoutHints       *fLayoutExpandXY;              ///< often used layout
+   TGLayoutHints       *fLayoutExpandXYMargin;        ///< often used layout
+   TGLayoutHints       *fLayoutExpandXCenterYMargin;  ///< often used layout
 
    void AddMenus(TGCompositeFrame *p);
    void DoNew();

@@ -12,13 +12,6 @@
 #ifndef ROOT_TGInputDialog
 #define ROOT_TGInputDialog
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// Input Dialog Widget                                                   //
-//                                                                       //
-// An Input dialog box                                                   //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 

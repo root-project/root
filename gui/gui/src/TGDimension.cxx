@@ -20,15 +20,28 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGDimension, TGPosition, TGLongPosition, TGInsets and TGRectangle    //
-//                                                                      //
-// Several small geometry classes that implement dimensions             //
-// (width and height), positions (x and y), insets and rectangles.      //
-// They are trivial and their members are public.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/**
+\defgroup guigeom GUI Geometry
+\ingroup guiwidgets
+
+Several small geometry classes that implement dimensions
+(width and height), positions (x and y), insets and rectangles.
+They are trivial and their members are public.
+
+\class TGDimension
+\ingroup guigeom
+\class TGPosition
+\ingroup guigeom
+\class TGLongPosition
+\ingroup guigeom
+\class TGInsets
+\ingroup guigeom
+\class TGRectangle
+\ingroup guigeom
+
+*/
+
 
 #include "TGDimension.h"
 #include "TMathBase.h"

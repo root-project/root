@@ -12,15 +12,6 @@
 #ifndef ROOT_TStyleDialog
 #define ROOT_TStyleDialog
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TStyleDialog                                                        //
-//                                                                      //
-//  This small class is useful to ask the user for a name and a title,  //
-//       in order to rename a style, create a new style or import a     //
-//       style from a canvas.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 
@@ -36,19 +27,19 @@ class TVirtualPad;
 class TStyleDialog : public TGTransientFrame {
 
 private:
-   TStyleManager       *fStyleManager;    // parent style manager
-   TGTextEntry         *fName;            // TStyle name text entry
-   TGLabel             *fNameLabel;       // name label
-   TGTextEntry         *fTitle;           // TStyle title text entry
-   TGLabel             *fTitleLabel;      // title label
-   TGLabel             *fWarnLabel;       // label for warnings
-   TGTextButton        *fOK;              // save button
-   TGTextButton        *fCancel;          // cancel button
-   TStyle              *fCurStyle;        // style to copy or to rename
-   Int_t                fMode;            // 1=new, 2=rename, 3=import
-   TVirtualPad         *fCurPad;          // current pad from which to import
-   TList               *fTrashListFrame;  // to avoid memory leak
-   TList               *fTrashListLayout; // to avoid memory leak
+   TStyleManager       *fStyleManager;    ///< parent style manager
+   TGTextEntry         *fName;            ///< TStyle name text entry
+   TGLabel             *fNameLabel;       ///< name label
+   TGTextEntry         *fTitle;           ///< TStyle title text entry
+   TGLabel             *fTitleLabel;      ///< title label
+   TGLabel             *fWarnLabel;       ///< label for warnings
+   TGTextButton        *fOK;              ///< save button
+   TGTextButton        *fCancel;          ///< cancel button
+   TStyle              *fCurStyle;        ///< style to copy or to rename
+   Int_t                fMode;            ///< 1=new, 2=rename, 3=import
+   TVirtualPad         *fCurPad;          ///< current pad from which to import
+   TList               *fTrashListFrame;  ///< to avoid memory leak
+   TList               *fTrashListLayout; ///< to avoid memory leak
 
 public:
    TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,

@@ -13,14 +13,6 @@
 #define ROOT_TGFSContainer
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFileIcon, TGFileEntry, TGFSContainer                               //
-//                                                                      //
-// Utility classes used by the file selection dialog (TGFileDialog).    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGListView.h"
 #include "TGDNDManager.h"
 

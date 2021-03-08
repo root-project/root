@@ -9,23 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TPaveStatsEditor                                                    //
-//                                                                      //
-//  Implements GUI for editing attributes of TPaveStats objects.        //                                             //
-//      all text attributes                                             //
-//      The following statistics option settings can be set:            //
-//      name, mean, RMS, overflow, underflow, integral of bins,         //
-//      Fit parameters that can be set are: Values/Names, Probability,  //
-//      Errors, Chisquare                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TPaveStatsEditor.gif">
+
+/** \class TPaveStatsEditor
+    \ingroup ged
+
+Implements GUI for editing attributes of TPaveStats objects.
+  all text attributes
+  The following statistics option settings can be set:
+  name, mean, RMS, overflow, underflow, integral of bins,
+  Fit parameters that can be set are: Values/Names, Probability,
+  Errors, Chisquare
+
 */
-//End_Html
+
 
 #include "TPaveStatsEditor.h"
 #include "TGButton.h"
