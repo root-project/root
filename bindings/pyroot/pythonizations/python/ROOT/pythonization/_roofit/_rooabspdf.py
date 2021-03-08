@@ -13,21 +13,11 @@ import cppyy
 from ROOT import pythonization
 
 
-def __cast(s):
-    # NB: not implemented, returns input
-    # If needed this function can cast the keywords
-    # I.e. one could pass `range=...` instead of `Range=...`
-    # Parameters:
-    # s: string
-    return s
-
-
 def __getter(k, v):
     # helper function to get CmdArg attribute from `RooFit` 
     # Parameters:
     # k: key of the kwarg
     # v: value of the kwarg
-    k = __cast(k)
     if isinstance(v, (tuple, list)):
         attr = getattr(cppyy.gbl.RooFit, k)(*v)
     elif isinstance(v, (dict, )):
