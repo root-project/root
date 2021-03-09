@@ -170,6 +170,15 @@ If you use the `RooDataHist::sum()` function in you own classes, please check th
 The new and corrected bin correction behaviour is:
   - `correctForBinSize`: multiply counts in each bin by the bin volume corresponding to the variables in `sumSet`
   - `inverseBinCor`: divide counts in each bin by the bin volume corresponding to the variables *not* in `sumSet`
+  - 
+### New fully parametrised Crystal Ball shape class
+
+So far, the Crystal Ball distribution has been represented in RooFit only by the `RooCBShape` class, which has a Gaussian core and a single power-law tail on one side.
+This release introduces the `RooCrystalBall` class, which implements some commom generalizations of the Crystal Ball shape:
+  - symmetric or asymmetric power-law tails on both sides
+  - different width parameters for the left and right sides of the Gaussian core
+
+The new `RooCrystalBall` class is meant to substitute the `RooDSCBShape` and `RooSDSCBShape` classes that were never part of RooFit but passed around in its user community.
 
 ## 2D Graphics Libraries
 
