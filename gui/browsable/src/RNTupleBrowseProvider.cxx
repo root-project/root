@@ -61,13 +61,22 @@ public:
 
    std::unique_ptr<RHolder> GetObject()
    {
-      return std::make_unique<RFieldHolder<void>>(fNTuple, fParentName, fFieldId);
+      return std::make_unique<RFieldHolder>(fNTuple, fParentName, fFieldId);
    }
 
    EActionKind GetDefaultAction() const override
    {
       auto range = fNTuple->GetDescriptor().GetFieldRange(fFieldId);
-      return (range.begin() == range.end()) ? kActDraw6 : kActNone;
+      if (range.begin() != range.end()) return kActNone;
+
+      auto &field = fNTuple->GetDescriptor().GetFieldDescriptor(fFieldId);
+
+      bool supported = (field.GetTypeName() == "double"s) ||  (field.GetTypeName() == "float"s) || (field.GetTypeName() == "int"s) || (field.GetTypeName() == "std::int32_t"s);
+
+      if (!supported)
+         printf("Field %s type %s not yet supported for drawing\n", field.GetFieldName().c_str(), field.GetTypeName().c_str());
+
+      return supported ? kActDraw6 : kActNone;
    }
 
    //bool IsCapable(EActionKind) const override;
