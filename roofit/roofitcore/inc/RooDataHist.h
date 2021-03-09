@@ -89,13 +89,13 @@ public:
   RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
   void getBatches(RooBatchCompute::RunContext& evalData, std::size_t begin, std::size_t len) const override;
 
-  Double_t sum(Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) const ;
-  Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) ;
+  Double_t sum(bool correctForBinSize, bool inverseCorr=false) const ;
+  Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, bool correctForBinSize, bool inverseCorr=false) ;
   Double_t sum(const RooArgSet& sumSet,
                const RooArgSet& sliceSet,
-               Bool_t correctForBinSize,
-               Bool_t inverseCorr,
-               const std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >& ranges,
+               bool correctForBinSize,
+               bool inverseCorr,
+               const std::map<const RooAbsArg*, std::pair<double, double> >& ranges,
                std::function<double(int)> getBinScale = [](int){ return 1.0; } );
 
   /// Return weight of i-th bin. \see getIndex()

@@ -331,7 +331,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code,
   // Partial integration scenario, retrieve set of variables, calculate partial
   // sum, figure out integration ranges (if needed)
   RooArgSet intSet;
-  std::map<const RooAbsArg*, std::pair<Double_t, Double_t> > ranges;
+  std::map<const RooAbsArg*, std::pair<double, double> > ranges;
   for (unsigned int n=0; n < pdfObsList.size() && n < histObsList.size(); ++n) {
     const auto pa = pdfObsList[n];
     const auto ha = histObsList[n];

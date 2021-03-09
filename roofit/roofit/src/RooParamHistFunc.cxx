@@ -257,7 +257,7 @@ Double_t RooParamHistFunc::analyticalIntegralWN(Int_t code, const RooArgSet* /*n
   //
   //  - for simplicity, there is no check for the possibility of full-range integration with another overload of
   //    RooDataHist::sum
-  std::map<const RooAbsArg*, std::pair<Double_t, Double_t> > ranges;
+  std::map<const RooAbsArg*, std::pair<double, double> > ranges;
   for (const auto obs : _x) {
     ranges[obs] = RooHelpers::getRangeOrBinningInterval(obs, rangeName);
   }
@@ -266,5 +266,5 @@ Double_t RooParamHistFunc::analyticalIntegralWN(Int_t code, const RooArgSet* /*n
 
   auto integrationSet = _dh.get();
   RooArgSet sliceSet{};
-  return const_cast<RooDataHist&>(_dh).sum(*integrationSet, sliceSet, kTRUE, kFALSE, ranges, getBinScale);
+  return const_cast<RooDataHist&>(_dh).sum(*integrationSet, sliceSet, true, false, ranges, getBinScale);
 }
