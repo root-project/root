@@ -47,27 +47,25 @@ public:
          auto p = dynamic_cast<RFieldHolder<void>*> (obj.get());
          if (!p) return false;
 
-         printf("Try to draw\n");
-
          auto tuple = p->GetNTuple();
+         std::string name = p->GetParentName();
          auto id = p->GetId();
 
          auto &field = tuple->GetDescriptor().GetFieldDescriptor(id);
+         name.append(field.GetFieldName());
 
-         std::string title = "Drawing of RField "s + field.GetFieldName();
+         std::string title = "Drawing of RField "s + name;
 
          auto h1 = new TH1F("hdraw", title.c_str(), 100, -20, 20);
          h1->SetDirectory(nullptr);
 
-         auto view = tuple->GetView<double>(field.GetFieldName());
+         auto view = tuple->GetView<double>(name);
          for (auto i : tuple->GetEntryRange())
             h1->Fill(view(i));
 
          pad->GetListOfPrimitives()->Clear();
 
          pad->GetListOfPrimitives()->Add(h1, opt.c_str());
-
-         printf("Add to pad primitives\n");
 
          return true;
       });
