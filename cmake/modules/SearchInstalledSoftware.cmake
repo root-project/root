@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -1868,8 +1868,9 @@ endif()
 
 #------------------------------------------------------------------------------------
 # Check if the pyspark package is installed on the system.
-# The distributed RDataFrame module has been tested on pyspark version 2.4 and above.
-if(dataframe_distpyspark)
+# Needed to run tests of the distributed RDataFrame module that use pyspark.
+# The functionality has been tested with pyspark 2.4 and above.
+if(test_distrdf_pyspark)
   message(STATUS "Looking for PySpark")
 
   if(fail-on-missing)
@@ -1878,8 +1879,8 @@ if(dataframe_distpyspark)
 
     find_package(PySpark 2.4)
     if(NOT PySpark_FOUND)
-      message(STATUS "Switching OFF 'dataframe_distpyspark' option")
-      set(dataframe_distpyspark OFF CACHE BOOL "Disabled because PySpark not found" FORCE)
+      message(STATUS "Switching OFF 'test_distrdf_pyspark' option")
+      set(test_distrdf_pyspark OFF CACHE BOOL "Disabled because PySpark not found" FORCE)
     endif()
 
   endif()
