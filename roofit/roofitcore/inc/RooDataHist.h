@@ -27,11 +27,14 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <unordered_map>
 
+class TAxis ;
 class TObject ;
 class RooAbsArg;
 class RooAbsReal ;
 class RooAbsCategory ;
+class RooCategory ;
 class Roo1DTable ;
 class RooPlot;
 class RooArgSet ;
@@ -242,7 +245,7 @@ protected:
  
   mutable std::size_t _curIndex{std::numeric_limits<std::size_t>::max()}; // Current index
 
-  mutable RooCacheManager<std::vector<Double_t> > _pbinvCacheMgr ; //! Cache manager for arrays of partial bin volumes
+  mutable std::unordered_map<int,std::vector<double>> _pbinvCache ; //! Cache for arrays of partial bin volumes
   std::vector<RooAbsLValue*> _lvvars ; //! List of observables casted as RooAbsLValue
   std::vector<std::unique_ptr<const RooAbsBinning>> _lvbins ; //! List of used binnings associated with lvalues
   mutable std::vector<std::vector<Double_t> > _binbounds; //! list of bin bounds per dimension
