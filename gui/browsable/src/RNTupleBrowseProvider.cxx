@@ -38,11 +38,13 @@ class RFieldElement : public RElement {
 protected:
    std::shared_ptr<ROOT::Experimental::RNTupleReader> fNTuple;
 
+   std::string fParentName;
+
    ROOT::Experimental::DescriptorId_t fFieldId;
 
 public:
 
-   RFieldElement(std::shared_ptr<ROOT::Experimental::RNTupleReader> tuple, const ROOT::Experimental::DescriptorId_t id) : RElement(), fNTuple(tuple), fFieldId(id) {}
+   RFieldElement(std::shared_ptr<ROOT::Experimental::RNTupleReader> tuple, const std::string &parent_name, const ROOT::Experimental::DescriptorId_t id) : RElement(), fNTuple(tuple), fParentName(parent_name), fFieldId(id) {}
 
    virtual ~RFieldElement() = default;
 
@@ -59,7 +61,7 @@ public:
 
    std::unique_ptr<RHolder> GetObject()
    {
-      return std::make_unique<RFieldHolder<void>>(fNTuple, fFieldId);
+      return std::make_unique<RFieldHolder<void>>(fNTuple, fParentName, fFieldId);
    }
 
    EActionKind GetDefaultAction() const override
@@ -130,10 +132,11 @@ class RFieldsIterator : public RLevelIter {
 
    std::shared_ptr<ROOT::Experimental::RNTupleReader> fNTuple;
    std::vector<ROOT::Experimental::DescriptorId_t> fFieldIds;
+   std::string fParentName;
    int fCounter{-1};
 
 public:
-   RFieldsIterator(std::shared_ptr<ROOT::Experimental::RNTupleReader> tuple, std::vector<ROOT::Experimental::DescriptorId_t> &&ids) : fNTuple(tuple), fFieldIds(ids)
+   RFieldsIterator(std::shared_ptr<ROOT::Experimental::RNTupleReader> tuple, std::vector<ROOT::Experimental::DescriptorId_t> &&ids, const std::string &parent_name = ""s) : fNTuple(tuple), fFieldIds(ids), fParentName(parent_name)
    {
    }
 
@@ -173,7 +176,7 @@ public:
 
    std::shared_ptr<RElement> GetElement() override
    {
-      return std::make_shared<RFieldElement>(fNTuple, fFieldIds[fCounter]);
+      return std::make_shared<RFieldElement>(fNTuple, fParentName, fFieldIds[fCounter]);
    }
 };
 
@@ -186,7 +189,13 @@ std::unique_ptr<RLevelIter> RFieldElement::GetChildsIter()
       ids.emplace_back(f.GetId());
 
    if (ids.size() == 0) return nullptr;
-   return std::make_unique<RFieldsIterator>(fNTuple, std::move(ids));
+
+   std::string prefix = fParentName;
+   auto &fld = fNTuple->GetDescriptor().GetFieldDescriptor(fFieldId);
+   prefix.append(fld.GetFieldName());
+   prefix.append(".");
+
+   return std::make_unique<RFieldsIterator>(fNTuple, std::move(ids), prefix);
 }
 
 std::unique_ptr<RLevelIter> RNTupleElement::GetChildsIter()
