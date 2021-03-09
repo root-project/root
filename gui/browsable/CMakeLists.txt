@@ -118,3 +118,12 @@ ROOT_LINKER_LIBRARY(ROOTNTupleDraw6Provider
      Gpad
 )
 
+ROOT_LINKER_LIBRARY(ROOTNTupleDraw7Provider
+     src/RNTupleDraw7Provider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
+     Hist
+     ROOTGpadv7
+)
+
