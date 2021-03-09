@@ -40,8 +40,8 @@ def _fitTo(self, *args, **kwargs):
     if not kwargs:
         return self._OriginalFitTo(*args)
     else:
-        sargs = [__getter(k, v) for k, v in kwargs.items()]
-        return self._OriginalFitTo(*args, *sargs)
+        nargs = args + tuple((__getter(k, v) for k, v in kwargs.items()))
+        return self._OriginalFitTo(*nargs)
 
 
 @pythonization()
