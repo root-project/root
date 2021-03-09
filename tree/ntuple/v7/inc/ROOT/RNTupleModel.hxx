@@ -67,8 +67,18 @@ public:
    /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> MakeField(std::string_view fieldName, ArgsT&&... args) {
-      EnsureValidFieldName(fieldName);
-      auto field = std::make_unique<RField<T>>(fieldName);
+      return MakeField<T>({fieldName, ""}, std::forward<ArgsT>(args)...);
+   }
+
+   /// Creates a new field given a `{name, description}` pair and a corresponding tree value that
+   /// is managed by a shared pointer.
+   template <typename T, typename... ArgsT>
+   std::shared_ptr<T> MakeField(std::pair<std::string_view, std::string_view> fieldNameDesc,
+      ArgsT&&... args)
+   {
+      EnsureValidFieldName(fieldNameDesc.first);
+      auto field = std::make_unique<RField<T>>(fieldNameDesc.first);
+      field->SetDescription(fieldNameDesc.second);
       auto ptr = fDefaultEntry->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
       fFieldZero->Attach(std::move(field));
       return ptr;
@@ -79,8 +89,14 @@ public:
 
    template <typename T>
    void AddField(std::string_view fieldName, T* fromWhere) {
-      EnsureValidFieldName(fieldName);
-      auto field = std::make_unique<RField<T>>(fieldName);
+      AddField<T>({fieldName, ""}, fromWhere);
+   }
+
+   template <typename T>
+   void AddField(std::pair<std::string_view, std::string_view> fieldNameDesc, T* fromWhere) {
+      EnsureValidFieldName(fieldNameDesc.first);
+      auto field = std::make_unique<RField<T>>(fieldNameDesc.first);
+      field->SetDescription(fieldNameDesc.second);
       fDefaultEntry->CaptureValue(field->CaptureValue(fromWhere));
       fFieldZero->Attach(std::move(field));
    }
