@@ -2871,7 +2871,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
    UInt_t verboseLevel = verbose ? 7 : gDebug;
-   Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (strchr(opt,'-')!=0);
+   Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (opt && strchr(opt,'-')!=0);
 
    // if non-zero, build_loc indicates where to build the shared library.
    TString build_loc = ExpandFileName(GetBuildDir());
