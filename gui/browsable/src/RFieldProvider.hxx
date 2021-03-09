@@ -37,11 +37,10 @@ using namespace std::string_literals;
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-template<typename DUMMY>
 class RFieldProvider : public RProvider {
 public:
 
-   virtual ~RFieldProvider() = default;
+   // virtual ~RFieldProvider() = default;
 
    /** Test collected entries if it looks like integer values and one can use better binning */
    TH1F *TestHistBuffer(TH1F *hist)
