@@ -268,3 +268,32 @@ TEST(RNTupleModel, EnforceValidFieldNames)
    auto otherField = otherModel->MakeField<float>("pt", 42.0);
    auto collection = model->MakeCollection("otherModel", std::move(otherModel));
 }
+
+TEST(RNTupleModel, FieldDescriptions)
+{
+   FileRaii fileGuard("test_ntuple_field_descriptions.root");
+   auto model = RNTupleModel::Create();
+
+   auto pt = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+
+   float num = 10.0;
+   model->AddField({"mass", "mass"}, &num);
+
+   auto charge = std::make_unique<RField<float>>(RField<float>("charge"));
+   charge->SetDescription("electric charge");
+   model->AddField(std::move(charge));
+
+   {
+      RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   std::vector<std::string> fieldDescriptions;
+   for (auto& f: ntuple->GetDescriptor().GetTopLevelFields()) {
+      fieldDescriptions.push_back(f.GetFieldDescription());
+   }
+   ASSERT_EQ(3, fieldDescriptions.size());
+   EXPECT_EQ(std::string("transverse momentum"), fieldDescriptions[0]);
+   EXPECT_EQ(std::string("mass"), fieldDescriptions[1]);
+   EXPECT_EQ(std::string("electric charge"), fieldDescriptions[2]);
+}

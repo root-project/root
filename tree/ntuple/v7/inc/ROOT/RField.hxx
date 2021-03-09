@@ -229,6 +229,7 @@ public:
    bool IsSimple() const { return fIsSimple; }
    /// Get the field's description
    std::string GetDescription() const { return fDescription; }
+   void SetDescription(std::string_view description) { fDescription = std::string(description); }
 
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
