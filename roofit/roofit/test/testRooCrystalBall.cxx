@@ -3,6 +3,7 @@
 #include "RooCrystalBall.h"
 #include "RooCBShape.h"
 #include "RooDSCBShape.h"
+#include "RooSDSCBShape.h"
 
 #include "RooRealVar.h"
 #include "RooGaussian.h"
@@ -12,6 +13,7 @@
 #include "RooGenericPdf.h"
 #include "RooNumIntConfig.h"
 #include "RooDataSet.h"
+#include "RooFormulaVar.h"
 #include "RooFitResult.h"
 
 #include "TCanvas.h"
@@ -94,11 +96,17 @@ TEST(RooCrystalBall, SingleTailAndFullySymmetric)
    RooRealVar alpha("a", "a", 1., 1.E-6, 100.);
    RooRealVar n("n", "n", 1., 1.E-6, 100.);
 
+   // To get a right tail we need to flip the sign of alpha
+   RooFormulaVar minusAlpha("minusA", "-x[0]", RooArgList(alpha));
+
    // in the fully symmetric case, we also compare with the old implementation `RooCBShape`
    RooCrystalBall crystalBallOnlyLeftTail("cb1", "cb1", x, x0, sigma, alpha, n);
-   RooCrystalBall crystalBallOnlyRightTail("cb2", "cb2", x, x0, sigma, alpha, n, RooCrystalBall::TailSide::Right);
-   RooCrystalBall crystalBallFullySymmetric("cb3", "cb3", x, x0, sigma, alpha, n, RooCrystalBall::TailSide::Both);
-   RooCBShape crystalBallOld("cbOld", "cbOld", x, x0, sigma, alpha, n);
+   RooCrystalBall crystalBallOnlyRightTail("cb2", "cb2", x, x0, sigma, minusAlpha, n);
+   RooCrystalBall crystalBallFullySymmetric("cb3", "cb3", x, x0, sigma, alpha, n, true);
+
+   RooCBShape crystalBallOnlyLeftTailOld("cb1Old", "cb3Old", x, x0, sigma, alpha, n);
+   RooCBShape crystalBallOnlyRightTailOld("cb2Old", "cb2Old", x, x0, sigma, minusAlpha, n);
+   RooSDSCBShape crystalBallFullySymmetricOld("cb3Old", "cb3Old", x, x0, sigma, alpha, n);
 
    auto formulaOnlyLeftTail = makeCrystalBallFormulaOnlyLeftTail();
    auto formulaOnlyRightTail = makeCrystalBallFormulaOnlyRightTail();
@@ -129,13 +137,21 @@ TEST(RooCrystalBall, SingleTailAndFullySymmetric)
                      << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
 
                   // Compare left tail only version with RooCBShape which should match
-                  EXPECT_FLOAT_EQ(crystalBallOld.getVal(), crystalBallOnlyLeftTailRef->getVal())
+                  EXPECT_FLOAT_EQ(crystalBallOnlyLeftTailOld.getVal(), crystalBallOnlyLeftTailRef->getVal())
                      << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
 
                   EXPECT_FLOAT_EQ(crystalBallOnlyRightTail.getVal(), crystalBallOnlyRightTailRef->getVal())
                      << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
 
+                  // Compare right tail only version with RooCBShape which should match
+                  EXPECT_FLOAT_EQ(crystalBallOnlyRightTailOld.getVal(), crystalBallOnlyRightTailRef->getVal())
+                     << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
+
                   EXPECT_FLOAT_EQ(crystalBallFullySymmetric.getVal(), crystalBallFullySymmetricRef->getVal())
+                     << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
+
+                  // Compare fully symmetric version with RooSDSCBShape which should match
+                  EXPECT_FLOAT_EQ(crystalBallFullySymmetricOld.getVal(), crystalBallFullySymmetricRef->getVal())
                      << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
                }
             }
