@@ -2,8 +2,6 @@
 
 #include "RooCrystalBall.h"
 #include "RooCBShape.h"
-#include "RooDSCBShape.h"
-#include "RooSDSCBShape.h"
 
 #include "RooRealVar.h"
 #include "RooGaussian.h"
@@ -22,6 +20,14 @@
 #include <numeric>
 #include <string>
 #include <iostream>
+
+// You can also validate by comparing with the RooDSCBShape and RooSDSCBShape
+// classes that are floating around in the RooFit user community.
+// Some commented-out lines are kept on purpose in this test to make this as
+// easy as possible.
+//
+//#include "RooDSCBShape.h"
+//#include "RooSDSCBShape.h"
 
 #include "gtest/gtest.h"
 
@@ -106,7 +112,7 @@ TEST(RooCrystalBall, SingleTailAndFullySymmetric)
 
    RooCBShape crystalBallOnlyLeftTailOld("cb1Old", "cb3Old", x, x0, sigma, alpha, n);
    RooCBShape crystalBallOnlyRightTailOld("cb2Old", "cb2Old", x, x0, sigma, minusAlpha, n);
-   RooSDSCBShape crystalBallFullySymmetricOld("cb3Old", "cb3Old", x, x0, sigma, alpha, n);
+   //RooSDSCBShape crystalBallFullySymmetricOld("cb3Old", "cb3Old", x, x0, sigma, alpha, n);
 
    auto formulaOnlyLeftTail = makeCrystalBallFormulaOnlyLeftTail();
    auto formulaOnlyRightTail = makeCrystalBallFormulaOnlyRightTail();
@@ -151,8 +157,8 @@ TEST(RooCrystalBall, SingleTailAndFullySymmetric)
                      << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
 
                   // Compare fully symmetric version with RooSDSCBShape which should match
-                  EXPECT_FLOAT_EQ(crystalBallFullySymmetricOld.getVal(), crystalBallFullySymmetricRef->getVal())
-                     << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
+                  //EXPECT_FLOAT_EQ(crystalBallFullySymmetricOld.getVal(), crystalBallFullySymmetricRef->getVal())
+                  //  << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
                }
             }
          }
@@ -172,7 +178,7 @@ TEST(RooCrystalBall, DoubleSided)
 
    // in the symmetric Gaussian core case, we also compare with the old implementation `RooDSCBShape`
    RooCrystalBall crystalBall("crystalBall", "crystalBall", x, x0, sigma, alphaL, nL, alphaR, nR);
-   RooDSCBShape crystalBallOld("crystalBallOld", "crystalBallOld", x, x0, sigma, alphaL, nL, alphaR, nR);
+   //RooDSCBShape crystalBallOld("crystalBallOld", "crystalBallOld", x, x0, sigma, alphaL, nL, alphaR, nR);
 
    auto formula = makeCrystalBallFormulaDoubleSided();
 
@@ -201,9 +207,9 @@ TEST(RooCrystalBall, DoubleSided)
                            << theX << " " << theX0 << " " << theSigma << " " << theAlphaL << " " << theNL << " "
                            << theAlphaR << " " << theNR;
 
-                        EXPECT_FLOAT_EQ(crystalBallOld.getVal(), crystalBallRef->getVal())
-                           << theX << " " << theX0 << " " << theSigma << " " << theAlphaL << " " << theNL << " "
-                           << theAlphaR << " " << theNR;
+                        //EXPECT_FLOAT_EQ(crystalBallOld.getVal(), crystalBallRef->getVal())
+                        //   << theX << " " << theX0 << " " << theSigma << " " << theAlphaL << " " << theNL << " "
+                        //   << theAlphaR << " " << theNR;
                      }
                   }
                }
