@@ -48,15 +48,19 @@ public:
 
    virtual ~RFieldElement() = default;
 
-   /** Name of NTuple */
+   /** Name of RField */
    std::string GetName() const override { return fNTuple->GetDescriptor().GetFieldDescriptor(fFieldId).GetFieldName(); }
 
-   /** Title of NTuple */
-   std::string GetTitle() const override { return "RField title"s; }
+   /** Title of RField */
+   std::string GetTitle() const override
+   {
+      auto &fld = fNTuple->GetDescriptor().GetFieldDescriptor(fFieldId);
+      return "RField name "s + fld.GetFieldName() + " type "s + fld.GetTypeName();
+   }
 
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 
-   /** Return class of field  - for a moment using RNTuple class */
+   /** Return class of field  - for a moment using RNTuple class as dummy */
    const TClass *GetClass() const { return TClass::GetClass<ROOT::Experimental::RNTuple>(); }
 
    std::unique_ptr<RHolder> GetObject()
@@ -176,9 +180,9 @@ public:
 
       auto &field = fNTuple->GetDescriptor().GetFieldDescriptor(fFieldIds[fCounter]);
 
-      auto item = std::make_unique<RItem>(field.GetFieldName(), nchilds, "sap-icon://measuring-point");
+      auto item = std::make_unique<RItem>(field.GetFieldName(), nchilds, nchilds > 0 ? "sap-icon://split" : "sap-icon://e-care");
 
-      item->SetTitle("RField title");
+      item->SetTitle("RField name "s + field.GetFieldName() + " type "s + field.GetTypeName());
 
       return item;
    }
