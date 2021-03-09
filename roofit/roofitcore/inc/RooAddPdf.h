@@ -22,9 +22,9 @@
 #include "RooAICRegistry.h"
 #include "RooNormSetCache.h"
 #include "RooNameSet.h"
-#include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 #include "RooNameReg.h"
+
 #include <vector>
 #include <list>
 #include <utility>

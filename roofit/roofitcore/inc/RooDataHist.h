@@ -19,8 +19,6 @@
 #include "RooAbsData.h"
 #include "RooDirItem.h"
 #include "RooArgSet.h"
-#include "RooNameSet.h"
-#include "RooCacheManager.h"
 
 #include <map>
 #include <vector>
@@ -32,13 +30,8 @@
 class TAxis ;
 class TObject ;
 class RooAbsArg;
-class RooAbsReal ;
-class RooAbsCategory ;
 class RooCategory ;
-class Roo1DTable ;
 class RooPlot;
-class RooArgSet ;
-class RooLinkedList ;
 class RooAbsLValue ;
 
 class RooDataHist : public RooAbsData, public RooDirItem {

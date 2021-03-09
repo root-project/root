@@ -20,9 +20,9 @@
 #include "RooListProxy.h"
 #include "RooLinkedList.h"
 #include "RooAICRegistry.h"
-#include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 #include "RooCmdArg.h"
+
 #include <vector>
 #include <list>
 #include <string>
