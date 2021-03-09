@@ -77,13 +77,13 @@ protected:
    TGTextButton        *fCancel;          ///< Cancel-Button to reprobate the rebinned histogram
    TGCompositeFrame    *fBinXCont1;       ///< Contains the X Rebin Widgets for case 2
    TGHSlider           *fBinXSlider1;     ///< Slider to set x rebinning integer value
-   TGNumberEntryField  *fBinXNumberEntry1;// Label which shows the rebinned x bin number
+   TGNumberEntryField  *fBinXNumberEntry1;///< Label which shows the rebinned x bin number
    TGNumberEntryField  *fXOffsetNumberEntry; ///< Shows the offset to the x origin of the histogram
    TGHSlider           *fXBinOffsetSld;   ///< Add an x-offset to the origin of the histogram
 
    TGCompositeFrame    *fBinYCont1;       ///< Contains the Y Rebin Widgets for case 2
    TGHSlider           *fBinYSlider1;     ///< Slider to set y rebinning integer value
-   TGNumberEntryField  *fBinYNumberEntry1;// Label which shows the rebinned y bin number
+   TGNumberEntryField  *fBinYNumberEntry1;///< Label which shows the rebinned y bin number
    TGNumberEntryField  *fYOffsetNumberEntry; ///< Shows the offset to the y origin of the histogram
    TGHSlider           *fYBinOffsetSld;   ///< Add an y-offset to the origin of the histogram
    TGDoubleHSlider     *fSliderX;         ///< Slider to set x-axis range
