@@ -1,89 +1,70 @@
 sudo: false
-dist: trusty
 
 language: cpp
-compiler: gcc
+os: linux
+compiler: clang
 
-# caching of the build dir (which is large, so large timeout (3 minute default))
 cache:
-  timeout: 1000
-  directories:
-  - ../root_build  # the build directory
-  - ../deps        # cmake
-  - files          # testing downloads some files to the git repo dir
+  ccache: true
 
-# following http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
-# updated with https://stackoverflow.com/a/49412522/1199693 for trusty
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - ninja-build
-      - gcc-7
-      - g++-7
-      - libxpm-dev
-      - libgsl0-dev
-      - libfftw3-dev
-      - libafterimage-dev
-      - libftgl-dev
-      - libgl2ps-dev
-      - libglew-dev
-      - liblzma-dev
+# Do not build our sync branch.
+branches:
+  only:
+    - master
+    - Travis*
 
-# following http://stackoverflow.com/a/33203355/1199693 and https://github.com/Microsoft/GSL/blob/master/.travis.yml
-before_install:
-  - |
-    DEPS_DIR="${TRAVIS_BUILD_DIR}/../deps"
-    mkdir -p "${DEPS_DIR}"
+# Without the top-level env, no job will be allowed to fail.
+env:
 
-install:
-  - mkdir -p "${TRAVIS_BUILD_DIR}"/../root_build
+matrix:
+  # Abort all builds on a single failing matrix entry.
+  fast_finish: true
 
-script:
-  - cd "${TRAVIS_BUILD_DIR}"/../root_build
-  - |
-    if [[ -f touch_mtimes.txt ]]; then
-      while read mtime fn; do
-        touch -c -m -d "@$mtime" $fn
-      done < touch_mtimes.txt
-      
-      # touch all git repo files to set mtimes to older than oldest build dir file
-      # to ensure ninja will not rebuild them
-      cut -f 1 -d ' ' touch_mtimes.txt | sort | read OLDEST_MTIME
-      export OLDEST_MTIME=$((OLDEST_MTIME-1))
-      find "${TRAVIS_BUILD_DIR}" -type f -exec touch -c -m -d "@$OLDEST_MTIME" {} \;
-      
-      # touch changed git files to trigger their rebuild
-      if [[ -f previous_git_commit.txt ]]; then
-        read PREVIOUS_GIT_COMMIT < previous_git_commit.txt
-        export PREVIOUS_GIT_COMMIT
-      else
-        # MANUAL SETTING FOR BOOTSTRAPPING
-        export PREVIOUS_GIT_COMMIT="HEAD~1"
-      fi
-      cd "${TRAVIS_BUILD_DIR}"
-      changed_files=`git diff --name-only $PREVIOUS_GIT_COMMIT HEAD`
-      echo "Previously cached Travis build based on git commit ${PREVIOUS_GIT_COMMIT}."
-      echo "... changed files since then:"
-      echo $changed_files
-      touch `echo $changed_files`
-      cd "${TRAVIS_BUILD_DIR}"/../root_build
-    else
-      cmake -G Ninja "${TRAVIS_BUILD_DIR}" -DCMAKE_C_COMPILER=gcc-7 -DCMAKE_CXX_COMPILER=g++-7 -Droofit=ON -Dtesting=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF
-    fi
-  - timeout 25m ninja -j4 # -d explain
-  - cd "${TRAVIS_BUILD_DIR}/../root_build/roofit/roofitZMQ/test"
-  - ./testRooFitZMQ
-  - cd "${TRAVIS_BUILD_DIR}/../root_build/roofit/roofitcore/test"
-  - ./testRooGradMinimizer
-  - ./testMultiProcess_Vector
-  - ./testVectorNLL
-  - ./testVectorGradMinimizer
+  exclude:
+    # Note: Workaround travis-ci/travis-ci#4681
+    # Exclude default job which lacks our included environment variables.
+    - os: linux
 
-# Save the exact timestamps of the files so we can recreate them with touch in the next build.
-# N.B.: just tarring the build files doesn't work, since the git clone will still be newer.
-# The build tools (make at least) only care about order, not about absolute timestamps.
-before_cache:
-  - find . -type f -printf "%.10T@ %p\n" > touch_mtimes.txt
-  - cd "${TRAVIS_BUILD_DIR}" && git rev-parse HEAD > ../root_build/previous_git_commit.txt
+  include:
+    - env: TOOL=clang-format
+      script: &format_script
+        - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then .ci/format_script.sh; fi
+
+    - env: TOOL=clang-tidy-analyzer
+      before_script: &copy_headers
+        - echo "Copying and generating header files."
+        - echo -en "travis_fold:start:install.headers"
+        - .ci/copy_headers.sh
+        - echo -en 'travis_fold:end:install.headers\\r'
+
+      script: &tidy_script
+        - |
+          if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+            .ci/tidy_script.sh
+          fi
+
+    - env: TOOL=clang-tidy-modernize
+      before_script: *copy_headers
+      script: *tidy_script
+
+    - env: TOOL=minuit2-standalone
+      script: cd math/minuit2 && .ci/make_and_test.sh
+
+  allow_failures:
+    # clang-tidy-modernize is still experimental
+    - env: TOOL=clang-tidy-modernize
+    # a lot of code doesn't follow clang-format yet
+    - env: TOOL=clang-format
+
+
+# This will never run since there is not a clang-tidy only TOOL
+#  elif [[ "$TRAVIS_EVENT_TYPE" = "cron" ]] && [[ $TOOL == 'clang-tidy' ]]; then
+#    # We need to ignore our vendor drops.
+#    FILES_REGEX='^.*root\/(?!interpreter\/|core\/clib)'
+#
+#    echo "Running clang-tidy-3.9 against branch $TRAVIS_BRANCH."
+#    echo "run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX"
+#    run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX
+#  fi
+  
+on_failure: echo "Showing current directory contents" && ls -la
