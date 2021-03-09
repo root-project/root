@@ -1478,7 +1478,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
 /// with the N-dimensional bin volume, making the return value
 /// the integral over the function represented by this histogram.
 /// \param[in] inverseBinCor Divide by the N-dimensional bin volume.
-Double_t RooDataHist::sum(Bool_t correctForBinSize, Bool_t inverseBinCor) const 
+Double_t RooDataHist::sum(bool correctForBinSize, bool inverseBinCor) const 
 {
   checkInit() ;
 
@@ -1514,7 +1514,7 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize, Bool_t inverseBinCor) const
 /// making the return value the integral over the function
 /// represented by this histogram
 
-Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseBinCor)
+Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, bool correctForBinSize, bool inverseBinCor)
 {
   checkInit() ;
 
@@ -1522,7 +1522,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   varSave.addClone(_vars) ;
 
   RooArgSet sliceOnlySet(sliceSet);
-  sliceOnlySet.remove(sumSet,kTRUE,kTRUE) ;
+  sliceOnlySet.remove(sumSet,true,true) ;
 
   _vars = sliceOnlySet;
   std::vector<double> const * pbinv = nullptr;
@@ -1534,17 +1534,17 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   }
 
   // Calculate mask and refence plot bins for non-iterating variables
-  Bool_t* mask = new Bool_t[_vars.getSize()] ;
-  Int_t*  refBin = new Int_t[_vars.getSize()] ;
+  std::vector<bool> mask(_vars.getSize());
+  std::vector<int> refBin(_vars.getSize());
 
   for (unsigned int i = 0; i < _vars.size(); ++i) {
     const RooAbsArg*    arg   = _vars[i];
     const RooAbsLValue* argLv = _lvvars[i]; // Same as above, but cross-cast
 
     if (sumSet.find(*arg)) {
-      mask[i] = kFALSE ;
+      mask[i] = false ;
     } else {
-      mask[i] = kTRUE ;
+      mask[i] = true ;
       refBin[i] = argLv->getBin();
     }
   }
@@ -1554,14 +1554,14 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   for (Int_t ibin=0; ibin < _arrSize; ++ibin) {
 
     std::size_t tmpibin = ibin;
-    Bool_t skip(kFALSE) ;
+    Bool_t skip(false) ;
 
     // Check if this bin belongs in selected slice
     for (unsigned int ivar = 0; !skip && ivar < _vars.size(); ++ivar) {
       const Int_t idx = tmpibin / _idxMult[ivar] ;
       tmpibin -= idx*_idxMult[ivar] ;
       if (mask[ivar] && idx!=refBin[ivar])
-        skip=kTRUE ;
+        skip = true ;
     }
     
     if (!skip) {
@@ -1569,9 +1569,6 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
       total += get_wgt(ibin) * theBinVolume;
     }
   }
-
-  delete[] mask ;
-  delete[] refBin ;
 
   _vars = varSave ;
 
@@ -1595,9 +1592,9 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
 /// binVolumeInRange/totalBinVolume.
 
 Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
-	Bool_t correctForBinSize, Bool_t inverseBinCor,
-	const std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >& ranges,
-    std::function<double(int)> getBinScale)
+                          bool correctForBinSize, bool inverseBinCor,
+                          const std::map<const RooAbsArg*, std::pair<double, double> >& ranges,
+                          std::function<double(int)> getBinScale)
 {
   checkInit();
   checkBinBounds();
@@ -1605,16 +1602,16 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
   varSave.addClone(_vars);
   {
     RooArgSet sliceOnlySet(sliceSet);
-    sliceOnlySet.remove(sumSet,kTRUE,kTRUE);
+    sliceOnlySet.remove(sumSet, true, true);
     _vars = sliceOnlySet;
   }
 
   // Calculate mask and reference plot bins for non-iterating variables,
   // and get ranges for iterating variables
   std::vector<bool> mask(_vars.getSize());
-  std::vector<Int_t> refBin(_vars.getSize());
-  std::vector<Double_t> rangeLo(_vars.getSize(), -std::numeric_limits<Double_t>::infinity());
-  std::vector<Double_t> rangeHi(_vars.getSize(), +std::numeric_limits<Double_t>::infinity());
+  std::vector<int> refBin(_vars.getSize());
+  std::vector<double> rangeLo(_vars.getSize(), -std::numeric_limits<Double_t>::infinity());
+  std::vector<double> rangeHi(_vars.getSize(), +std::numeric_limits<Double_t>::infinity());
 
   for (std::size_t i = 0; i < _vars.size(); ++i) {
     const RooAbsArg* arg = _vars[i];
@@ -1636,14 +1633,14 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
   }
 
   // Loop over entire data set, skipping masked entries
-  Double_t total(0), carry(0);
+  ROOT::Math::KahanSum<double> total;
   for (Int_t ibin = 0; ibin < _arrSize; ++ibin) {
     // Check if this bin belongs in selected slice
-    Bool_t skip(kFALSE);
+    bool skip{false};
     for (int ivar = 0, tmp = ibin; !skip && ivar < int(_vars.size()); ++ivar) {
       const Int_t idx = tmp / _idxMult[ivar];
       tmp -= idx*_idxMult[ivar];
-      if (mask[ivar] && idx!=refBin[ivar]) skip=kTRUE;
+      if (mask[ivar] && idx!=refBin[ivar]) skip = true;
     }
 
     if (skip) continue;
@@ -1679,10 +1676,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
     const Double_t corrPartial = binVolumeSumSetInRange / binVolumeSumSetFull;
     if (0. == corrPartial) continue;
     const Double_t corr = correctForBinSize ? (inverseBinCor ? binVolumeSumSetFull / _binv[ibin] : binVolumeSumSetFull ) : 1.0;
-    const Double_t y = getBinScale(ibin)*(get_wgt(ibin) * corr * corrPartial) - carry;
-    const Double_t t = total + y;
-    carry = (t - total) - y;
-    total = t;
+    total += getBinScale(ibin)*(get_wgt(ibin) * corr * corrPartial);
   }
 
   _vars = varSave;
@@ -1707,7 +1701,7 @@ const std::vector<double>& RooDataHist::calculatePartialBinVolume(const RooArgSe
   pbinv = new vector<Double_t>(_arrSize);
 
   // Calculate plot bins of components from master index
-  Bool_t* selDim = new Bool_t[_vars.getSize()] ;
+  std::vector<bool> selDim(_vars.getSize());
   Int_t i(0) ;
   for (const auto v : _vars) {
     selDim[i++] = dimSet.find(*v) ? kTRUE : kFALSE ;
@@ -1729,8 +1723,6 @@ const std::vector<double>& RooDataHist::calculatePartialBinVolume(const RooArgSe
     }
     (*pbinv)[ibin] = theBinVolume ;
   }
-
-  delete[] selDim ;
 
   // Put in cache (which takes ownership) 
   _pbinvCacheMgr.setObj(&dimSet,pbinv) ;
