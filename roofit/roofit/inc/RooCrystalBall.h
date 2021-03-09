@@ -12,7 +12,6 @@ class RooRealVar;
 
 class RooCrystalBall final : public RooAbsPdf {
 public:
-   enum class TailSide { Left, Right, Both };
 
    RooCrystalBall(){};
 
@@ -21,7 +20,7 @@ public:
    RooCrystalBall(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x0, RooAbsReal &sigma,
                   RooAbsReal &alphaL, RooAbsReal &nL, RooAbsReal &alphaR, RooAbsReal &nR);
    RooCrystalBall(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x0, RooAbsReal &sigma,
-                  RooAbsReal &alpha, RooAbsReal &n, TailSide = TailSide::Left);
+                  RooAbsReal &alpha, RooAbsReal &n, bool doubleSided = false);
 
    RooCrystalBall(const RooCrystalBall &other, const char *name = 0);
    virtual TObject *clone(const char *newname) const { return new RooCrystalBall(*this, newname); }
@@ -43,10 +42,10 @@ private:
    RooRealProxy x0_;
    RooRealProxy sigmaL_;
    RooRealProxy sigmaR_;
+   RooRealProxy alphaL_;
+   RooRealProxy nL_;
 
    // optional parameters
-   std::unique_ptr<RooRealProxy> alphaL_ = nullptr;
-   std::unique_ptr<RooRealProxy> nL_ = nullptr;
    std::unique_ptr<RooRealProxy> alphaR_ = nullptr;
    std::unique_ptr<RooRealProxy> nR_ = nullptr;
 
