@@ -87,6 +87,8 @@ private:
    /// corresponding RNTuple descriptor. This on-disk ID is set in RPageSink::Create() for writing and by
    /// RFieldDescriptor::CreateField() when recreating a field / model from the stored descriptor.
    DescriptorId_t fOnDiskId = kInvalidDescriptorId;
+   /// Free text set by the user
+   std::string fDescription;
 
 protected:
    /// Collections and classes own sub fields
@@ -225,6 +227,8 @@ public:
    const RFieldBase *GetParent() const { return fParent; }
    std::vector<const RFieldBase *> GetSubFields() const;
    bool IsSimple() const { return fIsSimple; }
+   /// Get the field's description
+   std::string GetDescription() const { return fDescription; }
 
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
