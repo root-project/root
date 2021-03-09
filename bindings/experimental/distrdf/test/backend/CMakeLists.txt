@@ -19,7 +19,7 @@ ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_common test_common.py)
 ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_dist test_dist.py)
 
 # pyspark is required to run this test
-if(dataframe_distpyspark)
+if(test_distrdf_pyspark)
     ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_spark test_spark.py)
 endif()
 
