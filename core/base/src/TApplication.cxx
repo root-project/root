@@ -446,11 +446,11 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
 
          if (fFiles) {
             for (auto f: *fFiles) {
-               TObjString* file = dynamic_cast<TObjString*>(f);
+               TObjString *file = dynamic_cast<TObjString *>(f);
                if (!file) {
                   if (!dynamic_cast<TNamed*>(f)) {
                      Error("GetOptions()", "Inconsistent file entry (not a TObjString)!");
-                     f->Dump();
+                     if (f) f->Dump();
                   } // else we did not find the file.
                   continue;
                }
@@ -1223,7 +1223,7 @@ Int_t TApplication::ParseRemoteLine(const char *ln,
             script = tkn;
             script.Insert(0, "\"");
             script += "\"";
-            isScript = kFALSE;
+            // isScript = kFALSE; // [clang-tidy] never read
             break;
          }
       }
