@@ -75,7 +75,9 @@ public:
 
       auto &field = fNTuple->GetDescriptor().GetFieldDescriptor(fFieldId);
 
-      bool supported = (field.GetTypeName() == "double"s) ||  (field.GetTypeName() == "float"s) || (field.GetTypeName() == "int"s) || (field.GetTypeName() == "std::int32_t"s);
+      bool supported = (field.GetTypeName() == "double"s) ||  (field.GetTypeName() == "float"s) ||
+                       (field.GetTypeName() == "int"s) || (field.GetTypeName() == "std::int32_t"s) ||
+                       (field.GetTypeName() == "std::uint32_t"s) || (field.GetTypeName() == "std::string"s);
 
       if (!supported)
          printf("Field %s type %s not yet supported for drawing\n", field.GetFieldName().c_str(), field.GetTypeName().c_str());

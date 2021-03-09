@@ -19,6 +19,9 @@
 #include "TH1.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
+#include <map>
+#include <string>
+
 
 #include "RFieldHolder.hxx"
 
@@ -101,6 +104,40 @@ class RNTupleDraw6Provider : public RProvider {
       return h1;
    }
 
+   TH1 *FillStringHistogram(std::shared_ptr<ROOT::Experimental::RNTupleReader> &tuple, const std::string &field_name)
+   {
+      std::map<std::string, int> values;
+
+      int nentries = 0;
+
+      auto view = tuple->GetView<std::string>(field_name);
+      for (auto i : tuple->GetEntryRange()) {
+          std::string v = view(i);
+          nentries++;
+          auto iter = values.find(v);
+          if (iter != values.end())
+             iter->second++;
+          else if (values.size() >= 50)
+             return nullptr;
+          else
+             values[v] = 0;
+      }
+
+      // now create histogram with labels
+
+      std::string title = "Drawing of RField "s + field_name.c_str();
+      TH1F *h = new TH1F("h",title.c_str(),3,0,3);
+      h->SetDirectory(nullptr);
+      h->SetStats(0);
+      h->SetEntries(nentries);
+      h->SetCanExtend(TH1::kAllAxes);
+      for (auto &entry : values)
+         h->Fill(entry.first.c_str(), entry.second);
+      h->LabelsDeflate();
+      h->Sumw2(kFALSE);
+      return h;
+   }
+
 public:
 
    RNTupleDraw6Provider()
@@ -128,6 +165,10 @@ public:
             h1 = FillHistogram<int>(tuple, name);
          else if (field.GetTypeName() == "std::int32_t"s)
             h1 = FillHistogram<int32_t>(tuple, name);
+         else if (field.GetTypeName() == "std::uint32_t"s)
+            h1 = FillHistogram<uint32_t>(tuple, name);
+         else if (field.GetTypeName() == "std::string"s)
+            h1 = FillStringHistogram(tuple, name);
 
          if (!h1) return false;
 
