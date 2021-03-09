@@ -67,6 +67,7 @@ See RooAbsData::plotOn().
 #include "RooUniformBinning.h"
 #include "RooSpan.h"
 
+#include "TAxis.h"
 #include "TH1.h"
 #include "TTree.h"
 #include "TBuffer.h"
@@ -81,8 +82,7 @@ ClassImp(RooDataHist);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooDataHist::RooDataHist() :
-  _pbinvCacheMgr(0,10)
+RooDataHist::RooDataHist()
 {
   TRACE_CREATE
 }
@@ -106,7 +106,7 @@ RooDataHist::RooDataHist() :
 /// Set the thresholds at the desired bin boundaries, and construct the
 /// data hist as a function of the threshold category instead of the real variable.
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const char* binningName) : 
-  RooAbsData(name,title,vars), _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,vars)
 {
   // Initialize datastore
   _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
@@ -143,7 +143,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 /// all missing dimensions will be projected.
 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t wgt) :
-  RooAbsData(name,title,vars), _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,vars)
 {
   // Initialize datastore
   _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
@@ -170,8 +170,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, 
 			 map<string,TH1*> histMap, Double_t wgt) :
-  RooAbsData(name,title,RooArgSet(vars,&indexCat)), 
-  _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,RooArgSet(vars,&indexCat))
 {
   // Initialize datastore
   _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
@@ -196,8 +195,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, 
 			 map<string,RooDataHist*> dhistMap, Double_t wgt) :
-  RooAbsData(name,title,RooArgSet(vars,&indexCat)), 
-  _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,RooArgSet(vars,&indexCat))
 {
   // Initialize datastore
   _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
@@ -218,7 +216,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 /// values are set accordingly on the arguments in 'vars'
 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t wgt) :
-  RooAbsData(name,title,vars), _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,vars)
 {
   // Initialize datastore
   _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
@@ -275,8 +273,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
 			 const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) :
-  RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8))), 
-  _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)))
 {
   // Initialize datastore
   _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
@@ -812,7 +809,7 @@ void RooDataHist::checkBinBounds() const
 /// Copy constructor
 
 RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
-  RooAbsData(other,newname), RooDirItem(), _arrSize(other._arrSize), _idxMult(other._idxMult), _pbinvCacheMgr(other._pbinvCacheMgr,0)
+  RooAbsData(other,newname), RooDirItem(), _arrSize(other._arrSize), _idxMult(other._idxMult), _pbinvCache(other._pbinvCache)
 {
   // Allocate and initialize weight array
   assert(_arrSize == other._arrSize);
@@ -855,8 +852,7 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 
 RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 			 const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) :
-  RooAbsData(name,title,varSubset),
-  _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,varSubset)
 {
   // Initialize datastore
   _dstore = new RooTreeDataStore(name,title,*h->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache) ;
@@ -1692,19 +1688,27 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
 
 const std::vector<double>& RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const
 {
-  // Allocate cache if not yet existing
-  vector<Double_t> *pbinv = _pbinvCacheMgr.getObj(&dimSet) ;
-  if (pbinv) {
-    return *pbinv;
+  // The code bitset has all bits set to one whose position corresponds to arguments in dimSet.
+  // It is used as the key for the bin volume caching hash map.
+  int code{0};
+  {
+    int i{0} ;
+    for (auto const& v : _vars) {
+      code += ((dimSet.find(*v) ? 1 : 0) << i) ;
+      ++i;
+    }
   }
 
-  pbinv = new vector<Double_t>(_arrSize);
+  auto& pbinv = _pbinvCache[code];
+  if(!pbinv.empty()) {
+    return pbinv;
+  }
+  pbinv.resize(_arrSize);
 
   // Calculate plot bins of components from master index
   std::vector<bool> selDim(_vars.getSize());
-  Int_t i(0) ;
-  for (const auto v : _vars) {
-    selDim[i++] = dimSet.find(*v) ? kTRUE : kFALSE ;
+  for (std::size_t i = 0; i < selDim.size(); ++i) {
+    selDim[i] = (code >> i) & 1 ;
   }
 
   // Recalculate partial bin volume cache
@@ -1721,13 +1725,10 @@ const std::vector<double>& RooDataHist::calculatePartialBinVolume(const RooArgSe
         theBinVolume *= arg->getBinWidth(idx) ;
       }
     }
-    (*pbinv)[ibin] = theBinVolume ;
+    pbinv[ibin] = theBinVolume ;
   }
 
-  // Put in cache (which takes ownership) 
-  _pbinvCacheMgr.setObj(&dimSet,pbinv) ;
-
-  return *pbinv;
+  return pbinv;
 }
 
 
