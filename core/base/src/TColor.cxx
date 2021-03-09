@@ -1594,23 +1594,20 @@ void TColor::Print(Option_t *) const
 void TColor::RGB2HLS(Float_t rr, Float_t gg, Float_t bb,
                      Float_t &hue, Float_t &light, Float_t &satur)
 {
-   Float_t rnorm, gnorm, bnorm, minval, maxval, msum, mdiff, r, g, b;
-   minval = maxval =0 ;
-   r = g = b = 0;
+   Float_t r = 0, g = 0, b = 0;
    if (rr > 0) { r = rr; if (r > 1) r = 1; }
    if (gg > 0) { g = gg; if (g > 1) g = 1; }
    if (bb > 0) { b = bb; if (b > 1) b = 1; }
 
-   minval = r;
+   Float_t minval = r, maxval = r;
    if (g < minval) minval = g;
    if (b < minval) minval = b;
-   maxval = r;
    if (g > maxval) maxval = g;
    if (b > maxval) maxval = b;
 
-   rnorm = gnorm = bnorm = 0;
-   mdiff = maxval - minval;
-   msum  = maxval + minval;
+   Float_t rnorm, gnorm, bnorm;
+   Float_t mdiff = maxval - minval;
+   Float_t msum  = maxval + minval;
    light = 0.5f * msum;
    if (maxval != minval) {
       rnorm = (maxval - r)/mdiff;
