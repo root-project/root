@@ -224,12 +224,12 @@ TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
       Zero();
       return;
    }
-   if (!a1) n1=0;
-   if (!a2) n2=0;
+   if (!a1) n1 = 0;
+   if (!a2) n2 = 0;
    Ssiz_t tot = n1+n2;
    char *data = Init(tot, tot);
-   memcpy(data,    a1, n1);
-   memcpy(data+n1, a2, n2);
+   if (a1) memcpy(data,    a1, n1);
+   if (a2) memcpy(data+n1, a2, n2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1028,7 +1028,9 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
             if (n1 > n2) {
                if (n2) memmove(p + pos, cs, n2);
                memmove(p + pos + n2, p + pos + n1, rem);
-               goto finish;
+               SetSize(tot);
+               p[tot] = 0;
+               return *this;
             }
             if (p + pos < cs && cs < p + len) {
                if (p + pos + n1 <= cs)
@@ -1045,7 +1047,6 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
          }
       }
       if (n2) memmove(p + pos, cs, n2);
-finish:
       SetSize(tot);
       p[tot] = 0;
    } else {
@@ -2509,10 +2510,11 @@ char *Strip(const char *s, char c)
 
 char *StrDup(const char *str)
 {
-   if (!str) return 0;
+   if (!str) return nullptr;
 
-   char *s = new char[strlen(str)+1];
-   if (s) strcpy(s, str);
+   auto len = strlen(str)+1;
+   char *s = new char[len];
+   if (s) strncpy(s, str, len);
 
    return s;
 }
