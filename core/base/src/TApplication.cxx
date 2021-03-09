@@ -450,7 +450,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                if (!file) {
                   if (!dynamic_cast<TNamed*>(f)) {
                      Error("GetOptions()", "Inconsistent file entry (not a TObjString)!");
-                     if (f) f->Dump();
+                     if (f)
+                        f->Dump();
                   } // else we did not find the file.
                   continue;
                }
