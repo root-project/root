@@ -63,7 +63,7 @@ public:
    /** Return class of field  - for a moment using RNTuple class as dummy */
    const TClass *GetClass() const { return TClass::GetClass<ROOT::Experimental::RNTuple>(); }
 
-   std::unique_ptr<RHolder> GetObject()
+   std::unique_ptr<RHolder> GetObject() override
    {
       return std::make_unique<RFieldHolder>(fNTuple, fParentName, fFieldId);
    }
