@@ -976,6 +976,7 @@ ROOT::Experimental::RDanglingFieldDescriptor::FromField(const Detail::RFieldBase
    fieldDesc.FieldVersion(field.GetFieldVersion())
       .TypeVersion(field.GetTypeVersion())
       .FieldName(field.GetName())
+      .FieldDescription(field.GetDescription())
       .TypeName(field.GetType())
       .Structure(field.GetStructure())
       .NRepetitions(field.GetNRepetitions());
