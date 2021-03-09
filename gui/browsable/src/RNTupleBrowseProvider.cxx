@@ -16,6 +16,8 @@
 #include <ROOT/RMiniFile.hxx>
 
 #include "TClass.h"
+#include "RFieldHolder.hxx"
+
 
 using namespace std::string_literals;
 
@@ -23,6 +25,14 @@ using namespace ROOT::Experimental::Browsable;
 
 
 // ==============================================================================================
+
+/** \class RFieldElement
+\ingroup rbrowser
+\brief Browsing element representing of RField
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2021-03-08
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RFieldElement : public RElement {
 protected:
@@ -44,14 +54,30 @@ public:
 
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 
+   /** Return class of field  - for a moment using RNTuple class */
    const TClass *GetClass() const { return TClass::GetClass<ROOT::Experimental::RNTuple>(); }
+
+   std::unique_ptr<RHolder> GetObject()
+   {
+      return std::make_unique<RFieldHolder<void>>(fNTuple, fFieldId);
+   }
+
+   EActionKind GetDefaultAction() const override
+   {
+      auto range = fNTuple->GetDescriptor().GetFieldRange(fFieldId);
+      return (range.begin() == range.end()) ? kActDraw6 : kActNone;
+   }
+
+   //bool IsCapable(EActionKind) const override;
+
+
 };
 
 // ==============================================================================================
 
 /** \class RNTupleElement
 \ingroup rbrowser
-\brief Browsing of RNTuple
+\brief Browsing element representing of RNTuple
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2021-03-08
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
@@ -62,7 +88,10 @@ protected:
    std::shared_ptr<ROOT::Experimental::RNTupleReader> fNTuple;
 
 public:
-   RNTupleElement(const std::string &tuple_name, const std::string &filename);
+   RNTupleElement(const std::string &tuple_name, const std::string &filename)
+   {
+      fNTuple = ROOT::Experimental::RNTupleReader::Open(tuple_name, filename);
+   }
 
    virtual ~RNTupleElement() = default;
 
@@ -86,14 +115,15 @@ public:
 };
 
 
-RNTupleElement::RNTupleElement(const std::string &tuple_name, const std::string &filename)
-{
-   fNTuple = ROOT::Experimental::RNTupleReader::Open(tuple_name, filename);
-}
-
-
 // ==============================================================================================
 
+/** \class RFieldsIterator
+\ingroup rbrowser
+\brief Iterator over RNTuple fields
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2021-03-08
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 
 class RFieldsIterator : public RLevelIter {
@@ -145,7 +175,6 @@ public:
    {
       return std::make_shared<RFieldElement>(fNTuple, fFieldIds[fCounter]);
    }
-
 };
 
 
@@ -174,19 +203,19 @@ std::unique_ptr<RLevelIter> RNTupleElement::GetChildsIter()
 
 // ==============================================================================================
 
-/** \class RNTupleProvider
+/** \class RNTupleBrowseProvider
 \ingroup rbrowser
-\brief Provider for RNTuple classes
+\brief Provider for browsing RNTuple classes
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2021-03-08
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RNTupleProvider : public RProvider {
+class RNTupleBrowseProvider : public RProvider {
 
 public:
 
-   RNTupleProvider()
+   RNTupleBrowseProvider()
    {
       RegisterNTupleFunc([](const std::string &tuple_name, const std::string &filename) -> std::shared_ptr<RElement> {
          auto elem = std::make_shared<RNTupleElement>(tuple_name, filename);
@@ -194,10 +223,10 @@ public:
       });
    }
 
-   virtual ~RNTupleProvider()
+   virtual ~RNTupleBrowseProvider()
    {
       RegisterNTupleFunc(nullptr);
    }
 
-} newRNTupleProvider;
+} newRNTupleBrowseProvider;
 
