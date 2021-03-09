@@ -94,7 +94,7 @@ CreateHostTargetMachine(const clang::CompilerInstance& CI) {
   // 2. Figure out exactly why GlobalISel emits different branch instructions,
   //    and whether this is a problem in the framework or of the generated IR.
   // 3. Verify if the same happens with LLVM 11/12 (whatever Cling will move to
-  //    next), and possibly fix the underlaying issue in LLVM upstream's `main`.
+  //    next), and possibly fix the underlying issue in LLVM upstream's `main`.
   //
   // FIXME: Lift this restriction and allow the target to enable GlobalISel,
   // if deemed ready by upstream developers.
