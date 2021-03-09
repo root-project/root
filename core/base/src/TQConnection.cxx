@@ -111,8 +111,9 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 
    fName = method_name;
 
-   char *method = new char[strlen(method_name) + 1];
-   if (method) strcpy(method, method_name);
+   auto len = strlen(method_name) + 1;
+   char *method = new char[len];
+   if (method) strncpy(method, method_name, len);
 
    char *proto;
    char *tmp;
@@ -182,12 +183,13 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    fName      = funcname;
    fExecuting = 0;
 
-   char *method = new char[strlen(funcname) + 1];
-   if (method) strcpy(method, funcname);
+   auto len = strlen(funcname) + 1;
+   char *method = new char[len];
+   if (method) strncpy(method, funcname, len);
 
    char *proto;
    char *tmp;
-   char *params = 0;
+   char *params = nullptr;
 
    // separate method and prototype strings
 
@@ -202,11 +204,9 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    gCling->CallFunc_IgnoreExtraArgs(fFunc, true);
 
    fClass = gCling->ClassInfo_Factory();
-   TClass *cl = 0;
+   TClass *cl = nullptr;
 
-   if (!class_name)
-      ;                       // function
-   else {
+   if (class_name) {
       gCling->ClassInfo_Init(fClass, class_name);  // class
       cl = TClass::GetClass(class_name);
    }
