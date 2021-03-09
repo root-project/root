@@ -9,11 +9,9 @@
 #ifndef ROOT_Browsable_RFieldHolder
 #define ROOT_Browsable_RFieldHolder
 
-
 #include <ROOT/Browsable/RHolder.hxx>
 
 #include <ROOT/RNTuple.hxx>
-#include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RMiniFile.hxx>
 
 #include "TClass.h"

@@ -22,7 +22,7 @@
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RNTupleDraw6Provider : public RFieldProvider<void> {
+class RNTupleDraw6Provider : public RFieldProvider {
 
 public:
 
