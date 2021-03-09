@@ -161,6 +161,16 @@ or better `get_wgt(i)`, which were also supported in ROOT \<v6.24. More details 
 - RooDataHist now supports fits with RooFit's faster `BatchMode()`.
 - Lower memory footprint. If weight errors are not needed, RooDataHist now allocates only 40% of the memory that the old implementation used.
 
+### Fix bin volume correction logic in `RooDataHist::sum()`
+
+The public member function `RooDataHist::sum()` has three overloads.
+Two of these overloads accept a `sumSet` parameter to not sum over all variables.
+These two overloads previously behaved inconsistently when the `correctForBinSize` or `inverseBinCor` flags were set.
+If you use the `RooDataHist::sum()` function in you own classes, please check that it can still be used with its new logic.
+The new and corrected bin correction behaviour is:
+  - `correctForBinSize`: multiply counts in each bin by the bin volume corresponding to the variables in `sumSet`
+  - `inverseBinCor`: divide counts in each bin by the bin volume corresponding to the variables *not* in `sumSet`
+
 ## 2D Graphics Libraries
 
 - Add the method `AddPoint`to `TGraph(x,y)` and `TGraph2D(x,y,z)`, equivalent to `SetPoint(g->GetN(),x,y)`and `SetPoint(g->GetN(),x,y,z)`
