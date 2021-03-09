@@ -18,8 +18,6 @@
 
 #include "TClass.h"
 
-
-template<typename T>
 class RFieldHolder : public ROOT::Experimental::Browsable::RHolder {
    std::shared_ptr<ROOT::Experimental::RNTupleReader> fNTuple;
    std::string fParentName;
@@ -37,9 +35,6 @@ public:
    auto GetNTuple() const { return fNTuple; }
    auto GetParentName() const { return fParentName; }
    auto GetId() const { return fFieldId; }
-
 };
-
-
 
 #endif

@@ -38,13 +38,22 @@ using namespace ROOT::Experimental::Browsable;
 
 class RNTupleDraw6Provider : public RProvider {
 
+   template<typename T>
+   void FillHistogram(std::shared_ptr<ROOT::Experimental::RNTupleReader> &tuple, const std::string &field_name, TH1 *hist)
+   {
+      auto view = tuple->GetView<T>(field_name);
+      for (auto i : tuple->GetEntryRange())
+         hist->Fill(view(i));
+   }
+
 public:
 
    RNTupleDraw6Provider()
    {
+
       RegisterDraw6(TClass::GetClass<ROOT::Experimental::RNTuple>(), [this](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
 
-         auto p = dynamic_cast<RFieldHolder<void>*> (obj.get());
+         auto p = dynamic_cast<RFieldHolder*> (obj.get());
          if (!p) return false;
 
          auto tuple = p->GetNTuple();
@@ -56,12 +65,23 @@ public:
 
          std::string title = "Drawing of RField "s + name;
 
-         auto h1 = new TH1F("hdraw", title.c_str(), 100, -20, 20);
+         auto h1 = new TH1F("hdraw", title.c_str(), 100, 0, 0);
          h1->SetDirectory(nullptr);
 
-         auto view = tuple->GetView<double>(name);
-         for (auto i : tuple->GetEntryRange())
-            h1->Fill(view(i));
+         if (field.GetTypeName() == "double"s)
+            FillHistogram<double>(tuple, name, h1);
+         else if (field.GetTypeName() == "float"s)
+            FillHistogram<float>(tuple, name, h1);
+         else if (field.GetTypeName() == "int"s)
+            FillHistogram<int>(tuple, name, h1);
+         else if (field.GetTypeName() == "std::int32_t"s)
+            FillHistogram<int32_t>(tuple, name, h1);
+         else {
+            delete h1;
+            return false;
+         }
+
+         h1->BufferEmpty();
 
          pad->GetListOfPrimitives()->Clear();
 
