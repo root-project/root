@@ -1068,7 +1068,6 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title, Bool_t return
          tmpdir = mkdir(workname,title);
       delete[] workname;
       if (!tmpdir) return nullptr;
-      if (!newdir) newdir = tmpdir;
       return tmpdir->mkdir(slash+1);
    }
 
@@ -1257,7 +1256,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
                                  const size_t namesize)
 {
    size_t len = 0;
-   const char *ni = strchr(buffer, ';');
+   const char *ni = buffer ? strchr(buffer, ';') : nullptr;
 
    if (ni) {
       // Found ';'
