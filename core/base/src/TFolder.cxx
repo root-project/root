@@ -338,7 +338,8 @@ TObject *TFolder::FindObject(const char *name) const
    } else {
       ret = fFolders->FindObject(cname);
    }
-   if (cname != csname) delete [] cname;
+   if (cname != csname)
+      delete [] cname;
    return ret;
 }
 

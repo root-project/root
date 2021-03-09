@@ -113,7 +113,8 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 
    auto len = strlen(method_name) + 1;
    char *method = new char[len];
-   if (method) strncpy(method, method_name, len);
+   if (method)
+      strncpy(method, method_name, len);
 
    char *proto;
    char *tmp;
@@ -185,7 +186,8 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
 
    auto len = strlen(funcname) + 1;
    char *method = new char[len];
-   if (method) strncpy(method, funcname, len);
+   if (method)
+      strncpy(method, funcname, len);
 
    char *proto;
    char *tmp;
