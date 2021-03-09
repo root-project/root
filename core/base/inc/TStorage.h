@@ -110,13 +110,13 @@ inline Bool_t TStorage::FilledByObjectAlloc(volatile const UInt_t *const member)
    //      the object.
    // The consequence would be that those objects would be deleted twice, once
    // by the TDirectory and once automatically when going out of scope
-   // (and thus quite visible).  A false negative (which is not posible with
+   // (and thus quite visible).  A false negative (which is not possible with
    // this implementation) would have been a silent memory leak.
 
    // This will be reported by valgrind as uninitialized memory reads for
    // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
 R__INTENTIONALLY_UNINIT_BEGIN
-   return *member == kObjectAllocMemValue;
+   return *member == kObjectAllocMemValue; // NOLINT
 R__INTENTIONALLY_UNINIT_END
 }
 
