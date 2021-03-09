@@ -1,4 +1,50 @@
-// Author: Jonas Rembser, CERN  02/2021
+/*****************************************************************************
+ * Project: RooFit                                                           *
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2019, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+ *****************************************************************************/
+
+// Authors of this class:
+//    T. Skwarnicki:
+//      - modify RooCBShape to Asymmetrical Double-Sided CB
+//    Michael Wilkinson
+//      - add to RooFit source
+//    Jonas Rembser, CERN  02/2021:
+//      - merging RooDSCBShape with RooSDSCBShape to RooCrystalBall
+//      - implement possibility to have asymmetrical Gaussian core
+//      - complete rewrite of evaluation and integral code to reduce code
+//        duplication
+
+/** \class RooCrystalBall
+    \ingroup Roofit
+
+PDF implementing the generalized Asymmetrical Double-Sided Crystall Ball line shape.
+\f[
+  f(m;m_0,\sigma,\alpha_L,n_L,\alpha_R,n_R) =
+  \begin{cases}
+    A_L \cdot (B_L - \frac{m - m_0}{\sigma_L})^{-n_L}, & \mbox{for }\frac{m - m_0}{\sigma_L} < -\alpha_L \\
+    \exp \left( - \frac{1}{2} \cdot \left[ \frac{m - m_0}{\sigma_L} \right]^2 \right), & \mbox{for }\frac{m - m_0}{\sigma_L} \leq 0 \\
+    \exp \left( - \frac{1}{2} \cdot \left[ \frac{m - m_0}{\sigma_R} \right]^2 \right), & \mbox{for }\frac{m - m_0}{\sigma_R} \leq \alpha_R \\
+    A_R \cdot (B_R + \frac{m - m_0}{\sigma_R})^{-n_R}, & \mbox{otherwise}, \\
+  \end{cases}
+\f]
+times some normalization factor,
+where
+\f[
+  \begin{align}
+    A_i &= \left(\frac{n_i}{\left| \alpha_i \right|}\right)^{n_i} \cdot \exp\left(- \frac {\left| \alpha_i \right|^2}{2}\right) \\
+    B_i &= \frac{n_i}{\left| \alpha_i \right|}  - \left| \alpha_i \right| \\
+  \end{align}
+\f]
+**/
 
 #include "RooCrystalBall.h"
 #include "RooAbsReal.h"
@@ -13,8 +59,18 @@
 ClassImp(RooCrystalBall);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates the fully parametrized crystal ball shape with asymmetric Gaussian core and asymmetric tails
-
+/// Creates the fully parametrized crystal ball shape with asymmetric Gaussian core and asymmetric tails.
+///
+/// \param name Name that identifies the PDF in computations.
+/// \param title Title for plotting.
+/// \param x The variable of the PDF.
+/// \param x0 Location parameter of the Gaussian component.
+/// \param sigmaL Width parameter of the left side of the Gaussian component.
+/// \param sigmaR Width parameter of the right side of the Gaussian component.
+/// \param alphaL Location of transition to a power law on the left, in standard deviations away from the mean.
+/// \param nL Exponent of power-law tail on the left.
+/// \param alphaR Location of transition to a power law on the right, in standard deviations away from the mean.
+/// \param nR Exponent of power-law tail on the right.
 RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x0, RooAbsReal &sigmaL,
                                RooAbsReal &sigmaR, RooAbsReal &alphaL, RooAbsReal &nL, RooAbsReal &alphaR,
                                RooAbsReal &nR)
@@ -34,8 +90,17 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a crystal ball shape with symmetric Gaussian core and asymmetric tails (just like `RooDSCBShape`)
-
+/// Create a crystal ball shape with symmetric Gaussian core and asymmetric tails (just like `RooDSCBShape`).
+///
+/// \param name Name that identifies the PDF in computations.
+/// \param title Title for plotting.
+/// \param x The variable of the PDF.
+/// \param x0 Location parameter of the Gaussian component.
+/// \param sigma Width parameter of the Gaussian component.
+/// \param alphaL Location of transition to a power law on the left, in standard deviations away from the mean.
+/// \param nL Exponent of power-law tail on the left.
+/// \param alphaR Location of transition to a power law on the right, in standard deviations away from the mean.
+/// \param nR Exponent of power-law tail on the right.
 RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x0, RooAbsReal &sigma,
                                RooAbsReal &alphaL, RooAbsReal &nL, RooAbsReal &alphaR, RooAbsReal &nR)
    : RooAbsPdf(name, title), x_("x", "Dependent", this, x), x0_("x0", "X0", this, x0),
@@ -53,8 +118,17 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a crystal ball shape with symmetric Gaussian core and only a tail on the left (just like `RooCBShape`)
-
+/// Create a crystal ball shape with symmetric Gaussian core and only a tail on
+/// one side (just like `RooCBShape`) or two symmetric tails (like `RooSDSCBShape`).
+///
+/// \param name Name that identifies the PDF in computations.
+/// \param title Title for plotting.
+/// \param x The variable of the PDF.
+/// \param x0 Location parameter of the Gaussian component.
+/// \param sigma Width parameter of the Gaussian component.
+/// \param alpha Location of transition to a power law, in standard deviations away from the mean.
+/// \param n Exponent of power-law tail.
+/// \param doubleSided Whether the tail is only on one side or on both sides
 RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x0, RooAbsReal &sigma,
                                RooAbsReal &alpha, RooAbsReal &n, TailSide tailSide)
    : RooAbsPdf(name, title), x_("x", "Dependent", this, x), x0_("x0", "X0", this, x0),
@@ -75,7 +149,7 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Copy a RooCrystalBall.
 RooCrystalBall::RooCrystalBall(const RooCrystalBall &other, const char *name)
    : RooAbsPdf(other, name), x_("x", this, other.x_), x0_("x0", this, other.x0_),
      sigmaL_("sigmaL", this, other.sigmaL_),
@@ -199,7 +273,7 @@ Double_t RooCrystalBall::analyticalIntegral(Int_t code, const char *rangeName) c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Advertise that we know the maximum of self for given (m0,alpha,n,sigma)
+/// Advertise that we know the maximum of self for given (m0,alpha,n,sigma).
 
 Int_t RooCrystalBall::getMaxVal(const RooArgSet &vars) const
 {
