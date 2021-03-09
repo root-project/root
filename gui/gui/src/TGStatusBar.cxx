@@ -20,13 +20,14 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGStatusBar                                                          //
-//                                                                      //
-// Provides a StatusBar widget.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGStatusBar
+    \ingroup guiwidgets
+
+Provides a StatusBar widget.
+
+*/
+
 
 #include "TGStatusBar.h"
 #include "TGResourcePool.h"

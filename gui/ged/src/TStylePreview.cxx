@@ -9,15 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TStylePreview                                                       //
-//                                                                      //
-//  This class may be used to preview the result of applying a style    //
-//       to a canvas. The result is shown on a clone of the object,     //
-//       in a different shown over the initial canvas.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TStylePreview
+\ingroup ged
+
+This class may be used to preview the result of applying a style
+   to a canvas. The result is shown on a clone of the object,
+   in a different shown over the initial canvas.
+
+*/
+
 
 #include "TStylePreview.h"
 #include "TStyleManager.h"

@@ -13,24 +13,6 @@
 #define ROOT_TGListView
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListView, TGLVContainer and TGLVEntry                              //
-//                                                                      //
-// A list view is a widget that can contain a number of items           //
-// arranged in a grid or list. The items can be represented either      //
-// by a string or by an icon.                                           //
-//                                                                      //
-// The TGListView is user callable. The other classes are service       //
-// classes of the list view.                                            //
-//                                                                      //
-// A list view can generate the following events:                       //
-// kC_CONTAINER, kCT_SELCHANGED, total items, selected items.           //
-// kC_CONTAINER, kCT_ITEMCLICK, which button, location (y<<16|x).       //
-// kC_CONTAINER, kCT_ITEMDBLCLICK, which button, location (y<<16|x).    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGCanvas.h"
 #include "TGWidget.h"
 #include "TGSplitter.h"

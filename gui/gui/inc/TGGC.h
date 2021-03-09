@@ -13,15 +13,6 @@
 #define ROOT_TGGC
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGGC and TGGCPool                                                    //
-//                                                                      //
-// Encapsulate a graphics context used in the low level graphics.       //
-// TGGCPool provides a pool of graphics contexts.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGObject.h"
 #include "TRefCnt.h"
 

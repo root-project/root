@@ -13,15 +13,6 @@
 #define ROOT_TGMimeTypes
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMimeTypes and TGMime                                               //
-//                                                                      //
-// This class handles mime types, used by browsers to map file types    //
-// to applications and icons. TGMime is internally used by TGMimeTypes. //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGClient.h"
 #include "TGPicture.h"
 

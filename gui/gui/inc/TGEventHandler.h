@@ -12,11 +12,6 @@
 #ifndef ROOT_TGEventHandler
 #define ROOT_TGEventHandler
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGEventHandler                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TNamed.h"
 #include "TQObject.h"

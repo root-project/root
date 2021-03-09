@@ -129,7 +129,7 @@ a single image in a canvas, you can:\n\
   pointed by c1.\n\n\
  -pad1->Print(\"xxx.ps\")\n\
   prints only the picture in the pad pointed by pad1. The size\n\
-  of the Postcript picture, by default, is computed to keep the aspect ratio\n\
+  of the PostScript picture, by default, is computed to keep the aspect ratio\n\
   of the picture on the screen, where the size along x is always 20cm. You\n\
   can set the size of the PostScript picture before generating the picture\n\
   with a command such as: gStyle->SetPaperSize(xsize,ysize) (size in cm).\n\n\
@@ -185,7 +185,7 @@ with a set of options available for interactive changing:\n\
  - fill attributes: style and foreground color\n\
  - line attributes: style, width and color\n\
  - text attributes: font, size, align and color\n\
- - marker attributesr: color, style and size\n\
+ - marker attributes: color, style and size\n\
  - a set of axis attributes\n\n\
 The buttons for primitive drawing are placed in the tool bar that can be\n\
 toggled by selecting the \"Toolbar\" item in the canvas \"View\" menu.\n\

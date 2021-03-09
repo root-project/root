@@ -13,26 +13,6 @@
 #define ROOT_TGComboBox
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGComboBox, TGComboBoxPopup                                          //
-//                                                                      //
-// A combobox (also known as a drop down listbox) allows the selection  //
-// of one item out of a list of items. The selected item is visible in  //
-// a little window. To view the list of possible items one has to click //
-// on a button on the right of the little window. This will drop down   //
-// a listbox. After selecting an item from the listbox the box will     //
-// disappear and the newly selected item will be shown in the little    //
-// window.                                                              //
-//                                                                      //
-// The TGComboBox is user callable. The TGComboBoxPopup is a service    //
-// class of the combobox.                                               //
-//                                                                      //
-// Selecting an item in the combobox will generate the event:           //
-// kC_COMMAND, kCM_COMBOBOX, combobox id, item id.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGListBox.h"
 
 class TGScrollBarElement;

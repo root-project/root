@@ -12,14 +12,6 @@
 #ifndef ROOT_TGFrame
 #define ROOT_TGFrame
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFrame, TGCompositeFrame, TGVerticalFrame, TGHorizontalFrame,       //
-// TGMainFrame, TGTransientFrame and TGGroupFrame                       //
-//                                                                      //
-// This header contains all different Frame classes.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGWindow.h"
 #include "TQObject.h"
@@ -84,22 +76,6 @@ enum EDNDFlags {
    kIsDNDTarget = BIT(1)
 };
 
-
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFrame                                                              //
-//                                                                      //
-// This class subclasses TGWindow, used as base class for some simple   //
-// widgets (buttons, labels, etc.).                                     //
-// It provides:                                                         //
-//  - position & dimension fields                                       //
-//  - an 'options' attribute (see constant above)                       //
-//  - a generic event handler                                           //
-//  - a generic layout mechanism                                        //
-//  - a generic border                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGFrame : public TGWindow, public TQObject {
 
@@ -307,18 +283,6 @@ public:
    ClassDef(TGFrame,0)  // Base class for simple widgets (button, etc.)
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGCompositeFrame                                                     //
-//                                                                      //
-// This class is the base class for composite widgets                   //
-// (menu bars, list boxes, etc.).                                       //
-//                                                                      //
-// It provides:                                                         //
-//  - a layout manager                                                  //
-//  - a frame container (TList *)                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGCompositeFrame : public TGFrame {
 
@@ -431,15 +395,6 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMainFrame                                                          //
-//                                                                      //
-// This class defines top level windows that interact with the system   //
-// Window Manager (WM or MWM for Motif Window Manager).                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 class TGMainFrame : public TGCompositeFrame {
 
 protected:
@@ -540,15 +495,6 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTransientFrame                                                     //
-//                                                                      //
-// This class defines transient windows that typically are used for     //
-// dialogs.                                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 class TGTransientFrame : public TGMainFrame {
 
 protected:
@@ -572,16 +518,6 @@ public:
    ClassDef(TGTransientFrame,0)  // Frame for dialog (transient) windows
 };
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGGroupFrame                                                         //
-//                                                                      //
-// A group frame is a composite frame with a border and a title.        //
-// It is typically used to group a number of logically related widgets  //
-// visually together.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGGroupFrame : public TGCompositeFrame {
 
@@ -640,14 +576,6 @@ public:
    ClassDef(TGGroupFrame,0)  // A composite frame with border and title
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGHeaderFrame                                                        //
-//                                                                      //
-// Horizontal Frame used to contain header buttons and splitters        //
-// in a list view. Used to have resizable column headers.               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGHeaderFrame : public TGHorizontalFrame {
 private:

@@ -68,16 +68,7 @@ public:
                UInt_t height = 25, GContext_t norm = GetDefaultGC()(),
                FontStruct_t font = GetDefaultFontStruct(),
                UInt_t option = 0, Bool_t resize =  kTRUE);
-//    TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image,
-//                TGString *label,  UInt_t row, UInt_t column,
-//                UInt_t width, UInt_t height, GContext_t norm = GetDefaultGC()(),
-//                FontStruct_t font = GetDefaultFontStruct(),
-//                UInt_t option = 0, Bool_t resize = kTRUE);
-//    TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image,
-//                const char *label, UInt_t row, UInt_t column, UInt_t width,
-//                UInt_t height, GContext_t norm = GetDefaultGC()(),
-//                FontStruct_t font = GetDefaultFontStruct(),
-//                UInt_t option = 0, Bool_t resize = kTRUE);
+
    virtual ~TGTableCell();
 
    virtual void DrawCopy(Handle_t id, Int_t x, Int_t y);

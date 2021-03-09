@@ -80,39 +80,14 @@ static const Int_t gAlignValues[] = {
     0
 };
 
-/*
-static const char *gFontList[] = {
-   "Arial",
-   "Comic Sans MS",
-   "Courier New",
-   "Georgia",
-   "Impact",
-   "Monotype",
-   "Symbol",
-   "Times New Roman",
-   "Trebuchet MS",
-   "Verdana",
-   "Webdings",
-   "Wingdings",
-   0,
-};
 
-static const char *gFontList2[] = {
-   "FreeSans",
-   "FreeSerif",
-   "FreeMono",
-   "OpenSymbol",
-   0
-};
+/** \class TGFontDialog
+    \ingroup guiwidgets
+
+Font selection dialog, allowing to select one in the list of available fonts in the system.
+
 */
 
-//_____________________________________________________________________________
-//
-// TGFontDialog
-//
-// Font selection dialog, allowing to select one in the list of available fonts
-// in the system.
-//_____________________________________________________________________________
 
 ClassImp(TGFontDialog);
 

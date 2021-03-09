@@ -13,15 +13,6 @@
 #define ROOT_TRootHelpDialog
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootHelpDialog                                                      //
-//                                                                      //
-// A TRootHelpDialog is used to display help text (or any text in a     //
-// dialog window). There is on OK button to popdown the dialog.         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TGTextView;

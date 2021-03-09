@@ -13,17 +13,6 @@
 #define ROOT_TGMenu
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMenuBar, TGPopupMenu, TGMenuTitle and TGMenuEntry                  //
-//                                                                      //
-// This header contains all different menu classes.                     //
-//                                                                      //
-// Selecting a menu item will generate the event:                       //
-// kC_COMMAND, kCM_MENU, menu id, user data.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGString.h"
 #include "TGPicture.h"
@@ -57,14 +46,13 @@ class TGMenuTitle;
 class TTimer;
 class TGSplitButton;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMenuEntry                                                          //
-//                                                                      //
-// This class contains all information about a menu entry.              //
-// It is a fully protected class used internally by TGPopupMenu.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGMenuEntry
+
+This class contains all information about a menu entry.
+It is a fully protected class used internally by TGPopupMenu.
+
+*/
+
 
 class TGMenuEntry : public TObject {
 
@@ -111,14 +99,13 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGPopupMenu                                                          //
-//                                                                      //
-// This class creates a popup menu object. Popup menu's are attached    //
-// to TGMenuBar objects.                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGPopupMenu
+
+This class creates a popup menu object. Popup menu's are attached
+to TGMenuBar objects.
+
+*/
+
 
 class TGPopupMenu : public TGFrame {
 
@@ -235,15 +222,14 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMenuTitle                                                          //
-//                                                                      //
-// This class creates a menu title. A menu title is a frame             //
-// to which a popup menu can be attached. Menu titles are automatically //
-// created when adding a popup menu to a menubar.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGMenuTitle
+
+This class creates a menu title. A menu title is a frame
+to which a popup menu can be attached. Menu titles are automatically
+created when adding a popup menu to a menubar.
+
+*/
+
 
 class TGMenuTitle : public TGFrame {
 
@@ -293,13 +279,12 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMenuBar                                                            //
-//                                                                      //
-// This class creates a menu bar.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGMenuBar
+
+This class creates a menu bar.
+
+*/
+
 
 class TGMenuBar : public TGHorizontalFrame {
 

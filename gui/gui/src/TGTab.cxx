@@ -20,21 +20,27 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTab, TGTabElement, TGTabLayout                                     //
-//                                                                      //
-// A tab widget contains a set of composite frames each with a little   //
-// tab with a name (like a set of folders with tabs).                   //
-//                                                                      //
-// The TGTab is user callable. The TGTabElement and TGTabLayout are     //
-// service classes of the tab widget.                                   //
-//                                                                      //
-// Clicking on a tab will bring the associated composite frame to the   //
-// front and generate the following event:                              //
-// kC_COMMAND, kCM_TAB, tab id, 0.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTab
+    \ingroup guiwidgets
+
+A tab widget contains a set of composite frames each with a little
+tab with a name (like a set of folders with tabs).
+
+Clicking on a tab will bring the associated composite frame to the
+front and generate the following event:
+kC_COMMAND, kCM_TAB, tab id, 0.
+
+\class TGTabElement
+\ingroup guiwidgets
+Service classes of the tab widget.
+
+\class TGTabLayout
+\ingroup guiwidgets
+Service classes of the tab widget.
+
+*/
+
 
 #include "TGTab.h"
 #include "TGResourcePool.h"
@@ -544,7 +550,7 @@ Bool_t TGTab::SetTab(const char *name, Bool_t emit)
    next();           // skip first container
 
    while ((el = (TGFrameElement *) next())) {
-      next();        // skip tab containter
+      next();        // skip tab container
       tab = (TGTabElement *)el->fFrame;
 
       if (*(tab->GetText()) == name) {

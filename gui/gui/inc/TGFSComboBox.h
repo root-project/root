@@ -13,15 +13,6 @@
 #define ROOT_TGFSComboBox
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFSComboBox, TGTreeLBEntry                                          //
-//                                                                      //
-// This is a combo box that is used in the File Selection dialog box.   //
-// It will allow the file path selection.                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGComboBox.h"
 
 #include <vector>

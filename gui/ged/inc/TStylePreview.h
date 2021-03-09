@@ -12,16 +12,6 @@
 #ifndef ROOT_TStylePreview
 #define ROOT_TStylePreview
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TStylePreview                                                       //
-//                                                                      //
-//  This class may be used to preview the result of applying a style    //
-//       to a canvas. The result is shown on a clone of the object,     //
-//       in a different shown over the initial canvas.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TCanvas;
@@ -33,9 +23,9 @@ class TVirtualPad;
 class TStylePreview : public TGTransientFrame {
 
 private:
-   TRootEmbeddedCanvas  *fEcan;                    // canvas for preview
-   TVirtualPad          *fPad;                     // original pad previewed
-   TList                *fTrashListLayout;         // to avoid memory leak
+   TRootEmbeddedCanvas  *fEcan;                    ///< canvas for preview
+   TVirtualPad          *fPad;                     ///< original pad previewed
+   TList                *fTrashListLayout;         ///< to avoid memory leak
 
 public:
    TStylePreview(const TGWindow *p, TStyle *style, TVirtualPad *currentPad);

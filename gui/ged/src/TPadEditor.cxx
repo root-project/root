@@ -10,26 +10,21 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TPadEditor                                                          //
-//                                                                      //
-//  Editor of pad/canvas objects.                                       //
-//       color and fill style,                                          //
-//      'Edit' check box sets pad/canvad editable,                      //
-//      'Crosshair' sets a cross hair on the pad,                       //
-//      'Fixed aspect ratio' can be set when resizing the pad           //
-//      'TickX' and 'TickY' set ticks along the X and Y axis            //
-//      'GridX' and 'GridY' set a grid along the X and Y axis           //
-//       pad/canvas border size can be set if a sinken or a raised      //
-//       border mode is selected; no border mode can be set to          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TPadEditor.gif">
+/** \class TPadEditor
+ \ingroup ged
+
+Editor of pad/canvas objects.
+   color and fill style,
+  'Edit' check box sets pad/canvad editable,
+  'Crosshair' sets a cross hair on the pad,
+  'Fixed aspect ratio' can be set when resizing the pad
+  'TickX' and 'TickY' set ticks along the X and Y axis
+  'GridX' and 'GridY' set a grid along the X and Y axis
+   pad/canvas border size can be set if a sinken or a raised
+   border mode is selected; no border mode can be set to
+
 */
-//End_Html
+
 
 #include "TPadEditor.h"
 #include "TGedEditor.h"

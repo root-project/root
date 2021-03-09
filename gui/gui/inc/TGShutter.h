@@ -13,17 +13,6 @@
 #define ROOT_TGShutter
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGShutter, TGShutterItem                                             //
-//                                                                      //
-// A shutter widget contains a set of shutter items that can be         //
-// open and closed like a shutter.                                      //
-// This widget is usefull to group a large number of options in         //
-// a number of categories.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGCanvas.h"
 #include "TGWidget.h"

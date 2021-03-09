@@ -12,13 +12,6 @@
 #ifndef ROOT_TArrowEditor
 #define ROOT_TArrowEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TArrowEditor                                                        //
-//                                                                      //
-//  Implements GUI for editing arrow attributes: shape, size, angle.    //                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "GuiTypes.h"
 #include "TGedFrame.h"
@@ -31,10 +24,10 @@ class TArrow;
 class TArrowEditor : public TGedFrame {
 
 protected:
-   TArrow               *fArrow;            // arrow object
-   TGComboBox           *fOptionCombo;      // arrow shapes combo box
-   TGNumberEntry        *fAngleEntry;       // opening angle entry
-   TGNumberEntry        *fSizeEntry;        // size entry
+   TArrow               *fArrow;            ///< arrow object
+   TGComboBox           *fOptionCombo;      ///< arrow shapes combo box
+   TGNumberEntry        *fAngleEntry;       ///< opening angle entry
+   TGNumberEntry        *fSizeEntry;        ///< size entry
 
    virtual void   ConnectSignals2Slots();
    TGComboBox    *BuildOptionComboBox(TGFrame* parent, Int_t id);

@@ -13,14 +13,6 @@
 #ifndef ROOT_TRootEmbeddedCanvas
 #define ROOT_TRootEmbeddedCanvas
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootEmbeddedCanvas                                                  //
-//                                                                      //
-// This class creates a TGCanvas in which a TCanvas is created. Use     //
-// GetCanvas() to get a pointer to the TCanvas.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGCanvas.h"
 

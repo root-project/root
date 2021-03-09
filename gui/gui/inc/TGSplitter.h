@@ -13,16 +13,6 @@
 #define ROOT_TGSplitter
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGSplitter, TGVSplitter and TGHSplitter                              //
-//                                                                      //
-// A splitter allows the frames left and right or above and below of    //
-// it to be resized. The frame to be resized must have the kFixedWidth  //
-// or kFixedHeight property set.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 

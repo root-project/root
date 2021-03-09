@@ -12,13 +12,6 @@
 #ifndef ROOT_TGedFrame
 #define ROOT_TGedFrame
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGedFrame                                                           //
-//                                                                      //
-//  Base editor's attribute frame - a service class.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 
@@ -51,13 +44,13 @@ private:
    TGedFrame& operator=(const TGedFrame&) = delete;
 
 protected:
-   Bool_t          fInit;        // init flag for setting signals/slots
-   TGedEditor     *fGedEditor;   // manager of this frame
-   TClass         *fModelClass;  // class corresponding to instantiated GedFrame
-   Bool_t          fAvoidSignal; // flag for executing slots
+   Bool_t          fInit;        ///< init flag for setting signals/slots
+   TGedEditor     *fGedEditor;   ///< manager of this frame
+   TClass         *fModelClass;  ///< class corresponding to instantiated GedFrame
+   Bool_t          fAvoidSignal; ///< flag for executing slots
 
-   TList          *fExtraTabs;   // addtional tabs in ged editor
-   Int_t           fPriority;    // location in GedEditor
+   TList          *fExtraTabs;   ///< addtional tabs in ged editor
+   Int_t           fPriority;    ///< location in GedEditor
 
    virtual void MakeTitle(const char *title);
 

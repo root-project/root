@@ -30,13 +30,14 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiMainFrame.                                                      //
-//                                                                      //
-// This file contains the TGMdiMainFrame class.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGMdiMainFrame.
+    \ingroup guiwidgets
+
+This file contains the TGMdiMainFrame class.
+
+*/
+
 
 #include "KeySymbols.h"
 #include "TGFrame.h"
@@ -584,7 +585,7 @@ void TGMdiMainFrame::UpdateMdiButtons()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Automatic repositionning and resizing of every MDI child window.
+/// Automatic repositioning and resizing of every MDI child window.
 /// depending on mode : tile horizontal, tile vertical, or cascade.
 
 void TGMdiMainFrame::ArrangeFrames(Int_t mode)

@@ -17,6 +17,12 @@
 
 #include <iostream>
 
+/** \class TGShapedFrame
+    \ingroup guiwidgets
+A Shaped window
+*/
+
+
 ClassImp(TGShapedFrame);
 
 ////////////////////////////////////////////////////////////////////////////////

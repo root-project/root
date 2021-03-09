@@ -9,18 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TCurlyArcEditor                                                     //
-//                                                                      //
-//  Implements GUI for editing CurlyArc attributes: radius, phi1, phi2. //                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TCurlyArcEditor.gif">
+
+/** \class TCurlyArcEditor
+    \ingroup ged
+
+Implements GUI for editing CurlyArc attributes: radius, phi1, phi2.
+
 */
-//End_Html
 
 
 #include "TCurlyArcEditor.h"

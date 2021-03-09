@@ -13,16 +13,6 @@
 #define ROOT_TGCanvas
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGCanvas and TGViewPort and TGContainer                              //
-//                                                                      //
-// A TGCanvas is a frame containing two scrollbars (horizontal and      //
-// vertical) and a viewport. The viewport acts as the window through    //
-// which we look at the contents of the container frame.                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TGHScrollBar;

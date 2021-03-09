@@ -13,18 +13,6 @@
 #define ROOT_TGProgressBar
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGProgressBar, TGHProgressBar and TGVProgressBar                     //
-//                                                                      //
-// The classes in this file implement progress bars. Progress bars can  //
-// be used to show progress of tasks taking more then a few seconds.    //
-// TGProgressBar is an abstract base class, use either TGHProgressBar   //
-// or TGVProgressBar. TGHProgressBar can in addition show the position  //
-// as text in the bar.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 

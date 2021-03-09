@@ -12,16 +12,6 @@
 #ifndef ROOT_TGedEditor
 #define ROOT_TGedEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGedEditor                                                           //
-//                                                                      //
-// Editor is a composite frame that contains GUI for editting objects   //
-// in a canvas. It looks for the class ROOT_classname + 'Editor'.       //
-//                                                                      //
-// It connects to a Canvas and listens for selected objects             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TVirtualPadEditor.h"
@@ -44,22 +34,22 @@ private:
    TGedEditor& operator=(const TGedEditor&) = delete;
 
 protected:
-   TMap              fFrameMap;         //global map of available frames
-   TMap              fExclMap;          //map of excluded editors for selected model
-   TList             fGedFrames;        //list visible of frames
+   TMap              fFrameMap;         ///< global map of available frames
+   TMap              fExclMap;          ///< map of excluded editors for selected model
+   TList             fGedFrames;        ///< list visible of frames
 
-   TGCanvas         *fCan;              //provides scroll bars
-   TGTab            *fTab;              //tab widget holding the editor
+   TGCanvas         *fCan;              ///< provides scroll bars
+   TGTab            *fTab;              ///< tab widget holding the editor
 
-   TList             fCreatedTabs;      //list of created tabs
-   TList             fVisibleTabs;      //list ofcurrently used tabs
-   TGCompositeFrame *fTabContainer;     //main tab container
+   TList             fCreatedTabs;      ///< list of created tabs
+   TList             fVisibleTabs;      ///< list ofcurrently used tabs
+   TGCompositeFrame *fTabContainer;     ///< main tab container
 
-   TObject          *fModel;            //selected object
-   TVirtualPad      *fPad;              //selected pad
-   TCanvas          *fCanvas;           //canvas related to the editor
-   TClass           *fClass;            //class of the selected object
-   Bool_t            fGlobal;           //true if editor is global
+   TObject          *fModel;            ///< selected object
+   TVirtualPad      *fPad;              ///< selected pad
+   TCanvas          *fCanvas;           ///< canvas related to the editor
+   TClass           *fClass;            ///< class of the selected object
+   Bool_t            fGlobal;           ///< true if editor is global
 
    void              ConfigureGedFrames(Bool_t objChaged);
 

@@ -20,22 +20,23 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListTree and TGListTreeItem                                        //
-//                                                                      //
-// A list tree is a widget that can contain a number of items           //
-// arranged in a tree structure. The items are represented by small     //
-// folder icons that can be either open or closed.                      //
-//                                                                      //
-// The TGListTree is user callable. The TGListTreeItem is a service     //
-// class of the list tree.                                              //
-//                                                                      //
-// A list tree can generate the following events:                       //
-// kC_LISTTREE, kCT_ITEMCLICK, which button, location (y<<16|x).        //
-// kC_LISTTREE, kCT_ITEMDBLCLICK, which button, location (y<<16|x).     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGListTree
+    \ingroup guiwidgets
+
+A list tree is a widget that can contain a number of items
+arranged in a tree structure. The items are represented by small
+folder icons that can be either open or closed.
+
+The TGListTree is user callable. The TGListTreeItem is a service
+class of the list tree.
+
+A list tree can generate the following events:
+  - kC_LISTTREE, kCT_ITEMCLICK, which button, location (y<<16|x).
+  - kC_LISTTREE, kCT_ITEMDBLCLICK, which button, location (y<<16|x).
+
+*/
+
 
 #include <cstdlib>
 #include <iostream>
@@ -537,7 +538,7 @@ void TGListTree::HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Higlight item children.
+/// Highlight item children.
 
 void TGListTree::HighlightChildren(TGListTreeItem *item, Bool_t state, Bool_t draw)
 {

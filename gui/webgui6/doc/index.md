@@ -1,5 +1,5 @@
-\defgroup webgui6 ROOT 6 web display
-\ingroup webgui
+\defgroup webgui6 ROOT 6 Web Display
+\ingroup webdisplay
 \brief To display %ROOT 6 canvases in the web browser
 
 This group contains TWebCanvas class which provides web-based TCanvasImp

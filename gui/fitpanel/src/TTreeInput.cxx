@@ -9,14 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Tree Input Widget                                                    //
-//                                                                      //
-// An dialog box that asks the user for the variables and cuts          //
-// of the selected tree in the fitpanel.                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TTreeInput
+    \ingroup fitpanel
+
+Tree Input Dialog Widget
+
+An dialog box that asks the user for the variables and cuts
+of the selected tree in the fitpanel.
+
+*/
+
 
 #include "TTreeInput.h"
 #include "TGButton.h"

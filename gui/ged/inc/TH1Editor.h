@@ -12,13 +12,6 @@
 #ifndef ROOT_TH1Editor
 #define ROOT_TH1Editor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TH1Editor                                                           //
-//                                                                      //
-//  Editor changing histogram attributes (Type, Coords, Error, Style)   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
 
@@ -40,53 +33,53 @@ class TGTextButton;
 class TH1Editor : public TGedFrame {
 
 protected:
-   TH1                 *fHist;            // histogram object
-   Bool_t               fSameOpt;         // flag for option "same"
-   TGCompositeFrame    *fBin;             // Contains the Binning Widgets
-   Int_t                fTitlePrec;       // font precision level
-   TGTextEntry         *fTitle;           // histogram title input field
-   TGHButtonGroup      *fDimGroup;        // Radiobuttongroup to change 2D <-> 3D-Plot
-   TGRadioButton       *fDim;             // 2D-Plot RadioButton
-   TGRadioButton       *fDim0;            // 3D-Plot RadioButton
-   TGLayoutHints       *fDimlh;           // layout hints for 2D-Plot RadioButton
-   TGLayoutHints       *fDim0lh;          // layout hints for 3D-Plot RadioButton
-   TGComboBox          *fTypeCombo;       // histogram type combo box
-   TGComboBox          *fCoordsCombo;     // Coordinate System combo box
-   TGComboBox          *fErrorCombo;      // Error combo box
-   TGCheckButton       *fHistOnOff;       // Draw a simple histogram with default options
-   TGCheckButton       *fAddMarker;       // Draw a Marker on top of each bin
-   TGCheckButton       *fAddB;            // Draw a Bar Chart
-   TGCheckButton       *fAddBar;          // Bar Option
-   TGCheckButton       *fAdd;             // Activate more Options
-   TGCheckButton       *fMakeHBar;        // Draw Horizontal Bar Chart
-   TGCheckButton       *fAddSimple;       // Draw a simple histogram  (==HIST draw option)
-   TGNumberEntry       *fBarWidth;        // Change the Bar Width
-   TGNumberEntry       *fBarOffset;       // Change the Bar Offset
-   TGComboBox          *fAddCombo;        // Add Lines, Bars, Fill
-   TGComboBox          *fPercentCombo;    // Percentage of the Bar which is drawn in a different color
-   TGCompositeFrame    *f3;               // Contains Histogram Type
-   TGCompositeFrame    *f6;               // Contains the Add-ComboBox (Style)
-   TGCompositeFrame    *f7;               // Contains the Marker OnOff CheckBox
-   TGCompositeFrame    *f8;               // Contains the Bar Chart CheckBox
-   TGCompositeFrame    *f9;               // Contains the Bar Option CheckBox
-   TGCompositeFrame    *f10;              // Contains the Bar Option Title
-   TGCompositeFrame    *f11;              // Contains the Bar Width/Offset NumberEntries
-   TGCompositeFrame    *f12;              // Contains fPercentCombo, fMakeHBar
-   TGCompositeFrame    *f15;              // Contains outer line CheckBox
-   TGCompositeFrame    *fBinCont;         // Contains the Rebin Widgets for case 1
-   TGCompositeFrame    *fBinCont1;        // Contains the Rebin Widgets for case 2
-   TGHSlider           *fBinSlider;       // Slider to set rebinning integer value
-   TGHSlider           *fBinSlider1;      // Slider to set rebinning integer value for ntuple histogram
-   TGNumberEntryField  *fBinNumberEntry;  // Label which shows the rebinned bin number
-   TGNumberEntryField  *fBinNumberEntry1; // Label which shows the rebinned bin number for ntuple histogram
-   TGHSlider           *fBinOffsetSld;    // Add an offset to the origin of the histogram
-   TGNumberEntryField  *fOffsetNumberEntry;// Shows the offset to the origin of the histogram
-   TGDoubleHSlider     *fSlider;          // Slider to set x-axis range
-   TGNumberEntryField  *fSldMin;          // Contains the minimum value of the x-Axis
-   TGNumberEntryField  *fSldMax;          // Contains the maximum value of the x-Axis
-   TGCheckButton       *fDelaydraw;       // Delayed drawing of the new axis range
-   TGTextButton        *fApply;           // Apply-Button to accept the rebinned histogram
-   TGTextButton        *fCancel;          // Cancel-Button to reprobate the rebinned histogram
+   TH1                 *fHist;            ///< histogram object
+   Bool_t               fSameOpt;         ///< flag for option "same"
+   TGCompositeFrame    *fBin;             ///< Contains the Binning Widgets
+   Int_t                fTitlePrec;       ///< font precision level
+   TGTextEntry         *fTitle;           ///< histogram title input field
+   TGHButtonGroup      *fDimGroup;        ///< Radiobuttongroup to change 2D <-> 3D-Plot
+   TGRadioButton       *fDim;             ///< 2D-Plot RadioButton
+   TGRadioButton       *fDim0;            ///< 3D-Plot RadioButton
+   TGLayoutHints       *fDimlh;           ///< layout hints for 2D-Plot RadioButton
+   TGLayoutHints       *fDim0lh;          ///< layout hints for 3D-Plot RadioButton
+   TGComboBox          *fTypeCombo;       ///< histogram type combo box
+   TGComboBox          *fCoordsCombo;     ///< Coordinate System combo box
+   TGComboBox          *fErrorCombo;      ///< Error combo box
+   TGCheckButton       *fHistOnOff;       ///< Draw a simple histogram with default options
+   TGCheckButton       *fAddMarker;       ///< Draw a Marker on top of each bin
+   TGCheckButton       *fAddB;            ///< Draw a Bar Chart
+   TGCheckButton       *fAddBar;          ///< Bar Option
+   TGCheckButton       *fAdd;             ///< Activate more Options
+   TGCheckButton       *fMakeHBar;        ///< Draw Horizontal Bar Chart
+   TGCheckButton       *fAddSimple;       ///< Draw a simple histogram  (==HIST draw option)
+   TGNumberEntry       *fBarWidth;        ///< Change the Bar Width
+   TGNumberEntry       *fBarOffset;       ///< Change the Bar Offset
+   TGComboBox          *fAddCombo;        ///< Add Lines, Bars, Fill
+   TGComboBox          *fPercentCombo;    ///< Percentage of the Bar which is drawn in a different color
+   TGCompositeFrame    *f3;               ///< Contains Histogram Type
+   TGCompositeFrame    *f6;               ///< Contains the Add-ComboBox (Style)
+   TGCompositeFrame    *f7;               ///< Contains the Marker OnOff CheckBox
+   TGCompositeFrame    *f8;               ///< Contains the Bar Chart CheckBox
+   TGCompositeFrame    *f9;               ///< Contains the Bar Option CheckBox
+   TGCompositeFrame    *f10;              ///< Contains the Bar Option Title
+   TGCompositeFrame    *f11;              ///< Contains the Bar Width/Offset NumberEntries
+   TGCompositeFrame    *f12;              ///< Contains fPercentCombo, fMakeHBar
+   TGCompositeFrame    *f15;              ///< Contains outer line CheckBox
+   TGCompositeFrame    *fBinCont;         ///< Contains the Rebin Widgets for case 1
+   TGCompositeFrame    *fBinCont1;        ///< Contains the Rebin Widgets for case 2
+   TGHSlider           *fBinSlider;       ///< Slider to set rebinning integer value
+   TGHSlider           *fBinSlider1;      ///< Slider to set rebinning integer value for ntuple histogram
+   TGNumberEntryField  *fBinNumberEntry;  ///< Label which shows the rebinned bin number
+   TGNumberEntryField  *fBinNumberEntry1; ///< Label which shows the rebinned bin number for ntuple histogram
+   TGHSlider           *fBinOffsetSld;    ///< Add an offset to the origin of the histogram
+   TGNumberEntryField  *fOffsetNumberEntry;///< Shows the offset to the origin of the histogram
+   TGDoubleHSlider     *fSlider;          ///< Slider to set x-axis range
+   TGNumberEntryField  *fSldMin;          ///< Contains the minimum value of the x-Axis
+   TGNumberEntryField  *fSldMax;          ///< Contains the maximum value of the x-Axis
+   TGCheckButton       *fDelaydraw;       ///< Delayed drawing of the new axis range
+   TGTextButton        *fApply;           ///< Apply-Button to accept the rebinned histogram
+   TGTextButton        *fCancel;          ///< Cancel-Button to reprobate the rebinned histogram
 
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);       // builts the Type ComboBox
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);     // builts the Coordinate ComboBox

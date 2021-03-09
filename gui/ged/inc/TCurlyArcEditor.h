@@ -12,13 +12,6 @@
 #ifndef ROOT_TCurlyArcEditor
 #define ROOT_TCurlyArcEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TCurlyArcEditor                                                     //
-//                                                                      //
-//  Implements GUI for editing CurlyArc attributes: radius, phi1, phi2. //                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
 
@@ -28,12 +21,12 @@ class TCurlyArc;
 class TCurlyArcEditor : public TGedFrame {
 
 protected:
-   TCurlyArc            *fCurlyArc;         // CurlyArc object
-   TGNumberEntry        *fRadiusEntry;      // radius entry
-   TGNumberEntry        *fPhiminEntry;      // Phimin entry
-   TGNumberEntry        *fPhimaxEntry;      // Phimax entry
-   TGNumberEntry        *fCenterXEntry;     // center x entry
-   TGNumberEntry        *fCenterYEntry;     // center y entry
+   TCurlyArc            *fCurlyArc;         ///< CurlyArc object
+   TGNumberEntry        *fRadiusEntry;      ///< radius entry
+   TGNumberEntry        *fPhiminEntry;      ///< Phimin entry
+   TGNumberEntry        *fPhimaxEntry;      ///< Phimax entry
+   TGNumberEntry        *fCenterXEntry;     ///< center x entry
+   TGNumberEntry        *fCenterYEntry;     ///< center y entry
 
    virtual void   ConnectSignals2Slots();
 

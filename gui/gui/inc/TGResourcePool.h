@@ -12,14 +12,6 @@
 #ifndef ROOT_TGResourcePool
 #define ROOT_TGResourcePool
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGResourcePool                                                       //
-//                                                                      //
-// This class implements a pool for the default GUI resource set,       //
-// like GC's, colors, fonts, etc..                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGObject.h"
 

@@ -13,16 +13,6 @@
 #define ROOT_TRootContextMenu
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootContextMenu                                                     //
-//                                                                      //
-// This class provides an interface to context sensitive popup menus.   //
-// These menus pop up when the user hits the right mouse button, and    //
-// are destroyed when the menu pops downs.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TContextMenuImp.h"
 #include "TGMenu.h"
 

@@ -13,14 +13,6 @@
 #ifndef ROOT_TRootCanvas
 #define ROOT_TRootCanvas
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootCanvas                                                          //
-//                                                                      //
-// This class creates a main window with menubar, scrollbars and a      //
-// drawing area. The widgets used are the new native ROOT GUI widgets.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TCanvasImp.h"
 #include "TGFrame.h"

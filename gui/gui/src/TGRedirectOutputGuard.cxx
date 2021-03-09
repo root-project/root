@@ -9,30 +9,38 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGRedirectOutputGuard                                                //
-//                                                                      //
-// This class provides output redirection to a TGTextView in guaranteed //
-// exception safe way. Use like this:                                   //
-// {                                                                    //
-//    TGRedirectOutputGuard guard(textview);                            //
-//    ... // do something                                               //
-//    guard.Update();                                                   //
-//    ... // do something else                                          //
-// }                                                                    //
-// when guard goes out of scope, Update() is called to flush what left  //
-// on the screed and the output is automatically redirected again to    //
-// the standard units.                                                  //
-// The exception mechanism takes care of calling the dtors              //
-// of local objects so it is exception safe.                            //
-// Optionally the output can also be saved into a file:                 //
-// {                                                                    //
-//    TGRedirectOutputGuard guard(textview, file, mode);                //
-//    ... // do something                                               //
-// }                                                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGRedirectOutputGuard
+    \ingroup guiwidgets
+
+This class provides output redirection to a TGTextView in guaranteed
+exception safe way. Use like this:
+
+```
+{
+   TGRedirectOutputGuard guard(textview);
+   ... // do something
+   guard.Update();
+   ... // do something else
+}
+```
+
+when guard goes out of scope, Update() is called to flush what left
+on the screed and the output is automatically redirected again to
+the standard units.
+The exception mechanism takes care of calling the dtors
+of local objects so it is exception safe.
+Optionally the output can also be saved into a file:
+
+```
+{
+   TGRedirectOutputGuard guard(textview, file, mode);
+   ... // do something
+}
+```
+
+*/
+
 
 #include <errno.h>
 #include <sys/types.h>

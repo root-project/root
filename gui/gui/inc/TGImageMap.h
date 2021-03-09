@@ -12,14 +12,6 @@
 #ifndef ROOT_TGImageMap
 #define ROOT_TGImageMap
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGImageMap (with TGRegion and TGRegionWithId help classes)           //
-//                                                                      //
-// A TGImageMap provides the functionality like a clickable image in    //
-// a web browser with sensitive regions (MAP HTML tag).                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGButton.h"
 #include "TPoint.h"

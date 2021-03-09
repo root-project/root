@@ -13,25 +13,6 @@
 #define ROOT_TGListBox
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListBox, TGLBContainer, TGLBEntry and TGTextLBEntry                //
-//                                                                      //
-// A listbox is a box, possibly with scrollbar, containing entries.     //
-// Currently entries are simple text strings (TGTextLBEntry).           //
-// A TGListBox looks a lot like a TGCanvas. It has a TGViewPort         //
-// containing a TGLBContainer which contains the entries and it also    //
-// has a vertical scrollbar which becomes visible if there are more     //
-// items than fit in the visible part of the container.                 //
-//                                                                      //
-// The TGListBox is user callable. The other classes are service        //
-// classes of the listbox.                                              //
-//                                                                      //
-// Selecting an item in the listbox will generate the event:            //
-// kC_COMMAND, kCM_LISTBOX, listbox id, item id.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGCanvas.h"
 #include "TGScrollBar.h"
@@ -39,14 +20,14 @@
 class TGListBox;
 class TList;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLBEntry                                                            //
-//                                                                      //
-// Basic listbox entries. Listbox entries are created by a TGListBox    //
-// and not by the user.                                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLBEntry
+    \ingroup guiwidgets
+
+Basic listbox entries. Listbox entries are created by a TGListBox
+and not by the user.
+
+*/
+
 
 class TGLBEntry : public TGFrame {
 
@@ -72,13 +53,13 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextLBEntry                                                        //
-//                                                                      //
-// Text string listbox entries.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGTextLBEntry
+    \ingroup guiwidgets
+
+Text string listbox entries.
+
+*/
+
 
 class TGTextLBEntry : public TGLBEntry {
 
@@ -129,14 +110,14 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLineLBEntry                                                        //
-//                                                                      //
-// Line style & width listbox entry.                                    //
-// Line example and width number                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLineLBEntry
+    \ingroup guiwidgets
+
+Line style & width listbox entry.
+Line example and width number
+
+*/
+
 
 class TGLineLBEntry : public TGTextLBEntry {
 
@@ -172,13 +153,13 @@ public:
    ClassDef(TGLineLBEntry, 0)  // Line width listbox entry
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGIconLBEntry                                                        //
-//                                                                      //
-// Icon + text listbox entry.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGIconLBEntry
+    \ingroup guiwidgets
+
+Icon + text listbox entry.
+
+*/
+
 
 class TGIconLBEntry : public TGTextLBEntry {
 
@@ -210,14 +191,14 @@ public:
    ClassDef(TGIconLBEntry, 0)  // Icon + text listbox entry
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLBContainer                                                        //
-//                                                                      //
-// A Composite frame that contains a list of TGLBEnties.                //
-// A TGLBContainer is created by the TGListBox and not by the user.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLBContainer
+    \ingroup guiwidgets
+
+A Composite frame that contains a list of TGLBEnties.
+A TGLBContainer is created by the TGListBox and not by the user.
+
+*/
+
 
 class TGLBContainer : public TGContainer {
 
@@ -277,13 +258,13 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListBox                                                            //
-//                                                                      //
-// A TGListBox widget.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGListBox
+    \ingroup guiwidgets
+
+A TGListBox widget.
+
+*/
+
 
 class TGListBox : public TGCompositeFrame, public TGWidget {
 

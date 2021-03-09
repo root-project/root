@@ -13,15 +13,6 @@
 #ifndef ROOT_TGNumberEntry
 #define ROOT_TGNumberEntry
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGNumberEntry, TGNumberEntryField and TGNumberFormat                 //
-//                                                                      //
-// TGNumberEntry is a number entry input widget with up/down buttons.   //
-// TGNumberEntryField is a number entry input widget.                   //
-// TGNumberFormat contains enum types to specify the numeric format .   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TGTextEntry.h"

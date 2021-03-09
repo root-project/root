@@ -20,23 +20,24 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListView, TGLVContainer and TGLVEntry                              //
-//                                                                      //
-// A list view is a widget that can contain a number of items           //
-// arranged in a grid or list. The items can be represented either      //
-// by a string or by an icon.                                           //
-//                                                                      //
-// The TGListView is user callable. The other classes are service       //
-// classes of the list view.                                            //
-//                                                                      //
-// A list view can generate the following events:                       //
-// kC_CONTAINER, kCT_SELCHANGED, total items, selected items.           //
-// kC_CONTAINER, kCT_ITEMCLICK, which button, location (y<<16|x).       //
-// kC_CONTAINER, kCT_ITEMDBLCLICK, which button, location (y<<16|x).    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGListView
+    \ingroup guiwidgets
+
+A list view is a widget that can contain a number of items
+arranged in a grid or list. The items can be represented either
+by a string or by an icon.
+
+The TGListView is user callable. The other classes are service
+classes of the list view.
+
+A list view can generate the following events:
+  - kC_CONTAINER, kCT_SELCHANGED, total items, selected items.
+  - kC_CONTAINER, kCT_ITEMCLICK, which button, location (y<<16|x).
+  - kC_CONTAINER, kCT_ITEMDBLCLICK, which button, location (y<<16|x).
+
+*/
+
 
 #include "TGListView.h"
 #include "TGPicture.h"
@@ -310,7 +311,7 @@ void TGLVEntry::SetPictures(const TGPicture *bigpic, const TGPicture *smallpic)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Redraw list view item.
-/// List view item is placed and layouted in the container frame,
+/// List view item is placed and laid out in the container frame,
 /// but is drawn in viewport.
 
 void TGLVEntry::DoRedraw()
@@ -358,8 +359,8 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
          gVirtualX->SetForeground(fNormGC, fgBlackPixel);
       }
    }
-   // This if tries to print the elements with ... appened at the end if
-   // the widht of the string is longer than that of the column
+   // This if tries to print the elements with ... appended at the end if
+   // the width of the string is longer than that of the column
    if (fViewMode == kLVDetails && fSubnames && fCpos && fJmode && fCtw) {
       TString tmpString = *fItemName;
       Int_t ftmpWidth = gVirtualX->TextWidth(fFontStruct, tmpString,

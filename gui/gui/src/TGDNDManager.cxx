@@ -56,12 +56,14 @@ TGDNDManager *gDNDManager = 0;
 
 Cursor_t TGDragWindow::fgDefaultCursor = kNone;
 
-//_____________________________________________________________________________
-//
-// TGDragWindow
-//
-// Window used as drag icon during drag and drop operations.
-//_____________________________________________________________________________
+
+/** \class TGDragWindow
+    \ingroup guiwidgets
+
+Window used as drag icon during drag and drop operations.
+
+*/
+
 
 ClassImp(TGDragWindow);
 
@@ -95,7 +97,7 @@ TGDragWindow::TGDragWindow(const TGWindow *p, Pixmap_t pic, Pixmap_t mask,
    wattr.fOverrideRedirect = kTRUE;
 
    // This input window is used to make the dragging smoother when using
-   // highly complicated shapped windows (like labels and semitransparent
+   // highly complicated shaped windows (like labels and semitransparent
    // icons), for some obscure reason most of the motion events get lost
    // while the pointer is over the shaped window.
 
@@ -550,7 +552,7 @@ void TGDNDManager::SendDNDPosition(Window_t target, int x, int y,
    event.fUser[0] = fMain->GetId();  // from;
    event.fUser[1] = 0L;
 
-   event.fUser[2] = (x << 16) | y;   // root coodinates
+   event.fUser[2] = (x << 16) | y;   // root coordinates
    event.fUser[3] = timestamp;       // timestamp for retrieving data
    event.fUser[4] = action;          // requested action
 
@@ -664,7 +666,7 @@ Bool_t TGDNDManager::HandleDNDEnter(Window_t src, Long_t vers, Atom_t dataTypes[
       fDraggerTypes[3] = kNone;
    }
 
-   // the following is not strictly neccessary, unless the previous
+   // the following is not strictly necessary, unless the previous
    // dragging application crashed without sending XdndLeave
    if (fLocalTarget) fLocalTarget->HandleDNDLeave();
    fLocalTarget = 0;

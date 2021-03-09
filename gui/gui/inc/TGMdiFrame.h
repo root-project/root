@@ -33,13 +33,6 @@
 #ifndef ROOT_TGMdiFrame
 #define ROOT_TGMdiFrame
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiFrame.                                                          //
-//                                                                      //
-// This file contains the TGMdiFrame class.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 

@@ -12,29 +12,6 @@
 #ifndef ROOT_TGColorSelect
 #define ROOT_TGColorSelect
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGColorFrame, TG16ColorSelector, TGColorPopup and TGColorSelect.     //
-//                                                                      //
-// The TGColorFrame is a small frame with border showing a specific     //
-// color.                                                               //
-//                                                                      //
-// The TG16ColorSelector is a composite frame with 16 TGColorFrames.    //
-//                                                                      //
-// The TGColorPopup is a popup containing a TG16ColorSelector and a     //
-// "More..." button which popups up a TGColorDialog allowing custom     //
-// color selection.                                                     //
-//                                                                      //
-// The TGColorSelect widget is like a checkbutton but instead of the    //
-// check mark there is color area with a little down arrow. When        //
-// clicked on the arrow the TGColorPopup pops up.                       //
-//                                                                      //
-// Selecting a color in this widget will generate the event:            //
-// kC_COLORSEL, kCOL_SELCHANGED, widget id, pixel.                      //
-// and the signal:                                                      //
-// ColorSelected(Pixel_t pixel)                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TGButton.h"

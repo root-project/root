@@ -13,16 +13,6 @@
 #define ROOT_TGText
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGText                                                               //
-//                                                                      //
-// A TGText is a multi line text buffer. It allows the text to be       //
-// loaded from file, saved to file and edited. It is used in the        //
-// TGTextEdit widget. Single line text is handled by TGTextBuffer.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TString.h"
 
 #include "TGDimension.h"

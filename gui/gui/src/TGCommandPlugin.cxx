@@ -10,8 +10,11 @@
  *************************************************************************/
 
 /** \class TGCommandPlugin
+    \ingroup guiwidgets
+
 Class used to redirect the command line input/output.
-**/
+
+*/
 
 #include "TROOT.h"
 #include "TSystem.h"

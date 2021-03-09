@@ -1,3 +1,3 @@
-\defgroup qt5webdisplay Web display with QT5
-\ingroup webgui
+\defgroup qt5webdisplay QT5 Web Display
+\ingroup webdisplay
 \brief Classes for web display using QT5

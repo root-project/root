@@ -30,13 +30,14 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiFrame.                                                          //
-//                                                                      //
-// This file contains the TGMdiFrame class.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGMdiFrame.
+\ingroup guiwidgets
+
+This file contains the TGMdiFrame class.
+
+*/
+
 
 #include "TGMdiFrame.h"
 #include "TGMdiMainFrame.h"

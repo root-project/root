@@ -13,12 +13,6 @@
 #define ROOT_TRootGuiBuilder
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootGuiBuilder                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGuiBuilder.h"
 
@@ -81,7 +75,7 @@ private:
    TGPopupMenu       *fMenuHelp;    // "Help" popup menu
    TGStatusBar       *fStatusBar;   // guibuilder status bar
    TGFrame           *fSelected;    // selected frame
-   TGMdiFrame        *fEditable;    // mdi frame where editted frame is  located
+   TGMdiFrame        *fEditable;    // mdi frame where edited frame is  located
    TGuiBldEditor     *fEditor;      // frame property editor
    const TGPicture   *fIconPic;     // icon picture
    TGPictureButton   *fStartButton; // start button

@@ -13,17 +13,6 @@
 #define ROOT_TG3DLine
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGHorizontal3DLine and TGVertical3DLine                              //
-//                                                                      //
-// A horizontal 3D line is a line that typically separates a toolbar    //
-// from the menubar.                                                    //
-// A vertical 3D line is a line that can be used to separate groups of  //
-// widgets.                                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TGHorizontal3DLine : public TGFrame {

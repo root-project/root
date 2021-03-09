@@ -13,14 +13,6 @@
 #ifndef ROOT_TRootGuiFactory
 #define ROOT_TRootGuiFactory
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootGuiFactory                                                      //
-//                                                                      //
-// This class is a factory for ROOT GUI components. It overrides        //
-// the member functions of the ABS TGuiFactory.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGuiFactory.h"
 

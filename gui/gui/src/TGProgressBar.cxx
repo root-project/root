@@ -9,17 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGProgressBar, TGHProgressBar and TGVProgressBar                     //
-//                                                                      //
-// The classes in this file implement progress bars. Progress bars can  //
-// be used to show progress of tasks taking more then a few seconds.    //
-// TGProgressBar is an abstract base class, use either TGHProgressBar   //
-// or TGVProgressBar. TGHProgressBar can in addition show the position  //
-// as text in the bar.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGProgressBar
+    \ingroup guiwidgets
+
+The classes in this file implement progress bars. Progress bars can
+be used to show progress of tasks taking more then a few seconds.
+TGProgressBar is an abstract base class, use either TGHProgressBar
+or TGVProgressBar. TGHProgressBar can in addition show the position
+as text in the bar.
+
+*/
+
 
 #include "TGProgressBar.h"
 #include "TGResourcePool.h"
@@ -323,7 +323,7 @@ void TGHProgressBar::DoRedraw()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// cconstructor
+/// Constructor
 
 TGVProgressBar::TGVProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
                               Pixel_t back, Pixel_t barcolor, GContext_t norm,

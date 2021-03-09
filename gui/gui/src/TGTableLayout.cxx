@@ -26,49 +26,48 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTableLayout                                                        //
-//                                                                      //
-// A layout manager, which places child frames in a table arranged in   //
-// rows and columns, making it easy to align many widgets next each to  //
-// other horizontally and vertivally. It uses TGTableLayoutHints        //
-// (not TGLayoutHints!!!) and works like TGMatrixLayout with the        //
-// addition that:                                                       //
-//  - Child frames can span more than one column/row.                   //
-//  - Child frames can resize with the frame.                           //
-//  - Column and row sizes are not fixed nor (optionally) homogeneous.  //
-//  - The number of columns and rows must be fully specified in the     //
-//    constructor.                                                      //
-// The gaps between all rows or columns can be specified by 'sep'       //
-// parameter in the constructor. All rows and columns will have the     //
-// same size (set by widest and the highest child frame) if the         //
-// parameter 'homogeneous' is set to kTRUE.                             //
-//                                                                      //
-//                                                                      //
-// TGTableLayoutHints                                                   //
-//                                                                      //
-// This class describes layout hints used by the TGTableLayout class.   //
-// It specifies the column/row division number on which to attach the   //
-// child frame. This number starts from 0 and goes to #_columns/#_rows  //
-// respectively (0 indicates the first row/column).                     //
-//                                                                      //
-// Below are described all parameters of TGTableLayoutHints constructor //
-//     attach_left   - the column to the left of the widget;            //
-//     attach_right  - the column to the right of the widget;           //
-//     attach_top    - the row above the widget;                        //
-//     attach_bottom - the row below the widget;                        //
-//                                                                      //
-//     hints - layout hints (combination of ELayoutHints)               //
-//                                                                      //
-// The next parameters determine the extra padding added around the     //
-// child frame. By default these are 0.                                 //
-//     padleft   - determines the extra padding added on the left       //
-//     padright  - determines the extra padding added on the right      //
-//     padtop    - determines the extra padding added on the top        //
-//     padbottom - determines the extra padding added on the bottom     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTableLayout
+    \ingroup guiwidgets
+
+A layout manager, which places child frames in a table arranged in
+rows and columns, making it easy to align many widgets next each to
+other horizontally and vertically. It uses TGTableLayoutHints
+(not TGLayoutHints!!!) and works like TGMatrixLayout with the
+addition that:
+  - Child frames can span more than one column/row.
+  - Child frames can resize with the frame.
+  - Column and row sizes are not fixed nor (optionally) homogeneous.
+  - The number of columns and rows must be fully specified in the constructor.
+The gaps between all rows or columns can be specified by 'sep'
+parameter in the constructor. All rows and columns will have the
+same size (set by widest and the highest child frame) if the
+parameter 'homogeneous' is set to kTRUE.
+
+
+\class TGTableLayoutHints
+\ingroup guiwidgets
+
+This class describes layout hints used by the TGTableLayout class.
+It specifies the column/row division number on which to attach the
+child frame. This number starts from 0 and goes to #_columns/#_rows
+respectively (0 indicates the first row/column).
+
+Below are described all parameters of TGTableLayoutHints constructor
+  - attach_left   - the column to the left of the widget;
+  - attach_right  - the column to the right of the widget;
+  - attach_top    - the row above the widget;
+  - attach_bottom - the row below the widget;
+  - hints - layout hints (combination of ELayoutHints)
+
+The next parameters determine the extra padding added around the
+child frame. By default these are 0.
+  - padleft   - determines the extra padding added on the left
+  - padright  - determines the extra padding added on the right
+  - padtop    - determines the extra padding added on the top
+  - padbottom - determines the extra padding added on the bottom
+
+*/
 
 
 #include "TGTableLayout.h"
@@ -115,12 +114,12 @@ TGTableLayout::~TGTableLayout()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find the sizes of rows and columns needed to statisfy
+/// Find the sizes of rows and columns needed to satisfy
 /// children's layout policies.
 
 void TGTableLayout::FindRowColSizes()
 {
-   // This is equiv to GTK's requisition stage
+   // This is equiv. to GTK's requisition stage
 
    FindRowColSizesInit();
    FindRowColSizesSinglyAttached();

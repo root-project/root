@@ -13,17 +13,6 @@
 #define ROOT_TGToolTip
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGToolTip                                                            //
-//                                                                      //
-// A tooltip can be a one or multiple lines help text that is displayed //
-// in a window when the mouse cursor overs a widget, without clicking   //
-// it. A small box appears with suplementary information regarding the  //
-// item being hovered over.                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TGLabel;

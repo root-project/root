@@ -12,15 +12,6 @@
 #ifndef ROOT_TGDimension
 #define ROOT_TGDimension
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGDimension, TGPosition, TGLongPosition, TGInsets and TGRectangle    //
-//                                                                      //
-// Several small geometry classes that implement dimensions             //
-// (width and height), positions (x and y), insets and rectangles.      //
-// They are trivial and their members are public.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "RtypesCore.h"
 

@@ -13,16 +13,6 @@
 #ifndef ROOT_TRootApplication
 #define ROOT_TRootApplication
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootApplication                                                     //
-//                                                                      //
-// This class create the ROOT native GUI version of the ROOT            //
-// application environment. This in contrast the Win32 version.         //
-// Once the native widgets work on Win32 this class can be folded into  //
-// the TApplication class (since all graphic will go via TVirtualX).    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TApplicationImp.h"
 

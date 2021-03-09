@@ -12,13 +12,6 @@
 #ifndef ROOT_TGMsgBox
 #define ROOT_TGMsgBox
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMsgBox                                                              //
-//                                                                      //
-// A message dialog box.                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TGWidget.h"

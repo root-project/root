@@ -9,16 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootApplication                                                     //
-//                                                                      //
-// This class create the ROOT native GUI version of the ROOT            //
-// application environment. This in contrast to the Win32 version.      //
-// Once the native widgets work on Win32 this class can be folded into  //
-// the TApplication class (since all graphic will go via TVirtualX).    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootApplication
+    \ingroup guiwidgets
+
+This class create the ROOT native GUI version of the ROOT
+application environment. This in contrast to the Win32 version.
+Once the native widgets work on Win32 this class can be folded into
+the TApplication class (since all graphic will go via TVirtualX).
+
+*/
+
 
 #include "TRootApplication.h"
 #include "TSystem.h"

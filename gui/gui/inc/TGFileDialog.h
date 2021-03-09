@@ -13,23 +13,6 @@
 #ifndef ROOT_TGFileDialog
 #define ROOT_TGFileDialog
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFileDialog                                                         //
-//                                                                      //
-// This class creates a file selection dialog. It contains a combo box  //
-// to select the desired directory. A listview with the different       //
-// files in the current directory and a combo box with which you can    //
-// select a filter (on file extensions).                                //
-// When creating a file dialog one passes a pointer to a TGFileInfo     //
-// object. In this object you can set the fFileTypes and fIniDir to     //
-// specify the list of file types for the filter combo box and the      //
-// initial directory. When the TGFileDialog ctor returns the selected   //
-// file name can be found in the TGFileInfo::fFilename field and the    //
-// selected directory in TGFileInfo::fIniDir. The fFilename and         //
-// fIniDir are deleted by the TGFileInfo dtor.                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 

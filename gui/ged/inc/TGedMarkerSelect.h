@@ -12,23 +12,6 @@
 #ifndef ROOT_TGedMarkerSelect
 #define ROOT_TGedMarkerSelect
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGedMarkerPopup and TGedMarkerSelect.                                //
-//                                                                      //
-// The TGedMarkerPopup is a popup containing all diferent styles of     //
-// markers.                                                             //
-//                                                                      //
-// The TGedMarkerSelect widget is a button with marker drawn inside     //
-// and a little down arrow. When clicked the TGMarkerPopup.             //
-//                                                                      //
-// Selecting a marker in this widget will generate the event:           //
-// kC_MARKERSEL, kMAR_SELCHANGED, widget id, pixel.                     //
-//                                                                      //
-// and the signal:                                                      //
-// MarkerSelected(Style_t marker)                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedPatternSelect.h"
 
@@ -54,8 +37,8 @@ public:
 class TGedMarkerSelect : public TGedSelect {
 
 protected:
-   Style_t          fMarkerStyle;   //marker style
-   const TGPicture *fPicture;       //image used for popup window
+   Style_t          fMarkerStyle;   ///< marker style
+   const TGPicture *fPicture;       ///< image used for popup window
 
    virtual void     DoRedraw();
 

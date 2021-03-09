@@ -13,16 +13,6 @@
 #define ROOT_TGTextEdit
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextEdit                                                           //
-//                                                                      //
-// A TGTextEdit is a specialization of TGTextView. It provides the      //
-// text edit functionality to the static text viewing widget.           //
-// For the messages supported by this widget see the TGView class.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGTextView.h"
 
 class TGPopupMenu;

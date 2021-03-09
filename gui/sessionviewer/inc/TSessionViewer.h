@@ -9,14 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSessionViewer                                                       //
-//                                                                      //
-// Widget used to manage PROOF or local sessions, PROOF connections,    //
-// queries construction and results handling.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TSessionViewer
 #define ROOT_TSessionViewer

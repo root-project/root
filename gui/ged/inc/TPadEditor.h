@@ -12,13 +12,6 @@
 #ifndef ROOT_TPadEditor
 #define ROOT_TPadEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TPadEditor                                                          //
-//                                                                      //
-//  Editor of pad/canvas objects.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
 
@@ -32,23 +25,23 @@ class TPad;
 class TPadEditor : public TGedFrame {
 
 protected:
-   TPad                *fPadPointer;       // TPad object
-   TGCheckButton       *fEditable;         // set pad editable
-   TGCheckButton       *fCrosshair;        // set crosshair
-   TGCheckButton       *fFixedAR;          // set fixed aspect ratio
-   TGCheckButton       *fGridX;            // set grid on X
-   TGCheckButton       *fGridY;            // set grid on Y
-   TGCheckButton       *fLogX;             // set log scale on X
-   TGCheckButton       *fLogY;             // set log scale on Y
-   TGCheckButton       *fLogZ;             // set log scale on Z
-   TGCheckButton       *fTickX;            // set ticks on X
-   TGCheckButton       *fTickY;            // set ticks on Y
-   TGRadioButton       *fBmode;            // set sinken pad border mode
-   TGRadioButton       *fBmode0;           // set no pad border
-   TGRadioButton       *fBmode1;           // set raised pad border mode
-   TGLayoutHints       *fBmodelh;          // layout hints for border mode buttons
-   TGLineWidthComboBox *fBsize;            // set pad border size
-   TGButtonGroup       *fBgroup;           // button group of border mode
+   TPad                *fPadPointer;       ///< TPad object
+   TGCheckButton       *fEditable;         ///< set pad editable
+   TGCheckButton       *fCrosshair;        ///< set crosshair
+   TGCheckButton       *fFixedAR;          ///< set fixed aspect ratio
+   TGCheckButton       *fGridX;            ///< set grid on X
+   TGCheckButton       *fGridY;            ///< set grid on Y
+   TGCheckButton       *fLogX;             ///< set log scale on X
+   TGCheckButton       *fLogY;             ///< set log scale on Y
+   TGCheckButton       *fLogZ;             ///< set log scale on Z
+   TGCheckButton       *fTickX;            ///< set ticks on X
+   TGCheckButton       *fTickY;            ///< set ticks on Y
+   TGRadioButton       *fBmode;            ///< set sinken pad border mode
+   TGRadioButton       *fBmode0;           ///< set no pad border
+   TGRadioButton       *fBmode1;           ///< set raised pad border mode
+   TGLayoutHints       *fBmodelh;          ///< layout hints for border mode buttons
+   TGLineWidthComboBox *fBsize;            ///< set pad border size
+   TGButtonGroup       *fBgroup;           ///< button group of border mode
 
    virtual void ConnectSignals2Slots();
 

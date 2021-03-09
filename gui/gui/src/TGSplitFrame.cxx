@@ -27,6 +27,17 @@
 
 #include <iostream>
 
+/** \class TGSplitFrame
+    \ingroup guiwidgets
+A split frame.
+*/
+
+
+/** \class TGSplitTool
+    \ingroup guiwidgets
+A split frame tool tip.
+*/
+
 
 ClassImp(TGSplitTool);
 ClassImp(TGSplitFrame);

@@ -13,15 +13,6 @@
 #define ROOT_TGClient
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGClient                                                             //
-//                                                                      //
-// Window client. In client server windowing systems, like X11 this     //
-// class is used to make the initial connection to the window server.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 #include "GuiTypes.h"
 #include "TString.h"

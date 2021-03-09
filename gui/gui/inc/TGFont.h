@@ -13,15 +13,6 @@
 #define ROOT_TGFont
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFont and TGFontPool                                                //
-//                                                                      //
-// Encapsulate fonts used in the GUI system.                            //
-// TGFontPool provides a pool of fonts.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TNamed.h"
 #include "TGObject.h"
 #include "TRefCnt.h"
