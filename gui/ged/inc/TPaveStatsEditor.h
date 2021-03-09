@@ -22,7 +22,7 @@ class TPaveStatsEditor : public TGedFrame {
 
 protected:
    TPaveStats         *fPaveStats;        ///< TPaveStats object
-   ///< widgets for stat options
+   // widgets for stat options
    TGCheckButton      *fHistoName;        ///< histo name check box
    TGCheckButton      *fEntries;          ///< entries' number check box
    TGCheckButton      *fMean;             ///< mean value check box
@@ -33,7 +33,7 @@ protected:
    TGCheckButton      *fSkewness;         ///< skewness check box
    TGCheckButton      *fKurtosis;         ///< kurtosis check box
    TGCheckButton      *fStatsErrors;      ///< statistics error check box
-   ///< widgets for fit options
+   // widgets for fit options
    TGCheckButton      *fNameValues;       ///< parameters' name/values check box
    TGCheckButton      *fErrors;           ///< error check box
    TGCheckButton      *fChisquare;        ///< Chisquare check box
