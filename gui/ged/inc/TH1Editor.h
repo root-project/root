@@ -73,7 +73,7 @@ protected:
    TGNumberEntryField  *fBinNumberEntry;  ///< Label which shows the rebinned bin number
    TGNumberEntryField  *fBinNumberEntry1; ///< Label which shows the rebinned bin number for ntuple histogram
    TGHSlider           *fBinOffsetSld;    ///< Add an offset to the origin of the histogram
-   TGNumberEntryField  *fOffsetNumberEntry;// Shows the offset to the origin of the histogram
+   TGNumberEntryField  *fOffsetNumberEntry;///< Shows the offset to the origin of the histogram
    TGDoubleHSlider     *fSlider;          ///< Slider to set x-axis range
    TGNumberEntryField  *fSldMin;          ///< Contains the minimum value of the x-Axis
    TGNumberEntryField  *fSldMax;          ///< Contains the maximum value of the x-Axis
