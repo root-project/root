@@ -82,11 +82,16 @@ public:
       if (!supported)
          printf("Field %s type %s not yet supported for drawing\n", field.GetFieldName().c_str(), field.GetTypeName().c_str());
 
-      return supported ? kActDraw6 : kActNone;
+      return supported ? kActDraw7 : kActNone;
    }
 
-   //bool IsCapable(EActionKind) const override;
+   bool IsCapable(EActionKind kind) const override
+   {
+      if ((kind == kActDraw6) || (kind == kActDraw7))
+         return GetDefaultAction() == kActDraw7;
 
+      return false;
+   }
 
 };
 
