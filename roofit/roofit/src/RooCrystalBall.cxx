@@ -55,6 +55,7 @@ where
 
 #include <cmath>
 #include <limits>
+#include <utility>
 
 ClassImp(RooCrystalBall);
 
@@ -76,10 +77,9 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
                                RooAbsReal &nR)
    : RooAbsPdf(name, title), x_("x", "Dependent", this, x), x0_("x0", "X0", this, x0),
      sigmaL_("sigmaL", "Left Sigma", this, sigmaL), sigmaR_("sigmaR", "Right Sigma", this, sigmaR),
-     alphaL_{std::make_unique<RooRealProxy>("alphaL", "Left Alpha", this, alphaL)}, nL_{std::make_unique<RooRealProxy>(
-                                                                                       "nL", "Left Order", this, nL)},
-     alphaR_{std::make_unique<RooRealProxy>("alphaR", "Right Alpha", this, alphaR)}, nR_{std::make_unique<RooRealProxy>(
-                                                                                        "nR", "Right Order", this, nR)}
+     alphaL_{"alphaL", "Left Alpha", this, alphaL}, nL_{"nL", "Left Order", this, nL},
+     alphaR_{std::make_unique<RooRealProxy>("alphaR", "Right Alpha", this, alphaR)},
+     nR_{std::make_unique<RooRealProxy>("nR", "Right Order", this, nR)}
 {
    RooHelpers::checkRangeOfParameters(this, {&sigmaL}, 0.0);
    RooHelpers::checkRangeOfParameters(this, {&sigmaR}, 0.0);
@@ -105,10 +105,9 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
                                RooAbsReal &alphaL, RooAbsReal &nL, RooAbsReal &alphaR, RooAbsReal &nR)
    : RooAbsPdf(name, title), x_("x", "Dependent", this, x), x0_("x0", "X0", this, x0),
      sigmaL_("sigmaL", "Left Sigma", this, sigma), sigmaR_("sigmaR", "Right Sigma", this, sigma),
-     alphaL_{std::make_unique<RooRealProxy>("alphaL", "Left Alpha", this, alphaL)}, nL_{std::make_unique<RooRealProxy>(
-                                                                                       "nL", "Left Order", this, nL)},
-     alphaR_{std::make_unique<RooRealProxy>("alphaR", "Right Alpha", this, alphaR)}, nR_{std::make_unique<RooRealProxy>(
-                                                                                        "nR", "Right Order", this, nR)}
+     alphaL_{"alphaL", "Left Alpha", this, alphaL}, nL_{"nL", "Left Order", this, nL},
+     alphaR_{std::make_unique<RooRealProxy>("alphaR", "Right Alpha", this, alphaR)},
+     nR_{std::make_unique<RooRealProxy>("nR", "Right Order", this, nR)}
 {
    RooHelpers::checkRangeOfParameters(this, {&sigma}, 0.0);
    RooHelpers::checkRangeOfParameters(this, {&alphaL}, 0.0);
@@ -130,22 +129,22 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
 /// \param n Exponent of power-law tail.
 /// \param doubleSided Whether the tail is only on one side or on both sides
 RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x0, RooAbsReal &sigma,
-                               RooAbsReal &alpha, RooAbsReal &n, TailSide tailSide)
+                               RooAbsReal &alpha, RooAbsReal &n, bool doubleSided)
    : RooAbsPdf(name, title), x_("x", "Dependent", this, x), x0_("x0", "X0", this, x0),
-     sigmaL_("sigmaL", "Left Sigma", this, sigma), sigmaR_("sigmaR", "Right Sigma", this, sigma)
+     sigmaL_{"sigmaL", "Left Sigma", this, sigma}, sigmaR_{"sigmaR", "Right Sigma", this, sigma},
+     alphaL_{"alphaL", "Left Alpha", this, alpha},
+     nL_{"nL", "Left Order", this, n}
 {
-   if (tailSide == TailSide::Left || tailSide == TailSide::Both) {
-      alphaL_ = std::make_unique<RooRealProxy>("alphaL", "Left Alpha", this, alpha);
-      nL_ = std::make_unique<RooRealProxy>("nL", "Left Order", this, n);
-   }
-   if (tailSide == TailSide::Right || tailSide == TailSide::Both) {
+   if (doubleSided) {
       alphaR_ = std::make_unique<RooRealProxy>("alphaR", "Right Alpha", this, alpha);
       nR_ = std::make_unique<RooRealProxy>("nR", "Right Order", this, n);
    }
 
    RooHelpers::checkRangeOfParameters(this, {&sigma}, 0.0);
-   RooHelpers::checkRangeOfParameters(this, {&alpha}, 0.0);
    RooHelpers::checkRangeOfParameters(this, {&n}, 0.0);
+   if (doubleSided) {
+      RooHelpers::checkRangeOfParameters(this, {&alpha}, 0.0);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -153,10 +152,8 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
 RooCrystalBall::RooCrystalBall(const RooCrystalBall &other, const char *name)
    : RooAbsPdf(other, name), x_("x", this, other.x_), x0_("x0", this, other.x0_),
      sigmaL_("sigmaL", this, other.sigmaL_),
-     sigmaR_("sigmaR", this, other.sigmaR_), alphaL_{other.alphaL_
-                                                        ? std::make_unique<RooRealProxy>("alphaL", this, *other.alphaL_)
-                                                        : nullptr},
-     nL_{other.nL_ ? std::make_unique<RooRealProxy>("nL", this, *other.nL_) : nullptr},
+     sigmaR_("sigmaR", this, other.sigmaR_), alphaL_{"alphaL", this, other.alphaL_},
+     nL_{"nL", this, other.nL_},
      alphaR_{other.alphaR_ ? std::make_unique<RooRealProxy>("alphaR", this, *other.alphaR_) : nullptr},
      nR_{other.nR_ ? std::make_unique<RooRealProxy>("nR", this, *other.nR_) : nullptr}
 {
@@ -211,10 +208,17 @@ Double_t RooCrystalBall::evaluate() const
    const double x0 = x0_;
    const double sigmaL = std::abs(sigmaL_);
    const double sigmaR = std::abs(sigmaR_);
-   const double alphaL = alphaL_ ? std::abs(*alphaL_) : std::numeric_limits<double>::infinity();
-   const double alphaR = alphaR_ ? std::abs(*alphaR_) : std::numeric_limits<double>::infinity();
-   const double nL = nL_ ? *nL_ : 0.0;
-   const double nR = nR_ ? *nR_ : 0.0;
+   double alphaL = std::abs(alphaL_);
+   double nL = nL_;
+   double alphaR = alphaR_ ? std::abs(*alphaR_) : std::numeric_limits<double>::infinity();
+   double nR = nR_ ? *nR_ : 0.0;
+
+   // If alphaL is negative, then the tail will be on the right side.
+   // Like this, we follow the convention established by RooCBShape.
+   if(!alphaR_ && alphaL_ < 0.0) {
+      std::swap(alphaL, alphaR);
+      std::swap(nL, nR);
+   }
 
    const double t = (x - x0) / (x < x0 ? sigmaL : sigmaR);
 
@@ -243,10 +247,17 @@ Double_t RooCrystalBall::analyticalIntegral(Int_t code, const char *rangeName) c
    const double x0 = x0_;
    const double sigmaL = std::abs(sigmaL_);
    const double sigmaR = std::abs(sigmaR_);
-   const double alphaL = alphaL_ ? std::abs(*alphaL_) : std::numeric_limits<double>::infinity();
-   const double alphaR = alphaR_ ? std::abs(*alphaR_) : std::numeric_limits<double>::infinity();
-   const double nL = nL_ ? *nL_ : 0.0;
-   const double nR = nR_ ? *nR_ : 0.0;
+   double alphaL = std::abs(alphaL_);
+   double nL = nL_;
+   double alphaR = alphaR_ ? std::abs(*alphaR_) : std::numeric_limits<double>::infinity();
+   double nR = nR_ ? *nR_ : 0.0;
+
+   // If alphaL is negative, then the tail will be on the right side.
+   // Like this, we follow the convention established by RooCBShape.
+   if(!alphaR_ && alphaL_ < 0.0) {
+      std::swap(alphaL, alphaR);
+      std::swap(nL, nR);
+   }
 
    constexpr double switchToLogThreshold = 1.0e-05;
 
