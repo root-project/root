@@ -13,16 +13,6 @@
 #define ROOT_TGString
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGString and TGHotString                                             //
-//                                                                      //
-// TGString wraps a TString and adds some graphics routines like        //
-// drawing, size of string on screen depending on font, etc.            //
-// TGHotString is a string with a "hot" character unerlined.            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TString.h"
 #include "GuiTypes.h"
 

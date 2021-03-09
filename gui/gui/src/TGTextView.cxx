@@ -20,17 +20,18 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextView                                                           //
-//                                                                      //
-// A TGTextView is a text viewer widget. It is a specialization of      //
-// TGView. It uses the TGText class (which contains all text            //
-// manipulation code, i.e. loading a file in memory, changing,          //
-// removing lines, etc.). Use a TGTextView to view non-editable text.   //
-// For supported messages see TGView.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTextView
+    \ingroup guiwidgets
+
+A TGTextView is a text viewer widget. It is a specialization of
+TGView. It uses the TGText class (which contains all text
+manipulation code, i.e. loading a file in memory, changing,
+removing lines, etc.). Use a TGTextView to view non-editable text.
+For supported messages see TGView.
+
+*/
+
 
 #include "TGTextView.h"
 #include "TGScrollBar.h"
@@ -1091,7 +1092,7 @@ Bool_t TGTextView::HandleDNDDrop(TDNDData *data)
    if (fText->RowCount() > 1) {
       Int_t ret;
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                   "Overvrite", "Do you want to replace existing text?",
+                   "Overwrite", "Do you want to replace existing text?",
                    kMBIconExclamation, kMBYes | kMBNo, &ret);
       if (ret == kMBNo)
          return kTRUE;

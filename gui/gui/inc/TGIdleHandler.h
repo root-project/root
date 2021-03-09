@@ -12,14 +12,6 @@
 #ifndef ROOT_TGIdleHandler
 #define ROOT_TGIdleHandler
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGIdleHandler                                                        //
-//                                                                      //
-// Handle idle events, i.e. process GUI actions when there is nothing   //
-// else anymore to do.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"
 

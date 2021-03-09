@@ -13,22 +13,6 @@
 #define ROOT_TGTab
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTab, TGTabElement, TGTabLayout                                     //
-//                                                                      //
-// A tab widget contains a set of composite frames each with a little   //
-// tab with a name (like a set of folders with tabs).                   //
-//                                                                      //
-// The TGTab is user callable. The TGTabElement and TGTabLayout are     //
-// is a service classes of the tab widget.                              //
-//                                                                      //
-// Clicking on a tab will bring the associated composite frame to the   //
-// front and generate the following event:                              //
-// kC_COMMAND, kCM_TAB, tab id, 0.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGWidget.h"
 

@@ -33,13 +33,6 @@
 #ifndef ROOT_TGMdiMenu
 #define ROOT_TGMdiMenu
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiMenu.                                                           //
-//                                                                      //
-// This file contains the TGMdiMenuBar class.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGMenu.h"
 #include "TGFrame.h"

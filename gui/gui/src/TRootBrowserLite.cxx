@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootBrowserLite                                                     //
-//                                                                      //
-// This class creates a ROOT object browser (looking like Windows       //
-// Explorer). The widgets used are the new native ROOT GUI widgets.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootBrowserLite
+    \ingroup guiwidgets
+
+This class creates a ROOT object browser (looking like Windows
+Explorer). The widgets used are the new native ROOT GUI widgets.
+
+*/
+
 
 #include "RConfigure.h"
 

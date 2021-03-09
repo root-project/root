@@ -24,12 +24,13 @@ class TGStatusBar;
 class TGVSplitter;
 class TGHSplitter;
 
-//_____________________________________________________________________________
-//
-// TBrowserPlugin
-//
-// Helper class used to manage plugins (command or macro to be executed).
-//_____________________________________________________________________________
+
+/** \class TBrowserPlugin
+    \ingroup guiwidgets
+
+Helper class used to manage plugins (command or macro to be executed).
+*/
+
 
 class TBrowserPlugin : public TNamed
 {

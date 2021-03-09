@@ -13,23 +13,6 @@
 #define ROOT_TGListTree
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListTree and TGListTreeItem                                        //
-//                                                                      //
-// A list tree is a widget that can contain a number of items           //
-// arranged in a tree structure. The items are represented by small     //
-// folder icons that can be either open or closed.                      //
-//                                                                      //
-// The TGListTree is user callable. The TGListTreeItem is a service     //
-// class of the list tree.                                              //
-//                                                                      //
-// A list tree can generate the following events:                       //
-// kC_LISTTREE, kCT_ITEMCLICK, which button, location (y<<16|x).        //
-// kC_LISTTREE, kCT_ITEMDBLCLICK, which button, location (y<<16|x).     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGCanvas.h"
 #include "TGWidget.h"
 #include "TGDNDManager.h"

@@ -13,14 +13,6 @@
 #define ROOT_TGWindow
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGWindow                                                             //
-//                                                                      //
-// ROOT GUI Window base class.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGObject.h"
 #include "TGClient.h"
 
@@ -56,12 +48,12 @@ public:
    enum  EEditMode {
       kEditEnable        = 0,          // allow edit of this window
       kEditDisable       = BIT(0),     // disable edit of this window
-      kEditDisableEvents = BIT(1),     // window events cannot be editted
-      kEditDisableGrab   = BIT(2),     // window grab cannot be editted
-      kEditDisableLayout = BIT(3),     // window layout cannot be editted
-      kEditDisableResize = BIT(4),     // window size cannot be editted
-      kEditDisableHeight = BIT(5),     // window height cannot be editted
-      kEditDisableWidth  = BIT(6),     // window width cannot be editted
+      kEditDisableEvents = BIT(1),     // window events cannot be edited
+      kEditDisableGrab   = BIT(2),     // window grab cannot be edited
+      kEditDisableLayout = BIT(3),     // window layout cannot be edited
+      kEditDisableResize = BIT(4),     // window size cannot be edited
+      kEditDisableHeight = BIT(5),     // window height cannot be edited
+      kEditDisableWidth  = BIT(6),     // window width cannot be edited
       kEditDisableBtnEnable = BIT(7),  // window can handle mouse button events
       kEditDisableKeyEnable = BIT(8)   // window can handle keyboard events
    };
@@ -130,14 +122,14 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGUnknownWindowHandler                                               //
-//                                                                      //
-// Handle events for windows that are not part of the native ROOT GUI.  //
-// Typically windows created by Xt or Motif.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGUnknownWindowHandler
+    \ingroup guiwidgets
+
+Handle events for windows that are not part of the native ROOT GUI.
+Typically windows created by Xt or Motif.
+
+*/
+
 
 class TGUnknownWindowHandler : public TObject {
 

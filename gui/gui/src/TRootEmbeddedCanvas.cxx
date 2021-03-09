@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootEmbeddedCanvas                                                  //
-//                                                                      //
-// This class creates a TGCanvas in which a TCanvas is created. Use     //
-// GetCanvas() to get a pointer to the TCanvas.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootEmbeddedCanvas
+    \ingroup guiwidgets
+
+This class creates a TGCanvas in which a TCanvas is created.
+Use GetCanvas() to get a pointer to the TCanvas.
+
+*/
+
 
 #include "TRootEmbeddedCanvas.h"
 #include "TCanvas.h"
@@ -33,17 +34,18 @@
 
 #include <iostream>
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootEmbeddedContainer                                               //
-//                                                                      //
-// Utility class used by TRootEmbeddedCanvas. The TRootEmbeddedContainer//
-// is the frame embedded in the TGCanvas widget. The ROOT graphics goes //
-// into this frame. This class is used to enable input events on this   //
-// graphics frame and forward the events to the TRootEmbeddedCanvas     //
-// handlers.                                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootEmbeddedContainer
+    \ingroup guiwidgets
+
+Utility class used by TRootEmbeddedCanvas. The TRootEmbeddedContainer
+is the frame embedded in the TGCanvas widget. The ROOT graphics goes
+into this frame. This class is used to enable input events on this
+graphics frame and forward the events to the TRootEmbeddedCanvas
+handlers.
+
+*/
+
 
 class TRootEmbeddedContainer : public TGCompositeFrame {
 private:
@@ -86,9 +88,6 @@ TRootEmbeddedContainer::TRootEmbeddedContainer(TRootEmbeddedCanvas *c, Window_t 
 
    fEditDisabled = kEditDisableGrab;
 }
-
-
-
 
 ClassImp(TRootEmbeddedCanvas);
 

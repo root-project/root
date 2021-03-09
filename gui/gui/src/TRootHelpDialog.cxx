@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootHelpDialog                                                      //
-//                                                                      //
-// A TRootHelpDialog is used to display help text (or any text in a     //
-// dialog window). There is on OK button to popdown the dialog.         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootHelpDialog
+    \ingroup guiwidgets
+
+A TRootHelpDialog is used to display help text (or any text in a
+dialog window). There is on OK button to popdown the dialog.
+
+*/
+
 
 #include "TRootHelpDialog.h"
 #include "TGButton.h"

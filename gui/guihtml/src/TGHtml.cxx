@@ -50,12 +50,14 @@
 #include "strlcpy.h"
 #include "snprintf.h"
 
-//_____________________________________________________________________________
-//
-// TGHtml
-//
-// The ROOT HTML widget. A derivate of TGView.
-//_____________________________________________________________________________
+
+/** \class TGHtml
+    \ingroup guihtml
+
+The ROOT HTML widget. A derivate of TGView.
+
+*/
+
 
 ClassImp(TGHtml);
 
@@ -1134,7 +1136,7 @@ Bool_t TGHtml::HandleFocusChange(Event_t *event)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This routine searchs for a hyperlink beneath the coordinates x,y
+/// This routine searches for a hyperlink beneath the coordinates x,y
 /// and returns a pointer to the HREF for that hyperlink. The text
 /// is held in one of the markup argv[] fields of the <a> markup.
 
@@ -1767,7 +1769,7 @@ int TGHtml::GetColorByValue(ColorStruct_t *pRef)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This routine searchs for a hyperlink beneath the coordinates x,y
+/// This routine searches for a hyperlink beneath the coordinates x,y
 /// and returns a pointer to the HREF for that hyperlink. The text
 /// is held in one of the markup argv[] fields of the <a> markup.
 

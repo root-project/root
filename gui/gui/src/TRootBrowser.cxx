@@ -9,46 +9,56 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootBrowser                                                         //
-//                                                                      //
-// This class creates a ROOT object browser, constitued by three main   //
-// tabs.                                                                //
-//                                                                      //
-// All tabs can 'swallow' frames, thanks to the new method:             //
-//   ExecPlugin(const char *name = 0, const char *fname = 0,            //
-//              const char *cmd = 0, Int_t pos = kRight,                //
-//              Int_t subpos = -1)                                      //
-// allowing to select plugins (can be a macro or a command)             //
-// to be executed, and where to embed the frame created by              //
-// the plugin (tab and tab element). Examples:                          //
-//                                                                      //
-// create a new browser:                                                //
-// TBrowser b;                                                          //
-//                                                                      //
-// create a new TCanvas in a new top right tab element:                 //
-// b.ExecPlugin("Canvas", 0, "new TCanvas()");                          //
-//                                                                      //
-// create a new top right tab element embedding the                     //
-// TGMainFrame created by the macro 'myMacro.C':                        //
-// b.ExecPlugin("MyPlugin", "myMacro.C");                               //
-//                                                                      //
-// create a new bottom tab element embedding the                        //
-// TGMainFrame created by the macro 'myMacro.C':                        //
-// b.ExecPlugin("MyPlugin", "myMacro.C", 0, TRootBrowser::kBottom);     //
-//                                                                      //
-// this browser implementation can be selected via the env              //
-// 'Browser.Name' in .rootrc, (TRootBrowser or TRootBrowserLite)        //
-// the default being TRootBrowserLite (old browser)                     //
-// a list of options (plugins) for the new TRootBrowser is also         //
-// specified via the env 'Browser.Options' in .rootrc, the default      //
-// being: FECI                                                          //
-// Here is the list of available options:                               //
-// F: File browser E: Text Editor H: HTML browser C: Canvas I: I/O      //
-// redirection P: Proof G: GL viewer                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootBrowser
+    \ingroup guiwidgets
+
+This class creates a ROOT object browser, constituted by three main tabs.
+
+All tabs can 'swallow' frames, thanks to the new method:
+  ExecPlugin(const char *name = 0, const char *fname = 0,
+             const char *cmd = 0, Int_t pos = kRight,
+             Int_t subpos = -1)
+allowing to select plugins (can be a macro or a command)
+to be executed, and where to embed the frame created by
+the plugin (tab and tab element).
+
+### Examples:
+
+#### create a new browser:
+```
+TBrowser b;
+```
+
+#### create a new TCanvas in a new top right tab element:
+```
+b.ExecPlugin("Canvas", 0, "new TCanvas()");
+```
+#### create a new top right tab element embedding the TGMainFrame created by the macro 'myMacro.C':
+```
+b.ExecPlugin("MyPlugin", "myMacro.C");
+```
+
+#### create a new bottom tab element embedding the TGMainFrame created by the macro 'myMacro.C':
+````
+b.ExecPlugin("MyPlugin", "myMacro.C", 0, TRootBrowser::kBottom);
+````
+
+this browser implementation can be selected via the env
+`Browser.Name` in `.rootrc`, (TRootBrowser or TRootBrowserLite)
+the default being TRootBrowserLite
+a list of options (plugins) for the new TRootBrowser is also
+specified via the env 'Browser.Options' in .rootrc, the default
+being: FECI
+
+Here is the list of available options:
+  - F: File browser
+  - E: Text Editor
+  - H: HTML browser C: Canvas I: I/O redirection
+  - P: Proof
+  - G: GL viewer
+
+*/
 
 #include "TROOT.h"
 #include "TSystem.h"
@@ -99,12 +109,6 @@ static const char *gPluginFileTypes[] = {
    0,              0
 };
 
-//_____________________________________________________________________________
-//
-// TRootBrowser
-//
-// The main ROOT object browser.
-//_____________________________________________________________________________
 
 ClassImp(TRootBrowser);
 

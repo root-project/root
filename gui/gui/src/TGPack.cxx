@@ -13,16 +13,21 @@
 #include "TGSplitter.h"
 #include "TMath.h"
 
-//______________________________________________________________________________
-//
-// Stack of frames in horizontal (default) or vertical stack.
-// The splitters are placed between the neighbouring frames so that
-// they can be resized by the user.
-// When the whole pack is resized, frames are scaled proportionally to
-// their previous size.
-//
-// When frames are left in pack at destruction time, they will be
-// deleted via local-cleanup.
+
+/** \class TGPack
+    \ingroup guiwidgets
+
+Stack of frames in horizontal (default) or vertical stack.
+The splitters are placed between the neighbouring frames so that
+they can be resized by the user.
+When the whole pack is resized, frames are scaled proportionally to
+their previous size.
+
+When frames are left in pack at destruction time, they will be
+deleted via local-cleanup.
+
+*/
+
 
 ClassImp(TGPack);
 
@@ -221,9 +226,6 @@ void TGPack::FindFrames(TGFrame* splitter, TGFrameElementPack*& f0, TGFrameEleme
    f1 = (TGFrameElementPack *) next();
 }
 
-
-//------------------------------------------------------------------------------
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add frame f at the end.
 /// LayoutHints are ignored in TGPack.
@@ -243,19 +245,19 @@ void TGPack::AddFrameInternal(TGFrame* f, TGLayoutHints* l, Float_t weight)
 
       sf = new TGFrameElementPack(s, l ? l : fgDefaultHints, 0);
       fList->Add(sf);
-      // in case of recusive cleanup, propagate cleanup setting to all
+      // in case of recursive cleanup, propagate cleanup setting to all
       // child composite frames
       if (fMustCleanup == kDeepCleanup)
          s->SetCleanup(kDeepCleanup);
       s->MapWindow();
    }
 
-   // instread TGCopositeFrame::AddFrame
+   // instead TGCopositeFrame::AddFrame
    TGFrameElementPack *el = new TGFrameElementPack(f, l ? l : fgDefaultHints, weight);
    el->fSplitFE = sf;
    fList->Add(el);
 
-   // in case of recusive cleanup, propagate cleanup setting to all
+   // in case of recursive cleanup, propagate cleanup setting to all
    // child composite frames
    if (fMustCleanup == kDeepCleanup)
       f->SetCleanup(kDeepCleanup);
@@ -416,7 +418,6 @@ void TGPack::HideFrame(TGFrame* f)
    }
 }
 
-//------------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual method of TGcompositeFrame.
@@ -588,7 +589,6 @@ void TGPack::HandleSplitterResize(Int_t delta)
    Layout();
 }
 
-//------------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the vertical flag and reformats the back to new stacking

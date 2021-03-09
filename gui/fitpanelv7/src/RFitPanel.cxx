@@ -48,7 +48,7 @@
 using namespace std::string_literals;
 
 /** \class ROOT::Experimental::RFitPanel
-\ingroup webdisplay
+\ingroup webwidgets
 
 web-based FitPanel prototype.
 */

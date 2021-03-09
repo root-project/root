@@ -23,13 +23,7 @@ enum ETableLayoutHints {
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTableLayoutHints                                                   //
-//                                                                      //
-// This class describes layout hints used by the TGTableLayout class.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
 
 class TGTableLayoutHints : public TGLayoutHints {
 
@@ -66,20 +60,7 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTableLayout                                                        //
-//                                                                      //
-// A LayoutManager which places child frames in a table. This uses      //
-// TGTableLayoutHints (not TGLayoutHints). See TGTableLayoutHints       //
-// for how to use these. This manager works like TGMatrixLayout with    //
-// the addition that:                                                   //
-//  - Child frames can span more than one column/row.                   //
-//  - Child frames can resize with the frame.                           //
-//  - Column and row sizes are not fixed nor (optionally) homogeneous.  //
-//  - The number of columns and rows must be fully specified.           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
 
 class TGTableLayout : public TGLayoutManager {
 

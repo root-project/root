@@ -18,7 +18,6 @@ class TGMainFrame;
 class TGDragWindow;
 class TTimer;
 
-//----------------------------------------------------------------------
 
 class TGDragWindow : public TGFrame {
 
@@ -53,14 +52,14 @@ public:
    ClassDef(TGDragWindow, 0) // Window used for dragging
 };
 
-//----------------------------------------------------------------------
 
-//_____________________________________________________________________________
-//
-// TDNDData
-//
-// Drag and drop data container.
-//_____________________________________________________________________________
+/** \class TDNDData
+    \ingroup guiwidgets
+
+Drag and drop data container.
+
+*/
+
 
 class TDNDData : public TObject {
 private:
@@ -80,7 +79,6 @@ public:
    ClassDef(TDNDData, 0) // Drag and drop specific data
 };
 
-//----------------------------------------------------------------------
 
 class TGDNDManager : public TObject {
 

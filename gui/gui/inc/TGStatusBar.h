@@ -13,14 +13,6 @@
 #define ROOT_TGStatusBar
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGStatusBar                                                          //
-//                                                                      //
-// Provides a StatusBar widget.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TGStatusBarPart;

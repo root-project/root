@@ -13,16 +13,6 @@
 #define ROOT_TGApplication
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGApplication                                                        //
-//                                                                      //
-// This class initialize the ROOT GUI toolkit.                          //
-// This class must be instantiated exactly once in any given            //
-// application.                                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TApplication.h"
 
 class TGClient;

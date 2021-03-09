@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootCanvas                                                          //
-//                                                                      //
-// This class creates a main window with menubar, scrollbars and a      //
-// drawing area. The widgets used are the new native ROOT GUI widgets.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootCanvas
+    \ingroup guiwidgets
+
+This class creates a main window with menubar, scrollbars and a
+drawing area. The widgets used are the new native ROOT GUI widgets.
+
+*/
+
 
 #include "RConfigure.h"
 

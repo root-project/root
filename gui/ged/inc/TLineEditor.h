@@ -12,13 +12,6 @@
 #ifndef ROOT_TLineEditor
 #define ROOT_TLineEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TLineEditor                                                         //
-//                                                                      //
-//  Implements GUI for editing line attributes, start/end points.       //                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
 
@@ -29,13 +22,13 @@ class TLine;
 class TLineEditor : public TGedFrame {
 
 protected:
-   TLine           *fLine;         //line object
-   TGNumberEntry   *fStartPointX;  //start point x coordinate
-   TGNumberEntry   *fStartPointY;  //start point y coordinate
-   TGNumberEntry   *fEndPointX;    //end point x coordinate
-   TGNumberEntry   *fEndPointY;    //end point y coordinate
-   TGCheckButton   *fVertical;     //set the line vertical
-   TGCheckButton   *fHorizontal;   //set the line horizontal
+   TLine           *fLine;         ///< line object
+   TGNumberEntry   *fStartPointX;  ///< start point x coordinate
+   TGNumberEntry   *fStartPointY;  ///< start point y coordinate
+   TGNumberEntry   *fEndPointX;    ///< end point x coordinate
+   TGNumberEntry   *fEndPointY;    ///< end point y coordinate
+   TGCheckButton   *fVertical;     ///< set the line vertical
+   TGCheckButton   *fHorizontal;   ///< set the line horizontal
 
    virtual void   ConnectSignals2Slots();
 

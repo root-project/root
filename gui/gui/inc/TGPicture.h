@@ -13,17 +13,6 @@
 #define ROOT_TGPicture
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGPicture, TGSelectdPicture & TGPicturePool                          //
-//                                                                      //
-// The TGPicture class implements pictures and icons used in the        //
-// different GUI elements and widgets. The TGPicturePool class          //
-// implements a TGPicture cache. TGPictures are created, managed and    //
-// destroyed by the TGPicturePool.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 #include "TRefCnt.h"
 #include "TString.h"

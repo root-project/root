@@ -21,17 +21,27 @@
 **************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFont and TGFontPool                                                //
-//                                                                      //
-// Encapsulate fonts used in the GUI system.                            //
-// TGFontPool provides a pool of fonts.                                 //
-// TGTextLayout is used to keep track of string  measurement            //
-// information when  using the text layout facilities.                  //
-// It can be displayed with respect to any origin.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGFont and TGFontPool
+    \ingroup guiwidgets
+
+Encapsulate fonts used in the GUI system.
+
+
+\class TGFontPool
+\ingroup guiwidgets
+
+provides a pool of fonts.
+
+
+\class TGTextLayout
+\ingroup guiwidgets
+
+is used to keep track of string  measurement
+information when  using the text layout facilities.
+It can be displayed with respect to any origin.
+
+*/
+
 
 #include "TGFont.h"
 #include "TGClient.h"
@@ -575,7 +585,7 @@ Int_t TGFont::TextWidth(const char *string, Int_t numChars) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return text widht in pixels
+/// Return text width in pixels
 
 Int_t TGFont::XTextWidth(const char *string, Int_t numChars) const
 {
@@ -1487,7 +1497,7 @@ void TGFont::DrawChars(Drawable_t dst, GContext_t gc,
       int length;
 
       // The string we are being asked to draw is too big and would overflow
-      // the X coordinate space. Unfortunatley X servers aren't too bright
+      // the X coordinate space. Unfortunately X servers aren't too bright
       // and so they won't deal with this case cleanly. We need to truncate
       // the string before sending it to X.
 
@@ -2566,7 +2576,7 @@ TGFont *TGFontPool::GetNativeFont(const char *name, Bool_t fixedDefault)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper for GetNativeFont() and GetFontFromAttributes(). Creates and
-/// intializes a new TGFont object.
+/// initializes a new TGFont object.
 ///
 /// font       -- If non-NULL, store the information in this existing TGFont
 ///               object, rather than creating a new one; the existing

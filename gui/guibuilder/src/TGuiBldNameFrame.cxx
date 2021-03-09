@@ -9,11 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGuiNameFrame                                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGuiNameFrame
+    \ingroup guibuilder
+*/
 
 
 #include "TGuiBldNameFrame.h"

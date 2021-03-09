@@ -9,92 +9,100 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGXYLayout                                                           //
-//                                                                      //
-// Is a layout manager where the position and the size of each widget   //
-// in the frame are defined by X / Y - coordinates. The coordinates     //
-// for each widget are defined by the TGXYLayoutHints. Therefore it     //
-// is not possible to share a layout hint for several widgets.          //
-//                                                                      //
-// The coordinates (X, Y) and the size (W, H) are defined in units      //
-// of the size of a typical character. Also the size of the             //
-// TGCompositeFrame for which a TGXYLayout manager is used has to be    //
-// defined in its constructor in units of the size of a character!      //
-//                                                                      //
-// It is not possible to use any other layout hint than the             //
-// TGXYLayoutHints for this layout manager!                             //
-//                                                                      //
-// The rubberFlag in the constructor of the TGLXYLayoutHins defines     //
-// how the position and the size of a widget is recalculated if the     //
-// size of the frame is increased:                                      //
-// - kLRubberX: The X - position (left edge) is increased by the same   //
-//              factor as the width of the frame increases.             //
-// - kLRubberY: The Y - position (upper edge) is increased by the same  //
-//              factor as the height of the frame increases.            //
-// - kLRubberW: The width of the widget is increased by the same        //
-//              factor as the width of the frame increases.             //
-// - kLRubberH: The height of the widget is increased by the same       //
-//              factor as the height of the frame increases.            //
-// But the size never becomes smaller than defined by the               //
-// TGXYLayoutHints and the X and Y coordinates becomes never smaller    //
-// than defined by the layout hints.                                    //
-//                                                                      //
-// TGXYLayoutHints                                                      //
-//                                                                      //
-// This layout hint must be used for the TGXYLouyout manager!           //
-//                                                                      //
-//                                                                      //
-// Example how to use this layout manager:                              //
-//                                                                      //
-// TGMyFrame::TGMyFrame()                                               //
-//    : TGMainFrame(gClient->GetRoot(), 30, 12)                         //
-//    // frame is 30 character long and 12 character heigh              //
-// {                                                                    //
-//    SetLayoutManager(new TGXYLayout(this));                           //
-//                                                                      //
-//    // create a button of size 8 X 1.8 at position 20 / 1             //
-//    TGTextButton * button;                                            //
-//    button = new TGTextButton(this, "&Apply", 1);                     //
-//    AddFrame(button, new TGXYLayoutHints(20, 1, 8, 1.8));             //
-//                                                                      //
-//    // create a listbox of size 18 X 10 at position 1 / 1.            //
-//    // The height will increase if the frame height increases         //
-//    TGListBox * listBox;                                              //
-//    listBox = new TGListBox(this, 2);                                 //
-//    AddFrame(listBox, new TGXYLayoutHints(1, 1, 18, 10,               //
-//             TGXYLayoutHints::kLRubberX |                             //
-//             TGXYLayoutHints::kLRubberY |                             //
-//             TGXYLayoutHints::kLRubberH ));                           //
-//    .                                                                 //
-//    .                                                                 //
-//    .                                                                 //
-// }                                                                    //
-//                                                                      //
-// Normally there is one layout hint per widget. Therefore these        //
-// can be deleted like in the following example in the desctuctor       //
-// of the frame:                                                        //
-//                                                                      //
-// TGMyFrame::~TGMyFrame()                                              //
-// {                                                                    //
-//    // Destructor, deletes all frames and their layout hints.         //
-//                                                                      //
-//    TGFrameElement *ptr;                                              //
-//                                                                      //
-//    // delete all frames and layout hints                             //
-//    if (fList) {                                                      //
-//       TIter next(fList);                                             //
-//       while ((ptr = (TGFrameElement *) next())) {                    //
-//          if (ptr->fLayout)                                           //
-//             delete ptr->fLayout;                                     //
-//          if (ptr->fFrame)                                            //
-//             delete ptr->fFrame;                                      //
-//       }                                                              //
-//    }                                                                 //
-// }                                                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGXYLayout
+    \ingroup guiwidgets
+
+Is a layout manager where the position and the size of each widget
+in the frame are defined by X / Y - coordinates. The coordinates
+for each widget are defined by the TGXYLayoutHints. Therefore it
+is not possible to share a layout hint for several widgets.
+
+The coordinates (X, Y) and the size (W, H) are defined in units
+of the size of a typical character. Also the size of the
+TGCompositeFrame for which a TGXYLayout manager is used has to be
+defined in its constructor in units of the size of a character!
+
+It is not possible to use any other layout hint than the
+TGXYLayoutHints for this layout manager!
+
+The rubberFlag in the constructor of the TGLXYLayoutHins defines
+how the position and the size of a widget is recalculated if the
+size of the frame is increased:
+
+  - kLRubberX: The X - position (left edge) is increased by the same
+               factor as the width of the frame increases.
+  - kLRubberY: The Y - position (upper edge) is increased by the same
+               factor as the height of the frame increases.
+  - kLRubberW: The width of the widget is increased by the same
+               factor as the width of the frame increases.
+  - kLRubberH: The height of the widget is increased by the same
+               factor as the height of the frame increases.
+
+But the size never becomes smaller than defined by the
+TGXYLayoutHints and the X and Y coordinates becomes never smaller
+than defined by the layout hints.
+
+
+\class TGXYLayoutHints
+\ingroup guiwidgets
+
+This layout hint must be used for the TGXYLayout manager!
+
+Example how to use this layout manager:
+
+```
+TGMyFrame::TGMyFrame()
+   : TGMainFrame(gClient->GetRoot(), 30, 12)
+   // frame is 30 character long and 12 character heigh
+{
+   SetLayoutManager(new TGXYLayout(this));
+
+   // create a button of size 8 X 1.8 at position 20 / 1
+   TGTextButton * button;
+   button = new TGTextButton(this, "&Apply", 1);
+   AddFrame(button, new TGXYLayoutHints(20, 1, 8, 1.8));
+
+   // create a listbox of size 18 X 10 at position 1 / 1.
+   // The height will increase if the frame height increases
+   TGListBox * listBox;
+   listBox = new TGListBox(this, 2);
+   AddFrame(listBox, new TGXYLayoutHints(1, 1, 18, 10,
+            TGXYLayoutHints::kLRubberX |
+            TGXYLayoutHints::kLRubberY |
+            TGXYLayoutHints::kLRubberH ));
+   .
+   .
+   .
+}
+```
+
+Normally there is one layout hint per widget. Therefore these
+can be deleted like in the following example in the destructor
+of the frame:
+
+```
+TGMyFrame::~TGMyFrame()
+{
+   // Destructor, deletes all frames and their layout hints.
+
+   TGFrameElement *ptr;
+
+   // delete all frames and layout hints
+   if (fList) {
+      TIter next(fList);
+      while ((ptr = (TGFrameElement *) next())) {
+         if (ptr->fLayout)
+            delete ptr->fLayout;
+         if (ptr->fFrame)
+            delete ptr->fFrame;
+      }
+   }
+}
+```
+
+*/
+
 
 #include "TGXYLayout.h"
 #include "TGFrame.h"
@@ -242,7 +250,7 @@ void TGXYLayout::Layout()
       fFirst        = kFALSE;
    }
 
-   // get the factor of the increacement of the window
+   // get the factor to increase of window size
    xFactor = (Double_t)fMain->GetWidth() / (Double_t)fFirstWidth;
    if (xFactor < 1.0) xFactor = 1.0;
    yFactor = (Double_t)fMain->GetHeight() / (Double_t)fFirstHeight;

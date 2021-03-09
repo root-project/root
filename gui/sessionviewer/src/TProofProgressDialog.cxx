@@ -9,13 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofProgressDialog                                                 //
-//                                                                      //
-// This class provides a query progress bar.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TProofProgressDialog
+    \ingroup sessionviewer
+
+This class provides a query progress bar.
+
+*/
+
 
 #include "TProofProgressDialog.h"
 #include "TProofProgressLog.h"

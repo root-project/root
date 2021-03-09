@@ -13,12 +13,6 @@
 #define ROOT_TVirtualDragManager
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualDragManager                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 enum EDragType { kDragNone, kDragMove, kDragCopy,
