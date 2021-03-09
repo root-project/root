@@ -380,7 +380,7 @@ static int omatch(const char**      strp,
 
    // Notice: cases above don't advance.
    // Match any except newline
-   case kANY: if (**strp == '\n') return 0;
+   case kANY: if (*strp && (**strp == '\n')) return 0;
       break;
 
    // Set match
@@ -388,7 +388,7 @@ static int omatch(const char**      strp,
       break;
 
    // Literal match
-   default:    if (*slenp == 0 || (unsigned char) **strp != *pat)  return 0;
+   default:    if (*slenp == 0 || *strp == nullptr || (unsigned char) **strp != *pat) return 0;
       break;
    }
 
