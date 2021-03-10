@@ -22,6 +22,10 @@
 #define __has_feature(x) 0
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4624)
+#endif
+
 namespace llvm {
 
 
