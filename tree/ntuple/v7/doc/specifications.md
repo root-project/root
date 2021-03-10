@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications
+# RNTuple Reference Specifications (DRAFT, WIP)
 
 ## Terminology
 
@@ -154,7 +154,6 @@ These provide information regarding the location of the clusters and of the page
 
 ### OwnUuid
 A universally unique identifier (as defined by RFC4122) that is used to identify information in computer systems. Gives every generated nTuple a unique identifier. [Type to be determined].
-
 
 
 
