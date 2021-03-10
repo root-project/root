@@ -109,11 +109,11 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Add default parameter to the scope if needed.
 
-static clang::NestedNameSpecifier* AddDefaultParametersNNS(const clang::ASTContext& Ctx,
+static clang::NestedNameSpecifier *AddDefaultParametersNNS(const clang::ASTContext& Ctx,
                                                            clang::NestedNameSpecifier* scope,
                                                            const cling::Interpreter &interpreter,
                                                            const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) {
-   if (!scope) return 0;
+   if (!scope) return nullptr;
 
    const clang::Type* scope_type = scope->getAsType();
    if (scope_type) {
@@ -158,11 +158,11 @@ static bool CheckDefinition(const clang::CXXRecordDecl *cl, const clang::CXXReco
 /// instantiating the class template instance and replace it with the
 /// partially sugared types we have from 'instance'.
 
-static clang::NestedNameSpecifier* ReSubstTemplateArgNNS(const clang::ASTContext &Ctxt,
+static clang::NestedNameSpecifier *ReSubstTemplateArgNNS(const clang::ASTContext &Ctxt,
                                                          clang::NestedNameSpecifier *scope,
                                                          const clang::Type *instance)
 {
-   if (!scope) return 0;
+   if (!scope) return nullptr;
 
    const clang::Type* scope_type = scope->getAsType();
    if (scope_type) {
@@ -211,8 +211,7 @@ static const clang::FieldDecl *GetDataMemberFromAll(const clang::CXXRecordDecl &
          return *field_iter;
       }
    }
-   return 0;
-
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,7 +272,7 @@ static const clang::FieldDecl *GetDataMemberFromAllParents(const clang::CXXRecor
          return found;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 static
@@ -2848,7 +2847,7 @@ clang::RecordDecl *ROOT::TMetaUtils::GetUnderlyingRecordDecl(clang::QualType typ
 
    if (rawtype->isFundamentalType() || rawtype->isEnumeralType()) {
       // not an object.
-      return 0;
+      return nullptr;
    }
    return rawtype->getAsCXXRecordDecl();
 }
@@ -4860,10 +4859,10 @@ ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const clang::TypedefNameDecl* ROOT::TMetaUtils::GetAnnotatedRedeclarable(const clang::TypedefNameDecl* TND)
+const clang::TypedefNameDecl *ROOT::TMetaUtils::GetAnnotatedRedeclarable(const clang::TypedefNameDecl *TND)
 {
    if (!TND)
-      return 0;
+      return nullptr;
 
    TND = TND->getMostRecentDecl();
    while (TND && !(TND->hasAttrs()))
@@ -4874,10 +4873,10 @@ const clang::TypedefNameDecl* ROOT::TMetaUtils::GetAnnotatedRedeclarable(const c
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const clang::TagDecl* ROOT::TMetaUtils::GetAnnotatedRedeclarable(const clang::TagDecl* TD)
+const clang::TagDecl *ROOT::TMetaUtils::GetAnnotatedRedeclarable(const clang::TagDecl *TD)
 {
    if (!TD)
-      return 0;
+      return nullptr;
 
    TD = TD->getMostRecentDecl();
    while (TD && !(TD->hasAttrs() && TD->isThisDeclarationADefinition()))
@@ -4936,11 +4935,11 @@ void ROOT::TMetaUtils::ExtractCtxtEnclosingNameSpaces(const clang::DeclContext& 
 /// Extract the names and types of containing scopes.
 /// Stop if a class is met and return its pointer.
 
-const clang::RecordDecl* ROOT::TMetaUtils::ExtractEnclosingScopes(const clang::Decl& decl,
+const clang::RecordDecl *ROOT::TMetaUtils::ExtractEnclosingScopes(const clang::Decl& decl,
                                                                   std::list<std::pair<std::string,unsigned int> >& enclosingSc)
 {
    const clang::DeclContext* enclosingDeclCtxt = decl.getDeclContext();
-   if (!enclosingDeclCtxt) return 0;
+   if (!enclosingDeclCtxt) return nullptr;
 
    unsigned int scopeType;
 
@@ -4957,7 +4956,6 @@ const clang::RecordDecl* ROOT::TMetaUtils::ExtractEnclosingScopes(const clang::D
    }
 
    return nullptr;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
