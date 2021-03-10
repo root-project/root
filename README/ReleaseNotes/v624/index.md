@@ -98,9 +98,42 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 
 ## RooFit Libraries
 
+- Extension / updates of the doxygen reference guide.
+- Allow for removing RooPlot from global directory management, see [RooPlot::AddDirectory](https://root.cern/doc/v624/classRooPlot.html#a47f7ba71dcaca30ad9ee295dee89c9b8)
+  and [RooPlot::SetDirectory](https://root.cern/doc/v624/classRooPlot.html#a5938bc6d5c47d94c2f04fdcc10c1c026)
+- Hash-assisted finding of elements in RooWorkspace. Large RooWorkspace objects were slow in finding elements.
+  This was improved using a hash map.
+- Stabilise RooStats::HypoTestInverter. It can now tolerate a few failed fits when conducting hypothesis tests.
+  This is relevant when a few points in a parameter scan don't converge due to numerical or model instabilities.
+  These points will be skipped, and HypoTestInverter can continue.
+- New PDFs
+  - [RooDSCBShape](https://root.cern/doc/v624/classRooDSCBShape.html)
+  - [RooSDSCBShape](https://root.cern/doc/v624/classRooSDSCBShape.html)
+- Tweak pull / residual plots. ROOT automatically zoomed out a bit when a pull / residual plot is created. Now, the
+  axis range of the original plot is transferred to the residual plot, so the pulls can be drawn below the main plot.
+
+
+### Massive speed up of RooFit's `BatchMode` on CPUs with vector extensions
+RooFit's [`BatchMode`](https://root.cern/doc/master/classRooAbsPdf.html#a8f802a3a93467d5b7b089e3ccaec0fa8) has been around
+[since ROOT 6.20](https://root.cern/doc/v620/release-notes.html#fast-function-evaluation-and-vectorisation), but to
+fully use vector extensions of modern CPUs, a manual compilation of ROOT was necessary, setting the required compiler flags.
+
+Now, RooFit comes with dedicated computation libraries, each compiled for a specific CPU architecture. When RooFit is loaded for the
+first time, ROOT inspects the CPU capabilities, and loads the fastest supported version of this computation library.
+This means that RooFit can now use vector extensions such as AVX2 without being recompiled, which enables a speed up of up to 4x for certain computations.
+Combined with better data access patterns (~3x speed up, ROOT 6.20), computations with optimised PDFs speed up between 4x and 16x.
+
+The fast `BatchMode` now also works in combination with multi processing (`NumCPU`) and with binned data (`RooDataHist`).
+
+See [Demo notebook in SWAN](https://github.com/hageboeck/rootNotebooks),
+[EPJ Web Conf. 245 (2020) 06007](https://www.epj-conferences.org/articles/epjconf/abs/2020/21/epjconf_chep2020_06007/epjconf_chep2020_06007.html),
+[arxiv:2012.02746](https://arxiv.org/abs/2012.02746).
+
+
 ### Unbiased binned fits
 When RooFit performs binned fits, it takes the probability density at the bin centre as a proxy for the probability in the bin. This can lead to a bias.
 To alleviate this, the new class [RooBinSamplingPdf](https://root.cern/doc/v624/classRooBinSamplingPdf.html) has been added to RooFit.
+Also see [arxiv:2012.02746](https://arxiv.org/abs/2012.02746).
 
 ### More accurate residual and pull distributions
 When making residual or pull distributions with `RooPlot::residHist` or `RooPlot::pullHist`, the histogram is now compared with the curve's average values within a given bin by default, ensuring that residual and pull distributions are valid for strongly curved distributions.
@@ -111,7 +144,8 @@ When a function in RooFit is undefined (Poisson with negative mean, PDF with neg
 "badness" of the violation to the minimiser. The minimiser can use this to compute a gradient to find its way out of the undefined region.
 This can drastically improve its ability to recover when unstable fit models are used, for example RooPolynomial.
 
-For details, see the RooFit tutorial [rf612_recoverFromInvalidParameters.C](https://root.cern/doc/v624/rf612__recoverFromInvalidParameters_8C.html).
+For details, see the RooFit tutorial [rf612_recoverFromInvalidParameters.C](https://root.cern/doc/v624/rf612__recoverFromInvalidParameters_8C.html)
+and [arxiv:2012.02746](https://arxiv.org/abs/2012.02746).
 
 ### Modernised RooDataHist
 RooDataHist was partially modernised to improve const-correctness, to reduce side effects as well as its memory footprint, and to make
