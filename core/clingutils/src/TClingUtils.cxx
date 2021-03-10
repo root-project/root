@@ -3188,14 +3188,12 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
          }
       } else { // current token is not a digit
          // first let's see if it is a data member:
-         int found = 0;
          const clang::CXXRecordDecl *parent_clxx = llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext());
          const clang::FieldDecl *index1 = 0;
          if (parent_clxx)
             index1 = GetDataMemberFromAll(*parent_clxx, current );
          if ( index1 ) {
             if ( IsFieldDeclInt(index1) ) {
-               found = 1;
                // Let's see if it has already been written down in the
                // Streamer.
                // Let's see if we already wrote it down in the
@@ -3229,6 +3227,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
          } else {
             // There is no variable by this name in this class, let see
             // the base classes!:
+            int found = 0;
             index1 = GetDataMemberFromAllParents( *parent_clxx, current );
             if ( index1 ) {
                if ( IsFieldDeclInt(index1) ) {
