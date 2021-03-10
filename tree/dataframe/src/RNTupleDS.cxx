@@ -36,19 +36,16 @@ namespace Detail {
 
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
 /// collection sizes. It is used to provide the "number of" RDF columns for collections, e.g.
-/// `#jets` for a collection named `jets`.
+/// `__rdf_sizeof_jets` for a collection named `jets`.
 ///
 /// This field owns the collection offset field but instead of exposing the collection offsets it exposes
 /// the collection sizes (offset(N+1) - offset(N)).  For the time being, we offer this functionality only in RDataFrame.
 /// TODO(jblomer): consider providing a general set of useful virtual fields as part of RNTuple.
 class RRDFCardinalityField : public ROOT::Experimental::Detail::RFieldBase {
-   ROOT::Experimental::RField<ClusterSize_t> fOffsetField;
-
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t::ValueType"; }
    RRDFCardinalityField()
      : Detail::RFieldBase("", TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
-     , fOffsetField("")
    {
    }
    RRDFCardinalityField(RRDFCardinalityField&& other) = default;
@@ -58,9 +55,13 @@ public:
       return std::make_unique<RRDFCardinalityField>();
    }
 
-   /// Being virtual, the field doesn't have any columns of its own but it uses, indirectly, the columns
-   /// of fOffsetField when reading
-   void GenerateColumnsImpl() final { }
+   void GenerateColumnsImpl() final
+   {
+      RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
+      fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
+         Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
+      fPrincipalColumn = fColumns[0].get();
+   }
 
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final
    {
@@ -77,7 +78,7 @@ public:
                        ROOT::Experimental::Detail::RFieldValue *value) final
    {
       RClusterIndex collectionStart;
-      fOffsetField.GetCollectionInfo(globalIndex, &collectionStart, value->Get<ClusterSize_t>());
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, value->Get<ClusterSize_t>());
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
@@ -85,14 +86,13 @@ public:
                           ROOT::Experimental::Detail::RFieldValue *value) final
    {
       RClusterIndex collectionStart;
-      fOffsetField.GetCollectionInfo(clusterIndex, &collectionStart, value->Get<ClusterSize_t>());
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, value->Get<ClusterSize_t>());
    }
 };
 
 
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
-protected:
    using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
    using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
@@ -164,16 +164,16 @@ void RNTupleDS::AddField(
    // tree of sub fields and expose the following RDF columns:
    // TODO(jblomer): Collections should be exposed as RVec<T> instead of std::vector<T>
    //
-   // "event"                 [Event]
-   // "event.id"              [int]
-   // "event.tracks"          [std::vector<Track>]
-   // "#event.tracks"         [unsigned int]
-   // "event.tracks.hits"     [std::vector<std::vector<Hit>>]
-   // "#event.tracks.hits"    [std::vector<unsigned int>]
-   // "event.tracks.hits.x"   [std::vector<std::vector<float>>]
-   // "#event.tracks.hits.x"  [std::vector<unsigned int>]
-   // "event.tracks.hits.y"   [std::vector<std::vector<float>>]
-   // "#event.tracks.hits.y"  [std::vector<unsigned int>]
+   // "event"                             [Event]
+   // "event.id"                          [int]
+   // "event.tracks"                      [std::vector<Track>]
+   // "__rdf_sizeof_event.tracks"         [unsigned int]
+   // "event.tracks.hits"                 [std::vector<std::vector<Hit>>]
+   // "__rdf_sizeof_event.tracks.hits"    [std::vector<unsigned int>]
+   // "event.tracks.hits.x"               [std::vector<std::vector<float>>]
+   // "__rdf_sizeof_event.tracks.hits.x"  [std::vector<unsigned int>]
+   // "event.tracks.hits.y"               [std::vector<std::vector<float>>]
+   // "__rdf_sizeof_event.tracks.hits.y"  [std::vector<unsigned int>]
 
    const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
    if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
@@ -207,7 +207,7 @@ void RNTupleDS::AddField(
    auto valueField = fieldOrException.Unwrap();
    valueField->SetOnDiskId(fieldId);
    std::unique_ptr<Detail::RFieldBase> cardinalityField;
-   // Collections get the additional "number of" RDF column (e.g. "#tracks")
+   // Collections get the additional "number of" RDF column (e.g. "__rdf_sizeof_tracks")
    if (!skeinIDs.empty()) {
       cardinalityField = std::make_unique<Detail::RRDFCardinalityField>();
       cardinalityField->SetOnDiskId(skeinIDs.back());
@@ -225,7 +225,7 @@ void RNTupleDS::AddField(
    }
 
    if (cardinalityField) {
-      fColumnNames.emplace_back(std::string("#") + std::string(colName));
+      fColumnNames.emplace_back(std::string("__rdf_sizeof_") + std::string(colName));
       fColumnTypes.emplace_back(cardinalityField->GetType());
       auto cardColReader =
          std::make_unique<Detail::RNTupleColumnReader>(std::move(cardinalityField));
