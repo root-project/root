@@ -192,7 +192,7 @@ private: // member functions
 
    Int_t      Complete(const TRegexp& re, const TSeqCollection* pListOfCandidates,
                        const char appendage[], std::ostream& out, TString::ECaseCompare cmp = TString::kExact);
-   void       CopyMatch( char dest[], const char localName[], const char appendage[] = nullptr, const char fullName[] = nullptr) const;
+   void       CopyMatch(char *dest, int dest_len, const char *localName, const char *appendage = nullptr, const char *fullName = nullptr) const;
    EContext_t DetermineContext() const;
    TString    DeterminePath( const TString& fileName, const char defaultPath[] ) const;
    TString    ExtendPath( const char originalPath[], TString newBase ) const;
