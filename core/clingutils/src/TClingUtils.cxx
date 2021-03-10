@@ -220,10 +220,11 @@ static bool CXXRecordDecl__FindOrdinaryMember(const clang::CXXBaseSpecifier *Spe
                                               clang::CXXBasePath &Path,
                                               const char *Name)
 {
+   if (!Specifier) return false;
    clang::RecordDecl *BaseRecord = Specifier->getType()->getAs<clang::RecordType>()->getDecl();
 
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(BaseRecord);
-   if (clxx == 0) return false;
+   if (!clxx) return false;
 
    const clang::FieldDecl *found = GetDataMemberFromAll(*clxx,(const char*)Name);
    if (found) {
@@ -1644,8 +1645,8 @@ bool ROOT::TMetaUtils::hasOpaqueTypedef(const AnnotatedRecordDecl &cl,
                                         const cling::Interpreter &interp,
                                         const TNormalizedCtxt &normCtxt)
 {
-   const clang::CXXRecordDecl* clxx =  llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
-   if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
+   const clang::CXXRecordDecl *clxx =  llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
+   if (!clxx || clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return false;
 
    clang::QualType instanceType = interp.getLookupHelper().findType(cl.GetNormalizedName(),
                                                                     cling::LookupHelper::WithDiagnostics);
@@ -2265,14 +2266,15 @@ int ROOT::TMetaUtils::WriteNamespaceHeader(std::ostream &out, const clang::DeclC
    //    cl.Fullname(),namespace_obj.Fullname());
    if (ctxt && ctxt->isNamespace()) {
       closing_brackets = WriteNamespaceHeader(out,ctxt->getParent());
-      for (int indent = 0; indent < closing_brackets; ++indent) {
-         out << "   ";
-      }
       const clang::NamespaceDecl *ns = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
-      if (ns->isInline())
-         out << "inline ";
-      out << "namespace " << ns->getNameAsString() << " {" << std::endl;
-      closing_brackets++;
+      if (ns) {
+         for (int indent = 0; indent < closing_brackets; ++indent)
+            out << "   ";
+         if (ns->isInline())
+            out << "inline ";
+         out << "namespace " << ns->getNameAsString() << " {" << std::endl;
+         closing_brackets++;
+      }
    }
 
    return closing_brackets;

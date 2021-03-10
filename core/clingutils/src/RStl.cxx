@@ -72,6 +72,7 @@ void ROOT::Internal::RStl::GenerateTClassFor(const clang::QualType &type, const 
    if (!templateCl) {
       ROOT::TMetaUtils::Error("RStl::GenerateTClassFor","%s not in a template",
             ROOT::TMetaUtils::GetQualifiedName(*stlclass).c_str());
+      return;
    }
 
    if ( TClassEdit::STLKind( stlclass->getName().str() )  == ROOT::kSTLvector ) {
@@ -127,9 +128,10 @@ void ROOT::Internal::RStl::GenerateTClassFor(const char *requestedName, const cl
    // Force the generation of the TClass for the given class.
    const clang::ClassTemplateSpecializationDecl *templateCl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(stlclass);
 
-   if (templateCl == 0) {
+   if (!templateCl) {
       ROOT::TMetaUtils::Error("RStl::GenerateTClassFor","%s not in a template",
             ROOT::TMetaUtils::GetQualifiedName(*stlclass).c_str());
+      return;
    }
 
 
