@@ -278,7 +278,7 @@ TRef::TRef(const TRef &ref) : TObject(ref)
 void TRef::operator=(TObject *obj)
 {
    UInt_t uid = 0;
-   fPID = 0;
+   fPID = nullptr;
    if (obj) {
       if (obj->IsA()->CanIgnoreTObjectStreamer()) {
          Error("operator= ","Class: %s IgnoreTObjectStreamer. Cannot reference object",obj->ClassName());
@@ -377,8 +377,8 @@ TObjArray *TRef::GetListOfExecs()
 TObject *TRef::GetObject() const
 {
    //TObject *obj = 0;
-   if (!fPID) return 0;
-   if (!TProcessID::IsValid(fPID)) return 0;
+   if (!fPID) return nullptr;
+   if (!TProcessID::IsValid(fPID)) return nullptr;
    UInt_t uid = GetUniqueID();
 
    //the reference may be in the TRefTable
@@ -406,7 +406,7 @@ TObject *TRef::GetObject() const
             exec->Exec();
             if ((const TRef*)fgObject != this)
                obj = fgObject;
-            else obj=0;
+            else obj=nullptr;
             if (obj){
                uid = TProcessID::AssignID(obj);
                ((TRef*)this)->SetUniqueID(uid);

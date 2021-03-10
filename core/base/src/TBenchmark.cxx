@@ -27,10 +27,10 @@ TBenchmark::TBenchmark(): TNamed()
 {
    fNbench   = 0;
    fNmax     = 20;
-   fNames    = 0;
-   fRealTime = 0;
-   fCpuTime  = 0;
-   fTimer    = 0;
+   fNames    = nullptr;
+   fRealTime = nullptr;
+   fCpuTime  = nullptr;
+   fTimer    = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,10 +40,10 @@ TBenchmark::TBenchmark(const TBenchmark& bm) :
   TNamed(bm),
   fNbench(bm.fNbench),
   fNmax(bm.fNmax),
-  fNames(0),
-  fRealTime(0),
-  fCpuTime(0),
-  fTimer(0)
+  fNames(nullptr),
+  fRealTime(nullptr),
+  fCpuTime(nullptr),
+  fTimer(nullptr)
 {
    fNames    = new TString[fNmax];
    fRealTime = new Float_t[fNmax];
@@ -94,10 +94,10 @@ TBenchmark& TBenchmark::operator=(const TBenchmark& bm)
 TBenchmark::~TBenchmark()
 {
    fNbench   = 0;
-   if (fNames)    { delete [] fNames;    fNames  = 0;}
-   if (fRealTime) { delete [] fRealTime; fRealTime  = 0;}
-   if (fCpuTime)  { delete [] fCpuTime;  fCpuTime  = 0;}
-   if (fTimer  )  { delete [] fTimer;    fTimer  = 0;}
+   if (fNames)    { delete [] fNames;    fNames  = nullptr;}
+   if (fRealTime) { delete [] fRealTime; fRealTime  = nullptr;}
+   if (fCpuTime)  { delete [] fCpuTime;  fCpuTime  = nullptr;}
+   if (fTimer  )  { delete [] fTimer;    fTimer  = nullptr;}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -95,10 +95,10 @@ static void CallEndOfProcessCleanups()
 /// Default ctor. Can be used by classes deriving from TApplication.
 
 TApplication::TApplication() :
-   fArgc(0), fArgv(0), fAppImp(0), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
+   fArgc(0), fArgv(nullptr), fAppImp(nullptr), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
    fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE), fUseMemstat(kFALSE),
-   fFiles(0), fIdleTimer(0), fSigHandler(0), fExitOnException(kDontExit),
-   fAppRemote(0)
+   fFiles(nullptr), fIdleTimer(nullptr), fSigHandler(nullptr), fExitOnException(kDontExit),
+   fAppRemote(nullptr)
 {
    ResetBit(kProcessRemotely);
 }
@@ -119,10 +119,10 @@ TApplication::TApplication() :
 
 TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
                            void * /*options*/, Int_t numOptions) :
-   fArgc(0), fArgv(0), fAppImp(0), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
+   fArgc(0), fArgv(nullptr), fAppImp(nullptr), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
    fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE), fUseMemstat(kFALSE),
-   fFiles(0), fIdleTimer(0), fSigHandler(0), fExitOnException(kDontExit),
-   fAppRemote(0)
+   fFiles(nullptr), fIdleTimer(nullptr), fSigHandler(nullptr), fExitOnException(kDontExit),
+   fAppRemote(nullptr)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -139,7 +139,7 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    if (gApplication && gApplication->TestBit(kDefaultApplication)) {
       // allow default TApplication to be replaced by a "real" TApplication
       delete gApplication;
-      gApplication = 0;
+      gApplication = nullptr;
       gROOT->SetBatch(kFALSE);
       fgGraphInit = kFALSE;
    }
@@ -236,7 +236,7 @@ TApplication::~TApplication()
    // Reduce the risk of the files or sockets being closed after the
    // end of 'main' (or more exactly before the library start being
    // unloaded).
-   if (fgApplications == 0 || fgApplications->FirstLink() == 0 ) {
+   if (fgApplications == nullptr || fgApplications->FirstLink() == nullptr ) {
       TROOT::ShutDown();
    }
 
@@ -341,11 +341,11 @@ char *TApplication::Argv(Int_t index) const
    if (fArgv) {
       if (index >= fArgc) {
          Error("Argv", "index (%d) >= number of arguments (%d)", index, fArgc);
-         return 0;
+         return nullptr;
       }
       return fArgv[index];
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -358,7 +358,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
 
    fNoLog = kFALSE;
    fQuit  = kFALSE;
-   fFiles = 0;
+   fFiles = nullptr;
 
    if (!argc)
       return;
@@ -1282,12 +1282,12 @@ Longptr_t TApplication::ProcessRemote(const char *line, Int_t *)
          delete fAppRemote;
       }
       // Return to local run
-      fAppRemote = 0;
+      fAppRemote = nullptr;
       // Done
       return 1;
    } else if (rc == 1) {
       // close an existing remote application
-      TApplication *ap = TApplication::Open(hostdir, 0, 0);
+      TApplication *ap = TApplication::Open(hostdir, 0, nullptr);
       if (ap) {
          TApplication::Close(ap);
          delete ap;
@@ -1296,7 +1296,7 @@ Longptr_t TApplication::ProcessRemote(const char *line, Int_t *)
    // Attach or start a remote application
    if (user.Length() > 0)
       hostdir.Insert(0,Form("%s@", user.Data()));
-   const char *sc = (script.Length() > 0) ? script.Data() : 0;
+   const char *sc = (script.Length() > 0) ? script.Data() : nullptr;
    TApplication *ap = TApplication::Open(hostdir, dbg, sc);
    if (ap) {
       fAppRemote = ap;
@@ -1391,7 +1391,7 @@ Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
    }
 
    if (!strncmp(line, ".ls", 3)) {
-      const char *opt = 0;
+      const char *opt = nullptr;
       if (line[3]) opt = &line[3];
       if (gDirectory) gDirectory->ls(opt);
       return 1;
@@ -1520,7 +1520,7 @@ Longptr_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
    int comment  = 0;
    int ifndefc  = 0;
    int ifdef    = 0;
-   char *s      = 0;
+   char *s      = nullptr;
    Bool_t execute = kFALSE;
    Longptr_t retval = 0;
 
@@ -1747,7 +1747,7 @@ void TApplication::CreateApplication()
       Int_t argc = 2;
       argv[0] = a;
       argv[1] = b;
-      new TApplication("RootApp", &argc, argv, 0, 0);
+      new TApplication("RootApp", &argc, argv, nullptr, 0);
       if (gDebug > 0)
          Printf("<TApplication::CreateApplication>: "
                 "created default TApplication");
@@ -1763,7 +1763,7 @@ void TApplication::CreateApplication()
 TApplication *TApplication::Open(const char *url,
                                   Int_t debug, const char *script)
 {
-   TApplication *ap = 0;
+   TApplication *ap = nullptr;
    TUrl nu(url);
    Int_t nnew = 0;
 
@@ -1798,7 +1798,7 @@ TApplication *TApplication::Open(const char *url,
    }
 
    // Instantiate the TApplication object to be run
-   TPluginHandler *h = 0;
+   TPluginHandler *h = nullptr;
    if ((h = gROOT->GetPluginManager()->FindHandler("TApplication","remote"))) {
       if (h->LoadPlugin() == 0) {
          ap = (TApplication *) h->ExecPlugin(3, nu.GetUrl(), debug, script);
@@ -1852,7 +1852,7 @@ void TApplication::ls(Option_t *opt) const
 {
    if (fgApplications) {
       TIter nxa(fgApplications);
-      TApplication *a = 0;
+      TApplication *a = nullptr;
       while ((a = (TApplication *) nxa())) {
          a->Print(opt);
       }

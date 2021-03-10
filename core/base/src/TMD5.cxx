@@ -424,7 +424,7 @@ TMD5 *TMD5::ReadChecksum(const char *file)
    FILE *fid = fopen(file, "r");
    if (!fid) {
       // file cannot be opened
-      return 0;
+      return nullptr;
    }
 
    char buf[33];
@@ -432,7 +432,7 @@ TMD5 *TMD5::ReadChecksum(const char *file)
    if (!fgets(buf, 33, fid)) {
       SysError("TMD5::ReadChecksum", "error reading checksum from %s", file);
       fclose(fid);
-      return 0;
+      return nullptr;
    }
 
    fclose(fid);
@@ -478,11 +478,11 @@ TMD5 *TMD5::FileChecksum(const char *file)
    if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 0) {
       if (flags > 1) {
          Error("TMD5::FileChecksum", "%s not a regular file (%ld)", file, flags);
-         return 0;
+         return nullptr;
       }
    } else {
       // file does not exist
-      return 0;
+      return nullptr;
    }
 
 #ifndef WIN32
@@ -492,7 +492,7 @@ TMD5 *TMD5::FileChecksum(const char *file)
 #endif
    if (fd < 0) {
       Error("TMD5::FileChecksum", "cannot open %s in read mode", file);
-      return 0;
+      return nullptr;
    }
 
    TMD5 *md5 = new TMD5;
@@ -512,7 +512,7 @@ TMD5 *TMD5::FileChecksum(const char *file)
          Error("TMD5::FileChecksum", "error reading from file %s", file);
          close(fd);
          delete md5;
-         return 0;
+         return nullptr;
       }
 
       md5->Update(buf, left);
