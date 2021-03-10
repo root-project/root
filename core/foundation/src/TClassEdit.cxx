@@ -1463,7 +1463,6 @@ static void ResolveTypedefProcessType(const char *tname,
          }
          else {
             modified = true;
-            mod_start_of_type = start_of_type;
             result += string(tname,0,start_of_type);
             if (constprefix && typeresult.compare(0,6,"const ",6) == 0) {
                result += typeresult.substr(6,string::npos);
