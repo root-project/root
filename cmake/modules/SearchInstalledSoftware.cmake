@@ -964,6 +964,15 @@ if(builtin_xrootd)
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${XROOTD_VERSIONNUM}")
   install(DIRECTORY ${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libXrd*")
   install(DIRECTORY ${XROOTD_ROOTDIR}/include/xrootd/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+  if(NOT WINDOWS)
+    # Install xrdcp along other root binaries
+    install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/xrdcp
+                                DESTINATION ${CMAKE_INSTALL_BINDIR}
+                                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                                            GROUP_EXECUTE GROUP_READ
+                                            WORLD_EXECUTE WORLD_READ
+                                COMPONENT applications)
+  endif()
   if(APPLE)
     # XRootD libraries on mac need the LC_RPATH variable set. The build process already takes care of setting
     #   * BUILD_RPATH = build/XROOTD-prefix/../src
