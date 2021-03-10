@@ -647,7 +647,7 @@ There are two reasons why RDataFrame may consume more memory than expected. Firs
 Secondly, just-in-time compilation of string expressions or non-templated actions (see the previous paragraph) causes Cling, ROOT's C++ interpreter, to allocate some memory for the generated code that is only released at the end of the application. This commonly results in memory usage creep in long-running applications that create many RDataFrames one after the other. Possible mitigations include creating and running each RDataFrame event loop in a sub-process, or booking all operations for all different RDataFrame computation graphs before the first event loop is triggered, so that the interpreter is invoked only once for all computation graphs.
 
 ##  <a name="more-features"></a>More features
-Here is a list of the most important features that have been omitted in the "Crash course" for brevity[.
+Here is a list of the most important features that have been omitted in the "Crash course" for brevity.
 You don't need to read all these to start using `RDataFrame`, but they are useful to save typing time and runtime.
 
 ### Programmatically get the list of column names
