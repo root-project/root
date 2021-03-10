@@ -942,12 +942,31 @@ ROOT will implement a workaround for this in an upcoming release.
 * [#6856](https://github.com/root-project/root/issues/6856) - error when creating a python class inheriting from a ROOT class,  6.22/02
 
 
-## HEAD of the v6-22-00-patches branch
+## Release 6.22/08
 
-These changes will be part of a future 6.22/06.
+Published on March 10, 2021
+
+### Windows Binaries
+
+Due to false positive virus scanner reports, all previous Windows binaries of ROOT have been removed.
+These false positives were addressed by a trivial change to ROOT's sources which is available since 6.22/08.
 
 ### Build, Configuration and Testing Infrastructure
 
 The following builtins have been updated:
 
 - VecCore 0.7.0
+
+### Bugs and Issues fixed in this release
+
+* [#6944](https://github.com/root-project/root/issues/6944) - RDataFrame misidentifies vector<XYZTVector> type of a friend tree with identical branch name to another friend tree
+* [#6964](https://github.com/root-project/root/issues/6964) - [TTree] GetLeaf ignores the branchname arg if friend trees are present
+* [#7016](https://github.com/root-project/root/issues/7016) - Memory leak during schema evolution of some classes
+* [#7143](https://github.com/root-project/root/issues/7143) - TTreeProcessorMT: Fails when iterating over different treenames within same ROOT file
+* [#6933](https://github.com/root-project/root/issues/6933) - ROOT 6.22 should reject TBB 2021.1.1 and above during configuration (fails to compile)
+* [#7115](https://github.com/root-project/root/issues/7115) - regex_error when selecting pdf components to plot
+* [#7240](https://github.com/root-project/root/issues/7240) - [RF] Batch mode returns broken logarithms when `-DVDT=OFF`
+
+## HEAD of the v6-22-00-patches branch
+
+These changes will be part of a future 6.22/10.
