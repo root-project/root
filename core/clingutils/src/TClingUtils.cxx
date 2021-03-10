@@ -27,6 +27,7 @@
 #include <ROOT/RConfig.hxx>
 #include <ROOT/FoundationUtils.hxx>
 #include "Rtypes.h"
+#include "strlcpy.h"
 
 #include "RStl.h"
 
@@ -3285,34 +3286,39 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
       if (out.capacity() < (j+3)) {
          out.resize(2*j+3);
       }
+      const char *repl = nullptr;
       switch(c) { // We resized the underlying buffer if needed
-         case '+': strcpy(const_cast<char*>(out.data())+j,"pL"); j+=2; break;
-         case '-': strcpy(const_cast<char*>(out.data())+j,"mI"); j+=2; break;
-         case '*': strcpy(const_cast<char*>(out.data())+j,"mU"); j+=2; break;
-         case '/': strcpy(const_cast<char*>(out.data())+j,"dI"); j+=2; break;
-         case '&': strcpy(const_cast<char*>(out.data())+j,"aN"); j+=2; break;
-         case '%': strcpy(const_cast<char*>(out.data())+j,"pE"); j+=2; break;
-         case '|': strcpy(const_cast<char*>(out.data())+j,"oR"); j+=2; break;
-         case '^': strcpy(const_cast<char*>(out.data())+j,"hA"); j+=2; break;
-         case '>': strcpy(const_cast<char*>(out.data())+j,"gR"); j+=2; break;
-         case '<': strcpy(const_cast<char*>(out.data())+j,"lE"); j+=2; break;
-         case '=': strcpy(const_cast<char*>(out.data())+j,"eQ"); j+=2; break;
-         case '~': strcpy(const_cast<char*>(out.data())+j,"wA"); j+=2; break;
-         case '.': strcpy(const_cast<char*>(out.data())+j,"dO"); j+=2; break;
-         case '(': strcpy(const_cast<char*>(out.data())+j,"oP"); j+=2; break;
-         case ')': strcpy(const_cast<char*>(out.data())+j,"cP"); j+=2; break;
-         case '[': strcpy(const_cast<char*>(out.data())+j,"oB"); j+=2; break;
-         case ']': strcpy(const_cast<char*>(out.data())+j,"cB"); j+=2; break;
-         case '!': strcpy(const_cast<char*>(out.data())+j,"nO"); j+=2; break;
-         case ',': strcpy(const_cast<char*>(out.data())+j,"cO"); j+=2; break;
-         case '$': strcpy(const_cast<char*>(out.data())+j,"dA"); j+=2; break;
-         case ' ': strcpy(const_cast<char*>(out.data())+j,"sP"); j+=2; break;
-         case ':': strcpy(const_cast<char*>(out.data())+j,"cL"); j+=2; break;
-         case '"': strcpy(const_cast<char*>(out.data())+j,"dQ"); j+=2; break;
-         case '@': strcpy(const_cast<char*>(out.data())+j,"aT"); j+=2; break;
-         case '\'': strcpy(const_cast<char*>(out.data())+j,"sQ"); j+=2; break;
-         case '\\': strcpy(const_cast<char*>(out.data())+j,"fI"); j+=2; break;
+         case '+': repl = "pL"; break;
+         case '-': repl = "mI"; break;
+         case '*': repl = "mU"; break;
+         case '/': repl = "dI"; break;
+         case '&': repl = "aN"; break;
+         case '%': repl = "pE"; break;
+         case '|': repl = "oR"; break;
+         case '^': repl = "hA"; break;
+         case '>': repl = "gR"; break;
+         case '<': repl = "lE"; break;
+         case '=': repl = "eQ"; break;
+         case '~': repl = "wA"; break;
+         case '.': repl = "dO"; break;
+         case '(': repl = "oP"; break;
+         case ')': repl = "cP"; break;
+         case '[': repl = "oB"; break;
+         case ']': repl = "cB"; break;
+         case '!': repl = "nO"; break;
+         case ',': repl = "cO"; break;
+         case '$': repl = "dA"; break;
+         case ' ': repl = "sP"; break;
+         case ':': repl = "cL"; break;
+         case '"': repl = "dQ"; break;
+         case '@': repl = "aT"; break;
+         case '\'': repl = "sQ"; break;
+         case '\\': repl = "fI"; break;
          default: out[j++]=c; break;
+      }
+      if (repl) {
+         strlcpy(const_cast<char*>(out.data())+j, repl, out.capacity()-j);
+         j+=2;
       }
       ++i;
    }
@@ -3321,8 +3327,6 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
    // Remove initial numbers if any
    std::size_t firstNonNumber = out.find_first_not_of("0123456789");
    out.replace(0,firstNonNumber,"");
-
-   return;
 }
 
 static clang::SourceLocation
