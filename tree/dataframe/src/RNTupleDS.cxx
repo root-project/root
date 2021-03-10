@@ -42,6 +42,11 @@ namespace Detail {
 /// the collection sizes (offset(N+1) - offset(N)).  For the time being, we offer this functionality only in RDataFrame.
 /// TODO(jblomer): consider providing a general set of useful virtual fields as part of RNTuple.
 class RRDFCardinalityField : public ROOT::Experimental::Detail::RFieldBase {
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view /* newName */) const final {
+      return std::make_unique<RRDFCardinalityField>();
+   }
+
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t::ValueType"; }
    RRDFCardinalityField()
@@ -51,9 +56,6 @@ public:
    RRDFCardinalityField(RRDFCardinalityField&& other) = default;
    RRDFCardinalityField& operator =(RRDFCardinalityField&& other) = default;
    ~RRDFCardinalityField() = default;
-   std::unique_ptr<Detail::RFieldBase> Clone(std::string_view /* newName */) const final {
-      return std::make_unique<RRDFCardinalityField>();
-   }
 
    void GenerateColumnsImpl() final
    {
@@ -111,9 +113,7 @@ public:
    /// Column readers are created as prototype and then cloned for every slot
    std::unique_ptr<RNTupleColumnReader> Clone()
    {
-      auto cloneField = fField->Clone(fField->GetName());
-      cloneField->SetOnDiskId(fField->GetOnDiskId());
-      return std::make_unique<RNTupleColumnReader>(std::move(cloneField));
+      return std::make_unique<RNTupleColumnReader>(fField->Clone(fField->GetName()));
    }
 
    /// Connect the field and its subfields to the page source
