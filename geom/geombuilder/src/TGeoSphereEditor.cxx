@@ -348,7 +348,6 @@ void TGeoSphereEditor::DoRmax()
    }
    if (rmax < rmin+1.e-10) {
       rmax = rmin + 0.1;
-      if (rmin < 0.) rmin = 0.;
       fERmax->SetNumber(rmax);
    }
    DoModified();

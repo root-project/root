@@ -236,7 +236,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    fCategories->AddItem(si);
 
    f1 = new TGCompositeFrame(container, 155, 10, kHorizontalFrame | kFixedWidth);
-   f1->AddFrame(label = new TGLabel(f1, "Visibility"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   f1->AddFrame(/* label = */ new TGLabel(f1, "Visibility"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
 //   gClient->GetColorByName("#ff0000", color);
 //   label->SetTextColor(color);
@@ -314,13 +314,13 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    container->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
    // Division range
    f1 = new TGCompositeFrame(container, 155, 10, kHorizontalFrame | kFixedWidth);
-   f1->AddFrame(label = new TGLabel(f1, "Division parameters"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   f1->AddFrame(/* label = */ new TGLabel(f1, "Division parameters"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
 //   gClient->GetColorByName("#ff0000", color);
 //   label->SetTextColor(color);
    container->AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
    f1 = new TGCompositeFrame(container, 155, 10, kHorizontalFrame | kFixedWidth);
-   f1->AddFrame(label = new TGLabel(f1, "From"), new TGLayoutHints(kLHintsLeft, 2, 2, 4, 0));
+   f1->AddFrame(/* label = */ new TGLabel(f1, "From"), new TGLayoutHints(kLHintsLeft, 2, 2, 4, 0));
 //   gClient->GetColorByName("#0000ff", color);
 //   label->SetTextColor(color);
    fEDivFrom = new TGNumberEntry(f1, 0, 5, kVOL_DIVSTART);
@@ -334,7 +334,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    container->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
 
    f1 = new TGCompositeFrame(container, 155, 10, kHorizontalFrame | kFixedWidth);
-   f1->AddFrame(label = new TGLabel(f1, "Step"), new TGLayoutHints(kLHintsLeft, 2, 2, 4, 0));
+   f1->AddFrame(/* label = */ new TGLabel(f1, "Step"), new TGLayoutHints(kLHintsLeft, 2, 2, 4, 0));
 //   gClient->GetColorByName("#0000ff", color);
 //   label->SetTextColor(color);
    fEDivStep = new TGNumberEntry(f1, 0, 5, kVOL_DIVSTEP);
@@ -348,7 +348,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    container->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
 
    f1 = new TGCompositeFrame(container, 155, 10, kHorizontalFrame |kFixedWidth);
-   f1->AddFrame(label = new TGLabel(f1, "Nslices"), new TGLayoutHints(kLHintsLeft, 2, 2, 4, 0));
+   f1->AddFrame(/* label = */ new TGLabel(f1, "Nslices"), new TGLayoutHints(kLHintsLeft, 2, 2, 4, 0));
 //   gClient->GetColorByName("#0000ff", color);
 //   label->SetTextColor(color);
    fEDivN = new TGNumberEntry(f1, 0, 5, kVOL_DIVN);
