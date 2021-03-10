@@ -545,7 +545,7 @@ It is also possible to specify the quantity to be stored in the new temporary co
 `Define(name, expression)`. For example this invocation
 
 ~~~{.cpp}
-tdf.Define("pt", "sqrt(px*px + py*py)");
+df.Define("pt", "sqrt(px*px + py*py)");
 ~~~
 
 will create a new column called "pt" the value of which is calculated starting from the columns px and py. The system
