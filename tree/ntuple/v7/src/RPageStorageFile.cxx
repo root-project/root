@@ -376,8 +376,10 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
       auto cachedPage = fPagePool->GetPage(columnId, RClusterIndex(clusterId, idxInCluster));
-      if (!cachedPage.IsNull())
+      if (!cachedPage.IsNull()) {
+         delete[] pageBuffer;
          return cachedPage;
+      }
 
       ROnDiskPage::Key key(columnId, pageNo);
       //printf("POPULATE cluster %ld column %ld page %ld\n", clusterId, columnId, pageNo);
