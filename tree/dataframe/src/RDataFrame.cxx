@@ -481,10 +481,14 @@ print(cols["x"], cols["y"])
 
 ##  <a name="transformations"></a>Transformations
 ### <a name="Filters"></a> Filters
-A filter is defined through a call to `Filter(f, columnList)`. `f` can be a function, a lambda expression, a functor
-class, or any other callable object. It must return a `bool` signalling whether the event has passed the selection
-(`true`) or not (`false`). It must perform "read-only" actions on the columns, and should not have side-effects (e.g.
-modification of an external or static variable) to ensure correct results when implicit multi-threading is active.
+A filter is created through a call to `Filter(f, columnList)` or `Filter(filterString)`. In the first overload, `f` can
+be a function, a lambda expression, a functor class, or any other callable object. It must return a `bool` signalling
+whether the event has passed the selection (`true`) or not (`false`). It should perform "read-only" operations on the
+columns, and should not have side-effects (e.g. modification of an external or static variable) to ensure correctness
+when implicit multi-threading is active. The second overload takes a string with a valid C++ expression in which column
+names are used as variable names (e.g. `Filter("x[0] + x[1] > 0")`). This is a convenience feature that comes with a
+certain runtime overhead: C++ code has to be generated on the fly from this expression before using it in the event
+loop. See the paragraph about "Just-in-time compilation" below for more information.
 
 `RDataFrame` only evaluates filters when necessary: if multiple filters are chained one after another, they are executed
 in order and the first one returning `false` causes the event to be discarded and triggers the processing of the next
@@ -707,7 +711,7 @@ most notably the case where filters are used before deriving a cached/persistifi
 Note that in multi-thread event loops the values of `rdfentry_` _do not_ correspond to what would be the entry numbers
 of a TChain constructed over the same set of ROOT files, as the entries are processed in an unspecified order.
 
-### Branch type guessing and explicit declaration of branch types
+### Just-in-time compilation: branch type inference and explicit declaration of branch types
 C++ is a statically typed language: all types must be known at compile-time. This includes the types of the `TTree`
 branches we want to work on. For filters, temporary columns and some of the actions, **branch types are deduced from the
 signature** of the relevant filter function/temporary column expression/action function:
