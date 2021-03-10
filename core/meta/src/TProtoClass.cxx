@@ -220,8 +220,8 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
       // for example in presence of daughter and mother class present in two
       // dictionaries compiled in two different libraries which are not linked
       // one with each other.
-      for (auto element: fPRealData) {
-         //if (element->IsA() == TObjString::Class()) {
+      for (auto &element : fPRealData) {
+         // if (element->IsA() == TObjString::Class()) {
          if (element.IsAClass() ) {
             if (gDebug > 1) Info("","Treating beforehand mother class %s",GetClassName(element.fClassIndex));
             TInterpreter::SuspendAutoParsing autoParseRaii(gInterpreter);
@@ -313,7 +313,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    bool first = true;
    if (fPRealData.size()  > 0) {
       size_t element_next_idx = 0;
-      for (auto element: fPRealData) {
+      for (auto &element : fPRealData) {
          ++element_next_idx;
          //if (element->IsA() == TObjString::Class()) {
          if (element.IsAClass() ) {
