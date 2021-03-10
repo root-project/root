@@ -328,13 +328,13 @@ TObject *TFolder::FindObject(const char *name) const
       len = nch+1;
       cname = new char[len];
    }
-   strncpy(cname, name, len);
+   strlcpy(cname, name, len);
    TObject *ret = nullptr;
    char *slash = strchr(cname,'/');
    if (slash) {
       *slash = 0;
-      TObject *obj = fFolders->FindObject(cname);
-      if (obj) ret = obj->FindObject(slash+1);
+      if (TObject *obj = fFolders->FindObject(cname))
+         ret = obj->FindObject(slash+1);
    } else {
       ret = fFolders->FindObject(cname);
    }

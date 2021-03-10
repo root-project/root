@@ -69,6 +69,7 @@ General purpose message signal
 #include "RQ_OBJECT.h"
 #include "TVirtualMutex.h"
 #include "RConfigure.h"
+#include "strlcpy.h"
 
 void *gTQSender; // A pointer to the object that sent the last signal.
                  // Getting access to the sender might be practical
@@ -181,7 +182,7 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
 {
    auto len = strlen(signal)+1;
    char *signal_method = new char[len];
-   if (signal_method) strncpy(signal_method, signal, len);
+   if (signal_method) strlcpy(signal_method, signal, len);
 
    char *signal_proto;
    char *tmp;
@@ -239,7 +240,7 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
 
    auto len2 = strlen(slot)+1;
    char *slot_method = new char[len2];
-   if (slot_method) strncpy(slot_method, slot, len2);
+   if (slot_method) strlcpy(slot_method, slot, len2);
 
    char *slot_proto;
    char *slot_params = nullptr;

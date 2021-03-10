@@ -42,6 +42,7 @@ as a TString, construct a TString from it, eg:
 #include <algorithm>
 
 #include "Varargs.h"
+#include "strlcpy.h"
 #include "TString.h"
 #include "TBuffer.h"
 #include "TError.h"
@@ -2514,7 +2515,7 @@ char *StrDup(const char *str)
 
    auto len = strlen(str)+1;
    char *s = new char[len];
-   if (s) strncpy(s, str, len);
+   if (s) strlcpy(s, str, len);
 
    return s;
 }
