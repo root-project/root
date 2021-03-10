@@ -404,6 +404,8 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
 size_t GetFullArrayLength(const clang::ConstantArrayType *arrayType)
 {
+   if (!arrayType)
+      return 0;
    llvm::APInt len = arrayType->getSize();
    while (const clang::ConstantArrayType *subArrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual())) {
       len *= subArrayType->getSize();
@@ -858,11 +860,10 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(m.getType()), 0);
    Internal::RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
 
-   if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
+   if (!clxx || clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
 
    const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
    if (!tmplt_specialization) return 0;
-
 
    string stlType(ROOT::TMetaUtils::ShortTypeName(mTypename.c_str()));
    string stlName;
@@ -4220,7 +4221,7 @@ int RootClingMain(int argc,
          remove((moduleCachePath + llvm::sys::path::get_separator() + "vcruntime.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "services.pcm").str().c_str());
 #endif
-         
+
 #ifdef R__MACOSX
          remove((moduleCachePath + llvm::sys::path::get_separator() + "Darwin.pcm").str().c_str());
 #else
@@ -5647,7 +5648,7 @@ int GenReflexMain(int argc, char **argv)
          "      library (needs target library switch. See its documentation).\n"
       },
 
-      
+
       {
          NOGLOBALUSINGSTD,
          NOTYPE ,
