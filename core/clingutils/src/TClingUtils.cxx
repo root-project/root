@@ -3691,8 +3691,8 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
          = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(newArg.getAsType()->getAsCXXRecordDecl());
 //         std::cout << "nSTdecl is " << nTSTdecl << std::endl;
 
-      isEqual =  nTSTdecl->getMostRecentDecl() == TSTdecl->getMostRecentDecl() ||
-                 tParQualType.getTypePtr() == newArg.getAsType().getTypePtr();
+      isEqual =  (nTSTdecl && nTSTdecl->getMostRecentDecl() == TSTdecl->getMostRecentDecl()) ||
+                 (tParQualType.getTypePtr() == newArg.getAsType().getTypePtr());
    }
 
 
@@ -3878,6 +3878,13 @@ static void KeepNParams(clang::QualType& normalizedType,
       if (tpl->getMinRequiredArguments () < tpl->size())
          ctdWithDefaultArgs = llvm::dyn_cast<clang::ClassTemplateDecl>(rd);
    }
+
+   if (!ctdWithDefaultArgs) {
+      Error("KeepNParams", "Not found template default arguments\n");
+      normalizedType=originalNormalizedType;
+      return;
+   }
+
    TemplateParameterList* tParsPtr = ctdWithDefaultArgs->getTemplateParameters();
    const TemplateParameterList& tPars = *tParsPtr;
    const TemplateArgumentList& tArgs = ctsd->getTemplateArgs();
@@ -4674,6 +4681,8 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
    const clang::ClassTemplateSpecializationDecl* TSTdecl
       = llvm::dyn_cast_or_null<const clang::ClassTemplateSpecializationDecl>(instance->getAsCXXRecordDecl());
+
+   if (!TSTdecl) return input;
 
    const clang::SubstTemplateTypeParmType *substType
       = llvm::dyn_cast<clang::SubstTemplateTypeParmType>(input.getTypePtr());
