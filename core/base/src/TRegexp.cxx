@@ -270,7 +270,7 @@ TSubString TString::operator()(const TRegexp& r, Ssiz_t start) const
 {
    Ssiz_t len = 0;
    Ssiz_t begin = Index(r, &len, start);
-   return TSubString(*this, begin, len); // [clang-tidy] here len used and must be initialized
+   return TSubString(*this, begin, len);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

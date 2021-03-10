@@ -1056,7 +1056,6 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title, Bool_t return
    }
    if (!name || !title || !name[0]) return nullptr;
    if (!title[0]) title = name;
-   TDirectory *newdir = nullptr;
    if (const char *slash = strchr(name,'/')) {
       Long_t size = Long_t(slash-name);
       char *workname = new char[size+1];
@@ -1073,9 +1072,7 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title, Bool_t return
 
    TDirectory::TContext ctxt(this);
 
-   newdir = new TDirectory(name, title, "", this);
-
-   return newdir;
+   return new TDirectory(name, title, "", this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
