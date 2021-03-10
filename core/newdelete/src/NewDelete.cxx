@@ -200,7 +200,7 @@ void *operator new(size_t size)
       vp = ::calloc(RealSize(size), sizeof(char));
    if (vp == 0)
       Fatal(where, gSpaceErr, RealSize(size));
-   StoreSizeMagic(vp, size, where);
+   StoreSizeMagic(vp, size, where);  // NOLINT
    return ExtStart(vp);
 }
 
@@ -283,7 +283,7 @@ void operator delete(void *ptr) noexcept
           || !ROOT::Internal::gFreeIfTMapFile(RealStart(ptr))) {
          do {
             TSystem::ResetErrno();
-            ::free(RealStart(ptr));
+            ::free(RealStart(ptr));  // NOLINT
          } while (TSystem::GetErrno() == EINTR);
       }
       if (TSystem::GetErrno() != 0)
@@ -421,9 +421,9 @@ void *CustomReAlloc1(void *ovp, size_t size)
    if (vp == 0)
       Fatal(where, gSpaceErr, RealSize(size));
    if (size > oldsize)
-      MemClearRe(ExtStart(vp), oldsize, size-oldsize);
+      MemClearRe(ExtStart(vp), oldsize, size-oldsize);   // NOLINT
 
-   StoreSizeMagic(vp, size, where);
+   StoreSizeMagic(vp, size, where);   // NOLINT
    return ExtStart(vp);
 }
 
@@ -461,8 +461,8 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    if (vp == 0)
       Fatal(where, gSpaceErr, RealSize(size));
    if (size > oldsize)
-      MemClearRe(ExtStart(vp), oldsize, size-oldsize);
+      MemClearRe(ExtStart(vp), oldsize, size-oldsize);   // NOLINT
 
-   StoreSizeMagic(vp, size, where);
+   StoreSizeMagic(vp, size, where);    // NOLINT
    return ExtStart(vp);
 }
