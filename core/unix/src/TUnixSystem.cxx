@@ -686,7 +686,7 @@ void TUnixSystem::SetDisplay()
                char hbuf[NI_MAXHOST + 4];
                if (getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, NI_NAMEREQD) == 0) {
                   assert( strlen(hbuf) < NI_MAXHOST );
-                  strcat(hbuf, ":0.0");
+                  strlcat(hbuf, ":0.0", sizeof(hbuf));
                   Setenv("DISPLAY", hbuf);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
                           hbuf);
@@ -4243,7 +4243,7 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
               sockpath, (UInt_t)sizeof(unserver.sun_path)-1);
       return -1;
    }
-   strcpy(unserver.sun_path, sockpath);
+   strlcpy(unserver.sun_path, sockpath, sizeof(unserver.sun_path));
 
    // Open socket
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -4455,7 +4455,7 @@ int TUnixSystem::UnixUnixService(const char *sockpath, int backlog)
               sockpath, (UInt_t)sizeof(unserver.sun_path)-1);
       return -1;
    }
-   strcpy(unserver.sun_path, sockpath);
+   strlcpy(unserver.sun_path, sockpath, sizeof(unserver.sun_path));
 
    // Create socket
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
