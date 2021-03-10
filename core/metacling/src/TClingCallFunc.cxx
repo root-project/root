@@ -233,7 +233,7 @@ namespace {
       }
       if (QT->isMemberPointerType()) {
          const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
-         if (MPT->isMemberDataPointer()) {
+         if (MPT && MPT->isMemberDataPointer()) {
             return (returnType)(ptrdiff_t)val.getPtr();
          }
          return (returnType)(long) val.getPtr();
@@ -1997,7 +1997,7 @@ TClingCallFunc::InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret) {
       return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
    } else if (QT->isMemberPointerType()) {
       const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
-      if (MPT->isMemberDataPointer()) {
+      if (MPT && MPT->isMemberDataPointer()) {
          // A member data pointer is a actually a struct with one
          // member of ptrdiff_t, the offset from the base of the object
          // storage to the storage for the designated data member.

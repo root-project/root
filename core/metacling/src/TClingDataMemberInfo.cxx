@@ -426,6 +426,8 @@ long TClingDataMemberInfo::Property() const
          }
 
          declOrParent = llvm::dyn_cast<clang::Decl>(Parent);
+         if (!declOrParent)
+            break;
          if (strictestAccess < declOrParent->getAccess()) {
             strictestAccess = declOrParent->getAccess();
          }
