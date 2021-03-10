@@ -276,6 +276,10 @@ std::shared_ptr<RooAbsL> build_simultaneous_likelihood(RooAbsPdf* pdf, RooAbsDat
 {
    return build_simultaneous_likelihood(pdf, data, RooAbsL::Extended::Auto, {}, {}, {}, global_observables_tag);
 }
+std::shared_ptr<RooAbsL> build_simultaneous_likelihood(RooAbsPdf* pdf, RooAbsData* data, ConstrainedParameters constrained_parameters, GlobalObservables global_observables)
+{
+   return build_simultaneous_likelihood(pdf, data, RooAbsL::Extended::Auto, constrained_parameters, {}, global_observables);
+}
 
 
 std::shared_ptr<RooAbsL> build_unbinned_constrained_likelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended,
