@@ -217,7 +217,7 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
        }
     }
 
-    err = deflateEnd(&stream);
+    deflateEnd(&stream);
 
     tgt[0] = 'Z';               /* Signature ZLib */
     tgt[1] = 'L';
@@ -234,7 +234,6 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     tgt[8] = (char)((l_in_size >> 16) & 0xff);
 
     *irep = stream.total_out + HDRSIZE;
-    return;
 }
 
 
