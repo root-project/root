@@ -90,3 +90,13 @@ TEST(Redefine, GetColumnType)
    auto df = ROOT::RDataFrame(1).Define("x", [] { return 'c'; }).Redefine("x", [] { return 42; });
    EXPECT_EQ(df.GetColumnType("x"), "int");
 }
+
+TEST(Redefine, GetColumnTypeOfRedefinedBranch)
+{
+   TTree t("t", "t");
+   int x = 1;
+   t.Branch("x", &x);
+   t.Fill();
+   auto df = ROOT::RDataFrame(t).Redefine("x", [] { return 'c'; });
+   EXPECT_EQ(df.GetColumnType("x"), "char");
+}
