@@ -770,7 +770,7 @@ TObjString *TFileCollection::ExportInfo(const char *name, Int_t popt)
 
 TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
 {
-   TFileCollection *fc = (TFileCollection *)nullptr;
+   TFileCollection *fc = nullptr;
 
    // Server specification is mandatory
    if (!server || strlen(server) <= 0) {
