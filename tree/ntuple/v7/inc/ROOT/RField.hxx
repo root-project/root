@@ -155,7 +155,8 @@ public:
    RFieldBase& operator =(RFieldBase&&) = default;
    virtual ~RFieldBase();
 
-   ///// Copies the field and its sub fields using a possibly new name and a new, unconnected set of columns
+   /// Copies the field and its sub fields using a possibly new name and a new, unconnected set of columns
+   /// Note that the clone does _not_ carry over the original field's on-disk ID (since it is unconnected)
    virtual std::unique_ptr<RFieldBase> Clone(std::string_view newName) const = 0;
 
    /// Factory method to resurrect a field from the stored on-disk type information

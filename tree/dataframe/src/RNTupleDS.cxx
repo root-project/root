@@ -42,9 +42,9 @@ namespace Detail {
 /// the collection sizes (offset(N+1) - offset(N)).  For the time being, we offer this functionality only in RDataFrame.
 /// TODO(jblomer): consider providing a general set of useful virtual fields as part of RNTuple.
 class RRDFCardinalityField : public ROOT::Experimental::Detail::RFieldBase {
-public:
    ROOT::Experimental::RField<ClusterSize_t> fOffsetField;
 
+public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t::ValueType"; }
    RRDFCardinalityField()
      : Detail::RFieldBase("", TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
@@ -98,23 +98,31 @@ protected:
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
    std::unique_ptr<RFieldBase> fField; ///< The field backing the RDF column
-   /// For inner collections, the field IDs of the outer collections, from outermost to innermost. Empty otherwise.
-   std::vector<DescriptorId_t> fSkeinIDs;
    RFieldValue fValue; ///< The memory location used to read from fField
    Long64_t fLastEntry; ///< Last entry number that was read
 
 public:
-   RNTupleColumnReader(std::unique_ptr<RFieldBase> f, const std::vector<DescriptorId_t> &skeinIDs)
-      : fField(std::move(f)), fSkeinIDs(skeinIDs), fValue(fField->GenerateValue()), fLastEntry(-1)
+   RNTupleColumnReader(std::unique_ptr<RFieldBase> f)
+      : fField(std::move(f)), fValue(fField->GenerateValue()), fLastEntry(-1)
    {
    }
    virtual ~RNTupleColumnReader() { fField->DestroyValue(fValue); }
 
-   /// Column readers are created as prtotypes and then cloned for every slot
-   virtual std::unique_ptr<RNTupleColumnReader> Clone() const = 0;
-   /// The RNTuple columns of fField and the outer collection fields given by fSkeinIDs are connected
-   /// to the RNTuple page source only on demand.
-   virtual void Connect(RPageSource &source) = 0;
+   /// Column readers are created as prototype and then cloned for every slot
+   std::unique_ptr<RNTupleColumnReader> Clone()
+   {
+      auto cloneField = fField->Clone(fField->GetName());
+      cloneField->SetOnDiskId(fField->GetOnDiskId());
+      return std::make_unique<RNTupleColumnReader>(std::move(cloneField));
+   }
+
+   /// Connect the field and its subfields to the page source
+   void Connect(RPageSource &source)
+   {
+      fField->ConnectPageStorage(source);
+      for (auto &f : *fField)
+         f.ConnectPageStorage(source);
+   }
 
    void *GetImpl(Long64_t entry) final
    {
@@ -123,52 +131,6 @@ public:
          fLastEntry = entry;
       }
       return fValue.GetRawPtr();
-   }
-};
-
-/// Provides the size of a collection as an RDF column
-class RNTupleCardinalityColumnReader : public RNTupleColumnReader {
-public:
-   RNTupleCardinalityColumnReader(std::unique_ptr<RFieldBase> f, const std::vector<DescriptorId_t> &skeinIDs)
-      : RNTupleColumnReader(std::move(f), skeinIDs)
-   {
-   }
-
-   std::unique_ptr<RNTupleColumnReader> Clone() const final {
-      return std::make_unique<RNTupleCardinalityColumnReader>(fField->Clone(fField->GetName()), fSkeinIDs);
-   }
-
-   void Connect(RPageSource &source) final {
-      auto f = fField.get();
-      for (unsigned i = 0; i < fSkeinIDs.size() - 1; ++i) {
-         Detail::RFieldFuse::Connect(fSkeinIDs[i], source, *f);
-         // The skein IDs refer to collection fields, so we know that they have exactly one sub field
-         f = f->GetSubFields()[0];
-      }
-      auto cardinalityField = dynamic_cast<RRDFCardinalityField *>(f);
-      Detail::RFieldFuse::Connect(fSkeinIDs.back(), source, cardinalityField->fOffsetField);
-   }
-};
-
-/// Provides a particular field of the RNTuple as RDF column
-class RNTupleNormalColumnReader : public RNTupleColumnReader {
-public:
-   RNTupleNormalColumnReader(std::unique_ptr<RFieldBase> f, const std::vector<DescriptorId_t> &skeinIDs)
-      : RNTupleColumnReader(std::move(f), skeinIDs)
-   {
-   }
-
-   std::unique_ptr<RNTupleColumnReader> Clone() const final {
-      return std::make_unique<RNTupleNormalColumnReader>(fField->Clone(fField->GetName()), fSkeinIDs);
-   }
-
-   void Connect(RPageSource &source) final {
-      auto f = fField.get();
-      for (unsigned i = 0; i < fSkeinIDs.size() - 1; ++i) {
-         Detail::RFieldFuse::Connect(fSkeinIDs[i], source, *f);
-         f = f->GetSubFields()[0];
-      }
-      Detail::RFieldFuse::ConnectRecursively(fSkeinIDs.back(), source, *f);
    }
 };
 
@@ -243,30 +205,37 @@ void RNTupleDS::AddField(
    if (!fieldOrException)
       return;
    auto valueField = fieldOrException.Unwrap();
+   valueField->SetOnDiskId(fieldId);
    std::unique_ptr<Detail::RFieldBase> cardinalityField;
    // Collections get the additional "number of" RDF column (e.g. "#tracks")
-   if (!skeinIDs.empty())
+   if (!skeinIDs.empty()) {
       cardinalityField = std::make_unique<Detail::RRDFCardinalityField>();
+      cardinalityField->SetOnDiskId(skeinIDs.back());
+   }
 
    std::string typeName;
-   for (unsigned int i = 0; i < skeinIDs.size(); ++i) {
+   for (auto i = skeinIDs.rbegin(); i != skeinIDs.rend(); ++i) {
       valueField = std::make_unique<ROOT::Experimental::RVectorField>("", std::move(valueField));
-      if (i < skeinIDs.size() - 1)
+      valueField->SetOnDiskId(*i);
+      // Skip the inner-most collection level to construct the cardinality column
+      if (i != skeinIDs.rbegin()) {
          cardinalityField = std::make_unique<ROOT::Experimental::RVectorField>("", std::move(cardinalityField));
+         cardinalityField->SetOnDiskId(*i);
+      }
    }
 
    if (cardinalityField) {
       fColumnNames.emplace_back(std::string("#") + std::string(colName));
       fColumnTypes.emplace_back(cardinalityField->GetType());
       auto cardColReader =
-         std::make_unique<Detail::RNTupleCardinalityColumnReader>(std::move(cardinalityField), skeinIDs);
+         std::make_unique<Detail::RNTupleColumnReader>(std::move(cardinalityField));
       fColumnReaderPrototypes.emplace_back(std::move(cardColReader));
    }
 
    skeinIDs.emplace_back(fieldId);
    fColumnNames.emplace_back(colName);
    fColumnTypes.emplace_back(valueField->GetType());
-   auto valColReader = std::make_unique<Detail::RNTupleNormalColumnReader>(std::move(valueField), skeinIDs);
+   auto valColReader = std::make_unique<Detail::RNTupleColumnReader>(std::move(valueField));
    fColumnReaderPrototypes.emplace_back(std::move(valColReader));
 }
 
