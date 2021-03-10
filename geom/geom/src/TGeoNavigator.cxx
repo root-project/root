@@ -609,6 +609,9 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
    TGeoNode *crtstate[10];
    Int_t level = fLevel+1;
    Bool_t samepath = kFALSE;
+   for (Int_t i=0; i<10; ++i)
+      crtstate[i] = nullptr;
+
    if (!downwards) {
      for (Int_t i=0; i<fLevel; ++i) {
        crtstate[i] = GetMother(i);
