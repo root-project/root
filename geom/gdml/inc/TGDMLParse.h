@@ -34,7 +34,7 @@ public:
 
       fNameS = "";
       fSolid = "";
-      fMatrix = 0;
+      fMatrix = nullptr;
    }
 
    virtual ~TGDMLRefl() {}
