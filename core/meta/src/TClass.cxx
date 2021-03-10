@@ -6645,20 +6645,24 @@ void TClass::AdoptReferenceProxy(TVirtualRefProxy* proxy)
 
 void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
 {
-   if (!fRealData) return;
+   if (fRealData) {
 
-   R__LOCKGUARD(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
 
-   TIter next(fRealData);
-   TRealData *rd;
-   while ((rd = (TRealData*)next())) {
-      if (strcmp(rd->GetName(),name) == 0) {
-         // If there is a TStreamerElement that took a pointer to the
-         // streamer we should inform it!
-         rd->AdoptStreamer(p);
-         break;
+      TIter next(fRealData);
+      TRealData *rd;
+      while ((rd = (TRealData*)next())) {
+         if (strcmp(rd->GetName(),name) == 0) {
+            // If there is a TStreamerElement that took a pointer to the
+            // streamer we should inform it!
+            rd->AdoptStreamer(p);
+            return;
+         }
       }
    }
+
+   Error("AdoptMemberStreamer","Cannot adope member streamer for %s::%s",GetName(), name);
+   delete p;
 
 //  NOTE: This alternative was proposed but not is not used for now,
 //  One of the major difference with the code above is that the code below
@@ -6675,7 +6679,6 @@ void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
 //       return;
 //    }
 //    dm->SetStreamer(p);
-   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
