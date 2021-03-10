@@ -162,6 +162,8 @@ long TClingClassInfo::ClassProperty() const
    // We now have a class or a struct.
    const CXXRecordDecl *CRD =
       llvm::dyn_cast<CXXRecordDecl>(GetDecl());
+   if (!CRD)
+      return property;
    property |= kClassIsValid;
    if (CRD->isAbstract()) {
       property |= kClassIsAbstract;
@@ -1284,13 +1286,14 @@ long TClingClassInfo::Property() const
    // Note: Now we have class, struct, union only.
    const CXXRecordDecl *CRD =
       llvm::dyn_cast<CXXRecordDecl>(GetDecl());
+   if (!CRD)
+      return property;
+
    if (CRD->isClass()) {
       property |= kIsClass;
-   }
-   else if (CRD->isStruct()) {
+   } else if (CRD->isStruct()) {
       property |= kIsStruct;
-   }
-   else if (CRD->isUnion()) {
+   } else if (CRD->isUnion()) {
       property |= kIsUnion;
    }
    if (CRD->hasDefinition() && CRD->isAbstract()) {
@@ -1441,6 +1444,6 @@ const char *TClingClassInfo::TmpltName() const
       // Note: This does *not* include the template arguments!
       buf = ND->getNameAsString();
    }
-   return buf.c_str();
+   return buf.c_str();  // NOLINT
 }
 

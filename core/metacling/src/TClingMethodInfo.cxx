@@ -647,7 +647,7 @@ const char *TClingMethodInfo::GetPrototype()
          buf += " const";
       }
    }
-   return buf.c_str();
+   return buf.c_str();  // NOLINT
 }
 
 const char *TClingMethodInfo::Name() const
