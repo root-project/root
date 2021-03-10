@@ -1011,7 +1011,7 @@ Bool_t TGeoPgon::IsCrossingSlice(const Double_t *point, const Double_t *dir, Int
    Int_t icrtseg = ipl;
    Int_t isegstart = ipl;
    Int_t iseglast = (incseg > 0) ? (fNz - 1) : -1;
-   Double_t din, dout, rdot, rnew, rpg, apg, bpg, db, znew;
+   Double_t din, dout, rdot, rnew, apg, bpg, db, znew;
 
    for (ipl = isegstart; ipl != iseglast; ipl += incseg) {
       step = (fZ[ipl + 1 - ((1 + incseg) >> 1)] - pt[2]) * invdir;
@@ -1035,10 +1035,10 @@ Bool_t TGeoPgon::IsCrossingSlice(const Double_t *point, const Double_t *dir, Int
          //         printf("   inner visible\n");
          if (TGeoShape::IsSameWithinTolerance(dz, 0)) {
             rnew = apr + bpr * fZ[ipl];
-            rpg = (rnew - fRmin[ipl]) * (rnew - fRmin[ipl + 1]);
+            Double_t rpg = (rnew - fRmin[ipl]) * (rnew - fRmin[ipl + 1]);
             if (rpg <= 0) din = (fZ[ipl] - pt[2]) * invdir;
          } else {
-            rpg = Rpg(pt[2], ipl, kTRUE, apg, bpg);
+            Rpg(pt[2], ipl, kTRUE, apg, bpg);
             db = bpg - bpr;
             if (!TGeoShape::IsSameWithinTolerance(db, 0)) {
                znew = (apr - apg) / db;
@@ -1060,10 +1060,10 @@ Bool_t TGeoPgon::IsCrossingSlice(const Double_t *point, const Double_t *dir, Int
          // outer surface visible ->check crossing
          if (TGeoShape::IsSameWithinTolerance(dz, 0)) {
             rnew = apr + bpr * fZ[ipl];
-            rpg = (rnew - fRmax[ipl]) * (rnew - fRmax[ipl + 1]);
+            Double_t rpg = (rnew - fRmax[ipl]) * (rnew - fRmax[ipl + 1]);
             if (rpg <= 0) dout = (fZ[ipl] - pt[2]) * invdir;
          } else {
-            rpg = Rpg(pt[2], ipl, kFALSE, apg, bpg);
+            Rpg(pt[2], ipl, kFALSE, apg, bpg);
             db = bpg - bpr;
             if (!TGeoShape::IsSameWithinTolerance(db, 0)) {
                znew = (apr - apg) / db;
@@ -1455,8 +1455,7 @@ void TGeoPgon::SetSegsAndPols(TBuffer3D &buff) const
 
    Int_t c = GetBasicColor();
 
-   Int_t indx, indx2, k;
-   indx = indx2 = 0;
+   Int_t indx = 0, indx2, k;
 
    // inside & outside circles, number of segments: 2*nz*(n-1)
    //             special case number of segments: 2*nz*n
@@ -1890,7 +1889,6 @@ Double_t TGeoPgon::Safety(const Double_t *point, Bool_t in) const
    // Check safety for current segment
    safmin = SafetyToSegment(point, ipl, iphi, kFALSE, safphi);
    if (safmin < 1E-6) return TMath::Abs(safmin); // point on radius-changing plane
-   saftmp = 0.;
    // check increasing iplanes
    iplane = ipl + 1;
    saftmp = 0.;
