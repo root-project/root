@@ -4458,7 +4458,6 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
       Version_t oldvers = cl->fClassVersion;
       if (oldvers == version && cl->GetClassInfo()) {
          // We have a version and it might need an update.
-         Version_t newvers = oldvers;
          TClingClassInfo* cli = (TClingClassInfo*)cl->GetClassInfo();
          if (llvm::isa<clang::NamespaceDecl>(cli->GetDecl())) {
             // Namespaces don't have class versions.
@@ -4475,7 +4474,7 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
             }
             return cl;
          }
-         newvers = ROOT::TMetaUtils::GetClassVersion(llvm::dyn_cast<clang::RecordDecl>(cli->GetDecl()),
+         Version_t newvers = ROOT::TMetaUtils::GetClassVersion(llvm::dyn_cast<clang::RecordDecl>(cli->GetDecl()),
                                                      *fInterpreter);
          if (newvers == -1) {
             // Didn't manage to determine the class version from the AST.
@@ -5358,44 +5357,36 @@ const char* TCling::GetCurrentMacroName() const
 
 const char* TCling::TypeName(const char* typeDesc)
 {
-   TTHREAD_TLS(char*) t = 0;
-   TTHREAD_TLS(unsigned int) tlen = 0;
+   TTHREAD_TLS_DECL(std::string,t);
 
-   unsigned int dlen = strlen(typeDesc);
-   if (dlen > tlen) {
-      delete[] t;
-      t = new char[dlen + 1];
-      tlen = dlen;
-   }
-   const char* s, *template_start;
    if (!strstr(typeDesc, "(*)(")) {
-      s = strchr(typeDesc, ' ');
-      template_start = strchr(typeDesc, '<');
+      const char *s = strchr(typeDesc, ' ');
+      const char *template_start = strchr(typeDesc, '<');
       if (!strcmp(typeDesc, "long long")) {
-         strlcpy(t, typeDesc, dlen + 1);
+         t = typeDesc;
       }
       else if (!strncmp(typeDesc, "unsigned ", s + 1 - typeDesc)) {
-         strlcpy(t, typeDesc, dlen + 1);
+         t = typeDesc;
       }
       // s is the position of the second 'word' (if any)
       // except in the case of templates where there will be a space
       // just before any closing '>': eg.
       //    TObj<std::vector<UShort_t,__malloc_alloc_template<0> > >*
       else if (s && (template_start == 0 || (s < template_start))) {
-         strlcpy(t, s + 1, dlen + 1);
+         t = s + 1;
       }
       else {
-         strlcpy(t, typeDesc, dlen + 1);
+         t = typeDesc;
       }
    }
    else {
-      strlcpy(t, typeDesc, dlen + 1);
+      t = typeDesc;
    }
-   int l = strlen(t);
-   while (l > 0 && (t[l - 1] == '*' || t[l - 1] == '&')) {
-      t[--l] = 0;
-   }
-   return t;
+   auto l = t.length();
+   while (l > 0 && (t[l - 1] == '*' || t[l - 1] == '&'))
+      --l;
+   t.resize(l);
+   return t.c_str(); // NOLINT
 }
 
 static bool requiresRootMap(const char* rootmapfile)
@@ -7487,7 +7478,7 @@ const char* TCling::MapCppName(const char* name) const
 {
    TTHREAD_TLS_DECL(std::string,buffer);
    ROOT::TMetaUtils::GetCppName(buffer,name);
-   return buffer.c_str();
+   return buffer.c_str(); // NOLINT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8365,7 +8356,7 @@ const char* TCling::ClassInfo_FullName(ClassInfo_t* cinfo) const
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    TTHREAD_TLS_DECL(std::string,output);
    TClinginfo->FullName(output,*fNormalizedCtxt);
-   return output.c_str();
+   return output.c_str(); // NOLINT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8494,7 +8485,7 @@ const char* TCling::BaseClassInfo_FullName(BaseClassInfo_t* bcinfo) const
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    TTHREAD_TLS_DECL(std::string,output);
    TClinginfo->FullName(output,*fNormalizedCtxt);
-   return output.c_str();
+   return output.c_str(); // NOLINT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8656,7 +8647,7 @@ const char* TCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) con
 
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    result = TClinginfo->ValidArrayIndex().str();
-   return result.c_str();
+   return result.c_str(); // NOLINT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
