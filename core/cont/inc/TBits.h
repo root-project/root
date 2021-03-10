@@ -52,10 +52,11 @@ public:
       TBits  &fBits; //!
       UInt_t  fPos;  //!
 
-      TReference(); // left undefined
+      TReference() = delete;
 
-public:
-      TReference(TBits& bit, UInt_t pos) : fBits(bit),fPos(pos) { }
+   public:
+      TReference(TBits& bit, UInt_t pos) : fBits(bit), fPos(pos) {}
+      TReference(const TReference &rhs) : fBits(rhs.fBits), fPos(rhs.fPos) {}
       ~TReference() { }
 
        // For b[i] = val;
