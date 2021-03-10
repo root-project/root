@@ -354,31 +354,18 @@ const char *TStreamerElement::GetFullName() const
 void TStreamerElement::GetSequenceType(TString &sequenceType) const
 {
    sequenceType.Clear();
-   Bool_t first = kTRUE;
-   if (TestBit(TStreamerElement::kWholeObject)) {
-      if (!first) sequenceType += ",";
-      first = kFALSE;
-      sequenceType += "wholeObject";
-   }
-   if (TestBit(TStreamerElement::kCache)) {
-      first = kFALSE;
-      sequenceType += "cached";
-   }
-   if (TestBit(TStreamerElement::kRepeat)) {
-      if (!first) sequenceType += ",";
-      first = kFALSE;
-      sequenceType += "repeat";
-   }
-   if (TestBit(TStreamerElement::kDoNotDelete)) {
-      if (!first) sequenceType += ",";
-      first = kFALSE;
-      sequenceType += "nodelete";
-   }
-   if (TestBit(TStreamerElement::kWrite)) {
-      if (!first) sequenceType += ",";
-      first = kFALSE;
-      sequenceType += "write";
-   }
+   auto test_bit = [this, &sequenceType](unsigned bit, const char *name) {
+      if (TestBit(bit)) {
+         if (!sequenceType.IsNull()) sequenceType += ",";
+         sequenceType += name;
+      }
+   };
+
+   test_bit(TStreamerElement::kWholeObject, "wholeObject");
+   test_bit(TStreamerElement::kCache, "cached");
+   test_bit(TStreamerElement::kRepeat, "repeat");
+   test_bit(TStreamerElement::kDoNotDelete, "nodelete");
+   test_bit(TStreamerElement::kWrite, "write");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
