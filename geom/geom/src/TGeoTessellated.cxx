@@ -742,7 +742,7 @@ TGeoTessellated *TGeoTessellated::ImportFromObjFormat(const char *objfile, bool 
             return nullptr;
          }
          int nvert = 0;
-         for (auto sword : sfacets) {
+         for (auto &sword : sfacets) {
             stringstream ssword(sword);
             string token;
             getline(ssword, token, '/'); // just need the vertex index, which is the first token
