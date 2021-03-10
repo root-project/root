@@ -14,6 +14,35 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+/**
+ * \struct RooBatchCompute::RunContext
+ *
+ * This struct enables passing computation data around between elements of a computation graph.
+ *
+ * ### Separating data and computation graph
+ * The RunContext stores read-only spans to data that has already been computed.
+ * This can be data of the observables (which is constant during a fit)
+ * or intermediate computation results from evaluating PDFs or formulae for every point in a dataset.
+ * The latter may change as fit parameters change.
+ *
+ * Instead of storing information about these data *inside* nodes of the computation graph (requiring a change
+ * of their state, possibly violating const-correctness), this information is stored in RunContext::spans using
+ * the pointer of the element that produced those results as a key. In this way, one or multiple RunContext
+ * instances can be passed around when computations are running, leaving the objects of the computation graph
+ * invariant.
+ *
+ * ### Memory ownership model
+ * The RunContext can provide memory for temporary data, that is, data that can vanish after a fit converges. Using
+ * RunContext::makeBatch(), a suitable amount of memory is allocated to store computation results.
+ * When intermediate data are cleared, this memory is *not freed*. In this way, temporary data can be invalidated
+ * when fit parameters change, but the memory is only allocated once per fit.
+ *
+ * When a RunContext goes out of scope, the memory is freed. That means that in between fit cycles, a RunContext should
+ * be cleared using clear(), or single results should be invalidated by removing these from RunContext::spans.
+ * The RunContext object should be destroyed only *after* a fit completes.
+ */
+
+
 #include "RunContext.h"
 
 #include <limits>

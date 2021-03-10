@@ -17,7 +17,7 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROOVDTHEADERS_H
 #define ROOFIT_BATCHCOMPUTE_ROOVDTHEADERS_H
 
-/**
+/*
  * VDT headers for RooFit. Since RooFit cannot directly depend on VDT (it might not be available),
  * this layer can be used to switch between different implementations.
  */
