@@ -286,7 +286,6 @@ Double_t TGeoCone::DistFromInsideS(const Double_t *point, const Double_t *dir, D
    Double_t zinv = 1./dz;
    Double_t rin = 0.5*(rmin1+rmin2+(rmin2-rmin1)*point[2]*zinv);
    // Do Rmin
-   Double_t sr = TGeoShape::Big();
    Double_t b,delta,zi;
    if (rin>0) {
       // Protection in case point is actually outside the cone
@@ -296,7 +295,7 @@ Double_t TGeoCone::DistFromInsideS(const Double_t *point, const Double_t *dir, D
       } else {
          TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
          if (delta>0) {
-            sr = -b-delta;
+            Double_t sr = -b-delta;
             if (sr>0) {
                zi = point[2]+sr*dir[2];
                if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
@@ -316,7 +315,7 @@ Double_t TGeoCone::DistFromInsideS(const Double_t *point, const Double_t *dir, D
       if (ddotn>=0) return 0.0;
       TGeoCone::DistToCone(point, dir, dz, rmax1, rmax2, b, delta);
       if (delta<0) return 0.0;
-      sr = -b+delta;
+      Double_t sr = -b+delta;
       if (sr<0) return sz;
       if (TMath::Abs(-b-delta)>sr) return sz;
       zi = point[2]+sr*dir[2];
@@ -325,7 +324,7 @@ Double_t TGeoCone::DistFromInsideS(const Double_t *point, const Double_t *dir, D
    }
    TGeoCone::DistToCone(point, dir, dz, rmax1, rmax2, b, delta);
    if (delta>0) {
-      sr = -b-delta;
+      Double_t sr = -b-delta;
       if (sr>0) {
          zi = point[2]+sr*dir[2];
          if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
@@ -511,6 +510,7 @@ Double_t TGeoCone::DistFromOutside(const Double_t *point, const Double_t *dir, I
 void TGeoCone::DistToCone(const Double_t *point, const Double_t *dir, Double_t dz, Double_t r1, Double_t r2,
                               Double_t &b, Double_t &delta)
 {
+   b = 0;
    delta = -1.;
    if (dz<0) return;
    Double_t ro0 = 0.5*(r1+r2);
