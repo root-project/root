@@ -101,10 +101,10 @@ public:
 TQSlot::TQSlot(TClass *cl, const char *method_name,
                const char *funcname) : TObject(), TRefCnt()
 {
-   fFunc      = 0;
-   fClass     = 0;
+   fFunc      = nullptr;
+   fClass     = nullptr;
    fOffset    = 0;
-   fMethod    = 0;
+   fMethod    = nullptr;
    fName      = "";
    fExecuting = 0;
 
@@ -119,7 +119,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 
    char *proto;
    char *tmp;
-   char *params = 0;
+   char *params = nullptr;
 
    // separate method and prototype strings
 
@@ -178,10 +178,10 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 TQSlot::TQSlot(const char *class_name, const char *funcname) :
    TObject(), TRefCnt()
 {
-   fFunc      = 0;
-   fClass     = 0;
+   fFunc      = nullptr;
+   fClass     = nullptr;
    fOffset    = 0;
-   fMethod    = 0;
+   fMethod    = nullptr;
    fName      = funcname;
    fExecuting = 0;
 
@@ -347,7 +347,7 @@ inline void TQSlot::ExecuteMethod(void *object, const char *param)
 
 inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam)
 {
-   void *address = 0;
+   void *address = nullptr;
    R__LOCKGUARD(gInterpreterMutex);
    if (paramArr) gCling->CallFunc_SetArgArray(fFunc, paramArr, nparam);
    if (object) address = (void *)((Long_t)object + fOffset);
@@ -464,7 +464,7 @@ void TQConnection::SetArg(const Long_t *params, Int_t nparam/* = -1*/) {
 TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
    : TQObject()
 {
-   const char *funcname = 0;
+   const char *funcname = nullptr;
    fReceiver = receiver;      // fReceiver is pointer to receiver
 
    if (!cl) {

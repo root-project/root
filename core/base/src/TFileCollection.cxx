@@ -46,7 +46,7 @@ ClassImp(TFileCollection);
 
 TFileCollection::TFileCollection(const char *name, const char *title,
                                  const char *textfile, Int_t nfiles, Int_t firstfile)
-   : TNamed(name, title), fList(0), fMetaDataList(0), fDefaultTree(),
+   : TNamed(name, title), fList(nullptr), fMetaDataList(nullptr), fDefaultTree(),
      fTotalSize(0), fNFiles(0), fNStagedFiles(0), fNCorruptFiles(0)
 {
    fList = new THashList();
@@ -93,7 +93,7 @@ Int_t TFileCollection::Add(TFileCollection *coll)
 {
    if (fList && coll && coll->GetList()) {
       TIter nxfi(coll->GetList());
-      TFileInfo *fi = 0;
+      TFileInfo *fi = nullptr;
       while ((fi = (TFileInfo *) nxfi())) {
          TFileInfo *info = new TFileInfo(*fi);
          fList->Add(info);
@@ -231,7 +231,7 @@ Int_t TFileCollection::RemoveDuplicates()
 
    Int_t n0 = fList->GetSize();
    TIter nxfi(fList);
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    while ((fi = (TFileInfo *)nxfi())) {
       if (!(hl->FindObject(fi->GetUUID()->AsString()))) {
          // We hash on the UUID
@@ -256,12 +256,12 @@ Int_t TFileCollection::RemoveDuplicates()
 TFileCollection *TFileCollection::GetStagedSubset()
 {
    if (!fList)
-     return 0;
+     return nullptr;
 
    TFileCollection *subset = new TFileCollection(GetName(), GetTitle());
 
    TIter iter(fList);
-   TFileInfo *fileInfo = 0;
+   TFileInfo *fileInfo = nullptr;
    while ((fileInfo = dynamic_cast<TFileInfo*>(iter.Next()))) {
       if (fileInfo->TestBit(TFileInfo::kStaged) && !fileInfo->TestBit(TFileInfo::kCorrupted))
          subset->Add(fileInfo);
@@ -323,7 +323,7 @@ Int_t TFileCollection::Update(Long64_t avgsize)
    // Clear internal meta information which is going to be rebuilt in this
    // function
    TIter nxm(fMetaDataList);
-   TFileInfoMeta *m = 0;
+   TFileInfoMeta *m = nullptr;
    while ((m = (TFileInfoMeta *)nxm())) {
       if (!(m->TestBit(TFileInfoMeta::kExternal))) {
          fMetaDataList->Remove(m);
@@ -334,7 +334,7 @@ Int_t TFileCollection::Update(Long64_t avgsize)
    fNFiles = fList->GetEntries();
 
    TIter iter(fList);
-   TFileInfo *fileInfo = 0;
+   TFileInfo *fileInfo = nullptr;
    while ((fileInfo = dynamic_cast<TFileInfo*> (iter.Next()))) {
 
       if (fileInfo->GetSize() > 0) {
@@ -353,7 +353,7 @@ Int_t TFileCollection::Update(Long64_t avgsize)
          if (fileInfo->GetMetaDataList()) {
             TIter metaDataIter(fileInfo->GetMetaDataList());
             // other than TFileInfoMeta is also allowed in list
-            TObject *obj = 0;
+            TObject *obj = nullptr;
             while ((obj = metaDataIter.Next())) {
                TFileInfoMeta *metaData = dynamic_cast<TFileInfoMeta*>(obj);
                if (!metaData)
@@ -420,7 +420,7 @@ void TFileCollection::Print(Option_t *option) const
       Printf("The files contain the following trees:");
 
       TIter metaDataIter(fMetaDataList);
-      TFileInfoMeta* metaData = 0;
+      TFileInfoMeta* metaData = nullptr;
       while ((metaData = dynamic_cast<TFileInfoMeta*>(metaDataIter.Next()))) {
          if (!metaData->IsTree())
             continue;
@@ -556,10 +556,10 @@ void TFileCollection::SetAnchor(const char *anchor)
      return;
 
    TIter iter(fList);
-   TFileInfo *fileInfo = 0;
+   TFileInfo *fileInfo = nullptr;
    while ((fileInfo = dynamic_cast<TFileInfo*>(iter.Next()))) {
       fileInfo->ResetUrl();
-      TUrl *url = 0;
+      TUrl *url = nullptr;
       while ((url = fileInfo->NextUrl()))
          url->SetAnchor(anchor);
       fileInfo->ResetUrl();
@@ -575,7 +575,7 @@ void TFileCollection::SetBitAll(UInt_t f)
      return;
 
    TIter iter(fList);
-   TFileInfo *fileInfo = 0;
+   TFileInfo *fileInfo = nullptr;
    while ((fileInfo = dynamic_cast<TFileInfo*>(iter.Next())))
       fileInfo->SetBit(f);
 }
@@ -589,7 +589,7 @@ void TFileCollection::ResetBitAll(UInt_t f)
      return;
 
    TIter iter(fList);
-   TFileInfo *fileInfo = 0;
+   TFileInfo *fileInfo = nullptr;
    while ((fileInfo = dynamic_cast<TFileInfo*>(iter.Next())))
       fileInfo->ResetBit(f);
 }
@@ -605,13 +605,13 @@ const char *TFileCollection::GetDefaultTreeName() const
      return fDefaultTree;
 
    TIter metaDataIter(fMetaDataList);
-   TFileInfoMeta *metaData = 0;
+   TFileInfoMeta *metaData = nullptr;
    while ((metaData = dynamic_cast<TFileInfoMeta*>(metaDataIter.Next()))) {
       if (!metaData->IsTree())
          continue;
       return metaData->GetName();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -641,7 +641,7 @@ Long64_t TFileCollection::GetTotalEntries(const char *tree) const
 TFileInfoMeta *TFileCollection::GetMetaData(const char *meta) const
 {
    if (!meta || !*meta)
-      return 0;
+      return nullptr;
 
    return dynamic_cast<TFileInfoMeta*>(fMetaDataList->FindObject(meta));
 }
@@ -667,7 +667,7 @@ void TFileCollection::RemoveMetaData(const char *meta)
 {
    if (fList) {
       TIter iter(fList);
-      TFileInfo *fileInfo = 0;
+      TFileInfo *fileInfo = nullptr;
       while ((fileInfo = dynamic_cast<TFileInfo*>(iter.Next())))
          fileInfo->RemoveMetaData(meta);
    }
@@ -750,7 +750,7 @@ TObjString *TFileCollection::ExportInfo(const char *name, Int_t popt)
    if (dsname.IsNull()) dsname = GetName();
 
    // Create the output string
-   TObjString *outs = 0;
+   TObjString *outs = nullptr;
    if (popt == 1) {
       outs = new TObjString(Form("%s %lld files, %lld %s, staged %d %%, tree: %s", dsname.Data(),
                                  GetNFiles(), xsz, unit[k],
@@ -770,7 +770,7 @@ TObjString *TFileCollection::ExportInfo(const char *name, Int_t popt)
 
 TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
 {
-   TFileCollection *fc = (TFileCollection *)0;
+   TFileCollection *fc = (TFileCollection *)nullptr;
 
    // Server specification is mandatory
    if (!server || strlen(server) <= 0) {
@@ -811,17 +811,17 @@ TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
 
    // Go through the list
    TIter nxf(fList);
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    while ((fi = (TFileInfo *)nxf())) {
-      TUrl *xu = 0;
+      TUrl *xu = nullptr;
       if ((xu = fi->FindByUrl(srv.Data()))) {
          // Create a new TFileInfo object
          TFileInfo *nfi = new TFileInfo(xu->GetUrl(), fi->GetSize(),
-                                        fi->GetUUID() ? fi->GetUUID()->AsString() : 0,
-                                        fi->GetMD5() ? fi->GetMD5()->AsString() : 0);
+                                        fi->GetUUID() ? fi->GetUUID()->AsString() : nullptr,
+                                        fi->GetMD5() ? fi->GetMD5()->AsString() : nullptr);
          if (fi->GetMetaDataList()) {
             TIter nxm(fi->GetMetaDataList());
-            TFileInfoMeta *md = 0;
+            TFileInfoMeta *md = nullptr;
             while ((md = (TFileInfoMeta *) nxm())) {
                nfi->AddMetaData(new TFileInfoMeta(*md));
             }
@@ -837,7 +837,7 @@ TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
    // If nothing found, delete the object
    if (fc->GetList()->GetSize() <= 0) {
       delete fc;
-      fc = 0;
+      fc = nullptr;
       Info("GetFilesOnServer", "dataset '%s' has no files on server: '%s' (searched for: '%s')",
                                GetName(), server, srv.Data());
    }
@@ -864,7 +864,7 @@ TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
 
 TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
 {
-   TMap *dsmap = 0;
+   TMap *dsmap = nullptr;
 
    // Nothing to do for empty lists
    if (!fList || fList->GetSize() <= 0) {
@@ -873,7 +873,7 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
    }
 
    // List of servers to be ignored
-   THashList *excl = 0;
+   THashList *excl = nullptr;
    if (exclude && strlen(exclude) > 0) {
       excl = new THashList;
       excl->SetOwner();
@@ -897,16 +897,16 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
 
    // Go through the list
    TIter nxf(fList);
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    TUri uri;
    TString key;
-   TFileCollection *fc = 0;
+   TFileCollection *fc = nullptr;
    while ((fi = (TFileInfo *)nxf())) {
       // Save current URL
       TUrl *curl = fi->GetCurrentUrl();
       // Loop over URLs
       if (!curronly) fi->ResetUrl();
-      TUrl *xurl = 0;
+      TUrl *xurl = nullptr;
       while ((xurl = (curronly) ? curl : fi->NextUrl())) {
          // Find the key for this server
          key.Form("%s://%s", xurl->GetProtocol(), xurl->GetHostFQDN());
@@ -923,7 +923,7 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
             }
          }
          // Get the map entry for this key
-         TPair *ent = 0;
+         TPair *ent = nullptr;
          if (!(ent = (TPair *) dsmap->FindObject(key.Data()))) {
             // Create the TFileCollection
             fc = new TFileCollection(GetName());
@@ -947,11 +947,11 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
          }
          // Create a new TFileInfo object
          TFileInfo *nfi = new TFileInfo(xurl->GetUrl(kTRUE), fi->GetSize(),
-                                        fi->GetUUID() ? fi->GetUUID()->AsString() : 0,
-                                        fi->GetMD5() ? fi->GetMD5()->AsString() : 0);
+                                        fi->GetUUID() ? fi->GetUUID()->AsString() : nullptr,
+                                        fi->GetMD5() ? fi->GetMD5()->AsString() : nullptr);
          if (fi->GetMetaDataList()) {
             TIter nxm(fi->GetMetaDataList());
-            TFileInfoMeta *md = 0;
+            TFileInfoMeta *md = nullptr;
             while ((md = (TFileInfoMeta *) nxm())) {
                nfi->AddMetaData(new TFileInfoMeta(*md));
             }
@@ -968,7 +968,7 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
 
    // Fill up sums on the sub file collections
    TIter nxk(dsmap);
-   TObject *k = 0;
+   TObject *k = nullptr;
    while ((k = nxk()) && (fc = (TFileCollection *) dsmap->GetValue(k))) {
       fc->Update();
       // Fraction of total in permille
