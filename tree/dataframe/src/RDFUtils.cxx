@@ -220,6 +220,11 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, R
 {
    std::string colType;
 
+   // must check defines first: we want Redefines to have precedence over everything else
+   if (colType.empty() && define) {
+      colType = define->GetTypeName();
+   }
+
    if (ds && ds->HasColumn(colName))
       colType = ds->GetTypeName(colName);
 
@@ -232,10 +237,6 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, R
          auto &valueType = split[1];
          colType = ComposeRVecTypeName(valueType);
       }
-   }
-
-   if (colType.empty() && define) {
-      colType = define->GetTypeName();
    }
 
    if (colType.empty())
