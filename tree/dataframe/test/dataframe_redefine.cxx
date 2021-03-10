@@ -100,3 +100,41 @@ TEST(Redefine, GetColumnTypeOfRedefinedBranch)
    auto df = ROOT::RDataFrame(t).Redefine("x", [] { return 'c'; });
    EXPECT_EQ(df.GetColumnType("x"), "char");
 }
+
+TEST(Redefine, OriginalBranchAsInput)
+{
+   TTree t("t", "t");
+   int x = 1;
+   t.Branch("x", &x);
+   t.Fill();
+   auto r = ROOT::RDataFrame(t).Redefine("x", [](int _x) { return _x * 42; }, {"x"}).Max<int>("x");
+   EXPECT_EQ(*r, 42);
+}
+
+TEST(Redefine, OriginalBranchAsInputJitted)
+{
+   TTree t("t", "t");
+   int x = 1;
+   t.Branch("x", &x);
+   t.Fill();
+   auto r = ROOT::RDataFrame(t).Redefine("x", "x*42").Max<int>("x");
+   EXPECT_EQ(*r, 42);
+}
+
+TEST(Redefine, OriginalDefineAsInput)
+{
+   auto r = ROOT::RDataFrame(1)
+               .Define("x", [] { return 1; })
+               .Redefine("x", [](int x) { return x * 42; }, {"x"})
+               .Max<int>("x");
+   EXPECT_EQ(*r, 42);
+}
+
+TEST(Redefine, OriginalDefineAsInputJitted)
+{
+   auto r = ROOT::RDataFrame(1)
+               .Define("x", [] { return 1; })
+               .Redefine("x", [](int x) { return x * 42; }, {"x"})
+               .Max<int>("x");
+   EXPECT_EQ(*r, 42);
+}
