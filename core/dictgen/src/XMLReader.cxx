@@ -875,19 +875,23 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
 
             if (!exclusion && !IsClosingTag(tagStr)) { // exclusion should be false, we are not interested in closing tags
                // as well as in key-tags such as <selection> and <lcgdict>
-               if (tagKind == kLcgdict || tagKind == kSelection)
+               if (tagKind == kLcgdict || tagKind == kSelection) {
                   ;// DEBUG std::cout<<"Don't care (don't create sel rule)"<<std::endl;
-               else {
+               } else {
                   // DEBUG std::cout<<"Yes"<<std::endl;
-                  if (tagKind == kField || tagKind == kMethod) bsrChild->SetSelected(BaseSelectionRule::kYes); // if kMethod or kField - add to child
-                  else bsr->SetSelected(BaseSelectionRule::kYes);
+                  if (tagKind == kField || tagKind == kMethod)
+                     bsrChild->SetSelected(BaseSelectionRule::kYes); // if kMethod or kField - add to child
+                  else if (bsr)
+                     bsr->SetSelected(BaseSelectionRule::kYes);
                }
             }
             else { // if exclusion = true
-               if (IsStandaloneTag(tagStr)){
+               if (IsStandaloneTag(tagStr)) {
                   // DEBUG std::cout<<"No"<<std::endl;
-                  if (tagKind == kField || tagKind == kMethod) bsrChild->SetSelected(BaseSelectionRule::kNo);
-                  else bsr->SetSelected(BaseSelectionRule::kNo);
+                  if (tagKind == kField || tagKind == kMethod)
+                     bsrChild->SetSelected(BaseSelectionRule::kNo);
+                  else if (bsr)
+                     bsr->SetSelected(BaseSelectionRule::kNo);
                }
                else if (tagKind == kClass) {
                   // DEBUG std::cout<<"Don't care (create sel rule)"<<std::endl; // if it is not a standalone tag,
@@ -978,7 +982,7 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                         out.SetHasFileNameRule(true);
                      }
                   }
-                  else {
+                  else if (bsrChild) {
                      if (bsrChild->HasAttributeWithName(iAttrName)) {
                         std::string preExistingValue;
                         bsrChild->GetAttributeValue(iAttrName,preExistingValue);
