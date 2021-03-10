@@ -3189,7 +3189,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
       } else { // current token is not a digit
          // first let's see if it is a data member:
          const clang::CXXRecordDecl *parent_clxx = llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext());
-         const clang::FieldDecl *index1 = 0;
+         const clang::FieldDecl *index1 = nullptr;
          if (parent_clxx)
             index1 = GetDataMemberFromAll(*parent_clxx, current );
          if ( index1 ) {
@@ -3228,7 +3228,8 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
             // There is no variable by this name in this class, let see
             // the base classes!:
             int found = 0;
-            index1 = GetDataMemberFromAllParents( *parent_clxx, current );
+            if (parent_clxx)
+               index1 = GetDataMemberFromAllParents( *parent_clxx, current );
             if ( index1 ) {
                if ( IsFieldDeclInt(index1) ) {
                   found = 1;
