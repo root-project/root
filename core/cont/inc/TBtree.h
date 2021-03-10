@@ -189,7 +189,7 @@ private:
    TBtItem    *fItem;   // actually fItem[MaxIndex()+1] is desired
 
 public:
-   TBtInnerNode(TBtInnerNode *parent, TBtree *t = 0);
+   TBtInnerNode(TBtInnerNode *parent, TBtree *t = nullptr);
    TBtInnerNode(TBtInnerNode *parent, TBtree *tree, TBtNode *oldroot);
    ~TBtInnerNode();
 
@@ -245,8 +245,8 @@ public:
 
    Int_t     Psize() const { return fLast; }
    Int_t     Vsize() const;
-   Int_t     MaxIndex() const { return fTree->fInnerMaxIndex; }
-   Int_t     MaxPsize() const { return fTree->fInnerMaxIndex; }
+   Int_t     MaxIndex() const { return fTree ? fTree->fInnerMaxIndex : 0; }
+   Int_t     MaxPsize() const { return fTree ? fTree->fInnerMaxIndex : 0; }
 
    // void      PrintOn(std::ostream &os) const;
 
@@ -275,7 +275,7 @@ private:
    TObject **fItem; // actually TObject *fItem[MaxIndex()+1] is desired
 
 public:
-   TBtLeafNode(TBtInnerNode *p, const TObject *obj = 0, TBtree *t = 0);
+   TBtLeafNode(TBtInnerNode *p, const TObject *obj = nullptr, TBtree *t = nullptr);
    ~TBtLeafNode();
 
 #ifndef __CINT__
@@ -311,8 +311,8 @@ public:
 
    Int_t      Psize() const { return fLast + 1; }
    Int_t      Vsize() const;
-   Int_t      MaxIndex() const { return fTree->fLeafMaxIndex; }
-   Int_t      MaxPsize() const { return fTree->fLeafMaxIndex + 1; }
+   Int_t      MaxIndex() const { return fTree ? fTree->fLeafMaxIndex : 0; }
+   Int_t      MaxPsize() const { return fTree ? fTree->fLeafMaxIndex + 1 : 0; }
 
    // void       PrintOn(std::ostream &os) const;
 
