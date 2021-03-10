@@ -10,7 +10,7 @@ namespace RooBatchCompute {
    *
    * RF_ARCH is a macro that is defined by cmake. The macro gets a different name for each copy of the library, namely
    * GENERIC, SSE4, AVX, AVX2, AVX512, CUDA. This ensures that name clashes are avoided.
-   * \see RooBatchComputeInterface, RooBatchComputeClass, dispatch
+   * \see RooBatchComputeInterface, RooBatchComputeClass, RooBatchCompute::dispatch
    */
   namespace RF_ARCH {
 
@@ -647,6 +647,16 @@ namespace RooBatchCompute {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * \brief Implementation of the RooBatchComputeInterface.
+     *
+     * This class dispatches computation requests to an actual computation backend, such as SSE, AVX, AVX2, etc.
+     * Several implementations of this class may be provided, each targeted at different architectures.
+     *
+     * Note that when this class is instantiated, it registers itself in RooBatchCompute::dispatch. This means
+     * that all subsequent computation requests that are issued via RooBatchCompute::dispatch are handled by the
+     * last instance that was created.
+     */
     class RooBatchComputeClass : public RooBatchComputeInterface {
       private:
 
