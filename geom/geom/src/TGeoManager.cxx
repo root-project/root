@@ -1691,7 +1691,8 @@ void TGeoManager::AnimateTracks(Double_t tmin, Double_t tmax, Int_t nframes, Opt
    if (opt.Contains("/G")) geomanim = kTRUE;
    SetTminTmax(0,0);
    DrawTracks(opt.Data());
-   Double_t start[6], end[6];
+   Double_t start[6] = {0,0,0,0,0,0};
+   Double_t end[6] = {0,0,0,0,0,0};
    Double_t dd[6] = {0,0,0,0,0,0};
    Double_t dlat=0, dlong=0, dpsi=0;
    if (geomanim) {
