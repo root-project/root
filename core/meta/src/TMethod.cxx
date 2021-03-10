@@ -180,15 +180,14 @@ TDataMember *TMethod::FindDataMember()
       } while (ptr1);
 
       //now let's  parse all argument tokens...
-      TClass     *cl = 0;
-      TMethodArg *a  = 0;
-      TMethodArg *ar = 0;
-      TDataMember *member = 0;
+      TClass     *cl = nullptr;
+      TMethodArg *a  = nullptr;
+      TMethodArg *ar = nullptr;
+      TDataMember *member = nullptr;
 
       for (i=0; i<token_cnt;i++) {
-         cnt = 0;
          ptr1 = R__STRTOK_R(tokens[i], "=>", &rest);         // LeftHandedSide=methodarg
-         ptr2 = R__STRTOK_R((char *)0, "=>", &rest);         // RightHandedSide-points to datamember
+         ptr2 = R__STRTOK_R((char *) nullptr, "=>", &rest);  // RightHandedSide-points to datamember
 
          //find the MethodArg
          a      = 0;
