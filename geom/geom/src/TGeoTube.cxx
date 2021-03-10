@@ -296,7 +296,6 @@ Double_t TGeoTube::DistFromInsideS(const Double_t *point, const Double_t *dir, D
    Double_t rsq=point[0]*point[0]+point[1]*point[1];
    Double_t rdotn=point[0]*dir[0]+point[1]*dir[1];
    Double_t b,d;
-   Double_t sr = TGeoShape::Big();
    // inner cylinder
    if (rmin>0) {
       // Protection in case point is actually outside the tube
@@ -306,7 +305,7 @@ Double_t TGeoTube::DistFromInsideS(const Double_t *point, const Double_t *dir, D
          if (rdotn<0) {
             DistToTube(rsq,nsq,rdotn,rmin,b,d);
             if (d>0) {
-               sr=-b-d;
+               Double_t sr = -b-d;
                if (sr>0) return TMath::Min(sz,sr);
             }
          }
@@ -318,7 +317,7 @@ Double_t TGeoTube::DistFromInsideS(const Double_t *point, const Double_t *dir, D
    }
    DistToTube(rsq,nsq,rdotn,rmax,b,d);
    if (d>0) {
-      sr=-b+d;
+      Double_t sr = -b+d;
       if (sr>0) return TMath::Min(sz,sr);
    }
    return 0.;
@@ -350,12 +349,11 @@ Double_t TGeoTube::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
    Double_t rmaxsq = rmax*rmax;
    Double_t rminsq = rmin*rmin;
    zi = dz - TMath::Abs(point[2]);
-   Double_t s = TGeoShape::Big();
    Bool_t in = kFALSE;
    Bool_t inz = (zi<0)?kFALSE:kTRUE;
    if (!inz) {
       if (point[2]*dir[2]>=0) return TGeoShape::Big();
-      s  = -zi/TMath::Abs(dir[2]);
+      Double_t s  = -zi/TMath::Abs(dir[2]);
       xi = point[0]+s*dir[0];
       yi = point[1]+s*dir[1];
       Double_t r2=xi*xi+yi*yi;
@@ -393,7 +391,7 @@ Double_t TGeoTube::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
       if (TMath::Abs(nsq)<TGeoShape::Tolerance()) return TGeoShape::Big();
       DistToTube(rsq, nsq, rdotn, rmin, b, d);
       if (d>0) {
-         s=-b+d;
+         Double_t s=-b+d;
          if (s>0) {
             zi=point[2]+s*dir[2];
             if (TMath::Abs(zi)<=dz) return s;
@@ -406,7 +404,7 @@ Double_t TGeoTube::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
    if (!inrmax) {
       DistToTube(rsq, nsq, rdotn, rmax, b, d);
       if (d>0) {
-         s=-b-d;
+         Double_t s=-b-d;
          if (s>0) {
             zi=point[2]+s*dir[2];
             if (TMath::Abs(zi)<=dz) return s;
@@ -417,7 +415,7 @@ Double_t TGeoTube::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
    if (rmin>0) {
       DistToTube(rsq, nsq, rdotn, rmin, b, d);
       if (d>0) {
-         s=-b+d;
+         Double_t s=-b+d;
          if (s>0) {
             zi=point[2]+s*dir[2];
             if (TMath::Abs(zi)<=dz) return s;
@@ -1459,12 +1457,11 @@ Double_t TGeoTubeSeg::DistFromInsideS(const Double_t *point, const Double_t *dir
 {
    Double_t stube = TGeoTube::DistFromInsideS(point,dir,rmin,rmax,dz);
    if (stube<=0) return 0.0;
-   Double_t sfmin = TGeoShape::Big();
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
    Double_t cpsi=point[0]*cm+point[1]*sm;
    if (cpsi>r*cdfi+TGeoShape::Tolerance())  {
-      sfmin = TGeoShape::DistToPhiMin(point, dir, s1, c1, s2, c2, sm, cm);
+      Double_t sfmin = TGeoShape::DistToPhiMin(point, dir, s1, c1, s2, c2, sm, cm);
       return TMath::Min(stube,sfmin);
    }
    // Point on the phi boundary or outside
@@ -1475,7 +1472,7 @@ Double_t TGeoTubeSeg::DistFromInsideS(const Double_t *point, const Double_t *dir
       if (ddotn>=0) return 0.0;
       ddotn = -s2*dir[0]+c2*dir[1];
       if (ddotn<=0) return stube;
-      sfmin = s2*point[0]-c2*point[1];
+      Double_t sfmin = s2*point[0]-c2*point[1];
       if (sfmin<=0) return stube;
       sfmin /= ddotn;
       if (sfmin >= stube) return stube;
@@ -1488,7 +1485,7 @@ Double_t TGeoTubeSeg::DistFromInsideS(const Double_t *point, const Double_t *dir
    if (ddotn>=0) return 0.0;
    ddotn = s1*dir[0]-c1*dir[1];
    if (ddotn<=0) return stube;
-   sfmin = -s1*point[0]+c1*point[1];
+   Double_t sfmin = -s1*point[0]+c1*point[1];
    if (sfmin<=0) return stube;
    sfmin /= ddotn;
    if (sfmin >= stube) return stube;
@@ -1523,13 +1520,12 @@ Double_t TGeoTubeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
                                 Double_t dz, Double_t c1, Double_t s1, Double_t c2, Double_t s2,
                                 Double_t cm, Double_t sm, Double_t cdfi)
 {
-   Double_t r2, cpsi;
+   Double_t r2, cpsi, s;
    // check Z planes
    Double_t xi, yi, zi;
    zi = dz - TMath::Abs(point[2]);
    Double_t rmaxsq = rmax*rmax;
    Double_t rminsq = rmin*rmin;
-   Double_t s = TGeoShape::Big();
    Double_t snxt=TGeoShape::Big();
    Bool_t in = kFALSE;
    Bool_t inz = (zi<0)?kFALSE:kTRUE;
@@ -1654,7 +1650,6 @@ Double_t TGeoTubeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
                // now check phi range
                xi=point[0]+s*dir[0];
                yi=point[1]+s*dir[1];
-               r2=xi*xi+yi*yi;
                if ((xi*cm+yi*sm) >= rmin*cdfi) return s;
                // now we really have to check any phi crossing
                Double_t un=-dir[0]*s1+dir[1]*c1;
@@ -2056,7 +2051,6 @@ void TGeoTubeSeg::SetSegsAndPols(TBuffer3D &buff) const
 
 Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
 {
-   Double_t safe = TGeoShape::Big();
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
@@ -2064,7 +2058,7 @@ Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
       saf[0] = fDz-TMath::Abs(point[2]);
       saf[1] = r-fRmin;
       saf[2] = fRmax-r;
-      safe   = saf[TMath::LocMin(3,saf)];
+      Double_t safe   = saf[TMath::LocMin(3,saf)];
       if ((fPhi2-fPhi1)>=360.) return safe;
       Double_t safphi = TGeoShape::SafetyPhi(point,in,fPhi1,fPhi2);
       return TMath::Min(safe, safphi);
@@ -2077,7 +2071,7 @@ Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
    if (inphi) {
       saf[1] = fRmin-r;
       saf[2] = r-fRmax;
-      safe = saf[TMath::LocMax(3,saf)];
+      Double_t safe = saf[TMath::LocMax(3,saf)];
       safe = TMath::Max(0., safe);
       return safe;
    }
@@ -2087,7 +2081,7 @@ Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
    Double_t rproj = TMath::Max(point[0]*fC1+point[1]*fS1, point[0]*fC2+point[1]*fS2);
    saf[1] = fRmin-rproj;
    saf[2] = rproj-fRmax;
-   safe = TMath::Max(saf[1], saf[2]);
+   Double_t safe = TMath::Max(saf[1], saf[2]);
    if ((fPhi2-fPhi1)>=360.) return TMath::Max(safe,saf[0]);
    if (safe>0) {
       // rproj not within (rmin,rmax) - > no need to calculate safphi
@@ -2104,7 +2098,6 @@ Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
 Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz,
                               Double_t phi1d, Double_t phi2d, Int_t skipz)
 {
-   Double_t safe = TGeoShape::Big();
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
@@ -2126,7 +2119,7 @@ Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, D
    if (in) {
       saf[1] = r-rmin;
       saf[2] = rmax-r;
-      safe   = saf[TMath::LocMin(3,saf)];
+      Double_t safe   = saf[TMath::LocMin(3,saf)];
       if ((phi2d-phi1d)>=360.) return safe;
       Double_t safphi = TGeoShape::SafetyPhi(point,in,phi1d,phi2d);
       return TMath::Min(safe, safphi);
@@ -2147,7 +2140,7 @@ Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, D
    if (inphi) {
       saf[1] = rmin-r;
       saf[2] = r-rmax;
-      safe = saf[TMath::LocMax(3,saf)];
+      Double_t safe = saf[TMath::LocMax(3,saf)];
       safe = TMath::Max(0., safe);
       return safe;
    }
@@ -2162,7 +2155,7 @@ Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, D
    Double_t rproj = TMath::Max(point[0]*c1+point[1]*s1, point[0]*c2+point[1]*s2);
    saf[1] = rmin-rproj;
    saf[2] = rproj-rmax;
-   safe   = TMath::Max(saf[1], saf[2]);
+   Double_t safe   = TMath::Max(saf[1], saf[2]);
    if ((phi2d-phi1d)>=360.) return TMath::Max(safe,saf[0]);
    if (safe>0) {
       // rproj not within (rmin,rmax) - > no need to calculate safphi
@@ -2769,8 +2762,7 @@ Double_t TGeoCtub::DistFromOutside(const Double_t *point, const Double_t *dir, I
    Double_t r2;
    Double_t calf = dir[0]*fNlow[0]+dir[1]*fNlow[1]+dir[2]*fNlow[2];
    // check Z planes
-   Double_t xi, yi, zi;
-   Double_t s = TGeoShape::Big();
+   Double_t xi, yi, zi, s;
    if (saf[0]>0) {
       if (calf<0) {
          s = -saf[0]/calf;
@@ -2906,10 +2898,9 @@ Double_t TGeoCtub::DistFromInside(const Double_t *point, const Double_t *dir, In
    Double_t calf = dir[0]*fNlow[0]+dir[1]*fNlow[1]+dir[2]*fNlow[2];
    if (calf>0) sz = saf[0]/calf;
 
-   Double_t sz1=TGeoShape::Big();
    calf = dir[0]*fNhigh[0]+dir[1]*fNhigh[1]+dir[2]*fNhigh[2];
    if (calf>0) {
-      sz1 = saf[1]/calf;
+      Double_t sz1 = saf[1]/calf;
       if (sz1<sz) sz = sz1;
    }
 
@@ -3012,15 +3003,14 @@ Double_t TGeoCtub::Safety(const Double_t *point, Bool_t in) const
    saf[2] = (fRmin<1E-10 && !isseg)?TGeoShape::Big():(r-fRmin);
    saf[3] = fRmax-r;
    Double_t safphi = TGeoShape::Big();
-   Double_t safe = TGeoShape::Big();
    if (isseg) safphi =  TGeoShape::SafetyPhi(point, in, fPhi1, fPhi2);
 
    if (in) {
-      safe = saf[TMath::LocMin(4,saf)];
+      Double_t safe = saf[TMath::LocMin(4,saf)];
       return TMath::Min(safe, safphi);
    }
    for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
-   safe = saf[TMath::LocMax(4,saf)];
+   Double_t safe = saf[TMath::LocMax(4,saf)];
    if (isseg) return TMath::Max(safe, safphi);
    return safe;
 }
