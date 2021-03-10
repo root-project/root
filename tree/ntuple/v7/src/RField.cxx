@@ -1156,6 +1156,7 @@ ROOT::Experimental::RCollectionField::RCollectionField(
       auto& subField = collectionModel->GetFieldZero()->fSubFields[i];
       Attach(std::move(subField));
    }
+   SetDescription(collectionModel->GetDescription());
 }
 
 

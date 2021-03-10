@@ -297,3 +297,20 @@ TEST(RNTupleModel, FieldDescriptions)
    EXPECT_EQ(std::string("mass"), fieldDescriptions[1]);
    EXPECT_EQ(std::string("electric charge"), fieldDescriptions[2]);
 }
+
+TEST(RNTupleModel, CollectionFieldDescriptions)
+{
+   FileRaii fileGuard("test_ntuple_collection_field_descriptions.root");
+   {
+      auto muon = RNTupleModel::Create();
+      muon->SetDescription("muons after basic selection");
+
+      auto model = RNTupleModel::Create();
+      model->MakeCollection("Muon", std::move(muon));
+      RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   const auto& muon_desc = *ntuple->GetDescriptor().GetTopLevelFields().begin();
+   EXPECT_EQ(std::string("muons after basic selection"), muon_desc.GetFieldDescription());
+}

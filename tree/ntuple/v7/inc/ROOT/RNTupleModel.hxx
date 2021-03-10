@@ -55,6 +55,9 @@ class RNTupleModel {
    /// of this NTuple model. Throws an RException for invalid names.
    void EnsureValidFieldName(std::string_view fieldName);
 
+   /// Free text set by the user
+   std::string fDescription;
+
 public:
    RNTupleModel();
    RNTupleModel(const RNTupleModel&) = delete;
@@ -115,7 +118,8 @@ public:
    REntry *GetDefaultEntry() { return fDefaultEntry.get(); }
    std::unique_ptr<REntry> CreateEntry();
    RNTupleVersion GetVersion() const { return RNTupleVersion(); }
-   std::string GetDescription() const { return ""; /* TODO */ }
+   std::string GetDescription() const { return fDescription; }
+   void SetDescription(std::string_view description) { fDescription = std::string(description); }
    RNTupleUuid GetUuid() const { return RNTupleUuid(); /* TODO */ }
 };
 
