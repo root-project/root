@@ -10,13 +10,29 @@
 class RooAbsReal;
 class RooListProxy;
 
+/**
+ * Namespace for dispatching RooFit computations to various backends.
+ *
+ * This namespace contains an interface for providing high-performance computation functions for use in RooAbsReal::evaluateSpan(),
+ * see RooBatchComputeInterface.
+ *
+ * Furthermore, several implementations of this interface can be created, which reside in RooBatchCompute::RF_ARCH, where
+ * RF_ARCH may be replaced by the architecture that this implementation targets, e.g. SSE, AVX, etc.
+ *
+ * Using the pointer RooBatchCompute::dispatch, a computation request can be dispatched to the fastest backend that is available
+ * on a specific platform.
+ */
 namespace RooBatchCompute {
   /**
-   * \brief The interface which should be implemented to provide optimised evaluateSpan() functionality for RooFit PDF classes.
+   * \brief The interface which should be implemented to provide optimised computation functions for implementations of RooAbsReal::evaluateSpan().
    *
    * This interface contains the signatures of the compute functions of every PDF that has an optimised implementation available.
    * These are the functions that perform the actual computations in batches.
-   * \see dispatch, RooBatchComputeClass, RF_ARCH
+   *
+   * Several implementations of this interface may be provided, e.g. SSE, AVX, AVX2 etc. At run time, the fastest implementation of this interface
+   * is selected, and using a virtual call, the computation is dispatched to the best backend.
+   *
+   * \see RooBatchCompute::dispatch, RooBatchComputeClass, RF_ARCH
    */ 
   class RooBatchComputeInterface {
   public:
@@ -42,6 +58,13 @@ namespace RooBatchCompute {
     virtual RooSpan<double> computeVoigtian(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> mean, RooSpan<const double> width, RooSpan<const double> sigma) = 0;
   };
 
+  /**
+   * This dispatch pointer points to an implementation of the compute library, provided one has been loaded.
+   * Using a virtual call, computation requests are dispatched to backends with architecture-specific functions
+   * such as SSE, AVX, AVX2, etc.
+   *
+   * \see RooBatchComputeInterface, RooBatchComputeClass, RF_ARCH
+   */
   R__EXTERN RooBatchComputeInterface* dispatch;
 }
 
