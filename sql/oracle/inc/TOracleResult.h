@@ -16,15 +16,14 @@
 
 #include <vector>
 
-#ifndef R__WIN32
-#include <sys/time.h>
-#endif
-
-#include <occi.h>
-
-#ifdef CONST
-#undef CONST
-#endif
+namespace oracle {
+namespace occi {
+class Connection;
+class Statement;
+class ResultSet;
+struct MetaData;
+}
+}
 
 class TList;
 
