@@ -2708,67 +2708,70 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 /// \f$ \mathrm{Cov}(mathbf{a},mathbf{a}') \f$ = the covariance matrix from the fit result.
 ///
 
-Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset_in) const
+double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset_in) const
 {
 
    // Strip out parameters with zero error
    RooArgList fpf_stripped;
-   RooFIter fi = fr.floatParsFinal().fwdIterator();
-   RooRealVar *frv;
-   while ((frv = (RooRealVar *)fi.next())) {
+   for (auto fi : fr.floatParsFinal()) {
+      auto *frv = static_cast<RooRealVar*>(fi);
       if (frv->getError() > 1e-20) {
          fpf_stripped.add(*frv);
       }
    }
 
-   RooArgSet *errorParams = getObservables(fpf_stripped);
-
-   RooArgSet *nset =
-      nset_in.getSize() == 0 ? getParameters(*errorParams) : getObservables(nset_in);
+   std::unique_ptr<RooArgSet> errorParams{getObservables(fpf_stripped)};
+   std::unique_ptr<RooArgSet> nset{nset_in.getSize() == 0 ? getParameters(*errorParams)
+                                                          : getObservables(nset_in)};
 
    // Make list of parameter instances in order of error matrix
    RooArgList paramList;
    const RooArgList &fpf = fpf_stripped;
-   vector<int> fpf_idx;
-   for (Int_t i = 0; i < fpf.getSize(); i++) {
-      RooAbsArg *par = errorParams->find(fpf[i].GetName());
-      if (par) {
+
+   std::vector<int> fpf_idx;
+   fpf_idx.reserve(fpf.getSize());
+
+   for (int i = 0; i < fpf.getSize(); i++) {
+      if (RooAbsArg *par = errorParams->find(fpf[i].GetName())) {
          paramList.add(*par);
          fpf_idx.push_back(i);
       }
-  }
+   }
 
-  vector<Double_t> plusVar, minusVar ;
+  auto nParams = paramList.getSize();
+
+  std::vector<double> plusVar(nParams);
+  std::vector<double> minusVar(nParams);
 
   // Create vector of plus,minus variations for each parameter
-  TMatrixDSym V(paramList.getSize()==fr.floatParsFinal().getSize()?
-		fr.covarianceMatrix():
-		fr.reducedCovarianceMatrix(paramList)) ;
+  TMatrixDSym V(nParams == fr.floatParsFinal().getSize() ? fr.covarianceMatrix()
+                                                         : fr.reducedCovarianceMatrix(paramList)) ;
 
-  for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
+  for (int ivar = 0; ivar < nParams; ivar++) {
 
-    RooRealVar& rrv = (RooRealVar&)fpf[fpf_idx[ivar]] ;
+    auto& param = static_cast<RooRealVar&>(paramList[ivar]);
+    auto& rrv = static_cast<RooRealVar&>(fpf[fpf_idx[ivar]]);
 
-    Double_t cenVal = rrv.getVal() ;
-    Double_t errVal = sqrt(V(ivar,ivar)) ;
+    double cenVal = rrv.getVal() ;
+    double errVal = std::sqrt(V(ivar,ivar)) ;
 
     // Make Plus variation
-    ((RooRealVar*)paramList.at(ivar))->setVal(cenVal+errVal) ;
-    plusVar.push_back(getVal(nset)) ;
+    param.setVal(cenVal+errVal) ;
+    plusVar[ivar] = getVal(nset.get());
 
     // Make Minus variation
-    ((RooRealVar*)paramList.at(ivar))->setVal(cenVal-errVal) ;
-    minusVar.push_back(getVal(nset)) ;
+    param.setVal(cenVal-errVal) ;
+    minusVar[ivar] = getVal(nset.get());
 
-    ((RooRealVar*)paramList.at(ivar))->setVal(cenVal) ;
+    param.setVal(cenVal) ;
   }
 
   TMatrixDSym C(paramList.getSize()) ;
   vector<double> errVec(paramList.getSize()) ;
   for (int i=0 ; i<paramList.getSize() ; i++) {
-    errVec[i] = sqrt(V(i,i)) ;
+    errVec[i] = std::sqrt(V(i,i)) ;
     for (int j=i ; j<paramList.getSize() ; j++) {
-      C(i,j) = V(i,j)/sqrt(V(i,i)*V(j,j)) ;
+      C(i,j) = V(i,j) / std::sqrt(V(i,i)*V(j,j)) ;
       C(j,i) = C(i,j) ;
     }
   }
@@ -2780,12 +2783,9 @@ Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet 
   }
 
   // Calculate error in linear approximation from variations and correlation coefficient
-  Double_t sum = F*(C*F) ;
+  double sum = F*(C*F) ;
 
-  delete errorParams ;
-  delete nset ;
-
-  return sqrt(sum) ;
+  return std::sqrt(sum) ;
 }
 
 
