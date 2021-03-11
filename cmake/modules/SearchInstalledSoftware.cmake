@@ -1598,6 +1598,14 @@ if (vecgeom)
   endif()
 endif()
 
+#---Check for protobuf-------------------------------------------------------------------
+find_package(Protobuf)
+if(Protobuf_FOUND)
+  if(Protobuf_VERSION GREATER 3.0)
+    set(tmva-sofie ON)
+  endif()
+endif()
+
 #---Check for CUDA-----------------------------------------------------------------------
 # if tmva-gpu is off and cuda is on cuda is searched but not used in tmva
 #  if cuda is off but tmva-gpu is on cuda is searched and activated if found !
