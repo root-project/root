@@ -383,15 +383,16 @@ void MCMCInterval::CreateHist()
       coutE(Eval) << "Make sure to fully construct/initialize." << endl;
       return;
    }
-   if (fHist != NULL)
+   if (fHist != NULL) {
       delete fHist;
+      fHist = NULL;
+   }
 
    if (fNumBurnInSteps >= fChain->Size()) {
       coutE(InputArguments) <<
          "MCMCInterval::CreateHist: creation of histogram failed: " <<
          "Number of burn-in steps (num steps to ignore) >= number of steps " <<
          "in Markov chain." << endl;
-      fHist = NULL;
       return;
    }
 
