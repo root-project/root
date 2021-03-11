@@ -1250,7 +1250,6 @@ TString TGText::AsString()
       }
       char *txt = travel->GetText();
       ret += txt;
-      delete [] txt;
       travel = travel->fNext;
       if (travel) ret += '\n';
       line_count++;
