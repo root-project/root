@@ -655,7 +655,10 @@ void TProofProgressLog::Rebuild()
       }
    }
    // Cleanup current TProofLog
-   if (fProofLog) delete fProofLog;
+   if (fProofLog) {
+      delete fProofLog;
+      fProofLog = nullptr;
+   }
 
    // Set new parameters
    fSessionUrl = fUrlText->GetText();
