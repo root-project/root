@@ -839,8 +839,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
          if (can_draw && can_expand && !drawopt) {
             // if default action specified as expand, disable drawing
-            if (dflt_expand || (handle && (handle.dflt === 'expand'))) can_draw = false; else
-            if (this.isItemDisplayed(itemname)) can_draw = false; // if already displayed, try to expand
+            // if already displayed, try to expand
+            if (dflt_expand || (handle && (handle.dflt === 'expand')) || this.isItemDisplayed(itemname)) can_draw = false;
          }
 
          if (can_draw)
@@ -1727,7 +1727,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
            .css(handle.vertical ? 'height' : 'width', '5px')
            .css('cursor', handle.vertical ? "ns-resize" : "ew-resize");
 
-      separ.bind('changePosition', function(e, drag_ui) {
+      separ.on('changePosition', function(e, drag_ui) {
          let handle = $(this).prop('handle'),
              id = parseInt($(this).attr('separator-id')),
              pos = handle.groups[id].position;
@@ -1771,7 +1771,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          }
       });
 
-      separ.bind('resizeGroup', function(e, grid) {
+      separ.on('resizeGroup', function(e, grid) {
          let sel = $(this).parent().children("[groupid='"+grid+"']");
          if (!sel.hasClass('jsroot_newgrid')) sel = sel.find(".jsroot_newgrid");
          sel.each(function() { JSROOT.resize($(this).get(0)); });
