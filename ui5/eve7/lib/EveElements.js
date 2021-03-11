@@ -268,7 +268,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    {
       var fcol = jsrp.getColor(ebox.fMainColor);
       var boxMaterial = new THREE.MeshPhongMaterial({color: fcol,  flatShading: true});
-      var fcol = jsrp.getColor(ebox.fMainColor);
 
       // console.log("EveElements.prototype.makeFlatBox triangulate", idxBegin, idxEnd);
       let nTriang = (idxEnd - idxBegin) -2;
@@ -707,7 +706,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    Calo2DControl.prototype.extractIndex = function(intersect)
    {
       let idx  = Math.floor(intersect.faceIndex/2);
-      return idx;ls
+      return idx;
    }
 
    Calo2DControl.prototype.getTooltipText = function(intersect)
