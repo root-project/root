@@ -343,6 +343,7 @@ RooMappedCategory::Entry& RooMappedCategory::Entry::operator=(const RooMappedCat
 
   if (_regexp) {
     delete _regexp ;
+    _regexp = nullptr;
   }
 
   return *this;
