@@ -574,6 +574,7 @@ void TAlienFile::Close(Option_t * option)
    if (!list) {
       if (result) {
          delete result;
+         result = nullptr;
       }
       Error("Close", "cannot commit envelope for %s", fLfn.Data());
       gSystem->Unlink(fLfn);
