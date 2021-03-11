@@ -152,7 +152,7 @@ RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
     for (Int_t i=0 ; i<_nseg ; i++) {
       delete _array[i] ;
     }
-    delete _array ;
+    delete [] _array ;
   }
 }
 
