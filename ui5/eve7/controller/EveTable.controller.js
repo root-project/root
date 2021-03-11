@@ -207,7 +207,7 @@ sap.ui.define([
             var xr = rowData[r];
             for (var xri = 0; xri < xr.length; xri++) {
                var nv = parseFloat(xr[i]);
-               if (nv != NaN) {
+               if (!isNaN(nv)) {
                   rowData[r][ri] = nv;
                }
             }
