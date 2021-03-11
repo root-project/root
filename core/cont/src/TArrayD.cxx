@@ -111,11 +111,12 @@ void TArrayD::Set(Int_t n)
       if (n != 0) {
          fArray = new Double_t[n];
          if (n < fN) {
-            memcpy(fArray,temp, n*sizeof(Double_t));
+            memcpy(fArray, temp, n*sizeof(Double_t));
+         } else if (temp) {
+            memcpy(fArray, temp, fN*sizeof(Double_t));
+            memset(&fArray[fN], 0, (n-fN)*sizeof(Double_t));
          } else {
-            if (temp)
-               memcpy(fArray,temp,fN*sizeof(Double_t));
-            memset(&fArray[fN],0,(n-fN)*sizeof(Double_t));
+            memset(fArray, 0, n*sizeof(Double_t));
          }
       } else {
          fArray = nullptr;
