@@ -111,10 +111,11 @@ void TArrayS::Set(Int_t n)
          fArray = new Short_t[n];
          if (n < fN) {
             memcpy(fArray, temp, n*sizeof(Short_t));
-         } else {
-            if (temp)
-               memcpy(fArray, temp, fN*sizeof(Short_t));
+         } else if (temp) {
+            memcpy(fArray, temp, fN*sizeof(Short_t));
             memset(&fArray[fN], 0, (n-fN)*sizeof(Short_t));
+         } else {
+            memset(fArray, 0, n*sizeof(Short_t));
          }
       } else {
          fArray = nullptr;

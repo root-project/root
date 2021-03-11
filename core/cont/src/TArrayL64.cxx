@@ -111,10 +111,11 @@ void TArrayL64::Set(Int_t n)
          fArray = new Long64_t[n];
          if (n < fN) {
             memcpy(fArray, temp, n*sizeof(Long64_t));
-         } else {
-            if (temp)
-               memcpy(fArray, temp, fN*sizeof(Long64_t));
+         } else if (temp) {
+            memcpy(fArray, temp, fN*sizeof(Long64_t));
             memset(&fArray[fN], 0, (n-fN)*sizeof(Long64_t));
+         } else {
+            memset(fArray, 0, n*sizeof(Long64_t));
          }
       } else {
          fArray = nullptr;

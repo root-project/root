@@ -111,10 +111,11 @@ void TArrayC::Set(Int_t n)
          fArray = new Char_t[n];
          if (n < fN) {
             memcpy(fArray, temp, n*sizeof(Char_t));
+         } else if (temp) {
+            memcpy(fArray, temp, fN*sizeof(Char_t));
+            memset(&fArray[fN], 0, (n-fN)*sizeof(Char_t));
          } else {
-            if (temp)
-               memcpy(fArray, temp, fN*sizeof(Char_t));
-            memset(&fArray[fN],0,(n-fN)*sizeof(Char_t));
+            memset(fArray, 0, n*sizeof(Char_t));
          }
       } else {
          fArray = nullptr;
