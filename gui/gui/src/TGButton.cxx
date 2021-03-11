@@ -624,6 +624,7 @@ TGTextButton::~TGTextButton()
 void TGTextButton::Layout()
 {
    delete fTLayout;
+   fTLayout = nullptr;
 
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
