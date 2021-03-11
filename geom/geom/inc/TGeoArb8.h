@@ -28,8 +28,8 @@ protected:
    Double_t             *fTwist{nullptr};    //! [4] tangents of twist angles
    Double_t              fXY[8][2];          // list of vertices
 
-   TGeoArb8(const TGeoArb8&);
-   TGeoArb8& operator=(const TGeoArb8&);
+   TGeoArb8(const TGeoArb8 &) = delete;
+   TGeoArb8& operator=(const TGeoArb8 &) = delete;
 
    void CopyTwist(Double_t *twist = nullptr);
 
