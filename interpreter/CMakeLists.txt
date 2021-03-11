@@ -452,8 +452,9 @@ if (builtin_cling)
   # LLVM doesn't really give us a API to get this with an in-source build
   # so we just use the normal way of doing this and read the llvm directory
   # compilation properties.
+  set(LLVM_DEFS "__STDC_CONSTANT_MACROS;__STDC_FORMAT_MACROS;__STDC_LIMIT_MACROS")
   if( LLVM_USING_GLIBC )
-    set(LLVM_DEFS "_GNU_SOURCE;__STDC_CONSTANT_MACROS;__STDC_FORMAT_MACROS;__STDC_LIMIT_MACROS")
+    list(APPEND LLVM_DEFS "_GNU_SOURCE")
   endif()
   # Turns DEFINE1;DEFINE2 to -DDEFINE1 -DDEFINE2
   string (REPLACE ";" " -D" LLVM_DEFS ";${LLVM_DEFS}")
