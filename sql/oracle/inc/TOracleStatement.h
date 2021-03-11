@@ -18,11 +18,11 @@
 
 namespace oracle {
 namespace occi {
-class Environment;
-class Connection;
-class Statement;
-class ResultSet;
-struct MetaData;
+   class Environment;
+   class Connection;
+   class Statement;
+   class ResultSet;
+   struct MetaData;
 }
 }
 
@@ -54,15 +54,15 @@ protected:
    void        SetBufferSize(Int_t size);
    void        CloseBuffer();
 
+   TOracleStatement(const TOracleStatement &) = delete;
+   TOracleStatement& operator=(const TOracleStatement &) = delete;
+
 public:
    TOracleStatement(oracle::occi::Environment* env,
                     oracle::occi::Connection* conn,
                     oracle::occi::Statement* stmt,
                     Int_t niter, Bool_t errout = kTRUE);
    virtual ~TOracleStatement();
-
-   TOracleStatement(const TOracleStatement &) = delete;
-   TOracleStatement& operator=(const TOracleStatement &) = delete;
 
    void        Close(Option_t * = "") final;
 
