@@ -212,6 +212,18 @@ TEST(RNTuple, Clusters)
    EXPECT_EQ(24.0, (*rdFourVec)[1]);
 }
 
+TEST(RNTupleModel, HasField)
+{
+   auto model = RNTupleModel::Create();
+   EXPECT_FALSE(model->HasField("pt"));
+   auto field = model->MakeField<float>("pt", 42.0);
+   EXPECT_TRUE(model->HasField("pt"));
+
+   EXPECT_FALSE(model->HasField("muon"));
+   auto muon = RNTupleModel::Create();
+   model->MakeCollection("muon", std::move(muon));
+   EXPECT_TRUE(model->HasField("muon"));
+}
 
 TEST(RNTupleModel, EnforceValidFieldNames)
 {

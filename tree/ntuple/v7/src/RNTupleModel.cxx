@@ -57,6 +57,9 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
    fFieldZero->Attach(std::move(field));
 }
 
+bool ROOT::Experimental::RNTupleModel::HasField(std::string_view fieldName) const {
+   return fFieldNames.find(std::string(fieldName)) != fFieldNames.end();
+}
 
 std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental::RNTupleModel::MakeCollection(
    std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)

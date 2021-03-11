@@ -109,6 +109,9 @@ public:
       return fDefaultEntry->Get<T>(fieldName);
    }
 
+   /// Check if a field name already exists in the model.
+   bool HasField(std::string_view fieldName) const;
+
    /// Ingests a model for a sub collection and attaches it to the current model
    std::shared_ptr<RCollectionNTupleWriter> MakeCollection(
       std::string_view fieldName,
