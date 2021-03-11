@@ -94,9 +94,7 @@ sap.ui.define([
       },
 
       sortTable: function (e) {
-         var col = e.mParameters.column;
-         var colId = col.getId();
-
+         // var colId = col.getId();
          var col = e.mParameters.column;
          var bDescending = (e.mParameters.sortOrder == sap.ui.core.SortOrder.Descending);
          var sv = bDescending;
