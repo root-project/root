@@ -3279,14 +3279,12 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
 
 void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
 {
-   out.resize(strlen(in)*2);
-   unsigned int i=0,j=0,c;
-   while((c=in[i])) {
-      if (out.capacity() < (j+3)) {
-         out.resize(2*j+3);
-      }
+   unsigned int i = 0;
+   char c;
+   out.clear();
+   while((c = in[i++])) {
       const char *repl = nullptr;
-      switch(c) { // We resized the underlying buffer if needed
+      switch(c) {
          case '+': repl = "pL"; break;
          case '-': repl = "mI"; break;
          case '*': repl = "mU"; break;
@@ -3313,19 +3311,17 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
          case '@': repl = "aT"; break;
          case '\'': repl = "sQ"; break;
          case '\\': repl = "fI"; break;
-         default: out[j++]=c; break;
       }
-      if (repl) {
-         strlcpy(const_cast<char*>(out.data())+j, repl, out.capacity()-j);
-         j+=2;
-      }
-      ++i;
+      if (repl)
+         out.append(repl);
+      else
+         out.push_back(c);
    }
-   out.resize(j);
 
    // Remove initial numbers if any
-   std::size_t firstNonNumber = out.find_first_not_of("0123456789");
-   out.replace(0,firstNonNumber,"");
+   auto firstNonNumber = out.find_first_not_of("0123456789");
+   if (firstNonNumber != std::string::npos)
+      out.replace(0,firstNonNumber,"");
 }
 
 static clang::SourceLocation
