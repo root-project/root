@@ -146,7 +146,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
            switch(obj._typename) {
               case 'TColor': item._value = jsrp.getRGBfromTColor(obj); break;
-              case 'TText': item._value = obj.fTitle; break;
+              case 'TText':
               case 'TLatex': item._value = obj.fTitle; break;
               case 'TObjString': item._value = obj.fString; break;
               default: if (lst.opt && lst.opt[i] && lst.opt[i].length) item._value = lst.opt[i];

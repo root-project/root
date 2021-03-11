@@ -105,10 +105,10 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          let handler = func;
          if (typeof arg == 'function') {
             func = arg;
-            handler = res => func(arg=="1");
+            handler = res => func(res=="1");
             arg = flag ? "0" : "1";
          }
-         return this.add((flag ? "chk:" : "unk:") + name, arg, handler);
+         this.add((flag ? "chk:" : "unk:") + name, arg, handler);
       }
 
       /** @summary Returns menu size */
@@ -128,7 +128,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
          if (opts.length === 1) {
             if (opts[0]==='inspect') top_name = top_name.replace("Draw", "Inspect");
-            return this.add(top_name, opts[0], call_back);
+            this.add(top_name, opts[0], call_back);
+            return;
          }
 
          if (!without_sub) this.add("sub:" + top_name, opts[0], call_back);
