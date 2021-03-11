@@ -15,6 +15,12 @@
 #include <cstring>
 #include <ctime>
 
+#include <occi.h>
+
+#ifdef CONST
+#undef CONST
+#endif
+
 ClassImp(TOracleRow);
 
 using namespace std;

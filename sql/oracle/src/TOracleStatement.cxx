@@ -24,6 +24,14 @@
 #include "snprintf.h"
 #include <cstdlib>
 
+#include <occi.h>
+
+#ifdef CONST
+#undef CONST
+#endif
+
+
+
 ClassImp(TOracleStatement);
 
 using namespace std;

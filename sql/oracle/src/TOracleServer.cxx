@@ -55,6 +55,16 @@
 #include "TList.h"
 #include "TObjString.h"
 
+#ifndef R__WIN32
+#include <sys/time.h>
+#endif
+
+#include <occi.h>
+
+#ifdef CONST
+#undef CONST
+#endif
+
 ClassImp(TOracleServer);
 
 using namespace std;

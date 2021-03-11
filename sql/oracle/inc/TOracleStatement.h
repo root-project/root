@@ -14,11 +14,17 @@
 
 #include "TSQLStatement.h"
 
-#include <occi.h>
+#include <vector>
 
-#ifdef CONST
-#undef CONST
-#endif
+namespace oracle {
+namespace occi {
+class Environment;
+class Connection;
+class Statement;
+class ResultSet;
+struct MetaData;
+}
+}
 
 class TOracleStatement : public TSQLStatement {
 

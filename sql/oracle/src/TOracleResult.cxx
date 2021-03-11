@@ -13,6 +13,17 @@
 #include "TOracleRow.h"
 #include "TList.h"
 
+#ifndef R__WIN32
+#include <sys/time.h>
+#endif
+
+#include <occi.h>
+
+#ifdef CONST
+#undef CONST
+#endif
+
+
 using namespace std;
 using namespace oracle::occi;
 
