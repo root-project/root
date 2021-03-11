@@ -2721,14 +2721,12 @@ Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet 
       }
    }
 
-   // Clone self for internal use
-   RooAbsReal *cloneFunc = (RooAbsReal *)cloneTree();
-   RooArgSet *errorParams = cloneFunc->getObservables(fpf_stripped);
+   RooArgSet *errorParams = getObservables(fpf_stripped);
 
    RooArgSet *nset =
-      nset_in.getSize() == 0 ? cloneFunc->getParameters(*errorParams) : cloneFunc->getObservables(nset_in);
+      nset_in.getSize() == 0 ? getParameters(*errorParams) : getObservables(nset_in);
 
-   // Make list of parameter instances of cloneFunc in order of error matrix
+   // Make list of parameter instances in order of error matrix
    RooArgList paramList;
    const RooArgList &fpf = fpf_stripped;
    vector<int> fpf_idx;
@@ -2756,11 +2754,11 @@ Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet 
 
     // Make Plus variation
     ((RooRealVar*)paramList.at(ivar))->setVal(cenVal+errVal) ;
-    plusVar.push_back(cloneFunc->getVal(nset)) ;
+    plusVar.push_back(getVal(nset)) ;
 
     // Make Minus variation
     ((RooRealVar*)paramList.at(ivar))->setVal(cenVal-errVal) ;
-    minusVar.push_back(cloneFunc->getVal(nset)) ;
+    minusVar.push_back(getVal(nset)) ;
 
     ((RooRealVar*)paramList.at(ivar))->setVal(cenVal) ;
   }
@@ -2784,7 +2782,6 @@ Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet 
   // Calculate error in linear approximation from variations and correlation coefficient
   Double_t sum = F*(C*F) ;
 
-  delete cloneFunc ;
   delete errorParams ;
   delete nset ;
 
