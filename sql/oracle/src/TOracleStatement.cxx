@@ -26,15 +26,8 @@
 
 #include <occi.h>
 
-#ifdef CONST
-#undef CONST
-#endif
-
-
-
 ClassImp(TOracleStatement);
 
-using namespace std;
 using namespace oracle::occi;
 
 

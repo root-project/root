@@ -18,8 +18,8 @@
 
 namespace oracle {
 namespace occi {
-class ResultSet;
-struct MetaData;
+   class ResultSet;
+   struct MetaData;
 }
 }
 
@@ -33,8 +33,8 @@ private:
 
    Bool_t  IsValid(Int_t field);
 
-   TOracleRow(const TOracleRow&) = delete;            // Not implemented.
-   TOracleRow &operator=(const TOracleRow&)= delete; // Not implemented.
+   TOracleRow(const TOracleRow &) = delete;
+   TOracleRow &operator=(const TOracleRow &) = delete;
 
 protected:
    void        GetRowData();

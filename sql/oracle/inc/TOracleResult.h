@@ -18,10 +18,10 @@
 
 namespace oracle {
 namespace occi {
-class Connection;
-class Statement;
-class ResultSet;
-struct MetaData;
+   class Connection;
+   class Statement;
+   class ResultSet;
+   struct MetaData;
 }
 }
 
@@ -42,8 +42,8 @@ private:
 
    Bool_t  IsValid(Int_t field);
 
-   TOracleResult(const TOracleResult&);            // Not implemented;
-   TOracleResult &operator=(const TOracleResult&); // Not implemented;
+   TOracleResult(const TOracleResult&) = delete;
+   TOracleResult &operator=(const TOracleResult&) = delete;
 
 protected:
    void    initResultSet(oracle::occi::Statement *stmt);

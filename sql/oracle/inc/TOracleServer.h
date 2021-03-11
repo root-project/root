@@ -16,8 +16,8 @@
 
 namespace oracle {
 namespace occi {
-class Environment;
-class Connection;
+   class Environment;
+   class Connection;
 }
 }
 
@@ -30,6 +30,9 @@ private:
 
    static const char* fgDatimeFormat; //! format for converting date and time stamps into string
 
+   TOracleServer(const TOracleServer&) = delete;
+   TOracleServer &operator=(const TOracleServer&) = delete;
+
 public:
    TOracleServer(const char *db, const char *uid, const char *pw);
    ~TOracleServer();
@@ -38,7 +41,7 @@ public:
    TSQLResult *Query(const char *sql) final;
    Bool_t      Exec(const char* sql) final;
    TSQLStatement *Statement(const char *sql, Int_t niter = 100) final;
-   Bool_t      IsConnected() const final { return (fConn!=0) && (fEnv!=0); }
+   Bool_t      IsConnected() const final { return fConn && fEnv; }
    Bool_t      HasStatement() const final { return kTRUE; }
    Int_t       SelectDataBase(const char *dbname) final;
    TSQLResult *GetDataBases(const char *wild = nullptr) final;
