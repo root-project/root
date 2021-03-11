@@ -299,12 +299,12 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
 {
    if(this!=&dm) {
       gCling->DataMemberInfo_Delete(fInfo);
-      delete fValueSetter;
-      delete fValueGetter;
+      delete fValueSetter; fValueSetter = nullptr;
+      delete fValueGetter; fValueGetter = nullptr;
       if (fOptions) {
          fOptions->Delete();
          delete fOptions;
-         fOptions = 0;
+         fOptions = nullptr;
       }
 
       TDictionary::operator=(dm);
