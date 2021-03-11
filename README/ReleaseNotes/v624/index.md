@@ -106,9 +106,6 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 - Stabilise RooStats::HypoTestInverter. It can now tolerate a few failed fits when conducting hypothesis tests.
   This is relevant when a few points in a parameter scan don't converge due to numerical or model instabilities.
   These points will be skipped, and HypoTestInverter can continue.
-- New PDFs
-  - [RooDSCBShape](https://root.cern/doc/v624/classRooDSCBShape.html)
-  - [RooSDSCBShape](https://root.cern/doc/v624/classRooSDSCBShape.html)
 - Tweak pull / residual plots. ROOT automatically zoomed out a bit when a pull / residual plot is created. Now, the
   axis range of the original plot is transferred to the residual plot, so the pulls can be drawn below the main plot.
 
@@ -208,11 +205,11 @@ The new and corrected bin correction behaviour is:
 ### New fully parametrised Crystal Ball shape class
 
 So far, the Crystal Ball distribution has been represented in RooFit only by the `RooCBShape` class, which has a Gaussian core and a single power-law tail on one side.
-This release introduces the `RooCrystalBall` class, which implements some commom generalizations of the Crystal Ball shape:
+This release introduces [`RooCrystalBall`](https://root.cern/doc/v624/classRooCrystalBall.html), which implements some common generalizations of the Crystal Ball shape:
   - symmetric or asymmetric power-law tails on both sides
   - different width parameters for the left and right sides of the Gaussian core
 
-The new `RooCrystalBall` class is meant to substitute the `RooDSCBShape` and `RooSDSCBShape` classes that were never part of RooFit but passed around in its user community.
+The new `RooCrystalBall` class can substitute the `RooDSCBShape` and `RooSDSCBShape`, which were passed around in the community.
 
 ## 2D Graphics Libraries
 
