@@ -217,7 +217,9 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
        }
     }
 
-    deflateEnd(&stream);
+    err = deflateEnd(&stream);
+    if (err != Z_OK)
+       printf("error %d in deflateEnd (zlib)\n",err);
 
     tgt[0] = 'Z';               /* Signature ZLib */
     tgt[1] = 'L';
