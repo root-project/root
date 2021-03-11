@@ -61,16 +61,11 @@
 
 #include <occi.h>
 
-#ifdef CONST
-#undef CONST
-#endif
-
 ClassImp(TOracleServer);
 
-using namespace std;
 using namespace oracle::occi;
 
-const char* TOracleServer::fgDatimeFormat = "MM/DD/YYYY, HH24:MI:SS";
+const char *TOracleServer::fgDatimeFormat = "MM/DD/YYYY, HH24:MI:SS";
 
 
 // Reset error and check that server connected
