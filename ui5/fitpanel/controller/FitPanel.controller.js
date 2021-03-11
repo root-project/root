@@ -173,5 +173,4 @@ sap.ui.define([
 
    });
 
-   return
 });
