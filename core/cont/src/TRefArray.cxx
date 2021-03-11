@@ -482,10 +482,11 @@ void TRefArray::Expand(Int_t newSize)
       fUIDs = new UInt_t[newSize];
       if (newSize < fSize) {
          memcpy(fUIDs, temp, newSize*sizeof(UInt_t));
-      } else {
-         if (temp)
-            memcpy(fUIDs, temp, fSize*sizeof(UInt_t));
+      } else if (temp) {
+         memcpy(fUIDs, temp, fSize*sizeof(UInt_t));
          memset(&fUIDs[fSize], 0, (newSize-fSize)*sizeof(UInt_t));
+      } else {
+         memset(fUIDs, 0, newSize*sizeof(UInt_t));
       }
    } else {
       fUIDs = nullptr;
