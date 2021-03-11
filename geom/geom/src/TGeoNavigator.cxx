@@ -2651,8 +2651,9 @@ void TGeoNavigator::ResetAll()
       Bool_t dummy=fCache->IsDummy();
       Bool_t nodeid = fCache->HasIdArray();
       delete fCache;
+      fCache = nullptr;
       delete fBackupState;
-      fCache = 0;
+      fBackupState = nullptr;
       BuildCache(dummy,nodeid);
    }
 }
