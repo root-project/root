@@ -1068,12 +1068,14 @@ public:
    BoolArray(const RVec<bool> &v) : fSize(v.size()), fBools(CopyVector(v)) {}
    BoolArray(const BoolArray &b)
    {
-      CopyArray(b.fBools, b.fSize);
+      fBools = CopyArray(b.fBools, b.fSize);
+      fSize = b.fSize;
    }
    BoolArray &operator=(const BoolArray &b)
    {
       delete[] fBools;
-      CopyArray(b.fBools, b.fSize);
+      fBools = CopyArray(b.fBools, b.fSize);
+      fSize = b.fSize;
       return *this;
    }
    BoolArray(BoolArray &&b)
@@ -1305,7 +1307,7 @@ public:
       // associated to those is re-allocated. As a result the value of the pointer can change therewith
       // leaving associated to the branch of the output tree an invalid pointer.
       // With this code, we set the value of the pointer in the output branch anew when needed.
-      // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and 
+      // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and
       // we need an int for the expander list.
       int expander[] = {(fBranches[S] && fBranchAddresses[S] != GetData(values)
                          ? fBranches[S]->SetAddress(GetData(values)),
@@ -1392,7 +1394,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
    // Addresses of branches in output per slot, non-null only for the ones holding C arrays
    std::vector<std::vector<TBranch *>> fBranches;
    // Addresses associated to output branches per slot, non-null only for the ones holding C arrays
-   std::vector<std::vector<void *>> fBranchAddresses; 
+   std::vector<std::vector<void *>> fBranchAddresses;
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
@@ -1402,7 +1404,7 @@ public:
       : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots), fIsFirstEvent(fNSlots, 1), fFileName(filename),
         fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
         fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots), fBoolArrays(fNSlots),
-        fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)), 
+        fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)),
         fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr))
    {
       ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
