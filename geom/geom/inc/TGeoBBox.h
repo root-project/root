@@ -24,6 +24,10 @@ protected :
    Double_t              fOrigin[3]; // box origin
 // methods
    virtual void FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localFrame) const;
+
+   TGeoBBox(const TGeoBBox&) = delete;
+   TGeoBBox& operator=(const TGeoBBox&) = delete;
+
 public:
    // constructors
    TGeoBBox();

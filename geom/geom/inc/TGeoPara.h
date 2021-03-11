@@ -28,7 +28,10 @@ protected :
    Double_t              fTxz;      // tangent of XZ section angle
    Double_t              fTyz;      // tangent of XZ section angle
 
-// methods
+   // methods
+   TGeoPara(const TGeoPara&) = delete;
+   TGeoPara& operator=(const TGeoPara&) = delete;
+
 public:
    // constructors
    TGeoPara();
