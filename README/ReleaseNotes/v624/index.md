@@ -192,7 +192,7 @@ or better `get_wgt(i)`, which were also supported in ROOT \<v6.24. More details 
 - RooDataHist now supports fits with RooFit's faster `BatchMode()`.
 - Lower memory footprint. If weight errors are not needed, RooDataHist now allocates only 40% of the memory that the old implementation used.
 
-### Fix bin volume correction logic in `RooDataHist::sum()`
+#### Fix bin volume correction logic in `RooDataHist::sum()`
 
 The public member function `RooDataHist::sum()` has three overloads.
 Two of these overloads accept a `sumSet` parameter to not sum over all variables.
@@ -201,7 +201,7 @@ If you use the `RooDataHist::sum()` function in you own classes, please check th
 The new and corrected bin correction behaviour is:
   - `correctForBinSize`: multiply counts in each bin by the bin volume corresponding to the variables in `sumSet`
   - `inverseBinCor`: divide counts in each bin by the bin volume corresponding to the variables *not* in `sumSet`
-  - 
+
 ### New fully parametrised Crystal Ball shape class
 
 So far, the Crystal Ball distribution has been represented in RooFit only by the `RooCBShape` class, which has a Gaussian core and a single power-law tail on one side.
