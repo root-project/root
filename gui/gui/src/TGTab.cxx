@@ -87,7 +87,8 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
    fTHeight = max_ascent + max_descent;
    Resize(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
    fEnabled = kTRUE;
-   gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask, kNone, kNone);
+   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |
+                         kPointerMotionMask, kNone, kNone);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,37 +136,61 @@ void TGTabElement::DrawBorder()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle button event in the tab widget. Basically we only handle
-/// button events in the small tabs.
+/// button and scroll events in the small tabs.
 
 Bool_t TGTabElement::HandleButton(Event_t *event)
 {
-   if (event->fType == kButtonPress) {
-      TGTab* main = (TGTab*)fParent;
-      if (main) {
-         if (fShowClose && event->fWindow == GetId() &&
-             (UInt_t)event->fX > fTWidth+12 && (UInt_t)event->fX < fTWidth+26 &&
-             (UInt_t)event->fY > fHeight/2-7 && (UInt_t)event->fY < fHeight/2+7) {
-            if (main->GetTabTab(main->GetCurrent()) == this) {
-               main->CloseTab(main->GetCurrent()); // emit signal
-               //main->RemoveTab(main->GetCurrent());
-               return kTRUE;
+   if (event->fCode == kButton4 || event->fCode == kButton5) { //scroll wheel events
+      if (fParent) {
+         TGTab* main = (TGTab*)fParent;
+         if (main->IsScrollingEnabled())
+         {
+            if (event->fCode == kButton4) { //scroll up = move left, as in Firefox
+               for (Int_t c = main->GetCurrent() - 1; c >= 0; --c) {
+                  if (main->GetTabTab(c)->IsEnabled()) {
+                     // change tab and generate event
+                     main->SetTab(c);
+                     break;
+                  }
+               }
+            } else if (event->fCode == kButton5) { //scroll down = move right, as in Firefox
+               for (Int_t c = main->GetCurrent() + 1; c < main->GetNumberOfTabs(); ++c) {
+                  if (main->GetTabTab(c)->IsEnabled()) {
+                     // change tab and generate event
+                     main->SetTab(c);
+                     break;
+                  }
+               }
             }
          }
-         TGFrameElement *el;
-         TIter next(main->GetList());
+      }
+   } else if (event->fType == kButtonPress)  { //normal button press events
+       TGTab* main = (TGTab*)fParent;
+       if (main) {
+          if (fShowClose && event->fWindow == GetId() &&
+             (UInt_t)event->fX > fTWidth+12 && (UInt_t)event->fX < fTWidth+26 &&
+             (UInt_t)event->fY > fHeight/2-7 && (UInt_t)event->fY < fHeight/2+7) {
+             if (main->GetTabTab(main->GetCurrent()) == this) {
+                 main->CloseTab(main->GetCurrent()); // emit signal
+                 //main->RemoveTab(main->GetCurrent());
+                 return kTRUE;
+             }
+          }
+          TGFrameElement *el;
+          TIter next(main->GetList());
 
-         next();   // skip first container
+          next();   // skip first container
 
-         Int_t i = 0;
-         Int_t c = main->GetCurrent();
-         while ((el = (TGFrameElement *) next())) {
-            if (el->fFrame->GetId() == (Window_t)event->fWindow)
-               c = i;
-            next(); i++;
-         }
+          Int_t i = 0;
+          Int_t c = main->GetCurrent();
+          while ((el = (TGFrameElement *) next())) {
+              if (el->fFrame->GetId() == (Window_t)event->fWindow)
+                  c = i;
+              next(); i++;
+          }
 
-         // change tab and generate event
-         main->SetTab(c);
+          // change tab and generate event
+          main->SetTab(c);
       }
    }
    return kTRUE;
@@ -316,6 +341,8 @@ TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
    fNormGC     = norm;
    fFontStruct = font;
 
+   fScrolling  = kFALSE;
+
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTabh = max_ascent + max_descent + 6;
@@ -447,6 +474,22 @@ void TGTab::SetEnabled(Int_t tabIndex, Bool_t on)
       te->SetEnabled(on);
       fClient->NeedRedraw(te);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if tab scrolling is enabled.
+
+Bool_t TGTab::IsScrollingEnabled() const
+{
+   return fScrolling;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable tab scrolling.
+
+void TGTab::SetScrollingEnabled(Bool_t on)
+{
+   fScrolling = on;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
