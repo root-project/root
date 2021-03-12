@@ -52,25 +52,14 @@ TEST(RResultPtr, MoveCtor)
    EXPECT_EQ(*res, 1u);
 }
 
-TEST(RResultPtr, Release)
-{
-   ROOT::RDataFrame df(1);
-   auto p = df.Sum<ULong64_t>("rdfentry_");
-   p.GetValue();
-   p.Release();
-   EXPECT_TRUE(p == nullptr);
-}
-
 TEST(RResultPtr, NullResultPtr)
 {
-   // build null result ptrs in 3 different ways
+   // build null result ptr
    ROOT::RDF::RResultPtr<TH1D> r1;
 
+   // set result ptr to null with a move
    auto r2 = ROOT::RDataFrame(1).Histo1D<ULong64_t>("rdfentry_");
-   auto r3 = r2;
    ROOT::RDF::RResultPtr<TH1D>(std::move(r2));
-   EXPECT_EQ(r3->GetEntries(), 1ll); // trigger event loop, to check moved-after-event-loop state
-   r3.Release();
 
    // make sure they have consistent, sane behavior
    auto checkResPtr = [](ROOT::RDF::RResultPtr<TH1D> &r) {
@@ -83,13 +72,10 @@ TEST(RResultPtr, NullResultPtr)
       EXPECT_THROW(r.OnPartialResult(1, [] (TH1D&) {}), std::runtime_error);
       EXPECT_THROW(r->GetEntries(), std::runtime_error);
       EXPECT_THROW(*r, std::runtime_error);
-
-      EXPECT_EQ(r.Release(), nullptr);
    };
 
    checkResPtr(r1);
    checkResPtr(r2);
-   checkResPtr(r3);
 }
 
 TEST(RResultPtr, ImplConv)

@@ -326,18 +326,6 @@ public:
       return *this;
    }
 
-   /// Return a pointer to the result, releasing its ownership and leaving this object empty.
-   T *Release()
-   {
-      if (fActionPtr != nullptr && !fActionPtr->HasRun())
-         TriggerRun();
-      fActionPtr = nullptr;
-      fLoopManager = nullptr;
-      auto p = fObjPtr.get();
-      fObjPtr.reset();
-      return p;
-   }
-
    // clang-format off
    /// Check whether the result has already been computed
    ///
