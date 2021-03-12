@@ -35,9 +35,12 @@ class RNTupleDescriptor;
 namespace Detail {
 class RFieldBase;
 class RFieldValue;
-class RNTupleColumnReader;
 class RPageSource;
 } // namespace Detail
+
+namespace Internal {
+class RNTupleColumnReader;
+}
 
 class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// Clones of the first source, one for each slot
@@ -46,7 +49,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// We prepare a column reader prototype for every column. If a column reader is actually requested
    /// in GetColumnReaders(), we move a clone of the prototype into the hands of RDataFrame.
    /// Only the clone connects to the backing page store and acquires I/O resources.
-   std::vector<std::unique_ptr<Detail::RNTupleColumnReader>> fColumnReaderPrototypes;
+   std::vector<std::unique_ptr<ROOT::Experimental::Internal::RNTupleColumnReader>> fColumnReaderPrototypes;
    std::vector<std::string> fColumnNames;
    std::vector<std::string> fColumnTypes;
    std::vector<size_t> fActiveColumns;

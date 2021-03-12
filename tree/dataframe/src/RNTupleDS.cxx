@@ -32,7 +32,7 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
 /// collection sizes. It is used to provide the "number of" RDF columns for collections, e.g.
@@ -43,14 +43,15 @@ namespace Detail {
 /// TODO(jblomer): consider providing a general set of useful virtual fields as part of RNTuple.
 class RRDFCardinalityField : public ROOT::Experimental::Detail::RFieldBase {
 protected:
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view /* newName */) const final
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> CloneImpl(std::string_view /* newName */) const final
    {
       return std::make_unique<RRDFCardinalityField>();
    }
 
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t::ValueType"; }
-   RRDFCardinalityField() : Detail::RFieldBase("", TypeName(), ENTupleStructure::kLeaf, false /* isSimple */) {}
+   RRDFCardinalityField()
+      : ROOT::Experimental::Detail::RFieldBase("", TypeName(), ENTupleStructure::kLeaf, false /* isSimple */) {}
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
    RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
    ~RRDFCardinalityField() = default;
@@ -58,18 +59,18 @@ public:
    void GenerateColumnsImpl() final
    {
       RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
-      fColumns.emplace_back(
-         std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
+      fColumns.emplace_back(std::unique_ptr<ROOT::Experimental::Detail::RColumn>(
+         ROOT::Experimental::Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
       fPrincipalColumn = fColumns[0].get();
    }
 
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
    {
-      return Detail::RFieldValue(this, static_cast<ClusterSize_t *>(where));
+      return ROOT::Experimental::Detail::RFieldValue(this, static_cast<ClusterSize_t *>(where));
    }
-   Detail::RFieldValue CaptureValue(void *where) final
+   ROOT::Experimental::Detail::RFieldValue CaptureValue(void *where) final
    {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
+      return ROOT::Experimental::Detail::RFieldValue(true /* captureFlag */, this, where);
    }
    size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
 
@@ -131,7 +132,7 @@ public:
    }
 };
 
-} // namespace Detail
+} // namespace Internal
 
 RNTupleDS::~RNTupleDS() = default;
 
@@ -203,7 +204,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    std::unique_ptr<Detail::RFieldBase> cardinalityField;
    // Collections get the additional "number of" RDF column (e.g. "__rdf_sizeof_tracks")
    if (!skeinIDs.empty()) {
-      cardinalityField = std::make_unique<Detail::RRDFCardinalityField>();
+      cardinalityField = std::make_unique<ROOT::Experimental::Internal::RRDFCardinalityField>();
       cardinalityField->SetOnDiskId(skeinIDs.back());
    }
 
@@ -221,14 +222,15 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    if (cardinalityField) {
       fColumnNames.emplace_back("__rdf_sizeof_" + std::string(colName));
       fColumnTypes.emplace_back(cardinalityField->GetType());
-      auto cardColReader = std::make_unique<Detail::RNTupleColumnReader>(std::move(cardinalityField));
+      auto cardColReader = std::make_unique<ROOT::Experimental::Internal::RNTupleColumnReader>(
+         std::move(cardinalityField));
       fColumnReaderPrototypes.emplace_back(std::move(cardColReader));
    }
 
    skeinIDs.emplace_back(fieldId);
    fColumnNames.emplace_back(colName);
    fColumnTypes.emplace_back(valueField->GetType());
-   auto valColReader = std::make_unique<Detail::RNTupleColumnReader>(std::move(valueField));
+   auto valColReader = std::make_unique<ROOT::Experimental::Internal::RNTupleColumnReader>(std::move(valueField));
    fColumnReaderPrototypes.emplace_back(std::move(valColReader));
 }
 
