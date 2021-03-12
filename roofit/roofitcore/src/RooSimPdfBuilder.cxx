@@ -342,7 +342,7 @@
 ///  </p>
 ///  <pre>
 ///   const <tt>RooSimultaneous</tt>* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet,
-///                                   const RooArgSet& auxSplitCats, Bool_t verbose=kFALSE) {
+///                                   const RooArgSet& auxSplitCats, bool verbose=false) {
 ///                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ///  </pre>
 ///  <p>
@@ -504,12 +504,12 @@ void RooSimPdfBuilder::addSpecializations(const RooArgSet& specSet)
 /// Initialize needed components
 
 RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents,
-    const RooArgSet* auxSplitCats, Bool_t verbose)
+    const RooArgSet* auxSplitCats, bool verbose)
 {
   const char* spaceChars = " \t" ;
 
   // Retrieve physics index category
-  Int_t buflen = strlen(((RooStringVar*)buildConfig.find("physModels"))->getVal())+1 ;
+  int buflen = strlen(((RooStringVar*)buildConfig.find("physModels"))->getVal())+1 ;
   std::vector<char> bufContainer(buflen);
   char *buf = bufContainer.data() ;
 
@@ -542,7 +542,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     return 0 ;
   }
 
-  Bool_t first(kTRUE) ;
+  bool first{true} ;
   RooArgSet stateMap ;
   while(physName) {
 
@@ -579,7 +579,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     }
 
     // Add pdf to list of models to be processed
-    physModelSet.add(*physModel,kTRUE) ; // silence duplicate insertion warnings
+    physModelSet.add(*physModel,true) ; // silence duplicate insertion warnings
 
     // Store state->pdf mapping
     stateMap.addOwned(* new RooStringVar(stateName,stateName,physName)) ;
@@ -587,7 +587,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     // Continue with next mapping
     physName = strtok(0,spaceChars) ;
     if (first) {
-      first = kFALSE ;
+      first = false ;
     } else if (physCat==0) {
       coutW(InputArguments) << "RooSimPdfBuilder::buildPdf: WARNING: without physCat specification, only the first model will be used" << endl ;
       break ;
@@ -668,7 +668,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
   RooArgSet auxSplitSet ;
   if (auxSplitCats) {
     // Deep clone auxililary split cats
-    if (!std::unique_ptr<RooArgSet>{auxSplitCats->snapshot(kTRUE)}) {
+    if (!std::unique_ptr<RooArgSet>{auxSplitCats->snapshot(true)}) {
       coutE(InputArguments) << "RooSimPdfBuilder::buildPdf(" << GetName() << ") Couldn't deep-clone set auxiliary splitcats, abort." << endl ;
       return 0 ;
     }
@@ -893,7 +893,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
               RooCatType* type ;
               RooArgList fracLeafList ;
               std::string formExpr{"1"} ;
-              Int_t i(0) ;
+              int i(0) ;
 
               while((type=(RooCatType*)iter->Next())) {
 
@@ -976,7 +976,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     fitCat->setLabel(fcState->GetName()) ;
 
     // Check if this fitCat state is selected
-    Bool_t select(kTRUE) ;
+    bool select{true} ;
     for (const auto arg : fitCatList) {
       auto splitCat = static_cast<const RooAbsCategory*>(arg);
 
@@ -985,7 +985,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       if (!slist) continue ;
       RooCatType* type = (RooCatType*) slist->FindObject(splitCat->getCurrentLabel()) ;
       if (!type) {
-        select = kFALSE ;
+        select = false ;
       }
     }
     if (!select) continue ;
