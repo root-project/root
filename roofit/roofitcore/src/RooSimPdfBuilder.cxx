@@ -493,7 +493,7 @@ RooArgSet* RooSimPdfBuilder::createProtoBuildConfig()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooSimPdfBuilder::addSpecializations(const RooArgSet& specSet) 
+void RooSimPdfBuilder::addSpecializations(const RooArgSet& specSet)
 {
   _splitNodeList.add(specSet) ;
 }
@@ -519,9 +519,9 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     const char* physCatName = strtok(buf,spaceChars) ;
     physCat = dynamic_cast<RooAbsCategoryLValue*>(dependents.find(physCatName)) ;
     if (!physCat) {
-      coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR physics index category " << physCatName 
+      coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR physics index category " << physCatName
           << " not found in dataset variables" << endl ;
-      return 0 ;      
+      return 0 ;
     }
     coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: category indexing physics model: " << physCatName << endl ;
   }
@@ -566,14 +566,14 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
     RooAbsPdf* physModel = (RooAbsPdf*) (physName ? _protoPdfSet.find(physName) : 0 );
     if (!physModel) {
-      coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR requested physics model " 
+      coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR requested physics model "
           << (physName?physName:"(null)") << " is not defined" << endl ;
       return 0 ;
-    }    
+    }
 
     // Check if state mapping has already been defined
     if (stateMap.find(stateName)) {
-      coutW(InputArguments) << "RooSimPdfBuilder::buildPdf: WARNING: multiple PDFs specified for state " 
+      coutW(InputArguments) << "RooSimPdfBuilder::buildPdf: WARNING: multiple PDFs specified for state "
           << stateName << ", only first will be used" << endl ;
       continue ;
     }
@@ -581,7 +581,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     // Add pdf to list of models to be processed
     physModelSet.add(*physModel,kTRUE) ; // silence duplicate insertion warnings
 
-    // Store state->pdf mapping    
+    // Store state->pdf mapping
     stateMap.addOwned(* new RooStringVar(stateName,stateName,physName)) ;
 
     // Continue with next mapping
@@ -624,15 +624,15 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
     RooCategory* splitCat = catName ? dynamic_cast<RooCategory*>(dependents.find(catName)) : 0 ;
     if (!splitCat) {
-      coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR requested split category " << (catName?catName:"(null)") 
-			        << " is not a RooCategory in the dataset" << endl ;
+      coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR requested split category " << (catName?catName:"(null)")
+                            << " is not a RooCategory in the dataset" << endl ;
       return 0 ;
     }
     splitCatSet.add(*splitCat) ;
 
     // Process optional state list
     if (stateList) {
-      coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: splitting of category " << catName 
+      coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: splitting of category " << catName
           << " restricted to states (" << stateList << ")" << endl ;
 
       // Create list named after this splitCat holding its selected states
@@ -647,7 +647,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
         const RooCatType* type = splitCat->lookupType(stateLabel) ;
         if (!type) {
           coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR splitCat " << splitCat->GetName()
-				    << " doesn't have a state named " << stateLabel << endl ;
+                                << " doesn't have a state named " << stateLabel << endl ;
           splitStateList.Delete() ;
           return 0 ;
         }
@@ -689,7 +689,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       std::unique_ptr<RooArgSet> parSet{aux->getParameters(splitCatSet)} ;
       if (parSet->getSize()>0) {
         coutW(InputArguments) << "RooSimPdfBuilder::buildPdf: WARNING: ignoring auxiliary category " << aux->GetName()
-			          << " because it has servers that are not listed in splitCatSet: " << *parSet << endl ;
+                              << " because it has servers that are not listed in splitCatSet: " << *parSet << endl ;
         continue ;
       }
 
@@ -767,8 +767,11 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
                 RooArgSet tmp(compCatSet) ;
                 tmp.remove(*theArg) ;
                 if (theArg->dependsOnValue(tmp)) {
-                  coutE(InputArguments) << "RooSimPdfBuilder::buildPDF: ERROR: Ill defined split: auxiliary splitting category " << theArg->GetName()
-					            << " used in composite split " << compCatSet << " depends on one or more of the other splitting categories in the composite split" << endl ;
+                  coutE(InputArguments)
+                      << "RooSimPdfBuilder::buildPDF: ERROR: Ill defined split: auxiliary splitting category "
+                      << theArg->GetName() << " used in composite split " << compCatSet
+                      << " depends on one or more of the other splitting categories in the composite split"
+                      << std::endl ;
 
                   // Cleanup and axit
                   customizerList.Delete() ;
@@ -947,7 +950,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       //RooArgSet* paramSet = physModel->getParameters(dependents) ;
     } else {
       coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: no splitting rules for " << physModel->GetName() << endl ;
-    }    
+    }
   }
 
   coutI(ObjectHandling)  << "RooSimPdfBuilder::buildPdf: configured customizers for all physics models" << endl ;
@@ -961,13 +964,13 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
   fitCatList.add(splitCatSet) ;
   RooSuperCategory *fitCat = new RooSuperCategory("fitCat","fitCat",fitCatList) ;
 
-  // Create master PDF 
+  // Create master PDF
   RooSimultaneous* simPdf = new RooSimultaneous("simPdf","simPdf",*fitCat) ;
 
   // Add component PDFs to master PDF
   std::unique_ptr<TIterator> fcIter{fitCat->typeIterator()} ;
 
-  RooCatType* fcState ;  
+  RooCatType* fcState ;
   while((fcState=(RooCatType*)fcIter->Next())) {
     // Select fitCat state
     fitCat->setLabel(fcState->GetName()) ;
@@ -977,7 +980,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     for (const auto arg : fitCatList) {
       auto splitCat = static_cast<const RooAbsCategory*>(arg);
 
-      // Find selected state list 
+      // Find selected state list
       TList* slist = (TList*) splitStateList.FindObject(splitCat->GetName()) ;
       if (!slist) continue ;
       RooCatType* type = (RooCatType*) slist->FindObject(splitCat->getCurrentLabel()) ;
@@ -990,15 +993,15 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
     // Select appropriate PDF for this physCat state
     RooCustomizer* physCustomizer ;
-    if (physCat) {      
+    if (physCat) {
       RooStringVar* physNameVar = (RooStringVar*) stateMap.find(physCat->getCurrentLabel()) ;
       if (!physNameVar) continue ;
-      physCustomizer = static_cast<RooCustomizer*>(customizerList.FindObject(physNameVar->getVal())) ;  
+      physCustomizer = static_cast<RooCustomizer*>(customizerList.FindObject(physNameVar->getVal())) ;
     } else {
       physCustomizer = static_cast<RooCustomizer*>(customizerList.First()) ;
     }
 
-    coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: Customizing physics model " << physCustomizer->GetName() 
+    coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: Customizing physics model " << physCustomizer->GetName()
        << " for mode " << fcState->GetName() << endl ;
 
     // Customizer PDF for current state and add to master simPdf
@@ -1022,7 +1025,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooSimPdfBuilder::~RooSimPdfBuilder() 
+RooSimPdfBuilder::~RooSimPdfBuilder()
 {
   _retiredCustomizerList.Delete() ;
 
@@ -1033,5 +1036,5 @@ RooSimPdfBuilder::~RooSimPdfBuilder()
     delete ptr;
   }
 }
- 
+
 
