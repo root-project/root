@@ -154,7 +154,7 @@ std::vector<Double_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points
       auto weight = std::get<1>(ev);
       auto isSignal = std::get<2>(ev);
 
-      true_negatives_sum += weight * (!isSignal);
+      true_negatives_sum += weight * (!isSignal ? 1. : 0.);
       true_negatives.push_back(true_negatives_sum);
    }
 
