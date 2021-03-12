@@ -13,6 +13,13 @@
  */
 
 #include "RooFit/MultiProcess/Messenger.h"
+#include <RooFit/MultiProcess/ProcessManager.h>  // ... JobManager::process_manager()
 
 #include "gtest/gtest.h"
 
+TEST(TestMPMessenger, Connections)
+{
+   RooFit::MultiProcess::ProcessManager pm(2);
+   RooFit::MultiProcess::Messenger messenger(pm);
+   messenger.test_connections(pm);
+}
