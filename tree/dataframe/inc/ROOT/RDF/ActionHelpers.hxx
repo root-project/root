@@ -1052,32 +1052,11 @@ class BoolArray {
       return b;
    }
 
-   bool *CopyArray(bool *o, std::size_t size)
-   {
-      auto b = new bool[size];
-      for (auto i = 0u; i < size; ++i)
-         b[i] = o[i];
-      return b;
-   }
-
 public:
-   // this generic constructor could be replaced with a constexpr if in SetBranchesHelper
    BoolArray() = default;
-   template <typename T>
-   BoolArray(const T &) { throw std::runtime_error("This constructor should never be called"); }
    BoolArray(const RVec<bool> &v) : fSize(v.size()), fBools(CopyVector(v)) {}
-   BoolArray(const BoolArray &b)
-   {
-      fBools = CopyArray(b.fBools, b.fSize);
-      fSize = b.fSize;
-   }
-   BoolArray &operator=(const BoolArray &b)
-   {
-      delete[] fBools;
-      fBools = CopyArray(b.fBools, b.fSize);
-      fSize = b.fSize;
-      return *this;
-   }
+   BoolArray(const BoolArray &b) = delete;
+   BoolArray &operator=(const BoolArray &b) = delete;
    BoolArray(BoolArray &&b)
    {
       fSize = b.fSize;
