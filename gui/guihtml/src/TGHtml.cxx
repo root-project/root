@@ -1345,7 +1345,7 @@ void TGHtml::SubmitClicked(const char *val)
 /// Save file. Ask user for a file name via the file dialog. The pre-filled
 /// file name will be extracted from the current URI, if any
 
-void TGHtml::SaveAs()
+void TGHtml::SaveFileAs()
 {
    TGFileInfo fi;
    static const char *inputFileTypes[] = {
@@ -1374,7 +1374,7 @@ void TGHtml::HandleMenu(Int_t id)
 {
    switch(id) {
       case kM_FILE_SAVEAS:
-         SaveAs();
+         SaveFileAs();
          break;
       case kM_FILE_PRINT:
          break;

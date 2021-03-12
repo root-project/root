@@ -962,7 +962,7 @@ public:
    const char *GetText() const { return fZText; }
 
    void HandleMenu(Int_t);
-   void SaveAs();
+   void SaveFileAs();
 
    int GetMarginWidth() { return fMargins.fL + fMargins.fR; }
    int GetMarginHeight() { return fMargins.fT + fMargins.fB; }
