@@ -848,9 +848,12 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
           for (const auto& paramName : RooHelpers::tokenise(token, ",")) {
             // Check for fractional split option 'param_name[remainder_state]'
             std::string remainderState;
-            if (const auto pos = paramName.find('[') != std::string::npos) {
-              const auto posEnd = paramName.find(']');
-              remainderState = paramName.substr(pos+1, posEnd - pos - 1);
+            {
+              const auto pos = paramName.find('[');
+              if (pos != std::string::npos) {
+                const auto posEnd = paramName.find(']');
+                remainderState = paramName.substr(pos+1, posEnd - pos - 1);
+              }
             }
 
 
