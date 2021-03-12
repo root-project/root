@@ -2149,7 +2149,7 @@ fXbins.Set( xbins ); \
      - The field is obligatory and defines the name of the in-memory class that
        this rule can be applied to.
   * target
-     - A semicolon-separated list of target class data member names that this rule
+     - A comma-separated list of target class data member names that this rule
        is capable of calculating.
   * embed
      - This property tells the system if the rule should be written in the output
