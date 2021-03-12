@@ -201,7 +201,7 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
         const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8):
   TNamed(name, title)
 {
-  if(cloneData == 1) {
+  if(cloneData) {
     fSData = (RooDataSet*) data.Clone(newName);
     SetBit(kOwnData);
   }
