@@ -43,29 +43,27 @@ namespace Detail {
 /// TODO(jblomer): consider providing a general set of useful virtual fields as part of RNTuple.
 class RRDFCardinalityField : public ROOT::Experimental::Detail::RFieldBase {
 protected:
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view /* newName */) const final {
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view /* newName */) const final
+   {
       return std::make_unique<RRDFCardinalityField>();
    }
 
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t::ValueType"; }
-   RRDFCardinalityField()
-     : Detail::RFieldBase("", TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
-   {
-   }
-   RRDFCardinalityField(RRDFCardinalityField&& other) = default;
-   RRDFCardinalityField& operator =(RRDFCardinalityField&& other) = default;
+   RRDFCardinalityField() : Detail::RFieldBase("", TypeName(), ENTupleStructure::kLeaf, false /* isSimple */) {}
+   RRDFCardinalityField(RRDFCardinalityField &&other) = default;
+   RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
    ~RRDFCardinalityField() = default;
 
    void GenerateColumnsImpl() final
    {
       RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
-      fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
-         Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
+      fColumns.emplace_back(
+         std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
       fPrincipalColumn = fColumns[0].get();
    }
 
-   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
    {
       return Detail::RFieldValue(this, static_cast<ClusterSize_t *>(where));
    }
@@ -76,8 +74,8 @@ public:
    size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
 
    /// Get the number of elements of the collection identified by globalIndex
-   void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex,
-                       ROOT::Experimental::Detail::RFieldValue *value) final
+   void
+   ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, ROOT::Experimental::Detail::RFieldValue *value) final
    {
       RClusterIndex collectionStart;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, value->Get<ClusterSize_t>());
@@ -92,7 +90,6 @@ public:
    }
 };
 
-
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
@@ -100,8 +97,8 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
    std::unique_ptr<RFieldBase> fField; ///< The field backing the RDF column
-   RFieldValue fValue; ///< The memory location used to read from fField
-   Long64_t fLastEntry; ///< Last entry number that was read
+   RFieldValue fValue;                 ///< The memory location used to read from fField
+   Long64_t fLastEntry;                ///< Last entry number that was read
 
 public:
    RNTupleColumnReader(std::unique_ptr<RFieldBase> f)
@@ -136,13 +133,10 @@ public:
 
 } // namespace Detail
 
-
 RNTupleDS::~RNTupleDS() = default;
 
-
-void RNTupleDS::AddField(
-   const RNTupleDescriptor &desc, std::string_view colName, DescriptorId_t fieldId,
-   std::vector<DescriptorId_t> skeinIDs)
+void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName, DescriptorId_t fieldId,
+                         std::vector<DescriptorId_t> skeinIDs)
 {
    // As an example for the mapping of RNTuple fields to RDF columns, let's consider an RNTuple
    // using the following types and with a top-level field named "event" of type Event:
@@ -185,7 +179,7 @@ void RNTupleDS::AddField(
       // skeinIDs would already contain the fieldID of "event.tracks"
       skeinIDs.emplace_back(fieldId);
       // There should only be one sub field but it's easiest to access via the sub field range
-      for (const auto& f : desc.GetFieldRange(fieldDesc.GetId())) {
+      for (const auto &f : desc.GetFieldRange(fieldDesc.GetId())) {
          AddField(desc, colName, f.GetId(), skeinIDs);
       }
       // Note that at the end of the recursion, we handled the inner sub collections as well as the
@@ -193,7 +187,7 @@ void RNTupleDS::AddField(
       return;
    } else if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
       // Inner fields of records are provided as individual RDF columns, e.g. "event.id"
-      for (const auto& f : desc.GetFieldRange(fieldDesc.GetId())) {
+      for (const auto &f : desc.GetFieldRange(fieldDesc.GetId())) {
          auto innerName = colName.empty() ? f.GetFieldName() : (std::string(colName) + "." + f.GetFieldName());
          AddField(desc, innerName, f.GetId(), skeinIDs);
       }
@@ -227,8 +221,7 @@ void RNTupleDS::AddField(
    if (cardinalityField) {
       fColumnNames.emplace_back(std::string("__rdf_sizeof_") + std::string(colName));
       fColumnTypes.emplace_back(cardinalityField->GetType());
-      auto cardColReader =
-         std::make_unique<Detail::RNTupleColumnReader>(std::move(cardinalityField));
+      auto cardColReader = std::make_unique<Detail::RNTupleColumnReader>(std::move(cardinalityField));
       fColumnReaderPrototypes.emplace_back(std::move(cardColReader));
    }
 
@@ -238,7 +231,6 @@ void RNTupleDS::AddField(
    auto valColReader = std::make_unique<Detail::RNTupleColumnReader>(std::move(valueField));
    fColumnReaderPrototypes.emplace_back(std::move(valColReader));
 }
-
 
 RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
 {
@@ -275,7 +267,8 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 {
    // TODO(jblomer): use cluster boundaries for the entry ranges
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
-   if (fHasSeenAllRanges) return ranges;
+   if (fHasSeenAllRanges)
+      return ranges;
 
    auto nEntries = fSources[0]->GetNEntries();
    const auto chunkSize = nEntries / fNSlots;
@@ -293,32 +286,23 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
    return ranges;
 }
 
-
 std::string RNTupleDS::GetTypeName(std::string_view colName) const
 {
-   const auto index = std::distance(
-      fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), colName));
+   const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), colName));
    return fColumnTypes[index];
 }
 
-
 bool RNTupleDS::HasColumn(std::string_view colName) const
 {
-   return std::find(fColumnNames.begin(), fColumnNames.end(), colName) !=
-          fColumnNames.end();
+   return std::find(fColumnNames.begin(), fColumnNames.end(), colName) != fColumnNames.end();
 }
-
 
 void RNTupleDS::Initialise()
 {
    fHasSeenAllRanges = false;
 }
 
-
-void RNTupleDS::Finalise()
-{
-}
-
+void RNTupleDS::Finalise() {}
 
 void RNTupleDS::SetNSlots(unsigned int nSlots)
 {
@@ -332,9 +316,8 @@ void RNTupleDS::SetNSlots(unsigned int nSlots)
       fSources[i]->Attach();
    }
 }
-} // ns Experimental
-} // ns ROOT
-
+} // namespace Experimental
+} // namespace ROOT
 
 ROOT::RDataFrame ROOT::Experimental::MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName)
 {
