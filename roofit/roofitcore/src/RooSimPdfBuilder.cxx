@@ -84,12 +84,12 @@
 /// RooAddPdf pdf("pdf","gauss+argus",RooArgList(gauss,argus),gfrac) ;
 ///
 /// RooSimPdfBuilder builder(pdf) ;
-/// RooArgSet* config = builder.createProtoBuildConfig() ;
-/// (*config)["physModels"] = "pdf" ;      /// Name of the PDF we are going to work with
-/// (*config)["splitCats"]  = "C" ;        /// Category used to differentiate sub-datasets
-/// (*config)["pdf"]        = "C : k,s" ;  /// Prescription to taylor PDF parameters k and s
-///                                        /// for each data subset designated by C states
-/// RooSimultaneous* simPdf = builder.buildPdf(*config,&D) ;
+/// RooArgSet* cfg = builder.createProtoBuildConfig() ;
+/// dynamic_cast<RooStringVar&>((*cfg)["physModels"]) = "pdf" ;      /// Name of the PDF we are going to work with
+/// dynamic_cast<RooStringVar&>((*cfg)["splitCats"])  = "C" ;        /// Category used to differentiate sub-datasets
+/// dynamic_cast<RooStringVar&>((*cfg)["pdf"])        = "C : k,s" ;  /// Prescription to taylor PDF parameters k and s
+///                                                                  /// for each data subset designated by C states
+/// RooSimultaneous* simPdf = builder.buildPdf(*cfg,&D) ;
 ///  </pre>
 ///  <p>
 ///    The above snippet of code demonstrates the concept of <tt>RooSimPdfBuilder</tt>:
