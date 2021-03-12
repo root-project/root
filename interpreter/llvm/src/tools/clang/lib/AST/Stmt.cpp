@@ -293,7 +293,6 @@ CompoundStmt::CompoundStmt(ArrayRef<Stmt *> Stmts, SourceLocation LB,
                            SourceLocation RB)
     : Stmt(CompoundStmtClass), RBraceLoc(RB) {
   CompoundStmtBits.NumStmts = Stmts.size();
-  CompoundStmtBits.WasReplaced = 0;
   setStmts(Stmts);
   CompoundStmtBits.LBraceLoc = LB;
 }
@@ -301,7 +300,7 @@ CompoundStmt::CompoundStmt(ArrayRef<Stmt *> Stmts, SourceLocation LB,
 void CompoundStmt::setStmts(ArrayRef<Stmt *> Stmts) {
   assert(CompoundStmtBits.NumStmts == Stmts.size() &&
          "NumStmts doesn't fit in bits of CompoundStmtBits.NumStmts!");
-  assert(!CompoundStmtBits.WasReplaced && "Call replaceStmts!");
+
   std::copy(Stmts.begin(), Stmts.end(), body_begin());
 }
 
@@ -317,30 +316,8 @@ CompoundStmt *CompoundStmt::CreateEmpty(const ASTContext &C,
   void *Mem =
       C.Allocate(totalSizeToAlloc<Stmt *>(NumStmts), alignof(CompoundStmt));
   CompoundStmt *New = new (Mem) CompoundStmt(EmptyShell());
-  New->CompoundStmtBits.WasReplaced = 0;
   New->CompoundStmtBits.NumStmts = NumStmts;
   return New;
-}
-
-void CompoundStmt::replaceStmts(const ASTContext &C,
-                                llvm::ArrayRef<Stmt*> Stmts) {
-  Stmt** Body = body_begin();
-
-  if (CompoundStmtBits.WasReplaced)
-    C.Deallocate(Body);
-  else
-    memset(body_begin(), 0, size());
-
-  CompoundStmtBits.NumStmts = Stmts.size();
-  assert(CompoundStmtBits.NumStmts == Stmts.size() &&
-         "NumStmts doesn't fit in bits of CompoundStmtBits.NumStmts!");
-
-  Body = new (C) Stmt*[Stmts.size()];
-  std::copy(Stmts.begin(), Stmts.end(), Body);
-
-  getTrailingObjects<Stmt *>()[0] = reinterpret_cast<Stmt*>(Body);
-
-  CompoundStmtBits.WasReplaced = 1;
 }
 
 const Expr *ValueStmt::getExprStmt() const {
