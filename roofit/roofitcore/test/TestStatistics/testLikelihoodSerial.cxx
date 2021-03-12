@@ -346,57 +346,84 @@ TEST_F(LikelihoodSerialTest, SimUnbinnedNonExtended)
 }
 
 
-TEST_F(LikelihoodSerialTest, SimBinnedConstrained)
+class LikelihoodSerialSimBinnedConstrainedTest : public LikelihoodSerialTest {
+protected:
+   void SetUp() override {
+      LikelihoodSerialTest::SetUp();
+      // Unbinned pdfs that define template histograms
+
+      w.factory("Gaussian::gA(x[-10,10],-2,3)") ;
+      w.factory("Gaussian::gB(x[-10,10],2,1)") ;
+      w.factory("Uniform::u(x)");
+
+      // Generate template histograms
+
+      RooDataHist* h_sigA = w.pdf("gA")->generateBinned(*w.var("x"),1000) ;
+      RooDataHist* h_sigB = w.pdf("gB")->generateBinned(*w.var("x"),1000) ;
+      RooDataHist *h_bkg = w.pdf("u")->generateBinned(*w.var("x"), 1000);
+
+      w.import(*h_sigA, RooFit::Rename("h_sigA"));
+      w.import(*h_sigB, RooFit::Rename("h_sigB"));
+      w.import(*h_bkg, RooFit::Rename("h_bkg"));
+
+      // Construct binned pdf as sum of amplitudes
+      w.factory("HistFunc::hf_sigA(x,h_sigA)") ;
+      w.factory("HistFunc::hf_sigB(x,h_sigB)") ;
+      w.factory("HistFunc::hf_bkg(x,h_bkg)") ;
+
+      w.factory("ASUM::model_phys_A(mu_sig[1,-1,10]*hf_sigA,expr::mu_bkg_A('1+0.02*alpha_bkg_A',alpha_bkg_A[-5,5])*hf_bkg)") ;
+      w.factory("ASUM::model_phys_B(mu_sig*hf_sigB,expr::mu_bkg_B('1+0.05*alpha_bkg_B',alpha_bkg_B[-5,5])*hf_bkg)") ;
+
+      // Construct L_subs: Gaussian subsidiary measurement that constrains alpha_bkg
+      w.factory("Gaussian:model_subs_A(alpha_bkg_obs_A[0],alpha_bkg_A,1)") ;
+      w.factory("Gaussian:model_subs_B(alpha_bkg_obs_B[0],alpha_bkg_B,1)") ;
+
+      // Construct full pdfs for each component (A,B)
+      w.factory("PROD::model_A(model_phys_A,model_subs_A)") ;
+      w.factory("PROD::model_B(model_phys_B,model_subs_B)") ;
+
+      // Construct simulatenous pdf
+      w.factory("SIMUL::model(index[A,B],A=model_A,B=model_B)") ;
+
+      pdf = w.pdf("model");
+      // Construct dataset from physics pdf
+      data = pdf->generate(RooArgSet(*w.var("x"), *w.cat("index")), RooFit::AllBinned());
+   }
+};
+
+TEST_F(LikelihoodSerialSimBinnedConstrainedTest, BasicParameters)
 {
-   // Unbinned pdfs that define template histograms
-
-   w.factory("Gaussian::gA(x[-10,10],-2,3)") ;
-   w.factory("Gaussian::gB(x[-10,10],2,1)") ;
-   w.factory("Uniform::u(x)");
-
-   // Generate template histograms
-
-   RooDataHist* h_sigA = w.pdf("gA")->generateBinned(*w.var("x"),1000) ;
-   RooDataHist* h_sigB = w.pdf("gB")->generateBinned(*w.var("x"),1000) ;
-   RooDataHist *h_bkg = w.pdf("u")->generateBinned(*w.var("x"), 1000);
-
-   w.import(*h_sigA, RooFit::Rename("h_sigA"));
-   w.import(*h_sigB, RooFit::Rename("h_sigB"));
-   w.import(*h_bkg, RooFit::Rename("h_bkg"));
-
-   // Construct binned pdf as sum of amplitudes
-   w.factory("HistFunc::hf_sigA(x,h_sigA)") ;
-   w.factory("HistFunc::hf_sigB(x,h_sigB)") ;
-   w.factory("HistFunc::hf_bkg(x,h_bkg)") ;
-
-   w.factory("ASUM::model_phys_A(mu_sig[1,-1,10]*hf_sigA,expr::mu_bkg_A('1+0.02*alpha_bkg_A',alpha_bkg_A[-5,5])*hf_bkg)") ;
-   w.factory("ASUM::model_phys_B(mu_sig*hf_sigB,expr::mu_bkg_B('1+0.05*alpha_bkg_B',alpha_bkg_B[-5,5])*hf_bkg)") ;
-
-   // Construct L_subs: Gaussian subsidiary measurement that constrains alpha_bkg
-   w.factory("Gaussian:model_subs_A(alpha_bkg_obs_A[0],alpha_bkg_A,1)") ;
-   w.factory("Gaussian:model_subs_B(alpha_bkg_obs_B[0],alpha_bkg_B,1)") ;
-
-   // Construct full pdfs for each component (A,B)
-   w.factory("PROD::model_A(model_phys_A,model_subs_A)") ;
-   w.factory("PROD::model_B(model_phys_B,model_subs_B)") ;
-
-   // Construct simulatenous pdf
-   w.factory("SIMUL::model(index[A,B],A=model_A,B=model_B)") ;
-
-   pdf = w.pdf("model");
-   // Construct dataset from physics pdf
-   data = pdf->generate(RooArgSet(*w.var("x"), *w.cat("index")), RooFit::AllBinned());
-
-   nll.reset(pdf->createNLL(*data, RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_A"),*w.var("alpha_bkg_obs_B")))));
+   // original test:
+   nll.reset(pdf->createNLL(*data, RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")))));
 
    // --------
 
    auto nll0 = nll->getVal();
 
-   likelihood =
-//      std::make_shared<RooFit::TestStatistics::RooSumL>(pdf, data, RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_A"),*w.var("alpha_bkg_obs_B"))));
-//      std::make_shared<RooFit::TestStatistics::RooSumL>(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"),*w.var("alpha_bkg_obs_B")}));
-      RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"),*w.var("alpha_bkg_obs_B")}));
+   likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(
+         pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+
+   nll_ts.evaluate();
+   auto nll1 = nll_ts.return_result();
+
+   EXPECT_DOUBLE_EQ(nll0, nll1);
+}
+
+TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
+{
+   // a variation to test some additional parameters (ConstrainedParameters and offsetting)
+   nll.reset(pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
+                                RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(kTRUE)));
+
+   // --------
+
+   auto nll0 = nll->getVal();
+
+   likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(
+         pdf, data, RooFit::TestStatistics::ConstrainedParameters({*w.var("alpha_bkg_obs_A")}),
+         RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_B")}));
+   likelihood->enable_offsetting(true);
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
 
    nll_ts.evaluate();
