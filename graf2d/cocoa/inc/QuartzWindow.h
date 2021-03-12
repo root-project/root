@@ -19,28 +19,39 @@
 #include "X11Events.h"
 #include "GuiTypes.h"
 
-/////////////////////////////////////////////////////////////////////
-//                                                                 //
-// CrosshairView comprises the content view of a CrosshairWindow.  //
-// It's purpose is to render two lines ... a crosshair.            //
-//                                                                 //
-/////////////////////////////////////////////////////////////////////
-@interface CrosshairView: NSView
-// Line1:
-@property (nonatomic, assign)NSPoint start1;
-@property (nonatomic, assign)NSPoint end1;
-// Line2:
-@property (nonatomic, assign)NSPoint start2;
-@property (nonatomic, assign)NSPoint end2;
+namespace ROOT {
+namespace MacOSX {
+namespace X11 {
+
+class Command;
+
+} // namespace X11
+} // namespace MacOSX
+} // namespace ROOT
+
+////////////////////////////////////////////////////////////////////////
+//                                                                    //
+// XorDrawingView is a content view of a XorDrawingWindow window.     //
+// Its purpose is to render lines into the transparent backing store, //
+// while staying on top of a TPad (making an illusion these lines     //
+// are a part of the pad below). On X11/Windows this us achieved by   //
+// using XOR drawing mode and drawing into the TPad's pixmap, but XOR //
+// mode does not exist in Quartz, thus this "gymnastics". So far only //
+// used by TPad::DrawCrosshair and TFitEditor (lines and boxes). Let  //
+// me know if you find another case! ;)                               //
+//                                                                    //
+////////////////////////////////////////////////////////////////////////
+@interface XorDrawingView: NSView
+- (void) setXorOperations : (const std::vector<ROOT::MacOSX::X11::Command *> &) primitives;
 @end
 
-// CrosshairWindow is a special window: a transparent
+// XorDrawingWindow is a special window: a transparent
 // transient child window that we attach to a canvas
-// to draw a crosshair on top of the pad's contents.
+// to draw lines on top of the pad's contents.
 // It's transparent to all mouse events and can never
 // be main or a key window. It has a transparent
 // background.
-@interface CrosshairWindow : NSWindow
+@interface XorDrawingWindow : NSWindow
 - (instancetype) init;
 @end
 
@@ -116,11 +127,11 @@
 - (unsigned char *) readColorBits : (ROOT::MacOSX::X11::Rectangle) area;
 
 // Trick for crosshair drawing in TCanvas ("pseudo-XOR")
-- (void) addCrosshairWindow;
-- (void) adjustCrosshairWindowGeometry;
-- (void) adjustCrosshairWindowGeometry : (CrosshairWindow *)win;
-- (void) removeCrosshairWindow;
-- (CrosshairWindow *) findCrosshairWindow;
+- (void) addXorWindow;
+- (void) adjustXorWindowGeometry;
+- (void) adjustXorWindowGeometry : (XorDrawingWindow *) win;
+- (void) removeXorWindow;
+- (XorDrawingWindow *) findXorWindow;
 
 //X11Window protocol.
 
