@@ -210,7 +210,7 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
 
    fMenu = new TGPopupMenu(gClient->GetDefaultRoot());
    fMenu->AddEntry(" Save &As...\tCtrl+A", kM_FILE_SAVEAS, 0, gClient->GetPicture("ed_save.png"));
-   fMenu->AddEntry(" Print...", kM_FILE_PRINT, 0, gClient->GetPicture("ed_print.png"));
+   fMenu->AddEntry(" &Print...\tCtrl+P", kM_FILE_PRINT, 0, gClient->GetPicture("ed_print.png"));
    fMenu->DisableEntry(kM_FILE_PRINT);
    fMenu->Connect("Activated(Int_t)", "TGHtml", this, "HandleMenu(Int_t)");
 
