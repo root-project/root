@@ -258,6 +258,7 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* n
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
 RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info & /*tid*/)
 {
+   // at this point we can assume that `name` will be found in fColumnNames, RDF is in charge validation
    // TODO(jblomer): check incoming type
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
    auto clone = fColumnReaderPrototypes[index]->Clone();
