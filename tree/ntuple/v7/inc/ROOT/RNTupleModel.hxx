@@ -109,7 +109,8 @@ public:
       return fDefaultEntry->Get<T>(fieldName);
    }
 
-   /// Check if a field name already exists in the model.
+   /// Checks if a field with the given name already exists in the model. Works for
+   /// both top-level fields (`HasField("flag")`) and sub-fields (`HasField("particle.pos.x")`).
    bool HasField(std::string_view fieldName) const;
 
    /// Ingests a model for a sub collection and attaches it to the current model

@@ -221,8 +221,14 @@ TEST(RNTupleModel, HasField)
 
    EXPECT_FALSE(model->HasField("muon"));
    auto muon = RNTupleModel::Create();
+   auto pt = muon->MakeField<float>("pt", 0.0);
+   auto subCollection = RNTupleModel::Create();
+   auto subField = subCollection->MakeField<float>("pt", 0.0);
+   muon->MakeCollection("sub", std::move(subCollection));
    model->MakeCollection("muon", std::move(muon));
    EXPECT_TRUE(model->HasField("muon"));
+   EXPECT_TRUE(model->HasField("muon.pt"));
+   EXPECT_TRUE(model->HasField("muon.sub.pt"));
 }
 
 TEST(RNTupleModel, EnforceValidFieldNames)

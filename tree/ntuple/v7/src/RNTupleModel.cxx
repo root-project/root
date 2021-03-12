@@ -65,6 +65,9 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
 {
    EnsureValidFieldName(fieldName);
+   for (const auto& subField: collectionModel->fFieldNames) {
+      fFieldNames.insert(std::string(fieldName).append(".").append(subField));
+   }
    auto collectionNTuple = std::make_shared<RCollectionNTupleWriter>(std::move(collectionModel->fDefaultEntry));
    auto field = std::make_unique<RCollectionField>(fieldName, collectionNTuple, std::move(collectionModel));
    fDefaultEntry->CaptureValue(field->CaptureValue(collectionNTuple->GetOffsetPtr()));
