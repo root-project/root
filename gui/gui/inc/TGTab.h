@@ -52,6 +52,7 @@ protected:
    TList              *fRemoved;        // list of removed tabs
    FontStruct_t        fFontStruct;     // font
    GContext_t          fNormGC;         // drawing context
+   Bool_t              fScrolling;      // true if tab scrolling enabled
 
    void ChangeTab(Int_t tabIndex, Bool_t emit=kTRUE);
 
@@ -98,6 +99,8 @@ public:
    virtual void      SetEnabled(Int_t tabIndex, Bool_t on = kTRUE);  //*MENU*
    virtual void      SetText(const char *text = "tab");              //*MENU*icon=bld_rename.png*
    Bool_t            IsEnabled(Int_t tabIndex) const;
+   virtual void      SetScrollingEnabled(Bool_t on = kTRUE);
+   Bool_t            IsScrollingEnabled() const;
 
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
 
