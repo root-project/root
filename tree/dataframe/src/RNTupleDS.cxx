@@ -219,7 +219,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    }
 
    if (cardinalityField) {
-      fColumnNames.emplace_back(std::string("__rdf_sizeof_") + std::string(colName));
+      fColumnNames.emplace_back("__rdf_sizeof_" + std::string(colName));
       fColumnTypes.emplace_back(cardinalityField->GetType());
       auto cardColReader = std::make_unique<Detail::RNTupleColumnReader>(std::move(cardinalityField));
       fColumnReaderPrototypes.emplace_back(std::move(cardColReader));
