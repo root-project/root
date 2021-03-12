@@ -172,7 +172,6 @@ void TPaletteAxis::Copy(TObject &obj) const
 {
    TPave::Copy(obj);
    ((TPaletteAxis&)obj).fH    = fH;
-   ((TPaletteAxis&)obj).fName = fName;
 }
 
 
