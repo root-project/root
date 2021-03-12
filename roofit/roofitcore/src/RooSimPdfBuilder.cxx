@@ -736,7 +736,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
             // Check if already instantiated
             splitCat = (RooAbsCategory*) _compSplitCatSet.find(splitCatName) ;
-            TString origCompCatName(splitCatName) ;
+            const std::string origCompCatName{splitCatName} ;
             if (!splitCat) {
               // Build now
 
@@ -777,7 +777,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
                 }
               }
 
-              splitCat = new RooMultiCategory(origCompCatName,origCompCatName,compCatSet) ;
+              splitCat = new RooMultiCategory(origCompCatName.c_str(), origCompCatName.c_str(), compCatSet) ;
               _compSplitCatSet.addOwned(*splitCat) ;
               //cout << "composite splitcat: " << splitCat->GetName() ;
             }
@@ -889,13 +889,13 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
               std::unique_ptr<TIterator> iter{splitCat->typeIterator()} ;
               RooCatType* type ;
               RooArgList fracLeafList ;
-              TString formExpr("1") ;
+              std::string formExpr{"1"} ;
               Int_t i(0) ;
 
               while((type=(RooCatType*)iter->Next())) {
 
                 // Skip remainder state
-                if (!TString(type->GetName()).CompareTo(remainderState)) continue ;
+                if (std::string{type->GetName()} != remainderState) continue ;
 
                 // If restricted build is requested, skip states of splitcat that are not built
                 if (remStateSplitList && !remStateSplitList->FindObject(type->GetName())) {
@@ -903,30 +903,26 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
                 }
 
                 // Construct name of split leaf
-                TString splitLeafName(param->GetName()) ;
-                splitLeafName.Append("_") ;
-                splitLeafName.Append(type->GetName()) ;
+                const auto splitLeafName = std::string{param->GetName()} + "_" + type->GetName();
 
                 // Check if split leaf already exists
-                RooAbsArg* splitLeaf = _splitNodeList.find(splitLeafName) ;
+                RooAbsArg* splitLeaf = _splitNodeList.find(splitLeafName.c_str()) ;
                 if (!splitLeaf) {
                   // If not create it now
-                  splitLeaf = (RooAbsArg*) param->clone(splitLeafName) ;
+                  splitLeaf = (RooAbsArg*) param->clone(splitLeafName.c_str()) ;
                   _splitNodeList.add(*splitLeaf) ;
                   _splitNodeListOwned.addOwned(*splitLeaf) ;
                 }
                 fracLeafList.add(*splitLeaf) ;
-                formExpr.Append(Form("-@%d",i++)) ;
+                formExpr += Form("-@%d",i++) ;
               }
 
               // Construct RooFormulaVar expresssing remainder of fraction
-              TString remLeafName(param->GetName()) ;
-              remLeafName.Append("_") ;
-              remLeafName.Append(remainderState) ;
+              const auto remLeafName = std::string{param->GetName()} + "_" + remainderState;
 
               // Check if no specialization was already specified for remainder state
-              if (!_splitNodeList.find(remLeafName)) {
-                RooAbsArg* remLeaf = new RooFormulaVar(remLeafName,formExpr,fracLeafList) ;
+              if (!_splitNodeList.find(remLeafName.c_str())) {
+                RooAbsArg* remLeaf = new RooFormulaVar(remLeafName.c_str(), formExpr.c_str(), fracLeafList) ;
                 _splitNodeList.add(*remLeaf) ;
                 _splitNodeListOwned.addOwned(*remLeaf) ;
                 coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: creating remainder fraction formula for " << remainderState
