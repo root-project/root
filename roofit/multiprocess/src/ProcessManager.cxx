@@ -13,8 +13,8 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
-#include <csignal>  // for sigterm handling on child processes
 #include <cstring>  // for strsignal
+#include <sys/wait.h>  // for wait
 #include <iostream>
 #include <unordered_set>
 
@@ -129,11 +129,11 @@ void ProcessManager::initialize_processes(bool cpu_pinning) {
       // set correct bit
       std::size_t set_cpu;
       if (is_master()) {
-       set_cpu = N_workers + 1;
+       set_cpu = _N_workers + 1;
       } else if (is_queue()) {
-       set_cpu = N_workers;
+       set_cpu = _N_workers;
       } else {
-       set_cpu = worker_id;
+       set_cpu = _worker_id;
       }
       CPU_SET(set_cpu, &mask);
    #ifndef NDEBUG

@@ -16,6 +16,7 @@
 #define ROOT_ROOFIT_MultiProcess_ProcessManager
 
 #include <sys/types.h>  // pid_t
+#include <csignal>  // sig_atomic_t and for sigterm handling on child processes (in ProcessManager.cxx)
 #include <vector>
 
 // forward declaration
