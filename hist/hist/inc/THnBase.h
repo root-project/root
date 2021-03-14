@@ -150,6 +150,28 @@ protected:
       return bin;
    }
 
+   /// Fill with the provided variadic arguments.
+   /// The number of arguments must be equal to the number of histogram dimensions or, for weighted fills, to the
+   /// number of dimensions + 1; in the latter case, the last function argument is used as weight.
+   /// A separate `firstval` argument is needed so the compiler does not pick this overload instead of the non-templated
+   /// Fill overloads
+   template <typename... MoreTypes>
+   Long64_t Fill(Double_t firstval, MoreTypes... morevals)
+   {
+      const std::array<double, 1 + sizeof...(morevals)> x{firstval, static_cast<double>(morevals)...};
+      if (Int_t(x.size()) == GetNdimensions()) {
+         // without weight
+         return Fill(x.data());
+      } else if (Int_t(x.size()) == (GetNdimensions() + 1)) {
+         // with weight
+         return Fill(x.data(), x.back());
+      } else {
+         Error("Fill", "Wrong number of arguments for number of histogram axes.");
+      }
+
+      return -1;
+   }
+
    virtual void FillBin(Long64_t bin, Double_t w) = 0;
 
    void SetBinEdges(Int_t idim, const Double_t* bins);
