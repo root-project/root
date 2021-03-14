@@ -3,11 +3,12 @@
 #include <TParameter.h>
 #include <TKey.h>
 #include <TFile.h>
-#include <TCanvas.h>
 #include <TLine.h>
 #include <TFolder.h>
 #include <TH1F.h>
 #include <TDirectory.h>
+
+#include "TMap.h"
 
 #include <Math/ProbFuncMathCore.h>
 
@@ -33,7 +34,7 @@
     std::cerr << arg << std::endl;                                      \
   }}
 #define INFO(arg) std::cout << arg << std::endl;
-/*
+
 RooLagrangianMorphOptimizer* RooLagrangianMorphOptimizer::gActiveInstance = NULL;
 
 RooLagrangianMorphOptimizer::ParamCard RooLagrangianMorphOptimizer::RandomLagrangianGenerator::generate(){
@@ -75,11 +76,13 @@ void RooLagrangianMorphOptimizer::setupMorphFunc(){
     this->morphFunc->updateCoefficients();
   } else {
     // empty string as filename makes RooLagrangianMorphFunc use the gDirectory for input
-    if(this->_nonInterfering.size()!=0){
-      this->morphFunc = new RooLagrangianMorphPdf("morphing","morphing","","xsection",this->vertices,this->_nonInterfering,this->temporaries_list);
-    }else{
-      this->morphFunc = new RooLagrangianMorphPdf("morphing","morphing","","xsection",this->vertices,this->temporaries_list);
-    }
+   // if(this->_nonInterfering.size()!=0){
+   //   this->morphFunc = new RooLagrangianMorphing::RooLagrangianMorph("morphing","morphing","","xsection",this->vertices,this->_nonInterfering,this->temporaries_list);
+   // }else{
+      RooLagrangianMorphing::RooLagrangianMorphConfig config;
+      config.setVertices(this->vertices); 
+      this->morphFunc = new RooLagrangianMorphing::RooLagrangianMorph("morphing","morphing","","xsection",config,this->temporaries_list);
+  //  }
   }
 }
   
@@ -159,10 +162,10 @@ std::vector<double> RooLagrangianMorphOptimizer::getParameterBounds(const std::v
   }
   return pars_limit;
 }
-*/
-//void RooLagrangianMorphOptimizer::targetFcn(Int_t&npar, Double_t* /*gin*/, Double_t&f, Double_t*par, Int_t /*flag*/){
+
+void RooLagrangianMorphOptimizer::targetFcn(Int_t&npar, Double_t* /*gin*/, Double_t&f, Double_t*par, Int_t /*flag*/){
   // putting it all together
-/*  std::vector<double> pars(par, par + npar);
+  std::vector<double> pars(par, par + npar);
   try {
     std::vector<double> pars_limit = RooLagrangianMorphOptimizer::gActiveInstance->getParameterBounds(pars);
     RooLagrangianMorphOptimizer::gActiveInstance->setupMorphing(pars_limit);
@@ -255,7 +258,7 @@ RooLagrangianMorphOptimizer::RooLagrangianMorphOptimizer(const char* input, cons
 {
   // constructor with interference setting
   this->_nonInterfering = nonInterfering;
-  this->xsHelper = new RooLagrangianMorphPdf("xsHelper","xsHelper","",inputobservable.Data(),this->vertices,this->_nonInterfering,this->initInputs(xsInputsArg));
+  //this->xsHelper = new RooLagrangianMorphing::RooLagrangianMorph("xsHelper","xsHelper","",inputobservable.Data(),this->vertices,this->_nonInterfering,this->initInputs(xsInputsArg));
   this->setup(startvalues);
 }
 
@@ -263,7 +266,9 @@ RooLagrangianMorphOptimizer::RooLagrangianMorphOptimizer(const char* input, cons
   RooLagrangianMorphOptimizer(input,benchmarksArg,verticesArg,containerType)
 {
   // constructor without interference setting
-  this->xsHelper = new RooLagrangianMorphPdf("xsHelper","xsHelper","",inputobservable.Data(),this->vertices,this->initInputs(xsInputsArg));
+  RooLagrangianMorphing::RooLagrangianMorphConfig config;
+  config.setVertices(this->vertices); 
+  this->xsHelper = new RooLagrangianMorphing::RooLagrangianMorph("xsHelper","xsHelper","",inputobservable.Data(),config,this->initInputs(xsInputsArg));
   this->setup(startvalues);
 }
 
@@ -722,7 +727,7 @@ int RooLagrangianMorphOptimizer::optimize(){
   Int_t nvpar,nparx,icstat;
   ptMinuit->mnstat(amin,edm,errdef,nvpar,nparx,icstat);
   //void mnstat(Double_t &fmin, Double_t &fedm, Double_t &errdef, Int_t &npari, Int_t &nparx, Int_t &istat) 
-*/
+
   //*-*-*-*-*Returns concerning the current status of the minimization*-*-*-*-*
   //*-*      =========================================================
   //*-*       User-called
@@ -738,7 +743,7 @@ int RooLagrangianMorphOptimizer::optimize(){
   //*-*                    2= full matrix, but forced positive-definite
   //*-*                    3= full accurate covariance matrix
   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-/*
+
   std::cout << "\n";
   std::cout << " Minimum target function square = " << amin << "\n";
   std::cout << " Estimated vert. distance to min. = " << edm << "\n";
@@ -748,7 +753,7 @@ int RooLagrangianMorphOptimizer::optimize(){
 
   std::cout << "\n";
   ptMinuit->mnprin(3,amin);
-*/
+
   //*-*-*-*Prints the values of the parameters at the time of the call*-*-*-*-*
   //*-*    ===========================================================
   //*-*        also prints other relevant information such as function value,
@@ -762,6 +767,6 @@ int RooLagrangianMorphOptimizer::optimize(){
   //*-*                  4    values, parabolic errors, MINOS errors
   //*-*    when INKODE=5, MNPRIN chooses IKODE=1,2, or 3, according to ISW(2)
   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-/*
+
   return 0;
-}*/
+}

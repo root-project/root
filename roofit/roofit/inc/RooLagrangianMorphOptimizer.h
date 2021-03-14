@@ -115,8 +115,8 @@ protected:
   
 protected:
   // temporaries
-  RooLagrangianMorphPdf* morphFunc = NULL;
-  RooLagrangianMorphPdf* xsHelper = NULL;
+  RooLagrangianMorphing::RooLagrangianMorph* morphFunc = NULL;
+  RooLagrangianMorphing::RooLagrangianMorph* xsHelper = NULL;
   TMinuit* ptMinuit = NULL;
   int ierflg;
   
@@ -156,6 +156,5 @@ public:
   ClassDef(RooLagrangianMorphOptimizer,0)
 
 };
-
 
 #endif

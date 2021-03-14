@@ -60,29 +60,22 @@
 #pragma link C++ class RooUniform+ ;
 #pragma link C++ class RooJeffreysPrior+ ;
 #pragma link C++ class RooJohnson+;
-//#pragma link C++ class RooLagrangianMorphOptimizer+;
+#pragma link C++ class RooHCggfWWMorph+ ;
 #pragma link C++ class RooLagrangianMorphing::RooLagrangianMorph+;
-#pragma link C++ class RooHCggfWWMorph+;
+#pragma link C++ typedef RooLagrangianMorphing::ParamSet;
+#pragma link C++ typedef RooLagrangianMorphing::ParamMap;
+#pragma link C++ namespace RooLagrangianMorphing;
+#pragma link C++ function RooLagrangianMorphing::append;
 #pragma link C++ class RooHCvbfWWMorph+;
 #pragma link C++ class RooHCggfZZMorph+;
 #pragma link C++ class RooHCvbfZZMorph+;
 #pragma link C++ class RooHCvbfMuMuMorph+;
 #pragma link C++ class RooSMEFTggfWWMorph+;
 #pragma link C++ class RooSMEFTvbfWWMorph+;
-#pragma link C++ class RooSMEFTggfWWMorph+;
-#pragma link C++ class RooSMEFTvbfWWMorph+;
 #pragma link C++ class RooSMEFTggfMorph+;
 #pragma link C++ class RooSMEFTvbfMorph+;
-#pragma link C++ class RooSMEFTggfMorph+;
-#pragma link C++ class RooSMEFTvbfMorph+;
-#pragma link C++ typedef RooLagrangianMorphing::ParamSet;
-#pragma link C++ typedef RooLagrangianMorphing::ParamMap;
-#pragma link C++ namespace RooLagrangianMorphing;
-#pragma link C++ function RooLagrangianMorphing::append;
-#ifdef USE_MULTIPRECISION_LC
+#pragma link C++ class RooLagrangianMorphOptimizer+;
 #pragma link C++ class RooLagrangianMorphing::LinearCombination+;
-#endif
-//
 #pragma link C++ class RooFunctorBinding+ ;
 #pragma link C++ class RooFunctor1DBinding+ ;
 #pragma link C++ class RooFunctorPdfBinding+ ;

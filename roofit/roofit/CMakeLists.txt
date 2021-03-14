@@ -45,8 +45,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooIntegralMorph.h
     RooJeffreysPrior.h
     RooKeysPdf.h
+    Floats.h
+    LinearCombination.h
     RooLagrangianMorphing.h
-#    RooLagrangianMorphOptimizer.h
+    RooLagrangianMorphOptimizer.h
+    RooHCMorphing.h
+    RooSMEFTMorphing.h
     RooLandau.h
     RooLognormal.h
     RooMathCoreReg.h
@@ -62,6 +66,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooParamHistFunc.h
     RooPoisson.h
     RooPolynomial.h
+#    RooSMEFTMorphing.h
     RooStepFunction.h
     RooTFnBinding.h
     RooTFnPdfBinding.h
@@ -107,8 +112,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooIntegralMorph.cxx
     src/RooJeffreysPrior.cxx
     src/RooKeysPdf.cxx
+    src/LinearCombination.cxx
     src/RooLagrangianMorphing.cxx
- #   src/RooLagrangianMorphOptimizer.cxx
+    src/RooHCMorphing.cxx
+    src/RooLagrangianMorphOptimizer.cxx
     src/RooLandau.cxx
     src/RooLognormal.cxx
     src/RooMathCoreReg.cxx
