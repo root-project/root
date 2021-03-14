@@ -223,6 +223,40 @@ constexpr std::size_t CacheLineStep() {
 
 void CheckDefineType(RDefineBase &define, const std::type_info &tid);
 
+// TODO in C++17 this could be a lambda within FillParHelper::Exec
+template <typename T>
+constexpr std::size_t FindIdxTrue(const T &arr)
+{
+   for (size_t i = 0; i < arr.size(); ++i) {
+      if (arr[i])
+         return i;
+   }
+   return arr.size();
+}
+
+// return type has to be decltype(auto) to preserve perfect forwarding
+template <std::size_t N, typename... Ts>
+decltype(auto) GetNthElement(Ts &&...args)
+{
+   auto tuple = std::forward_as_tuple(args...);
+   return std::get<N>(tuple);
+}
+
+#if __cplusplus >= 201703L
+template <class... Ts>
+using Disjunction = std::disjunction<Ts...>;
+#else
+template <class...>
+struct Disjunction : std::false_type {
+};
+template <class B1>
+struct Disjunction<B1> : B1 {
+};
+template <class B1, class... Bn>
+struct Disjunction<B1, Bn...> : std::conditional_t<bool(B1::value), B1, Disjunction<Bn...>> {
+};
+#endif
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
