@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "11/03/2021";
+   JSROOT.version_date = "15/03/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -628,6 +628,9 @@
       }
 
       function load_module(req, m) {
+         if (m.extract && !m.dep && globalThis[m.extract])
+            return finish_loading(m, globalThis[m.extract])
+
          let element = document.createElement("script");
          element.setAttribute('type', "text/javascript");
          element.setAttribute('src', m.src);
@@ -1714,7 +1717,7 @@
             case "S": histo.fArray = new Int16Array(histo.fNcells); break;
             case "I": histo.fArray = new Int32Array(histo.fNcells); break;
             case "F": histo.fArray = new Float32Array(histo.fNcells); break;
-            case "L": histo.fArray = new Float64Array(histo.fNcells); break;
+            case "L":
             case "D": histo.fArray = new Float64Array(histo.fNcells); break;
             default: histo.fArray = new Array(histo.fNcells); break;
          }

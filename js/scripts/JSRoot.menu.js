@@ -190,25 +190,25 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
       /** @summary Add size selection menu entries
         * @protected */
-      addSizeMenu(name, min, max, step, value, set_func) {
-         if (value === undefined) return;
+      addSizeMenu(name, min, max, step, size_value, set_func) {
+         if (size_value === undefined) return;
 
          this.add("sub:" + name, function() {
             // todo - use jqury dialog here
-            let entry = value.toFixed(4);
-            if (step >= 0.1) entry = value.toFixed(2);
-            if (step >= 1) entry = value.toFixed(0);
-            let val = prompt("Enter value of " + name, entry);
-            if (!val) return;
-            val = parseFloat(val);
-            if (!isNaN(val)) set_func((step >= 1) ? Math.round(val) : val);
+            let entry = size_value.toFixed(4);
+            if (step >= 0.1) entry = size_value.toFixed(2);
+            if (step >= 1) entry = size_value.toFixed(0);
+            let sz = prompt("Enter value of " + name, entry);
+            if (!sz) return;
+            sz = parseFloat(sz);
+            if (!isNaN(sz)) set_func((step >= 1) ? Math.round(sz) : sz);
          });
-         for (let val = min; val <= max; val += step) {
-            let entry = val.toFixed(2);
-            if (step >= 0.1) entry = val.toFixed(1);
-            if (step >= 1) entry = val.toFixed(0);
-            this.addchk((Math.abs(value - val) < step / 2), entry,
-                        val, res => set_func((step >= 1) ? parseInt(res) : parseFloat(res)));
+         for (let sz = min; sz <= max; sz += step) {
+            let entry = sz.toFixed(2);
+            if (step >= 0.1) entry = sz.toFixed(1);
+            if (step >= 1) entry = sz.toFixed(0);
+            this.addchk((Math.abs(size_value - sz) < step / 2), entry,
+                        sz, res => set_func((step >= 1) ? parseInt(res) : parseFloat(res)));
          }
          this.add("endsub:");
       }
