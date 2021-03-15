@@ -541,7 +541,7 @@ Bool_t TEntryListArray::RemoveSubList(TEntryListArray *e, TTree *tree)
       }
    }
 
-   if (!fSubLists->Remove(e)) {
+   if (!fSubLists || !fSubLists->Remove(e)) {
       return 0;
    }
    // fSubLists->Sort(); --> for TObjArray
