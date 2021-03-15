@@ -8,15 +8,19 @@
 ///
 /// \macro_code
 ///
-/// \date 2021-02-26
-/// \warning The RNTuple classes are experimental at this point.
-/// Functionality, interface, and data format is still subject to changes.
-/// Do not use for real data! During ROOT setup, configure the following flags: "-DCMAKE_CXX_STANDARD=14 -Droot7=ON -Dwebgui=ON"
-/// \author John Yoon
-
+///
 /// NOTE: Until C++ runtime modules are universally used, we explicitly load the ntuple library.  Otherwise
 /// triggering autoloading from the use of templated types would require an exhaustive enumeration
 /// of "all" template instances in the LinkDef file.
+///
+/// \warning The RNTuple classes are experimental at this point.
+/// Functionality, interface, and data format is still subject to changes.
+/// Do not use for real data! During ROOT setup, configure the following flags:
+/// `-DCMAKE_CXX_STANDARD=14 -Droot7=ON -Dwebgui=ON`
+///
+/// \date 2021-02-26
+/// \author John Yoon
+
 R__LOAD_LIBRARY(ROOTNTuple)
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RNTuple.hxx>
@@ -55,7 +59,7 @@ std::shared_ptr<TH1D> GetDrawableHist(ROOT::RDF::RResultPtr<TH1D> &h) {
    return result;
 }
 
-// Climate data is downloadable at the followink URL:
+// Climate data is downloadable at the following URL:
 // https://www.kaggle.com/berkeleyearth/climate-change-earth-surface-temperature-data
 // The original data set is from http://berkeleyearth.org/archive/data/
 // License CC BY-NC-SA 4.0
@@ -130,7 +134,7 @@ void Ingest() {
              << " seconds\n" << std::endl;
 }
 
-// Every data result that we want to get is declared first, and it is only upon their declaration that 
+// Every data result that we want to get is declared first, and it is only upon their declaration that
 // they are actually used. This stems from motivations relating to efficiency and optimization.
 void Analyze() {
    // Create a RDataframe by wrapping around NTuple.
@@ -176,13 +180,13 @@ void Analyze() {
    auto winterHistResultPtr = dfWinter.Histo1D({"Winter Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
    auto springHistResultPtr = dfSpring.Histo1D({"Spring Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
    auto summerHistResultPtr = dfSummer.Histo1D({"Summer Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
-  
+
    // Configure histograms for each decade.
    auto hist_1993_to_2002_ResultPtr = df1993_to_2002.Histo1D({"1993_to_2002 Average Temp", "Average Temperature: 1993_to_2002 vs. 2003_to_2013", 100, -40, 40}, "AverageTemperature");
    auto hist_2003_to_2013_ResultPtr = df2003_to_2013.Histo1D({"2003_to_2013 Average Temp", "Average Temperature: 1993_to_2002 vs. 2003_to_2013", 100, -40, 40}, "AverageTemperature");
 
    //____________________________________________________________________________________
-   
+
    // Display the minimum and maximum temperature values.
    std::cout << std::endl << "The Minimum temperature is: " << *min_value << std::endl;
    std::cout << "The Maximum temperature is: " << *max_value << std::endl;
@@ -248,7 +252,7 @@ void Analyze() {
    auto canvas2 = RCanvas::Create("Average Temperature: 1993_to_2002 vs. 2003_to_2013");
    canvas2->Draw<TObjectDrawable>(hist_1993_to_2002, "L");
    canvas2->Draw<TObjectDrawable>(hist_2003_to_2013, "L");
-   
+
    // Create a legend for the two decades canvas.
    auto legend2 = std::make_shared<TLegend>(0.1,0.7,0.48,0.9);
    legend2->AddEntry(hist_1993_to_2002.get(),"1993_to_2002","l");
