@@ -40,7 +40,7 @@ class pMainFrame( ROOT.TGMainFrame ):
        ROOT.TGMainFrame.__init__( self, parent, width, height )
 
        self.Canvas    = ROOT.TRootEmbeddedCanvas( 'Canvas', self, 200, 200 )
-       self.AddFrame( self.Canvas, ROOT.TGLayoutHints() )
+       self.AddFrame( self.Canvas, ROOT.TGLayoutHints(ROOT.kLHintsExpandX | ROOT.kLHintsExpandY) )
        self.ButtonsFrame = ROOT.TGHorizontalFrame( self, 200, 40 )
 
        self.DrawButton   = ROOT.TGTextButton( self.ButtonsFrame, '&Draw', 10 )
