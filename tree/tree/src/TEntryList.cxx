@@ -659,7 +659,7 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
 Long64_t TEntryList::GetEntry(Int_t index)
 {
 
-   if (index>=fN){
+   if ((index>=fN) || (index<0)) {
       return -1;
    }
    if (index==fLastIndexQueried+1){
