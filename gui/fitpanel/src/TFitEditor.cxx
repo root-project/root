@@ -2847,8 +2847,12 @@ void TFitEditor::DrawSelection(bool restore)
    if (gPad->GetCanvas()) gPad->GetCanvas()->FeedbackMode(kTRUE);
    gPad->SetLineWidth(1);
    gPad->SetLineColor(2);
-
+#ifndef R__HAS_COCOA
+   // With Cocoa XOR is fake, so no need in erasing the old box, it's
+   // done by clearing the backing store and repainting inside a special
+   // window.
    gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+#endif // R__HAS_COCOA
    gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
 
    px1old = px1;

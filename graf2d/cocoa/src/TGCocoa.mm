@@ -3507,7 +3507,7 @@ void TGCocoa::SetDrawMode(EDrawMode mode)
        auto windows = NSApplication.sharedApplication.windows;
        for (NSWindow *candidate : windows) {
            if ([candidate isKindOfClass:QuartzWindow.class])
-               [(QuartzWindow *)candidate removeCrosshairWindow];
+               [(QuartzWindow *)candidate removeXorWindow];
        }
        fPimpl->fX11CommandBuffer.ClearXOROperations();
    }
