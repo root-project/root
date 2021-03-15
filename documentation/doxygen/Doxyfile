@@ -828,14 +828,7 @@ INPUT                  = . \
                          ../../graf3d/g3d/ \
                          ../../graf3d/gl/ \
                          ../../graf3d/gviz3d/ \
-                         ../../gui/fitpanel/ \
-                         ../../gui/ged/ \
-                         ../../gui/gui/ \
-                         ../../gui/guibuilder/ \
-                         ../../gui/guihtml/ \
-                         ../../gui/recorder/ \
-                         ../../gui/sessionviewer/ \
-                         ../../gui/webdisplay \
+                         ../../gui/ \
                          ../../hist/ \
                          ../../html/ \
                          ../../io/dcache/ \
