@@ -22,6 +22,7 @@ See TBranch structure in TTree.
 #include "TTree.h"
 #include "TVirtualPad.h"
 #include "TBrowser.h"
+#include "strlcpy.h"
 
 #include <cctype>
 
@@ -234,7 +235,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    bleft++;
    Int_t nch = strlen(bleft);
    char* countname = new char[nch+1];
-   strcpy(countname, bleft);
+   strlcpy(countname, bleft, nch+1);
    char* bright = (char*) strchr(countname, ']');
    if (!bright) {
       delete[] countname;
