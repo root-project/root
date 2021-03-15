@@ -6,7 +6,6 @@
 /// "normal" coordinates' system and changing the line color linearly from black
 /// to red.
 ///
-/// \macro_image (line.png)
 /// \macro_code
 ///
 /// \date 2018-03-18
