@@ -566,14 +566,12 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
      * @private */
    jsrp.createOrbitControl = function(painter, camera, scene, renderer, lookat) {
 
-      if (JSROOT.settings.Zooming && JSROOT.settings.ZoomWheel)
-         renderer.domElement.addEventListener( 'wheel', control_mousewheel);
-
-      let enable_zoom = JSROOT.settings.Zooming && JSROOT.settings.ZoomMouse,
-          enable_select = (typeof painter.processMouseClick == "function"),
-          control = null;
+      let control = null,
+          enable_zoom = JSROOT.settings.Zooming && JSROOT.settings.ZoomMouse,
+          enable_select = (typeof painter.processMouseClick == "function");
 
       function control_mousedown(evnt) {
+         if (!control) return;
 
          // function used to hide some events from orbit control and redirect them to zooming rect
          if (control.mouse_zoom_mesh) {
@@ -601,6 +599,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       }
 
       function control_mouseup(evnt) {
+         if (!control) return;
 
          if (control.mouse_zoom_mesh && control.mouse_zoom_mesh.point2 && control.painter.Get3DZoomCoord) {
 
@@ -641,6 +640,52 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
             }
          }
       }
+
+      function render3DFired(painter) {
+         if (!painter || painter.renderer === undefined) return false;
+         return painter.render_tmout !== undefined; // when timeout configured, object is prepared for rendering
+      }
+
+      function control_mousewheel(evnt) {
+         if (!control) return;
+
+         // try to handle zoom extra
+
+         if (render3DFired(control.painter) || control.mouse_zoom_mesh) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            evnt.stopImmediatePropagation();
+            return; // already fired redraw, do not react on the mouse wheel
+         }
+
+         let intersect = control.detectZoomMesh(evnt);
+         if (!intersect) return;
+
+         evnt.preventDefault();
+         evnt.stopPropagation();
+         evnt.stopImmediatePropagation();
+
+         if (control.painter && (typeof control.painter.analyzeMouseWheelEvent == 'function')) {
+            let kind = intersect.object.zoom,
+                position = intersect.point[kind],
+                item = { name: kind, ignore: false };
+
+            // z changes from 0..2*size_z3d, others -size_xy3d..+size_xy3d
+            if (kind!=="z") position = (position + control.painter.size_xy3d)/2/control.painter.size_xy3d;
+                       else position = position/2/control.painter.size_z3d;
+
+            control.painter.analyzeMouseWheelEvent(evnt, item, position, false);
+
+            if ((kind==="z") && intersect.object.use_y_for_z) kind = "y";
+
+            control.painter.zoom(kind, item.min, item.max);
+         }
+      }
+
+      // assign own handler before creating OrbitControl
+
+      if (JSROOT.settings.Zooming && JSROOT.settings.ZoomWheel)
+         renderer.domElement.addEventListener( 'wheel', control_mousewheel);
 
       if (enable_zoom || enable_select) {
          renderer.domElement.addEventListener('pointerdown', control_mousedown);
@@ -926,45 +971,6 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          if (this.cursor_changed) {
             document.body.style.cursor = 'auto';
             this.cursor_changed = false;
-         }
-      }
-
-      function render3DFired(painter) {
-         if (!painter || painter.renderer === undefined) return false;
-         return painter.render_tmout !== undefined; // when timeout configured, object is prepared for rendering
-      }
-
-      function control_mousewheel(evnt) {
-         // try to handle zoom extra
-
-         if (render3DFired(control.painter) || control.mouse_zoom_mesh) {
-            evnt.preventDefault();
-            evnt.stopPropagation();
-            evnt.stopImmediatePropagation();
-            return; // already fired redraw, do not react on the mouse wheel
-         }
-
-         let intersect = control.detectZoomMesh(evnt);
-         if (!intersect) return;
-
-         evnt.preventDefault();
-         evnt.stopPropagation();
-         evnt.stopImmediatePropagation();
-
-         if (control.painter && (typeof control.painter.analyzeMouseWheelEvent == 'function')) {
-            let kind = intersect.object.zoom,
-                position = intersect.point[kind],
-                item = { name: kind, ignore: false };
-
-            // z changes from 0..2*size_z3d, others -size_xy3d..+size_xy3d
-            if (kind!=="z") position = (position + control.painter.size_xy3d)/2/control.painter.size_xy3d;
-                       else position = position/2/control.painter.size_z3d;
-
-            control.painter.analyzeMouseWheelEvent(evnt, item, position, false);
-
-            if ((kind==="z") && intersect.object.use_y_for_z) kind = "y";
-
-            control.painter.zoom(kind, item.min, item.max);
          }
       }
 

@@ -507,7 +507,7 @@ JSROOT.define(['three'], function(THREE) {
          return this;
 
       } else {
-         throw 'ThreeBSP: Given geometry is unsupported';
+         throw Error('ThreeBSP: Given geometry is unsupported');
       }
 
       let polygons = [],
