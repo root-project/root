@@ -1403,6 +1403,7 @@ Bool_t TGHtml::HandleButton(Event_t *event)
       int x = event->fX + fVisible.fX;
       int y = event->fY + fVisible.fY;
       const char *uri = GetHref(x, y);
+      void *dummy;
 
 #if 0  // insertion cursor test
       char ix[20];
@@ -1417,6 +1418,8 @@ Bool_t TGHtml::HandleButton(Event_t *event)
             //!!delete[] uri;
          }
       }
+      fMenu->EndMenu(dummy);
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
    } else if ((event->fType == kButtonPress) && (event->fCode == kButton3)) {
       fMenu->PlaceMenu(event->fXRoot, event->fYRoot, kTRUE, kTRUE);
    } else if (event->fCode == kButton4) {
