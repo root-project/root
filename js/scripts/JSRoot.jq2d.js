@@ -1116,8 +1116,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             +'<div style="display:flex;flex-direction:row;padding-top:5px">'
             +'<select class="gui_selectFileName" style="flex:1;padding:2px;" title="select file name"'
             +'<option value="" selected="selected"></option>';
-         for (let i in arrFiles)
-            guiCode += '<option value = "' + path + arrFiles[i] + '">' + arrFiles[i] + '</option>';
+         arrFiles.forEach(fname => { guiCode += '<option value = "' + path + fname + '">' + fname + '</option>'; });
          guiCode += '</select>'
             +'<input type="file" class="gui_localFile" accept=".root" style="display:none"/><output id="list" style="display:none"></output>'
             +'<input type="button" value="..." class="gui_fileBtn" style="min-width:3em;padding:3px;margin-left:5px;margin-right:5px;" title="select local file for reading"/><br/>'
@@ -1562,23 +1561,24 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
          top.append(entry);
 
-         function PopupWindow(div) {
-            if (div === 'first') {
-               div = null;
+         function PopupWindow(arg) {
+            let sel;
+            if (arg === 'first') {
                $('#' + topid + ' .flex_frame').each(function() {
-                  if (!$(this).is(":hidden") && ($(this).prop('state') != "minimal")) div = $(this);
+                  if (!$(this).is(":hidden") && ($(this).prop('state') != "minimal")) sel = $(this);
                });
-               if (!div) return;
+            } else if (typeof arg == 'object') {
+               sel = arg;
             }
+            if (!sel) return;
 
-            div.appendTo(div.parent());
+            sel.appendTo(sel.parent());
 
-            if (div.prop('state') == "minimal") return;
+            if (sel.prop('state') == "minimal") return;
 
-            div = div.find(".flex_draw").get(0);
-            jsrp.selectActivePad({ pp: jsrp.getElementCanvPainter(div), active: true });
-
-            JSROOT.resize(div);
+            let frame = sel.find(".flex_draw").get(0);
+            jsrp.selectActivePad({ pp: jsrp.getElementCanvPainter(frame), active: true });
+            JSROOT.resize(frame);
          }
 
          function ChangeWindowState(main, state) {
@@ -1647,16 +1647,14 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
              })
              .draggable({
                containment: "parent",
-               start: function(event, ui) {
+               start: function(event /*, ui*/) {
                   // bring element to front when start dragging
                   PopupWindow($(this));
-
-                  let ddd = $(this).find(".flex_draw");
-
                   // block dragging when mouse below header
-                  let elementMouseIsOver = document.elementFromPoint(event.clientX, event.clientY);
-                  let isparent = false;
-                  $(elementMouseIsOver).parents().map(function() { if ($(this).get(0) === ddd.get(0)) isparent = true; });
+                  let draw_area = $(this).find(".flex_draw"),
+                      elementMouseIsOver = document.elementFromPoint(event.clientX, event.clientY),
+                      isparent = false;
+                  $(elementMouseIsOver).parents().each(function() { if ($(this).get(0) === draw_area.get(0)) isparent = true; });
                   if (isparent) return false;
                }
             })

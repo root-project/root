@@ -1603,7 +1603,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       let loop, nfaces = [], pos = [], indx = [],    // buffers for faces
           nsegments = 0, lpos = null, lindx = 0,     // buffer for lines
           ngridsegments = 0, grid = null, gindx = 0, // buffer for grid lines segments
-          normindx = null;                           // buffer to remember place of vertex for each bin
+          normindx = [];                             // buffer to remember place of vertex for each bin
 
       function CheckSide(z,level1, level2) {
          if (z<level1) return -1;
@@ -3124,6 +3124,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          return cnt;
       }
 
+      function sqr(v) { return v*v; }
+
       function graph2DTooltip(intersect) {
          if (isNaN(intersect.index)) {
             console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r121');
@@ -3141,7 +3143,6 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
              grz = p.grz(this.graph.fZ[indx]);
 
          if (this.check_next && indx+1<this.graph.fX.length) {
-            function sqr(v) { return v*v; }
             let d = intersect.point,
                 grx1 = p.grx(this.graph.fX[indx+1]),
                 gry1 = p.gry(this.graph.fY[indx+1]),

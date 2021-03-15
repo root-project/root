@@ -428,7 +428,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
                   switch(fld._typename) {
                      case 'TColor': item._value = jsrp.getRGBfromTColor(fld); break;
-                     case 'TText': item._value = fld.fTitle; break;
+                     case 'TText':
                      case 'TLatex': item._value = fld.fTitle; break;
                      case 'TObjString': item._value = fld.fString; break;
                      default:
@@ -1727,7 +1727,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             return Promise.resolve();
          }
 
-         if (hitem._obj) promise = DoExpandItem(hitem, hitem._obj, itemname);
+         if (hitem._obj) promise = DoExpandItem(hitem, hitem._obj);
       }
 
       return promise.then(res => {
@@ -2806,7 +2806,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       /** @summary method dedicated to iterate over existing panels
         * @param {function} userfunc is called with arguments (frame)
         * @param {boolean} only_visible let select only visible frames */
-      forEachFrame(/* userfunc, only_visible */) { console.warn("forEachFrame not implemented in MDIDisplay"); }
+      forEachFrame(userfunc, only_visible) {
+         console.warn(`forEachFrame not implemented in MDIDisplay ${typeof userfunc} ${only_visible}`);
+      }
 
       /** @summary method dedicated to iterate over existing panles
         * @param {function} userfunc is called with arguments (painter, frame)
@@ -2900,7 +2902,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.frames[divid] += (itemname + ";");
       }
 
-      forEachFrame(userfunc /* ,  only_visible */) {
+      forEachFrame(userfunc) {
          let ks = Object.keys(this.frames);
          for (let k = 0; k < ks.length; ++k) {
             let node = d3.select("#"+ks[k]);
@@ -3098,7 +3100,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                this.createSeparator(handle, main, handle.groups[cnt]);
       }
 
-      forEachFrame(userfunc /*, only_visible */) {
+      /** @summary Call function for each frame */
+      forEachFrame(userfunc) {
          if (this.simple_layout)
             userfunc(this.getGridFrame());
          else
@@ -3114,7 +3117,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let found = super.getActiveFrame();
          if (found) return found;
 
-         this.forEachFrame(frame => { if (!found) found = frame; }, true);
+         this.forEachFrame(frame => { if (!found) found = frame; });
 
          return found;
       }
