@@ -69,7 +69,8 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 
 ## TTree Libraries
 
-- TTree now supports the inclusion of leaves of types `long` and `unsigned long` (and therefore also `std::size_t` on most systems) also for branches in "leaflist mode". The corresponding leaflist letters are 'G' and 'g'.
+- `TTree` now supports the inclusion of leaves of types `long` and `unsigned long` (and therefore also `std::size_t` on most systems) also for branches in "leaflist mode". The corresponding leaflist letters are 'G' and 'g'.
+- when looping over a `TTree` with a friend with a larger number of entries, `TTreeReader` now ends the event loop when the entries in the _main_ `TTree` are exhausted, consistently with other interfaces. See [#6518](https://github.com/root-project/root/issues/6518) for more details.
 
 ## RDataFrame
 
