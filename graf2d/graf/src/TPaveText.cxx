@@ -342,8 +342,6 @@ TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj) const
          linet = (TText*)line;
          ytext -= yspace;
          Double_t yl     = linet->GetY();
-         Short_t talign = linet->GetTextAlign();
-         if (talign == 0) talign = GetTextAlign();
          if (yl > 0 && yl <1) {
             ytext = fY1 + yl*dy;
          }
