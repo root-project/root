@@ -69,24 +69,24 @@ struct SXmlDoc_t {
 
 class TXMLOutputStream {
 protected:
-   std::ostream *fOut;
-   TString *fOutStr;
-   char *fBuf;
-   char *fCurrent;
-   char *fMaxAddr;
-   char *fLimitAddr;
+   std::ostream *fOut{nullptr};
+   TString *fOutStr{nullptr};
+   char *fBuf{nullptr};
+   char *fCurrent{nullptr};
+   char *fMaxAddr{nullptr};
+   char *fLimitAddr{nullptr};
 
 public:
    TXMLOutputStream(const char *filename, Int_t bufsize = 20000)
    {
       fOut = new std::ofstream(filename);
-      fOutStr = 0;
+      fOutStr = nullptr;
       Init(bufsize);
    }
 
    TXMLOutputStream(TString *outstr, Int_t bufsize = 20000)
    {
-      fOut = 0;
+      fOut = nullptr;
       fOutStr = outstr;
       Init(bufsize);
    }
@@ -110,9 +110,9 @@ public:
    void OutputCurrent()
    {
       if (fCurrent != fBuf) {
-         if (fOut != 0)
+         if (fOut)
             fOut->write(fBuf, fCurrent - fBuf);
-         else if (fOutStr != 0)
+         else if (fOutStr)
             fOutStr->Append(fBuf, fCurrent - fBuf);
       }
       fCurrent = fBuf;
@@ -120,9 +120,9 @@ public:
 
    void OutputChar(char symb)
    {
-      if (fOut != 0)
+      if (fOut)
          fOut->put(symb);
-      else if (fOutStr != 0)
+      else if (fOutStr)
          fOutStr->Append(symb);
    }
 
@@ -131,7 +131,10 @@ public:
       int len = strlen(str);
       if (fCurrent + len >= fMaxAddr) {
          OutputCurrent();
-         fOut->write(str, len);
+         if (fOut)
+            fOut->write(str, len);
+         else if (fOutStr)
+            fOutStr->Append(str, len);
       } else {
          while (*str)
             *fCurrent++ = *str++;
@@ -144,10 +147,10 @@ public:
    {
       if (fCurrent + cnt >= fMaxAddr)
          OutputCurrent();
-      if (fCurrent + cnt >= fMaxAddr)
+      if (fCurrent + cnt >= fMaxAddr) {
          for (int n = 0; n < cnt; n++)
             OutputChar(symb);
-      else {
+      } else {
          for (int n = 0; n < cnt; n++)
             *fCurrent++ = symb;
          if (fCurrent > fLimitAddr)
