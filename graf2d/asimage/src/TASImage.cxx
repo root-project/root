@@ -156,7 +156,7 @@ typedef struct {
 #define _alphaBlend(bot, top) {\
    __argb32__ *T = (__argb32__*)(top);\
    __argb32__ *B = (__argb32__*)(bot);\
-   int aa = 255-T->a;\
+   int aa = 255-T->a; /* NOLINT */ \
    if (!aa) {\
       *bot = *top;\
    } else { \
@@ -3382,8 +3382,6 @@ void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
          return;
       }
 
-      x = 0;
-      y = 0;
       fill_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
    }
 
@@ -4091,8 +4089,6 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
    if (!fImage) {
       w = w ? w : 20;
       h = h ? h : 20;
-      x = 0;
-      y = 0;
       fImage = create_asimage(w, h, 0);
       FillRectangle(col, 0, 0, w, h);
       return;
@@ -4902,10 +4898,9 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
    if (!arr) return;
    UInt_t xx = 0;
    UInt_t yy = 0;
-   UInt_t yyy = 0;
 
    for (UInt_t i = 0; i < npt; i++) {
-      yyy = ppt[i].fY*fImage->width;
+      UInt_t yyy = ppt[i].fY*fImage->width;
 
       for (UInt_t j = 0; j < widths[i]; j++) {
          if ((ppt[i].fX >= (Int_t)fImage->width) || (ppt[i].fX < 0) ||
@@ -4917,7 +4912,6 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
          ii = yy*tile->GetWidth() + xx;
          _alphaBlend(&fImage->alt.argb32[idx], &arr[ii]);
       }
-      yyy += fImage->width;;
    }
 }
 
@@ -6743,13 +6737,10 @@ void TASImage::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    char *buf = 0;
    int sz;
 
-   UInt_t w = GetWidth();
-   UInt_t h = GetHeight();
-
-   if (w > 500) { // workaround CINT limitations
-      w = 500;
+   if (GetWidth() > 500) { // workaround CINT limitations
+      UInt_t w = 500;
       Double_t scale = 500./GetWidth();
-      h = TMath::Nint(GetHeight()*scale);
+      UInt_t h = TMath::Nint(GetHeight()*scale);
       Scale(w, h);
    }
 
