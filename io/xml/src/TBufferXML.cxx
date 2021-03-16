@@ -2532,7 +2532,7 @@ void TBufferXML::ReadCharP(Char_t *c)
    BeforeIOoperation();
    const char *buf;
    if ((buf = XmlReadValue(xmlio::CharStar)))
-      strcpy(c, buf);
+      strcpy(c, buf);  // NOLINT unfortunately, size of target buffer cannot be controlled here
 }
 
 ////////////////////////////////////////////////////////////////////////////////
