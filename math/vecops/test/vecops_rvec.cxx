@@ -772,6 +772,20 @@ TEST(VecOps, Argsort)
    CheckEqual(i, ref);
 }
 
+TEST(VecOps, ArgsortWithComparisonOperator)
+{
+   ROOT::VecOps::RVec<int> v{2, 0, 1};
+   using size_type = typename ROOT::VecOps::RVec<int>::size_type;
+
+   auto i1 = Argsort(v, [](int x, int y){ return x < y; });
+   ROOT::VecOps::RVec<size_type> ref1{1, 2, 0};
+   CheckEqual(i1, ref1);
+
+   auto i2 = Argsort(v, [](int x, int y){ return x > y; });
+   ROOT::VecOps::RVec<size_type> ref2{0, 2, 1};
+   CheckEqual(i2, ref2);
+}
+
 TEST(VecOps, TakeIndices)
 {
    ROOT::VecOps::RVec<int> v0{2, 0, 1};
