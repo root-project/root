@@ -654,6 +654,21 @@ TEST(RDFSnapshotMore, Lazy)
    gSystem->Unlink(fname1);
 }
 
+TEST(RDFSnapshotMore, LazyJitted)
+{
+   const auto treename = "t";
+   const auto fname = "lazyjittedsnapshot.root";
+   // make sure the file is not here beforehand
+   gSystem->Unlink(fname);
+   RDataFrame d(1);
+   RSnapshotOptions opts = {"RECREATE", ROOT::kZLIB, 0, 0, 99, true};
+   auto ds = d.Alias("c0", "rdfentry_").Snapshot(treename, fname, {"c0"}, opts);
+   EXPECT_TRUE(gSystem->AccessPathName(fname)); // This returns FALSE if the file IS there
+   *ds;
+   EXPECT_FALSE(gSystem->AccessPathName(fname));
+   gSystem->Unlink(fname);
+}
+
 TEST(RDFSnapshotMore, LazyNotTriggered)
 {
    {
