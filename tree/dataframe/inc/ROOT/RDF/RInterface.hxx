@@ -2302,7 +2302,7 @@ private:
       const unsigned int nSlots = fLoopManager->GetNSlots();
 
       auto tree = fLoopManager->GetTree();
-      auto helperArgOnHeap = RDFInternal::MakeWeakOnHeap(helperArg);
+      auto helperArgOnHeap = RDFInternal::MakeSharedOnHeap(helperArg);
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       using BaseNodeType_t = typename std::remove_pointer<decltype(upcastNodeOnHeap)>::type::element_type;
@@ -2311,9 +2311,9 @@ private:
       const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*fLoopManager);
       auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
 
-      auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(std::weak_ptr<HelperArgType>),
-                                               typeid(ActionTag), helperArgOnHeap, tree, nSlots, fDefines, fDataSource,
-                                               jittedActionOnHeap);
+      auto toJit = RDFInternal::JitBuildAction(
+         validColumnNames, upcastNodeOnHeap, typeid(std::shared_ptr<HelperArgType>), typeid(ActionTag), helperArgOnHeap,
+         tree, nSlots, fDefines, fDataSource, jittedActionOnHeap);
       fLoopManager->Book(jittedAction.get());
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
