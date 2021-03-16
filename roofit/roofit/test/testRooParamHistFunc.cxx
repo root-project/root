@@ -2,9 +2,12 @@
 // Author: Jonas Rembser, CERN  03/2020
 
 #include "RooParamHistFunc.h"
+#include "RooRealSumPdf.h"
 #include "RooRealVar.h"
+#include "RooUniform.h"
 
 #include "TH1D.h"
+#include "TF1.h"
 
 #include "gtest/gtest.h"
 
@@ -58,4 +61,38 @@ TEST(RooParamHistFunc, Integration)
 
    EXPECT_FLOAT_EQ(phf.createIntegral(x, x)->getVal(), ref);
    EXPECT_FLOAT_EQ(phf.createIntegral(x, x, "R1")->getVal(), refR1);
+}
+
+TEST(RooParamHistFunc, IntegrationAndCloning)
+{
+   // This tests the analytical integration of RooParamHistFunc
+   // after the RooParamHistFunc has been cloned.
+   // The test was inspired by this error reported on the forum:
+   // https://root-forum.cern.ch/t/barlow-beeston-in-subrange/43909/5
+
+   using namespace RooFit;
+
+   RooRealVar x("x", "x", 0, 10);
+   x.setRange("R1", 0, 5);
+   TF1 f1("f1", "1");
+
+   TH1D h1("h1", "h1", 10, 0, 10);
+   h1.FillRandom("f1", 50);
+   RooDataHist dh1("dh1", "dh1", x, &h1);
+
+   RooParamHistFunc ph("ph", "", x, dh1);
+
+   // Combine the RooParamHistFunc with something else in a RooRealSumPdf.
+   // This is do make the test more similar to the Barlow-Beeston test,
+   // which is where the RooParamHistFunc is primarily used.
+   RooUniform uni("uni", "uni", RooArgList(x));
+   RooRealVar frac("frac", "frac", 0.5, 0.0, 1.0);
+   RooRealSumPdf model{"model", "model", ph, uni, frac};
+
+   auto integral = ph.createIntegral(x, x, "R1");
+   auto integralClone = static_cast<RooAbsReal *>(integral->cloneTree());
+
+   RooArgSet nset{x};
+
+   EXPECT_FLOAT_EQ(integralClone->getValV(&nset), integral->getValV(&nset));
 }
