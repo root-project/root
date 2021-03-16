@@ -998,6 +998,8 @@ void swap(RVec<T> &lhs, RVec<T> &rhs)
 /// auto sortIndices = Argsort(v);
 /// sortIndices
 /// // (ROOT::VecOps::RVec<unsigned long> &) { 2, 0, 1 }
+/// Take(v, sortIndices)
+/// // (ROOT::VecOps::RVec<double> &) { 1., 2., 3. }
 /// ~~~
 template <typename T>
 RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
