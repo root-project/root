@@ -1009,6 +1009,29 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
    return i;
 }
 
+/// Return an RVec of indices that sort the input RVec based on a comparison operator
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v {2., 3., 1.};
+/// auto sortIndices = Argsort(v, [](double x, double y) {return x > y;});
+/// sortIndices
+/// // (ROOT::VecOps::RVec<unsigned long> &) { 1, 0, 2 }
+/// Take(v, sortIndices);
+/// // (ROOT::VecOps::RVec<double> &) { 3., 2., 1. }
+/// ~~~
+template <typename T, typename Compare>
+RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v, Compare &&c)
+{
+   using size_type = typename RVec<T>::size_type;
+   RVec<size_type> i(v.size());
+   std::iota(i.begin(), i.end(), 0);
+   std::sort(i.begin(), i.end(),
+             [&v, &c](size_type i1, size_type i2) { return c(v[i1], v[i2]); });
+   return i;
+}
+
 /// Return elements of a vector at given indices
 ///
 /// Example code, at the ROOT prompt:
