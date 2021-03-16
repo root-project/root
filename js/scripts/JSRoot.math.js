@@ -48,11 +48,6 @@ JSROOT.define([], () =>  {
          p = Math.floor(q);
          if ( p==q )//_unur_FP_same(p,q)
             return Number.POSITIVE_INFINITY;
-         i = Math.round(p);
-         if ( (i & 1) == 0 )
-            sgngam = -1;
-         else
-            sgngam = 1;
          z = q - p;
          if ( z > 0.5 ) {
             p += 1.0;
@@ -81,11 +76,8 @@ JSROOT.define([], () =>  {
             u = x + p;
          }
          if ( z < 0.0 ) {
-            sgngam = -1;
             z = -z;
          }
-         else
-            sgngam = 1;
          if ( u == 2.0 )
             return Math.log(z);
          p -= 2.0;

@@ -284,10 +284,11 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       let left_pos = d3.select("#" + this.gui_div + "_drawing").style('left');
 
-      line = main.insert("div",".jsroot_browser_area").attr("id",id)
-                 .classed("jsroot_status_area", true)
-                 .style('position',"absolute").style('left',left_pos).style('height',"20px").style('bottom',0).style('right',0)
-                 .style('margin',0).style('border',0);
+      main.insert("div",".jsroot_browser_area")
+          .attr("id",id)
+          .classed("jsroot_status_area", true)
+          .style('position',"absolute").style('left',left_pos).style('height',"20px").style('bottom',0).style('right',0)
+          .style('margin',0).style('border',0);
 
       let hsepar = main.insert("div",".jsroot_browser_area")
                        .classed("jsroot_separator", true).classed("jsroot_h_separator", true)
@@ -337,7 +338,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       if ((hsepar===null) && first_time && !main.select(".jsroot_h_separator").empty()) {
          // if separator set for the first time, check if status line present
          hsepar = main.select(".jsroot_h_separator").style('bottom');
-         if ((typeof hsepar=='string') && (hsepar.indexOf('px')==hsepar.length-2))
+         if ((typeof hsepar=='string') && (hsepar.length > 2) && (hsepar.indexOf('px') == hsepar.length-2))
             hsepar = hsepar.substr(0,hsepar.length-2);
          else
             hsepar = null;
@@ -1127,7 +1128,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             +'<input style="padding:3px;margin-right:5px;"'
             +'       class="gui_ReadFileBtn" type="button" title="Read the Selected File" value="Load"/>'
             +'<input style="padding:3px;margin-right:5px;"'
-            +'       class="gui_ResetUIBtn" type="button" title="Close all opened files and clear drawings" value="Reset"/>'
+            +'       class="gui_ResetUIBtn" type="button" title="Close all opened files and clear drawings" value="Reset"/>';
       } else if (this.no_select == "file") {
          guiCode += '<div style="display:flex;flex-direction:row">';
       }
@@ -1150,11 +1151,11 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             let filename = main.select(".gui_urlToLoad").property('value').trim();
             if (!filename) return;
 
-            if ((filename.toLowerCase().lastIndexOf(".json") == filename.length-5))
+            if (filename.toLowerCase().lastIndexOf(".json") == filename.length-5)
                this.openJsonFile(filename);
             else
                this.openRootFile(filename);
-         }
+         };
 
          jmain.find(".gui_selectFileName").val("")
               .change(function() { jmain.find(".gui_urlToLoad").val($(this).val()); });
@@ -1186,7 +1187,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
                localfile_read_callback = resolveFunc;
                $("#" + this.gui_div + " .jsroot_browser").find(".gui_localFile").click();
             });
-         }
+         };
       }
 
       let jlayout = jmain.find(".gui_layout");
@@ -1641,7 +1642,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
                   PopupWindow($(this));
                },
                stop: function(event, ui) {
-                  let rect = { width : ui.size.width-1, height : ui.size.height - $(this).find(".flex_header").height()-1 };
+                  let rect = { width:  ui.size.width - 1, height: ui.size.height - $(this).find(".flex_header").height() - 1 };
                   JSROOT.resize($(this).find(".flex_draw").get(0), rect);
                }
              })
@@ -1904,10 +1905,10 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             if (!args.drawopt) delete args.drawopt;
 
             args.numentries = parseInt(frame.find('.treedraw_number').val());
-            if (isNaN(args.numentries)) delete args.numentries;
+            if (!Number.isInteger(args.numentries)) delete args.numentries;
 
             args.firstentry = parseInt(frame.find('.treedraw_first').val());
-            if (isNaN(args.firstentry)) delete args.firstentry;
+            if (!Number.isInteger(args.firstentry)) delete args.firstentry;
          }
 
          if (args.drawopt) JSROOT.cleanup(this.drawid);
@@ -1961,7 +1962,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
                JSROOT.cleanup(this.drawid);
                JSROOT.draw(this.drawid, res, option);
             });
-         }
+         };
 
          if (this.askey) {
             // first let read tree from the file
