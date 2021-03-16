@@ -628,7 +628,7 @@
       }
 
       function load_module(req, m) {
-         if (m.extract && !m.dep && globalThis[m.extract])
+         if (m.extract && !m.dep && !m.loading && globalThis[m.extract])
             return finish_loading(m, globalThis[m.extract])
 
          let element = document.createElement("script");
