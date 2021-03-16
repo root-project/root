@@ -23,6 +23,7 @@ The following people have contributed to this new version:
  Hadrien Grasland, IJCLab/LAL,\
  Enrico Guiraud, CERN/SFT,\
  Claire Guyot, CERN/SFT,\
+ Emmanouil Michalainas, CERN/SFT,\
  Stephan Hageboeck, CERN/SFT,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
@@ -42,6 +43,7 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+- [`RooAbsReal::evaluateBatch()`](https://root.cern.ch/doc/v624/classRooAbsReal.html#a261580dfe94f2b107f9b9a77cad78a62) has been removed in favour of the faster evaluateSpan(). See section "RooFit Libraries" for instructions on how to use [`RooAbsReal::evaluateSpan()`](https://root.cern.ch/doc/v624/classRooAbsReal.html#a1e5129ffbc63bfd04c01511fd354b1b8).
 
 ## Core Libraries
 
@@ -180,6 +182,51 @@ See [Demo notebook in SWAN](https://github.com/hageboeck/rootNotebooks),
 [EPJ Web Conf. 245 (2020) 06007](https://www.epj-conferences.org/articles/epjconf/abs/2020/21/epjconf_chep2020_06007/epjconf_chep2020_06007.html),
 [arxiv:2012.02746](https://arxiv.org/abs/2012.02746).
 
+#### RooBatchCompute Library
+The library that contains the optimised computation functions is called `RooBatchCompute`. The PDFs contained in this library are highly optimized, and there is currently work in progress for further optimization using CUDA and multi-threaded computations. If you use PDFs that are not part of the official RooFit, you are very well invited to add them to RooFit by [submitting a ticket](https://github.com/root-project/root/issues/new) or a [pull request](https://github.com/root-project/root/pulls).
+
+#### Benefiting from batch computations by overriding `evaluateSpan()`
+For PDFs that are not part of RooFit, it is possible to benefit from batch computations without vector extensions. To do so, consult the [RooBatchCompute readme](https://github.com/root-project/root/tree/v6-24-00-patches/roofit/batchcompute).
+
+
+#### Migrating PDFs that override the deprecated `evaluateBatch()`
+In case you have created a custom PDF which overrides `evaluateBatch()`, please follow these steps to update your code to the newest version:
+1. Change the signature of the function both in the source and header file:
+```diff
+- RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchSize) const
++ RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const
+```
+2. Include `RunContext.h` and `BracketAdapter.h`. 
+3. Use `getValues()` instead of `getValBatch()` to retrieve a RooSpan for the data of every value.
+```diff
+- auto xData = x.getValBatch(begin, batchSize);
++ auto xData = x->getValues(evalData,normSet);
+```
+4. Retrieve the number of events by getting the maximum size of the input spans.
+```c++
+  size_t nEvents=0;
+  for (auto& i:{xData,meanData,sigmaData})
+    nEvents = std::max(nEvents,i.size());
+```
+5. Create the output batch by calling `RunContext::makeBatch()`
+```diff
+- auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
++ auto output = evalData.makeBatch(this, nEvents);
+```
+6. **DO NOT use `RooSpan::isBatch()` and `RooSpan::empty()` methods!** Instead, distinguish between scalar (RooSpan of size 1) and vector (RooSpan of size>1) parameters as shown below.
+```diff
+- const bool batchX = !xData.empty();
++ const bool batchX = xData.size()>1;
+```
+7. Append `RooBatchCompute::` to the classes that have been moved to the RooBatchCompute Library: `RooSpan`,`BracketAdapterWithMask`, `BracketAdapter`, `RunContext`. Alternatively, you can write
+```c++
+using namespace RooBatchCompute;
+```
+8. Replace `_rf_fast_<function>` with `RooBatchCompute::fast_<function>` and include `RooVDTHeaders.h` (if applicable).
+```diff
+- output[i] = _rf_fast_exp(arg*arg * halfBySigmaSq);
++ output[i] = RooBatchCompute::fast_exp(arg*arg * halfBySigmaSq);
+```
 
 ### Unbiased binned fits
 When RooFit performs binned fits, it takes the probability density at the bin centre as a proxy for the probability in the bin. This can lead to a bias.
