@@ -271,7 +271,7 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 {
    static Int_t px1old, py1old, px2old, py2old;
    static Int_t px1, py1, px2, py2, pxl, pyl, pxt, pyt;
-   static TPad *padsav;
+   static TPad *padsav = nullptr;
    Double_t xlow, ylow, xup, yup;
    TPad * newpad;
 
@@ -338,7 +338,10 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
       newpad->Draw();
       TCanvas *canvas = gPad->GetCanvas();
       if (canvas) canvas->Selected((TPad*)gPad, newpad, kButton1Down);
-      padsav->cd();
+      if (padsav) {
+         padsav->cd();
+         padsav = nullptr;
+      }
       break;
    }
 }
