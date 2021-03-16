@@ -182,7 +182,7 @@ namespace TStreamerInfoActions {
 
       template <typename action_t>
       void AddAction( action_t action, TConfiguration *conf ) {
-         fActions.push_back( TConfiguredAction(action, conf) );
+         fActions.emplace_back( action, conf );
       }
       void AddAction(const TConfiguredAction &action ) {
          fActions.push_back( action );
