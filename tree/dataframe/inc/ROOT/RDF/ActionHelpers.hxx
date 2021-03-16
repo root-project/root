@@ -35,6 +35,7 @@
 #include "TClassEdit.h"
 #include "TClassRef.h"
 #include "TDirectory.h"
+#include "TError.h" // for R__ASSERT, Warning
 #include "TFile.h" // for SnapshotHelper
 #include "TH1.h"
 #include "TGraph.h"
@@ -1340,15 +1341,14 @@ public:
 
    void Finalize()
    {
-      if (fOutputFile && fOutputTree) {
-         // use AutoSave to flush TTree contents because TTree::Write writes in gDirectory, not in fDirectory
-         fOutputTree->AutoSave("flushbaskets");
-         // must destroy the TTree first, otherwise TFile will delete it too, leading to a double delete
-         fOutputTree.reset();
-         fOutputFile->Close();
-      } else {
-         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
-      }
+      R__ASSERT(fOutputTree != nullptr);
+      R__ASSERT(fOutputFile != nullptr);
+
+      // use AutoSave to flush TTree contents because TTree::Write writes in gDirectory, not in fDirectory
+      fOutputTree->AutoSave("flushbaskets");
+      // must destroy the TTree first, otherwise TFile will delete it too leading to a double delete
+      fOutputTree.reset();
+      fOutputFile->Close();
    }
 
    std::string GetActionName() { return "Snapshot"; }
@@ -1501,6 +1501,11 @@ public:
 
    void Finalize()
    {
+      const bool allNullFiles =
+         std::all_of(fOutputFiles.begin(), fOutputFiles.end(),
+                     [](const std::shared_ptr<ROOT::Experimental::TBufferMergerFile> &ptr) { return ptr == nullptr; });
+      R__ASSERT(!allNullFiles);
+
       auto fileWritten = false;
       for (auto &file : fOutputFiles) {
          if (file) {
@@ -1511,12 +1516,8 @@ public:
       }
 
       if (!fileWritten) {
-         if (std::none_of(fOutputFiles.begin(), fOutputFiles.end(), [] (const std::shared_ptr<ROOT::Experimental::TBufferMergerFile> ptr) { return bool(ptr); })) {
-            Warning("Snapshot",
-                    "No input entries (input TTree was empty or no entry passed the Filters). Output TTree is empty.");
-         } else {
-            Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
-         }
+         Warning("Snapshot",
+                 "No input entries (input TTree was empty or no entry passed the Filters). Output TTree is empty.");
       }
 
       // flush all buffers to disk by destroying the TBufferMerger
