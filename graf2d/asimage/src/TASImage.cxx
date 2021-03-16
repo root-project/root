@@ -5978,7 +5978,7 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return in-memory buffer compressed according image type.
-/// Buffer must be deallocated after usage.
+/// Buffer must be deallocated after usage with free(buffer) call.
 /// This method can be used for sending images over network.
 
 void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
