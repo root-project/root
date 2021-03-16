@@ -1890,7 +1890,7 @@ void TBufferSQL2::ReadTString(TString &s)
          else
             nbig = nwh;
 
-         char *data = new char[nbig];
+         char *data = new char[nbig+1];
          data[nbig] = 0;
          ReadFastArray(data, nbig);
          s = data;
