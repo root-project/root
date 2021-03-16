@@ -57,15 +57,15 @@ The namespace RooFit contains mostly switches that change the behaviour of funct
 
 These switches are documented with the relevant functions, e.g. RooAbsPdf::fitTo().
 For an introduction to RooFit (not the namespace), check the [user's guides](https://root.cern.ch/root-user-guides-and-manuals),
-[courses](https://root.cern.ch/courses) or [RooFit in 20 minutes](https://root.cern.ch/roofit-20-minutes).
+[courses](https://root.cern.ch/courses) or [the RooFit chapter of the Manual](https://root.cern/manual/roofit/).
 */
 namespace RooFit {
 
 /// Verbosity level for RooMsgService::StreamConfig in RooMsgService
 enum MsgLevel { DEBUG=0, INFO=1, PROGRESS=2, WARNING=3, ERROR=4, FATAL=5 } ;
 /// Topics for a RooMsgService::StreamConfig in RooMsgService
-enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration=16, LinkStateMgmt=32, 
-	 Eval=64, Caching=128, Optimization=256, ObjectHandling=512, InputArguments=1024, Tracing=2048, 
+enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration=16, LinkStateMgmt=32,
+	 Eval=64, Caching=128, Optimization=256, ObjectHandling=512, InputArguments=1024, Tracing=2048,
 	 Contents=4096, DataHandling=8192, NumIntegration=16384, FastEvaluations=1<<15, HistFactory=1<<16 };
 enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
@@ -155,8 +155,8 @@ RooCmdArg Link(const std::map<std::string,RooAbsData*>&) ;
 RooCmdArg Import(RooDataSet& data) ;
 RooCmdArg Import(TTree& tree) ;
 RooCmdArg ImportFromFile(const char* fname, const char* tname) ;
-RooCmdArg StoreError(const RooArgSet& aset) ; 
-RooCmdArg StoreAsymError(const RooArgSet& aset) ; 
+RooCmdArg StoreError(const RooArgSet& aset) ;
+RooCmdArg StoreAsymError(const RooArgSet& aset) ;
 RooCmdArg OwnLinked() ;
 
 /** @} */
@@ -178,7 +178,7 @@ RooCmdArg AutoSymRange(const RooAbsData& data, Double_t marginFactor=0.1) ;
 RooCmdArg AutoRange(const RooAbsData& data, Double_t marginFactor=0.1) ;
 
 // RooAbsData::createHistogram arguments
-RooCmdArg AutoSymBinning(Int_t nbins=100, Double_t marginFactor=0.1) ; 
+RooCmdArg AutoSymBinning(Int_t nbins=100, Double_t marginFactor=0.1) ;
 RooCmdArg AutoBinning(Int_t nbins=100, Double_t marginFactor=0.1) ;
 
 // RooAbsReal::fillHistogram arguments
@@ -210,7 +210,7 @@ RooCmdArg Verbose(Bool_t flag=kTRUE) ;
 RooCmdArg Save(Bool_t flag=kTRUE) ;
 RooCmdArg Timer(Bool_t flag=kTRUE) ;
 RooCmdArg PrintLevel(Int_t code) ;
-RooCmdArg Warnings(Bool_t flag=kTRUE) ; 
+RooCmdArg Warnings(Bool_t flag=kTRUE) ;
 RooCmdArg Strategy(Int_t code) ;
 RooCmdArg InitialHesse(Bool_t flag=kTRUE) ;
 RooCmdArg Hesse(Bool_t flag=kTRUE) ;
@@ -257,8 +257,8 @@ RooCmdArg NumEvents(Double_t numEvents) ;
 RooCmdArg AutoBinned(Bool_t flag=kTRUE) ;
 RooCmdArg GenBinned(const char* tag) ;
 RooCmdArg AllBinned() ;
-RooCmdArg ExpectedData(Bool_t flag=kTRUE) ; 
-RooCmdArg Asimov(Bool_t flag=kTRUE) ; 
+RooCmdArg ExpectedData(Bool_t flag=kTRUE) ;
+RooCmdArg Asimov(Bool_t flag=kTRUE) ;
 
 /** @} */
 
@@ -266,7 +266,7 @@ RooCmdArg Asimov(Bool_t flag=kTRUE) ;
 RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
 RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
 RooCmdArg AxisLabel(const char* name) ;
-RooCmdArg Scaling(Bool_t flag) ; 
+RooCmdArg Scaling(Bool_t flag) ;
 
 
 // RooAbsReal::createHistogram arguments
@@ -312,9 +312,9 @@ RooCmdArg Color(Color_t color) ;
 
 // RooWorkspace::import() arguments
 RooCmdArg RenameConflictNodes(const char* suffix, Bool_t renameOrigNodes=kFALSE) ;
-RooCmdArg RenameAllNodes(const char* suffix) ; 
-RooCmdArg RenameAllVariables(const char* suffix) ; 
-RooCmdArg RenameAllVariablesExcept(const char* suffix,const char* exceptionList) ; 
+RooCmdArg RenameAllNodes(const char* suffix) ;
+RooCmdArg RenameAllVariables(const char* suffix) ;
+RooCmdArg RenameAllVariablesExcept(const char* suffix,const char* exceptionList) ;
 RooCmdArg RenameVariable(const char* inputName, const char* outputName) ;
 RooCmdArg Rename(const char* suffix) ;
 RooCmdArg RecycleConflictNodes(Bool_t flag=kTRUE) ;
@@ -329,7 +329,7 @@ RooCmdArg SplitParamConstrained(const RooRealVar& var, const RooAbsCategory& cat
 RooCmdArg Restrict(const char* catName, const char* stateNameList) ;
 
 // RooAbsPdf::createCdf() arguments
-RooCmdArg SupNormSet(const RooArgSet& nset) ; 
+RooCmdArg SupNormSet(const RooArgSet& nset) ;
 RooCmdArg ScanParameters(Int_t nbins,Int_t intOrder) ;
 RooCmdArg ScanNumCdf() ;
 RooCmdArg ScanAllCdf() ;
@@ -340,8 +340,8 @@ RooCmdArg MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,
 		   const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
 		   const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
 		   const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
- 
-RooConstVar& RooConst(Double_t val) ; 
+
+RooConstVar& RooConst(Double_t val) ;
 
 // End group CmdArgs:
 /**
@@ -356,13 +356,13 @@ RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2) ;
 RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3) ;
 RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4) ;
 RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
+RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
             const RooAbsArg& v6) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
+RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
             const RooAbsArg& v6, const RooAbsArg& v7) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
+RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
             const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
+RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
             const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8, const RooAbsArg& v9) ;
 
 RooArgList L(const RooAbsArg& v1) ;
@@ -370,13 +370,13 @@ RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2) ;
 RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3) ;
 RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4) ;
 RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
+RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
              const RooAbsArg& v6) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
+RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
              const RooAbsArg& v6, const RooAbsArg& v7) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
+RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
              const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
+RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
              const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8, const RooAbsArg& v9) ;
 
 RooConstVar& C(Double_t value) ;
