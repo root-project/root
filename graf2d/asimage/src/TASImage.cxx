@@ -5985,8 +5985,6 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
 {
    static ASImageExportParams params;
    Bool_t ret = kFALSE;
-   int   isize = 0;
-   char *ibuff = 0;
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
    if (!img) return;
@@ -6000,8 +5998,8 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
    }
 
    if (!ret) {
-      *size = isize;
-      *buffer = ibuff;
+      *size = 0;
+      *buffer = nullptr;
    }
 }
 
@@ -6167,7 +6165,6 @@ void TASImage::CreateThumbnail()
 void TASImage::Streamer(TBuffer &b)
 {
    Bool_t image_type = 0;
-   char *buffer = 0;
    int size = 0;
    int w, h;
    UInt_t R__s, R__c;
@@ -6209,7 +6206,7 @@ void TASImage::Streamer(TBuffer &b)
 
       if (image_type != 0) {     // read PNG compressed image
          b >> size;
-         buffer = new char[size];
+         char *buffer = new char[size];
          b.ReadFastArray(buffer, size);
          SetImageBuffer(&buffer, TImage::kPng);
          delete [] buffer;
@@ -6239,10 +6236,11 @@ void TASImage::Streamer(TBuffer &b)
       b << image_type;
 
       if (image_type != 0) {     // write PNG compressed image
+         char *buffer = nullptr;
          GetImageBuffer(&buffer, &size, TImage::kPng);
          b << size;
          b.WriteFastArray(buffer, size);
-         delete buffer;
+         free(buffer);
       } else {                   // write vector  with palette
          TAttImage::Streamer(b);
          b << fImage->width;
@@ -6745,10 +6743,11 @@ void TASImage::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    }
 
    GetImageBuffer(&buf, &sz, TImage::kXpm);
+   TString str = buf;
+   free(buf);
 
    TString name = GetName();
    name.ReplaceAll(".", "_");
-   TString str = buf;
    static int ii = 0;
    ii++;
 
