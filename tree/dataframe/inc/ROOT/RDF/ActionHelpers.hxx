@@ -1341,9 +1341,9 @@ public:
    void Finalize()
    {
       if (fOutputFile && fOutputTree) {
-         // because TTree::Write writes in gDirectory, not in fDirectory
+         // use AutoSave to flush TTree contents because TTree::Write writes in gDirectory, not in fDirectory
          fOutputTree->AutoSave("flushbaskets");
-         // must destroy the TTree first, otherwise TFile will delete it too leading to a double delete
+         // must destroy the TTree first, otherwise TFile will delete it too, leading to a double delete
          fOutputTree.reset();
          fOutputFile->Close();
       } else {
