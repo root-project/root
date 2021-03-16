@@ -9,12 +9,11 @@
 ############################################################################
 #Author: Sitong An, Lorenzo Moneta 10/03/2011
 
-include_directories(SYSTEM ${Protobuf_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR} )
+#sofie is built only if protobuf is found
 
-#add_custom_target(proto_dep DEPENDS ${PROTO_SRCS} ${PROTO_HDRS})
+include_directories(SYSTEM ${Protobuf_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR} )
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS "onnx_proto3")
 set_source_files_properties(${PROTO_SRCS} ${PROTO_HDRS} PROPERTIES GENERATED TRUE)
-#set_source_files_properties(onnx.proto3.pb.cc onnx.proto3.pb.h PROPERTIES GENERATED TRUE)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(SOFIE
   HEADERS
@@ -27,12 +26,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(SOFIE
    TMVA/ROperator_Transpose.hxx
    TMVA/SOFIE_common.hxx
    ${PROTO_HDRS}
-   #onnx.proto3.pb.h
   SOURCES
     src/RModel.cxx
     src/RModelParser_ONNX.cxx
     src/SOFIE_common.cxx
-    #onnx.proto3.pb.cc
     ${PROTO_SRCS}
 
   LIBRARIES
