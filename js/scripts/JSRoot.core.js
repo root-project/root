@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "15/03/2021";
+   JSROOT.version_date = "16/03/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -194,6 +194,15 @@
       return res;
    }
 
+   /** @summary Check if prototype string match to array (typed on untyped) */
+   function is_array_proto(proto) {
+       if ((proto.length < 14) || (proto.indexOf('[object ') != 0)) return false;
+       let p = proto.indexOf('Array]');
+       return (p > 0) && (p == proto.length-6);
+   }
+
+   _.is_array_proto = is_array_proto;
+
    /** @summary Specialized JSROOT constants, used in {@link JSROOT.settings}
      * @namespace
      * @private */
@@ -266,7 +275,7 @@
                case "alwaysmathjax": return this.AlwaysMathJax;
             }
             let code = parseInt(s);
-            return (!isNaN(code) && (code >= this.Off) && (code <= this.AlwaysMathJax)) ? code : this.Normal;
+            return (Number.isInteger(code) && (code >= this.Off) && (code <= this.AlwaysMathJax)) ? code : this.Normal;
          }
       }
    };
@@ -628,7 +637,7 @@
       }
 
       function load_module(req, m) {
-         if (m.extract && !m.dep && globalThis[m.extract])
+         if (m.extract && !m.dep && !m.loading && globalThis[m.extract])
             return finish_loading(m, globalThis[m.extract])
 
          let element = document.createElement("script");
@@ -662,10 +671,8 @@
                      failed: function(msg) { this.processed = true; if (this.reject) this.reject(Error(msg || "JSROOT.require failed")); } };
 
          if (req.factoryFunc && req.thisModule) {
-
-            let m = _.modules[req.thisModule];
-            if (!m)
-               m = _.modules[req.thisModule] = { jsroot: true, src: thisSrc, loading: true };
+            if (!(_.modules[req.thisModule]))
+               _.modules[req.thisModule] = { jsroot: true, src: thisSrc, loading: true };
          }
 
          for (let k = 0; k < need.length; ++k) {
@@ -831,7 +838,7 @@
          if (typeof value === 'string') {
             if (newfmt || (value.length < 6) || (value.indexOf("$ref:") !== 0)) return;
             let ref = parseInt(value.substr(5));
-            if (isNaN(ref) || (ref < 0) || (ref >= map.length)) return;
+            if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length)) return;
             newfmt = false;
             return map[ref];
          }
@@ -841,7 +848,7 @@
          let proto = Object.prototype.toString.apply(value);
 
          // scan array - it can contain other objects
-         if ((proto.indexOf('[object')==0) && (proto.indexOf('Array]')>0)) {
+         if (is_array_proto(proto)) {
              for (let i = 0; i < value.length; ++i) {
                 let res = unref_value(value[i]);
                 if (res!==undefined) value[i] = res;
@@ -853,7 +860,7 @@
 
          if ((newfmt!==false) && (len===1) && (ks[0]==='$ref')) {
             const ref = parseInt(value['$ref']);
-            if (isNaN(ref) || (ref < 0) || (ref >= map.length)) return;
+            if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length)) return;
             newfmt = true;
             return map[ref];
          }
@@ -972,7 +979,7 @@
       }
 
       // process typed array
-      if ((proto.indexOf('[object ') == 0) && (proto.indexOf('Array]') == proto.length-6)) {
+      if (is_array_proto(proto)) {
          let tgt = [];
          map.obj.push(src);
          map.clones.push(tgt);
@@ -1028,8 +1035,8 @@
          let proto = Object.prototype.toString.apply(value);
 
          // typed array need to be converted into normal array, otherwise looks strange
-         if ((proto.indexOf('[object ') == 0) && (proto.indexOf('Array]') == proto.length-6)) {
-            let arr = new Array(value.length)
+         if ((proto.length >= 14) && (proto.indexOf('[object ') == 0) && (proto.indexOf('Array]') == proto.length-6)) {
+            let arr = new Array(value.length);
             for (let i = 0; i < value.length; ++i)
                arr[i] = copy_value(value[i]);
             return arr;
@@ -1080,7 +1087,7 @@
          opts: {},
          has: function(opt) { return this.opts[opt] !== undefined; },
          get: function(opt,dflt) { let v = this.opts[opt]; return v!==undefined ? v : dflt; }
-      }
+      };
 
       if (!url || (typeof url !== 'string')) {
          if (JSROOT.settings.IgnoreUrlOptions || (typeof document === 'undefined')) return res;
@@ -1186,7 +1193,7 @@
 
          if ((this.readyState === 2) && this.expected_size) {
             let len = parseInt(this.getResponseHeader("Content-Length"));
-            if (!isNaN(len) && (len > this.expected_size) && !JSROOT.settings.HandleWrongHttpResponse) {
+            if (Number.isInteger(len) && (len > this.expected_size) && !JSROOT.settings.HandleWrongHttpResponse) {
                this.did_abort = true;
                this.abort();
                return this.error_callback(Error('Server response size ' + len + ' larger than expected ' + this.expected_size + '. Abort I/O operation'), 599);
@@ -1232,7 +1239,7 @@
          }
 
          this.http_callback(this.response);
-      }
+      };
 
       xhr.open(method, url, async);
 
@@ -1283,7 +1290,7 @@
          let scripts = url, loadNext = () => {
             if (!scripts.length) return Promise.resolve(true);
             return JSROOT.loadScript(scripts.shift()).then(loadNext, loadNext);
-         }
+         };
          return loadNext();
       }
 

@@ -71,7 +71,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          fp.camera.position.set(-1.6*max3d, -3.5*max3d, 1.4*fp.size_z3d);
 
       if (pad && (first_time || !fp.zoomChangedInteractive()))
-         if (!isNaN(pad.fTheta) && !isNaN(pad.fPhi) && ((pad.fTheta !== fp.camera_Theta) || (pad.fPhi !== fp.camera_Phi))) {
+         if (Number.isFinite(pad.fTheta) && Number.isFinite(pad.fPhi) && ((pad.fTheta !== fp.camera_Theta) || (pad.fPhi !== fp.camera_Phi))) {
             max3d = 3*Math.max(fp.size_xy3d, fp.size_z3d);
             let phi = (-pad.fPhi-90)/180*Math.PI, theta = pad.fTheta/180*Math.PI;
 
@@ -246,11 +246,11 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          }
 
          return (tip && tip.lines) ? tip : "";
-      }
+      };
 
       this.control.ProcessMouseLeave = function() {
          axis_painter.highlightBin3D(null);
-      }
+      };
 
       this.control.contextMenu = function(pos, intersects) {
          let kind = "painter", p = obj_painter;
@@ -266,7 +266,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          let fp = obj_painter.getFramePainter();
          if (fp && fp.showContextMenu)
             fp.showContextMenu(kind, pos, p);
-      }
+      };
 
    }
 
@@ -372,7 +372,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       if (mainp && (!mainp.provideUserTooltip || !mainp.hasUserTooltip())) mainp = null;
 
       if (this.tooltip_selfmesh) {
-         changed_self = (this.tooltip_selfmesh !== selfmesh)
+         changed_self = (this.tooltip_selfmesh !== selfmesh);
          this.tooltip_selfmesh.material.color = this.tooltip_selfmesh.save_color;
          delete this.tooltip_selfmesh;
          changed = true;
@@ -567,7 +567,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             if (!xticks.last_major()) {
                let space = (xticks.next_major_grpos() - grx);
                if (draw_width > 0)
-                  text_scale = Math.min(text_scale, 0.9*space/draw_width)
+                  text_scale = Math.min(text_scale, 0.9*space/draw_width);
                if (this.x_handle.isCenteredLabels()) text3d.grx += space/2;
             }
          }
@@ -597,7 +597,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             pos = min + pos*(max-min);
          }
          return pos;
-      }
+      };
 
       function CreateZoomMesh(kind, size_3d, use_y_for_z) {
          let geom = new THREE.Geometry();
@@ -661,7 +661,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             let tgtmesh = this.children ? this.children[0] : null, gg, kind = this.zoom;
             if (!pnt1 || !pnt2) {
                if (tgtmesh) {
-                  this.remove(tgtmesh)
+                  this.remove(tgtmesh);
                   jsrp.disposeThreejsObject(tgtmesh);
                }
                return tgtmesh;
@@ -697,7 +697,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       }
 
       let xcont = new THREE.Object3D();
-      xcont.position.set(0, grminy, grminz)
+      xcont.position.set(0, grminy, grminz);
       xcont.rotation.x = 1/4*Math.PI;
       xcont.xyid = 2;
       let xtickslines = jsrp.createLineSegments( ticks, lineMaterial );
@@ -776,7 +776,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             if (!yticks.last_major()) {
                let space = (yticks.next_major_grpos() - gry);
                if (draw_width > 0)
-                  text_scale = Math.min(text_scale, 0.9*space/draw_width)
+                  text_scale = Math.min(text_scale, 0.9*space/draw_width);
                if (this.y_handle.isCenteredLabels()) text3d.gry += space/2;
             }
          }
@@ -1079,7 +1079,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          if (this.options.Zero || (axis_zmin>0)) return true;
 
          return this._show_empty_bins;
-      }
+      };
 
       // if bin ID fit into 16 bit, use smaller arrays for intersect indexes
       let use16indx = (histo.getBin(i2, j2) < 0xFFFF),
@@ -1237,8 +1237,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          mesh.handle = handle;
 
          mesh.tooltip = function(intersect) {
-            if (isNaN(intersect.faceIndex)) {
-               console.error('faceIndex not provided, check three.js version', THREE.REVISION, 'expected r102');
+            if (!Number.isInteger(intersect.faceIndex)) {
+               console.error('faceIndex not provided, check three.js version', THREE.REVISION, 'expected r121');
                return null;
             }
 
@@ -1268,7 +1268,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             if (p.is_projection && (p.getDimension()==2)) tip.$painter = p; // used only for projections
 
             return tip;
-         }
+         };
 
          main.toplevel.add(mesh);
 
@@ -1574,7 +1574,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
       // first adjust ranges
 
-      let main_grz = !main.logz ? main.grz : function(value) { return value < axis_zmin ? -0.1 : main.grz(value); }
+      let main_grz = !main.logz ? main.grz : value => (value < axis_zmin) ? -0.1 : main.grz(value);
 
       if ((handle.i2 - handle.i1 < 2) || (handle.j2 - handle.j1 < 2)) return;
 
@@ -1980,7 +1980,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
           // return true if minimal histogram value should be skipped
           if (this.options.Zero || (zmin > 0)) return false;
           return !this._show_empty_bins;
-       }
+       };
 
        // loop over the points - first loop counts points, second fill arrays
        for (let loop=0;loop<2;++loop) {
@@ -2042,8 +2042,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
        line.tip_color = (this.getObject().fLineColor===3) ? 0xFF0000 : 0x00FF00;
 
        line.tooltip = function(intersect) {
-          if (isNaN(intersect.index)) {
-             console.error('segment index not provided, check three.js version', THREE.REVISION, 'expected r102');
+          if (!Number.isInteger(intersect.index)) {
+             console.error('segment index not provided, check three.js version', THREE.REVISION, 'expected r121');
              return null;
           }
 
@@ -2065,7 +2065,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
           tip.color = this.tip_color;
 
           return tip;
-       }
+       };
 
        main.toplevel.add(line);
    }
@@ -2078,7 +2078,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
           axis_zmin = pmain.z_handle.gr.domain()[0],
           axis_zmax = pmain.z_handle.gr.domain()[1],
           colindx, bin, i, len = histo.fBins.arr.length,
-          z0 = pmain.grz(axis_zmin), z1 = z0;
+          z0 = pmain.grz(axis_zmin), z1;
 
       // use global coordinates
       this.maxbin = this.gmaxbin;
@@ -2517,8 +2517,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       mesh.tip_color = (histo.fMarkerColor===3) ? 0xFF0000 : 0x00FF00;
 
       mesh.tooltip = function(intersect) {
-         if (isNaN(intersect.index)) {
-            console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r102');
+         if (!Number.isInteger(intersect.index)) {
+            console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r121');
             return null;
          }
 
@@ -2539,7 +2539,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          tip.opacity = 0.3;
 
          return tip;
-      }
+      };
 
       return true;
    }
@@ -2787,7 +2787,6 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       for(let ncol=0;ncol<cols_size.length;++ncol) {
          if (!cols_size[ncol]) continue; // ignore dummy colors
 
-         nbins = cols_size[ncol]; // how many bins with specified color
          let nseq = cols_sequence[ncol];
 
          // BufferGeometries that store geometry of all bins
@@ -2815,8 +2814,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          combined_bins.use_scale = use_scale;
 
          combined_bins.tooltip = function(intersect) {
-            if (isNaN(intersect.faceIndex)) {
-               console.error('intersect.faceIndex not provided, check three.js version', THREE.REVISION, 'expected r102');
+            if (!Number.isInteger(intersect.faceIndex)) {
+               console.error('intersect.faceIndex not provided, check three.js version', THREE.REVISION, 'expected r121');
                return null;
             }
             let indx = Math.floor(intersect.faceIndex / this.bins_faces);
@@ -2838,7 +2837,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             tip.color = this.tip_color;
 
             return tip;
-         }
+         };
 
          main.toplevel.add(combined_bins);
 
@@ -3127,7 +3126,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       function sqr(v) { return v*v; }
 
       function graph2DTooltip(intersect) {
-         if (isNaN(intersect.index)) {
+         if (!Number.isInteger(intersect.index)) {
             console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r121');
             return null;
          }
@@ -3166,7 +3165,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
                      "y: " + p.axisAsText("y", this.graph.fY[indx]),
                      "z: " + p.axisAsText("z", this.graph.fZ[indx])
                    ]
-         }
+         };
       }
 
       // try to define scale-down factor
@@ -3317,7 +3316,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
             mesh.graph = graph;
             mesh.painter = fp;
-            mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00
+            mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
             mesh.scale0 = 0.3*scale;
             mesh.index = index;
 
@@ -3408,7 +3407,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       fp.toplevel.add(mesh);
 
       mesh.tooltip = function(intersect) {
-         if (isNaN(intersect.index)) {
+         if (!Number.isInteger(intersect.index)) {
             console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r102');
             return null;
          }
@@ -3436,8 +3435,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
                      "y: " + p.axisAsText("y", this.poly.fP[indx+1]),
                      "z: " + p.axisAsText("z", this.poly.fP[indx+2])
                    ]
-         }
-      }
+         };
+      };
 
       fp.render3D(100); // set timeout to be able draw other points
 

@@ -24,7 +24,7 @@ JSROOT.define(['jquery', 'jquery-ui'], () => {
          resolveFunc(sap);
          resolveFunc = null;
       }
-   }
+   };
 
    function TryOpenOpenUI(sources) {
 

@@ -391,7 +391,7 @@ JSROOT.define([], () => {
 
       if (!this._websocket || (this.state <= 0)) return false;
 
-      if (isNaN(chid) || (chid === undefined)) chid = 1; // when not configured, channel 1 is used - main widget
+      if (!Number.isInteger(chid)) chid = 1; // when not configured, channel 1 is used - main widget
 
       if (this.cansend <= 0) console.error('should be queued before sending cansend: ' + this.cansend);
 
@@ -566,7 +566,7 @@ JSROOT.define([], () => {
                   reader.onload = function(event) {
                      // The file's text will be printed here
                      pthis.markQueueItemDone(qitem, event.target.result, 0);
-                  }
+                  };
                   reader.readAsArrayBuffer(msg, e.offset || 0);
                } else {
                   // console.log('got array ' + (typeof msg) + ' len = ' + msg.byteLength);
