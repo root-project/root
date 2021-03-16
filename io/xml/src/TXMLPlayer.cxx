@@ -391,7 +391,7 @@ const char *TXMLPlayer::ElementGetter(TClass *cl, const char *membername, int sp
 
 const char *TXMLPlayer::ElementSetter(TClass *cl, const char *membername, char *endch)
 {
-   strcpy(endch, "");
+   strcpy(endch, ""); // NOLINT
 
    TClass *membercl = cl ? cl->GetBaseDataMember(membername) : 0;
    TDataMember *member = membercl ? membercl->GetDataMember(membername) : 0;
@@ -401,7 +401,7 @@ const char *TXMLPlayer::ElementSetter(TClass *cl, const char *membername, char *
       fSetterName = "obj->";
       fSetterName += msetter->GetMethodName();
       fSetterName += "(";
-      strcpy(endch, ")");
+      strcpy(endch, ")"); // NOLINT
    } else if ((member == 0) || (member->Property() & kIsPublic) != 0) {
       fSetterName = "obj->";
       fSetterName += membername;

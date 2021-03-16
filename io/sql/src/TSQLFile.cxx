@@ -383,7 +383,6 @@ TSQLFile::TSQLFile(const char *dbname, Option_t *option, const char *user, const
             goto zombie;
          }
       SQLDeleteAllTables();
-      recreate = kFALSE;
       create = kTRUE;
       fOption = "CREATE";
    }
