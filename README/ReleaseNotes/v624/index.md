@@ -25,6 +25,7 @@ The following people have contributed to this new version:
  Claire Guyot, CERN/SFT,\
  Stephan Hageboeck, CERN/SFT,\
  Sergey Linev, GSI,\
+ Javier Lopez-Gomez, CERN/SFT,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Alja Mrak-Tadel, UCSD/CMS,\
@@ -63,6 +64,7 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 
 ### Interpreter
 - cling's LLVM is upgraded to version 9.0
+- New interface to enable/disable optional cling features. Currently, it can be used to enable/disable support for redefinitions. See [this](https://github.com/root-project/cling/issues/360) issue for more information.
 
 ## I/O Libraries
 
