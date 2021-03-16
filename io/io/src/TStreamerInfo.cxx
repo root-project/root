@@ -4520,8 +4520,7 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
       if (!rule) continue;
 
       TStreamerArtificial *newel;
-      typedef std::vector<TStreamerArtificial*> vec_t;
-      vec_t toAdd;
+      std::vector<TStreamerArtificial*> toAdd;
 
       if (rule->GetTarget()==0) {
          TString newName;
@@ -4591,8 +4590,8 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
          }
       }
       if (loc == -1) {
-         for(vec_t::iterator iter = toAdd.begin(); iter != toAdd.end(); ++iter) {
-            fElements->Add(*iter);
+         for(auto &el : toAdd) {
+            fElements->Add(el);
          }
       } else {
          R__TObjArray_InsertAt(fElements, toAdd, loc);
