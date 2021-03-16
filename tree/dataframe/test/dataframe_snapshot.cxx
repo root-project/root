@@ -795,6 +795,19 @@ TEST(RDFSnapshotMore, ForbiddenOutputFilename)
    EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);
 }
 
+TEST(RDFSnapshotMore, ZeroOutputEntries)
+{
+   const auto fname = "snapshot_zerooutputentries.root";
+   ROOT::RDataFrame(10).Alias("c", "rdfentry_").Filter([] { return false; }).Snapshot<ULong64_t>("t", fname, {"c"});
+   EXPECT_EQ(gSystem->AccessPathName(fname), 0); // This returns 0 if the file IS there
+
+   TFile f(fname);
+   auto *t = f.Get<TTree>("t");
+   EXPECT_NE(t, nullptr);           // TTree "t" should be in there...
+   EXPECT_EQ(t->GetEntries(), 0ll); // ...and have zero entries
+   gSystem->Unlink(fname);
+}
+
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
 TEST_F(RDFSnapshotMT, Snapshot_update_diff_treename)
@@ -1133,6 +1146,19 @@ TEST(RDFSnapshotMore, SetMaxTreeSizeMT)
 
    // Reset TTree max size to its old value
    TTree::SetMaxTreeSize(old_maxtreesize);
+}
+
+TEST(RDFSnapshotMore, ZeroOutputEntriesMT)
+{
+   const auto fname = "snapshot_zerooutputentriesmt.root";
+   ROOT::RDataFrame(10).Alias("c", "rdfentry_").Filter([] { return false; }).Snapshot<ULong64_t>("t", fname, {"c"});
+   EXPECT_EQ(gSystem->AccessPathName(fname), 0); // This returns 0 if the file IS there
+
+   TFile f(fname);
+   auto *t = f.Get<TTree>("t");
+   // TTree "t" should *not* be in there, differently from the single-thread case: see ROOT-10868
+   EXPECT_NE(t, nullptr);
+   gSystem->Unlink(fname);
 }
 
 #endif // R__USE_IMT
