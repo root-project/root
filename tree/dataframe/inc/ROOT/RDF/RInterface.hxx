@@ -526,11 +526,22 @@ public:
    /// When writing a variable size array through Snapshot, it is required that the column indicating its size is also
    /// written out and it appears before the array in the columnList.
    ///
+   /// By default, in case of TTree or TChain inputs, Snapshot will try to write out all top-level branches. For other
+   /// types of inputs, all columns returned by GetColumnNames() will be written out. If friend trees or chains are
+   /// present, by default all friend top-level branches that have names that do not collide with
+   /// names of branches in the main TTree/TChain will be written out. Since v6.24, Snapshot will also write out
+   /// friend branches with the same names of branches in the main TTree/TChain with names of the form
+   /// '<friendname>_<branchname>' in order to differentiate them from the branches in the main tree/chain.
+   ///
    /// \attention In multi-thread runs (i.e. when EnableImplicitMT() has been called) threads will loop over clusters of
    /// entries in an undefined order, so Snapshot will produce outputs in which (clusters of) entries will be shuffled with
    /// respect to the input TTree. Using such "shuffled" TTrees as friends of the original trees would result in wrong
    /// associations between entries in the main TTree and entries in the "shuffled" friend. Since v6.22, ROOT will
    /// error out if such a "shuffled" TTree is used in a friendship.
+   ///
+   /// \note In case no events are written out (e.g. because no event passes all filters) the behavior of Snapshot in
+   /// single-thread and multi-thread runs is different: in single-thread runs, Snapshot will write out a TTree with
+   /// the specified name and zero entries; in multi-thread runs, no TTree object will be written out to disk.
    ///
    /// ### Example invocations:
    ///
