@@ -46,6 +46,8 @@
 #include "TGText.h"
 #include "TGComboBox.h"
 #include "TGListBox.h"
+#include "TGFileDialog.h"
+#include "TGMenu.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
 #include "snprintf.h"
@@ -206,6 +208,11 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
    fDirtyTop = LARGE_NUMBER;
    fDirtyBottom = 0;
 
+   fMenu = new TGPopupMenu(gClient->GetDefaultRoot());
+   fMenu->AddEntry(" Save &As...\tCtrl+A", kM_FILE_SAVEAS, 0, gClient->GetPicture("ed_save.png"));
+   fMenu->AddEntry(" &Print...\tCtrl+P", kM_FILE_PRINT, 0, gClient->GetPicture("ed_print.png"));
+   fMenu->DisableEntry(kM_FILE_PRINT);
+   fMenu->Connect("Activated(Int_t)", "TGHtml", this, "HandleMenu(Int_t)");
 
    fVsb->SetAccelerated();
    fHsb->SetAccelerated();
@@ -232,6 +239,7 @@ TGHtml::~TGHtml()
    }
    if (fInsTimer) delete fInsTimer;
    if (fIdle) delete fIdle;
+   delete fMenu;
 
   // TODO: should also free colors!
 }
@@ -1334,6 +1342,48 @@ void TGHtml::SubmitClicked(const char *val)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Save file. Ask user for a file name via the file dialog. The pre-filled
+/// file name will be extracted from the current URI, if any
+
+void TGHtml::SaveFileAs()
+{
+   TGFileInfo fi;
+   static const char *inputFileTypes[] = {
+         "HTML files",   "*.html",
+                    0,          0
+   };
+   fi.fFileTypes = inputFileTypes;
+   TString actual = GetBaseUri();
+   Ssiz_t idy = actual.Last('/') + 1;
+   TString shortname(actual.Data());
+   if (idy < actual.Sizeof()) {
+      shortname = actual(idy, actual.Sizeof());
+      fi.fFilename = StrDup(shortname.Data());
+   }
+   new TGFileDialog(gClient->GetRoot(), this, kFDSave, &fi);
+   if (fi.fFilename) {
+      TGText txt(GetText());
+      txt.Save(fi.fFilename);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Handle context menu entries events.
+
+void TGHtml::HandleMenu(Int_t id)
+{
+   switch(id) {
+      case kM_FILE_SAVEAS:
+         SaveFileAs();
+         break;
+      case kM_FILE_PRINT:
+         break;
+      default:
+         break;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Handle mouse button event.
 
 Bool_t TGHtml::HandleButton(Event_t *event)
@@ -1353,6 +1403,7 @@ Bool_t TGHtml::HandleButton(Event_t *event)
       int x = event->fX + fVisible.fX;
       int y = event->fY + fVisible.fY;
       const char *uri = GetHref(x, y);
+      void *dummy;
 
 #if 0  // insertion cursor test
       char ix[20];
@@ -1367,6 +1418,10 @@ Bool_t TGHtml::HandleButton(Event_t *event)
             //!!delete[] uri;
          }
       }
+      fMenu->EndMenu(dummy);
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+   } else if ((event->fType == kButtonPress) && (event->fCode == kButton3)) {
+      fMenu->PlaceMenu(event->fXRoot, event->fYRoot, kTRUE, kTRUE);
    } else if (event->fCode == kButton4) {
       ScrollToPosition(TGLongPosition(fVisible.fX, fVisible.fY / fScrollVal.fY - amount));
    } else if (event->fCode == kButton5) {
