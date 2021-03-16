@@ -5698,15 +5698,18 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    char quote='"';
    char lcname[10];
    const char *cname = GetName();
-   Int_t nch = strlen(cname);
-   if (nch < 10) {
-      strlcpy(lcname,cname,10);
-      for (Int_t k=1;k<=nch;k++) {if (lcname[nch-k] == ' ') lcname[nch-k] = 0;}
-      if (lcname[0] == 0) {
-         if (this == gPad->GetCanvas()) {strlcpy(lcname,"c1",10);  nch = 2;}
-         else                           {strlcpy(lcname,"pad",10); nch = 3;}
-      }
-      cname = lcname;
+   size_t nch = strlen(cname);
+   if (nch < sizeof(lcname)) {
+      strlcpy(lcname, cname, sizeof(lcname));
+      for(size_t k = 0; k < nch; k++)
+         if (lcname[k] == ' ')
+            lcname[k] = 0;
+      if (lcname[0] != 0)
+         cname = lcname;
+      else if (this == gPad->GetCanvas())
+         cname = "c1";
+      else
+         cname = "pad";
    }
 
    //   Write pad parameters

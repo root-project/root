@@ -52,9 +52,7 @@
 class TCanvasInit {
 public:
    TCanvasInit() { TApplication::NeedGraphicsLibs(); }
-};
-static TCanvasInit gCanvasInit;
-
+} gCanvasInit;
 
 //*-*x16 macros/layout_canvas
 
