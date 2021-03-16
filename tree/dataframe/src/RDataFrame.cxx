@@ -644,7 +644,7 @@ Also make sure not to count the just-in-time compilation time (which happens onc
 ~~~{.cpp}
 #include <ROOT/RLogger.hxx>
 // ...
-auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel.kInfo);
+auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
 ~~~
 
 ### Memory usage
