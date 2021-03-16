@@ -47,6 +47,7 @@ ExternalProject_Add(
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
                -DENABLE_PYTHON=OFF
                -DENABLE_CEPH=OFF
+               -DXRDCL_LIB_ONLY=ON
                ${XROOTD_WITH_OPENSSL3}
                -DCMAKE_INSTALL_RPATH:STRING=${XROOTD_PREFIX}/${XROOTD_LIBDIR}
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
