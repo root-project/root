@@ -417,7 +417,7 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
       memcpy((void *)res.data(), png_buffer, size);
    }
 
-   delete[] png_buffer;
+   free(png_buffer);
    delete im;
 
    return !res.empty();
