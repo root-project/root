@@ -642,6 +642,8 @@ before the first event loop is triggered: just-in-time compilation will happen o
 
 Also make sure not to count the just-in-time compilation time (which happens once before the event loop and does not depend on the size of the dataset) as part of the event loop runtime (which scales with the size of the dataset). RDataFrame has an experimental logging feature that simplifies measuring the time spent in just-in-time compilation and in the event loop (as well as providing some more interesting information). It is activated like follows:
 ~~~{.cpp}
+#include <ROOT/RLogger.hxx>
+// ...
 auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel.kInfo);
 ~~~
 
