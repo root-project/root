@@ -669,14 +669,17 @@ TEST(RDFSnapshotMore, LazyJitted)
    gSystem->Unlink(fname);
 }
 
+void BookLazySnapshot()
+{
+   auto d = ROOT::RDataFrame(1);
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fLazy = true;
+   d.Snapshot<ULong64_t>("t", "lazysnapshotnottriggered_shouldnotbecreated.root", {"rdfentry_"}, opts);
+}
+
 TEST(RDFSnapshotMore, LazyNotTriggered)
 {
-   {
-      auto d = ROOT::RDataFrame(1);
-      ROOT::RDF::RSnapshotOptions opts;
-      opts.fLazy = true;
-      d.Snapshot<ULong64_t>("t", "foo.root", {"tdfentry_"}, opts);
-   }
+   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot", "A lazy Snapshot action was booked but never triggered.");
 }
 
 void CheckTClonesArrayOutput(const RVec<TH1D> &hvec)
@@ -1000,15 +1003,7 @@ TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
 TEST(RDFSnapshotMore, LazyNotTriggeredMT)
 {
    ROOT::EnableImplicitMT(4);
-   const auto fname = "lazynottriggeredmt.root";
-   {
-      auto d = ROOT::RDataFrame(8);
-      ROOT::RDF::RSnapshotOptions opts;
-      opts.fLazy = true;
-      d.Snapshot<ULong64_t, ULong64_t>("t", fname, {"tdfentry_", "rdfentry_"}, opts);
-   }
-
-   gSystem->Unlink(fname);
+   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot", "A lazy Snapshot action was booked but never triggered.");
    ROOT::DisableImplicitMT();
 }
 
