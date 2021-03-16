@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-#include "SOFIE_common.hxx"
+#include "TMVA/SOFIE_common.hxx"
 //#include "RModel.hxx"
 
 

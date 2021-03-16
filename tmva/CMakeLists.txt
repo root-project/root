@@ -18,7 +18,6 @@ if(r OR tmva-rmva)
 endif()
 
 if (tmva-sofie)
-   configure_file(onnx.proto3 ./sofie/onnx.proto3 COPYONLY)
    add_subdirectory(sofie)
 endif()
 

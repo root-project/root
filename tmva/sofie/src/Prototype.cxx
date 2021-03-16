@@ -1,7 +1,7 @@
 #include <memory>
 
-#include "RModel.hxx"
-#include "RModelParser_ONNX.hxx"
+#include "TMVA/RModel.hxx"
+#include "TMVA/RModelParser_ONNX.hxx"
 
 #include <cctype>
 #include <algorithm>

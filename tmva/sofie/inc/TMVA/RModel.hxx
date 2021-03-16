@@ -10,9 +10,8 @@
 #include <iomanip>
 #include <fstream>
 
-#include "SOFIE_common.hxx"
-#include "ROperator.hxx"
-
+#include "TMVA/SOFIE_common.hxx"
+#include "TMVA/ROperator.hxx"
 
 namespace TMVA{
 namespace Experimental{

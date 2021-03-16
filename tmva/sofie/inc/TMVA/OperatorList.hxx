@@ -1,3 +1,3 @@
-#include "ROperator_Transpose.hxx"
-#include "ROperator_Gemm.hxx"
-#include "ROperator_Relu.hxx"
+#include "TMVA/ROperator_Transpose.hxx"
+#include "TMVA/ROperator_Gemm.hxx"
+#include "TMVA/ROperator_Relu.hxx"

@@ -1,10 +1,9 @@
 #ifndef TMVA_SOFIE_ROPERATOR_GEMM
 #define TMVA_SOFIE_ROPERATOR_GEMM
 
-
-#include "SOFIE_common.hxx"
-#include "ROperator.hxx"
-#include "RModel.hxx"
+#include "TMVA/SOFIE_common.hxx"
+#include "TMVA/ROperator.hxx"
+#include "TMVA/RModel.hxx"
 
 #include <sstream>
 #include <algorithm>

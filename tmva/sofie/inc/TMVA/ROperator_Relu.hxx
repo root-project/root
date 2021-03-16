@@ -1,9 +1,9 @@
 #ifndef TMVA_SOFIE_ROPERATOR_RELU
 #define TMVA_SOFIE_ROPERATOR_RELU
 
-#include "SOFIE_common.hxx"
-#include "ROperator.hxx"
-#include "RModel.hxx"
+#include "TMVA/SOFIE_common.hxx"
+#include "TMVA/ROperator.hxx"
+#include "TMVA/RModel.hxx"
 
 #include <sstream>
 
