@@ -501,21 +501,18 @@ void TCurlyLine::SetBBoxCenter(const TPoint &p)
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    Double_t x1, x2, y1, y2;
-   x1 = x2 = y1 = y2 = 0;
 
-   if (fX2>fX1) {
+   if (fX2 > fX1) {
       x1 = gPad->PixeltoX(p.GetX())-0.5*w;
       x2 = gPad->PixeltoX(p.GetX())+0.5*w;
-   }
-   else {
+   } else {
       x2 = gPad->PixeltoX(p.GetX())-0.5*w;
       x1 = gPad->PixeltoX(p.GetX())+0.5*w;
    }
-   if (fY2>fY1) {
+   if (fY2 > fY1) {
       y1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h;
       y2 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h;
-   }
-   else {
+   } else {
       y2 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h;
       y1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h;
    }

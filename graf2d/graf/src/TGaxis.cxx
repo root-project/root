@@ -966,7 +966,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t atick[3];
    Double_t tick_side;
    Double_t charheight;
-   Double_t phil, phi, sinphi, cosphi, asinphi, acosphi;
+   Double_t phil, phi, sinphi, cosphi;
    Double_t binLow = 0.,  binLow2 = 0.,  binLow3 = 0.;
    Double_t binHigh = 0., binHigh2 = 0., binHigh3 = 0.;
    Double_t binWidth = 0., binWidth2 = 0., binWidth3 = 0.;
@@ -1361,10 +1361,10 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    }
    cosphi  = TMath::Cos(phi);
    sinphi  = TMath::Sin(phi);
-   acosphi = TMath::Abs(cosphi);
-   asinphi = TMath::Abs(sinphi);
-   if (acosphi <= epsilon) { acosphi = 0;  cosphi  = 0; }
-   if (asinphi <= epsilon) { asinphi = 0;  sinphi  = 0; }
+   if (TMath::Abs(cosphi) <= epsilon)
+      cosphi  = 0;
+   if (TMath::Abs(sinphi) <= epsilon)
+      sinphi  = 0;
 
 // mside positive, tick marks on positive side
 // mside negative, tick marks on negative side
