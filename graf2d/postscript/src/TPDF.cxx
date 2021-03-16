@@ -1861,51 +1861,8 @@ void TPDF::PrintFast(Int_t len, const char *str)
 
 void TPDF::Range(Float_t xsize, Float_t ysize)
 {
-   Float_t xps, yps, xncm, yncm, dxwn, dywn, xwkwn, ywkwn, xymax;
-
    fXsize = xsize;
    fYsize = ysize;
-
-   xps = xsize;
-   yps = ysize;
-
-   if (xsize <= xps && ysize < yps) {
-      if ( xps > yps) xymax = xps;
-      else            xymax = yps;
-      xncm  = xsize/xymax;
-      yncm  = ysize/xymax;
-      dxwn  = ((xps/xymax)-xncm)/2;
-      dywn  = ((yps/xymax)-yncm)/2;
-   } else {
-      if (xps/yps < 1) xwkwn = xps/yps;
-      else             xwkwn = 1;
-      if (yps/xps < 1) ywkwn = yps/xps;
-      else             ywkwn = 1;
-
-      if (xsize < ysize)  {
-         xncm = ywkwn*xsize/ysize;
-         yncm = ywkwn;
-         dxwn = (xwkwn-xncm)/2;
-         dywn = 0;
-         if (dxwn < 0) {
-            xncm = xwkwn;
-            dxwn = 0;
-            yncm = xwkwn*ysize/xsize;
-            dywn = (ywkwn-yncm)/2;
-         }
-      } else {
-         xncm = xwkwn;
-         yncm = xwkwn*ysize/xsize;
-         dxwn = 0;
-         dywn = (ywkwn-yncm)/2;
-         if (dywn < 0) {
-            yncm = ywkwn;
-            dywn = 0;
-            xncm = ywkwn*xsize/ysize;
-            dxwn = (xwkwn-xncm)/2;
-         }
-      }
-   }
    fRange = kTRUE;
 }
 
@@ -2008,7 +1965,6 @@ void TPDF::SetColor(Float_t r, Float_t g, Float_t b)
 void TPDF::SetFillColor( Color_t cindex )
 {
    fFillColor = cindex;
-   if (gStyle->GetFillColor() <= 0) cindex = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2450,6 +2406,9 @@ void TPDF::WriteCompressedBuffer()
    }
 
    err = deflateEnd(&stream);
+   if (err != Z_OK) {
+      Error("WriteCompressedBuffer", "error in deflateEnd (zlib)");
+   }
 
    fStream->write(out, stream.total_out);
 
