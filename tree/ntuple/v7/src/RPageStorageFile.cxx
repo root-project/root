@@ -366,11 +366,12 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    const auto pageSize = elementSize * pageInfo.fNElements;
 
    // Allocate the buffer only after checking the page pool in the following else branch
-   unsigned char *pageBuffer = nullptr;
+   // Note that if we allocate memory, we'll hand ownership over to the page pool at the end
+   std::unique_ptr<unsigned char []> pageBuffer;
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
-      pageBuffer = new unsigned char[bytesPacked];
-      fReader.ReadBuffer(pageBuffer, bytesOnStorage, pageInfo.fLocator.fPosition);
+      pageBuffer = std::make_unique<unsigned char[]>(bytesPacked);
+      fReader.ReadBuffer(pageBuffer.get(), bytesOnStorage, pageInfo.fLocator.fPosition);
       fCounters->fNPageLoaded.Inc();
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
@@ -381,28 +382,27 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
       if (!cachedPage.IsNull())
          return cachedPage;
 
-      pageBuffer = new unsigned char[bytesPacked];
+      pageBuffer = std::make_unique<unsigned char[]>(bytesPacked);
       ROnDiskPage::Key key(columnId, pageNo);
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
       R__ASSERT(onDiskPage && (bytesOnStorage == onDiskPage->GetSize()));
-      memcpy(pageBuffer, onDiskPage->GetAddress(), onDiskPage->GetSize());
+      memcpy(pageBuffer.get(), onDiskPage->GetAddress(), onDiskPage->GetSize());
    }
 
    if (bytesOnStorage != bytesPacked) {
       RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
-      fDecompressor(pageBuffer, bytesOnStorage, bytesPacked);
+      fDecompressor(pageBuffer.get(), bytesOnStorage, bytesPacked);
       fCounters->fSzUnzip.Add(bytesPacked);
    }
 
    if (!element->IsMappable()) {
       auto unpackedBuffer = new unsigned char[pageSize];
-      element->Unpack(unpackedBuffer, pageBuffer, pageInfo.fNElements);
-      delete[] pageBuffer;
-      pageBuffer = unpackedBuffer;
+      element->Unpack(unpackedBuffer, pageBuffer.get(), pageInfo.fNElements);
+      pageBuffer = std::unique_ptr<unsigned char[]>(unpackedBuffer);
    }
 
    const auto indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
-   auto newPage = fPageAllocator->NewPage(columnId, pageBuffer, elementSize, pageInfo.fNElements);
+   auto newPage = fPageAllocator->NewPage(columnId, pageBuffer.release(), elementSize, pageInfo.fNElements);
    newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
    fPagePool->RegisterPage(newPage,
       RPageDeleter([](const RPage &page, void * /*userData*/)
