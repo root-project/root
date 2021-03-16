@@ -627,8 +627,7 @@ void TLegend::PaintPrimitives()
    Double_t x2 = fX2NDC;
    Double_t y2 = fY2NDC;
    Double_t margin = fMargin*( x2-x1 )/fNColumns;
-   Double_t boxwidth = margin;
-   Double_t boxw = boxwidth*0.35;
+   Double_t boxw = margin*0.35;
    Double_t yspace = (y2-y1)/nRows;
    Double_t yspace2 = yspace/2.;
    Double_t textsize = GetTextSize();
@@ -870,11 +869,6 @@ void TLegend::PaintPrimitives()
          entry->TAttLine::Copy(entryline);
          // if the entry is filled, then surround the box with the line instead
          if ( opt.Contains("f") && !opt.Contains("l")) {
-            // box total height is yspace*0.7
-            boxwidth = yspace*
-               (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
-            if ( boxwidth > margin ) boxwidth = margin;
-
             entryline.PaintLineNDC( xsym - boxw, ysym + yspace*0.35,
                                     xsym + boxw, ysym + yspace*0.35);
             entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
