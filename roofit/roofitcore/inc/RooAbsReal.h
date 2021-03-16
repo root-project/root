@@ -419,7 +419,7 @@ protected:
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual Double_t evaluate() const = 0;
 
-  /// \deprecated evaluatedBatch() has been removed in favour of the faster evaluateSpan(). If your code is affected
+  /// \deprecated evaluateBatch() has been removed in favour of the faster evaluateSpan(). If your code is affected
   /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
   /// https://root.cern/doc/v624/release-notes.html
 #ifndef R__MACOSX
