@@ -349,6 +349,18 @@ bool IsInternalColumn(std::string_view colName)
    return goodPrefix && '_' == colName.back();                 // also ends with '_'
 }
 
+unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigned int minColumnSpace)
+{
+   auto columnWidth = 0u;
+   for (const auto& name : names) {
+      const auto length = name.length();
+      if (length > columnWidth)
+         columnWidth = length;
+   }
+   columnWidth = (columnWidth / minColumnSpace + 1) * minColumnSpace;
+   return columnWidth;
+}
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
