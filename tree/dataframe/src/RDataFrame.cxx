@@ -118,9 +118,9 @@ produce many different results in one event loop. Instant actions trigger the ev
 | [GetDefinedColumnNames](classROOT_1_1RDF_1_1RInterface.html#ad5c3fab8155aae8f614735df68430c58) | Get the names of all the defined columns |
 | [GetColumnType](classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8) | Return the type of a given column as a string. |
 | [GetColumnTypeNamesList](classROOT_1_1RDF_1_1RInterface.html#a951fe60b74d3a9fda37df59fd1dac186) | Return the list of type names of columns in the dataset. |
-| [GetFilterNames](classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2) | Get all the filters defined. If called on a root node, all filters will be returned. For any other node, only the filters upstream of that node. |
+| [GetFilterNames](classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2) | Return the names of all filters in the computation graph. If called on a root node, all filters will be returned. For any other node, only the filters upstream of that node. |
 | [SaveGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a366b19a07428c69801020e2edba117dd) | Store the computation graph of an RDataFrame in graphviz format for easy inspection. |
-| [GetNRuns](classROOT_1_1RDF_1_1RInterface.html#adfb0562a9f7732c3afb123aefa07e0df) | Get the number of event loops run by this RDataFrame instance. |
+| [GetNRuns](classROOT_1_1RDF_1_1RInterface.html#adfb0562a9f7732c3afb123aefa07e0df) | Return the number of event loops run by this RDataFrame instance so far. |
 | [GetNSlots](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a289f087fb7127585193be47290915c06) | Return the number of processing slots that RDataFrame will use during the event loop (i.e. the concurrency level). |
 
 
