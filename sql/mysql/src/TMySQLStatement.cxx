@@ -775,7 +775,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, Bool_t sig, ULo
       case MYSQL_TYPE_DATE:
       case MYSQL_TYPE_TIMESTAMP:
       case MYSQL_TYPE_DATETIME: allocsize = sizeof(MYSQL_TIME); doreset = true; break;
-      default: SetError(-1,"None-supported SQL type","SetSQLParamType"); return kFALSE;
+      default: SetError(-1, Form("SQL type not supported: %d", sqltype),"SetSQLParamType"); return kFALSE;
    }
 
    if ((fgAllocSizeLimit > 256) && (allocsize > fgAllocSizeLimit))
