@@ -1914,7 +1914,7 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
                       "OnDoubleClick(TGListTreeItem*,Int_t)");
    fContents->Connect("Clicked(TGListTreeItem*,Int_t)","TestDirList",this,
                       "OnDoubleClick(TGListTreeItem*,Int_t)");
-#ifdef G__WIN32
+#ifdef R__WIN32
    fContents->AddItem(0,"c:\\");  // browse the upper directory
 #else
    fContents->AddItem(0,"/");  // browse the upper directory
