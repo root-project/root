@@ -209,6 +209,20 @@ df.Filter([] (ULong64_t e) { return e == 1; }, {"event"}).Histo1D<RVec<float>>("
 ~~~
    </td>
 </tr>
+<tr>
+   <td>
+~~~{cpp}
+// object selection: for each event, fill histogram with array of selected pts
+tree->Draw('Muon_pt', 'Muon_pt > 100')
+~~~
+   </td>
+   <td>
+~~~{cpp}
+// with RDF, arrays are read as ROOT::VecOps::RVec objects
+df.Define("good_pt", "Muon_pt[Muon_pt > 100]").Histo1D("good_pt")
+~~~
+   </td>
+</tr>
 </table>
 
 ## <a name="crash-course"></a> Crash course
