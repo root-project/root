@@ -277,9 +277,15 @@ void CheckFilter(Filter &)
                  "filter expression returns a type that is not convertible to bool");
 }
 
+void CheckValidCppVarName(std::string_view var, const std::string &where);
+
 void CheckForRedefinition(const std::string &where, std::string_view definedCol, const ColumnNames_t &customCols,
                           const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &treeColumns,
                           const ColumnNames_t &dataSourceColumns);
+
+void CheckForDefinition(const std::string &where, std::string_view definedColView, const ColumnNames_t &customCols,
+                        const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &treeColumns,
+                        const ColumnNames_t &dataSourceColumns);
 
 std::string PrettyPrintAddr(const void *const addr);
 
