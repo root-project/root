@@ -78,7 +78,7 @@ using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 /**
  * \class ROOT::RDF::RInterface
  * \ingroup dataframe
- * \brief The public interface to the RDataFrame federation of classes
+ * \brief The public interface to the RDataFrame federation of classes.
  * \tparam Proxied One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
  * \tparam DataSource The type of the RDataSource which is providing the data to the data frame. There is no source by default.
  *
@@ -122,7 +122,7 @@ public:
    RInterface(RInterface &&) = default;
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Only enabled when building a RInterface<RLoopManager>
+   /// \brief Only enabled when building a RInterface<RLoopManager>.
    template <typename T = Proxied, typename std::enable_if<std::is_same<T, RLoopManager>::value, int>::type = 0>
    RInterface(const std::shared_ptr<Proxied> &proxied)
       : fProxiedPtr(proxied), fLoopManager(proxied.get()), fDataSource(proxied->GetDataSource())
@@ -262,7 +262,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column
+   /// \brief Creates a custom column.
    /// \param[in] name The name of the custom column.
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function.
@@ -357,7 +357,7 @@ public:
    // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column
+   /// \brief Creates a custom column.
    /// \param[in] name The name of the custom column.
    /// \param[in] expression An expression in C++ which represents the defined value
    /// \return the first node of the computation graph for which the new quantity is defined.
@@ -474,7 +474,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Allow to refer to a column with a different name
+   /// \brief Allow to refer to a column with a different name.
    /// \param[in] alias name of the column alias
    /// \param[in] columnName of the column to be aliased
    /// \return the first node of the computation graph for which the alias is available.
@@ -648,7 +648,7 @@ public:
    // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory
+   /// \brief Save selected columns in memory.
    /// \tparam ColumnTypes variadic list of branch/column types.
    /// \param[in] columnList columns to be cached in memory.
    /// \return a `RDataFrame` that wraps the cached dataset.
@@ -684,7 +684,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory
+   /// \brief Save selected columns in memory.
    /// \param[in] columnList columns to be cached in memory
    /// \return a `RDataFrame` that wraps the cached dataset.
    ///
@@ -729,7 +729,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory
+   /// \brief Save selected columns in memory.
    /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. The dialect supported is PCRE via the TPRegexp class. An empty string signals the selection of all columns.
    /// \return a `RDataFrame` that wraps the cached dataset.
    ///
@@ -751,7 +751,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory
+   /// \brief Save selected columns in memory.
    /// \param[in] columnList columns to be cached in memory.
    /// \return a `RDataFrame` that wraps the cached dataset.
    ///
@@ -764,7 +764,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node that filters entries based on range: [begin, end)
+   /// \brief Creates a node that filters entries based on range: [begin, end).
    /// \param[in] begin Initial entry number considered for this range.
    /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
    /// \param[in] stride Process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
@@ -796,7 +796,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node that filters entries based on range
+   /// \brief Creates a node that filters entries based on range.
    /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
    /// \return a node of the computation graph for which the range is defined.
    ///
@@ -806,7 +806,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined function on each entry (*instant action*)
+   /// \brief Execute a user-defined function on each entry (*instant action*).
    /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
    /// \param[in] columns Names of the columns/branches in input to the user function.
    ///
@@ -831,7 +831,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined function requiring a processing slot index on each entry (*instant action*)
+   /// \brief Execute a user-defined function requiring a processing slot index on each entry (*instant action*).
    /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
    /// \param[in] columns Names of the columns/branches in input to the user function.
    ///
@@ -929,7 +929,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the number of entries processed (*lazy action*)
+   /// \brief Return the number of entries processed (*lazy action*).
    /// \return the number of entries wrapped in a RResultPtr.
    ///
    /// Useful e.g. for counting the number of entries passing a certain filter (see also `Report`).
@@ -954,7 +954,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return a collection of values of a column (*lazy action*, returns a std::vector by default)
+   /// \brief Return a collection of values of a column (*lazy action*, returns a std::vector by default).
    /// \tparam T The type of the column.
    /// \tparam COLL The type of collection used to store the values.
    /// \param[in] column The name of the column to collect the values of.
@@ -992,7 +992,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*)
+   /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*).
    /// \tparam V The type of the column used to fill the histogram.
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] vName The name of the column that will fill the histogram.
@@ -1033,7 +1033,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*)
+   /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*).
    /// \tparam V The type of the column used to fill the histogram.
    /// \param[in] vName The name of the column that will fill the histogram.
    /// \return the monodimensional histogram wrapped in a RResultPtr.
@@ -1059,7 +1059,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*).
    /// \tparam V The type of the column used to fill the histogram.
    /// \tparam W The type of the column used as weights.
    /// \param[in] model The returned histogram will be constructed using this as a model.
@@ -1093,7 +1093,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*).
    /// \tparam V The type of the column used to fill the histogram.
    /// \tparam W The type of the column used as weights.
    /// \param[in] vName The name of the column that will fill the histogram.
@@ -1124,7 +1124,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*).
    /// \tparam V The type of the column used to fill the histogram.
    /// \tparam W The type of the column used as weights.
    /// \param[in] model The returned histogram will be constructed using this as a model.
@@ -1139,7 +1139,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a two-dimensional histogram (*lazy action*)
+   /// \brief Fill and return a two-dimensional histogram (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram.
    /// \param[in] model The returned histogram will be constructed using this as a model.
@@ -1181,7 +1181,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a weighted two-dimensional histogram (*lazy action*)
+   /// \brief Fill and return a weighted two-dimensional histogram (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram.
    /// \tparam W The type of the column used for the weights of the histogram.
@@ -1230,7 +1230,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a three-dimensional histogram (*lazy action*)
+   /// \brief Fill and return a three-dimensional histogram (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
    /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
@@ -1274,7 +1274,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a three-dimensional histogram (*lazy action*)
+   /// \brief Fill and return a three-dimensional histogram (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
    /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
@@ -1327,7 +1327,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a graph (*lazy action*)
+   /// \brief Fill and return a graph (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the graph.
    /// \tparam V2 The type of the column used to fill the y axis of the graph.
    /// \param[in] v1Name The name of the column that will fill the x axis.
@@ -1375,7 +1375,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional profile (*lazy action*)
+   /// \brief Fill and return a one-dimensional profile (*lazy action*).
    /// \tparam V1 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \tparam V2 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \param[in] model The model to be considered to build the new return value.
@@ -1415,7 +1415,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional profile (*lazy action*)
+   /// \brief Fill and return a one-dimensional profile (*lazy action*).
    /// \tparam V1 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \tparam V2 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \tparam W The type of the column the weights of which are used to fill the profile. Inferred if not present.
@@ -1465,7 +1465,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a two-dimensional profile (*lazy action*)
+   /// \brief Fill and return a two-dimensional profile (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the z axis of the histogram. Inferred if not present.
@@ -1510,7 +1510,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a two-dimensional profile (*lazy action*)
+   /// \brief Fill and return a two-dimensional profile (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
    /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
@@ -1563,7 +1563,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*)
+   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*).
    ///
    /// T must be a type that provides a copy- or move-constructor and a `T::Fill` method that takes as many arguments
    /// as the column names pass as columnList. The arguments of `T::Fill` must have type equal to the one of the
@@ -1597,7 +1597,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*)
+   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*).
    ///
    /// This overload infers the types of the columns specified in columnList at runtime and just-in-time compiles the
    /// method with these types. See previous overload for more information.
@@ -1626,7 +1626,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return a TStatistic object, filled once per event (*lazy action*)
+   /// \brief Return a TStatistic object, filled once per event (*lazy action*).
    ///
    /// \tparam V The type of the value column
    /// \param[in] value The name of the column with the values to fill the statistics with.
@@ -1656,7 +1656,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return a TStatistic object, filled once per event (*lazy action*)
+   /// \brief Return a TStatistic object, filled once per event (*lazy action*).
    ///
    /// \tparam V The type of the value column
    /// \tparam W The type of the weight column
@@ -1698,7 +1698,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the minimum of processed column values (*lazy action*)
+   /// \brief Return the minimum of processed column values (*lazy action*).
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
    /// \return the minimum value of the selected column wrapped in a RResultPtr.
@@ -1728,7 +1728,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the maximum of processed column values (*lazy action*)
+   /// \brief Return the maximum of processed column values (*lazy action*).
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
    /// \return the maximum value of the selected column wrapped in a RResultPtr.
@@ -1758,7 +1758,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the mean of processed column values (*lazy action*)
+   /// \brief Return the mean of processed column values (*lazy action*).
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
    /// \return the mean value of the selected column wrapped in a RResultPtr.
@@ -1786,7 +1786,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the unbiased standard deviation of processed column values (*lazy action*)
+   /// \brief Return the unbiased standard deviation of processed column values (*lazy action*).
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
    /// \return the standard deviation value of the selected column wrapped in a RResultPtr.
@@ -1815,7 +1815,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the sum of processed column values (*lazy action*)
+   /// \brief Return the sum of processed column values (*lazy action*).
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column.
    /// \param[in] initValue Optional initial value for the sum. If not present, the column values must be default-constructible.
@@ -1848,7 +1848,7 @@ public:
    // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Gather filtering statistics
+   /// \brief Gather filtering statistics.
    /// \return the resulting `RCutFlowReport` instance wrapped in a RResultPtr.
    ///
    /// Calling `Report` on the main `RDataFrame` object gathers stats for
@@ -1894,7 +1894,7 @@ public:
    }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the names of the available columns
+   /// \brief Returns the names of the available columns.
    /// \return the container of column names.
    ///
    /// This is not an action nor a transformation, just a query to the RDataFrame object.
@@ -1979,7 +1979,7 @@ public:
    ///
    std::vector<std::string> GetFilterNames() { return RDFInternal::GetFilterNames(fProxiedPtr); }
 
-   /// \brief Returns the names of the defined columns
+   /// \brief Returns the names of the defined columns.
    /// \return the container of the defined column names.
    ///
    /// This is not an action nor a transformation, just a simple utility to
@@ -2008,7 +2008,7 @@ public:
       return definedColumns;
    }
 
-   /// \brief Checks if a column is present in the dataset
+   /// \brief Checks if a column is present in the dataset.
    /// \return true if the column is available, false otherwise
    ///
    /// This method checks if a column is part of the input ROOT dataset, has
@@ -2040,7 +2040,7 @@ public:
       return false;
    }
 
-   /// \brief Gets the number of data processing slots
+   /// \brief Gets the number of data processing slots.
    /// \return The number of data processing slots used by this RDataFrame instance
    ///
    /// This method returns the number of data processing slots used by this RDataFrame
@@ -2054,7 +2054,7 @@ public:
    /// ~~~
    unsigned int GetNSlots() const { return fLoopManager->GetNSlots(); }
 
-   /// \brief Gets the number of event loops run
+   /// \brief Gets the number of event loops run.
    /// \return The number of event loops run by this RDataFrame instance
    ///
    /// This method returns the number of events loops run so far by this RDataFrame instance.
@@ -2072,7 +2072,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
+   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot.
    /// \tparam F The type of the aggregator callable. Automatically deduced.
    /// \tparam U The type of the aggregator variable. Must be default-constructible, copy-constructible and copy-assignable. Automatically deduced.
    /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
@@ -2140,7 +2140,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
+   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot.
    /// \tparam F The type of the aggregator callable. Automatically deduced.
    /// \tparam U The type of the aggregator variable. Must be default-constructible, copy-constructible and copy-assignable. Automatically deduced.
    /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
@@ -2222,7 +2222,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset
+   /// \brief Provides a representation of the columns in the dataset.
    /// \tparam ColumnTypes variadic list of branch/column types.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
@@ -2254,7 +2254,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset
+   /// \brief Provides a representation of the columns in the dataset.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
@@ -2270,7 +2270,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset
+   /// \brief Provides a representation of the columns in the dataset.
    /// \param[in] columnNameRegexp A regular expression to select the columns.
    /// \param[in] nRows Number of events for each column to be displayed.
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
@@ -2286,7 +2286,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset
+   /// \brief Provides a representation of the columns in the dataset.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
@@ -2498,7 +2498,7 @@ private:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Implementation of cache
+   /// \brief Implementation of cache.
    template <typename... ColTypes, std::size_t... S>
    RInterface<RLoopManager> CacheImpl(const ColumnNames_t &columnList, std::index_sequence<S...>)
    {
