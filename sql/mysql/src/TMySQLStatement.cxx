@@ -22,6 +22,7 @@
 #include "TDataType.h"
 #include "TDatime.h"
 #include "snprintf.h"
+#include "strlcpy.h"
 #include <cstdlib>
 
 ClassImp(TMySQLStatement);
@@ -937,9 +938,9 @@ Bool_t TMySQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
    Int_t len = value ? strlen(value) : 0;
 
-   void* addr = BeforeSet("SetString", npar, MYSQL_TYPE_STRING, true, maxsize);
+   void *addr = BeforeSet("SetString", npar, MYSQL_TYPE_STRING, true, maxsize);
 
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    if (len >= fBuffer[npar].fSize) {
       free(fBuffer[npar].fMem);
@@ -954,8 +955,10 @@ Bool_t TMySQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
       fNeedParBind = kTRUE;
    }
 
-   if (value) strcpy((char*) addr, value);
-   else ((char*)addr)[0]='\0';
+   if (value)
+      strlcpy((char*) addr, value, fBuffer[npar].fSize);
+   else
+      ((char *)addr)[0] = 0;
 
    fBuffer[npar].fResLength = len;
 
