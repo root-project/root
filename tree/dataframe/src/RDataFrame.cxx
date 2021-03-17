@@ -406,21 +406,21 @@ ROOT::EnableImplicitMT();
 ~~~
 Simple as that. More details are given [below](#parallel-execution).
 
-## <a name="collections"></a> Working with collections
+## <a name="collections"></a> Working with collections and object selections
 
 RDataFrame reads collections as the special type ROOT::VecOps::RVec (e.g. a branch containing an array of floating point numbers can
-be read as a ROOT::VecOps::RVec<float>). C-style arrays (with variable or static size), `std::vector`s and most other collection
-types can be read this way. When reading ROOT data, column values of type ROOT::VecOps::RVec<T> perform no copy of the underlying array.
+be read as a `ROOT::VecOps::RVec<float>`). C-style arrays (with variable or static size), `std::vector`s and most other collection
+types can be read this way. When reading ROOT data, column values of type `ROOT::VecOps::RVec<T>` perform no copy of the underlying array.
 
-ROOT::VecOps::RVec is a container similar to `std::vector` but it offers a rich interface to operate on the array elements in a
-vectorised fashion, similar to Python's NumPy arrays.
+ROOT::VecOps::RVec is a container similar to `std::vector` (and can be used just like a `std::vector`) but it also offers a rich interface to operate on the array elements in a
+vectorised fashion, similarly to Python's NumPy arrays.
 
 For example, to fill a histogram with the `pt` of selected particles for each event, Define() can be used to create
 a column that contains the desired array elements as follows:
 
 ~~~{.cpp}
-# h is filled with all the elements of `good_pts`, for each event
-h = df.Define("good_pts", "pt[pt > 0]").Histo1D("good_pts")
+// h is filled with all the elements of `good_pts`, for each event
+auto h = df.Define("good_pts", "pt[pt > 0]").Histo1D("good_pts")
 ~~~
 
 Learn more at ROOT::VecOps::RVec.
