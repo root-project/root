@@ -73,7 +73,7 @@ For example code like:
 can be replaced with the simpler and exception safe:
 
 ~~~ {.cpp}
-   TDirectory::TContext context(gDirectory,mydirectory);
+   TDirectory::TContext context(gDirectory, mydirectory);
    if (...) {
       ....
       return;
