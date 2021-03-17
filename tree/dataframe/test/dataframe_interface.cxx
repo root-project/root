@@ -718,8 +718,13 @@ TEST(RDataFrameInterface, ShortSyntaxForCollectionSizes)
    auto m2 = df.Max("#x");
    auto m3 = df.Define("y", [] (int xs) { return xs; }, {"#x"}).Max<int>("y");
    auto m4 = df.Filter("2 + pow(#x, 2) > 0").Max<int>("#x");
+   auto dfWithAlias = df.Alias("szx", "#x");
+   auto m5 = dfWithAlias.Max<int>("szx");
+   auto m6 = dfWithAlias.Max("szx");
    EXPECT_EQ(*m1, 42);
    EXPECT_EQ(*m2, 42);
    EXPECT_EQ(*m3, 42);
    EXPECT_EQ(*m4, 42);
+   EXPECT_EQ(*m5, 42);
+   EXPECT_EQ(*m6, 42);
 }
