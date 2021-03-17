@@ -1011,7 +1011,7 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
    return i;
 }
 
-/// Return an RVec of indices that sort the input RVec based on a comparison operator
+/// Return an RVec of indices that sort the input RVec based on a comparison function.
 ///
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
