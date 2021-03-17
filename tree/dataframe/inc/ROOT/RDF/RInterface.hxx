@@ -876,7 +876,7 @@ public:
    /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
    /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
-   /// \return the reduced quantity wrapped in a `RResultPtr`.
+   /// \return the reduced quantity wrapped in a ROOT::RDF:RResultPtr.
    ///
    /// A reduction takes two values of a column and merges them into one (e.g.
    /// by summing them, taking the maximum, etc). This action performs the
@@ -897,7 +897,7 @@ public:
    /// ~~~
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    // clang-format on
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
    RResultPtr<T> Reduce(F f, std::string_view columnName = "")
@@ -915,7 +915,7 @@ public:
    /// \param[in] f A callable with signature `T(T,T)`
    /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
    /// \param[in] redIdentity The reduced object of each thread is initialised to this value.
-   /// \return the reduced quantity wrapped in a `RResultPtr`.
+   /// \return the reduced quantity wrapped in a RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -930,11 +930,11 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the number of entries processed (*lazy action*)
-   /// \return the number of entries wrapped in a `RResultPtr`.
+   /// \return the number of entries wrapped in a RResultPtr.
    ///
    /// Useful e.g. for counting the number of entries passing a certain filter (see also `Report`).
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -958,7 +958,7 @@ public:
    /// \tparam T The type of the column.
    /// \tparam COLL The type of collection used to store the values.
    /// \param[in] column The name of the column to collect the values of.
-   /// \return the content of the selected column wrapped in a `RResultPtr`.
+   /// \return the content of the selected column wrapped in a RResultPtr.
    ///
    /// The collection type to be specified for C-style array columns is `RVec<T>`:
    /// in this case the returned collection is a `std::vector<RVec<T>>`.
@@ -972,7 +972,7 @@ public:
    /// auto cArrayIntCol = rdf.Take<RVec<int>>("cArrayInt");
    /// ~~~
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    template <typename T, typename COLL = std::vector<T>>
    RResultPtr<COLL> Take(std::string_view column = "")
    {
@@ -996,7 +996,7 @@ public:
    /// \tparam V The type of the column used to fill the histogram.
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] vName The name of the column that will fill the histogram.
-   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
+   /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
    /// Columns can be of a container type (e.g. `std::vector<double>`), in which case the histogram
    /// is filled with each one of the elements of the container. In case multiple columns of container type
@@ -1036,7 +1036,7 @@ public:
    /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*)
    /// \tparam V The type of the column used to fill the histogram.
    /// \param[in] vName The name of the column that will fill the histogram.
-   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
+   /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
    /// This overload uses a default model histogram TH1D(name, title, 128u, 0., 0.).
    /// The "name" and "title" strings are built starting from the input column name.
@@ -1065,7 +1065,7 @@ public:
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] vName The name of the column that will fill the histogram.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
+   /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
    /// See the description of the first Histo1D overload for more details.
    ///
@@ -1098,7 +1098,7 @@ public:
    /// \tparam W The type of the column used as weights.
    /// \param[in] vName The name of the column that will fill the histogram.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
+   /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
    /// This overload uses a default model histogram TH1D(name, title, 128u, 0., 0.).
    /// The "name" and "title" strings are built starting from the input column names.
@@ -1128,7 +1128,7 @@ public:
    /// \tparam V The type of the column used to fill the histogram.
    /// \tparam W The type of the column used as weights.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
+   /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
    /// This overload will use the first two default columns as column names.
    /// See the description of the first Histo1D overload for more details.
@@ -1145,7 +1145,7 @@ public:
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
-   /// \return the bidimensional histogram wrapped in a `RResultPtr`.
+   /// \return the bidimensional histogram wrapped in a RResultPtr.
    ///
    /// Columns can be of a container type (e.g. std::vector<double>), in which case the histogram
    /// is filled with each one of the elements of the container. In case multiple columns of container type
@@ -1189,7 +1189,7 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the bidimensional histogram wrapped in a `RResultPtr`.
+   /// \return the bidimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1238,7 +1238,7 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
-   /// \return the tridimensional histogram wrapped in a `RResultPtr`.
+   /// \return the tridimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1284,7 +1284,7 @@ public:
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the tridimensional histogram wrapped in a `RResultPtr`.
+   /// \return the tridimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1332,7 +1332,7 @@ public:
    /// \tparam V2 The type of the column used to fill the y axis of the graph.
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
-   /// \return the graph wrapped in a `RResultPtr`.
+   /// \return the graph wrapped in a RResultPtr.
    ///
    /// Columns can be of a container type (e.g. std::vector<double>), in which case the graph
    /// is filled with each one of the elements of the container.
@@ -1381,7 +1381,7 @@ public:
    /// \param[in] model The model to be considered to build the new return value.
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
-   /// \return the monodimensional profile wrapped in a `RResultPtr`.
+   /// \return the monodimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1423,7 +1423,7 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the monodimensional profile wrapped in a `RResultPtr`.
+   /// \return the monodimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1473,7 +1473,7 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
-   /// \return the bidimensional profile wrapped in a `RResultPtr`.
+   /// \return the bidimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1520,7 +1520,7 @@ public:
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the bidimensional profile wrapped in a `RResultPtr`.
+   /// \return the bidimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1573,7 +1573,7 @@ public:
    /// \tparam T The type of the object to fill. Automatically deduced.
    /// \param[in] model The model to be considered to build the new return value.
    /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
-   /// \return the filled object wrapped in a `RResultPtr`.
+   /// \return the filled object wrapped in a RResultPtr.
    ///
    /// The user gives up ownership of the model object.
    /// The list of column names to be used for filling must always be specified.
@@ -1604,7 +1604,7 @@ public:
    /// \tparam T The type of the object to fill. Automatically deduced.
    /// \param[in] model The model to be considered to build the new return value.
    /// \param[in] columnList The name of the columns read to fill the object.
-   /// \return the filled object wrapped in a `RResultPtr`.
+   /// \return the filled object wrapped in a RResultPtr.
    ///
    /// This overload of `Fill` infers the type of the specified columns at runtime and just-in-time compiles the
    /// previous overload. Check the previous overload for more details on `Fill`.
@@ -1630,7 +1630,7 @@ public:
    ///
    /// \tparam V The type of the value column
    /// \param[in] value The name of the column with the values to fill the statistics with.
-   /// \return the filled TStatistic object wrapped in a `RResultPtr`.
+   /// \return the filled TStatistic object wrapped in a RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1662,7 +1662,7 @@ public:
    /// \tparam W The type of the weight column
    /// \param[in] value The name of the column with the values to fill the statistics with.
    /// \param[in] weight The name of the column with the weights to fill the statistics with.
-   /// \return the filled TStatistic object wrapped in a `RResultPtr`.
+   /// \return the filled TStatistic object wrapped in a RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1701,7 +1701,7 @@ public:
    /// \brief Return the minimum of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
-   /// \return the minimum value of the selected column wrapped in a `RResultPtr`.
+   /// \return the minimum value of the selected column wrapped in a RResultPtr.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1731,7 +1731,7 @@ public:
    /// \brief Return the maximum of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
-   /// \return the maximum value of the selected column wrapped in a `RResultPtr`.
+   /// \return the maximum value of the selected column wrapped in a RResultPtr.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1761,7 +1761,7 @@ public:
    /// \brief Return the mean of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
-   /// \return the mean value of the selected column wrapped in a `RResultPtr`.
+   /// \return the mean value of the selected column wrapped in a RResultPtr.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1789,7 +1789,7 @@ public:
    /// \brief Return the unbiased standard deviation of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
-   /// \return the standard deviation value of the selected column wrapped in a `RResultPtr`.
+   /// \return the standard deviation value of the selected column wrapped in a RResultPtr.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1819,7 +1819,7 @@ public:
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column.
    /// \param[in] initValue Optional initial value for the sum. If not present, the column values must be default-constructible.
-   /// \return the sum of the selected column wrapped in a `RResultPtr`.
+   /// \return the sum of the selected column wrapped in a RResultPtr.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1849,7 +1849,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gather filtering statistics
-   /// \return the resulting `RCutFlowReport` instance wrapped in a `RResultPtr`.
+   /// \return the resulting `RCutFlowReport` instance wrapped in a RResultPtr.
    ///
    /// Calling `Report` on the main `RDataFrame` object gathers stats for
    /// all named filters in the call graph. Calling this method on a
@@ -2080,7 +2080,7 @@ public:
    /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
    /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
    /// \param[in] aggIdentity The aggregator variable of each thread is initialised to this value (or is default-constructed if the parameter is omitted)
-   /// \return the result of the aggregation wrapped in a `RResultPtr`.
+   /// \return the result of the aggregation wrapped in a RResultPtr.
    ///
    /// An aggregator callable takes two values, an aggregator variable and a column value. The aggregator variable is
    /// initialized to aggIdentity or default-constructed if aggIdentity is omitted.
@@ -2147,7 +2147,7 @@ public:
    /// \param[in] aggregator A callable with signature `U(U,T)` or `void(U,T)`, where T is the type of the column, U is the type of the aggregator variable
    /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
    /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
-   /// \return the result of the aggregation wrapped in a `RResultPtr`.
+   /// \return the result of the aggregation wrapped in a RResultPtr.
    ///
    /// See previous Aggregate overload for more information.
    // clang-format on
@@ -2170,7 +2170,7 @@ public:
    /// \tparam Helper The type of the user-defined helper. See below for the required interface it should expose.
    /// \param[in] helper The Action Helper to be scheduled.
    /// \param[in] columns The names of the columns on which the helper acts.
-   /// \return the result of the helper wrapped in a `RResultPtr`.
+   /// \return the result of the helper wrapped in a RResultPtr.
    ///
    /// This method books a custom action for execution. The behavior of the action is completely dependent on the
    /// Helper object provided by the caller. The minimum required interface for the helper is the following (more
@@ -2226,9 +2226,9 @@ public:
    /// \tparam ColumnTypes variadic list of branch/column types.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
-   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
-   /// This function returns a `RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
+   /// This function returns a RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
    /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
    /// complete version through `AsString()`.
    ///
@@ -2257,7 +2257,7 @@ public:
    /// \brief Provides a representation of the columns in the dataset
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
-   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// This overload automatically infers the column types.
    /// See the previous overloads for further details.
@@ -2273,7 +2273,7 @@ public:
    /// \brief Provides a representation of the columns in the dataset
    /// \param[in] columnNameRegexp A regular expression to select the columns.
    /// \param[in] nRows Number of events for each column to be displayed.
-   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// The existing columns are matched against the regular expression. If the string provided
    /// is empty, all columns are selected.
@@ -2289,7 +2289,7 @@ public:
    /// \brief Provides a representation of the columns in the dataset
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
-   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// See the previous overloads for further details.
    RResultPtr<RDisplay> Display(std::initializer_list<std::string> columnList, const int &nRows = 5)
