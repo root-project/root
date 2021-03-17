@@ -130,7 +130,7 @@ protected:
    virtual void   ExpandCPPLine(TString& line, Ssiz_t& pos);
    virtual Bool_t HandleDirective(TString& keyword, Ssiz_t& pos,
       TString& word, Ssiz_t& copiedToCommentUpTo);
-   virtual void   InitKeywords() const;
+   void           InitKeywords() const;
    virtual TClass* IsDirective(const TString& line, Ssiz_t pos, const TString& word, Bool_t& begin) const;
    TMethod*       LocateMethodInCurrentLine(Ssiz_t& posMethodName, TString& ret,
       TString& name, TString& params, Bool_t& isconst,
