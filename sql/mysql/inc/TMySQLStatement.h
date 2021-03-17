@@ -76,8 +76,8 @@ public:
    TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout = kTRUE);
    virtual ~TMySQLStatement();
 
-   static ULong_t GetAllocSizeLimit() { return fgAllocSizeLimit; }
-   static void SetAllocSizeLimit(ULong_t sz) { fgAllocSizeLimit = sz; }
+   static ULong_t GetAllocSizeLimit();
+   static void SetAllocSizeLimit(ULong_t sz);
 
    void        Close(Option_t * = "") final;
 

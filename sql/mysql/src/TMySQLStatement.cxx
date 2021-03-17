@@ -28,6 +28,22 @@ ClassImp(TMySQLStatement);
 
 ULong64_t TMySQLStatement::fgAllocSizeLimit = 0x8000000; // 128 Mb
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return limit for maximal allocated memory for single parameter
+
+ULong_t TMySQLStatement::GetAllocSizeLimit()
+{
+   return fgAllocSizeLimit;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set limit for maximal allocated memory for single parameter
+
+void TMySQLStatement::SetAllocSizeLimit(ULong_t sz)
+{
+   fgAllocSizeLimit = sz;
+}
+
 #if MYSQL_VERSION_ID >= 40100
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -758,17 +774,18 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, Bool_t sig, ULo
       case MYSQL_TYPE_DATE:
       case MYSQL_TYPE_TIMESTAMP:
       case MYSQL_TYPE_DATETIME: allocsize = sizeof(MYSQL_TIME); doreset = true; break;
-      default: SetError(-1,"Nonsupported SQL type","SetSQLParamType"); return kFALSE;
+      default: SetError(-1,"None-supported SQL type","SetSQLParamType"); return kFALSE;
    }
 
-   if (allocsize > fgAllocSizeLimit) allocsize = fgAllocSizeLimit;
+   if ((fgAllocSizeLimit > 256) && (allocsize > fgAllocSizeLimit))
+      allocsize = fgAllocSizeLimit;
 
    fBuffer[npar].fMem = malloc(allocsize);
    fBuffer[npar].fSize = allocsize;
    fBuffer[npar].fSqlType = sqltype;
    fBuffer[npar].fSign = sig;
 
-   if ((allocsize>0) && fBuffer[npar].fMem && doreset)
+   if (fBuffer[npar].fMem && doreset)
       memset(fBuffer[npar].fMem, 0, allocsize);
 
    fBind[npar].buffer_type = enum_field_types(sqltype);
