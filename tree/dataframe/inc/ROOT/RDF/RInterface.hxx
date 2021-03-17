@@ -923,6 +923,9 @@ public:
    /// auto myHist2 = myDf.Histo1D<float>({"histName", "histTitle", 64u, 0., 128.}, "myColumn");
    /// ~~~
    ///
+   /// \note Differently from other ROOT interfaces, the returned histogram is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
@@ -950,7 +953,7 @@ public:
    ///
    /// This overload uses a default model histogram TH1D(name, title, 128u, 0., 0.).
    /// The "name" and "title" strings are built starting from the input column name.
-   /// See the description of the first Histo1D overload for more details.
+   /// See the description of the first Histo1D() overload for more details.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -959,7 +962,6 @@ public:
    /// // Explicit column type
    /// auto myHist2 = myDf.Histo1D<float>("myColumn");
    /// ~~~
-   ///
    template <typename V = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(std::string_view vName)
    {
@@ -977,7 +979,7 @@ public:
    /// \param[in] wName The name of the column that will provide the weights.
    /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
-   /// See the description of the first Histo1D overload for more details.
+   /// See the description of the first Histo1D() overload for more details.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -986,7 +988,6 @@ public:
    /// // Explicit column type
    /// auto myHist2 = myDf.Histo1D<float, int>({"histName", "histTitle", 64u, 0., 128.}, "myValue", "myweight");
    /// ~~~
-   ///
    template <typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model, std::string_view vName, std::string_view wName)
    {
@@ -1012,7 +1013,7 @@ public:
    ///
    /// This overload uses a default model histogram TH1D(name, title, 128u, 0., 0.).
    /// The "name" and "title" strings are built starting from the input column names.
-   /// See the description of the first Histo1D overload for more details.
+   /// See the description of the first Histo1D() overload for more details.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1021,7 +1022,6 @@ public:
    /// // Explicit column types
    /// auto myHist2 = myDf.Histo1D<float, int>("myValue", "myweight");
    /// ~~~
-   ///
    template <typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
    {
@@ -1041,7 +1041,7 @@ public:
    /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
    /// This overload will use the first two default columns as column names.
-   /// See the description of the first Histo1D overload for more details.
+   /// See the description of the first Histo1D() overload for more details.
    template <typename V, typename W>
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.})
    {
@@ -1072,6 +1072,10 @@ public:
    /// auto myHist2 = myDf.Histo2D<float, float>({"histName", "histTitle", 64u, 0., 128., 32u, -4., 4.}, "myValueX", "myValueY");
    /// ~~~
    ///
+   ///
+   /// \note Differently from other ROOT interfaces, the returned histogram is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TH2D> Histo2D(const TH2DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
@@ -1103,7 +1107,6 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. Also see RResultPtr.
-   /// The user gives up ownership of the model histogram.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1113,6 +1116,7 @@ public:
    /// auto myHist2 = myDf.Histo2D<float, float, double>({"histName", "histTitle", 64u, 0., 128., 32u, -4., 4.}, "myValueX", "myValueY", "myWeight");
    /// ~~~
    ///
+   /// See the documentation of the first Histo2D() overload for more details.
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename W = RDFDetail::RInferredType>
    RResultPtr<::TH2D>
@@ -1163,6 +1167,9 @@ public:
    ///                                                    "myValueX", "myValueY", "myValueZ");
    /// ~~~
    ///
+   /// \note Differently from other ROOT interfaces, the returned histogram is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType>
    RResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name = "", std::string_view v2Name = "",
@@ -1210,6 +1217,8 @@ public:
    ///                                                    "myValueX", "myValueY", "myValueZ", "myWeight");
    /// ~~~
    ///
+   ///
+   /// See the documentation of the first Histo2D() overload for more details.
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name, std::string_view v2Name,
@@ -1261,6 +1270,9 @@ public:
    /// auto myGraph2 = myDf.Graph<int, float>("xValues", "yValues");
    /// ~~~
    ///
+   /// \note Differently from other ROOT interfaces, the returned graph is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TGraph> Graph(std::string_view v1Name = "", std::string_view v2Name = "")
    {
@@ -1304,6 +1316,9 @@ public:
    /// auto myProf2 = myDf.Graph<int, float>({"profName", "profTitle", 64u, -4., 4.}, "xValues", "yValues");
    /// ~~~
    ///
+   /// \note Differently from other ROOT interfaces, the returned profile is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TProfile>
    Profile1D(const TProfile1DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
@@ -1347,6 +1362,7 @@ public:
    ///                                                   "xValues", "yValues", "weight");
    /// ~~~
    ///
+   /// See the first Profile1D() overload for more details.
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename W = RDFDetail::RInferredType>
    RResultPtr<::TProfile>
@@ -1368,6 +1384,9 @@ public:
       return CreateAction<RDFInternal::ActionTags::Profile1D, V1, V2, W>(userColumns, h, h);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional profile (*lazy action*).
+   /// See the first Profile1D() overload for more details.
    template <typename V1, typename V2, typename W>
    RResultPtr<::TProfile> Profile1D(const TProfile1DModel &model)
    {
@@ -1398,6 +1417,9 @@ public:
    ///                                                   "xValues", "yValues", "zValues");
    /// ~~~
    ///
+   /// \note Differently from other ROOT interfaces, the returned profile is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType>
    RResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name = "",
@@ -1445,6 +1467,7 @@ public:
    ///                                                        "xValues", "yValues", "zValues", "weight");
    /// ~~~
    ///
+   /// See the first Profile2D() overload for more details.
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name, std::string_view v2Name,
@@ -1466,6 +1489,8 @@ public:
       return CreateAction<RDFInternal::ActionTags::Profile2D, V1, V2, V3, W>(userColumns, h, h);
    }
 
+   /// \brief Fill and return a two-dimensional profile (*lazy action*).
+   /// See the first Profile2D() overload for more details.
    template <typename V1, typename V2, typename V3, typename W>
    RResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model)
    {
