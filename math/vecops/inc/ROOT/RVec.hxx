@@ -996,9 +996,8 @@ void swap(RVec<T> &lhs, RVec<T> &rhs)
 /// using namespace ROOT::VecOps;
 /// RVec<double> v {2., 3., 1.};
 /// auto sortIndices = Argsort(v);
-/// sortIndices
 /// // (ROOT::VecOps::RVec<unsigned long> &) { 2, 0, 1 }
-/// Take(v, sortIndices)
+/// auto values = Take(v, sortIndices)
 /// // (ROOT::VecOps::RVec<double> &) { 1., 2., 3. }
 /// ~~~
 template <typename T>
@@ -1017,10 +1016,9 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
 /// RVec<double> v {2., 3., 1.};
-/// auto sortIndices = Argsort(v, [](double x, double y) {return x > y;});
-/// sortIndices
+/// auto sortIndices = Argsort(v, [](double x, double y) {return x > y;})
 /// // (ROOT::VecOps::RVec<unsigned long> &) { 1, 0, 2 }
-/// Take(v, sortIndices);
+/// auto values = Take(v, sortIndices)
 /// // (ROOT::VecOps::RVec<double> &) { 3., 2., 1. }
 /// ~~~
 template <typename T, typename Compare>
