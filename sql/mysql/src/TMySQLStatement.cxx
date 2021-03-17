@@ -778,6 +778,8 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, Bool_t sig, ULo
       default: SetError(-1, Form("SQL type not supported: %d", sqltype),"SetSQLParamType"); return kFALSE;
    }
 
+   // SL: 256 bytes is default size value for string or tiny blob
+   // therefore small fgAllocSizeLimit only has effect for data over limit of 256 bytes
    if ((fgAllocSizeLimit > 256) && (allocsize > fgAllocSizeLimit))
       allocsize = fgAllocSizeLimit;
 
