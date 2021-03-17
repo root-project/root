@@ -323,14 +323,12 @@ Int_t RooAddModel::basisCode(const char* name) const
 
 RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
 {
-  // Check if cache already exists 
-  CacheElem* cache = (CacheElem*) _projCacheMgr.getObj(nset,iset,0,RooNameReg::ptr(rangeName)) ;
-  if (cache) {
-    return cache ;
+  //Create new cache if it doesn't already exist
+  auto emplaceResult = _projCacheMgr.try_emplace<CacheElem>({nset,iset,RooNameReg::ptr(rangeName)});
+  auto cache = emplaceResult.cache ;
+  if(!emplaceResult.insertionHappened) {
+    return cache;
   }
-
-  //Create new cache 
-  cache = new CacheElem ;
 
   // *** PART 1 : Create supplemental normalization list ***
 
@@ -389,7 +387,6 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
 
   // If no projections required stop here
   if (!_projectCoefs || _basis!=0 ) {
-    _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
     return cache ;
   }
 
@@ -478,8 +475,6 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
   }
 
   delete nset2 ;
-
-  _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
 
   return cache ;
 }
@@ -694,18 +689,15 @@ Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVa
 
 void RooAddModel::getCompIntList(const RooArgSet* nset, const RooArgSet* iset, pRooArgList& compIntList, Int_t& code, const char* isetRangeName) const 
 {
-  Int_t sterileIdx(-1) ;
-
-  IntCacheElem* cache = (IntCacheElem*) _intCacheMgr.getObj(nset,iset,&sterileIdx,RooNameReg::ptr(isetRangeName)) ;
-  if (cache) {
-    code = _intCacheMgr.lastIndex() ;
+  // Create containers for partial integral components to be generated
+  auto emplaceResult = _intCacheMgr.try_emplace<IntCacheElem>({nset,iset,RooNameReg::ptr(isetRangeName)}) ;
+  auto cache = emplaceResult.cache;
+  code = emplaceResult.code ;
+  if (!emplaceResult.insertionHappened) {
     compIntList = &cache->_intList ;
     
     return ;
   }
-
-  // Create containers for partial integral components to be generated
-  cache = new IntCacheElem ;
 
   // Fill Cache
   for (auto obj : _pdfList) {
@@ -714,9 +706,6 @@ void RooAddModel::getCompIntList(const RooArgSet* nset, const RooArgSet* iset, p
     RooAbsReal* intPdf = model->createIntegral(*iset,nset,0,isetRangeName) ;
     cache->_intList.addOwned(*intPdf) ;
   }
-
-  // Store the partial integral list and return the assigned code ;
-  code = _intCacheMgr.setObj(nset,iset,(RooAbsCacheElement*)cache,RooNameReg::ptr(isetRangeName)) ;
 
   // Fill references to be returned
   compIntList = &cache->_intList ;

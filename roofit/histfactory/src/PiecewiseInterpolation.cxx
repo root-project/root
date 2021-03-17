@@ -372,16 +372,12 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   //  RooArgSet* normSet = getObservables();
   //  RooArgSet* normSet = 0;
 
-
-  // Check if this configuration was created before
-  Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx) ;
-  if (cache) {
-    return _normIntMgr.lastIndex()+1 ;
+  // Emplace new cache element
+  auto emplaceResult = _normIntMgr.try_emplace<CacheElem>({normSet,&analVars}) ;
+  if(!emplaceResult.insertionHappened) {
+    return emplaceResult.code + 1;
   }
-  
-  // Create new cache element
-  cache = new CacheElem ;
+  auto * cache = emplaceResult.cache;
 
   // Make list of function projection and normalization integrals 
   RooAbsReal *func ;
@@ -410,10 +406,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
     ++i;
   }
 
-  // Store cache element
-  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,0) ;
-
-  return code+1 ; 
+  return emplaceResult.code + 1 ; 
 }
 
 

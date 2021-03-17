@@ -531,29 +531,22 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
   analVars.add(allVars) ;
 
   // Retrieve (or create) the required partial integral list
-  Int_t code ;
-
-  // Check if this configuration was created before
-  CacheElem* cache = (CacheElem*) _partIntMgr.getObj(normSet,&analVars,0,RooNameReg::ptr(rangeName)) ;
-  if (cache) {
-    code = _partIntMgr.lastIndex() ;
-    return code+1 ;
+  auto emplaceResult = _partIntMgr.try_emplace<CacheElem>({normSet,&analVars,RooNameReg::ptr(rangeName)}) ;
+  if (!emplaceResult.insertionHappened) {
+    return emplaceResult.code+1;
   }
-  cache = new CacheElem ;
+
 
   // Create the partial integral set for this request
   TIterator* iter = _pdfProxyList.MakeIterator() ;
   RooRealProxy* proxy ;
   while((proxy=(RooRealProxy*)iter->Next())) {
     RooAbsReal* pdfInt = proxy->arg().createIntegral(analVars,normSet,0,rangeName) ;
-    cache->_partIntList.addOwned(*pdfInt) ;
+    emplaceResult.cache->_partIntList.addOwned(*pdfInt) ;
   }
   delete iter ;
 
-  // Store the partial integral list and return the assigned code ;
-  code = _partIntMgr.setObj(normSet,&analVars,cache,RooNameReg::ptr(rangeName)) ;
-
-  return code+1 ;
+  return emplaceResult.code+1 ;
 }
 
 

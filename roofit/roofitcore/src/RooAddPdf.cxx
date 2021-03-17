@@ -413,15 +413,12 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
 
 RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
 {
-
-  // Check if cache already exists
-  CacheElem* cache = (CacheElem*) _projCacheMgr.getObj(nset,iset,0,rangeName) ;
-  if (cache) {
+  // Create new cache if it doesn't exit already
+  auto emplaceResult = _projCacheMgr.try_emplace<CacheElem>({nset,iset,RooNameReg::ptr(rangeName)}) ;
+  auto cache = emplaceResult.cache;
+  if (!emplaceResult.insertionHappened) {
     return cache ;
   }
-
-  //Create new cache
-  cache = new CacheElem ;
 
   // *** PART 1 : Create supplemental normalization list ***
 
@@ -487,7 +484,6 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
 
   // If no projections required stop here
   if (!_projectCoefs && !rangeName) {
-    _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
 //     cout << " no projection required" << endl ;
     return cache ;
   }
@@ -641,8 +637,6 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
   }
 
   delete nset2 ;
-
-  _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
 
   return cache ;
 }

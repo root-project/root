@@ -297,18 +297,15 @@ Int_t RooRealSumFunc::getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &ana
    analVars.add(allVars);
    RooArgSet *normSet = normSet2 ? getObservables(normSet2) : 0;
 
-   // Check if this configuration was created before
-   Int_t sterileIdx(-1);
-   CacheElem *cache = (CacheElem *)_normIntMgr.getObj(normSet, &analVars, &sterileIdx, RooNameReg::ptr(rangeName));
-   if (cache) {
+   // Check if this configuration was created before, otherwise create new cache element
+   auto emplaceResult = _normIntMgr.try_emplace<CacheElem>({normSet, &analVars, RooNameReg::ptr(rangeName)});
+   if (!emplaceResult.insertionHappened) {
       // cout <<
       // "RooRealSumFunc("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>")
       // << " -> " << _normIntMgr.lastIndex()+1 << " (cached)" << endl;
-      return _normIntMgr.lastIndex() + 1;
+      return emplaceResult.code + 1;
    }
-
-   // Create new cache element
-   cache = new CacheElem;
+   auto cache = emplaceResult.cache;
 
    // Make list of function projection and normalization integrals
    _funcIter->Reset();
@@ -323,9 +320,6 @@ Int_t RooRealSumFunc::getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &ana
       }
    }
 
-   // Store cache element
-   Int_t code = _normIntMgr.setObj(normSet, &analVars, (RooAbsCacheElement *)cache, RooNameReg::ptr(rangeName));
-
    if (normSet) {
       delete normSet;
    }
@@ -333,7 +327,7 @@ Int_t RooRealSumFunc::getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &ana
    // cout <<
    // "RooRealSumFunc("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>")
    // << " -> " << code+1 << endl;
-   return code + 1;
+   return emplaceResult.code + 1;
 }
 
 //_____________________________________________________________________________

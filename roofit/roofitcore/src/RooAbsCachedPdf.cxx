@@ -169,7 +169,8 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   }
 
   // Create and fill cache
-  cache = createCache(nset) ;
+  std::unique_ptr<PdfCacheElem> cacheUniqePtr{createCache(nset)} ;
+  cache = cacheUniqePtr.get(); // non-owning pointer
 
   // Check if we have contents registered already in global expensive object cache
   RooDataHist* htmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
@@ -191,7 +192,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 
 
   // Store this cache configuration
-  Int_t code = _cacheMgr.setObj(nset,0,((RooAbsCacheElement*)cache),0) ;
+  Int_t code = _cacheMgr.setObj(nset,0,std::move(cacheUniqePtr),0) ;
 
   coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache << " with pdf "
 		 << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;

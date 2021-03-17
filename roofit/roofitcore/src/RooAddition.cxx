@@ -275,22 +275,18 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
   analVars.add(allVars);
 
   // check if we already have integrals for this combination of factors
-  Int_t sterileIndex(-1);
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName));
-  if (cache!=0) {
-    Int_t code = _cacheMgr.lastIndex();
-    return code+1;
+  auto emplaceResult = _cacheMgr.try_emplace<CacheElem>({&analVars,&analVars,RooNameReg::ptr(rangeName)});
+  if (!emplaceResult.insertionHappened) {
+    return emplaceResult.code+1;
   }
 
   // we don't, so we make it right here....
-  cache = new CacheElem;
   for (const auto arg : _set) {// checked in c'tor that this will work...
       RooAbsReal *I = static_cast<const RooAbsReal*>(arg)->createIntegral(analVars,rangeName);
-      cache->_I.addOwned(*I);
+      emplaceResult.cache->_I.addOwned(*I);
   }
 
-  Int_t code = _cacheMgr.setObj(&analVars,&analVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName));
-  return 1+code;
+  return emplaceResult.code+1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -482,8 +482,7 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   delete depList ;
 
   // Store it in the cache
-  cache = new CacheElem(*norm) ;
-  _normMgr.setObj(nset,iset,cache,rangeName) ;
+  _normMgr.try_emplace<CacheElem>({nset,iset,rangeName}, *norm);
 
   // And return the newly created integral
   return norm ;
@@ -587,8 +586,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
   }
 
   // Register new normalization with manager (takes ownership)
-  cache = new CacheElem(*_norm) ;
-  _normMgr.setObj(nset,cache) ;
+  _normMgr.try_emplace<CacheElem>({nset}, *_norm) ;
 
 //   cout << "making new object " << _norm->GetName() << endl ;
 

@@ -140,24 +140,20 @@ Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
   // Declare that we can analytically integrate all requested observables
   analVars.add(allVars) ;
 
-  // Check if cache was previously created
-  Int_t sterileIndex(-1) ;
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(&allVars,&allVars,&sterileIndex,RooNameReg::ptr(rangeName)) ;
-  if (cache) {
-    return _cacheMgr.lastIndex()+1;
+  // Store cache and return index as code
+  auto emplaceResult = _cacheMgr.try_emplace<CacheElem>({&allVars,&allVars,RooNameReg::ptr(rangeName)});
+  if(!emplaceResult.insertionHappened) {
+    return emplaceResult.code + 1;
   }
+  auto * cache = emplaceResult.cache;
 
   // Construct cache with clone of p.d.f that has fixed normalization set that is passed to input pdf
-  cache = new CacheElem ;
   cache->_intObs.addClone(allVars) ;
   cache->_clone = (RooEffProd*) clone(Form("%s_clone",GetName())) ;
   cache->_clone->_fixedNset = &cache->_intObs ;
   cache->_int = cache->_clone->createIntegral(cache->_intObs,rangeName) ;
 
-  // Store cache and return index as code
-  Int_t code = _cacheMgr.setObj(&allVars,&allVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ; 
-
-  return code+1 ;
+  return emplaceResult.code + 1;
 }
 
 

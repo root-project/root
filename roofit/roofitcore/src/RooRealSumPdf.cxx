@@ -317,15 +317,12 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
 
   // Check if this configuration was created before
-  Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,RooNameReg::ptr(rangeName)) ;
-  if (cache) {
+  auto emplaceResult = _normIntMgr.try_emplace<CacheElem>({normSet,&analVars,RooNameReg::ptr(rangeName)}) ;
+  if (!emplaceResult.insertionHappened) {
     //cout << "RooRealSumPdf("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << " -> " << _normIntMgr.lastIndex()+1 << " (cached)" << endl;
-    return _normIntMgr.lastIndex()+1 ;
+    return emplaceResult.code+1 ;
   }
-  
-  // Create new cache element
-  cache = new CacheElem ;
+  auto cache = emplaceResult.cache;
 
   // Make list of function projection and normalization integrals 
   for (const auto elm : _funcList) {
@@ -340,15 +337,12 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
     }
   }
 
-  // Store cache element
-  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ;
-
   if (normSet) {
     delete normSet ;
   }
 
   //cout << "RooRealSumPdf("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << " -> " << code+1 << endl;
-  return code+1 ; 
+  return emplaceResult.code+1 ; 
 }
 
 

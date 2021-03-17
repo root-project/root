@@ -109,11 +109,10 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
 {
 
   // Check if this configuration was created before
-  Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(iset,nset,&sterileIdx,RooNameReg::ptr(rangeName)) ;
-  if (cache) {
-    code = _cacheMgr.lastIndex() ;
-    return static_cast<const RooAbsReal*>(cache->_projection);
+  auto emplaceResult = _cacheMgr.try_emplace<CacheElem>({iset,nset,RooNameReg::ptr(rangeName)}) ;
+  if(!emplaceResult.insertionHappened) {
+    code = emplaceResult.code;
+    return emplaceResult.cache->_projection;
   }
 
   RooArgSet* nset2 =  intpdf.arg().getObservables(*nset) ;
@@ -124,12 +123,10 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
   RooAbsReal* proj = intpdf.arg().createIntegral(iset?*iset:RooArgSet(),nset2,0,rangeName) ;
   delete nset2 ;
 
-  cache = new CacheElem ;
-  cache->_projection = proj ;
+  emplaceResult.cache->_projection = proj ;
 
-  code = _cacheMgr.setObj(iset,nset,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ;
-
-  coutI(Integration) << "RooProjectedPdf::getProjection(" << GetName() << ") creating new projection " << proj->GetName() << " with code " << code << endl ;
+  coutI(Integration) << "RooProjectedPdf::getProjection(" << GetName() << ") creating new projection "
+                     << proj->GetName() << " with code " << code << endl ;
 
   return proj ;
 }

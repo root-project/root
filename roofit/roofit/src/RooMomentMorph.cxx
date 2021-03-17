@@ -350,8 +350,7 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
   RooChangeTracker* tracker = new RooChangeTracker(trackerName.c_str(),trackerName.c_str(),m.arg(),kTRUE) ;
 
   // Store it in the cache
-  cache = new CacheElem(*theSumPdf,*tracker,fracl) ;
-  _cacheMgr.setObj(0,0,cache,0) ;
+  cache = _cacheMgr.try_emplace<CacheElem>({}, *theSumPdf,*tracker,fracl).cache;
 
   cache->calculateFractions(*this, kFALSE);
   return cache ;

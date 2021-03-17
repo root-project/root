@@ -677,20 +677,8 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   // Select subset of allVars that are actual dependents
   analVars.add(allVars) ;
 
-  // Check if this configuration was created before
-  Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,(const char*)0) ;
-  if (cache) {
-    return _normIntMgr.lastIndex()+1 ;
-  }
-  
-  // Create new cache element
-  cache = new CacheElem ;
-
-  // Store cache element
-  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,0) ;
-
-  return code+1 ; 
+  // Emplace cache element
+  return _normIntMgr.try_emplace<CacheElem>({normSet,&analVars}).code + 1 ;
 
 }
 

@@ -99,9 +99,10 @@ Double_t RooJeffreysPrior::evaluate() const
 {
   RooHelpers::LocalChangeMsgLevel msgLvlRAII(RooFit::WARNING);
 
+  auto emplaceResult = _cacheMgr.try_emplace<CacheElem>({});
+  auto cacheElm = emplaceResult.cache;
 
-  CacheElem* cacheElm = (CacheElem*) _cacheMgr.getObj(nullptr);
-  if (!cacheElm) {
+  if (emplaceResult.insertionHappened) {
     //Internally, we have to enlarge the range of fit parameters to make
     //fits converge even if we are close to the limit of a parameter. Therefore, we clone the pdf and its
     //observables here. If something happens to the external PDF, the cache is wiped,
@@ -116,11 +117,8 @@ Double_t RooJeffreysPrior::evaluate() const
       var.setRange(range.first - 0.1*span, range.second + 0.1 * span);
     }
 
-    cacheElm = new CacheElem;
     cacheElm->_pdf.reset(clonePdf);
     cacheElm->_pdfVariables.reset(vars);
-
-    _cacheMgr.setObj(nullptr, cacheElm);
   }
 
   auto& cachedPdf = *cacheElm->_pdf;

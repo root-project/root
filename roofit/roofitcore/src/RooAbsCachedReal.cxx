@@ -148,7 +148,8 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
     return cache ;
   }
 
-  cache = createCache(nset) ;
+  std::unique_ptr<FuncCacheElem> cacheUniquePtr{createCache(nset)} ;
+  cache = cacheUniquePtr.get(); // non-owning pointer
 
   // Set cache function data to ADirty since function will need update every time in cache update process
   RooFIter iarg( cache->hist()->get()->fwdIterator() );
@@ -175,7 +176,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   } 
 
   // Store this cache configuration
-  Int_t code = _cacheMgr.setObj(nset,0,((RooAbsCacheElement*)cache),0) ;
+  Int_t code = _cacheMgr.setObj(nset,0,std::move(cacheUniquePtr),0) ;
   ccoutD(Caching) << "RooAbsCachedReal("<<this<<")::getCache(" << GetName() << ") creating new cache " << cache->func()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code << endl ;
   
   return cache ;

@@ -213,12 +213,10 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
 Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) const
 {
 
-  // check if we already have integrals for this combination of factors
-  Int_t sterileIndex(-1);
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(iset,iset,&sterileIndex,RooNameReg::ptr(isetRange));
-  if (cache!=0) {
-    Int_t code = _cacheMgr.lastIndex();
-    return code;
+  // check if we already have integrals for this combination of factors, if not create new cache element
+  auto emplaceResult = _cacheMgr.try_emplace<CacheElem>({iset,iset,RooNameReg::ptr(isetRange)});
+  if (!emplaceResult.insertionHappened) {
+    return emplaceResult.code;
   }
   
   ProdMap* map = groupProductTerms(*iset);
@@ -240,7 +238,9 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
     delete map ;
     return -1; // RRI caller will zero analVars if return code = 0....
   }
-  cache = new CacheElem();
+
+  auto cache = emplaceResult.cache;
+  auto code = emplaceResult.code;
 
   for (ProdMap::const_iterator i = map->begin();i!=map->end();++i) {
     RooAbsReal *term(0);
@@ -265,8 +265,6 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding integral for " << term->GetName() << " : " << integral->GetName() << endl;
     }
   }
-  // add current set-up to cache, and return index..
-  Int_t code = _cacheMgr.setObj(iset,iset,(RooAbsCacheElement*)cache,RooNameReg::ptr(isetRange));
 
   cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created list " << cache->_prodList << " with code " << code+1 << endl
 		       << " for iset=" << *iset << " @" << iset << " range: " << (isetRange?isetRange:"<none>") << endl ;

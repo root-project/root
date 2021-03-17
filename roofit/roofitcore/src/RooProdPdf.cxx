@@ -741,16 +741,13 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 //         << "   iset = " << (iset?*iset:RooArgSet()) << endl
 //         << "   isetRangeName = " << (isetRangeName?isetRangeName:"<null>") << endl ;
 
-  // Check if this configuration was created before
-  Int_t sterileIdx(-1);
-
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(nset,iset,&sterileIdx,isetRangeName);
-  if (cache) {
-    return _cacheMgr.lastIndex();
-  }
-
   // Create containers for partial integral components to be generated
-  cache = new CacheElem;
+  // and store the partial integral list and return the assigned code
+  auto emplaceResult = _cacheMgr.try_emplace<CacheElem>({nset, iset, RooNameReg::ptr(isetRangeName)});
+  if (!emplaceResult.insertionHappened) {
+    return emplaceResult.code;
+  }
+  auto cache = emplaceResult.cache;
 
   // Factorize the product in irreducible terms for this nset
   RooLinkedList terms, norms, imp, ints, cross;
@@ -1043,9 +1040,6 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
     }
   }
 
-  // Store the partial integral list and return the assigned code
-  Int_t returnCode = _cacheMgr.setObj(nset, iset, (RooAbsCacheElement*)cache, RooNameReg::ptr(isetRangeName));
-
   // WVE DEBUG PRINTING
 //   cout << "RooProdPdf::getPartIntList(" << GetName() << ") made cache " << cache << " with the following nset pointers ";
 //   TIterator* nliter = nsetList->MakeIterator();
@@ -1080,7 +1074,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
   norms.Delete();
   cross.Delete();
 
-  return returnCode;
+  return emplaceResult.code;
 }
 
 
