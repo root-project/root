@@ -977,7 +977,9 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 /// \param[in] filenameglob TDirectory where the tree is stored, e.g. a TFile.
 /// \param[in] defaultBranches Collection of default branches.
 ///
-/// The filename globbing supports the same type of expressions as TChain::Add().
+/// The filename glob supports the same type of expressions as TChain::Add(), and it is passed as-is to TChain's
+/// constructor.
+///
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
 /// See RInterface for the documentation of the methods available.
@@ -997,7 +999,9 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 /// \param[in] fileglobs Collection of file names of filename globs
 /// \param[in] defaultBranches Collection of default branches.
 ///
-/// The filename globbing supports the same type of expressions as TChain::Add().
+/// The filename globs support the same type of expressions as TChain::Add(), and each glob is passed as-is
+/// to TChain's constructor.
+///
 /// The default branches are looked at in case no branch is specified in the booking of actions or transformations.
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string> &fileglobs,
