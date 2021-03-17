@@ -195,7 +195,7 @@ BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const Colu
    R__ASSERT(vars.size() == varTypes.size());
 
    TPRegexp re(R"(\breturn\b)");
-   const bool hasReturnStmt = re.Match(expr) == 1;
+   const bool hasReturnStmt = re.MatchB(expr);
 
    static const std::vector<std::string> fundamentalTypes = {
       "int",
@@ -411,7 +411,7 @@ ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnName
    // we need to use TPRegexp
    TPRegexp regexp(theRegex);
    for (auto &&colName : colNames) {
-      if ((isEmptyRegex || 0 != regexp.Match(colName.c_str())) && !RDFInternal::IsInternalColumn(colName)) {
+      if ((isEmptyRegex || regexp.MatchB(colName.c_str())) && !RDFInternal::IsInternalColumn(colName)) {
          selectedColumns.emplace_back(colName);
       }
    }
