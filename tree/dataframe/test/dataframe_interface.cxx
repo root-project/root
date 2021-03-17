@@ -548,3 +548,13 @@ TEST(RDataFrameInterface, GetColumnTypeOfAlias)
       EXPECT_EQ(df.GetColumnType("y"), "Int_t");
    }
 }
+
+TEST(RDataFrameInterface, JittedExprWithMultipleReturns)
+{
+   const auto counts = ROOT::RDataFrame(1)
+                          .Define("x", [] { return 42; })
+                          .Filter("if (x == 42) { return true; } else { return false; }")
+                          .Count()
+                          .GetValue();
+   EXPECT_EQ(counts, 1ull);
+}
