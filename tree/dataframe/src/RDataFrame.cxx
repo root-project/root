@@ -121,6 +121,8 @@ produce many different results in one event loop. Instant actions trigger the ev
 | [GetFilterNames](classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2) | Get all the filters defined. If called on a root node, all filters will be returned. For any other node, only the filters upstream of that node. |
 | [SaveGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a366b19a07428c69801020e2edba117dd) | Store the computation graph of an RDataFrame in graphviz format for easy inspection. |
 | [GetNRuns](classROOT_1_1RDF_1_1RInterface.html#adfb0562a9f7732c3afb123aefa07e0df) | Get the number of event loops run by this RDataFrame instance. |
+| [GetNSlots](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a289f087fb7127585193be47290915c06) | Return the number of processing slots that RDataFrame will use during the event loop (i.e. the concurrency level). |
+
 
 
 ## <a name="introduction"></a>Introduction
