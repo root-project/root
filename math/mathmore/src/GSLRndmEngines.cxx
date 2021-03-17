@@ -40,6 +40,7 @@
 #include "gsl/gsl_rng.h"
 #include "gsl/gsl_randist.h"
 #include "gsl/gsl_vector.h"
+#include "gsl/gsl_version.h"
 
 #include "Math/GSLRndmEngines.h"
 #include "GSLRngWrapper.h"
@@ -47,6 +48,50 @@
 #include "GSLRngROOTWrapper.h"
 
 extern double gsl_ran_gaussian_acr(  const gsl_rng * r, const double sigma);
+
+// gsl_multivaraite_gaussian was added in GSL 2.2
+// Ubuntu 16.04 comes with GSL 2.1, so we can add it here by hand
+// from: http://git.savannah.gnu.org/cgit/gsl.git/tree/randist/mvgauss.c?h=release-2-6&id=8f0165f5cb2ae02e386cd33ff10e47ffb46ea7da
+// This can be removed after ROOT stops supporting Ubuntu 16
+#if GSL_MINOR_VERSION < 2
+#include <gsl/gsl_blas.h>
+extern
+int
+gsl_ran_multivariate_gaussian (const gsl_rng * r,
+                               const gsl_vector * mu,
+                               const gsl_matrix * L,
+                               gsl_vector * result)
+{
+  const size_t M = L->size1;
+  const size_t N = L->size2;
+
+  if (M != N)
+    {
+      GSL_ERROR("requires square matrix", GSL_ENOTSQR);
+    }
+  else if (mu->size != M)
+    {
+      GSL_ERROR("incompatible dimension of mean vector with variance-covariance matrix", GSL_EBADLEN);
+    }
+  else if (result->size != M)
+    {
+      GSL_ERROR("incompatible dimension of result vector", GSL_EBADLEN);
+    }
+  else
+    {
+      size_t i;
+
+      for (i = 0; i < M; ++i)
+        gsl_vector_set(result, i, gsl_ran_ugaussian(r));
+
+      gsl_blas_dtrmv(CblasLower, CblasNoTrans, CblasNonUnit, L, result);
+      gsl_vector_add(result, mu);
+
+      return GSL_SUCCESS;
+    }
+}
+#else
+#endif
 
 namespace ROOT {
 namespace Math {
