@@ -334,7 +334,13 @@ static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesRe
    }
 }
 
-static void CheckValidCppVarName(std::string_view var, const std::string &where)
+} // anonymous namespace
+
+namespace ROOT {
+namespace Internal {
+namespace RDF {
+
+void CheckValidCppVarName(std::string_view var, const std::string &where)
 {
    bool isValid = true;
 
@@ -361,12 +367,6 @@ static void CheckValidCppVarName(std::string_view var, const std::string &where)
       throw std::runtime_error(error);
    }
 }
-
-} // anonymous namespace
-
-namespace ROOT {
-namespace Internal {
-namespace RDF {
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Get all the top-level branches names, including the ones of the friend trees
@@ -428,41 +428,70 @@ ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnName
    return selectedColumns;
 }
 
+/// Throw if column `definedColView` is already there.
 void CheckForRedefinition(const std::string &where, std::string_view definedColView, const ColumnNames_t &customCols,
                           const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &treeColumns,
                           const ColumnNames_t &dataSourceColumns)
 {
-   CheckValidCppVarName(definedColView, where);
-
    const std::string definedCol(definedColView); // convert to std::string
    std::string error;
 
-   // check if definedCol is an alias
    const auto aliasColNameIt = aliasMap.find(definedCol);
-   if (aliasColNameIt != aliasMap.end())
-      error = "An alias with that name, pointing to column \"" + aliasColNameIt->second +
-              "\", already exists. Use Redefine to force redefinition.";
+   const bool isAnAlias = aliasColNameIt != aliasMap.end();
+   if (isAnAlias) {
+      error = "An alias with that name, pointing to column \"" + aliasColNameIt->second + "\", already exists.";
+   }
 
-   if (where.compare(0, 8, "Redefine") != 0) { // not a Redefine
-      // check if definedCol has already been `Define`d in the functional graph
+   if (error.empty()) {
       if (std::find(customCols.begin(), customCols.end(), definedCol) != customCols.end())
          error = "A column with that name has already been Define'd. Use Redefine to force redefinition.";
-
-      // check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
+      // else, check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
       // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
       // got it right when we collected the list of available branches.
-      if (std::find(treeColumns.begin(), treeColumns.end(), definedCol) != treeColumns.end())
+      else if (std::find(treeColumns.begin(), treeColumns.end(), definedCol) != treeColumns.end())
          error =
             "A branch with that name is already present in the input TTree/TChain. Use Redefine to force redefinition.";
-
-      // check if definedCol is already present in the data source (but has not yet been `Define`d)
-      if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end())
+      else if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end())
          error =
             "A column with that name is already present in the input data source. Use Redefine to force redefinition.";
    }
 
    if (!error.empty()) {
       error = "RDataFrame::" + where + ": cannot define column \"" + definedCol + "\". " + error;
+      throw std::runtime_error(error);
+   }
+}
+
+/// Throw if column `definedColView` is _not_ already there.
+void CheckForDefinition(const std::string &where, std::string_view definedColView, const ColumnNames_t &customCols,
+                        const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &treeColumns,
+                        const ColumnNames_t &dataSourceColumns)
+{
+   const std::string definedCol(definedColView); // convert to std::string
+   std::string error;
+
+   const auto aliasColNameIt = aliasMap.find(definedCol);
+   const bool isAnAlias = aliasColNameIt != aliasMap.end();
+   if (isAnAlias) {
+      error = "An alias with that name, pointing to column \"" + aliasColNameIt->second +
+              "\", already exists. Aliases cannot be Redefined.";
+   }
+
+   if (error.empty()) {
+      const bool isAlreadyDefined = std::find(customCols.begin(), customCols.end(), definedCol) != customCols.end();
+      // check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
+      // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
+      // got it right when we collected the list of available branches.
+      const bool isABranch = std::find(treeColumns.begin(), treeColumns.end(), definedCol) != treeColumns.end();
+      const bool isADSColumn =
+         std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end();
+
+      if (!isAlreadyDefined && !isABranch && !isADSColumn)
+         error = "No column with that name was found in the dataset. Use Define to create a new column.";
+   }
+
+   if (!error.empty()) {
+      error = "RDataFrame::" + where + ": cannot redefine column \"" + definedCol + "\". " + error;
       throw std::runtime_error(error);
    }
 }

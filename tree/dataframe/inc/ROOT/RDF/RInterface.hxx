@@ -369,8 +369,10 @@ public:
    /// Refer to the first overload of this method for the full documentation.
    RInterface<Proxied, DS_t> Define(std::string_view name, std::string_view expression)
    {
+      constexpr auto where = "Define";
+      RDFInternal::CheckValidCppVarName(name, where);
       // these checks must be done before jitting lest we throw exceptions in jitted code
-      RDFInternal::CheckForRedefinition("Define", name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+      RDFInternal::CheckForRedefinition(where, name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
                                         fLoopManager->GetBranchNames(),
                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
@@ -392,6 +394,8 @@ public:
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function.
    /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// An exception is thrown in case the column to re-define does not already exist.
    /// See Define() for more information.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    RInterface<Proxied, DS_t> Redefine(std::string_view name, F expression, const ColumnNames_t &columns = {})
@@ -406,6 +410,8 @@ public:
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot).
    /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// An exception is thrown in case the column to re-define does not already exist.
    ///
    /// See DefineSlot() for more information.
    // clang-format on
@@ -422,6 +428,8 @@ public:
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
    /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// An exception is thrown in case the column to re-define does not already exist.
    ///
    /// See DefineSlotEntry() for more information.
    // clang-format on
@@ -442,12 +450,16 @@ public:
    /// It must be valid C++ syntax in which variable names are substituted with the names
    /// of branches/columns.
    ///
-   /// Aliases cannot be overridden. See also Define().
+   /// An exception is thrown in case the column to re-define does not already exist.
+   ///
+   /// Aliases cannot be overridden. See the corresponding Define() overload for more information.
    RInterface<Proxied, DS_t> Redefine(std::string_view name, std::string_view expression)
    {
-      RDFInternal::CheckForRedefinition("Redefine", name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
-                                        fLoopManager->GetBranchNames(),
-                                        fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      constexpr auto where = "Redefine";
+      RDFInternal::CheckValidCppVarName(name, where);
+      RDFInternal::CheckForDefinition(where, name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                                      fLoopManager->GetBranchNames(),
+                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fDefines,
@@ -482,8 +494,10 @@ public:
       // Helper to find out if a name is a column
       auto &dsColumnNames = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
 
+      constexpr auto where = "Alias";
+      RDFInternal::CheckValidCppVarName(alias, where);
       // If the alias name is a column name, there is a problem
-      RDFInternal::CheckForRedefinition("Alias", alias, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+      RDFInternal::CheckForRedefinition(where, alias, fDefines.GetNames(), fLoopManager->GetAliasMap(),
                                         fLoopManager->GetBranchNames(), dsColumnNames);
 
       const auto validColumnName = GetValidatedColumnNames(1, {std::string(columnName)})[0];
@@ -2399,9 +2413,16 @@ private:
    typename std::enable_if<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>::type
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns, const std::string &where)
    {
-      RDFInternal::CheckForRedefinition(where, name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
-                                        fLoopManager->GetBranchNames(),
-                                        fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      RDFInternal::CheckValidCppVarName(name, where);
+      if (where.compare(0, 8, "Redefine") != 0) { // not a Redefine
+         RDFInternal::CheckForRedefinition(where, name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                                           fLoopManager->GetBranchNames(),
+                                           fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      } else {
+         RDFInternal::CheckForDefinition(where, name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                                         fLoopManager->GetBranchNames(),
+                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      }
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
       using ColTypesTmp_t = typename RDFInternal::RemoveFirstParameterIf<

@@ -50,21 +50,25 @@ TEST(Redefine, Alias)
 
 TEST(Redefine, Twice)
 {
-   auto df = ROOT::RDataFrame(1).Redefine("x", [] { return 1; }).Redefine("x", [] { return 42; });
+   auto df = ROOT::RDataFrame(1).Define("x", [] { return 0; }).Redefine("x", [] { return 1; }).Redefine("x", [] {
+      return 42;
+   });
    auto r = df.Max<int>("x");
    EXPECT_EQ(*r, 42);
 }
 
 TEST(Redefine, Slot)
 {
-   auto df = ROOT::RDataFrame(1).RedefineSlot("x", [](unsigned int) { return 42; });
+   auto df = ROOT::RDataFrame(1).Define("x", [] { return 0; }).RedefineSlot("x", [](unsigned int) { return 42; });
    auto r = df.Max<int>("x");
    EXPECT_EQ(*r, 42);
 }
 
 TEST(Redefine, SlotEntry)
 {
-   auto df = ROOT::RDataFrame(1).RedefineSlotEntry("x", [](unsigned int, ULong64_t) { return 42; });
+   auto df = ROOT::RDataFrame(1).Define("x", [] { return 0; }).RedefineSlotEntry("x", [](unsigned int, ULong64_t) {
+      return 42;
+   });
    auto r = df.Max<int>("x");
    EXPECT_EQ(*r, 42);
 }
@@ -80,7 +84,7 @@ TEST(Redefine, Parallel)
 
 TEST(Redefine, AliasOnRedefine)
 {
-   auto df = ROOT::RDataFrame(1).Redefine("x", [] { return 42; }).Alias("y", "x");
+   auto df = ROOT::RDataFrame(1).Define("x", [] { return 0; }).Redefine("x", [] { return 42; }).Alias("y", "x");
    auto r = df.Max<int>("y");
    EXPECT_EQ(*r, 42);
 }
@@ -137,4 +141,11 @@ TEST(Redefine, OriginalDefineAsInputJitted)
                .Redefine("x", [](int x) { return x * 42; }, {"x"})
                .Max<int>("x");
    EXPECT_EQ(*r, 42);
+}
+
+TEST(Redefine, ErrorOnNonExistingColumn)
+{
+   auto df = ROOT::RDataFrame(1);
+   EXPECT_THROW(df.Redefine("x", [](int x) { return x * 42; }, {"x"}), std::runtime_error);
+   EXPECT_THROW(df.Redefine("x", "42"), std::runtime_error);
 }
