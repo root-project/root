@@ -271,7 +271,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
       strcpy(withdot, GetName());
       char* lastdot = strrchr(withdot, '.');
       strcpy(lastdot, countname);
-      leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
+      leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(withdot);
       delete[] withdot;
       withdot = 0;
    }
