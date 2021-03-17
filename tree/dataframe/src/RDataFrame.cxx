@@ -100,7 +100,7 @@ produce many different results in one event loop. Instant actions trigger the ev
 | Stats() | Return a TStatistic object filled with the input columns. |
 | StdDev() | Return the unbiased standard deviation of the processed column values. |
 | Sum() | Return the sum of the values in the column. If the type of the column is inferred, the return type is `double`, the type of the column otherwise. |
-| Take() | Extract a column from the dataset as a collection of values. If the type of the column is a C-style array, the type stored in the return container is a ROOT::VecOps::RVec<T> to guarantee the lifetime of the data involved. |
+| Take() | Extract a column from the dataset as a collection of values, e.g. a `std::vector<float>` for a column of type `float`. |
 
 | **Instant action** | **Description** |
 |---------------------|-----------------|
