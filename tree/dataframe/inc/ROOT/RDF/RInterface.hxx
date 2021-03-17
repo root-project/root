@@ -913,7 +913,7 @@ public:
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1062,7 +1062,7 @@ public:
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1102,7 +1102,7 @@ public:
    /// \return the bidimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    /// The user gives up ownership of the model histogram.
    ///
    /// ### Example usage:
@@ -1151,7 +1151,7 @@ public:
    /// \return the tridimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1197,7 +1197,7 @@ public:
    /// \return the tridimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1251,7 +1251,7 @@ public:
    /// A name and a title to the graph is given based on the input column names.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1294,7 +1294,7 @@ public:
    /// \return the monodimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1336,7 +1336,7 @@ public:
    /// \return the monodimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1386,7 +1386,7 @@ public:
    /// \return the bidimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1433,7 +1433,7 @@ public:
    /// \return the bidimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1488,7 +1488,7 @@ public:
    /// The user gives up ownership of the model object.
    /// The list of column names to be used for filling must always be specified.
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed.
-   /// See RResultPtr documentation.
+   /// Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1618,7 +1618,7 @@ public:
    /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1648,7 +1648,7 @@ public:
    /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1677,7 +1677,7 @@ public:
    /// template specialization of this method.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1705,7 +1705,7 @@ public:
    /// template specialization of this method.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1736,7 +1736,7 @@ public:
    /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -2003,7 +2003,7 @@ public:
    /// If its signature is `U(U,U)` the aggregator variables of each thread are merged two by two.
    /// If its signature is `void(std::vector<U>& a)` it is assumed that it merges all aggregators in a[0].
    ///
-   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See RResultPtr documentation.
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see RResultPtr.
    ///
    /// Example usage:
    /// ~~~{.cpp}
@@ -2105,7 +2105,7 @@ public:
    ///   Result_t). The RResultPtr returned by Book will point to this object.
    ///
    /// See ActionHelpers.hxx for the helpers used by standard RDF actions.
-   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See RResultPtr documentation.
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see RResultPtr.
    // clang-format on
    template <typename... ColumnTypes, typename Helper>
    RResultPtr<typename Helper::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
@@ -2142,7 +2142,7 @@ public:
    /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
    /// complete version through `AsString()`.
    ///
-   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See RResultPtr documentation.
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see RResultPtr.
    ///
    /// Example usage:
    /// ~~~{.cpp}
