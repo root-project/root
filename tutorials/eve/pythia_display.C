@@ -52,6 +52,11 @@ const Color_t  kColors[3] = { kRed, kGreen, kYellow };
 // Global variables.
 //------------------------------------------------------------------------------
 
+#include "TEveTrack.h"
+#include "TEveTrackPropagator.h"
+#include "TEveElement.h"
+#include "TEveGeoShape.h"
+
 #include "TPythia6.h"
 #include "TGeoTube.h"
 #include "TMCParticle.h"
@@ -228,7 +233,7 @@ void pythia_next_event()
    gTrackList->MakeTracks();
 
 
-   TEveElement* top = gEve->GetCurrentEvent();
+   TEveElement* top = (TEveElement *)gEve->GetCurrentEvent();
 
    gMultiView->DestroyEventRPhi();
    gMultiView->ImportEventRPhi(top);
