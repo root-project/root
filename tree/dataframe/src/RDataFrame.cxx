@@ -949,7 +949,7 @@ using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 namespace RDFInternal = ROOT::Internal::RDF;
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Build the dataframe
+/// \brief Build the dataframe.
 /// \param[in] treeName Name of the tree contained in the directory
 /// \param[in] dirPtr TDirectory where the tree is stored, e.g. a TFile.
 /// \param[in] defaultBranches Collection of default branches.
@@ -974,7 +974,7 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Build the dataframe
+/// \brief Build the dataframe.
 /// \param[in] treeName Name of the tree contained in the directory
 /// \param[in] filenameglob TDirectory where the tree is stored, e.g. a TFile.
 /// \param[in] defaultBranches Collection of default branches.
@@ -996,7 +996,7 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Build the dataframe
+/// \brief Build the dataframe.
 /// \param[in] treeName Name of the tree contained in the directory
 /// \param[in] fileglobs Collection of file names of filename globs
 /// \param[in] defaultBranches Collection of default branches.
@@ -1018,7 +1018,7 @@ RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string>
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Build the dataframe
+/// \brief Build the dataframe.
 /// \param[in] tree The tree or chain to be studied.
 /// \param[in] defaultBranches Collection of default column names to fall back to when none is specified.
 ///
