@@ -764,7 +764,7 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
       const auto aliasColumnNameIt = aliasMap.find(colName);
       if (aliasMapEnd != aliasColumnNameIt)
          colName = aliasColumnNameIt->second;
-      if (colName[0] == '#')
+      if (colName[0] == '#' && colName.length() > 1) // otherwise the column name is "#" and we'll error out later
          colName = "__rdf_sizeof_" + colName.substr(1);
    }
 
