@@ -16,7 +16,7 @@ void pythia_display()
    dir.ReplaceAll("/./","/");
    gROOT->LoadMacro(dir +"MultiView.C+");
 
-#ifndef G__WIN32 // libPythia6 is a static library on Windoze
+#ifndef R__WIN32 // libPythia6 is a static library on Windoze
    if (gSystem->Load("libPythia6") < 0)
    {
       Error("pythia_display()",
