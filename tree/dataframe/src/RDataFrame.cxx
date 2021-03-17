@@ -183,14 +183,29 @@ d.Filter(IsGoodEvent).Foreach(DoStuff);
 <tr>
    <td>
 ~~~{.cpp}
-auto t = file->Get<TTree>("myTree");
-t->Draw("x", "y > 2");
+auto *tree = file->Get<TTree>("myTree");
+tree->Draw("x", "y > 2");
 ~~~
    </td>
    <td>
 ~~~{.cpp}
-ROOT::RDataFrame d("myTree", file);
-auto h = d.Filter("y > 2").Histo1D("x");
+ROOT::RDataFrame df("myTree", file);
+auto h = df.Filter("y > 2").Histo1D("x");
+h->Draw()
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{.cpp}
+tree->Draw("jet_eta", "weight*(event == 1)");
+~~~
+   </td>
+   <td>
+~~~{.cpp}
+df.Filter("event == 1").Histo1D("jet_eta", "weight");
+// or the fully compiled version:
+df.Filter([] (ULong64_t e) { return e == 1; }, {"event"}).Histo1D<RVec<float>>("jet_eta", "weight");
 ~~~
    </td>
 </tr>
