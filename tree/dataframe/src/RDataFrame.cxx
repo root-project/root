@@ -266,7 +266,7 @@ h->Draw();
 ~~~
 The first line creates a RDataFrame associated to the TTree "myTree". This tree has a branch named "MET".
 
-Histo1D() is an *action*; it returns a smart pointer (a RResultPtr, to be precise) to a TH1D histogram filled
+Histo1D() is an *action*; it returns a smart pointer (a ROOT::RDF::RResultPtr, to be precise) to a TH1D histogram filled
 with the `MET` of all events. If the quantity stored in the branch is a collection (e.g. a vector or an array), the
 histogram is filled with all vector elements for each event.
 
@@ -408,11 +408,11 @@ Simple as that. More details are given [below](#parallel-execution).
 
 ## <a name="collections"></a> Working with collections
 
-RDataFrame reads collections as the special type RVec (e.g. a branch containing an array of floating point numbers can
-be read as a RVec<float>). C-style arrays (with variable or static size), `std::vector`s and most other collection
-types can be read this way. When reading ROOT data, column values of type RVec<T> perform no copy of the underlying array.
+RDataFrame reads collections as the special type ROOT::VecOps::RVec (e.g. a branch containing an array of floating point numbers can
+be read as a ROOT::VecOps::RVec<float>). C-style arrays (with variable or static size), `std::vector`s and most other collection
+types can be read this way. When reading ROOT data, column values of type ROOT::VecOps::RVec<T> perform no copy of the underlying array.
 
-RVec is a container similar to `std::vector` but it offers a rich interface to operate on the array elements in a
+ROOT::VecOps::RVec is a container similar to `std::vector` but it offers a rich interface to operate on the array elements in a
 vectorised fashion, similar to Python's NumPy arrays.
 
 For example, to fill a histogram with the `pt` of selected particles for each event, Define() can be used to create
@@ -423,7 +423,7 @@ a column that contains the desired array elements as follows:
 h = df.Define("good_pts", "pt[pt > 0]").Histo1D("good_pts")
 ~~~
 
-Learn more on [RVec](https://root.cern/doc/master/classROOT_1_1VecOps_1_1RVec.html).
+Learn more at ROOT::VecOps::RVec.
 
 ##  <a name="python"></a>Efficient analysis in Python
 
@@ -518,9 +518,9 @@ work as usual, but also keep track of how many entries they accept and reject.
 
 Statistics are retrieved through a call to the Report() method:
 
-- when Report() is called on the main RDataFrame object, it returns a RResultPtr<RCutFlowReport> relative to all
+- when Report() is called on the main RDataFrame object, it returns a ROOT::RDF::RResultPtr<RCutFlowReport> relative to all
 named filters declared up to that point
-- when called on a specific node (e.g. the result of a Define() or Filter()), it returns a RResultPtr<RCutFlowReport>
+- when called on a specific node (e.g. the result of a Define() or Filter()), it returns a ROOT::RDF::RResultPtr<RCutFlowReport>
 relative all named filters in the section of the chain between the main RDataFrame and that node (included).
 
 Stats are stored in the same order as named filters have been added to the graph, and *refer to the latest event-loop*
@@ -694,11 +694,11 @@ h.OnPartialResult(100, [&c](TH1D &h_) { c.cd(); h_.Draw(); c.Update(); });
 h->Draw(); // event loop runs here, this `Draw` is executed after the event loop is finished
 ~~~
 
-Callbacks are registered to a RResultPtr and must be callables that takes a reference to the result type as argument
+Callbacks are registered to a ROOT::RDF::RResultPtr and must be callables that takes a reference to the result type as argument
 and return nothing. RDataFrame will invoke registered callbacks passing partial action results as arguments to them
 (e.g. a histogram filled with a part of the selected events).
 
-Read more on RResultPtr::OnPartialResult().
+Read more on ROOT::RDF::RResultPtr::OnPartialResult().
 
 ### Default branch lists
 When constructing a RDataFrame object, it is possible to specify a **default column list** for your analysis, in the
@@ -818,6 +818,8 @@ RDataFrame d(t);
 auto f = d.Filter("myFriend.MyCol == 42");
 ~~~
 
+Friend TTrees with a TTreeIndex are supported from ROOT v6.24.
+
 ### Reading file formats different from ROOT's
 RDataFrame can be interfaced with RDataSources. The RDataSource interface defines an API that RDataFrame can use to read arbitrary data formats.
 
@@ -930,7 +932,7 @@ auto maybeRangedDF = MaybeAddRange(df, true);
 The conversion to ROOT::RDF::RNode is cheap, but it will introduce an extra virtual call during the RDataFrame event 
 loop (in most cases, the resulting performance impact should be negligible).
 
-As a final note, remember that RDataFrame actions do not return another dataframe, but a RResultPtr<T>, where T is the
+As a final note, remember that RDataFrame actions do not return another dataframe, but a ROOT::RDF::RResultPtr<T>, where T is the
 type of the result of the action.
 
 Read more on this topic [here](https://root.cern.ch/doc/master/classROOT_1_1RDF_1_1RInterface.html#a6909f04c05723de79f97a14b092318b1).
