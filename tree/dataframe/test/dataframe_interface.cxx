@@ -573,3 +573,47 @@ TEST(RDataFrameInterface, JittedExprWithManyVars)
                           .GetValue();
    EXPECT_EQ(counts, 1ull);
 }
+
+TEST(RDataFrameInterface, Describe)
+{
+   // empty dataframe
+   RDataFrame df1(1);
+   const auto ref1 = "Property                Value\n"
+                     "--------                -----\n"
+                     "Columns in total            0\n"
+                     "Columns from defines        0\n"
+                     "Event loops run             0\n"
+                     "Processing slots            1\n"
+                     "\n"
+                     "Column  Type    Origin\n"
+                     "------  ----    ------\n";
+   EXPECT_EQ(df1.Describe(), ref1);
+
+   // create in-memory tree
+   TTree tree("tree", "tree");
+   int myInt = 1u;
+   float myFloat = 1.f;
+   tree.Branch("myInt", &myInt, "myInt/I");
+   tree.Branch("myFloat", &myFloat, "myFloat/F");
+   tree.Fill();
+
+   // dataframe with various data types
+   RDataFrame df2(tree);
+   auto df3 = df2.Define("myVec", "ROOT::RVec<float>({1, 2, 3})")
+                 .Define("myLongColumnName", "1u");
+   df3.Sum("myInt").GetValue(); // trigger the event loop once
+   const auto ref2 = "Property                Value\n"
+                     "--------                -----\n"
+                     "Columns in total            4\n"
+                     "Columns from defines        2\n"
+                     "Event loops run             1\n"
+                     "Processing slots            1\n"
+                     "\n"
+                     "Column                  Type                            Origin\n"
+                     "------                  ----                            ------\n"
+                     "myVec                   ROOT::VecOps::RVec<float>       Define\n"
+                     "myLongColumnName        unsigned int                    Define\n"
+                     "myInt                   Int_t                           Dataset\n"
+                     "myFloat                 Float_t                         Dataset";
+   EXPECT_EQ(df3.Describe(), ref2);
+}

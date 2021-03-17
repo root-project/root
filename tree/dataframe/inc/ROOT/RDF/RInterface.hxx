@@ -44,6 +44,7 @@
 #include <type_traits> // is_same, enable_if
 #include <typeinfo>
 #include <vector>
+#include <set>
 
 class TGraph;
 
@@ -1997,6 +1998,90 @@ public:
       const bool convertVector2RVec = true;
       return RDFInternal::ColumnName2ColumnTypeName(col, fLoopManager->GetTree(), fLoopManager->GetDataSource(), define,
                                                     convertVector2RVec);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Return information about the dataframe.
+   /// \return information about the dataframe as string
+   ///
+   /// This convenience function describes the dataframe and combines the following information:
+   /// - Number of event loops run, see GetNRuns()
+   /// - Number of total and defined columns, see GetColumnNames() and GetDefinedColumnNames()
+   /// - Column names, see GetColumnNames()
+   /// - Column types, see GetColumnType()
+   /// - Number of processing slots, see GetNSlots()
+   ///
+   /// This is not an action nor a transformation, just a query to the RDataFrame object.
+   /// The result is dependent on the node from which this method is called, e.g. the list of
+   /// defined columns returned by GetDefinedColumnNames().
+   ///
+   /// Please note that this is a convenience feature and the layout of the output can be subject
+   /// to change and should not be automatically parsed.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// RDataFrame df(10);
+   /// auto df2 = df.Define("x", "1.f").Define("s", "\"myStr\"");
+   /// // Describe the dataframe
+   /// std::cout << df2.Describe() << std::endl;
+   /// ~~~
+   ///
+   std::string Describe()
+   {
+      // Build set of defined column names to find later in all column names
+      // the defined columns more efficiently
+      const auto columnNames = GetColumnNames();
+      std::set<std::string> definedColumnNamesSet;
+      for (const auto &name : GetDefinedColumnNames())
+         definedColumnNamesSet.insert(name);
+
+      // Get information for the metadata table
+      const std::vector<std::string> metadataProperties = {"Columns in total", "Columns from defines",
+                                                           "Event loops run", "Processing slots"};
+      const std::vector<std::string> metadataValues = {std::to_string(columnNames.size()),
+                                                       std::to_string(definedColumnNamesSet.size()),
+                                                       std::to_string(GetNRuns()), std::to_string(GetNSlots())};
+
+      // Set header for metadata table
+      const auto columnWidthProperties = RDFInternal::GetColumnWidth(metadataProperties);
+      // The column width of the values is required to make right-bound numbers and is equal
+      // to the maximum of the string "Value" and all values to be put in this column.
+      const auto columnWidthValues =
+         std::max(std::max_element(metadataValues.begin(), metadataValues.end())->size(), static_cast<std::size_t>(5u));
+      std::stringstream ss;
+      ss << std::left << std::setw(columnWidthProperties) << "Property" << std::setw(columnWidthValues) << "Value\n"
+         << std::setw(columnWidthProperties) << "--------" << std::setw(columnWidthValues) << "-----\n";
+
+      // Build metadata table
+      // All numbers should be bound to the right and strings bound to the left.
+      for (auto i = 0u; i < metadataProperties.size(); i++) {
+         ss << std::left << std::setw(columnWidthProperties) << metadataProperties[i] << std::right
+            << std::setw(columnWidthValues) << metadataValues[i] << '\n';
+      }
+      ss << '\n'; // put space between this and the next table
+
+      // Set header for columns table
+      const auto columnWidthNames = RDFInternal::GetColumnWidth(columnNames);
+      const auto columnTypes = GetColumnTypeNamesList(columnNames);
+      const auto columnWidthTypes = RDFInternal::GetColumnWidth(columnTypes);
+      ss << std::left << std::setw(columnWidthNames) << "Column" << std::setw(columnWidthTypes) << "Type"
+         << "Origin\n"
+         << std::setw(columnWidthNames) << "------" << std::setw(columnWidthTypes) << "----"
+         << "------\n";
+
+      // Build columns table
+      const auto nCols = columnNames.size();
+      for (auto i = 0u; i < nCols; i++) {
+         auto origin = "Dataset";
+         if (definedColumnNamesSet.find(columnNames[i]) != definedColumnNamesSet.end())
+            origin = "Define";
+         ss << std::left << std::setw(columnWidthNames) << columnNames[i] << std::setw(columnWidthTypes)
+            << columnTypes[i] << origin;
+         if (i < nCols - 1)
+            ss << '\n';
+      }
+
+      return ss.str();
    }
 
    /// \brief Returns the names of the filters created.
