@@ -3810,7 +3810,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///
 /// \return -1 in case of error or number of selected events in case of success.
 ///
-/// \param [in] varexp is an expression of the general form
+/// \param [in] varexp
+/// \parblock
+///  A string that takes one of these general forms:
 ///  - "e1"           produces a 1-d histogram (TH1F) of expression "e1"
 ///  - "e1:e2"        produces an unbinned 2-d scatter-plot (TGraph) of "e1"
 ///                   on the y-axis versus "e2" on the x-axis
@@ -3841,8 +3843,10 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///       TMath::BreitWigner(fPx,3,2)
 ///       event.GetHistogram()->GetXaxis()->GetXmax()
 ///   ~~~
-///
-/// \param [in] selection is an expression with a combination of the columns.
+///   \endparblock
+/// \param [in] selection
+/// \parblock
+/// A string containing a selection expression.
 ///   In a selection all usual C++ mathematical and logical operators are allowed.
 ///   The value corresponding to the selection expression is used as a weight
 ///   to fill the histogram (a weight of 0 is equivalent to not filling the histogram).\n
@@ -3859,8 +3863,10 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///   // Muon_pt is an array: fill a histogram with the array elements > 100 in each event
 ///   tree->Draw('Muon_pt', 'Muon_pt > 100')
 ///   ~~~
-///
-/// \param [in] option is the drawing option.
+///  \endparblock
+/// \param [in] option
+/// \parblock
+/// The drawing option.
 ///    - When an histogram is produced it can be any histogram drawing option
 ///      listed in THistPainter.
 ///    - when no option is specified:
@@ -3882,10 +3888,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///    - if expression has more than four fields the option "PARA"or "CANDLE"
 ///      can be used.
 ///    - If option contains the string "goff", no graphics is generated.
-///
-/// \param [in] nentries is the number of entries to process (default is all)
-///
-/// \param [in] firstentry is the first entry to process (default is 0)
+/// \endparblock
+/// \param [in] nentries The number of entries to process (default is all)
+/// \param [in] firstentry The first entry to process (default is 0)
 ///
 /// ### Drawing expressions using arrays and array elements
 ///
