@@ -307,15 +307,20 @@ int NetRecvAllocate(void *&buf, int &len, EMessageTypes &kind)
 
 int NetRecv(char *msg, int len, EMessageTypes &kind)
 {
-   int   mlen;
+   int   mlen = 0;
+   void *tmpbuf = nullptr;
 
-   void *tmpbuf = 0;
-   if (NetRecvAllocate(tmpbuf, mlen, kind) < 0)
-      return -1;
+   int res = NetRecvAllocate(tmpbuf, mlen, kind);
    char *buf = static_cast<char *>(tmpbuf);
+
+   if (res < 0) {
+      delete [] buf;
+      return -1;
+   }
 
    if (mlen == 0) {
       msg[0] = 0;
+      delete [] buf;
       return 0;
    } else if (mlen > len-1) {
       strncpy(msg, buf, len-1);
