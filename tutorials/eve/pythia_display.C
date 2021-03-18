@@ -16,7 +16,7 @@ void pythia_display()
    dir.ReplaceAll("/./","/");
    gROOT->LoadMacro(dir +"MultiView.C+");
 
-#ifndef G__WIN32 // libPythia6 is a static library on Windoze
+#ifndef R__WIN32 // libPythia6 is a static library on Windoze
    if (gSystem->Load("libPythia6") < 0)
    {
       Error("pythia_display()",
@@ -51,6 +51,11 @@ const Color_t  kColors[3] = { kRed, kGreen, kYellow };
 //==============================================================================
 // Global variables.
 //------------------------------------------------------------------------------
+
+#include "TEveTrack.h"
+#include "TEveTrackPropagator.h"
+#include "TEveElement.h"
+#include "TEveGeoShape.h"
 
 #include "TPythia6.h"
 #include "TGeoTube.h"
@@ -228,7 +233,7 @@ void pythia_next_event()
    gTrackList->MakeTracks();
 
 
-   TEveElement* top = gEve->GetCurrentEvent();
+   TEveElement* top = static_cast<TEveElement *>(gEve->GetCurrentEvent());
 
    gMultiView->DestroyEventRPhi();
    gMultiView->ImportEventRPhi(top);
@@ -295,4 +300,3 @@ void pythia_make_gui()
 }
 
 #endif
-

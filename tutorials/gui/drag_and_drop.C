@@ -199,7 +199,7 @@ DNDMainFrame::DNDMainFrame(const TGWindow *p, int w, int h) :
    item->SetDNDSource(kTRUE);
 
    TString rootsys(gSystem->UnixPathName(gSystem->Getenv("ROOTSYS")));
-#ifdef G__WIN32
+#ifdef R__WIN32
    // remove the drive letter (e.g. "C:/") from $ROOTSYS, if any
    if (rootsys[1] == ':' && rootsys[2] == '/')
       rootsys.Remove(0, 3);
