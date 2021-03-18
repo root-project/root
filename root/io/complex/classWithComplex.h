@@ -5,12 +5,12 @@ class classWithComplex {
 public:
 classWithComplex(float re, float im, double red, double imd):fcf(re,im),fcd(red,imd){};
 classWithComplex():fcf(0,0),fcd(0,0){};
-complex<float> GetF() const {return fcf;}
-complex<double> GetD() const {return fcd;}
+  std::complex<float> GetF() const {return fcf;}
+  std::complex<double> GetD() const {return fcd;}
 
 private:
-complex<float> fcf;
-complex<double> fcd;
+  std::complex<float> fcf;
+  std::complex<double> fcd;
 
 };
 

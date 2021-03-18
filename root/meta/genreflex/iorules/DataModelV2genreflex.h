@@ -28,17 +28,17 @@ protected:
    }
 
    void Print() {
-      cout << "ACache::x " << GetX() << endl;
-      cout << "ACache::y " << GetY() << endl;
-      cout << "ACache::z " << GetZ() << endl;
-      cout << "ACache::c " << c << endl;
-      cout << "ACache::fN    " << fN << endl;
-      //cout << "ACache::fArray" << (void*)fArray << endl;
+      std::cout << "ACache::x " << GetX() << std::endl;
+      std::cout << "ACache::y " << GetY() << std::endl;
+      std::cout << "ACache::z " << GetZ() << std::endl;
+      std::cout << "ACache::c " << c << std::endl;
+      std::cout << "ACache::fN    " << fN << std::endl;
+      //std::cout << "ACache::fArray" << (void*)fArray << std::endl;
       if (fArray) for(int i = 0; i < fN; ++i) { 
-         cout << "ACache::fArray["<<i<<"] "<< (short)fArray[i] << endl;
+         std::cout << "ACache::fArray["<<i<<"] "<< (short)fArray[i] << std::endl;
       }
       for(unsigned int j = 0; j < sizeof(fValues) / sizeof(fValues[0]); ++j) { 
-         cout << "ACache::fValues["<<j<<"] "<< fValues[j] << endl;
+         std::cout << "ACache::fValues["<<j<<"] "<< fValues[j] << std::endl;
          
       }
    }

@@ -1,6 +1,7 @@
 #include <map>
+#include <string>
 
-std::map<string, bool> a1;
+std::map<std::string, bool> a1;
 std::map<char, bool> a2;
 std::map<const char*, bool> a3;
 std::map<int, bool> a11;
@@ -10,7 +11,7 @@ std::map<double, bool> b12;
 std::map<double, const double*> b22;
 std::map<double, unsigned long int> b32;
 
-std::multimap<string, bool> a12;
+std::multimap<std::string, bool> a12;
 std::multimap<char, bool> a22;
 std::multimap<const char*, bool> a32;
 std::multimap<int, bool> a112;

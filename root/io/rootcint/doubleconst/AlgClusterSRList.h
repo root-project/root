@@ -13,12 +13,12 @@ public:
   AlgClusterSRList();
   virtual ~AlgClusterSRList();
   std::map<const CandStripHandle*, Int_t> fNNeighbors;
-map<CandStripHandle *, double> fLikelihoods;
+  std::map<CandStripHandle *, double> fLikelihoods;
 
-map<CandStripHandle *,  AltCandStpProbHandle *> fLikelihoods2;
+  std::map<CandStripHandle *,  AltCandStpProbHandle *> fLikelihoods2;
 
 
-ClassDef(AlgClusterSRList,1)                // ClusterSRList Algorithm Class
+  ClassDef(AlgClusterSRList,1)                // ClusterSRList Algorithm Class
 };
 
 #endif                                                 // ALGCLUSTERSRLIST_H

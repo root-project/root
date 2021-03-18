@@ -8,10 +8,10 @@
 #ifndef __COMPLEX__INSTANCES__
 #define __COMPLEX__INSTANCES__
 template<class T> class instantiator{
-std::forward_list<complex<T>> a1;
-std::list<complex<T>> a2;
-std::vector<complex<T>> a3;
-std::deque<complex<T>> a4;
+  std::forward_list<std::complex<T>> a1;
+  std::list<std::complex<T>> a2;
+  std::vector<std::complex<T>> a3;
+  std::deque<std::complex<T>> a4;
 };
 instantiator<float> i1;
 instantiator<double> i2;
