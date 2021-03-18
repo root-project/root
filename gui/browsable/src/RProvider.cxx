@@ -176,7 +176,7 @@ const RProvider::StructClass &RProvider::GetClassEntry(const ClassArg &cl)
          for (auto &elem : bmap)
             if (cl.name.compare(0, elem.first.length(), elem.first) == 0)
                return elem.second;
-      } else {
+      } else if (cl.cl) {
          auto bases = const_cast<TClass *>(cl.cl)->GetListOfBases();
          const TClass *basecl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
          if (basecl) return RProvider::GetClassEntry(basecl);
