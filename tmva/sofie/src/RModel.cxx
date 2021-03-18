@@ -343,6 +343,9 @@ namespace SOFIE{
       }
       std::ofstream f;
       f.open(filename);
+      if (!f.is_open()){
+         throw std::runtime_error("tmva-sofie failed to open file for output generated inference code");
+      }
       f << fGC;
       f.close();
    }
