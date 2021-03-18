@@ -9,7 +9,7 @@
  **********************************************************************/
 //
 //  AnalyticalIntegrals.cxx
-//  
+//
 //
 //  Created by Aurélie Flandi on 09.09.14.
 //
@@ -38,8 +38,8 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
 
    TFormula * formula = f->GetFormula();
    if (!formula) {
-      Error("TF1::AnalyticalIntegral","Invalid formula number - return a NaN"); 
-      result = TMath::QuietNaN();
+      Error("TF1::AnalyticalIntegral","Invalid formula number - return a NaN");
+      return TMath::QuietNaN();
    }
 
    if   (num == 200)//expo: exp(p0+p1*x)
@@ -64,9 +64,9 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
       double mean  = p[1];
       double sigma = p[2];
       //printf("computing integral for landau in [%f,%f] for m=%f s = %f \n",xmin,xmax,mean,sigma);
-      if (formula->TestBit(TFormula::kNormalized) ) 
+      if (formula->TestBit(TFormula::kNormalized) )
          result = amp*(ROOT::Math::landau_cdf(xmax,sigma,mean) - ROOT::Math::landau_cdf(xmin,sigma,mean));
-      else 
+      else
          result = amp*sigma*(ROOT::Math::landau_cdf(xmax,sigma,mean) - ROOT::Math::landau_cdf(xmin,sigma,mean));
    }
    else if (num == 500) //crystal ball
@@ -76,9 +76,9 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
       double sigma = p[2];
       double alpha = p[3];
       double n     = p[4];
-      
+
       //printf("computing integral for CB in [%f,%f] for m=%f s = %f alpha = %f n = %f\n",xmin,xmax,mean,sigma,alpha,n);
-      if (alpha > 0) 
+      if (alpha > 0)
          result = amp*( ROOT::Math::crystalball_integral(xmin,alpha,n,sigma,mean) -  ROOT::Math::crystalball_integral(xmax,alpha,n,sigma,mean) );
       else {
          result = amp*( ROOT::Math::crystalball_integral(xmax,alpha,n,sigma,mean) -  ROOT::Math::crystalball_integral(xmin,alpha,n,sigma,mean) );
@@ -95,6 +95,6 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
    }
    else
       result = TMath::QuietNaN();
-   
+
    return result;
 }
