@@ -152,7 +152,7 @@ Bool_t TGInputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      // here copy the string from text buffer to return variable
                      // coverity[secure_coding]
                      str = fTE->GetBuffer()->GetString();
-                     strlcpy(fRetStr, str, strlen(str)+1);
+                     strlcpy(fRetStr, str, sizeof(fRetStr));
                      // if user selected an empty string, set the second
                      // char to 1,in order to distinguish between empty string
                      // selected with OK and Cancel button pressed
@@ -179,7 +179,7 @@ Bool_t TGInputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                // here copy the string from text buffer to return variable
                // coverity[secure_coding]
                str = fTE->GetBuffer()->GetString();
-               strlcpy(fRetStr, str, strlen(str)+1);
+               strlcpy(fRetStr, str, sizeof(fRetStr));
                // if user selected an empty string, set the second
                // char to 1,in order to distinguish between empty string
                // selected with OK and Cancel button pressed

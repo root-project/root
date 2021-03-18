@@ -842,24 +842,24 @@ wrapLine:
 
    curLine = 0;
    chunk = layout->fChunks;
-   if (chunk) y = chunk->fY;
-   for (n = 0; n < layout->fNumChunks; n++) {
-      int extra = maxWidth;
+   if (chunk) {
+      y = chunk->fY;
+      for (n = 0; n < layout->fNumChunks; n++) {
+         int extra = maxWidth;
 
-      if (chunk->fY != y) {
-         curLine++;
-         y = chunk->fY;
+         if (chunk->fY != y) {
+            curLine++;
+            y = chunk->fY;
+         }
+         if (curLine < maxLines)
+            extra = maxWidth - lineLengths[curLine];
+         if (justify == kTextCenterX) {
+            chunk->fX += extra / 2;
+         } else if (justify == kTextRight) {
+            chunk->fX += extra;
+         }
+         ++chunk;
       }
-      if (curLine < maxLines)
-         extra = maxWidth - lineLengths[curLine];
-      if (justify == kTextCenterX) {
-         chunk->fX += extra / 2;
-      } else if (justify == kTextRight) {
-         chunk->fX += extra;
-      }
-      ++chunk;
-      if (!chunk)
-         break;
    }
 
    layout->fWidth = maxWidth;
