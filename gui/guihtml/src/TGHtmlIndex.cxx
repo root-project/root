@@ -391,7 +391,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
 
       case 'b':
          if (strcmp(base, "begin") == 0) {
-            p = *ppToken = fPFirst;
+            *ppToken = fPFirst;
             *pIndex = 0;
          } else {
             rc = 1;

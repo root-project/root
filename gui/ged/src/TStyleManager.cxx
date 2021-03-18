@@ -1422,7 +1422,6 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          delta = fCurSelStyle->GetTimeOffset() - 788918400;
          year = 1995;
          month = 1;
-         day = 1;
          while (delta < 0) {
             year--;
             if (year % 4) oneYearInSecs = 3600 * 24 * 365;
@@ -4409,7 +4408,8 @@ void TStyleManager::DoPreview(Bool_t b)
             TQObject::Connect("TCanvas", "Closed()", "TStyleManager", this, "DoSelectNoCanvas()");
          }
       }
-      fPreviewWindow->Connect("CloseWindow()", "TStyleManager", this, "DoPreviewClosed()");
+      if (fPreviewWindow)
+         fPreviewWindow->Connect("CloseWindow()", "TStyleManager", this, "DoPreviewClosed()");
       fPreviewRealTime->SetEnabled(kTRUE);
       if (fRealTimePreview) {
          fPreviewRealTime->SetState(kButtonDown, kFALSE);

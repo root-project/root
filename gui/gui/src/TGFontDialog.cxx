@@ -628,7 +628,6 @@ void TGFontDialog::UpdateStyleSize(const char *family)
       n2 = name.Index("-", n1);
       n1 = n2 + 1;
       n2 = name.Index("-", n1);
-      n1 = n2 + 1;
 
       if (n2 != kNPOS) {
          n1 = n2 + 2;
@@ -881,7 +880,6 @@ void TGFontDialog::SetFont(TGFont *font)
    n2 = name.Index("-", n1);
    n1 = n2 + 1;
    n2 = name.Index("-", n1);
-   n1 = n2 + 1;
    if (n2 != kNPOS) {
       n1 = n2 + 1;
       n2 = name.Index("-", n1);

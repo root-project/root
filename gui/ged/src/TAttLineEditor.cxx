@@ -201,7 +201,7 @@ void TAttLineEditor::DoLineWidth(Int_t width)
       } else {
          fAttLine->SetLineWidth(-(TMath::Abs(graphLineWidth)+width));
       }
-   } else {
+   } else if (fAttLine) {
       fAttLine->SetLineWidth(width);
    }
    Update();

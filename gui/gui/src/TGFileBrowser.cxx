@@ -279,7 +279,7 @@ static Bool_t IsObjectEditable(TClass *cl)
       cl = base->GetClassPointer();
       if (cl && TClass::GetClass(Form("%sEditor", cl->GetName())))
          return kTRUE;
-      if (IsObjectEditable(cl))
+      if (cl && IsObjectEditable(cl))
          return kTRUE;
    }
    return kFALSE;
@@ -441,9 +441,6 @@ void TGFileBrowser::AddRemoteFile(TObject *obj)
    TGPicture *pic;
 
    FileStat_t sbuf;
-
-   type    = 0;
-   is_link = kFALSE;
 
    TRemoteObject *robj = (TRemoteObject *)obj;
 
@@ -738,7 +735,7 @@ void TGFileBrowser::AddFSDirectory(const char *entry, const char *path,
    TGListTreeItem *item = 0;
    if ((opt == 0) || (!opt[0])) {
       if (fRootDir == 0 && !fListTree->FindChildByName(0, rootdir))
-         item = fRootDir = fListTree->AddItem(0, rootdir);
+         fRootDir = fListTree->AddItem(0, rootdir);
       return;
    }
    if (strstr(opt, "SetRootDir")) {

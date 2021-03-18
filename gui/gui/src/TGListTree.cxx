@@ -1482,7 +1482,7 @@ Int_t TGListTree::DrawChildren(Handle_t id, TGListTreeItem *item,
 void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
                           Int_t *xroot, UInt_t *retwidth, UInt_t *retheight)
 {
-   Int_t  xpic1, ypic1, xbranch, ybranch, xtext, ytext = 0, xline, yline, xc;
+   Int_t  xpic1, ypic1, xbranch, ybranch, xtext, ytext = 0, yline, xc;
    Int_t  xpic2 = 0;
    UInt_t height;
    const TGPicture *pic1 = item->GetPicture();
@@ -1491,22 +1491,15 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
    // Compute the height of this line
    height = FontHeight();
 
-   xline = 0;
    xpic1 = x;
    xtext = x + fHspacing + (Int_t)item->GetPicWidth();
    if (pic2) {
       if (pic2->GetHeight() > height) {
-         ytext = y + (Int_t)((pic2->GetHeight() - height) >> 1);
          height = pic2->GetHeight();
-      } else {
-         ytext = y;
       }
       if (pic1) xpic2 = xpic1 + pic1->GetWidth() + 1;
       else xpic2 = xpic1 + 1;
       xtext += pic2->GetWidth();
-   } else {
-      ypic1 = y;
-      xline = 0;
    }
    if (pic1) {
       if (pic1->GetHeight() > height) {
@@ -1523,12 +1516,10 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
       xbranch = xpic1 + (Int_t)(pic1->GetWidth() >> 1);
       ybranch = ypic1 + (Int_t)pic1->GetHeight();
       yline = ypic1 + (Int_t)(pic1->GetHeight() >> 1);
-      if (xline == 0) xline = xpic1;
    } else {
-      if (xline == 0) xline = xpic1;
       ypic1 = ytext = y;
       xbranch = xpic1 + (Int_t)(item->GetPicWidth() >> 1);
-      yline = ybranch = ypic1 + (Int_t)(height >> 1);
+      ybranch = ypic1 + (Int_t)(height >> 1);
       yline = ypic1 + (Int_t)(height >> 1);
    }
 

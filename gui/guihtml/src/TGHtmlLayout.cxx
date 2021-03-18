@@ -466,7 +466,6 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
 
    if (actualWidth > 0) {
       for (p = p_start; p && p != p_end && p->fType != Html_Text; p = p->fPNext) {}
-      if (p == p_end || p == 0) p = p_start;
       maxAscent = maxTextAscent = 0;
       for (p = p_start; p && p != p_end; p = p->fPNext) {
          int ss;
@@ -495,7 +494,6 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
                } else if (ss < 0) {
                   int descent2 = text->fDescent;
                   int delta = (descent2 + text->fAscent) * (-ss) / 2;
-                  descent2 += delta;
                   text->fY = delta;
                } else {
                   text->fY = 0;

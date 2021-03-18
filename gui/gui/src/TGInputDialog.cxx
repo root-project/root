@@ -79,7 +79,6 @@ TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
    fOk = new TGTextButton(hf, "&Ok", 1);
    fOk->Associate(this);
    hf->AddFrame(fOk, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 5, 5, 0, 0));
-   height = fOk->GetDefaultHeight();
    width  = TMath::Max(width, fOk->GetDefaultWidth());
 
    fCancel = new TGTextButton(hf, "&Cancel", 2);
@@ -151,7 +150,7 @@ Bool_t TGInputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case 1:
                      // here copy the string from text buffer to return variable
                      // coverity[secure_coding]
-                     strcpy(fRetStr, fTE->GetBuffer()->GetString());
+                     strcpy(fRetStr, fTE->GetBuffer()->GetString()); // NOLINT
                      // if user selected an empty string, set the second
                      // char to 1,in order to distinguish between empty string
                      // selected with OK and Cancel button pressed
@@ -177,7 +176,7 @@ Bool_t TGInputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             case kTE_ENTER:
                // here copy the string from text buffer to return variable
                // coverity[secure_coding]
-               strcpy(fRetStr, fTE->GetBuffer()->GetString());
+               strcpy(fRetStr, fTE->GetBuffer()->GetString()); // NOLINT
                // if user selected an empty string, set the second
                // char to 1,in order to distinguish between empty string
                // selected with OK and Cancel button pressed

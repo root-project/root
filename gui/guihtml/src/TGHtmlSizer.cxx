@@ -1103,6 +1103,8 @@ void TGHtml::Sizer()
          font->GetFontMetrics(&fontMetrics);
          spaceWidth = 0;
       }
+      if (!font)
+         continue;
       switch (p->fType) {
          case Html_Text: {
             TGHtmlTextElement *text = (TGHtmlTextElement *) p;

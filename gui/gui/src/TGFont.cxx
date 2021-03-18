@@ -842,21 +842,24 @@ wrapLine:
 
    curLine = 0;
    chunk = layout->fChunks;
-   if (chunk) y = chunk->fY;
-   for (n = 0; n < layout->fNumChunks; n++) {
-      int extra;
+   if (chunk) {
+      y = chunk->fY;
+      for (n = 0; n < layout->fNumChunks; n++) {
+         int extra = maxWidth;
 
-      if (chunk->fY != y) {
-         curLine++;
-         y = chunk->fY;
+         if (chunk->fY != y) {
+            curLine++;
+            y = chunk->fY;
+         }
+         if (curLine < maxLines)
+            extra = maxWidth - lineLengths[curLine];
+         if (justify == kTextCenterX) {
+            chunk->fX += extra / 2;
+         } else if (justify == kTextRight) {
+            chunk->fX += extra;
+         }
+         ++chunk;
       }
-      extra = maxWidth - lineLengths[curLine];
-      if (justify == kTextCenterX) {
-         chunk->fX += extra / 2;
-      } else if (justify == kTextRight) {
-         chunk->fX += extra;
-      }
-      ++chunk;
    }
 
    layout->fWidth = maxWidth;
@@ -2245,7 +2248,7 @@ Bool_t TGFontPool::FieldSpecified(const char *field)
 {
    char ch;
 
-   if (!field) {
+   if (!field || !strlen(field)) {
       return kFALSE;
    }
    ch = field[0];
@@ -2378,8 +2381,6 @@ TGFont *TGFontPool::GetFontFromAttributes(FontAttributes_t *fa, TGFont *fontPtr)
       d += 0.5;
       pixelsize = (int) d;
    }
-
-   fontStruct = 0;
 
    // Couldn't find exact match. Now fall back to other available physical fonts.
 
