@@ -33,7 +33,7 @@ bool GaussIntegrator::fgAbsValue = false;
    if (std::max(fEpsRel,fEpsAbs)  <= 0.0 ) {
       fEpsRel = 1.E-9;
       fEpsAbs = 1.E-9;
-      MATH_WARN_MSG("ROOT::Math::GausIntegrator", "Invalid tolerance given, use values of 1.E-9"); 
+      MATH_WARN_MSG("ROOT::Math::GausIntegrator", "Invalid tolerance given, use values of 1.E-9");
    }
 
    fLastResult = fLastError = 0;
@@ -54,18 +54,18 @@ double GaussIntegrator::Integral(double a, double b) {
 }
 
 double GaussIntegrator::Integral () {
-   IntegrandTransform it(this->fFunction);
-   return DoIntegral(0., 1., it.Clone());
+   IntegrandTransform it(fFunction);
+   return DoIntegral(0., 1., &it);
 }
 
 double GaussIntegrator::IntegralUp (double a) {
-   IntegrandTransform it(a, IntegrandTransform::kPlus, this->fFunction);
-   return DoIntegral(0., 1., it.Clone());
+   IntegrandTransform it(a, IntegrandTransform::kPlus, fFunction);
+   return DoIntegral(0., 1., &it);
 }
 
 double GaussIntegrator::IntegralLow (double b) {
-   IntegrandTransform it(b, IntegrandTransform::kMinus, this->fFunction);
-   return DoIntegral(0., 1., it.Clone());
+   IntegrandTransform it(b, IntegrandTransform::kMinus, fFunction);
+   return DoIntegral(0., 1., &it);
 }
 
 double GaussIntegrator::DoIntegral(double a, double b, const IGenFunction* function)
