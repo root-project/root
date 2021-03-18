@@ -44,11 +44,48 @@ namespace Internal {
 
 class TDirectory : public TNamed {
 public:
-   /** @class TContext
-     *
-     *  Small helper to keep current directory context.
-     *  Automatically reverts to "old" directory
-     */
+
+/** \class TContext
+\ingroup Base
+
+TDirectory::TContext keeps track and restore the current directory.
+With this tool C++ exceptions will be guaranteed to properly restore the
+current directory pointer.
+
+For example code like:
+
+~~~ {.cpp}
+   TDirectory *sav = gDirectory;
+   mydirectory->cd();
+   if (...) {
+      ....
+      sav->cd();
+      return;
+   } else if (...) {
+      ....
+      sav->cd();
+      return;
+   }
+   sav->cd;
+   return;
+~~~
+
+can be replaced with the simpler and exception safe:
+
+~~~ {.cpp}
+   TDirectory::TContext context(gDirectory, mydirectory);
+   if (...) {
+      ....
+      return;
+   } else if (...) {
+      ....
+      return;
+   }
+   return;
+~~~
+
+*/
+
    class TContext  {
    private:
       std::atomic<TDirectory*> fDirectory{nullptr}; //! Pointer to the previous current directory.
