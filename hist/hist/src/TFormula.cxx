@@ -1388,11 +1388,11 @@ void TFormula::HandleFunctionArguments(TString &formula)
          } else {
             // otherwise, try to match default parametrized functions
 
-            for (auto keyval : parFunctions) {
+            for (const auto &keyval : parFunctions) {
                // (name, ndim)
-               pair<TString, Int_t> name_ndim = keyval.first;
+               const pair<TString, Int_t> &name_ndim = keyval.first;
                // (formula without normalization, formula with normalization)
-               pair<TString, TString> formulaPair = keyval.second;
+               const pair<TString, TString> &formulaPair = keyval.second;
 
                // match names like gaus, gausn, breitwigner
                if (name == name_ndim.first)
