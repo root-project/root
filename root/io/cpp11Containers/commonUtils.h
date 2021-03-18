@@ -19,42 +19,42 @@ bool gVerboseComparison = false;
 
 template <class T>
 bool IsSame(const T& a, const T& b){
-   cout << "ERROR\n";
+   std::cout << "ERROR\n";
    return a==b;
 }
 
 template <>
 bool IsSame<>(const int& a, const int& b){
    if (a==b) return true;
-   cout << "Error numbers differ: " << a << " " << b << std::endl;
+   std::cout << "Error numbers differ: " << a << " " << b << std::endl;
    return false;
 }
 
 template <>
 bool IsSame<>(const Long64_t& a, const Long64_t& b){
    if (a==b) return true;
-   cout << "Error numbers differ: " << a << " " << b << std::endl;
+   std::cout << "Error numbers differ: " << a << " " << b << std::endl;
    return false;
 }
 
 template <>
 bool IsSame<>(const double& a, const double& b){
    if (a==b) return true;
-   cout << "Error numbers differ: " << a << " " << b << std::endl;
+   std::cout << "Error numbers differ: " << a << " " << b << std::endl;
    return false;
 }
 
 template <>
 bool IsSame<>(const float& a, const float& b){
    if (a==b) return true;
-   cout << "Error numbers differ: " << a << " " << b << std::endl;
+   std::cout << "Error numbers differ: " << a << " " << b << std::endl;
    return false;
 }
 
 template <class T>
 bool IsSame(const std::complex<T>& a, const std::complex<T>& b){
    if (a==b) return true;
-   cout << "Error complex numbers differ: " << a << " " << b << std::endl;
+   std::cout << "Error complex numbers differ: " << a << " " << b << std::endl;
    return false;
 }
 
