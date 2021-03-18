@@ -148,8 +148,10 @@ static ParsedExpression ParseRDFExpression(std::string_view expr, const ColumnNa
 {
    // transform `#var` into `__rdf_sizeof_var`
    TString preProcessedExpr(expr);
-   TPRegexp colSizeReplacer("(^|\\W)#([a-zA-Z_][a-zA-Z0-9_]*)"); // match #varname at beginning or after not-a-word
-   colSizeReplacer.Substitute(preProcessedExpr, "$1__rdf_sizeof_$2", "g");
+   // match #varname at beginning of the sentence or after not-a-word, but exclude preprocessor directives like #ifdef
+   TPRegexp colSizeReplacer(
+      "(^|\\W)#(?!(ifdef|ifndef|if|else|elif|endif|pragma|define|undef|include|line))([a-zA-Z_][a-zA-Z0-9_]*)");
+   colSizeReplacer.Substitute(preProcessedExpr, "$1__rdf_sizeof_$3", "g");
 
    const auto usedColsAndAliases =
       FindUsedColumns(std::string(preProcessedExpr), treeBranchNames, customColNames, dataSourceColNames, aliasMap);
