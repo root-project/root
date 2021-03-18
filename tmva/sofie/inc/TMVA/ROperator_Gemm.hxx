@@ -1,6 +1,7 @@
 #ifndef TMVA_SOFIE_ROPERATOR_GEMM
 #define TMVA_SOFIE_ROPERATOR_GEMM
 
+
 #include "TMVA/SOFIE_common.hxx"
 #include "TMVA/ROperator.hxx"
 #include "TMVA/RModel.hxx"
@@ -129,8 +130,9 @@ namespace SOFIE{
             if (broadcast_needed){
                auto original_data = model.GetInitializedTensorData(fNC);
                if (fType == "float"){
-                  std::vector<float>* new_data = new std::vector<float>((UTILITY::Unidirectional_broadcast<float>(static_cast<float*>(original_data.get()), fShapeC, fShapeY)));
-                  std::shared_ptr<void> new_data_ptr(new_data->data(), std::default_delete<float[]>());
+
+                  std::shared_ptr<void> new_data_ptr(UTILITY::Unidirectional_broadcast<float>(static_cast<float*>(original_data.get()), fShapeC, fShapeY), std::default_delete<float[]>());
+
 
                   model.UpdateInitializedTensor(fNC, model.GetTensorType(fNC), fShapeY, new_data_ptr);
                   fShapeC = fShapeY;

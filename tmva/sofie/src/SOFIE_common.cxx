@@ -1,4 +1,4 @@
-#include "TMVA/SOFIE_common.hxx"
+#include "SOFIE_common.hxx"
 #include<cctype>
 
 namespace TMVA{
@@ -48,7 +48,7 @@ static inline void copy_vector_data(int_t no_of_copies, int_t input_size, T* inp
 }
 
 template <typename T>
-std::vector<T> UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<size_t> original_shape, const std::vector<size_t> target_shape)
+T* UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<size_t> original_shape, const std::vector<size_t> target_shape)
 {
 
       std::vector<size_t> current_shape(original_shape);
@@ -66,8 +66,8 @@ std::vector<T> UTILITY::Unidirectional_broadcast(const T* original_data, const s
          it = current_shape.insert(it, 1);
       }
 
-      std::vector<T> new_datavector(target_length);
-      std::memcpy(new_datavector.data(), original_data, original_length * sizeof(T));
+      T* new_datavector = new T[target_length];
+      std::memcpy(new_datavector, original_data, original_length * sizeof(T));
 
       for (int dim = target_shape.size() - 1; dim >= 0; dim--){
          if (current_shape[dim] != target_shape[dim]){
@@ -85,7 +85,7 @@ std::vector<T> UTILITY::Unidirectional_broadcast(const T* original_data, const s
             }
 
             for (int curr_group = no_of_groups - 1; curr_group >= 0; curr_group--){
-               copy_vector_data<T>(no_of_copies, group_size, new_datavector.data() + curr_group * group_size,new_datavector.data() + curr_group * group_size * no_of_copies);
+               copy_vector_data<T>(no_of_copies, group_size, new_datavector + curr_group * group_size,new_datavector + curr_group * group_size * no_of_copies);
             }
 
             current_shape[dim] = target_shape[dim];
@@ -100,7 +100,7 @@ std::string UTILITY::Clean_name(std::string input_tensor_name){
    return s;
 }
 
-template std::vector<float> UTILITY::Unidirectional_broadcast(const float* original_data, const std::vector<size_t> original_shape, const std::vector<size_t> target_shape);
+template float* UTILITY::Unidirectional_broadcast(const float* original_data, const std::vector<size_t> original_shape, const std::vector<size_t> target_shape);
 
 }//SOFIE
 }//Experimental
