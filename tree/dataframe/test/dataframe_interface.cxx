@@ -728,3 +728,23 @@ TEST(RDataFrameInterface, ShortSyntaxForCollectionSizes)
    EXPECT_EQ(*m5, 42);
    EXPECT_EQ(*m6, 42);
 }
+
+// make sure #pragma is ignored, and multiple #var1 #var2 are allowed
+TEST(RDataFrameInterface, StressShortSyntaxForCollectionSizes)
+{
+   gInterpreter->Declare("#define RDF_DO_FILTER 1");
+   auto df = ROOT::RDF::RNode(ROOT::RDataFrame(42));
+   // Define __rdf_sizeof_var{1,2,...,100}
+   for (int i = 1; i <= 100; ++i)
+      df = df.Define("__rdf_sizeof_var" + std::to_string(i), [] { return 1; });
+
+   // Filter expression is "#var1 + #var2 + ... + #var100 == 100"
+   std::string expr = "#var1";
+   for (int i = 2; i <= 100; ++i)
+      expr += "+#var" + std::to_string(i);
+   expr = expr + " == 100";
+   expr = "\n#ifdef RDF_DO_FILTER\nreturn " + expr + ";\n#else\nreturn false;\n#endif";
+   df = df.Filter(expr);
+   auto c = df.Count().GetValue();
+   EXPECT_EQ(c, 42ull);
+}
