@@ -558,3 +558,18 @@ TEST(RDataFrameInterface, JittedExprWithMultipleReturns)
                           .GetValue();
    EXPECT_EQ(counts, 1ull);
 }
+
+TEST(RDataFrameInterface, JittedExprWithManyVars)
+{
+   std::string expr = "x + x + x + x";
+   for (int i = 0; i < 10; ++i) {
+      expr = expr + '+' + expr;
+   }
+   expr = expr + ">0";
+   const auto counts = ROOT::RDataFrame(1)
+                          .Define("x", [] { return 1; })
+                          .Filter(expr)
+                          .Count()
+                          .GetValue();
+   EXPECT_EQ(counts, 1ull);
+}
