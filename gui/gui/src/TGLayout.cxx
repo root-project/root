@@ -283,7 +283,6 @@ void TGVerticalLayout::Layout()
                } else {
                   extra_space = esize_expand >> 1;
                }
-               y += extra_space;
                top += extra_space;
             }
          }
@@ -447,7 +446,6 @@ void TGHorizontalLayout::Layout()
                } else {
                   extra_space = esize_expand >> 1;
                }
-               x += extra_space;
                left += extra_space;
             }
          }
@@ -808,7 +806,7 @@ TGDimension TGTileLayout::GetDefaultSize() const
 
    next.Reset();
    // coverity[returned_pointer]
-   while ((ptr = (TGFrameElement *) next())) {
+   while (next()) {
       x += max_osize.fWidth + fSep;
       if (x + max_osize.fWidth > max_size.fWidth) {
          x = fSep;
@@ -900,7 +898,7 @@ TGDimension TGListLayout::GetDefaultSize() const
    x = fSep; y = fSep << 1;
 
    next.Reset();
-   while ((ptr = (TGFrameElement *) next())) {
+   while (next()) {
       y += (Int_t)max_osize.fHeight + fSep + (fSep >> 1);
       if (y + max_osize.fHeight > max_size.fHeight) {
          y = fSep << 1;

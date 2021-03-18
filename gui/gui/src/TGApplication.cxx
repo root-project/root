@@ -173,7 +173,7 @@ void TGApplication::GetOptions(Int_t *argc, char **argv)
 
    int i, j;
    for (i = 0; i < *argc; i++) {
-      if (!strcmp(argv[i], "-display")) {
+      if (argv[i] && !strcmp(argv[i], "-display")) {
          if (argv[i+1] && strlen(argv[i+1]) && argv[i+1][0] != '-') {
             fDisplay = argv[i+1];
             argv[i]   = nullptr;

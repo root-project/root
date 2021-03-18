@@ -227,7 +227,7 @@ char *TGHtmlUri::BuildUri()
    if (fZAuthority && fZAuthority[strlen(fZAuthority)-1] != '/' &&
       !(fZPath && fZPath[0] == '/')) {
       // coverity[secure_coding]
-      strcat(z, "/");
+      strcat(z, "/"); // NOLINT
       ++n;
    }
    if (fZPath) {
@@ -345,16 +345,16 @@ char *TGHtml::ResolveUri(const char *zUri)
       zBuf = new char[strlen(base->fZPath) + strlen(term->fZPath) + 2];
       if (zBuf) {
          // coverity[secure_coding]
-         sprintf(zBuf, "%s", base->fZPath);
+         sprintf(zBuf, "%s", base->fZPath); // NOLINT
          for (i = strlen(zBuf) - 1; i >= 0 && zBuf[i] != '/'; --i) {
             zBuf[i] = 0;
          }
          // coverity[secure_coding]
-         strcat(zBuf, term->fZPath);
+         strlcat(zBuf, term->fZPath, strlen(base->fZPath) + strlen(term->fZPath) + 2);
          for (i = 0; zBuf[i]; i++) {
             if (zBuf[i] == '/' && zBuf[i+1] == '.' && zBuf[i+2] == '/') {
                // coverity[secure_coding]
-               strcpy(&zBuf[i+1], &zBuf[i+3]);
+               strcpy(&zBuf[i+1], &zBuf[i+3]); // NOLINT
                --i;
                continue;
             }
@@ -367,7 +367,7 @@ char *TGHtml::ResolveUri(const char *zUri)
                for (j = i - 1; j >= 0 && zBuf[j] != '/'; --j) {}
                if (zBuf[i+3]) {
                   // coverity[secure_coding]
-                  strcpy(&zBuf[j+1], &zBuf[i+4]);
+                  strcpy(&zBuf[j+1], &zBuf[i+4]); // NOLINT
                } else {
                   zBuf[j+1] = 0;
                }

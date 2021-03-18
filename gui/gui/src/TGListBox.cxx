@@ -669,7 +669,8 @@ void TGLBContainer::RemoveAll()
       e = (TGLBEntry *) el->fFrame;
       l = el->fLayout;
       if (fLastActive == e) fLastActive = 0;
-      e->DestroyWindow();
+      if (e)
+         e->DestroyWindow();
       fList->Remove(el);  // avoid calling RemoveFrame(e)
       delete el;          // item
       delete e;

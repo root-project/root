@@ -47,8 +47,10 @@ TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w,
    else
       picName = "Default.png";
    fImage = TImage::Open(picName.Data());
-   if (!fImage || !fImage->IsValid())
+   if (!fImage || !fImage->IsValid()) {
       Error("TGShapedFrame", "%s not found", picName.Data());
+      return;
+   }
    fBgnd = fClient->GetPicturePool()->GetPicture(picName.Data(),
            fImage->GetPixmap(), fImage->GetMask());
    // shape the window with the picture mask

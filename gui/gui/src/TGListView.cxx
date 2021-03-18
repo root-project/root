@@ -851,7 +851,6 @@ Bool_t TGLVContainer::HandleButton(Event_t* event)
          total = selected = 0;
       }
 
-      select_frame = kFALSE;
       while ((el = (TGFrameElement *) next())) {
          select_frame = kFALSE;
 
