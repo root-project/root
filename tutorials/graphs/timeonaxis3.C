@@ -11,16 +11,6 @@
 ///
 /// \authors Philippe Gras, Bertrand Bellenot, Olivier Couet
 
-#if defined(G__WIN32) && defined(__CINT__) && !defined(__MAKECINT__)
-{
-   // timeonaxis3.C has to be run in compiled mode on Windows.
-   // the following code does it.
-
-   gSystem->CompileMacro("timeonaxis3.C");
-   timeonaxis3();
-}
-#else
-
 #include "TAxis.h"
 #include "TGaxis.h"
 #include "TCanvas.h"
@@ -119,4 +109,3 @@ TCanvas *timeonaxis3() {
    }
    return c;
 }
-#endif
