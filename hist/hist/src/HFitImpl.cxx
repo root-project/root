@@ -658,7 +658,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
          funcList->Add(fnew3);
       }
       else {
-         fnew2 = dynamic_cast<TF3*>(f1);
+         fnew3 = dynamic_cast<TF3*>(f1);
          R__ASSERT(fnew3);
       }
       fnew3->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
