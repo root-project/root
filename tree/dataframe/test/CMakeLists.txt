@@ -24,6 +24,7 @@ target_include_directories(dataframe_splitcoll_arrayview PRIVATE ${CMAKE_CURRENT
 if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(dataframe_simple dataframe_simple.cxx LIBRARIES ROOTDataFrame)
   ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame)
+  configure_file(TwoInts.h . COPYONLY)
   ROOT_ADD_GTEST(dataframe_helpers dataframe_helpers.cxx LIBRARIES ROOTDataFrame)
   ROOT_ADD_GTEST(dataframe_vecops dataframe_vecops.cxx LIBRARIES ROOTDataFrame)
 endif()
