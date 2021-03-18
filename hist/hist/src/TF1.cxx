@@ -3062,14 +3062,15 @@ TH1   *TF1::DoCreateHistogram(Double_t xmin, Double_t  xmax, Bool_t recreate)
       // delete previous histograms if were done if done in different mode
       xtitle = fHistogram->GetXaxis()->GetTitle();
       ytitle = fHistogram->GetYaxis()->GetTitle();
-      if (!gPad->GetLogx()  &&  fHistogram->TestBit(TH1::kLogX)) {
+      Bool_t test_logx = fHistogram->TestBit(TH1::kLogX);
+      if (!gPad->GetLogx() && test_logx) {
          delete fHistogram;
-         fHistogram = 0;
+         fHistogram = nullptr;
          recreate = kTRUE;
       }
-      if (gPad->GetLogx()  && !fHistogram->TestBit(TH1::kLogX)) {
+      if (gPad->GetLogx() && !test_logx) {
          delete fHistogram;
-         fHistogram = 0;
+         fHistogram = nullptr;
          recreate = kTRUE;
       }
    }
