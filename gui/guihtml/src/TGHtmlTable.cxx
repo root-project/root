@@ -131,7 +131,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
    TGString *str = new TGString("");  // The result
 
    if (pTable->fType != Html_TABLE) return str;
-   if (!(pEnd = pTable->fPEnd)) {
+   if (!pTable->fPEnd) {
       delete str;
       return 0;
    }
@@ -449,7 +449,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    separation = cellSpacing + 2 * (cellPadding + cbw);
    margin = tbw + cellSpacing + cbw + cellPadding;
 
-   z = pStart->MarkupArg("hspace", 0);
+   pStart->MarkupArg("hspace", 0);
    // hspace = z ? atoi(z) : DFLT_HSPACE;
 
    // Figure out the maximum space available
@@ -572,7 +572,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
 
             if (noWrap) {
                // coverity[returned_pointer]
-               if ((z = p->MarkupArg("rowspan", 0)) == 0) { // Hack ???
+               if (p->MarkupArg("rowspan", 0) == 0) { // Hack ???
                //minW = (requestedW > 0 ? requestedW : maxW);
                } else {
                   minW = maxW;
@@ -1223,7 +1223,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    z = pTable->MarkupArg("vspace", 0);
    vspace = z ? atoi(z) : DFLT_VSPACE;
 
-   z = pTable->MarkupArg("hspace", 0);
+   pTable->MarkupArg("hspace", 0);
    // hspace = z ? atoi(z) : DFLT_HSPACE;
 
 #ifdef DEBUG

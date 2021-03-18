@@ -1605,7 +1605,6 @@ void TGTextEntry::ScrollByChar()
          d -= offset;
          fOffset -= d;
          fCursorX -= d;
-         charWidth += d;
       }
    } else if (fCursorX > w-offset) {
       fOffset -= charWidth;
@@ -1616,7 +1615,6 @@ void TGTextEntry::ScrollByChar()
          d -= offset;
          fOffset += d;
          fCursorX += d;
-         charWidth += d;
       }
    }
 }

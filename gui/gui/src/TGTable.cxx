@@ -1384,7 +1384,6 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       xtl = xbr - ncolumns;
       if (xtl < 0) {
          xtl = 0;
-         ncolumns = TMath::Abs(xbr - xtl);
          Info("TGTable::GotoTableRange", "Right column boundry out of"
                                          " bounds, set to 0");
       }
@@ -1505,7 +1504,6 @@ void TGTable::UserRangeChange()
    TString range(fRangeEntry->GetText());
    if(!range.Contains("x")) return;
 
-   pos = 0;
    pos = range.First('x');
    TString ir = range(0,pos);
    TString jr = range(pos+1, range.Length());

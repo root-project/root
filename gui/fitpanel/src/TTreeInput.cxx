@@ -74,7 +74,6 @@ ClassImp(TTreeInput);
    fOk = new TGTextButton(hf, "&Ok", 1);
    fOk->Associate(this);
    hf->AddFrame(fOk, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 5, 5, 0, 0));
-   height = fOk->GetDefaultHeight();
    width  = TMath::Max(width, fOk->GetDefaultWidth());
 
    fCancel = new TGTextButton(hf, "&Cancel", 2);
