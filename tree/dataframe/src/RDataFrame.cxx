@@ -733,7 +733,7 @@ auto min = d2.Filter([](double b2) { return b2 > 0; }, {"b2"}) // we can still s
 
 ### <a name="ImplicitColumns"></a> Implicit Columns
 Every instance of RDataFrame is created with two special columns called `rdfentry_` and `rdfslot_`. The `rdfentry_`
-column is an unsigned 64-bit integer holding the current entry number while `rdfslot_` is an unsigned 32-bit integer
+column is of type `ULong64_t` and it holds the current entry number while `rdfslot_` is an `unsigned int`
 holding the index of the current data processing slot.
 For backwards compatibility reasons, the names `tdfentry_` and `tdfslot_` are also accepted.
 These columns are not considered by operations such as [Cache](classROOT_1_1RDF_1_1RInterface.html#aaaa0a7bb8eb21315d8daa08c3e25f6c9)
