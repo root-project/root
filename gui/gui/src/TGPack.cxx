@@ -151,7 +151,7 @@ void TGPack::ResizeExistingFrames()
       TGFrameElementPack *el;
       TIter next(fList);
       while ((el = (TGFrameElementPack*) next())) {
-         if (el->fState && el->fWeight) {
+         if (el->fState) {
             frameLength = TMath::Nint( unit*(el->fWeight));
             SetFrameLength(el->fFrame, frameLength);
             sumFrames += frameLength;
@@ -167,7 +167,7 @@ void TGPack::ResizeExistingFrames()
       TGFrameElementPack *el;
       TIter next(fList);
       while ((el = (TGFrameElementPack*) next()) && remain) {
-         if (el->fState &&  el->fWeight) {
+         if (el->fState) {
             Int_t l = GetFrameLength(el->fFrame) + step;
             if (l > 0) {
                SetFrameLength(el->fFrame, l);
