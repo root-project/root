@@ -233,7 +233,7 @@ void pythia_next_event()
    gTrackList->MakeTracks();
 
 
-   TEveElement* top = (TEveElement *)gEve->GetCurrentEvent();
+   TEveElement* top = static_cast<TEveElement *>(gEve->GetCurrentEvent());
 
    gMultiView->DestroyEventRPhi();
    gMultiView->ImportEventRPhi(top);
@@ -300,4 +300,3 @@ void pythia_make_gui()
 }
 
 #endif
-
