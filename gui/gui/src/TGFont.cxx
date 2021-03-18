@@ -844,7 +844,7 @@ wrapLine:
    chunk = layout->fChunks;
    if (chunk) y = chunk->fY;
    for (n = 0; n < layout->fNumChunks; n++) {
-      int extra;
+      int extra = maxWidth;
 
       if (chunk->fY != y) {
          curLine++;
