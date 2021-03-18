@@ -59,7 +59,7 @@ public:
          throw std::runtime_error("TMVA SOFIE Tranpose Op Input Tensor is not found in model");
       }
       fShapeData = model.GetTensorShape(fNData);
-      if (fAttrPerm.size() == 0){
+      if (fAttrPerm.empty()){
          for (int i = fShapeData.size() - 1; i >= 0; i--){
             fAttrPerm.push_back(i);
          }

@@ -41,7 +41,7 @@ std::unique_ptr<ROperator> make_ROperator_Transpose(const onnx::NodeProto& nodep
 
    switch(input_type){
    case ETensorType::FLOAT:
-      if (attr_perm.size() != 0){
+      if (!attr_perm.empty()){
          op.reset(new ROperator_Transpose<float>(attr_perm, nodeproto.input(0), nodeproto.output(0)));
       }else{
          op.reset(new ROperator_Transpose<float> (nodeproto.input(0), nodeproto.output(0)));
