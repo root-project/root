@@ -666,6 +666,7 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
           coutE(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") ERROR: Cannot find component data for state " << _gofArray[i]->GetName() << endl;
         }
       }
+      delete dlist; // delete only list, data will be used
     }
     break;
   case MPMaster:
