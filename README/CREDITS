@@ -423,6 +423,10 @@ N: Stephan Hageboeck
 E: stephan.hageboeck@cern.ch
 D: Roofit support and developments
 
+N: Jonas Hahnfeld
+E: jonas.hahnfeld@cern.ch
+D: Portable implementation of RANLUX++
+
 N: Andy Hanushevsky
 E: abh@slac.stanford.edu
 D: the eXtended ROOT daemon (xrootd)
