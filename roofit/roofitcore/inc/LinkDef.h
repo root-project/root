@@ -229,6 +229,7 @@
          while( (te = (RooThreshEntry*)iter->Next()) ) { \
            _threshList.emplace_back(te->_thresh, te->_cat.getVal()); \
          }\
+         delete iter;\
          }";
 #pragma read sourceClass="RooThresholdCategory" targetClass="RooThresholdCategory" version="[2]" \
   source="RooCatType* _defCat; std::vector<std::pair<double,RooCatType>> _threshList" target="_defIndex,_threshList" \
