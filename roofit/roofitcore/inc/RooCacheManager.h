@@ -221,6 +221,7 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
   // Check if object is already registered
   Int_t sterileIdx(-1) ;
   if (getObj(nset,iset,&sterileIdx,isetRangeName)) {
+    delete obj; // important! do not forget to cleanup memory
     return lastIndex() ;
   } 
 
