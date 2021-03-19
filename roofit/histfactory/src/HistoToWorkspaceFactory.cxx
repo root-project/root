@@ -1005,6 +1005,11 @@ namespace HistFactory{
       poi = (RooRealVar*) params_obj;
       cout << "printing results for " << poi->GetName() << " at " << poi->getVal()<< " high " << poi->getErrorLo() << " low " << poi->getErrorHi()<<endl;
     }
+    delete params_itr;
+    if (!poi) {
+       cerr << "found no POI" << endl;
+       return;
+    }
     fprintf(pFile, " %.4f / %.4f  ", poi->getErrorLo(), poi->getErrorHi());
 
     RooAbsReal* nll = model->createNLL(*simData);
