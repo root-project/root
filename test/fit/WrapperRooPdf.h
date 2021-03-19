@@ -108,11 +108,11 @@ public:
          fParamValues.resize(NPar() );
 
       // iterate on parameters and set values
-      TIterator* itr = fParams->createIterator() ;
+      TIter itr = fParams->createIterator() ;
       std::vector<double>::iterator vpitr = fParamValues.begin();
 
-      RooRealVar* var = 0;
-      while( ( var = dynamic_cast<RooRealVar*>(itr->Next() ) ) ) {
+      RooRealVar* var = nullptr;
+      while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
          assert(var != 0);
          *vpitr++ = var->getVal();
       }
@@ -121,10 +121,10 @@ public:
 
    std::string ParameterName(unsigned int i) const {
       // iterate on parameters and set values
-      TIterator* itr = fParams->createIterator() ;
-      RooRealVar* var = 0;
+      TIter itr = fParams->createIterator() ;
+      RooRealVar* var = nullptr;
       unsigned int index = 0;
-      while( ( var = dynamic_cast<RooRealVar*>(itr->Next() ) ) ) {
+      while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
          assert(var != 0);
          if (index == i) return std::string(var->GetName() );
          index++;
@@ -168,9 +168,9 @@ private:
       DoSetParameters(p);
 
       // iterate on observables
-      TIterator* itr = fX->createIterator() ;
+      TIter itr = fX->createIterator() ;
       RooRealVar* var = 0;
-      while( ( var = dynamic_cast<RooRealVar*>(itr->Next() ) ) ) {
+      while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
          assert(var != 0);
 #ifndef _WIN32
          var->setDirtyInhibit(true);
@@ -190,9 +190,9 @@ private:
 
    void DoSetParameters(const double * p) const {
       // iterate on parameters and set values
-      TIterator* itr = fParams->createIterator() ;
-      RooRealVar* var = 0;
-      while( ( var = dynamic_cast<RooRealVar*>(itr->Next() ) ) ) {
+      TIter itr = fParams->createIterator() ;
+      RooRealVar* var = nullptr;
+      while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
          assert(var != 0);
          var->setVal(*p++);
       }
