@@ -1047,19 +1047,17 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     // Simple case: default range, or single restricted range
     //cout<<"FK: Data test 1: "<<data.sumEntries()<<endl;
 
-    auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",
-        *this,data,projDeps,
-           {.rangeName=rangeName,
-            .addCoefRangeName=addCoefRangeName,
-            .nCPU=numcpu,
-            .interleave=interl,
-            .verbose=verbose,
-            .splitCutRange=static_cast<bool>(splitr),
-            .cloneInputData=static_cast<bool>(cloneData),
-            .integrateOverBinsPrecision=pc.getDouble("IntegrateBins"),
-            .binnedL=false},
-            ext
-        );
+    RooAbsTestStatistic::Configuration cfg;
+    cfg.rangeName = rangeName;
+    cfg.addCoefRangeName = addCoefRangeName;
+    cfg.nCPU = numcpu;
+    cfg.interleave = interl;
+    cfg.verbose = verbose;
+    cfg.splitCutRange = static_cast<bool>(splitr);
+    cfg.cloneInputData = static_cast<bool>(cloneData);
+    cfg.integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
+    cfg.binnedL = false;
+    auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps,std::move(cfg), ext);
     theNLL->batchMode(pc.getInt("BatchMode"));
     nll = theNLL;
   } else {
@@ -1067,19 +1065,18 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     RooArgList nllList ;
     auto tokens = RooHelpers::tokenise(rangeName, ",");
     for (const auto& token : tokens) {
+      RooAbsTestStatistic::Configuration cfg;
+      cfg.rangeName = token.c_str();
+      cfg.addCoefRangeName = addCoefRangeName;
+      cfg.nCPU = numcpu;
+      cfg.interleave = interl;
+      cfg.verbose = verbose;
+      cfg.splitCutRange = static_cast<bool>(splitr);
+      cfg.cloneInputData = static_cast<bool>(cloneData);
+      cfg.integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
+      cfg.binnedL = false;
       auto nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token.c_str()),"-log(likelihood)",
-          *this,data,projDeps,
-           {.rangeName=token.c_str(),
-            .addCoefRangeName=addCoefRangeName,
-            .nCPU=numcpu,
-            .interleave=interl,
-            .verbose=verbose,
-            .splitCutRange=static_cast<bool>(splitr),
-            .cloneInputData=static_cast<bool>(cloneData),
-            .integrateOverBinsPrecision=pc.getDouble("IntegrateBins"),
-            .binnedL=false},
-            ext
-        );
+                                   *this,data,projDeps,std::move(cfg),ext);
       nllComp->batchMode(pc.getInt("BatchMode"));
       nllList.add(*nllComp) ;
     }

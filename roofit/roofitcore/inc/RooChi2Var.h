@@ -38,15 +38,6 @@ public:
 
   enum FuncMode { Function, Pdf, ExtendedPdf } ;
 
-  // RooChi2Var was the only class that had a default configuration value that
-  // was different form the default value in the base class
-  // RooAbsOptTestStatistic. This function changes the default confuration
-  // values to what they were in the past.
-  static inline RooAbsTestStatistic::Configuration& customizeCfgDefaults(RooAbsTestStatistic::Configuration & cfg) {
-      cfg.splitCutRange.setDefaultValue(true);
-      return cfg;
-  } ;
-
   RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
              RooAbsTestStatistic::Configuration && cfg=RooAbsTestStatistic::Configuration{},
              bool extended=false, RooDataHist::ErrorType=RooDataHist::SumW2) ;
@@ -82,6 +73,16 @@ protected:
   virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const ;
   
   ClassDef(RooChi2Var,1) // Chi^2 function of p.d.f w.r.t a binned dataset
+
+private:
+  // RooChi2Var was the only class that had a default configuration value that
+  // was different form the default value in the base class
+  // RooAbsOptTestStatistic. This function changes the default confuration
+  // values to what they were in the past.
+  static inline RooAbsTestStatistic::Configuration& customizeCfgDefaults(RooAbsTestStatistic::Configuration & cfg) {
+      cfg.splitCutRange.setDefaultValue(true);
+      return cfg;
+  };
 };
 
 

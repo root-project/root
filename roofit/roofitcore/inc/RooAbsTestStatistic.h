@@ -88,6 +88,11 @@ public:
         _value = value;
       }
 
+      ConfParam& operator=(T const& value) {
+        setValue(value);
+        return *this;
+      }
+
       /// Get the configuration parameter value.
       T const& operator*() const { return _value ; }
 
