@@ -150,19 +150,21 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detai
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
+   auto& descriptorBuilder = GetDescriptorBuilder();
    auto columnId = fLastColumnId++;
-   fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
+   descriptorBuilder.AddColumn(columnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
    return ColumnHandle_t{columnId, &column};
 }
 
 
 void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
 {
-   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), "undefined author",
+   auto& descriptorBuilder = GetDescriptorBuilder();
+   descriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), "undefined author",
                                 model.GetVersion(), model.GetUuid());
 
    auto &fieldZero = *model.GetFieldZero();
-   fDescriptorBuilder.AddField(
+   descriptorBuilder.AddField(
       RDanglingFieldDescriptor::FromField(fieldZero)
          .FieldId(fLastFieldId)
          .MakeDescriptor()
@@ -171,13 +173,13 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    fieldZero.SetOnDiskId(fLastFieldId);
    for (auto& f : *model.GetFieldZero()) {
       fLastFieldId++;
-      fDescriptorBuilder.AddField(
+      descriptorBuilder.AddField(
          RDanglingFieldDescriptor::FromField(f)
             .FieldId(fLastFieldId)
             .MakeDescriptor()
             .Unwrap()
       );
-      fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fLastFieldId);
+      descriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fLastFieldId);
       f.SetOnDiskId(fLastFieldId);
       f.ConnectPageStorage(*this); // issues in turn one or several calls to AddColumn()
    }
@@ -214,14 +216,15 @@ void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHand
 
 void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
+   auto& descriptorBuilder = GetDescriptorBuilder();
    auto locator = CommitClusterImpl(nEntries);
 
    R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
-   fDescriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
+   descriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
                                  ClusterSize_t(nEntries - fPrevClusterNEntries));
-   fDescriptorBuilder.SetClusterLocator(fLastClusterId, locator);
+   descriptorBuilder.SetClusterLocator(fLastClusterId, locator);
    for (auto &range : fOpenColumnRanges) {
-      fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
+      descriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
       range.fFirstElementIndex += range.fNElements;
       range.fNElements = 0;
    }
@@ -229,7 +232,7 @@ void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NT
       RClusterDescriptor::RPageRange fullRange;
       std::swap(fullRange, range);
       range.fColumnId = fullRange.fColumnId;
-      fDescriptorBuilder.AddClusterPageRange(fLastClusterId, std::move(fullRange));
+      descriptorBuilder.AddClusterPageRange(fLastClusterId, std::move(fullRange));
    }
    ++fLastClusterId;
    fPrevClusterNEntries = nEntries;
