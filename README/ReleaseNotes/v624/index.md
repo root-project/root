@@ -40,7 +40,8 @@ The following people have contributed to this new version:
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
- Stefan Wunsch, CERN/SFT
+ Stefan Wunsch, CERN/SFT,\
+ Anirudh Dagar, CERN-HSF/GSoC
 
 ## Deprecation and Removal
 
@@ -152,6 +153,10 @@ Tests for the Spark backend can be turned ON/OFF with the new build option `test
   exceedingly rare case, as the ROOT interface typically used to manipulate `RVec`s is `RDataFrame`, and `RDataFrame` performs an on-the-fly
   `RVec <-> std::vector` conversion rather than writing `RVec`s to disk. Note that, currently, `RVecs` written e.g. in a `TTree` cannot be read back
   using certain ROOT interfaces (e.g. `TTreeReaderArray`, `RDataFrame` and the experimental `RNTuple`). All these limitations will be lifted in v6.26.
+
+## TMVA
+
+- Introducing TMVA PyTorch Interface, a method to use PyTorch internally with TMVA for deep learning. This can be used as an alternative to PyKeras Interface for complex models providing more flexibility and power.
 
 
 ## RooFit Libraries
