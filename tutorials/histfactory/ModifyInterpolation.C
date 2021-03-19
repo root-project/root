@@ -76,9 +76,9 @@ void ModifyInterpolation(){
 
 void ModifyInterpolationForAll(RooWorkspace* ws, int code){
   RooArgSet funcs = ws->allFunctions();
-  TIterator* it = funcs.createIterator();
-  TObject* tempObj=0;
-  while((tempObj=it->Next())){
+  TIter it = funcs.createIterator();
+  TObject* tempObj = nullptr;
+  while((tempObj=it.Next())){
     FlexibleInterpVar* flex = dynamic_cast<FlexibleInterpVar*>(tempObj);
     if(flex){
       flex->setAllInterpCodes(code);
@@ -88,12 +88,12 @@ void ModifyInterpolationForAll(RooWorkspace* ws, int code){
 
 void ModifyInterpolationForSet(RooArgSet* modifySet, int code){
 
-  TIterator* it = modifySet->createIterator();
-  RooRealVar* alpha=0;
-  while((alpha=(RooRealVar*)it->Next())){
-    TIterator* serverIt = alpha->clientIterator();
-    TObject* tempObj=0;
-    while((tempObj=serverIt->Next())){
+  TIter it = modifySet->createIterator();
+  RooRealVar* alpha = nullptr;
+  while((alpha=(RooRealVar*)it.Next())){
+    TIter serverIt = alpha->clientIterator();
+    TObject* tempObj = nullptr;
+    while((tempObj=serverIt.Next())){
       FlexibleInterpVar* flex = dynamic_cast<FlexibleInterpVar*>(tempObj);
       if(flex){
          flex->printAllInterpCodes();
@@ -108,9 +108,9 @@ void ModifyInterpolationForSet(RooArgSet* modifySet, int code){
 
 void CheckInterpolation(RooWorkspace* ws){
   RooArgSet funcs = ws->allFunctions();
-  TIterator* it = funcs.createIterator();
+  TIter it = funcs.createIterator();
   TObject* tempObj=0;
-  while((tempObj=it->Next())){
+  while((tempObj=it.Next())){
     FlexibleInterpVar* flex = dynamic_cast<FlexibleInterpVar*>(tempObj);
     if(flex){
       flex->printAllInterpCodes();
