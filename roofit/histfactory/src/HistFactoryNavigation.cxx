@@ -351,7 +351,6 @@ namespace RooStats {
       }
       
       std::cout << std::endl;
-
     }
 
 
@@ -370,9 +369,9 @@ namespace RooStats {
 		<< std::endl;
       
       // Loop over the parameters and print their values, etc
-      TIterator* paramItr = params->createIterator();
+      TIter paramItr = params->createIterator();
       RooRealVar* param = NULL;
-      while( (param=(RooRealVar*)paramItr->Next()) ) {
+      while( (param=(RooRealVar*)paramItr.Next()) ) {
 
 	if( !IncludeConstantParams && param->isConstant() ) continue;
 
@@ -385,8 +384,6 @@ namespace RooStats {
       }
       
       std::cout << std::endl;
-
-      return;
     }
 
     void HistFactoryNavigation::PrintChannelParameters(const std::string& channel,
@@ -408,9 +405,9 @@ namespace RooStats {
 		<< std::endl;
       
       // Loop over the parameters and print their values, etc
-      TIterator* paramItr = params->createIterator();
+      TIter paramItr = params->createIterator();
       RooRealVar* param = NULL;
-      while( (param=(RooRealVar*)paramItr->Next()) ) {
+      while( (param=(RooRealVar*)paramItr.Next()) ) {
 
 	if( !IncludeConstantParams && param->isConstant() ) continue;
 
@@ -425,8 +422,6 @@ namespace RooStats {
       }
       
       std::cout << std::endl;
-
-      return;
     }
 
 
@@ -450,9 +445,9 @@ namespace RooStats {
 		<< std::endl;
       
       // Loop over the parameters and print their values, etc
-      TIterator* paramItr = params->createIterator();
+      TIter paramItr = params->createIterator();
       RooRealVar* param = NULL;
-      while( (param=(RooRealVar*)paramItr->Next()) ) {
+      while( (param=(RooRealVar*)paramItr.Next()) ) {
 
 	if( !IncludeConstantParams && param->isConstant() ) continue;
 
@@ -467,8 +462,6 @@ namespace RooStats {
       }
       
       std::cout << std::endl;
-
-      return;
     }
 
 
@@ -846,9 +839,9 @@ namespace RooStats {
 	// Based on the mode, we assume that node is 
 	// the "unconstrained" pdf node for that channel
 	RooArgSet* components = pdf->getComponents();
-	TIterator* argItr = components->createIterator();
+	TIter argItr = components->createIterator();
 	RooAbsArg* arg = NULL;
-	while( (arg=(RooAbsArg*)argItr->Next()) ) {
+	while( (arg=(RooAbsArg*)argItr.Next()) ) {
 	  std::string ClassName = arg->ClassName();
 	  if( ClassName == "RooRealSumPdf" ) {
 	    fChannelSumNodeMap[ChannelName] = (RooRealSumPdf*) arg;
@@ -878,9 +871,9 @@ namespace RooStats {
 	// Loop over the sample nodes in this
 	// channel's RooRealSumPdf
 	RooArgList nodes = sumPdf->funcList();
-	TIterator* sampleItr = nodes.createIterator();
+	TIter sampleItr = nodes.createIterator();
 	RooAbsArg* sample;
-	while( (sample=(RooAbsArg*)sampleItr->Next()) ) {
+	while( (sample=(RooAbsArg*)sampleItr.Next()) ) {
 
 	  // Cast this node as a function
 	  RooAbsReal* func = (RooAbsReal*) sample;
@@ -1134,9 +1127,9 @@ namespace RooStats {
       
       /////// NODE SIZE
       {
-	TIterator* itr = components.createIterator();
+	TIter itr = components.createIterator();
 	RooAbsArg* arg = NULL;
-	while( (arg=(RooAbsArg*)itr->Next()) ) {
+	while( (arg=(RooAbsArg*)itr.Next()) ) {
 	  RooAbsReal* component = dynamic_cast<RooAbsReal*>(arg);
 	  std::string NodeName = component->GetName();
 	  label_print_width = TMath::Max(label_print_width, (int)NodeName.size()+2);
@@ -1157,9 +1150,9 @@ namespace RooStats {
       }
       std::cout << std::endl;
 
-      TIterator* itr = components.createIterator();
+      TIter itr = components.createIterator();
       RooAbsArg* arg = NULL;
-      while( (arg=(RooAbsArg*)itr->Next()) ) {
+      while( (arg=(RooAbsArg*)itr.Next()) ) {
 	RooAbsReal* component = dynamic_cast<RooAbsReal*>(arg);
 	std::string NodeName = component->GetName();
 
@@ -1289,9 +1282,9 @@ namespace RooStats {
 		<< std::endl;
       
       // Loop over the parameters and print their values, etc
-      TIterator* paramItr = params->createIterator();
+      TIter paramItr = params->createIterator();
       RooRealVar* param = NULL;
-      while( (param=(RooRealVar*)paramItr->Next()) ) {
+      while( (param=(RooRealVar*)paramItr.Next()) ) {
 
 	std::string ParamName = param->GetName();
 	TString ParamNameTString(ParamName);
