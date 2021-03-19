@@ -373,7 +373,7 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
 	}
 	else {
 	  cxcoutEHF << "Found tag attribute with unknown name in ParamSetting: "
-		    << curAttr->GetName() << std::endl;
+		    << curParam->GetName() << std::endl;
 	  throw hf_exc();
 	}
       }

@@ -297,7 +297,6 @@ Double_t PiecewiseInterpolation::evaluate() const
   }
 
   if(_positiveDefinite && (sum<0)){
-    sum = 1e-6;
     sum = 0;
     //     cout <<"sum < 0 forcing  positive definite"<<endl;
     //     int code = 1;
