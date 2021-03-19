@@ -194,14 +194,14 @@ void JobManager::activate()
    if (process_manager().is_queue()) {
       queue().loop();
 //      JobManager::instance()->process_manager().terminate_workers();
-      JobManager::instance()->messenger().close_master_queue_connection(false);
-      JobManager::instance()->messenger().close_queue_worker_connections(true);
+//      JobManager::instance()->messenger().close_master_queue_connection(false);
+//      JobManager::instance()->messenger().close_queue_worker_connections(JobManager::instance()->process_manager(), true);
       std::_Exit(0);
    }
 
    if (!is_worker_loop_running() && process_manager().is_worker()) {
       RooFit::MultiProcess::worker_loop();
-      messenger().close_queue_worker_connections(true);
+//      messenger().close_queue_worker_connections(JobManager::instance()->process_manager(), true);
       std::_Exit(0);
    }
 }

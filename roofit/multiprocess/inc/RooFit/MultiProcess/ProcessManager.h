@@ -55,6 +55,7 @@ private:
 
    bool _is_master = false;
    bool _is_queue = false;
+   bool _is_worker = false;
    std::size_t _worker_id;
    std::size_t _N_workers;
 

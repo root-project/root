@@ -60,19 +60,22 @@ void ProcessManager::handle_sigterm(int signum) {
    // the Messenger first. We do that with SIGTERMs. The sigterm_received()
    // should be checked in message loops to stop them when it's true.
    _sigterm_received = 1;
-//   std::cout << "handled " << strsignal(signum) << " on PID " << getpid() << std::endl;
+   printf("handled %s on PID %d\n", strsignal(signum), getpid());
 }
 
 // static function
 bool ProcessManager::sigterm_received() {
    if (_sigterm_received > 0) {
+//      printf("YEP on PID %d\n", getpid());
       return true;
    } else {
+//      printf("nopes on PID %d\n", getpid());
       return false;
    }
 }
 
 void ProcessManager::initialize_processes(bool cpu_pinning) {
+   printf("initializeing processes from PID %d\n", getpid());
    // Initialize processes;
    // ... first workers:
    worker_pids.resize(_N_workers);
@@ -80,6 +83,7 @@ void ProcessManager::initialize_processes(bool cpu_pinning) {
    for (std::size_t ix = 0; ix < _N_workers; ++ix) {
       child_pid = fork();
       if (!child_pid) {  // we're on the worker
+         _is_worker = true;
          _worker_id = ix;
          break;
       } else {          // we're on master
@@ -161,7 +165,7 @@ bool ProcessManager::is_initialized() const {
 
 void ProcessManager::terminate() noexcept {
    try {
-      if (is_master()) {
+      if (is_master() && is_initialized()) {
 //         JobManager::instance()->messenger().send_from_master_to_queue(M2Q::terminate);
          shutdown_processes();
       }
@@ -172,6 +176,7 @@ void ProcessManager::terminate() noexcept {
 
 
 void ProcessManager::wait_for_sigterm_then_exit() {
+   printf("waiting for sigterm on PID %d\n", getpid());
    if (!is_master()) {
       while(!sigterm_received()) {}
       std::_Exit(0);
@@ -209,7 +214,11 @@ int chill_wait() {
    }
 
    if (-1 == pid) {
-      throw std::runtime_error(std::string("waitpid, errno ") + std::to_string(errno));
+      if (errno == ECHILD) {
+         printf("chill_wait: no children (got ECHILD error code from wait call), done\n");
+      } else {
+         throw std::runtime_error(std::string("chill_wait: error in wait call: ") + strerror(errno) + std::string(", errno ") + std::to_string(errno));
+      }
    }
 
    return pid;
@@ -217,6 +226,7 @@ int chill_wait() {
 
 void ProcessManager::shutdown_processes() {
    if (is_master()) {
+      printf("terminating all children\n");
       // terminate all children
       std::unordered_set<pid_t> children;
       children.insert(queue_pid);
@@ -226,14 +236,20 @@ void ProcessManager::shutdown_processes() {
          children.insert(pid);
       }
       // then wait for them to actually die and clean out the zombies
+      printf("waiting on children to die...\n");
       while (!children.empty()) {
+         printf("children left: ");
+         for (auto child : children) {
+            printf("%d ", child);
+         }
+         printf("\n");
          pid_t pid = chill_wait();
          children.erase(pid);
       }
+      printf("children all deceased\n");
    }
 
    initialized = false;
-   _is_master = false;
 }
 
 
@@ -248,7 +264,7 @@ bool ProcessManager::is_queue() const {
 }
 
 bool ProcessManager::is_worker() const {
-   return !(_is_master || _is_queue);
+   return _is_worker;
 }
 
 std::size_t ProcessManager::worker_id() const {
@@ -264,12 +280,14 @@ std::size_t ProcessManager::N_workers() const {
 
 void ProcessManager::identify_processes() const {
    // identify yourselves (for debugging)
-   if (!(_is_master || _is_queue)) {
+   if (_is_worker) {
       printf("I'm a worker, PID %d\n", getpid());
    } else if (_is_master) {
       printf("I'm master, PID %d\n", getpid());
    } else if (_is_queue) {
       printf("I'm queue, PID %d\n", getpid());
+   } else {
+      printf("I'm not master, queue or worker, weird! PID %d\n", getpid());
    }
 }
 

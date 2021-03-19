@@ -56,7 +56,7 @@ public:
    };
 
    void close_master_queue_connection(bool close_context) noexcept;
-   void close_queue_worker_connections(bool close_context);
+   void close_queue_worker_connections(const ProcessManager &process_manager, bool close_context);
 
    std::pair<ZeroMQPoller, std::size_t> create_queue_poller();
    ZeroMQPoller create_worker_poller();
@@ -116,6 +116,11 @@ private:
    // pollers for all pull sockets
    std::vector<ZeroMQPoller> qw_pull_poller;
    ZeroMQPoller mq_pull_poller;
+
+   // destruction flags to distinguish between different process-type setups:
+   bool close_MQ_on_destruct_ = false;
+   bool close_this_QW_on_destruct_ = false;
+   bool close_QW_container_on_destruct_ = false;
 
    int send_flag = 0;
 };

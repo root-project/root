@@ -526,3 +526,47 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, Minimize)
 
    m1->cleanup(); // necessary in tests to clean up global _theFitter
 }
+
+TEST(CarstenGGFWorkspace, Minimize)
+{
+   bool use_multiprocess = false;
+   std::size_t NumCPU = 2;
+
+   std::size_t seed = 1;
+   RooRandom::randomGenerator()->SetSeed(seed);
+
+   TFile *_file0 = TFile::Open("/Users/pbos/projects/apcocsm/carsten/lxplus/ggF/ggF-stxs1-v1.root");
+
+   RooWorkspace* w = static_cast<RooWorkspace*>(gDirectory->Get("HWWRun2GGF"));
+
+   RooAbsData *data = w->data("obsData");
+   auto mc = dynamic_cast<RooStats::ModelConfig *>(w->genobj("ModelConfig"));
+   auto global_observables = mc->GetGlobalObservables();
+   auto nuisance_parameters = mc->GetNuisanceParameters();
+   RooAbsPdf *pdf = w->pdf(mc->GetPdf()->GetName());
+
+   std::unique_ptr<RooMinimizer> m;
+
+   if (use_multiprocess) {
+      RooFit::MultiProcess::JobManager::default_N_workers = NumCPU;
+      auto likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data, RooFit::TestStatistics::ConstrainedParameters(*nuisance_parameters), RooFit::TestStatistics::GlobalObservables(*global_observables));
+      likelihood->enable_offsetting(true);
+      m = RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(likelihood);
+   } else {
+      RooAbsReal *nll = pdf->createNLL(*data,
+                                       RooFit::GlobalObservables(*global_observables),
+                                       RooFit::Constrain(*nuisance_parameters),
+                                       RooFit::Offset(kTRUE));
+
+      m = RooMinimizer::create(*nll);
+   }
+
+   m->setPrintLevel(-1);
+   m->setStrategy(0);
+   m->setProfile(false);
+   m->optimizeConst(2);
+   m->setMinimizerType("Minuit2");
+   // m->setVerbose(kTRUE);
+
+   m->migrad();
+}

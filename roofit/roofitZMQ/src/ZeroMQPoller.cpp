@@ -50,13 +50,16 @@ std::vector<std::pair<size_t, int>> ZeroMQPoller::poll(int timeo) {
 }
 
 std::vector<std::pair<size_t, int>> ZeroMQPoller::ppoll(int timeo, const sigset_t * sigmask_) {
+   printf("polling p's on PID %d\n", getpid());
    if (m_items.empty()) {
       throw std::runtime_error("No sockets registered");
    }
 
    std::vector<std::pair<size_t, int>> r;
 
+   printf("going into actual ZMQ::ppoll on PID %d\n", getpid());
    auto n = ZMQ::ppoll(m_items, timeo, sigmask_);
+   printf("done with actual ZMQ::ppoll on PID %d\n", getpid());
    if (n == 0) return r;
 
    for (auto& m_item : m_items) {
