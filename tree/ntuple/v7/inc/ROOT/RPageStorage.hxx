@@ -130,6 +130,8 @@ public:
 
    /// Returns an empty metrics.  Page storage implementations usually have their own metrics.
    virtual RNTupleMetrics &GetMetrics();
+   /// Returns the NTuple name.
+   const std::string& GetNTupleName() const { return fNTupleName; }
 
    void SetTaskScheduler(RTaskScheduler *taskScheduler) { fTaskScheduler = taskScheduler; }
 };
@@ -146,6 +148,7 @@ up to the given entry number are committed.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
+friend class RPageSinkBuf; // to reorder page sink writes
 protected:
    RNTupleWriteOptions fOptions;
 
@@ -165,6 +168,7 @@ protected:
    /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
    RNTupleDescriptorBuilder fDescriptorBuilder;
+   virtual RNTupleDescriptorBuilder& GetDescriptorBuilder() { return fDescriptorBuilder; }
 
    virtual void CreateImpl(const RNTupleModel &model) = 0;
    virtual RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
@@ -191,6 +195,8 @@ public:
    static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
                                             const RNTupleWriteOptions &options = RNTupleWriteOptions());
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
+   /// Returns the sink's write options.
+   const RNTupleWriteOptions& GetWriteOptions() const { return fOptions; }
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
@@ -263,6 +269,7 @@ public:
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
+   const RNTupleReadOptions& GetReadOptions() const { return fOptions; }
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
    void DropColumn(ColumnHandle_t columnHandle) final;
 
