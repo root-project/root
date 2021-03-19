@@ -1986,9 +1986,9 @@ Bool_t RooWorkspace::makeDir()
   TString title= Form("TDirectory representation of RooWorkspace %s",GetName()) ;
   _dir = new WSDir(GetName(),title.Data(),this) ;
 
-  TIterator* iter = componentIterator() ;
+  TIter iter = componentIterator() ;
   RooAbsArg* darg ;
-  while((darg=(RooAbsArg*)iter->Next())) {
+  while((darg=(RooAbsArg*)iter.Next())) {
     if (darg->IsA() != RooConstVar::Class()) {
       _dir->InternalAppend(darg) ;
     }
