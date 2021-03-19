@@ -68,11 +68,8 @@ void Messenger::send_from_queue_to_worker(std::size_t this_worker_id, T item, Ts
 template <typename value_t>
 value_t Messenger::receive_from_queue_on_worker()
 {
-   printf("we get into ppoll... PID %d\n", getpid());
    qw_pull_poller[0].ppoll(-1, &ppoll_sigmask);
-   printf("we get after actual ppoll call... PID %d\n", getpid());
    auto value = zmqSvc().receive<value_t>(*this_worker_qw_pull, ZMQ_DONTWAIT);
-   printf("we get after receive... PID %d\n", getpid());
 
    #ifndef NDEBUG
    std::stringstream ss;

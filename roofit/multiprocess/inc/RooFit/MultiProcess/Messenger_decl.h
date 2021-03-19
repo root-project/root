@@ -55,9 +55,6 @@ public:
       fromQonW,
    };
 
-   void close_master_queue_connection(bool close_context) noexcept;
-   void close_queue_worker_connections(const ProcessManager &process_manager, bool close_context);
-
    std::pair<ZeroMQPoller, std::size_t> create_queue_poller();
    ZeroMQPoller create_worker_poller();
 
@@ -88,8 +85,6 @@ public:
    void send_from_master_to_queue(T item, Ts... items);
    template <typename value_t>
    value_t receive_from_master_on_queue();
-
-//   bool is_initialized() const;
 
    void test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id);
    void test_send(X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id);

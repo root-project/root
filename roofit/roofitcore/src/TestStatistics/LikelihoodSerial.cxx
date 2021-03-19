@@ -90,7 +90,7 @@ void LikelihoodSerial::init_vars()
 }
 
 void LikelihoodSerial::evaluate() {
-   std::size_t N_events = likelihood_->numDataEntries();
+//   std::size_t N_events = likelihood_->numDataEntries();
 
    switch (likelihood_type) {
    case LikelihoodType::unbinned:

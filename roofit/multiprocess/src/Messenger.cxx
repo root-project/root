@@ -116,7 +116,6 @@ Messenger::Messenger(const ProcessManager &process_manager)
 }
 
 Messenger::~Messenger() {
-   printf("somewhere %d...\n", getpid());
    if (close_MQ_on_destruct_) {
       try {
          mq_push.reset(nullptr);
@@ -137,13 +136,7 @@ Messenger::~Messenger() {
          socket.reset(nullptr);
       }
    }
-   // NOTE: close_context didn't happen manually (from JobManager) on queue before, but probably did through this destructor (which I assumed wasn't called there during std::Exit_):
    zmqSvc().close_context();
-   printf("...over the rainbow %d\n", getpid());
-   // TODO: remove below comment if this new dtor works
-   // the destructor is only used on the master process, so worker-queue
-   // connections needn't be closed here; see documentation of JobManager
-   // destructor
 }
 
 
@@ -191,7 +184,6 @@ void Messenger::test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, s
          break;
       }
       case test_rcv_pipes::fromQonW: {
-         printf("we get here... PID %d\n", getpid());
          handshake = receive_from_queue_on_worker<X2X>();
          break;
       }
@@ -237,11 +229,8 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
          test_send(X2X::ping, test_snd_pipes::Q2W, ix);
       }
 
-      int counter = 0;
-      printf("poller.size(): %d\n", poller.size());
       while (!process_manager.sigterm_received() && (poller.size() > 0)) {
          // poll: wait until status change (-1: infinite timeout)
-         printf("blurg %d\n", ++counter);
          std::vector<std::pair<size_t, int>> poll_result;
          try { // watch for zmq_error from ppoll caused by SIGTERM from master
             poll_result = poller.ppoll(-1, &ppoll_sigmask);
@@ -265,41 +254,24 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
             }
          }
 
-         printf("blorzg %d\n", counter);
-
          // then process incoming messages from sockets
          for (auto readable_socket : poll_result) {
             // message comes from the master/queue socket (first element):
             if (readable_socket.first == mq_index) {
-               printf("blarzeg1 %d\n", counter);
                test_receive(X2X::ping, test_rcv_pipes::fromMonQ, -1);
-               printf("blarzeg2 %d\n", counter);
                test_send(X2X::pong, test_snd_pipes::Q2M, -1);
-               printf("blarzeg3 %d\n", counter);
                test_send(X2X::ping, test_snd_pipes::Q2M, -1);
-               printf("blarzeg4 %d\n", counter);
                test_receive(X2X::pong, test_rcv_pipes::fromMonQ, -1);
-               printf("blarzeg5 %d\n", counter);
                poller.unregister_socket(*mq_pull);
-               printf("poller.size(): %d\n", poller.size());
-               printf("blarzeg6 %d\n", counter);
             } else { // from a worker socket
-               printf("brimzongue1 %d\n", counter);
                // TODO: dangerous assumption for this_worker_id, may become invalid if we allow multiple queue_loops on the same process!
                auto this_worker_id = readable_socket.first - 1;  // TODO: replace with a more reliable lookup
-               printf("brimzongue2 %d\n", counter);
 
                test_receive(X2X::pong, test_rcv_pipes::fromWonQ, this_worker_id);
-               printf("brimzongue3 %d\n", counter);
                test_receive(X2X::ping, test_rcv_pipes::fromWonQ, this_worker_id);
-               printf("brimzongue4 %d\n", counter);
-               printf("sending to worker id %d\n", this_worker_id);
                test_send(X2X::pong, test_snd_pipes::Q2W, this_worker_id);
-               printf("brimzongue5 %d\n", counter);
 
                poller.unregister_socket(*qw_pull[this_worker_id]);
-               printf("poller.size(): %d\n", poller.size());
-               printf("brimzongue6 %d\n", counter);
             }
          }
       }
@@ -308,9 +280,7 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
       test_receive(X2X::ping, test_rcv_pipes::fromQonW, -1);
       test_send(X2X::pong, test_snd_pipes::W2Q, -1);
       test_send(X2X::ping, test_snd_pipes::W2Q, -1);
-      printf("worker going into last receive, PID %d...\n", getpid());
       test_receive(X2X::pong, test_rcv_pipes::fromQonW, -1);
-      printf("worker sent and received all tests, PID %d\n", getpid());
    } else {
       // should never get here
       throw std::runtime_error("Messenger::test_connections: I'm neither master, nor queue, nor a worker");
@@ -318,46 +288,6 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
 
    // clean up signal management modifications
    sigprocmask(SIG_SETMASK, &ppoll_sigmask, nullptr);
-   if (process_manager.is_worker()) {
-      printf("worker at end of test_connections, PID %d\n", getpid());
-   }
-}
-
-
-void Messenger::close_master_queue_connection(bool close_context) noexcept {
-   // this function is called from the Messenger destructor on the master process
-   // and from JobManager::activate on the queue process before _Exiting that process
-   // so we need not check for those processes here (also, we can't on master, because
-   // there we are already in the process of destroying the JobManager _instance, so
-   // our link to the process_manager is gone and we can't pass it as an argument to
-   // the destructor)
-   try {
-      mq_push.reset(nullptr);
-      mq_pull.reset(nullptr);
-      if (close_context) {
-         printf("closing ZMQ context on PID %d\n", getpid());
-         zmqSvc().close_context();
-         printf("closed ZMQ context on PID %d\n", getpid());
-      }
-   } catch (const std::exception& e) {
-      std::cerr << "WARNING: something in Messenger::terminate threw an exception! Original exception message:\n" << e.what() << std::endl;
-   }
-}
-
-
-void Messenger::close_queue_worker_connections(const ProcessManager &process_manager, bool close_context) {
-   if (process_manager.is_worker()) {
-      this_worker_qw_push.reset(nullptr);
-      this_worker_qw_pull.reset(nullptr);
-      if (close_context) {
-         zmqSvc().close_context();
-      }
-   } else if (process_manager.is_queue()) {
-      for (std::size_t worker_ix = 0ul; worker_ix < process_manager.N_workers(); ++worker_ix) {
-         qw_push[worker_ix].reset(nullptr);
-         qw_pull[worker_ix].reset(nullptr);
-      }
-   }
 }
 
 
@@ -377,19 +307,6 @@ ZeroMQPoller Messenger::create_worker_poller() {
    return poller;
 }
 
-
-//bool Messenger::is_initialized() const
-//{
-//   if (JobManager::instance()->process_manager().is_worker()) {
-//      return static_cast<bool>(this_worker_qw_socket);
-//   } else if (JobManager::instance()->process_manager().is_queue()) {
-//      return static_cast<bool>(qw_sockets[0]) && static_cast<bool>(mq_socket);
-//   } else if (JobManager::instance()->process_manager().is_master()) {
-//      return static_cast<bool>(mq_socket);
-//   } else {
-//      return false;
-//   }
-//}
 
 // -- WORKER - QUEUE COMMUNICATION --
 
@@ -475,9 +392,9 @@ std::ostream& operator<<(std::ostream& out, const X2X value){
 
 #undef PROCESS_VAL
 
-void Messenger::debug_print(std::string s)
+void Messenger::debug_print(std::string /*s*/)
 {
-   printf("%s\n", s.c_str());
+//   printf("%s\n", s.c_str());
 //   std::cerr << s << std::endl;
 }
 

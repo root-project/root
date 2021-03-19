@@ -61,29 +61,6 @@ JobManager::~JobManager() {
    // JM will get destroyed. In this case, the job_objects map should have
    // been emptied. This check makes sure:
    assert(JobManager::job_objects.empty());
-   // The subsequent destruction of everything on all forks is not trivial,
-   // even though it seems trivial from the following three lines. On the
-   // master process, things are easy: we just destroy the members in reverse
-   // order of creation. However, for the slaves, we must send a terminate
-   // message through the messenger. This will then first stop the queue loop.
-   // The queue loop passes on a terminate message to the workers, also
-   // stopping the worker loops there. Then, after these loops, all things
-   // that need to be shut down have to be shut down manually there, because
-   // those processes cannot be allowed to continue on the same path as the
-   // master process. In reverse order:
-   // 3. The Queue has no state that has to be carefully dealt with, so we can
-   //    ignore it.
-   // 2. The processes need to be shut down properly, i.e. there should be no
-   //    open connections or files or streams or other connections to the OS
-   //    and the processes should send a SIGCHILD to the master process.
-   //    std::_Exit() should take care of the latter, not sure about the former
-   //    list. The main remaining connections are of course those of...
-   // 1. ... the messenger, i.e. the ZMQ connections. These have to be closed
-   //    first.
-   // Note that all this means that none of the destructors of these classes
-   // will be used on the forks, which is the reason they have separate
-   // terminate/close member functions.
-   // All this is handled in activate().
    messenger_ptr.reset(nullptr);
    process_manager_ptr.reset(nullptr);
    queue_ptr.reset(nullptr);
@@ -193,15 +170,11 @@ void JobManager::activate()
 
    if (process_manager().is_queue()) {
       queue().loop();
-//      JobManager::instance()->process_manager().terminate_workers();
-//      JobManager::instance()->messenger().close_master_queue_connection(false);
-//      JobManager::instance()->messenger().close_queue_worker_connections(JobManager::instance()->process_manager(), true);
       std::_Exit(0);
    }
 
    if (!is_worker_loop_running() && process_manager().is_worker()) {
       RooFit::MultiProcess::worker_loop();
-//      messenger().close_queue_worker_connections(JobManager::instance()->process_manager(), true);
       std::_Exit(0);
    }
 }

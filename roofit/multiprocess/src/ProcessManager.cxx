@@ -54,28 +54,25 @@ ProcessManager::~ProcessManager()
 volatile sig_atomic_t ProcessManager::_sigterm_received = 0;
 
 // static function
-void ProcessManager::handle_sigterm(int signum) {
+void ProcessManager::handle_sigterm(int /*signum*/) {
    // We need this to tell the children to die, because we can't talk
    // to them anymore during JobManager destruction, because that kills
    // the Messenger first. We do that with SIGTERMs. The sigterm_received()
    // should be checked in message loops to stop them when it's true.
    _sigterm_received = 1;
-   printf("handled %s on PID %d\n", strsignal(signum), getpid());
+//   printf("handled %s on PID %d\n", strsignal(signum), getpid());
 }
 
 // static function
 bool ProcessManager::sigterm_received() {
    if (_sigterm_received > 0) {
-//      printf("YEP on PID %d\n", getpid());
       return true;
    } else {
-//      printf("nopes on PID %d\n", getpid());
       return false;
    }
 }
 
 void ProcessManager::initialize_processes(bool cpu_pinning) {
-   printf("initializeing processes from PID %d\n", getpid());
    // Initialize processes;
    // ... first workers:
    worker_pids.resize(_N_workers);
@@ -176,7 +173,6 @@ void ProcessManager::terminate() noexcept {
 
 
 void ProcessManager::wait_for_sigterm_then_exit() {
-   printf("waiting for sigterm on PID %d\n", getpid());
    if (!is_master()) {
       while(!sigterm_received()) {}
       std::_Exit(0);
@@ -226,7 +222,6 @@ int chill_wait() {
 
 void ProcessManager::shutdown_processes() {
    if (is_master()) {
-      printf("terminating all children\n");
       // terminate all children
       std::unordered_set<pid_t> children;
       children.insert(queue_pid);
@@ -236,17 +231,10 @@ void ProcessManager::shutdown_processes() {
          children.insert(pid);
       }
       // then wait for them to actually die and clean out the zombies
-      printf("waiting on children to die...\n");
       while (!children.empty()) {
-         printf("children left: ");
-         for (auto child : children) {
-            printf("%d ", child);
-         }
-         printf("\n");
          pid_t pid = chill_wait();
          children.erase(pid);
       }
-      printf("children all deceased\n");
    }
 
    initialized = false;
