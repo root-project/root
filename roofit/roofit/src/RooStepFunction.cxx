@@ -80,9 +80,9 @@ RooStepFunction::RooStepFunction(const char* name, const char* title,
   delete coefIter ;
 
   _boundIter = _boundaryList.createIterator() ;
-  TIterator* boundaryIter = boundaryList.createIterator() ;
+  TIter boundaryIter = boundaryList.createIterator() ;
   RooAbsArg* boundary ;
-  while((boundary = (RooAbsArg*)boundaryIter->Next())) {
+  while((boundary = (RooAbsArg*)boundaryIter.Next())) {
     if (!dynamic_cast<RooAbsReal*>(boundary)) {
       cout << "RooStepFunction::ctor(" << GetName() << ") ERROR: boundary " << boundary->GetName()
       << " is not of type RooAbsReal" << endl ;
