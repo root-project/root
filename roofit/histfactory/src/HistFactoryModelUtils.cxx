@@ -352,9 +352,9 @@ namespace HistFactory{
     // Find the "data" of the poisson term
     // This is the nominal value
     bool FoundNomMean=false;
-    TIterator* iter_pois = constraintTerm->serverIterator(); //constraint_args
+    TIter iter_pois = constraintTerm->serverIterator(); //constraint_args
     RooAbsArg* term_pois ;
-    while((term_pois=(RooAbsArg*)iter_pois->Next())) {
+    while((term_pois=(RooAbsArg*)iter_pois.Next())) {
       std::string serverName = term_pois->GetName();
       //std::cout << "Checking Server: " << serverName << std::endl;
       if( serverName.find("nom_")!=std::string::npos ) {
@@ -370,15 +370,14 @@ namespace HistFactory{
     else {
       if(verbose) std::cout << "Found Poisson 'data' term: " << pois_nom->GetName() << std::endl;
     }
-    delete iter_pois;
 
     // Taking the constraint term (a Poisson), find
     // the "mean" which is the product: gamma*tau
     // Then, from that mean, find tau
-    TIterator* iter_constr = constraintTerm->serverIterator(); //constraint_args
+    TIter iter_constr = constraintTerm->serverIterator(); //constraint_args
     RooAbsArg* pois_mean_arg=NULL;
     bool FoundPoissonMean = false;
-    while(( pois_mean_arg = (RooAbsArg*) iter_constr->Next() )) {
+    while(( pois_mean_arg = (RooAbsArg*) iter_constr.Next() )) {
       std::string serverName = pois_mean_arg->GetName();
       if( pois_mean_arg->dependsOn( *gamma_stat ) ) {
 	FoundPoissonMean=true;
@@ -395,13 +394,11 @@ namespace HistFactory{
     else {
       if(verbose) std::cout << "Found Poisson 'mean' term: " << pois_mean_arg->GetName() << std::endl;
     }
-    delete iter_constr;
 
-
-    TIterator* iter_product = pois_mean_arg->serverIterator(); //constraint_args
+    TIter iter_product = pois_mean_arg->serverIterator(); //constraint_args
     RooAbsArg* term_in_product ;
     bool FoundTau=false;
-    while((term_in_product=(RooAbsArg*)iter_product->Next())) {
+    while((term_in_product=(RooAbsArg*)iter_product.Next())) {
       std::string serverName = term_in_product->GetName();
       //std::cout << "Checking Server: " << serverName << std::endl;
       if( serverName.find("_tau")!=std::string::npos ) {
@@ -417,7 +414,6 @@ namespace HistFactory{
     else {
       if(verbose) std::cout << "Found Poisson 'tau' term: " << tau->GetName() << std::endl;
     }
-    delete iter_product;
 
     return 0;
 
