@@ -152,6 +152,7 @@ Tests for the Spark backend can be turned ON/OFF with the new build option `test
   exceedingly rare case, as the ROOT interface typically used to manipulate `RVec`s is `RDataFrame`, and `RDataFrame` performs an on-the-fly
   `RVec <-> std::vector` conversion rather than writing `RVec`s to disk. Note that, currently, `RVecs` written e.g. in a `TTree` cannot be read back
   using certain ROOT interfaces (e.g. `TTreeReaderArray`, `RDataFrame` and the experimental `RNTuple`). All these limitations will be lifted in v6.26.
+- Portable implementation of the RANLUX++ generator, see [RanluxppEngine](https://root.cern/doc/master/classROOT_1_1Math_1_1RanluxppEngine.html) and [our blog post](https://root.cern/blog/ranluxpp/).
 
 
 ## RooFit Libraries
