@@ -359,9 +359,9 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
 RooArgSet* RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet* depList, Bool_t stripDisconnected) const {
   RooArgSet* allArgs = RooAbsArg::getParameters( depList, stripDisconnected );
 
-  TIterator* iter_args = allArgs->createIterator();
+  TIter iter_args = allArgs->createIterator();
   RooRealVar* arg;
-  while((arg=(RooRealVar*)iter_args->Next())) {
+  while((arg=(RooRealVar*)iter_args.Next())) {
     std::string arg_name = arg->GetName();
 
     // If there is a gamma in the name,
