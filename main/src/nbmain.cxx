@@ -43,10 +43,10 @@ using namespace std;
 
 #ifdef WIN32
 #include <process.h>
-std::string pathsep = "\\";
+constexpr const char *pathsep = "\\";
 #define execlp _execlp
 #else
-std::string pathsep = "/";
+constexpr const char *pathsep = "/";
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
