@@ -80,14 +80,14 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
   RooAbsOptTestStatistic(name,title,pdf,indata,
 			 *(const RooArgSet*)RooCmdConfig::decodeObjOnTheFly("RooNLLVar::RooNLLVar","ProjectedObservables",0,&_emptySet
 									    ,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","RangeWithName",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9).c_str(),
-			 RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","AddCoefRange",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9).c_str(),
-			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 RooFit::BulkPartition,
-			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","CloneData",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 RooCmdConfig::decodeDoubleOnTheFly("RooNLLVar::RooNLLVar", "IntegrateBins", 0, -1., {arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9}))
+			{.rangeName=RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","RangeWithName",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9).c_str(),
+			 .addCoefRangeName=RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","AddCoefRange",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9).c_str(),
+			 .nCPU=RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 .interleave=RooFit::BulkPartition,
+			 .verbose=static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9)),
+			 .splitCutRange=static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9)),
+			 .cloneInputData=static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","CloneData",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9)),
+			 .integrateOverBinsPrecision=RooCmdConfig::decodeDoubleOnTheFly("RooNLLVar::RooNLLVar", "IntegrateBins", 0, -1., {arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9})})
 {
   RooCmdConfig pc("RooNLLVar::RooNLLVar") ;
   pc.allowUndefined() ;
@@ -114,18 +114,15 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 /// For internal use.
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
-		     Bool_t extended, const char* rangeName, const char* addCoefRangeName,
-		     Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL,
-		     double integrateBinsPrecision) :
-  RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData,
-      integrateBinsPrecision),
+                     RooAbsTestStatistic::Configuration && cfg, bool extended) :
+  RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),RooAbsTestStatistic::Configuration(cfg)),
   _extended(extended),
   _weightSq(kFALSE),
   _first(kTRUE)
 {
   // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
   // for a binned likelihood calculation
-  _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
+  _binnedPdf = *cfg.binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
 
   // Retrieve and cache bin widths needed to convert un-normalized binnedPdf values back to yields
   if (_binnedPdf) {
@@ -161,18 +158,16 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 /// For internal use.
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
-		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,const char* addCoefRangeName,
-		     Int_t nCPU,RooFit::MPSplit interleave,Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL,
-		     double integrateBinsPrecision) :
-  RooAbsOptTestStatistic(name,title,pdf,indata,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData,
-      integrateBinsPrecision),
+                     const RooArgSet& projDeps,
+                     RooAbsTestStatistic::Configuration && cfg, bool extended) :
+  RooAbsOptTestStatistic(name,title,pdf,indata,projDeps, RooAbsTestStatistic::Configuration(cfg)),
   _extended(extended),
   _weightSq(kFALSE),
   _first(kTRUE)
 {
   // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
   // for a binned likelihood calculation
-  _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
+  _binnedPdf = *cfg.binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
 
   // Retrieve and cache bin widths needed to convert un-normalized binnedPdf values back to yields
   if (_binnedPdf) {
@@ -219,14 +214,15 @@ RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
 /// Create a test statistic using several properties of the current instance. This is used to duplicate
 /// the test statistic in multi-processing scenarios.
 RooAbsTestStatistic* RooNLLVar::create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
-            const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
-            Int_t nCPU, RooFit::MPSplit interleave, bool verbose, bool splitRange, bool binnedL) {
+            const RooArgSet& projDeps, RooAbsTestStatistic::Configuration && cfg) {
   RooAbsPdf & thePdf = dynamic_cast<RooAbsPdf&>(pdf);
   // check if pdf can be extended
   bool extendedPdf = _extended && thePdf.canBeExtended();
-  auto testStat = new RooNLLVar(name, title, thePdf, adata,
-      projDeps, extendedPdf , rangeName, addCoefRangeName, nCPU, interleave, verbose, splitRange, false, binnedL,
-      _integrateBinsPrecision);
+
+  // some configuration parameters are fixed
+  cfg.integrateOverBinsPrecision.setValue(_integrateBinsPrecision);
+
+  auto testStat = new RooNLLVar(name, title, thePdf, adata, projDeps, std::move(cfg), extendedPdf);
   testStat->batchMode(_batchEvaluations);
   return testStat;
 }
