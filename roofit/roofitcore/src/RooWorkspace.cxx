@@ -1938,10 +1938,10 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   // Make list of all immediate base classes of this class
   TString baseNameList ;
   TList* bl = tc->GetListOfBases() ;
-  TIterator* iter = bl->MakeIterator() ;
+  TIter iter = bl->MakeIterator() ;
   TBaseClass* base ;
   list<TClass*> bases ;
-  while((base=(TBaseClass*)iter->Next())) {
+  while((base=(TBaseClass*)iter.Next())) {
     if (baseNameList.Length()>0) {
       baseNameList += "," ;
     }
