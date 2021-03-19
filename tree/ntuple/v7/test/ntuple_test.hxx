@@ -18,6 +18,7 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPagePool.hxx>
+#include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RRawFile.hxx>
@@ -85,6 +86,7 @@ using RPageAllocatorHeap = ROOT::Experimental::Detail::RPageAllocatorHeap;
 using RPageDeleter = ROOT::Experimental::Detail::RPageDeleter;
 using RPagePool = ROOT::Experimental::Detail::RPagePool;
 using RPageSink = ROOT::Experimental::Detail::RPageSink;
+using RPageSinkBuf = ROOT::Experimental::Detail::RPageSinkBuf;
 using RPageSinkFile = ROOT::Experimental::Detail::RPageSinkFile;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
 using RPageSourceFile = ROOT::Experimental::Detail::RPageSourceFile;

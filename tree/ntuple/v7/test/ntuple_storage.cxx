@@ -70,3 +70,32 @@ TEST(RNTuple, Extended)
    }
    EXPECT_EQ(chksumRead, chksumWrite);
 }
+
+TEST(RPageSinkBuf, Basics)
+{
+   FileRaii fileGuard("test_ntuple_sinkbuf_basics.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldPt = model->MakeField<float>("pt", 42.0);
+      // PageSinkBuf wraps a concrete page source
+      std::unique_ptr<RPageSink> sink = std::make_unique<RPageSinkBuf>(
+         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions())
+      );
+      //std::unique_ptr<RPageSink> sink = std::make_unique<RPageSinkFile>(
+      //   "myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()
+      //);
+      sink->Create(*model.get());
+      sink->CommitDataset();
+      model = nullptr;
+   }
+
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   ntuple->PrintInfo();
+   auto viewPt = ntuple->GetView<float>("pt");
+   int n = 0;
+   for (auto i : ntuple->GetEntryRange()) {
+      EXPECT_EQ(42.0, viewPt(i));
+      n++;
+   }
+   EXPECT_EQ(1, n);
+}
