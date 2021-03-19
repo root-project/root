@@ -95,7 +95,7 @@ operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation
 {
    // internal interface from MinimumState and MnUserTransformation
    // Function who does the real Hessian calculations
-   MnPrint print("MnHesse");
+   MnPrint print("MnHesse", MnPrint::GlobalLevel());
 
    const MnMachinePrecision &prec = trafo.Precision();
    // make sure starting at the right place
