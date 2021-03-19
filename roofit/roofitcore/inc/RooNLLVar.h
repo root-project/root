@@ -38,21 +38,17 @@ public:
 	    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;
 
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-	    Bool_t extended, const char* rangeName=0, const char* addCoefRangeName=0, 
-	    Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, 
-	    Bool_t cloneData=kTRUE, Bool_t binnedL=kFALSE, double integrateBinsPrecision = -1.) ;
+            RooAbsTestStatistic::Configuration && cfg, bool extended);
   
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-	    const RooArgSet& projDeps, Bool_t extended=kFALSE, const char* rangeName=0, 
-	    const char* addCoefRangeName=0, Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, 
-	    Bool_t cloneData=kTRUE, Bool_t binnedL=kFALSE, double integrateBinsPrecision = -1.) ;
+            const RooArgSet& projDeps, RooAbsTestStatistic::Configuration && cfg,
+            bool extended = false) ;
 
   RooNLLVar(const RooNLLVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooNLLVar(*this,newname); }
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
-				      const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, Bool_t binnedL=kFALSE);
+                                      const RooArgSet& projDeps, RooAbsTestStatistic::Configuration && cfg);
   
   virtual ~RooNLLVar();
 

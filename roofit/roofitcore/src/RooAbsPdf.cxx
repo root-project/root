@@ -1048,8 +1048,18 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     //cout<<"FK: Data test 1: "<<data.sumEntries()<<endl;
 
     auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",
-        *this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,interl,
-        verbose,splitr,cloneData,/*binnedL=*/false, pc.getDouble("IntegrateBins"));
+        *this,data,projDeps,
+           {.rangeName=rangeName,
+            .addCoefRangeName=addCoefRangeName,
+            .nCPU=numcpu,
+            .interleave=interl,
+            .verbose=verbose,
+            .splitCutRange=static_cast<bool>(splitr),
+            .cloneInputData=static_cast<bool>(cloneData),
+            .integrateOverBinsPrecision=pc.getDouble("IntegrateBins"),
+            .binnedL=false},
+            ext
+        );
     theNLL->batchMode(pc.getInt("BatchMode"));
     nll = theNLL;
   } else {
@@ -1058,8 +1068,18 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     auto tokens = RooHelpers::tokenise(rangeName, ",");
     for (const auto& token : tokens) {
       auto nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token.c_str()),"-log(likelihood)",
-          *this,data,projDeps,ext,token.c_str(),addCoefRangeName,numcpu,interl,
-          verbose,splitr,cloneData, /*binnedL=*/false, pc.getDouble("IntegrateBins"));
+          *this,data,projDeps,
+           {.rangeName=token.c_str(),
+            .addCoefRangeName=addCoefRangeName,
+            .nCPU=numcpu,
+            .interleave=interl,
+            .verbose=verbose,
+            .splitCutRange=static_cast<bool>(splitr),
+            .cloneInputData=static_cast<bool>(cloneData),
+            .integrateOverBinsPrecision=pc.getDouble("IntegrateBins"),
+            .binnedL=false},
+            ext
+        );
       nllComp->batchMode(pc.getInt("BatchMode"));
       nllList.add(*nllComp) ;
     }

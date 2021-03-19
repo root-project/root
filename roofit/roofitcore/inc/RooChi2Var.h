@@ -27,34 +27,42 @@ public:
 
   // Constructors, assignment etc
   RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& data,
-	     const RooCmdArg& arg1                , const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(),
+	     const RooCmdArg& arg1                  , const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(),
 	     const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
 	     const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;
 
   RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooDataHist& data,
-	     const RooCmdArg& arg1                , const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(),
+	     const RooCmdArg& arg1                  , const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(),
 	     const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
 	     const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;
 
   enum FuncMode { Function, Pdf, ExtendedPdf } ;
 
+  // RooChi2Var was the only class that had a default configuration value that
+  // was different form the default value in the base class
+  // RooAbsOptTestStatistic. This function changes the default confuration
+  // values to what they were in the past.
+  static inline RooAbsTestStatistic::Configuration& customizeCfgDefaults(RooAbsTestStatistic::Configuration & cfg) {
+      cfg.splitCutRange.setDefaultValue(true);
+      return cfg;
+  } ;
+
   RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-	    Bool_t extended=kFALSE, const char* rangeName=0, const char* addCoefRangeName=0, 
-	     Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, RooDataHist::ErrorType=RooDataHist::SumW2) ;
+             RooAbsTestStatistic::Configuration && cfg=RooAbsTestStatistic::Configuration{},
+             bool extended=false, RooDataHist::ErrorType=RooDataHist::SumW2) ;
 
   RooChi2Var(const char *name, const char *title, RooAbsReal& func, RooDataHist& data,
-	     const RooArgSet& projDeps, FuncMode funcMode, const char* rangeName=0, const char* addCoefRangeName=0, 
-	     Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, RooDataHist::ErrorType=RooDataHist::SumW2) ;
+             const RooArgSet& projDeps, FuncMode funcMode,
+             RooAbsTestStatistic::Configuration && cfg=RooAbsTestStatistic::Configuration{},
+             RooDataHist::ErrorType=RooDataHist::SumW2) ;
 
   RooChi2Var(const RooChi2Var& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooChi2Var(*this,newname); }
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& dhist,
-				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition,Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, Bool_t = kFALSE) {
+                                      const RooArgSet& projDeps, RooAbsTestStatistic::Configuration && cfg) {
     // Virtual constructor
-    return new RooChi2Var(name,title,(RooAbsPdf&)pdf,(RooDataHist&)dhist,projDeps,_funcMode,rangeName,
-			  addCoefRangeName,nCPU,interleave,verbose, splitCutRange,_etype) ;
+    return new RooChi2Var(name,title,(RooAbsPdf&)pdf,(RooDataHist&)dhist,projDeps,_funcMode,std::move(cfg),_etype) ;
   }
   
   virtual ~RooChi2Var();

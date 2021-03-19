@@ -22,6 +22,7 @@
 #include "TStopwatch.h"
 #include "Math/Util.h"
 
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -40,16 +41,95 @@ class RooAbsTestStatistic : public RooAbsReal {
     friend class RooRealMPFE;
 public:
 
+  struct Configuration {
+
+    /// Stores the configuration parameters for RooAbsTestStatistic.
+
+    template<class T>
+    struct DefaultValue { const T val; };
+
+    template<class T>
+    DefaultValue<T> makeDefault(T const& value) { return {value}; }
+
+    template<class T>
+    class ConfParam {
+
+    /// Manages a configuration parameter.
+    /// It supports setting a default value, can determine if a value has been
+    /// set by the user, and allows to change the default value after
+    /// construction.
+
+    private:
+
+      friend struct Configuration;
+
+      /// Constructs a configuration parameter where the value is set to a default value
+      /// that can still be changed after construction.
+      /// This constructor should only be used in the declaration of the configuration struct.
+      ConfParam(DefaultValue<T> const& value) : _isSet{false}, _value{value.val} {}
+
+    public:
+
+      /// Constructs a configuration parameter where the value is set immediately.
+      ConfParam(T const& value) : _isSet{true}, _value{value} {}
+
+      /// Check if a given configuration parameter is set.
+      bool isSet() const { return _isSet ; }
+
+      /// Set a configuration value after construction time.
+      /// A given parameter should only be set once, otherwise this
+      /// hints to an error in the code and an exception is thrown,
+      /// hence the runtime_error throw.
+      void setValue(T const& value) {
+        if(_isSet) {
+          throw std::runtime_error("Can't set the value of a configuration parameter that has already been set.");
+        }
+        _isSet = true;
+        _value = value;
+      }
+
+      /// Get the configuration parameter value.
+      T const& operator*() const { return _value ; }
+
+    private:
+
+      friend class  RooChi2Var;
+
+      /// Change the default value after construction time.
+      /// This is a hack to reproduce the situation before, where the default
+      /// values were set in the constructor parameters of RooAbsTestStatistic
+      /// and its derived classes and the defaults were not consistent over the
+      /// dependency hierachy.
+      void setDefaultValue(T const& value) {
+        if(!_isSet) {
+          _value = value;
+        }
+      }
+
+      bool _isSet = false;
+      T _value{};
+    };
+
+    ConfParam<const char*> rangeName = makeDefault((const char*)nullptr);
+    ConfParam<const char*> addCoefRangeName = makeDefault((const char*)nullptr);
+    ConfParam<int> nCPU = makeDefault(1);
+    ConfParam<RooFit::MPSplit> interleave = makeDefault(RooFit::BulkPartition);
+    ConfParam<bool> verbose = makeDefault(true);
+    ConfParam<bool> splitCutRange = makeDefault(false);
+    ConfParam<bool> cloneInputData = makeDefault(true);
+    ConfParam<double> integrateOverBinsPrecision = makeDefault(-1.);
+    ConfParam<bool> binnedL = makeDefault(false);
+
+  };
+
   // Constructors, assignment etc
   RooAbsTestStatistic() ;
   RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
-		      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-		      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
+                      const RooArgSet& projDeps, Configuration && cfg);
   RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name=0);
   virtual ~RooAbsTestStatistic();
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
-				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE, Bool_t binnedL=kFALSE) = 0 ;
+                                      const RooArgSet& projDeps, Configuration && cfg) = 0;
 
   virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
 

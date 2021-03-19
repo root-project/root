@@ -99,23 +99,22 @@ RooAbsTestStatistic::RooAbsTestStatistic() :
 /// if the categories are called "pi0" and "gamma".
 
 RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
-					 const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
-					 Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange) :
+                                         const RooArgSet& projDeps, RooAbsTestStatistic::Configuration && cfg) :
   RooAbsReal(name,title),
   _paramSet("paramSet","Set of parameters",this),
   _func(&real),
   _data(&data),
   _projDeps((RooArgSet*)projDeps.Clone()),
-  _rangeName(rangeName?rangeName:""),
-  _addCoefRangeName(addCoefRangeName?addCoefRangeName:""),
-  _splitRange(splitCutRange),
+  _rangeName(*cfg.rangeName?*cfg.rangeName:""),
+  _addCoefRangeName(*cfg.addCoefRangeName?*cfg.addCoefRangeName:""),
+  _splitRange(*cfg.splitCutRange),
   _simCount(1),
-  _verbose(verbose),
+  _verbose(*cfg.verbose),
   _nGof(0),
   _gofArray(0),
-  _nCPU(nCPU),
+  _nCPU(*cfg.nCPU),
   _mpfeArray(0),
-  _mpinterl(interleave),
+  _mpinterl(*cfg.interleave),
   _doOffset(kFALSE),
   _evalCarry(0)
 {
@@ -464,7 +463,13 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
   _mpfeArray = new pRooRealMPFE[_nCPU];
 
   // Create proto-goodness-of-fit
-  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,rangeName,addCoefRangeName,1,_mpinterl,_verbose,_splitRange);
+  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,
+          {.rangeName=rangeName,
+           .addCoefRangeName=addCoefRangeName,
+           .nCPU=1,
+           .interleave=_mpinterl,
+           .verbose=_verbose,
+           .splitCutRange=_splitRange});
   gof->recursiveRedirectServers(_paramSet);
 
   for (Int_t i = 0; i < _nCPU; ++i) {
@@ -565,10 +570,24 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       // and omitting them reduces model complexity and associated handling/cloning times
       if (_splitRange && rangeName) {
         _gofArray[n] = create(catName.c_str(), catName.c_str(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
-            Form("%s_%s",rangeName,catName.c_str()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_verbose,_splitRange,binnedL);
+                {.rangeName=Form("%s_%s",rangeName,catName.c_str()),
+                 .addCoefRangeName=addCoefRangeName,
+                 .nCPU=_nCPU*(_mpinterl?-1:1),
+                 .interleave=_mpinterl,
+                 .verbose=_verbose,
+                 .splitCutRange=_splitRange,
+                 .binnedL=binnedL}
+        );
       } else {
         _gofArray[n] = create(catName.c_str(),catName.c_str(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
-            rangeName,addCoefRangeName,_nCPU,_mpinterl,_verbose,_splitRange,binnedL);
+                {.rangeName=rangeName,
+                 .addCoefRangeName=addCoefRangeName,
+                 .nCPU=_nCPU,
+                 .interleave=_mpinterl,
+                 .verbose=_verbose,
+                 .splitCutRange=_splitRange,
+                 .binnedL=binnedL}
+        );
       }
       _gofArray[n]->setSimCount(_nGof);
       // *** END HERE
