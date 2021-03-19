@@ -243,6 +243,11 @@ namespace HistFactory{
     }
     delete obsIter;
 
+    if (!cat) {
+       std::cerr <<"Category not found"<< std::endl;
+       return;
+    }
+
     // split dataset
     TList* dataByCategory = data->split(*cat);
     if(verbose) dataByCategory->Print();
@@ -289,9 +294,9 @@ namespace HistFactory{
       delete histForN;
     
     } // End Loop Over Categories
-    
-    return;
 
+    dataByCategory->Delete();
+    delete dataByCategory;
   }
 
 
