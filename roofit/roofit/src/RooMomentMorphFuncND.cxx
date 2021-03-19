@@ -428,7 +428,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
    int nObs = _obsList.getSize();
    int nPdf = _referenceGrid._pdfList.getSize();
 
-   TIterator *pdfItr = _pdfList.createIterator();
+   TIter pdfItr = _pdfList.createIterator();
 
    RooAbsReal *null = 0;
    vector<RooAbsReal *> meanrv(nPdf * nObs, null);
@@ -501,7 +501,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
       }
 
       // construction of unit pdfs
-      pdfItr->Reset();
+      pdfItr.Reset();
       RooAbsReal *pdf;
       RooArgList transPdfList;
 
@@ -509,7 +509,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
          _obsItr->Reset();
          RooRealVar *var;
 
-         pdf = (RooAbsReal *)pdfItr->Next();
+         pdf = (RooAbsReal *)pdfItr.Next();
          string pdfName = Form("pdf_%d", i);
          RooCustomizer cust(*pdf, pdfName.c_str());
 
