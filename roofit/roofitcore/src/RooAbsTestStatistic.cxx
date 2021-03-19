@@ -100,7 +100,8 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _gofOpMode{(cfg.nCPU>1 || cfg.nCPU==-1) ? MPMaster : (dynamic_cast<RooSimultaneous*>(_func) ? SimMaster : Slave)},
   _nEvents{data.numEntries()},
   _nCPU(cfg.nCPU != -1 ? cfg.nCPU : 1),
-  _mpinterl(cfg.interleave)
+  _mpinterl(cfg.interleave),
+  _batchMode(cfg.batchMode)
 {
   // Register all parameters as servers
   _paramSet.add(*std::unique_ptr<RooArgSet>{real.getParameters(&data)});
@@ -137,6 +138,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _gofSplitMode(other._gofSplitMode),
   _nCPU(other._nCPU != -1 ? other._nCPU : 1),
   _mpinterl(other._mpinterl),
+  _batchMode(other._batchMode),
   _doOffset(other._doOffset),
   _offset(other._offset),
   _evalCarry(other._evalCarry)

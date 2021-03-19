@@ -56,10 +56,6 @@ public:
 
   virtual Double_t defaultErrorLevel() const { return 0.5 ; }
 
-  void batchMode(bool on = true) {
-    _batchEvaluations = on;
-  }
-
   using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
 
 protected:

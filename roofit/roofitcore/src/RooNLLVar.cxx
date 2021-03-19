@@ -63,6 +63,7 @@ namespace {
     cfg.splitCutRange = static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,args...));
     cfg.cloneInputData = static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","CloneData",0,1,args...));
     cfg.integrateOverBinsPrecision = RooCmdConfig::decodeDoubleOnTheFly("RooNLLVar::RooNLLVar", "IntegrateBins", 0, -1., {args...});
+    cfg.batchMode = static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","BatchMode",0,false,args...));
     return cfg;
   }
 }
@@ -109,7 +110,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
 
   _extended = pc.getInt("extended") ;
-  _batchEvaluations = pc.getInt("BatchMode");
+  _batchEvaluations = _batchMode;
   _weightSq = kFALSE ;
   _first = kTRUE ;
   _offsetSaveW2 = 0.;
@@ -172,6 +173,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
                      RooAbsTestStatistic::Configuration const& cfg, bool extended) :
   RooAbsOptTestStatistic(name,title,pdf,indata,projDeps, cfg),
   _extended(extended),
+  _batchEvaluations(_batchMode),
   _weightSq(kFALSE),
   _first(kTRUE)
 {
@@ -230,7 +232,6 @@ RooAbsTestStatistic* RooNLLVar::create(const char *name, const char *title, RooA
   bool extendedPdf = _extended && thePdf.canBeExtended();
 
   auto testStat = new RooNLLVar(name, title, thePdf, adata, projDeps, cfg, extendedPdf);
-  testStat->batchMode(_batchEvaluations);
   return testStat;
 }
 
@@ -331,7 +332,7 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 
   } else { //unbinned PDF
 
-    if (_batchEvaluations) {
+    if (_batchMode) {
       std::tie(result, sumWeight) = computeBatched(stepSize, firstEvent, lastEvent);
 #ifdef ROOFIT_CHECK_CACHED_VALUES
 
@@ -368,7 +369,7 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 
         // Calculate sum of weights-squared here for extended term
         Double_t sumW2;
-        if (_batchEvaluations) {
+        if (_batchMode) {
           const RooSpan<const double> eventWeights = _dataClone->getWeightBatch(0, _nEvents);
           if (eventWeights.empty()) {
             sumW2 = (lastEvent - firstEvent) * _dataClone->weightSquared();

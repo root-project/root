@@ -51,6 +51,7 @@ public:
     bool cloneInputData = true;
     double integrateOverBinsPrecision = -1.;
     bool binnedL = false;
+    bool batchMode = false;
   };
 
   // Constructors, assignment etc
@@ -154,6 +155,7 @@ protected:
   pRooRealMPFE*  _mpfeArray = nullptr; //! Array of parallel execution frond ends
 
   RooFit::MPSplit _mpinterl = RooFit::BulkPartition; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
+  Bool_t _batchMode = false ; //! If batch mode is activated or not
   Bool_t         _doOffset = false; // Apply interval value offset to control numeric precision?
   mutable ROOT::Math::KahanSum<double> _offset = 0.0; //! Offset as KahanSum to avoid loss of precision
   mutable Double_t _evalCarry = 0.0; //! carry of Kahan sum in evaluatePartition

@@ -1109,14 +1109,13 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.cloneInputData = static_cast<bool>(cloneData);
   cfg.integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
   cfg.binnedL = false;
+  cfg.batchMode = pc.getInt("BatchMode");
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: default range, or single restricted range
     //cout<<"FK: Data test 1: "<<data.sumEntries()<<endl;
 
     cfg.rangeName = rangeName ? rangeName : "";
-    auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps,cfg, ext);
-    theNLL->batchMode(pc.getInt("BatchMode"));
-    nll = theNLL;
+    nll = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps,cfg, ext);
   } else {
     // Composite case: multiple ranges
     RooArgList nllList ;
@@ -1129,7 +1128,6 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
       cfg.rangeName = token;
       auto nllComp = new RooNLLVar((baseName + "_" + token).c_str(),"-log(likelihood)",
                                    *this,data,projDeps,cfg,ext);
-      nllComp->batchMode(pc.getInt("BatchMode"));
       nllList.add(*nllComp) ;
     }
 
