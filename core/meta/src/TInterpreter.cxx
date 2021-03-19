@@ -20,6 +20,7 @@ interpreter.
 #include "TError.h"
 #include "TGlobal.h"
 
+#include "ROOT/RLogger.hxx"
 
 TInterpreter*   gCling = nullptr; // returns pointer to global TCling object
 static TInterpreter *gInterpreterLocal = nullptr; // The real holder of the pointer.
@@ -64,4 +65,14 @@ TInterpreter *TInterpreter::Instance()
       }
    }
    return gInterpreterLocal;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Access the log channel for observice performance-critical actions.
+/// The channel name is "ROOT.InterpreterPerf"
+
+ROOT::Experimental::RLogChannel &TInterpreter::PerfLog() const
+{
+   static ROOT::Experimental::RLogChannel sLog("ROOT.InterpreterPerf");
+   return sLog;
 }

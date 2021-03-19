@@ -20,6 +20,7 @@ clang/LLVM technology.
 #include "TCling.h"
 
 #include "ROOT/FoundationUtils.hxx"
+#include "ROOT/RLogger.hxx"
 
 #include "TClingBaseClassInfo.h"
 #include "TClingCallFunc.h"
@@ -6353,13 +6354,16 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
                   } else {
                      fParsedPayloadsAddresses.insert(hName);
                      nHheadersParsed++;
+                     ProcInfo_t info;
+                     gSystem->GetProcInfo(&info);
+                     float endRSSval = 1e-3*info.fMemResident;
+                     float endVSIZEval = 1e-3*info.fMemVirtual;
                      if (gDebug > 0){
-                        ProcInfo_t info;
-                        gSystem->GetProcInfo(&info);
-                        float endRSSval = 1e-3*info.fMemResident;
-                        float endVSIZEval = 1e-3*info.fMemVirtual;
                         Info("Autoparse", ">>> RSS key %s - before %.3f MB - after %.3f MB - delta %.3f MB", apKey, initRSSval, endRSSval, endRSSval-initRSSval);
                         Info("Autoparse", ">>> VSIZE key %s - before %.3f MB - after %.3f MB - delta %.3f MB", apKey, initVSIZEval, endVSIZEval, endVSIZEval-initVSIZEval);
+                     } else {
+                        R__LOG_DEBUG(1, PerfLog()) << "Autoparse request `" << cls << "`, key `" << apKey << "`: parsed \"" << hName
+                           << "\" RSS cost " << endRSSval-initRSSval << "MB\n";
                      }
                   }
                } else if (!IsLoaded(hName)) {

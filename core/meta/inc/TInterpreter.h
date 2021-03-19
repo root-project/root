@@ -59,6 +59,9 @@ struct InterpreterMutexRegistrationRAII {
    ~InterpreterMutexRegistrationRAII();
 };
 }
+namespace Experimental {
+   class RLogChannel;
+}
 }
 
 class TInterpreter : public TNamed {
@@ -548,6 +551,8 @@ public:
    virtual const char *TypedefInfo_Title(TypedefInfo_t * /* tinfo */) const {return 0;}
 
    static TInterpreter *Instance();
+
+   ROOT::Experimental::RLogChannel &PerfLog() const;
 
    ClassDef(TInterpreter,0)  //ABC defining interface to generic interpreter
 };
