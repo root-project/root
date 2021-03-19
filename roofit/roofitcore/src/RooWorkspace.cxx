@@ -863,9 +863,9 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  TIterator* iter = aset.createIterator() ;
+  TIter iter = aset.createIterator() ;
   RooAbsArg* sarg ;
-  while((sarg=(RooAbsArg*)iter->Next())) {
+  while((sarg=(RooAbsArg*)iter.Next())) {
     // If missing, either import or report error
     if (!arg(sarg->GetName())) {
       if (importMissing) {
@@ -878,7 +878,7 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
     }
     wsargs.add(*arg(sarg->GetName())) ;
   }
-  delete iter ;
+
 
   // Install named set
   _namedSets[name].removeAll() ;
@@ -1433,9 +1433,9 @@ RooArgSet RooWorkspace::allFunctions() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) &&
 	!parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
 	!parg->IsA()->InheritsFrom(RooConstVar::Class()) &&
@@ -1456,9 +1456,9 @@ RooArgSet RooWorkspace::allCatFunctions() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) &&
 	!parg->IsA()->InheritsFrom(RooCategory::Class())) {
       ret.add(*parg) ;
@@ -1477,9 +1477,9 @@ RooArgSet RooWorkspace::allResolutionModels() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
       if (!((RooResolutionModel*)parg)->isConvolved()) {
 	ret.add(*parg) ;
@@ -1498,9 +1498,9 @@ RooArgSet RooWorkspace::allPdfs() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
 	!parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
       ret.add(*parg) ;

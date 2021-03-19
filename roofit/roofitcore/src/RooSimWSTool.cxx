@@ -452,9 +452,9 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
   TList* customizerList = new TList ;
 
   // Loop over requested physics models and build components
-  TIterator* physMIter = physModelSet.createIterator() ;
+  TIter physMIter = physModelSet.createIterator() ;
   RooAbsPdf* physModel ;
-  while((physModel=(RooAbsPdf*)physMIter->Next())) {
+  while((physModel=(RooAbsPdf*)physMIter.Next())) {
     if (verbose) coutI(ObjectHandling) << "RooSimPdfBuilder::executeBuild: processing prototype pdf " << physModel->GetName() << endl ;
 
     RooCustomizer* physCustomizer = new RooCustomizer(*physModel,*masterSplitCat,splitNodeListOwned,&splitNodeListAll) ;
@@ -525,7 +525,6 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
       physCustomizer->splitArgs(*splitIter->first,*splitCat) ;
     }
   }
-  delete physMIter ;
 
   // List all existing workspace components as prebuilt items for the customizers at this point
   splitNodeListAll.add(_ws->components()) ;

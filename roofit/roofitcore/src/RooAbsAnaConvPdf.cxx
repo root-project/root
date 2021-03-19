@@ -677,9 +677,9 @@ void RooAbsAnaConvPdf::printMultiline(ostream& os, Int_t contents, Bool_t verbos
   RooAbsPdf::printMultiline(os,contents,verbose,indent);
 
   os << indent << "--- RooAbsAnaConvPdf ---" << endl;
-  TIterator* iter = _convSet.createIterator() ;
+  TIter iter = _convSet.createIterator() ;
   RooResolutionModel* conv ;
-  while (((conv=(RooResolutionModel*)iter->Next()))) {
+  while (((conv=(RooResolutionModel*)iter.Next()))) {
     conv->printMultiline(os,contents,verbose,indent) ;
   }
 }
