@@ -692,8 +692,7 @@ void TNetFile::Create(const char * /*url*/, Option_t *option, Int_t netopt)
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
    Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
    Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
-   Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
-   if (!create && !recreate && !update && !read) {
+   if (!create && !recreate && !update) {
       fOption = "READ";
    }
 
