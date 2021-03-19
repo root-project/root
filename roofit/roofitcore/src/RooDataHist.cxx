@@ -330,9 +330,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
       // Initialize importing mapped set of TH1s
       map<string,TH1*> hmap ;
-      TIterator* hiter = impSliceHistos.MakeIterator() ;
+      TIter hiter = impSliceHistos.MakeIterator() ;
       for (const auto& token : RooHelpers::tokenise(impSliceNames, ",")) {
-        auto histo = static_cast<TH1*>(hiter->Next());
+        auto histo = static_cast<TH1*>(hiter.Next());
         assert(histo);
         hmap[token] = histo;
       }
@@ -341,9 +341,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
       // Initialize importing mapped set of RooDataHists
       map<string,RooDataHist*> dmap ;
-      TIterator* hiter = impSliceDHistos.MakeIterator() ;
+      TIter hiter = impSliceDHistos.MakeIterator() ;
       for (const auto& token : RooHelpers::tokenise(impSliceDNames, ",")) {
-        dmap[token] = (RooDataHist*) hiter->Next() ;
+        dmap[token] = (RooDataHist*) hiter.Next() ;
       }
       importDHistSet(vars,*indexCat,dmap,initWgt) ;
     }

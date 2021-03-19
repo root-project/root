@@ -805,9 +805,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   RooArgList wgtCompList ;
 //RooAbsPdf* pdf ;
   RooRealProxy* proxy ;
-  TIterator* pIter = _pdfProxyList.MakeIterator() ;
+  TIter pIter = _pdfProxyList.MakeIterator() ;
   Double_t sumWeight(0) ;
-  while((proxy=(RooRealProxy*)pIter->Next())) {
+  while((proxy=(RooRealProxy*)pIter.Next())) {
 
     idxCatClone->setLabel(proxy->name()) ;
 
