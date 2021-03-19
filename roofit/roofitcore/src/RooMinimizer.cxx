@@ -876,16 +876,15 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
 
 
   // Verify that all members of varList are of type RooRealVar
-  TIterator* iter = varList.createIterator() ;
+  TIter iter = varList.createIterator() ;
   RooAbsArg* arg  ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  while((arg=(RooAbsArg*)iter.Next())) {
     if (!dynamic_cast<RooRealVar*>(arg)) {
       oocoutE((TObject*)0,InputArguments) << "RooMinimizer::lastMinuitFit: ERROR: variable '"
 					  << arg->GetName() << "' is not of type RooRealVar" << endl ;
       return 0 ;
     }
   }
-  delete iter ;
 
   RooFitResult* res = new RooFitResult("lastMinuitFit","Last MINUIT fit") ;
 
