@@ -93,6 +93,8 @@ ROOT_BUILD_OPTION(builtin_glew OFF "Build bundled copy of GLEW")
 ROOT_BUILD_OPTION(builtin_gsl OFF "Build GSL internally (requires network)")
 ROOT_BUILD_OPTION(builtin_llvm ON "Build bundled copy of LLVM")
 ROOT_BUILD_OPTION(builtin_lz4 OFF "Build bundled copy of lz4")
+# We need to have it currently as a required dependency
+ROOT_BUILD_OPTION(builtin_flzma2 ON "Build bundled copy of flzma2")
 ROOT_BUILD_OPTION(builtin_lzma OFF "Build bundled copy of lzma")
 ROOT_BUILD_OPTION(builtin_nlohmannjson ON "Use nlohmann/json.hpp file distributed with ROOT")
 ROOT_BUILD_OPTION(builtin_openssl OFF "Build OpenSSL internally (requires network)")
@@ -204,13 +206,13 @@ if(all AND minimal)
 endif()
 
 #--- Compression algorithms in ROOT-------------------------------------------------------------
-set(compression_default "zlib" CACHE STRING "Default compression algorithm (zlib (default), lz4, zstd or lzma)")
+set(compression_default "zlib" CACHE STRING "Default compression algorithm (zlib (default), lz4, zstd, flzma2 or lzma)")
 string(TOLOWER "${compression_default}" compression_default)
-if("${compression_default}" MATCHES "zlib|lz4|lzma|zstd")
+if("${compression_default}" MATCHES "zlib|lz4|lzma|flzma2|zstd")
   message(STATUS "ROOT default compression algorithm: ${compression_default}")
 else()
   message(FATAL_ERROR "Unsupported compression algorithm: ${compression_default}\n"
-    "Known values are zlib, lzma, lz4, zstd (case-insensitive).")
+    "Known values are zlib, lzma, flzma2, lz4, zstd (case-insensitive).")
 endif()
 
 #--- The 'all' option swithes ON major options---------------------------------------------------
@@ -288,6 +290,7 @@ if(builtin_all)
   set(builtin_llvm_defvalue ON)
   set(builtin_lz4_defvalue ON)
   set(builtin_lzma_defvalue ON)
+  set(builtin_flzma2_defvalue ON)
   set(builtin_nlohmannjson_defvalue ON)
   set(builtin_openssl_defvalue ON)
   set(builtin_openui5_defvalue ON)

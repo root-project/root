@@ -75,7 +75,9 @@ struct RCompressionSetting {
          /// Compression level reserved for old ROOT compression algorithm
          kDefaultOld = 6,
          /// Compression level reserved for LZMA compression algorithm (slowest compression with smallest files)
-         kDefaultLZMA = 7
+         kDefaultLZMA = 7,
+         /// Compression level reserved for FLZMA2 compression algorithm (slowest compression with smallest files)
+         kDefaultFLZMA2 = 7
       };
    };
    struct EAlgorithm { /// Note: this is only temporarily a struct and will become a enum class hence the name
@@ -96,6 +98,8 @@ struct RCompressionSetting {
          kLZ4,
          /// Use ZSTD compression
          kZSTD,
+         /// Use FLZMA2 compression
+         kFLZMA2,
          /// Undefined compression algorithm (must be kept the last of the list in case a new algorithm is added).
          kUndefined
       };
@@ -117,6 +121,8 @@ enum ECompressionAlgorithm {
    kLZ4 = RCompressionSetting::EAlgorithm::kLZ4,
    /// Deprecated name, do *not* use:
    kZSTD = RCompressionSetting::EAlgorithm::kZSTD,
+   /// Deprecated name, do *not* use:
+   kFLZMA2 = RCompressionSetting::EAlgorithm::kFLZMA2,
    /// Deprecated name, do *not* use:
    kUndefinedCompressionAlgorithm = RCompressionSetting::EAlgorithm::kUndefined
 };

@@ -81,6 +81,7 @@ add_subdirectory(zip)
 add_subdirectory(lzma)
 add_subdirectory(lz4)
 add_subdirectory(zstd)
+add_subdirectory(flzma2)
 if(asan)
   add_subdirectory(sanitizer)
 endif()
@@ -117,6 +118,7 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:Cont>
                $<TARGET_OBJECTS:Foundation>
                $<TARGET_OBJECTS:Lzma>
+               $<TARGET_OBJECTS:FLzma2>
                $<TARGET_OBJECTS:Lz4>
                $<TARGET_OBJECTS:Zstd>
                $<TARGET_OBJECTS:Zip>
@@ -261,6 +263,7 @@ target_link_libraries(Core
     xxHash::xxHash
     LZ4::LZ4
     ZLIB::ZLIB
+    ${FLMA2_LIBRARIES}
     ${ZSTD_LIBRARIES}
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}

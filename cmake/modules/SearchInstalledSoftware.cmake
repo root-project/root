@@ -298,6 +298,29 @@ if(builtin_zstd)
   add_subdirectory(builtins/zstd)
 endif()
 
+#---Check for FLZMA2-------------------------------------------------------------------
+if(NOT builtin_flzma2)
+  message(STATUS "Looking for FLZMA2")
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARIES LIBRARY_DEBUG LIBRARY_RELEASE)
+    unset(FLZMA2_${suffix} CACHE)
+  endforeach()
+  # As for fail-on-missing, for now it is mandatory package.
+  # We don't expect you to have it as builtins, so no REQUIRED anymore.
+  find_package(FLZMA2)
+  if(NOT FLZMA2_FOUND)
+    message(STATUS "FLZMA2 not found. Switching on builtin_FLZMA2 option")
+    set(builtin_flzma2 ON CACHE BOOL "Enabled because FLZMA2 not found (${builtin_flzma2_description})" FORCE)
+  elseif(FLZMA2_FOUND AND FLZMA2_VERSION VERSION_LESS 1.0.0)
+    message(STATUS "Version of installed FLZMA2 is too old: ${FLZMA2_VERSION}. Switching on builtin_flzma2 option")
+    set(builtin_flzma2 ON CACHE BOOL "Enabled because FLZMA2 not found (${builtin_flzma2_description})" FORCE)
+  endif()
+endif()
+
+if(builtin_flzma2)
+  list(APPEND ROOT_BUILTINS FLZMA2)
+  add_subdirectory(builtins/flzma2)
+endif()
+
 #---Check for LZ4--------------------------------------------------------------------
 if(NOT builtin_lz4)
   message(STATUS "Looking for LZ4")

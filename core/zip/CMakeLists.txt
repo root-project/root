@@ -18,6 +18,7 @@ ROOT_OBJECT_LIBRARY(Zip
 target_include_directories(Zip PRIVATE
    ${ZLIB_INCLUDE_DIR}
    ${CMAKE_SOURCE_DIR}/core/lzma/inc
+   ${CMAKE_SOURCE_DIR}/core/flzma2/inc
    ${CMAKE_SOURCE_DIR}/core/lz4/inc
    ${CMAKE_SOURCE_DIR}/core/zstd/inc
    ${CMAKE_SOURCE_DIR}/core/foundation/inc
