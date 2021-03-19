@@ -23,6 +23,7 @@ The following people have contributed to this new version:
  Hadrien Grasland, IJCLab/LAL,\
  Enrico Guiraud, CERN/SFT,\
  Claire Guyot, CERN/SFT,\
+ Jonas Hahnfeld, CERN/SFT,\
  Emmanouil Michalainas, CERN/SFT,\
  Stephan Hageboeck, CERN/SFT,\
  Sergey Linev, GSI,\
@@ -34,6 +35,7 @@ The following people have contributed to this new version:
  Vincenzo Eduardo Padulano, CERN/SFT and UPV,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
+ Jonas Rembser, CERN/SFT,\
  Andrea Sciandra, SCIPP-UCSC/Atlas, \
  Oksana Shadura, UNL/CMS,\
  Enric Tejedor Saavedra, CERN/SFT,\
