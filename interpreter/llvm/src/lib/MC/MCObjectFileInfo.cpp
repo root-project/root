@@ -284,6 +284,8 @@ void MCObjectFileInfo::initELFMCObjectFileInfo(const Triple &T) {
   case Triple::mips64el:
     FDECFIEncoding = dwarf::DW_EH_PE_sdata8;
     break;
+  case Triple::ppc64:
+  case Triple::ppc64le:
   case Triple::x86_64:
     FDECFIEncoding = dwarf::DW_EH_PE_pcrel |
                      ((CMModel == CodeModel::Large) ? dwarf::DW_EH_PE_sdata8
