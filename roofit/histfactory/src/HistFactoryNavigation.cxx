@@ -502,7 +502,7 @@ namespace RooStats {
 
     std::map< std::string, RooAbsReal*> HistFactoryNavigation::GetSampleFunctionMap(const std::string& channel) {
       // Get a map of strings to function pointers, 
-      // which each function cooresponds to a sample
+      // which each function corresponds to a sample
 
       std::map< std::string, std::map< std::string, RooAbsReal*> >::iterator channel_itr;
       channel_itr = fChannelSampleFunctionMap.find(channel);
@@ -582,7 +582,7 @@ namespace RooStats {
       std::map< std::string, RooAbsReal*> SampleFunctionMap = GetSampleFunctionMap(channel);
 
       // Okay, 'loop' once 
-      TH1* total_hist=NULL;
+      TH1* total_hist = nullptr;
       std::map< std::string, RooAbsReal*>::iterator itr = SampleFunctionMap.begin();
       for( ; itr != SampleFunctionMap.end(); ++itr) {
 	std::string sample_name = itr->first;
@@ -594,6 +594,9 @@ namespace RooStats {
 	delete sample_hist;
 	break;
       }
+      if (!total_hist)
+         return nullptr;
+
       total_hist->Reset();
 
       // Loop over the SampleFunctionMap and add up all the histograms
