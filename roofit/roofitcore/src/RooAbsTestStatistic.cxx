@@ -463,13 +463,14 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
   _mpfeArray = new pRooRealMPFE[_nCPU];
 
   // Create proto-goodness-of-fit
-  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,
-          {.rangeName=rangeName,
-           .addCoefRangeName=addCoefRangeName,
-           .nCPU=1,
-           .interleave=_mpinterl,
-           .verbose=_verbose,
-           .splitCutRange=_splitRange});
+  Configuration cfg;
+  cfg.rangeName = rangeName;
+  cfg.addCoefRangeName = addCoefRangeName;
+  cfg.nCPU = 1;
+  cfg.interleave = _mpinterl;
+  cfg.verbose = _verbose;
+  cfg.splitCutRange = _splitRange;
+  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,std::move(cfg));
   gof->recursiveRedirectServers(_paramSet);
 
   for (Int_t i = 0; i < _nCPU; ++i) {
@@ -568,27 +569,20 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       // WVE END HACK
       // Below here directly pass binnedPdf instead of PROD(binnedPdf,constraints) as constraints are evaluated elsewhere anyway
       // and omitting them reduces model complexity and associated handling/cloning times
+      Configuration cfg;
+      cfg.addCoefRangeName=addCoefRangeName;
+      cfg.interleave = _mpinterl;
+      cfg.verbose = _verbose;
+      cfg.splitCutRange = _splitRange;
+      cfg.binnedL = binnedL;
       if (_splitRange && rangeName) {
-        _gofArray[n] = create(catName.c_str(), catName.c_str(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
-                {.rangeName=Form("%s_%s",rangeName,catName.c_str()),
-                 .addCoefRangeName=addCoefRangeName,
-                 .nCPU=_nCPU*(_mpinterl?-1:1),
-                 .interleave=_mpinterl,
-                 .verbose=_verbose,
-                 .splitCutRange=_splitRange,
-                 .binnedL=binnedL}
-        );
+        cfg.rangeName = Form("%s_%s",rangeName,catName.c_str());
+        cfg.nCPU = _nCPU*(_mpinterl?-1:1);
       } else {
-        _gofArray[n] = create(catName.c_str(),catName.c_str(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
-                {.rangeName=rangeName,
-                 .addCoefRangeName=addCoefRangeName,
-                 .nCPU=_nCPU,
-                 .interleave=_mpinterl,
-                 .verbose=_verbose,
-                 .splitCutRange=_splitRange,
-                 .binnedL=binnedL}
-        );
+        cfg.rangeName = rangeName;
+        cfg.nCPU = _nCPU;
       }
+      _gofArray[n] = create(catName.c_str(),catName.c_str(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,std::move(cfg));
       _gofArray[n]->setSimCount(_nGof);
       // *** END HERE
 

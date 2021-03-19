@@ -51,6 +51,14 @@ using namespace std;
 ClassImp(RooXYChi2Var);
 ;
 
+namespace {
+  RooAbsTestStatistic::Configuration makeRooAbsTestStatisticCfg() {
+    RooAbsTestStatistic::Configuration cfg;
+    cfg.verbose = false;
+    return cfg;
+  }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]
@@ -78,7 +86,7 @@ RooXYChi2Var::RooXYChi2Var()
 ///
 
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),{.verbose=false}),
+  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),std::move(makeRooAbsTestStatisticCfg())),
   _extended(kFALSE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
@@ -106,7 +114,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func
 ///
 
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, RooRealVar& yvar, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),{.verbose=false}),
+  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),std::move(makeRooAbsTestStatisticCfg())),
   _extended(kFALSE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
@@ -137,7 +145,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func
 ///
 
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),{.verbose=false}),
+  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),std::move(makeRooAbsTestStatisticCfg())),
   _extended(kTRUE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
@@ -171,7 +179,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPd
 ///
 
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, RooRealVar& yvar, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),{.verbose=false}),
+  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),std::move(makeRooAbsTestStatisticCfg())),
   _extended(kTRUE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
