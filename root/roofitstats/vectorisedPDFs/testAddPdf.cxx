@@ -41,8 +41,10 @@ class TestGaussPlusPoisson : public PDFTest
       auto pois = new RooPoisson("Pois", "Poisson PDF", *x, *meanPois, true);
 
       auto fractionGaus = new RooRealVar("fractionGaus", "Fraction of Gauss component", 0.5, 0., 1.);
-      _pdf = std::make_unique<RooAddPdf>("SumGausPois", "Sum of Gaus and Poisson",
+      auto sumGausPois = std::make_unique<RooAddPdf>("SumGausPois", "Sum of Gaus and Poisson",
           RooArgSet(*gauss, *pois), *fractionGaus);
+      sumGausPois->fixCoefNormalization(*x);
+      _pdf = std::move(sumGausPois);
 
       _variables.addOwned(*x);
 
@@ -95,9 +97,11 @@ class TestGaussPlusGaussPlusExp : public PDFTest
       auto nGauss = new RooRealVar("nGauss", "Fraction of Gauss component", 800., 0., 1.E6);
       auto nGauss2 = new RooRealVar("nGauss2", "Fraction of Gauss component", 600., 0., 1.E6);
       auto nExp = new RooRealVar("nExp", "Number of events in exp", 1000, 0, 1.E6);
-      _pdf = std::make_unique<RooAddPdf>("Sum2GausExp", "Sum of Gaus and Exponentials",
+      auto sum2GausExp = std::make_unique<RooAddPdf>("Sum2GausExp", "Sum of Gaus and Exponentials",
           RooArgSet(*gauss, *gauss2, *expo),
           RooArgSet(*nGauss, *nGauss2, *nExp));
+      sum2GausExp->fixCoefNormalization(*x);
+      _pdf = std::move(sum2GausExp);
 
 
       _variables.addOwned(*x);
