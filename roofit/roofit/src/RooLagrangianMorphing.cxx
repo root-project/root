@@ -3170,13 +3170,14 @@ Bool_t RooLagrangianMorphing::RooLagrangianMorph::selfNormalized() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get the pdf
+/// (currently similar to cloning the Pdf
 
 RooWrapperPdf* RooLagrangianMorphing::RooLagrangianMorph::getPdf() const
 {
   auto cache = getCache(_curNormSet);
   RooRealSumFunc* func = cache->_sumFunc;
-  RooWrapperPdf* x = new RooWrapperPdf(TString::Format("pdf_%s",func->GetName()),TString::Format("pdf of %s",func->GetTitle()), *(cache->_sumFunc));
+  // create a wrapper on the roorealsumfunc
+  RooWrapperPdf* x = new RooWrapperPdf(TString::Format("pdf_%s",func->GetName()),TString::Format("pdf of %s",func->GetTitle()), *func);
   return x;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -3186,7 +3187,8 @@ RooWrapperPdf* RooLagrangianMorphing::RooLagrangianMorph::clonePdf() const
 {
   auto cache = getCache(_curNormSet);
   RooRealSumFunc* func = cache->_sumFunc;
-  RooWrapperPdf* x = new RooWrapperPdf(TString::Format("pdf_%s",func->GetName()),func->GetTitle(), *(cache->_sumFunc));
+  // create a wrapper on the roorealsumfunc
+  RooWrapperPdf* x = new RooWrapperPdf(TString::Format("pdf_%s",func->GetName()),TString::Format("pdf of %s",func->GetTitle()), *func);
   return x;
 }
 
