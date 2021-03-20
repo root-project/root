@@ -1583,7 +1583,8 @@ public:
     DEBUG("creating RooRealSumPdf");
     // as RooRealSum* does not have a common constructor format, we need to provide a factory wrapper
     InternalType* morphfunc = makeSum(TString::Format("%s_morphfunc",name), name,sumElements,scaleElements);
-    
+   
+ 
     DEBUG("ownership handling");
     DEBUG("... adding observable");
     if(!observable) ERROR("unable to access observable");
@@ -1680,7 +1681,7 @@ namespace RooLagrangianMorphing
     DEBUG("makeSum - funcList");
     funcList.Print("v");
     DEBUG("makeSum - coefList");
-    coefList.Print("v");
+     
     return new RooRealSumFunc(name,title,funcList,coefList);
   }
  // template<> RooRealSumPdf* RooLagrangianMorphBase<RooAbsPdf>::CacheElem::makeSum(const char* name, const char* title, const RooArgList &funcList, const RooArgList &coefList){
@@ -3175,19 +3176,18 @@ RooWrapperPdf* RooLagrangianMorphing::RooLagrangianMorph::getPdf() const
 {
   auto cache = getCache(_curNormSet);
   RooRealSumFunc* func = cache->_sumFunc;
-  RooWrapperPdf* x = new RooWrapperPdf(func->GetName(),func->GetTitle(), *(cache->_sumFunc));
+  RooWrapperPdf* x = new RooWrapperPdf(TString::Format("pdf_%s",func->GetName()),TString::Format("pdf of %s",func->GetTitle()), *(cache->_sumFunc));
   return x;
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// get a standalone clone of the pdf that does not depend on this object
 
 RooWrapperPdf* RooLagrangianMorphing::RooLagrangianMorph::clonePdf() const
 {
-   auto cache = getCache(_curNormSet);
-   RooRealSumFunc* func = cache->_sumFunc;
-   RooWrapperPdf* x = new RooWrapperPdf(func->GetName(),func->GetTitle(), *(cache->_sumFunc));
-   return x;
+  auto cache = getCache(_curNormSet);
+  RooRealSumFunc* func = cache->_sumFunc;
+  RooWrapperPdf* x = new RooWrapperPdf(TString::Format("pdf_%s",func->GetName()),func->GetTitle(), *(cache->_sumFunc));
+  return x;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -111,7 +111,6 @@ namespace RooLagrangianMorphing {
   // some helpers to make the template mapping work
   template<class Base> struct Internal;
   template<> struct Internal<RooAbsReal> { typedef RooRealSumFunc Type; };
-//  template<> struct Internal<RooAbsReal>  { typedef RooRealSumPdf  Type; };
 
  class RooLagrangianMorphConfig {
   friend class RooLagrangianMorph;
@@ -123,9 +122,11 @@ namespace RooLagrangianMorphing {
   RooLagrangianMorphConfig(const RooLagrangianMorphConfig& other);
   void setCouplings(const RooAbsCollection& couplings);
   void setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings);
-  template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams);
   template <class T> void setVertices(const std::vector<T>& vertices);
+  template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams);
   template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering);
+  template <class T> void addDiagrams(const std::vector<T>& diagrams);
+
   virtual ~RooLagrangianMorphConfig();
 
   protected:
