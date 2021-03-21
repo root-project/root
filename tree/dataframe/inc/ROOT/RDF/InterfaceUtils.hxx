@@ -104,6 +104,7 @@ struct Fill{};
 struct StdDev{};
 struct Display{};
 struct Snapshot{};
+struct Book{};
 }
 // clang-format on
 
@@ -265,6 +266,16 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
                                    colNames, prevNode, defines));
    }
    return actionPtr;
+}
+
+// Book with custom helper type
+template <typename... ColTypes, typename PrevNodeType, typename Helper_t>
+std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<Helper_t> &h,
+                                         const unsigned int /*nSlots*/, std::shared_ptr<PrevNodeType> prevNode,
+                                         ActionTags::Book, const RDFInternal::RBookedDefines &defines)
+{
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(std::move(*h)), bl, std::move(prevNode), defines);
 }
 
 /****** end BuildAndBook ******/

@@ -2202,7 +2202,8 @@ public:
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Book execution of a custom action using a user-defined helper object.
-   /// \tparam ColumnTypes List of types of columns used by this action.
+   /// \tparam FirstColumn The type of the first column used by this action.  Inferred together with OtherColumns if not present.
+   /// \tparam OtherColumns A list of the types of the other columns used by this action
    /// \tparam Helper The type of the user-defined helper. See below for the required interface it should expose.
    /// \param[in] helper The Action Helper to be scheduled.
    /// \param[in] columns The names of the columns on which the helper acts.
@@ -2230,31 +2231,25 @@ public:
    /// * std::shared_ptr<Result_t> GetResultPtr() const: return a shared_ptr to the result of this action (of type
    ///   Result_t). The RResultPtr returned by Book will point to this object.
    ///
+   /// In case this is called without specifying column types, jitting is used,
+   /// and the Helper class needs to be known to the interpreter.
+   ///
    /// See ActionHelpers.hxx for the helpers used by standard RDF actions.
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see RResultPtr.
    // clang-format on
-   template <typename... ColumnTypes, typename Helper>
+
+   template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename Helper>
    RResultPtr<typename Helper::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
    {
-      constexpr auto nColumns = sizeof...(ColumnTypes);
-      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columns.size());
-
-      const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
-
       // TODO add more static sanity checks on Helper
       using AH = RDFDetail::RActionImpl<Helper>;
       static_assert(std::is_base_of<AH, Helper>::value && std::is_convertible<Helper *, AH *>::value,
                     "Action helper of type T must publicly inherit from ROOT::Detail::RDF::RActionImpl<T>");
 
-      using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
-      auto resPtr = helper.GetResultPtr();
+      auto hPtr = std::make_shared<Helper>(std::forward<Helper>(helper));
+      auto resPtr = hPtr->GetResultPtr();
 
-      CheckAndFillDSColumns(validColumnNames, RDFInternal::TypeList<ColumnTypes...>());
-
-      auto action =
-         std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr, fDefines);
-      fLoopManager->Book(action.get());
-      return MakeResultPtr(resPtr, *fLoopManager, std::move(action));
+      return CreateAction<RDFInternal::ActionTags::Book, FirstColumn, OtherColumns...>(columns, resPtr, hPtr, columns.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2397,7 +2392,7 @@ private:
              typename HelperArgType = ActionResultType,
              typename std::enable_if<!RDFInternal::RNeedJitting<ColTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
-                                             const std::shared_ptr<HelperArgType> &helperArg)
+                                             const std::shared_ptr<HelperArgType> &helperArg, const int /*nColumns*/ = -1)
    {
       constexpr auto nColumns = sizeof...(ColTypes);
 
