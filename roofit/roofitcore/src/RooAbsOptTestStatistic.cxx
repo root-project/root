@@ -142,7 +142,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   _origFunc = 0 ; //other._origFunc ;
   _origData = 0 ; // other._origData ;
 
-  initSlave(real, indata, projDeps, *cfg.rangeName, *cfg.addCoefRangeName) ;
+  initSlave(real, indata, projDeps, _rangeName.c_str(), _addCoefRangeName.c_str()) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
