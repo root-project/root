@@ -115,8 +115,8 @@ public:
       T _value{};
     };
 
-    ConfParam<const char*> rangeName = makeDefault((const char*)nullptr);
-    ConfParam<const char*> addCoefRangeName = makeDefault((const char*)nullptr);
+    ConfParam<std::string> rangeName = makeDefault(std::string(""));
+    ConfParam<std::string> addCoefRangeName = makeDefault(std::string(""));
     ConfParam<int> nCPU = makeDefault(1);
     ConfParam<RooFit::MPSplit> interleave = makeDefault(RooFit::BulkPartition);
     ConfParam<bool> verbose = makeDefault(true);
@@ -207,8 +207,8 @@ protected:
   virtual Bool_t processEmptyDataSets() const { return kTRUE ; }
 
   Bool_t initialize() ;
-  void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;    
-  void initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;
+  void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, std::string const& rangeName, std::string const& addCoefRangeName) ;    
+  void initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, std::string const& rangeName, std::string const& addCoefRangeName) ;
 
   mutable Bool_t _init ;          //! Is object initialized  
   GOFOpMode   _gofOpMode ;        // Operation mode of test statistic instance 
