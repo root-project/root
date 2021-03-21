@@ -55,8 +55,8 @@ namespace {
   template<class ...Args>
   RooAbsTestStatistic::Configuration makeRooAbsTestStatisticCfg(Args const& ... args) {
     RooAbsTestStatistic::Configuration cfg;
-    cfg.rangeName = RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","RangeWithName",0,"",args...).c_str();
-    cfg.addCoefRangeName = RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","AddCoefRange",0,"",args...).c_str();
+    cfg.rangeName = RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","RangeWithName",0,"",args...);
+    cfg.addCoefRangeName = RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","AddCoefRange",0,"",args...);
     cfg.nCPU = RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","NumCPU",0,1,args...);
     cfg.interleave = RooFit::BulkPartition;
     cfg.verbose = static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","Verbose",0,1,args...));
@@ -97,7 +97,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
                          *static_cast<const RooArgSet*>(RooCmdConfig::decodeObjOnTheFly(
                              "RooNLLVar::RooNLLVar","ProjectedObservables",0,&_emptySet,
                              arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9)),
-                         std::move(makeRooAbsTestStatisticCfg(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9)))
+                         makeRooAbsTestStatisticCfg(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
 {
   RooCmdConfig pc("RooNLLVar::RooNLLVar") ;
   pc.allowUndefined() ;
