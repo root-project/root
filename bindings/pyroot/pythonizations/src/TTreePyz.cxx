@@ -189,7 +189,7 @@ PyObject *PyROOT::AddBranchAttrSyntax(PyObject * /* self */, PyObject *args)
 /// implementation of the method expects the address of a pointer.
 ///
 /// For example:
-/// ~~~{.python}
+/// ~~~{.py}
 /// v = ROOT.std.vector('int')()
 /// t.SetBranchAddress("my_vector_branch", v)
 /// ~~~
@@ -382,7 +382,7 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
 /// implementation of the method expects the address of a pointer.
 ///
 /// For example:
-/// ~~~{.python}
+/// ~~~{.py}
 /// v = ROOT.std.vector('int')()
 /// t.Branch('my_vector_branch', v)
 /// ~~~
