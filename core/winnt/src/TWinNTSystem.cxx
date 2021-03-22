@@ -358,24 +358,26 @@ namespace {
          dynpath = "";
       }
       if (newpath) {
-
          dynpath = newpath;
-
       } else if (dynpath == "") {
+         dynpath = gSystem->Getenv("ROOT_LIBRARY_PATH");
          TString rdynpath = gEnv ? gEnv->GetValue("Root.DynamicPath", (char*)0) : "";
          rdynpath.ReplaceAll("; ", ";");  // in case DynamicPath was extended
          if (rdynpath == "") {
             rdynpath = ".;"; rdynpath += TROOT::GetBinDir();
          }
          TString path = gSystem->Getenv("PATH");
-         if (path == "")
-            dynpath = rdynpath;
-         else {
-            dynpath = path; dynpath += ";"; dynpath += rdynpath;
+         if (!path.IsNull()) {
+            if (!dynpath.IsNull())
+               dynpath += ";";
+            dynpath += path;
          }
-
+         if (!rdynpath.IsNull()) {
+            if (!dynpath.IsNull())
+               dynpath += ";";
+            dynpath += rdynpath;
+         }
       }
-
       if (!dynpath.Contains(TROOT::GetLibDir())) {
          dynpath += ";"; dynpath += TROOT::GetLibDir();
       }
