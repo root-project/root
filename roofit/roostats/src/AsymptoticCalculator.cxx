@@ -1194,7 +1194,7 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
   RooDataSet* asimovData = new RooDataSet("asimovDataFullModel","asimovDataFullModel",RooArgSet(obsAndWeight,channelCat),
                                           RooFit::Index(channelCat),RooFit::Import(asimovDataMap),RooFit::WeightVar(*weightVar));
 
-  for (auto element : asimovDataMap) {
+  for (auto &element : asimovDataMap) {
     delete element.second;
   }
 

@@ -2680,19 +2680,19 @@ void RooWorkspace::Streamer(TBuffer &R__b)
      // Reinstate clients here
 
 
-     for (auto iterx : extClients) {
+     for (auto &iterx : extClients) {
        for (auto client : iterx.second) {
          iterx.first->_clientList.Add(client);
        }
      }
 
-     for (auto iterx : extValueClients) {
+     for (auto &iterx : extValueClients) {
        for (auto client : iterx.second) {
          iterx.first->_clientListValue.Add(client);
        }
      }
 
-     for (auto iterx : extShapeClients) {
+     for (auto &iterx : extShapeClients) {
        for (auto client : iterx.second) {
          iterx.first->_clientListShape.Add(client);
        }
@@ -3162,7 +3162,7 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
    _genObjects.RecursiveRemove(removedObj);
    _studyMods.RecursiveRemove(removedObj);
 
-   for(auto c : _namedSets) {
+   for(auto &c : _namedSets) {
       c.second.RecursiveRemove(removedObj);
    }
 
