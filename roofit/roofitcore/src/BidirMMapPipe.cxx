@@ -1442,8 +1442,14 @@ int BidirMMapPipe::poll(BidirMMapPipe::PollVector& pipes, int timeout)
             ++it, ++mit) {
         PollEntry& pe = *it;
         pe.revents = None;
-        // null pipe pointer or closed pipe is invalid
-        if (!pe.pipe || pe.pipe->closed()) pe.revents |= Invalid;
+        // null pipe is invalid
+        if (!pe.pipe) {
+           pe.revents |= Invalid;
+           canskiptimeout = true;
+           continue;
+        }
+        // closed pipe is invalid
+        if (pe.pipe->closed()) pe.revents |= Invalid;
         // check for error
         if (pe.pipe->bad()) pe.revents |= Error;
         // check for end of file
