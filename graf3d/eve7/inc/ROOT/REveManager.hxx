@@ -19,6 +19,8 @@
 #include "TSysEvtHandler.h"
 #include "TTimer.h"
 
+#include <mutex>
+#include <condition_variable>
 #include <memory>
 #include <unordered_map>
 
@@ -44,6 +46,8 @@ class REveManager
 {
    REveManager(const REveManager&) = delete;
    REveManager& operator=(const REveManager&) = delete;
+
+   bool WindowClientStatusData(unsigned connid, const std::string &arg);
 
 public:
    class RRedrawDisabler {
@@ -78,11 +82,15 @@ public:
 
    struct Conn
    {
+      enum EConnState {Free, Processing, WaitingResponse };
       unsigned fId{0};
+      EConnState   fState{Free};
 
       Conn() = default;
       Conn(unsigned int cId) : fId(cId) {}
    };
+
+   typedef  std::function<void ()> ClientsFreeCB_t;
 
 protected:
    RExceptionHandler        *fExcHandler{nullptr};   //!< exception handler
@@ -126,6 +134,8 @@ protected:
    std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
    std::vector<Conn>                                fConnList;
 
+   ClientsFreeCB_t      fCBClientsFree{nullptr};
+
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
    void WindowDisconnect(unsigned connid);
@@ -149,6 +159,14 @@ public:
 
    REveViewer *SpawnNewViewer(const char *name, const char *title = "");
    REveScene *SpawnNewScene(const char *name, const char *title = "");
+
+   void SceneSubscriberProcessingChanges(unsigned cinnId);
+   void SceneSubscriberWaitingResponse(unsigned cinnId);
+
+   ClientsFreeCB_t GetCBClientsFree()         const { return fCBClientsFree; }
+   void         SetCBClientsFree(ClientsFreeCB_t  f) { fCBClientsFree = f; }
+
+   bool ClientConnectionsFree() const;
 
    TFolder *GetMacroFolder() const { return fMacroFolder; }
    TMacro *GetMacro(const char *name) const;

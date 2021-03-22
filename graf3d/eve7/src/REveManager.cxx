@@ -240,18 +240,20 @@ void REveManager::RegisterRedraw3D()
 void REveManager::DoRedraw3D()
 {
    static const REveException eh("REveManager::DoRedraw3D ");
-   nlohmann::json jobj = {};
 
-   jobj["content"] = "BeginChanges";
-   fWebWindow->Send(0, jobj.dump());
+   if (fScenes->AnyChanges()) {
+      nlohmann::json jobj = {};
 
-   // Process changes in scenes.
-   fWorld->ProcessChanges();
-   fScenes->ProcessSceneChanges();
+      jobj["content"] = "BeginChanges";
+      fWebWindow->Send(0, jobj.dump());
 
-   jobj["content"] = "EndChanges";
-   fWebWindow->Send(0, jobj.dump());
+      // Process changes in scenes.
+      fWorld->ProcessChanges();
+      fScenes->ProcessSceneChanges();
 
+      jobj["content"] = "EndChanges";
+      fWebWindow->Send(0, jobj.dump());
+   }
    fResetCameras = kFALSE;
    fDropLogicals = kFALSE;
 
@@ -795,6 +797,9 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
       return;
    }
 
+   if (WindowClientStatusData(connid, arg))
+     return;
+
    nlohmann::json cj = nlohmann::json::parse(arg);
    if (gDebug > 0)
       ::Info("REveManager::WindowData", "MIR test %s", cj.dump().c_str());
@@ -846,6 +851,33 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
    */
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Check for client status messages
+bool REveManager::WindowClientStatusData(unsigned connid, const std::string &arg)
+{
+   static const REveException eh("REveManager::WindowClientStatusData ");
+
+   static const std::string doneChanges = "__REveDoneChanges";
+   if (arg.compare("__REveDoneChanges") == 0) {
+      for (auto &conn : fConnList) {
+         if (conn.fId == connid) {
+            conn.fState = Conn::Free;
+            break;
+         }
+      }
+
+      // call function pointer for free status
+      // AMT TO
+      if (ClientConnectionsFree()) {
+         if (fCBClientsFree) {
+            (fCBClientsFree)();
+         }
+      }
+      return true;
+   }
+   return false;
+}
+
 void REveManager::Send(unsigned connid, const std::string &data)
 {
    fWebWindow->Send(connid, data);
@@ -854,6 +886,38 @@ void REveManager::Send(unsigned connid, const std::string &data)
 void REveManager::SendBinary(unsigned connid, const void *data, std::size_t len)
 {
    fWebWindow->SendBinary(connid, data, len);
+}
+
+bool REveManager::ClientConnectionsFree() const
+{
+   for (auto &conn : fConnList) {
+      if (conn.fState != Conn::Free)
+         return false;
+   }
+
+   return true;
+}
+
+void REveManager::SceneSubscriberProcessingChanges(unsigned cinnId)
+{
+   for (auto &conn : fConnList) {
+      if (conn.fId == cinnId)
+      {
+         conn.fState = Conn::WaitingResponse;
+         break;
+      }
+   }
+}
+
+void REveManager::SceneSubscriberWaitingResponse(unsigned cinnId)
+{
+   for (auto &conn : fConnList) {
+      if (conn.fId == cinnId)
+      {
+         conn.fState = Conn::Processing;
+         break;
+      }
+   }
 }
 
 //------------------------------------------------------------------------------
