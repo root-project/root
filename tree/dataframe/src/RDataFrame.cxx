@@ -708,6 +708,16 @@ RDataFrame d("myTree", "file.root");
 std::vector<std::string> colNames = d.GetColumnNames();
 ~~~
 
+### Organizing RDataFrame in collections
+
+Any RDataFrame node can be converted to the common type ROOT::RDF::RNode. The cast can happen either implicitly by the C++ casting rules or explicitly using ROOT::RDF::AsRNode. This allows to organize RDataFrame nodes in any collection, e.g. a std::vector<ROOT::RDF::RNode>. Note that this adds an extra virtual call during the RDataFrame event loop any have an impact on the performance.
+
+~~~{.cpp}
+std::vector<ROOT::RDF::RNode> dfs;
+dfs.emplace_back(ROOT::RDataFrame(10));
+dfs.emplace_back(dfs[0].Define("x", "42.f"));
+~~~
+
 ### Callbacks
 It's possible to schedule execution of arbitrary functions (callbacks) during the event loop.
 Callbacks can be used e.g. to inspect partial results of the analysis while the event loop is running,
