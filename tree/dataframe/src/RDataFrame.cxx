@@ -484,12 +484,12 @@ print(sum.GetValue())
 Alternatively, you can also pass the full RDataFrame object to C++ using the ROOT::RDF::AsRNode helper in Python, which casts any RDataFrame node to ROOT::RDF::RNode:
 
 ~~~{.python}
-ROOT.gInterpreter.Declare('''
-ROOT::RDF::RNode MyTransformation(ROOT::RDF::RNode& df) {
+ROOT.gInterpreter.Declare("""
+ROOT::RDF::RNode MyTransformation(ROOT::RDF::RNode df) {
     auto myFunc = [](float x){ return -x;};
     return df.Define("y", myFunc, {"x"});
 }
-''')
+""")
 
 df = ROOT.RDataFrame("myTree", "myFile.root")
 df = ROOT.MyTransformation(ROOT.RDF.AsRNode(df))
@@ -710,7 +710,7 @@ std::vector<std::string> colNames = d.GetColumnNames();
 
 ### Organizing RDataFrame in collections
 
-Any RDataFrame node can be converted to the common type ROOT::RDF::RNode. The cast can happen either implicitly by the C++ casting rules or explicitly using ROOT::RDF::AsRNode. This allows to organize RDataFrame nodes in any collection, e.g. a std::vector<ROOT::RDF::RNode>. Note that this adds an extra virtual call during the RDataFrame event loop any have an impact on the performance.
+Any RDataFrame node can be converted to the common type ROOT::RDF::RNode. The cast can happen either implicitly by the C++ casting rules or by passing any dataframe object to RNode's constructor. This allows to organize RDataFrame nodes in any collection, e.g. a `std::vector<ROOT::RDF::RNode>`. Note that this adds an extra virtual call during the RDataFrame event loop and can have a minor performance impact.
 
 ~~~{.cpp}
 std::vector<ROOT::RDF::RNode> dfs;
