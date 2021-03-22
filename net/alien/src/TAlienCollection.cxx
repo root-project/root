@@ -202,7 +202,7 @@ TGridCollection *TAlienCollection::OpenQuery(TGridResult * queryresult,
       return 0;
    }
 
-   TIterator *fileiter = queryresult->MakeIterator();
+   TIter fileiter = queryresult->MakeIterator();
    TMap *filemap = 0;
    TString prev_bname = "";
    TString prev_dname = "";
@@ -210,7 +210,7 @@ TGridCollection *TAlienCollection::OpenQuery(TGridResult * queryresult,
 
    TList *filelist = new TList();
 
-   while ((filemap = ((TMap *) fileiter->Next()))) {
+   while ((filemap = ((TMap *) fileiter.Next()))) {
       if (!filemap->GetValue("lfn"))
          continue;
       TString dname =
@@ -482,9 +482,9 @@ void TAlienCollection::Status()
       online = kTRUE;
       selected = kFALSE;
       TMap *attributes;
-      TIterator *nextfile = nextgroup->MakeIterator();
-      nextfile->Reset();
-      while ((attributes = (TMap *) nextfile->Next())) {
+      TIter nextfile = nextgroup->MakeIterator();
+      nextfile.Reset();
+      while ((attributes = (TMap *) nextfile.Next())) {
          fCurrent = nextgroup;
          if (TString(attributes->GetName()) != "") {
             totalfiles++;
@@ -574,13 +574,13 @@ Bool_t TAlienCollection::SelectFile(const char *filename, Int_t nstart, Int_t ns
    while ((nextgroup = (TMap *) Next())) {
       cnt++;
       TMap *attributes;
-      TIterator *nextfile = nextgroup->MakeIterator();
-      nextfile->Reset();
+      TIter nextfile = nextgroup->MakeIterator();
+      nextfile.Reset();
       if ( ((nstart == -1 ) && (nstop == -1)) ||
            ((nstart != -1 ) && (cnt >= nstart) && (nstop == -1)) ||
            ((nstart != -1 ) && (cnt >= nstart) && (nstop != -1) && (cnt <= nstop)) ||
            ((nstop  != -1 ) && (cnt <= nstop)  && (nstart == -1))) {
-         while ((attributes = (TMap *) nextfile->Next())) {
+         while ((attributes = (TMap *) nextfile.Next())) {
             if (TString(attributes->GetName()) != "") {
                if ((TString(attributes->GetName()) == TString(filename)) ||
                    (TString(filename) == TString("*"))) {
@@ -606,13 +606,13 @@ Bool_t TAlienCollection::DeselectFile(const char *filename, Int_t nstart, Int_t 
    while ((nextgroup = (TMap *) Next())) {
       cnt++;
       TMap *attributes;
-      TIterator *nextfile = nextgroup->MakeIterator();
-      nextfile->Reset();
+      TIter nextfile = nextgroup->MakeIterator();
+      nextfile.Reset();
       if ( ((nstart == -1 ) && (nstop == -1)) ||
            ((nstart != -1 ) && (cnt >= nstart) && (nstop == -1)) ||
            ((nstart != -1 ) && (cnt >= nstart) && (nstop != -1) && (cnt <= nstop)) ||
            ((nstop  != -1 ) && (cnt <= nstop)  && (nstart == -1))) {
-         while ((attributes = (TMap *) nextfile->Next())) {
+         while ((attributes = (TMap *) nextfile.Next())) {
             if (TString(attributes->GetName()) != "") {
                if ((TString(attributes->GetName()) == TString(filename)) ||
                    (TString(filename) == TString("*"))) {
@@ -639,9 +639,9 @@ Bool_t TAlienCollection::InvertSelection()
    while ((nextgroup = (TMap *) Next())) {
       cnt++;
       TMap *attributes;
-      TIterator *nextfile = nextgroup->MakeIterator();
-      nextfile->Reset();
-      while ((attributes = (TMap *) nextfile->Next())) {
+      TIter nextfile = nextgroup->MakeIterator();
+      nextfile.Reset();
+      while ((attributes = (TMap *) nextfile.Next())) {
          if (IsSelected(attributes->GetName())) {
             SetTag("select", "0",
                ((TMap *) nextgroup->GetValue(attributes->GetName())));
@@ -666,10 +666,10 @@ Bool_t TAlienCollection::DownscaleSelection(UInt_t scaler)
    while ((nextgroup = (TMap *) Next())) {
       cnt++;
       TMap *attributes;
-      TIterator *nextfile = nextgroup->MakeIterator();
-      nextfile->Reset();
+      TIter nextfile = nextgroup->MakeIterator();
+      nextfile.Reset();
       if (cnt%scaler) {
-         while ((attributes = (TMap *) nextfile->Next())) {
+         while ((attributes = (TMap *) nextfile.Next())) {
             if (TString(attributes->GetName()) != "") {
                SetTag("select", "0",
                   ((TMap *) nextgroup->GetValue(attributes->GetName())));
@@ -990,9 +990,9 @@ Bool_t TAlienCollection::LookupSUrls(Bool_t verbose)
    TMap *filemap;
    while ((filemap = Next())) {
       // loop over all files in this map
-      TIterator *nextfile = filemap->MakeIterator();
+      TIter nextfile = filemap->MakeIterator();
       TMap *attributes;
-      while ((attributes = (TMap *) nextfile->Next())) {
+      while ((attributes = (TMap *) nextfile.Next())) {
          if (TString(attributes->GetName()) != "") {
             lc++;
             if (fHasSelection && (!IsSelected(attributes->GetName())))
@@ -1052,9 +1052,9 @@ Bool_t TAlienCollection::Stage(Bool_t bulk,Option_t* option)
    if (!bulk) {
       while ((filemap = Next())) {
          // loop over all files in this map
-         TIterator *nextfile = filemap->MakeIterator();
+         TIter nextfile = filemap->MakeIterator();
          TMap *attributes;
-         while ((attributes = (TMap *) nextfile->Next())) {
+         while ((attributes = (TMap *) nextfile.Next())) {
             if (TString(attributes->GetName()) != "") {
                fc++;
                if (fHasSelection && (!IsSelected(attributes->GetName())))
@@ -1085,9 +1085,9 @@ Bool_t TAlienCollection::Stage(Bool_t bulk,Option_t* option)
       Bool_t stageresult=kFALSE;
       Reset();
       while ((filemap = Next())) {
-         TIterator *nextfile = filemap->MakeIterator();
+         TIter nextfile = filemap->MakeIterator();
          TMap *attributes;
-         while ((attributes = (TMap *) nextfile->Next())) {
+         while ((attributes = (TMap *) nextfile.Next())) {
             if (TString(attributes->GetName()) != "") {
                fc++;
                stagelist->Add( new TUrl((GetSURL(attributes->GetName()))));
@@ -1127,9 +1127,9 @@ Bool_t TAlienCollection::CheckIfOnline(Bool_t bulk)
    if (!bulk) {
       while ((filemap = Next())) {
          // loop over all files in this map
-         TIterator *nextfile = filemap->MakeIterator();
+         TIter nextfile = filemap->MakeIterator();
          TMap *attributes;
-         while ((attributes = (TMap *) nextfile->Next())) {
+         while ((attributes = (TMap *) nextfile.Next())) {
             if (fHasSelection && (!IsSelected(attributes->GetName())))
                continue;
             if (TString(attributes->GetName()) != "") {
@@ -1184,9 +1184,9 @@ Bool_t TAlienCollection::CheckIfOnline(Bool_t bulk)
          lookuplist->SetOwner(kTRUE);
          while ((filemap = Next())) {
             // loop over all files in this map
-            TIterator *nextfile = filemap->MakeIterator();
+            TIter nextfile = filemap->MakeIterator();
             TMap *attributes;
-            while ((attributes = (TMap *) nextfile->Next())) {
+            while ((attributes = (TMap *) nextfile.Next())) {
                if (TString(attributes->GetName()) != "") {
                   fc++;
                   // check if we have a fFileStager
@@ -1210,9 +1210,9 @@ Bool_t TAlienCollection::CheckIfOnline(Bool_t bulk)
          fc=0;
          while ((filemap = Next())) {
             // loop over all files in this map
-            TIterator *nextfile = filemap->MakeIterator();
+            TIter nextfile = filemap->MakeIterator();
             TMap *attributes;
-            while ((attributes = (TMap *) nextfile->Next())) {
+            while ((attributes = (TMap *) nextfile.Next())) {
                if (TString(attributes->GetName()) != "") {
                   fc++;
                   Bool_t online;
@@ -1339,10 +1339,10 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
       Bool_t isselected;
       isselected = kFALSE;
       TMap *attributes;
-      TIterator *nextfile = nextgroup->MakeIterator();
-      nextfile->Reset();
+      TIter nextfile = nextgroup->MakeIterator();
+      nextfile.Reset();
       // check if something is selected
-      while ((attributes = (TMap *) nextfile->Next())) {
+      while ((attributes = (TMap *) nextfile.Next())) {
          if (TString(attributes->GetName()) != "") {
             fCurrent = nextgroup;
             if (IsSelected(attributes->GetName())) {
@@ -1353,7 +1353,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
       }
       if ((!selected) || isselected) {
          // loop again and export files
-         nextfile->Reset();
+         nextfile.Reset();
          groupcnt++;
          // open new event header
          snprintf(outline,4096, "    <event name=\"%d\">\n", groupcnt);
@@ -1362,7 +1362,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
             exportfile->Close();
             return kFALSE;
          }
-         while ((attributes = (TMap *) nextfile->Next())) {
+         while ((attributes = (TMap *) nextfile.Next())) {
             if (TString(attributes->GetName()) != "") {
                fCurrent = nextgroup;
                if ((!selected) || (IsSelected(attributes->GetName()))) {
@@ -1379,13 +1379,13 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
                         return kFALSE;
                      }
                      // loop over map keys
-                     TIterator *mkeys =
+                     TIter mkeys =
                          ((TMap *) nextgroup->
                           GetValue(attributes->GetName()))->MakeIterator();
-                     mkeys->Reset();
+                     mkeys.Reset();
                      TObjString *tagname = 0;
                      TObjString *tagval = 0;
-                     while ((tagname = (TObjString *) mkeys->Next())) {
+                     while ((tagname = (TObjString *) mkeys.Next())) {
                         Bool_t filtered = kFALSE;
                         // check for filtered tags from the filter list
                         if (fTagFilterList) {

@@ -636,11 +636,11 @@ TString TAlienFile::SUrl(const char *lfn)
       return surl;
    }
 
-   TIterator *iter = result->MakeIterator();
+   TIter iter = result->MakeIterator();
    TObject *object=0;
    TObjString *urlStr=0;
 
-   object = iter->Next();
+   object = iter.Next();
    if (object) {
       TMap *map = dynamic_cast < TMap * >(object);
       TObject *urlObject = map->GetValue("url");

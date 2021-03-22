@@ -108,17 +108,17 @@ void TAlienMasterJob::Print(Option_t* options) const
    std::cout << " N of Subjobs                    : " << status->GetNSubJobs() << std::endl;
    std::cout << " % finished                      : " << status->PercentFinished()*100 << std::endl;
    std::cout << " ------------------------------------------------ " << std::endl;
-   TIterator* iter = status->GetJobs()->MakeIterator();
+   TIter iter = status->GetJobs()->MakeIterator();
 
    TObjString* obj = 0;
-   while ((obj = (TObjString*)iter->Next()) != 0) {
+   while ((obj = (TObjString*)iter.Next()) != 0) {
       TAlienJobStatus* substatus = (TAlienJobStatus*)status->GetJobs()->GetValue(obj->GetName());
       printf(" SubJob: [%-7s] %-10s %20s@%s  RunTime: %s\n",substatus->GetKey("queueId"),substatus->GetKey("status"),substatus->GetKey("node"),substatus->GetKey("site"),substatus->GetKey("runtime"));
    }
    std::cout << " ------------------------------------------------ " << std::endl;
-   iter->Reset();
+   iter.Reset();
    if ( strchr(options,'l') ) {
-      while ((obj = (TObjString*)iter->Next()) != 0) {
+      while ((obj = (TObjString*)iter.Next()) != 0) {
          TAlienJobStatus* substatus = (TAlienJobStatus*)status->GetJobs()->GetValue(obj->GetName());
          // list sandboxes
          const char* outputdir = substatus->GetJdlKey("OutputDir");
@@ -168,10 +168,10 @@ Bool_t TAlienMasterJob::Merge(const char* inputname,const char* mergeoutput)
    TFileMerger merger;
 
    TAlienMasterJobStatus* status = (TAlienMasterJobStatus*)(GetJobStatus());
-   TIterator* iter = status->GetJobs()->MakeIterator();
+   TIter iter = status->GetJobs()->MakeIterator();
 
    TObjString* obj = 0;
-   while ((obj = (TObjString*)iter->Next()) != 0) {
+   while ((obj = (TObjString*)iter.Next()) != 0) {
       TAlienJobStatus* substatus = (TAlienJobStatus*)status->GetJobs()->GetValue(obj->GetName());
       TString sandbox;// list sandboxes
       const char* outputdir = substatus->GetJdlKey("OutputDir");
