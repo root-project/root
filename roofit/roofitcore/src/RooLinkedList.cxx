@@ -42,6 +42,7 @@ Use RooAbsCollection derived objects for public use
 
 #include <algorithm>
 #include <list>
+#include <vector>
 
 using namespace std;
 
@@ -796,14 +797,7 @@ RooLinkedListElem* RooLinkedList::mergesort_impl(
   }
   if (sz <= 16) {
     // for short lists, we sort in an array
-#if !defined(_WIN32) && !defined(R__SOLARIS_CC50)
-    RooLinkedListElem *arr[sz];
-#else // _WIN32 && Solaris
-    // apparently, MSVC is not clever enough to figure out that sz cannot be
-    // zero and is at most sixteen, so we allocate a fixed size array on the
-    // stack instead
-    RooLinkedListElem *arr[16];
-#endif // _WIN32
+    std::vector<RooLinkedListElem *> arr(sz, nullptr);
     for (int i = 0; l1; l1 = l1->_next, ++i) arr[i] = l1;
     // straight insertion sort
     {
