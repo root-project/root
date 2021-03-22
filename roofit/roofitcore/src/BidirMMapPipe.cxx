@@ -294,7 +294,7 @@ namespace BidirMMapPipe_impl {
     Pages& Pages::operator=(const Pages& other)
     {
         if (&other == this) return *this;
-        if (--(m_pimpl->m_refcnt)) {
+        if (!--(m_pimpl->m_refcnt)) {
             if (m_pimpl->m_parent) m_pimpl->m_parent->push(*this);
             delete m_pimpl;
         }
