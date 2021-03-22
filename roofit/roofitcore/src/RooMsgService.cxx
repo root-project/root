@@ -120,7 +120,7 @@ void RooMsgService::reset() {
   _debugWorkspace = nullptr;
   _debugCode = 0 ;
 
-  for (auto item : _files) {
+  for (auto &item : _files) {
     delete item.second;
   }
   _files.clear();
