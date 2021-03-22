@@ -4590,6 +4590,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       dynpath = newpath;
    } else if (reset || !initialized) {
       initialized = kTRUE;
+      dynpath = gSystem->Getenv("ROOT_LIBRARY_PATH");
       TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
       rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
@@ -4609,10 +4610,15 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
 #else
       ldpath = gSystem->Getenv("LD_LIBRARY_PATH");
 #endif
-      if (ldpath.IsNull())
-         dynpath = rdynpath;
-      else {
-         dynpath = ldpath; dynpath += ":"; dynpath += rdynpath;
+      if (!ldpath.IsNull()) {
+         if (!dynpath.IsNull())
+            dynpath += ":";
+         dynpath += ldpath;
+      }
+      if (!rdynpath.IsNull()) {
+         if (!dynpath.IsNull())
+            dynpath += ":";
+         dynpath += rdynpath;
       }
       if (!dynpath.Contains(TROOT::GetLibDir())) {
          dynpath += ":"; dynpath += TROOT::GetLibDir();
