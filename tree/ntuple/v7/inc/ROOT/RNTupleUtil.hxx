@@ -43,12 +43,12 @@ void PrintRNTuple(const RNTuple& ntuple, std::ostream& output);
  * materialization on the primitive column layer.
  */
 enum ENTupleStructure {
-   kInvalid,
    kLeaf,
    kCollection,
    kRecord,
    kVariant,
    kReference, // unimplemented so far
+   kInvalid,
 };
 
 /// Integer type long enough to hold the maximum number of entries in a column
