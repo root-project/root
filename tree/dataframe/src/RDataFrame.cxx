@@ -481,6 +481,20 @@ sum = df.Filter("myFilter(x)").Sum("y")
 print(sum.GetValue())
 ~~~
 
+Alternatively, you can also pass the full RDataFrame object to C++ using the ROOT::RDF::AsRNode helper in Python, which casts any RDataFrame node to ROOT::RDF::RNode:
+
+~~~{.python}
+ROOT.gInterpreter.Declare('''
+ROOT::RDF::RNode MyTransformation(ROOT::RDF::RNode& df) {
+    auto myFunc = [](float x){ return -x;};
+    return df.Define("y", myFunc, {"x"});
+}
+''')
+
+df = ROOT.RDataFrame("myTree", "myFile.root")
+df = ROOT.MyTransformation(ROOT.RDF.AsRNode(df))
+~~~
+
 ### Just-in-time compilation of Python callables with numba
 
 ROOT also offers the option to compile Python callables with fundamental types and arrays thereof using numba and then
