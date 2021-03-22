@@ -89,7 +89,7 @@ RooMsgService::RooMsgService()
   _levelNames[FATAL]="FATAL" ;
 
   _topicNames[Generation]="Generation" ;
-  _topicNames[Minimization]="Minization" ;
+  _topicNames[Minimization]="Minimization" ;
   _topicNames[Plotting]="Plotting" ;
   _topicNames[Fitting]="Fitting" ;
   _topicNames[Integration]="Integration" ;
