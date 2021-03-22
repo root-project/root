@@ -444,7 +444,7 @@ Learn more at ROOT::VecOps::RVec.
 You can use RDataFrame in Python due to the dynamic C++/Python translation of PyROOT. In general, the interface
 is the same as for C++, a simple example follows.
 
-~~~{.python}
+~~~{.py}
 df = ROOT.RDataFrame("myTree", "myFile.root")
 sum = df.Filter("x > 10").Sum("y")
 print(sum.GetValue())
@@ -458,7 +458,7 @@ via the C++ interpreter cling. This approach has the advantage that you get the 
 combined with the convenient workflow of a Python script. See the following snippet for an example of how to
 use a just-in-time-compiled C++ function from Python.
 
-~~~{.python}
+~~~{.py}
 ROOT.gInterpreter.Declare("""
 bool myFilter(float x) {
     return x > 10;
@@ -473,7 +473,7 @@ print(sum.GetValue())
 To increase the performance even further, you can also pre-compile a C++ library with full code optimizations
 and load the function into the RDataFrame computation as follows.
 
-~~~{.python}
+~~~{.py}
 ROOT.gSystem.Load("path/to/myLibrary.so") # Library with the myFilter function
 ROOT.gInterpreter.Declare('#include "myLibrary.h"') # Header with the definition of the myFilter function
 df = ROOT.RDataFrame("myTree", "myFile.root")
@@ -483,7 +483,7 @@ print(sum.GetValue())
 
 Alternatively, you can also pass the full RDataFrame object to C++ using the ROOT::RDF::AsRNode helper in Python, which casts any RDataFrame node to ROOT::RDF::RNode:
 
-~~~{.python}
+~~~{.py}
 ROOT.gInterpreter.Declare("""
 ROOT::RDF::RNode MyTransformation(ROOT::RDF::RNode df) {
     auto myFunc = [](float x){ return -x;};
@@ -501,7 +501,7 @@ ROOT also offers the option to compile Python callables with fundamental types a
 using the function in RDataFrame from C++. The workflow requires the Python packages `numba` and `cffi`
 to be installed. See the following snippet for a simple example or the full tutorial [here](pyroot004__NumbaDeclare_8py.html).
 
-~~~{.python}
+~~~{.py}
 @ROOT.Numba.Declare(["float"], "bool")
 def myFilter(x):
     return x > 10
@@ -518,7 +518,7 @@ with functionality from Python libraries. For this purpose, we provide the AsNum
 to provide you the columns of your RDataFrame as numpy arrays in Python. See a brief introduction below or
 a full tutorial [here](df026__AsNumpyArrays_8py.html).
 
-~~~{.python}
+~~~{.py}
 df = ROOT.RDataFrame("myTree", "myFile.root")
 cols = df.Filter("x > 10").AsNumpy(["x", "y"])
 print(cols["x"], cols["y"])
