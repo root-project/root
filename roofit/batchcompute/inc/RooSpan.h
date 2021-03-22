@@ -92,7 +92,7 @@ public:
   constexpr RooSpan(std::vector<value_type>&& payload) = delete;
 
 
-  RooSpan<T>& operator=(const RooSpan<T>& other) = default;
+  RooSpan& operator=(const RooSpan& other) = default;
 
 
   constexpr typename std::span<T>::iterator begin() const {
