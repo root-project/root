@@ -149,7 +149,7 @@ class RPageSink : public RPageStorage {
 protected:
    RNTupleWriteOptions fOptions;
 
-   /// Helper to zip pages and header/footer; comprises a 16MB (kMAXZIPBUF) zip buffer.
+   /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
    /// There could be concrete page sinks that don't need a compressor.  Therefore, and in order to stay consistent
    /// with the page source, we leave it up to the derived class whether or not the compressor gets constructed.
    std::unique_ptr<RNTupleCompressor> fCompressor;

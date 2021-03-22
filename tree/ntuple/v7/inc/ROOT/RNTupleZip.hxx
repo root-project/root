@@ -54,7 +54,7 @@ public:
    RNTupleCompressor(RNTupleCompressor &&other) = default;
    RNTupleCompressor &operator =(RNTupleCompressor &&other) = default;
 
-   /// Returns the size of the compressed data. Data is compressed in 16MB blocks and written
+   /// Returns the size of the compressed data. Data is compressed in 16MB (kMAXZIPBUF) blocks and written
    /// piecewise using the provided writer
    size_t Zip(const void *from, size_t nbytes, int compression, Writer_t fnWriter) {
       R__ASSERT(from != nullptr);
@@ -94,7 +94,7 @@ public:
    }
 
    /// Returns the size of the compressed data block. The data is written into the zip buffer.
-   /// This works only for small input buffer up to 16MB
+   /// This works only for small input buffer up to 16MB (kMAXZIPBUF)
    size_t Zip(const void *from, size_t nbytes, int compression) {
       R__ASSERT(from != nullptr);
       R__ASSERT(nbytes <= kMAXZIPBUF);
