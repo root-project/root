@@ -19,8 +19,11 @@ TEST(RooAbsDataHelper, MTConstruction)
   // We create an RDataFrame with two columns filled with 2 million random numbers.
   constexpr std::size_t nEvent = 200000;
   ROOT::RDataFrame d(nEvent);
-  auto dd = d.DefineSlot("x", [](unsigned int /*slot*/, ULong64_t entry){ return -5. + 10. * ((double)entry) / nEvent; }, {"rdfentry_"})
-             .DefineSlot("y", [](unsigned int /*slot*/, ULong64_t entry){ return  0. +  2. * ((double)entry) / nEvent; }, {"rdfentry_"});
+  auto dd =
+     d.DefineSlot("x", [=](unsigned int /*slot*/, ULong64_t entry) { return -5. + 10. * ((double)entry) / nEvent; },
+                  {"rdfentry_"})
+        .DefineSlot("y", [=](unsigned int /*slot*/, ULong64_t entry) { return 0. + 2. * ((double)entry) / nEvent; },
+                    {"rdfentry_"});
   auto meanX = dd.Mean("x");
   auto meanY = dd.Mean("y");
 
