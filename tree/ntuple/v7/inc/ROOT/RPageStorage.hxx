@@ -246,7 +246,7 @@ protected:
    /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
    /// The optimization of directly mapping pages is left to the concrete page source implementations.
    /// Usage of this method requires construction of fDecompressor.
-   unsigned char *UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element);
+   std::unique_ptr<unsigned char []> UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element);
 
 public:
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
