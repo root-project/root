@@ -101,7 +101,7 @@ void ROOT::Experimental::Detail::RPageSource::UnzipCluster(RCluster *cluster)
 }
 
 
-unsigned char *ROOT::Experimental::Detail::RPageSource::UnsealPage(
+std::unique_ptr<unsigned char []> ROOT::Experimental::Detail::RPageSource::UnsealPage(
    const RSealedPage &sealedPage, const RColumnElementBase &element)
 {
    const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
@@ -109,21 +109,20 @@ unsigned char *ROOT::Experimental::Detail::RPageSource::UnsealPage(
 
    // TODO(jblomer): We might be able to do better memory handling for unsealing pages than a new malloc for every
    // new page.
-   auto pageBufferPacked = new unsigned char[bytesPacked];
+   auto pageBuffer = std::make_unique<unsigned char[]>(bytesPacked);
    if (sealedPage.fSize != bytesPacked) {
-      fDecompressor->Unzip(sealedPage.fBuffer, sealedPage.fSize, bytesPacked, pageBufferPacked);
+      fDecompressor->Unzip(sealedPage.fBuffer, sealedPage.fSize, bytesPacked, pageBuffer.get());
    } else {
       // We cannot simply map the sealed page as we don't know its life time. Specialized page sources
       // may decide to implement to not use UnsealPage but to custom mapping / decompression code.
       // Note that usually pages are compressed.
-      memcpy(pageBufferPacked, sealedPage.fBuffer, bytesPacked);
+      memcpy(pageBuffer.get(), sealedPage.fBuffer, bytesPacked);
    }
 
-   auto pageBuffer = pageBufferPacked;
    if (!element.IsMappable()) {
-      pageBuffer = new unsigned char[pageSize];
-      element.Unpack(pageBuffer, pageBufferPacked, sealedPage.fNElements);
-      delete[] pageBufferPacked;
+      auto unpackedBuffer = new unsigned char[pageSize];
+      element.Unpack(unpackedBuffer, pageBuffer.get(), sealedPage.fNElements);
+      pageBuffer = std::unique_ptr<unsigned char []>(unpackedBuffer);
    }
 
    return pageBuffer;
