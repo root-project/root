@@ -266,10 +266,10 @@ static int is_valid_header_lzma(unsigned char *src)
    return src[0] == 'X' && src[1] == 'Z' && src[2] == 0;
 }
 
-static int is_valid_header_flzma2(unsigned char *src)
-{
-   return src[0] == 'X' && src[1] == 'Z' && src[2] == 'F';
-}
+//static int is_valid_header_flzma2(unsigned char *src)
+//{
+//   return src[0] == 'X' && src[1] == 'Z' && src[2] == 'F';
+//}
 
 static int is_valid_header_lz4(unsigned char *src)
 {
@@ -283,7 +283,7 @@ static int is_valid_header_zstd(unsigned char *src)
 
 static int is_valid_header(unsigned char *src)
 {
-   return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) || is_valid_header_flzma2(src) ||
+   return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) ||
           is_valid_header_lz4(src) || is_valid_header_zstd(src);
 }
 
@@ -371,9 +371,12 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
    } else if (is_valid_header_lzma(src)) {
       R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
       return;
-   } else if (is_valid_header_flzma2(src)) {
-      R__unzipFLZMA2(srcsize, src, tgtsize, tgt, irep);
-      return;
+   // We will not use in this test case since files supposely should be decompressed with LZMA:
+   // (src[0] != 'X' || src[1] != 'Z')
+   //
+   //} else if (is_valid_header_flzma2(src)) {
+   //   R__unzipFLZMA2(srcsize, src, tgtsize, tgt, irep);
+   //   return;
    } else if (is_valid_header_lz4(src)) {
       R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
       return;
