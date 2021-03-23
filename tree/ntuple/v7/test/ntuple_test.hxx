@@ -39,6 +39,7 @@
 #include <chrono>
 #include <cstdio>
 #include <exception>
+#include <iterator>
 #include <memory>
 #include <sstream>
 #include <string>
