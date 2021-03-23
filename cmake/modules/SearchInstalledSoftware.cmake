@@ -1779,7 +1779,9 @@ if (testing)
     add_dependencies(${lib} googletest)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
         ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 9)
-      target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
+      # TODO cmake 3.11
+      #target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
+      SET_PROPERTY(TARGET ${lib} APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-Wno-deprecated-copy")
     endif()
   endforeach()
   # Once we require at least cmake 3.11, target_include_directories will work for imported targets
