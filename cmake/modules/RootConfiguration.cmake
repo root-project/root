@@ -635,6 +635,12 @@ else()
    set(has_found_attribute_noinline undef)
 endif()
 
+if(root7 AND webgui)
+   set(root_browser_class "ROOT::Experimental::RWebBrowserImp")
+else()
+   set(root_browser_class "TRootBrowser")
+endif()
+
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_GET_OPTIONS(features ENABLED)
 set(features "cxx${CMAKE_CXX_STANDARD} ${features}")
