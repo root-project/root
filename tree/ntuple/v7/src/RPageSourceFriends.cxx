@@ -36,7 +36,6 @@ ROOT::Experimental::Detail::RPageSourceFriends::~RPageSourceFriends() = default;
 
 
 void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(
-   const RNTupleDescriptor &originDesc,
    std::size_t originIdx,
    const RFieldDescriptor &originField,
    DescriptorId_t virtualParent,
@@ -51,8 +50,9 @@ void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(
    fBuilder.AddFieldLink(virtualParent, virtualFieldId);
    fIdBiMap.Insert({originIdx, originField.GetId()}, virtualFieldId);
 
+   const auto &originDesc = fSources[originIdx]->GetDescriptor();
    for (const auto &f : originDesc.GetFieldRange(originField))
-      AddVirtualField(originDesc, originIdx, f, virtualFieldId, f.GetFieldName());
+      AddVirtualField(originIdx, f, virtualFieldId, f.GetFieldName());
 
    for (const auto &c: originDesc.GetColumnRange(originField)) {
       fBuilder.AddColumn(fNextId, virtualFieldId, c.GetVersion(), c.GetModel(), c.GetIndex());
@@ -89,7 +89,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
             throw RException(R__FAIL("duplicate names of friend RNTuples"));
          }
       }
-      AddVirtualField(desc, i, desc.GetFieldZero(), 0, desc.GetName());
+      AddVirtualField(i, desc.GetFieldZero(), 0, desc.GetName());
 
       for (const auto &c : desc.GetClusterRange()) {
          fBuilder.AddCluster(fNextId, c.GetVersion(), c.GetFirstEntryIndex(), c.GetNEntries());

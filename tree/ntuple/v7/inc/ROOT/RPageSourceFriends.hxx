@@ -43,6 +43,8 @@ private:
       DescriptorId_t fId = kInvalidDescriptorId;
    };
 
+   /// A bi-directional map of descriptor IDs that translates from physical to virtual column, field, and
+   /// cluster IDs and vice versa.
    struct RIdBiMap {
       std::unordered_map<DescriptorId_t, ROriginId> fVirtual2Origin;
       std::vector<std::unordered_map<DescriptorId_t, DescriptorId_t>> fOrigin2Virtual;
@@ -78,8 +80,7 @@ private:
    RNTupleDescriptorBuilder fBuilder;
    DescriptorId_t fNextId = 1;  ///< 0 is reserved for the friend zero field
 
-   void AddVirtualField(const RNTupleDescriptor &originDesc,
-                        std::size_t originIdx,
+   void AddVirtualField(std::size_t originIdx,
                         const RFieldDescriptor &originField,
                         DescriptorId_t virtualParent,
                         const std::string &virtualName);
