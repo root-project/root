@@ -342,7 +342,7 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 /// is finalised by normalising the bare values, and by checking for computation errors.
 /// Derived classes should override evaluateSpan() to reach maximal performance.
 ///
-/// \param[in/out] evalData Object holding data that should be used in computations. Results are also stored here.
+/// \param[in,out] evalData Object holding data that should be used in computations. Results are also stored here.
 /// \param[in] normSet      If not nullptr, normalise results by integrating over
 /// the variables in this set. The normalisation is only computed once, and applied
 /// to the full batch.
