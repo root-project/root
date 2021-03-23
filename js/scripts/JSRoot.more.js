@@ -820,8 +820,6 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    /** @summary Decode options  */
    TGraphPainter.prototype.decodeOptions = function(opt) {
 
-      if (!opt) opt = this.getMainPainter() ? "lp" : "alp";
-
       if ((typeof opt == "string") && (opt.indexOf("same ")==0))
          opt = opt.substr(5);
 
@@ -832,13 +830,20 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       JSROOT.extend(this.options, {
          Line: 0, Curve: 0, Rect: 0, Mark: 0, Bar: 0, OutRange: 0,  EF:0, Fill: 0, NoOpt: 0,
-         MainError: 1, Ends: 1, Axis: "", PadStats: false, PadTitle: false, original: opt
+         MainError: 1, Ends: 1, Axis: "", PadStats: false, original: opt
        });
 
       let res = this.options;
 
+      // check pad options first
       res.PadStats = d.check("USE_PAD_STATS");
-      res.PadTitle = d.check("USE_PAD_TITLE");
+      let hopt = "", checkhopt = ["USE_PAD_TITLE", "LOGXY", "LOGX", "LOGY", "LOGZ", "GRIDXY", "GRIDX", "GRIDY", "TICKXY", "TICKX", "TICKY"];
+      checkhopt.forEach(name => { if (d.check(name)) hopt += ";" + name; });
+
+      if (d.empty()) {
+         res.original = this.getMainPainter() ? "lp" : "alp";
+         d = new JSROOT.DrawOptions(res.original);
+      }
 
       res._pfc = d.check("PFC");
       res._plc = d.check("PLC");
@@ -894,11 +899,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          let pp = this.getPadPainter();
          let pad = pp ? pp.getRootPad(true) : null;
          if (!pad || (pad.fPrimitives && (pad.fPrimitives.arr[0] === graph))) res.Axis = "AXIS";
-      } else if (res.Axis.indexOf("A")<0) {
+      } else if (res.Axis.indexOf("A") < 0) {
          res.Axis = "AXIS," + res.Axis;
       }
 
-      if (res.PadTitle) res.Axis += ";USE_PAD_TITLE";
+      res.Axis += hopt;
 
       res.HOptions = res.Axis;
    }
@@ -3384,7 +3389,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    /** @summary draw speical histogram for axis
      * @returns {Promise} when ready */
-   TMultiGraphPainter.prototype.drawAxis = function() {
+   TMultiGraphPainter.prototype.drawAxis = function(hopt) {
 
       let mgraph = this.getObject(),
           pp = this.getPadPainter(),
@@ -3392,7 +3397,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       // histogram painter will be first in the pad, will define axis and
       // interactive actions
-      return JSROOT.draw(this.getDom(), histo, "AXIS");
+      return JSROOT.draw(this.getDom(), histo, "AXIS" + hopt);
    }
 
    /** @summary method draws next function from the functions list  */
@@ -3447,9 +3452,12 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       painter._plc = d.check("PLC");
       painter._pmc = d.check("PMC");
 
+      let hopt = "", checkhopt = ["USE_PAD_TITLE", "LOGXY", "LOGX", "LOGY", "LOGZ", "GRIDXY", "GRIDX", "GRIDY", "TICKXY", "TICKX", "TICKY"];
+      checkhopt.forEach(name => { if (d.check(name)) hopt += ";" + name; });
+
       let promise = Promise.resolve(painter);
       if (d.check("A") || !painter.getMainPainter())
-         promise = painter.drawAxis().then(fp => {
+         promise = painter.drawAxis(hopt).then(fp => {
             painter.firstpainter = fp;
             return painter;
          });
@@ -3762,7 +3770,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                let indx = Math.round((zval - this.arr[0]) / (this.arr[this.arr.length-1] - this.arr[0]) * (this.rgba.length-4)/4) * 4;
                return "rgba(" + this.rgba[indx] + "," + this.rgba[indx+1] + "," + this.rgba[indx+2] + "," + this.rgba[indx+3] + ")";
             }
-         }
+         };
          for (let k=0;k<200;k++)
             this.fContour.arr[k] = min + (max-min)/(200-1)*k;
 
@@ -3842,7 +3850,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
 
       if (url)
-         this.createG(true)
+         this.createG(fp ? true : false)
              .append("image")
              .attr("href", url)
              .attr("width", rect.width)
@@ -3984,7 +3992,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    function drawASImage(divid, obj, opt) {
       let painter = new TASImagePainter(divid, obj, opt);
       painter.decodeOptions(opt);
-      return jsrp.ensureTCanvas(painter)
+      return jsrp.ensureTCanvas(painter, false)
                  .then(() => painter.drawImage())
                  .then(() => {
                      painter.fillToolbar();
