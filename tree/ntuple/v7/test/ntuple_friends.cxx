@@ -73,8 +73,11 @@ TEST(RPageStorageFriends, Basic)
    auto ntuple = RNTupleReader::OpenFriends(friends);
    EXPECT_EQ(3u, ntuple->GetNEntries());
 
-   auto viewPt = ntuple->GetView<float>("ntpl1.pt");
-   auto viewEta = ntuple->GetView<float>("ntpl2.eta");
+   auto clone = ntuple->Clone();
+   EXPECT_EQ(3u, clone->GetNEntries());
+
+   auto viewPt = clone->GetView<float>("ntpl1.pt");
+   auto viewEta = clone->GetView<float>("ntpl2.eta");
 
    EXPECT_DOUBLE_EQ(1.0, viewPt(0));
    EXPECT_DOUBLE_EQ(2.0, viewPt(1));
