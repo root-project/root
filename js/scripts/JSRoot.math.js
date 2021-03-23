@@ -13,7 +13,7 @@ JSROOT.define([], () =>  {
    /** @summary lgam function
      * @private */
    mth.lgam = function( x ) {
-      let p, q, u, w, z, i, sgngam = 1;
+      let p, q, u, w, z, sgngam = 1;
       const kMAXLGM = 2.556348e305,
             LS2PI = 0.91893853320467274178,
       A = [

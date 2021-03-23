@@ -179,7 +179,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // Create a single regex to detect any symbol to replace
       if (!symbolsRegexCache)
-         symbolsRegexCache = new RegExp('(' + Object.keys(symbols_map).join('|').replace(/\{/g, '{').replace(/\}/g, '}') + ')', 'g');
+         symbolsRegexCache = new RegExp('(' + Object.keys(symbols_map).join('|').replace(/\\\{/g, '{').replace(/\\\}/g, '}') + ')', 'g');
 
       str = str.replace(symbolsRegexCache, ch => symbols_map[ch]);
 
