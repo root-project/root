@@ -390,7 +390,8 @@ Bearer tokens are part of WLCG capability-based infrastructure with capability-b
 ## Build, Configuration and Testing Infrastructure
 
 - a new cmake variable, `CMAKE_INSTALL_PYTHONDIR`, has been added: it allows customization of the installation directory of ROOT's python modules
-- The developer build option `asserts` is introduced to enable/disable asserts via the `NDEBUG` C/CXX flag. Asserts are always enabled for `CMAKE_BUILD_TYPE=Debug` and `dev=ON`. The previous behavior of the builds set via the `CMAKE_BUILD_TYPE` variable has not changed.
+- the developer build option `asserts` is introduced to enable/disable asserts via the `NDEBUG` C/CXX flag. Asserts are always enabled for `CMAKE_BUILD_TYPE=Debug` and `dev=ON`. The previous behavior of the builds set via the `CMAKE_BUILD_TYPE` variable has not changed.
+- `CMAKE_CXX_STANDARD`, i.e. the C++ standard ROOT is built with, now defaults to the compiler default (or C++11 if the compiler default is older than that) rather than always defaulting to C++11. In turn this means that v6.24 is the first ROOT release for which ROOT's pre-compiled binaries are not compiled with C++11 but with the default standard in use by the default system compiler. On Ubuntu 20.04, for example, the v6.24 pre-compiled binaries are now compiled with C++14 rather than C++11 as it happened for previous ROOT versions. Also see [ROOT-10692](https://sft.its.cern.ch/jira/browse/ROOT-10692).
 
 The following builtins have been updated:
 
