@@ -102,13 +102,11 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
      * 2 - when plain (1-dim) array with same-type content */
    function checkArrayPrototype(arr, check_content) {
       if (typeof arr !== 'object') return 0;
-      let proto = Object.prototype.toString.apply(arr);
-      if (proto.indexOf('[object') !== 0) return 0;
-      const pos = proto.indexOf('Array]');
-      if (pos < 0) return 0;
-      if (pos > 8) return 2; // this is typed array like Int32Array
 
-      if (!check_content) return 1; //
+      let arr_kind = JSROOT._.is_array_proto(Object.prototype.toString.apply(arr));
+
+      if (!check_content || (arr_kind != 1)) return arr_kind;
+
       let typ, plain = true;
       for (let k = 0; k < arr.length; ++k) {
          let sub = typeof arr[k];
@@ -168,7 +166,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
             if (obj._typename !== undefined) {
                if (JSROOT.isRootCollection(obj)) { obj = obj.arr; typ = "array"; }
                else typ = "any";
-            } else if (!isNaN(obj.length) && (checkArrayPrototype(obj) > 0)) {
+            } else if (Number.isInteger(obj.length) && (checkArrayPrototype(obj) > 0)) {
                typ = "array";
             } else {
                typ = "any";
@@ -200,7 +198,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                   this.cnt = cnt;
                   return true;
                default:
-                  if (!isNaN(this.select[cnt])) {
+                  if (Number.isInteger(this.select[cnt])) {
                      this.indx[cnt] = this.select[cnt];
                      if (this.indx[cnt] < 0) this.indx[cnt] = obj.length - 1;
                   } else {
@@ -388,7 +386,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                case "$size$": arriter.push("$size$"); break;
                case "$first$": arriter.push(0); break;
                default:
-                  if (!isNaN(parseInt(sub))) {
+                  if (Number.isInteger(parseInt(sub))) {
                      arriter.push(parseInt(sub));
                   } else {
                      // try to compile code as draw variable
@@ -575,7 +573,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          if (separ > 0) { parvalue = parname.substr(separ + 1); parname = parname.substr(0, separ); }
 
          let intvalue = parseInt(parvalue);
-         if (!parvalue || isNaN(intvalue)) intvalue = undefined;
+         if (!parvalue || !Number.isInteger(intvalue)) intvalue = undefined;
 
          switch (parname) {
             case "num":
@@ -614,7 +612,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                break;
             case "hbins":
                this.hist_nbins = parseInt(parvalue);
-               if (isNaN(this.hist_nbins) || (this.hist_nbins <= 3)) delete this.hist_nbins;
+               if (!Number.isInteger(this.hist_nbins) || (this.hist_nbins <= 3)) delete this.hist_nbins;
                break;
             case "drawopt":
                args.drawopt = parvalue;
@@ -645,7 +643,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
             let isok = true;
             for (let n = 0; n < harg.length; ++n) {
                harg[n] = (n % 3 === 0) ? parseInt(harg[n]) : parseFloat(harg[n]);
-               if (isNaN(harg[n])) isok = false;
+               if (!Number.isFinite(harg[n])) isok = false;
             }
             if (isok) this.hist_args = harg;
          }
@@ -790,7 +788,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
    TDrawSelector.prototype.ShowProgress = function(value) {
       if (typeof document == 'undefined' || !JSROOT.Painter) return;
 
-      if ((value === undefined) || isNaN(value)) return JSROOT.Painter.showProgress();
+      if ((value === undefined) || !Number.isFinite(value)) return JSROOT.Painter.showProgress();
 
       if (this.last_progress !== value) {
          let diff = value - this.last_progress;
@@ -818,7 +816,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          }
          selector.Abort();
          JSROOT.Painter.showProgress();
-      }
+      };
 
       JSROOT.Painter.showProgress(main_box);
       this.last_progress = value;
@@ -935,7 +933,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       res.GetBin = function(value) {
          const bin = this.lbls ? this.lbls.indexOf(value) : Math.floor((value - this.min) * this.k);
          return (bin < 0) ? 0 : ((bin > this.nbins) ? this.nbins + 1 : bin + 1);
-      }
+      };
 
       return res;
    }
@@ -1705,7 +1703,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
                         while (n < size) arr[n++] = this.methods.Create(); // create new objects
                      }
-                  }
+                  };
 
                   if ((typeof read_mode === "string") && (read_mode[0] === ".")) {
                      member.conttype = detectBranchMemberClass(branch.fBranches, branch.fName + read_mode);
@@ -1796,7 +1794,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                            while (l < this.leaves.length)
                               this.leaves[l++].func(buf, tgt);
                         }
-                     }
+                     };
                }
 
          if (!elem && !member) {
@@ -1824,7 +1822,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
             if (snames.length === 1) {
                // no point in the name - just plain array of objects
-               member.get = function(arr, n) { return arr[n]; }
+               member.get = (arr, n) => arr[n];
             } else if (read_mode === "$child$") {
                console.error('target name contains point, but suppose to be direct child', target_name);
                return null;
@@ -1837,7 +1835,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                   let obj1 = arr[n][this.name1];
                   if (!obj1) obj1 = arr[n][this.name1] = this.methods1.Create();
                   return obj1;
-               }
+               };
             } else {
                // very complex task - we need to reconstruct several embedded members with their types
                // try our best - but not all data types can be reconstructed correctly
@@ -1868,7 +1866,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                      obj1 = obj2;
                   }
                   return obj1;
-               }
+               };
             }
 
             // case when target is sub-object and need to be created before
@@ -1884,7 +1882,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                   let arr = obj[this.name0], n = 0; // objects array where reading is done
                   while (n < arr.length)
                      this.func0(buf, this.get(arr, n++)); // read all individual object with standard functions
-               }
+               };
             }
 
          } else if (item_cnt) {
@@ -1897,7 +1895,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                member.stl_size = item_cnt.name;
                member.func = function(buf, obj) {
                   obj[this.name] = this.readarr(buf, obj[this.stl_size]);
-               }
+               };
 
             } else
                if (((elem.fType === jsrio.kOffsetP + jsrio.kDouble32) || (elem.fType === jsrio.kOffsetP + jsrio.kFloat16)) && branch.fBranchCount2) {
@@ -1910,7 +1908,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                      for (let n = 0; n < sz0; ++n)
                         arr[n] = (buf.ntou1() === 1) ? this.readarr(buf, sz1[n]) : [];
                      obj[this.name] = arr;
-                  }
+                  };
 
                } else
                   // special handling of simple arrays
@@ -1934,7 +1932,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                            for (let n = 0; n < sz0; ++n)
                               arr[n] = (buf.ntou1() === 1) ? buf.readFastArray(sz1[n], this.type) : [];
                            obj[this.name] = arr;
-                        }
+                        };
                      }
 
                   } else
@@ -2031,7 +2029,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
          if (!item) {
             selector.Terminate(false);
-            return Promise.reject(Error("Fail to add branch ${selector.branches[nn]}"));
+            return Promise.reject(Error(`Fail to add branch ${selector.branches[nn]}`));
          }
       }
 
@@ -2066,12 +2064,12 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
       let resolveFunc, rejectFunc; // Promise methods
 
-      if (!isNaN(args.firstentry) && (args.firstentry > handle.firstentry) && (args.firstentry < handle.lastentry))
+      if (Number.isInteger(args.firstentry) && (args.firstentry > handle.firstentry) && (args.firstentry < handle.lastentry))
          handle.process_min = args.firstentry;
 
       handle.current_entry = handle.staged_now = handle.process_min;
 
-      if (!isNaN(args.numentries) && (args.numentries > 0)) {
+      if (Number.isInteger(args.numentries) && (args.numentries > 0)) {
          let max = handle.process_min + args.numentries;
          if (max < handle.process_max) handle.process_max = max;
       }
@@ -2545,7 +2543,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
      * @desc All sub-branches checked as well
      * @returns {Object} branch */
    TTreeMethods.GetBranch = function(id) {
-      if ((id === undefined) || isNaN(id)) return;
+      if (!Number.isInteger(id)) return;
       let res, seq = 0;
       function Scan(obj) {
          if (obj && obj.fBranches)
@@ -2703,7 +2701,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
             this.Process(selector, drawargs);
          }
-      }
+      };
 
       return new Promise(resolve => {
          args.resolveFunc = resolve;
@@ -2914,7 +2912,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                return objpainter; // return painter for histogram
             });
          });
-      }
+      };
 
       args.progress = obj => process_result(obj, true);
 

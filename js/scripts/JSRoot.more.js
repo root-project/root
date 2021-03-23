@@ -371,12 +371,18 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (oo.indexOf("<")==0)
          this.beg = (oo.indexOf("<|") == 0) ? 12 : 2;
-      if (oo.indexOf("->-")>=0)  this.mid = 1; else
-      if (oo.indexOf("-|>-")>=0) this.mid = 11; else
-      if (oo.indexOf("-<-")>=0) this.mid = 2; else
-      if (oo.indexOf("-<|-")>=0) this.mid = 12;
-      if (oo.lastIndexOf(">") == oo.length-1)
-         this.end = ((oo.lastIndexOf("|>") == oo.length-2) && (oo.length>1)) ? 11 : 1;
+      if (oo.indexOf("->-")>=0)
+         this.mid = 1;
+      else if (oo.indexOf("-|>-")>=0)
+         this.mid = 11;
+      else if (oo.indexOf("-<-")>=0)
+         this.mid = 2;
+      else if (oo.indexOf("-<|-")>=0)
+         this.mid = 12;
+
+      let p1 = oo.lastIndexOf(">"), p2 = oo.lastIndexOf("|>"), len = oo.length;
+      if ((p1 >= 0) && (p1 == len-1))
+         this.end = ((p2 >= 0) && (p2 == len-2)) ? 11 : 1;
 
       this.createAttLine({ attr: arrow });
 
@@ -397,7 +403,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          res += "l"+Math.round(dx)+","+Math.round(dy);
          if (x0 && (y0===undefined)) res+="z";
          return res;
-      }
+      };
 
       this.createPath = function() {
          let angle = Math.atan2(this.y2 - this.y1, this.x2 - this.x1),
@@ -426,7 +432,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                 "L" + Math.round(this.x2 - (this.end > 10 ? dx : 0)) + "," +
                       Math.round(this.y2 - (this.end > 10 ? dy : 0)) +
                 path;
-      }
+      };
 
       let elem = this.draw_g.append("svg:path")
                      .attr("d", this.createPath())
@@ -448,14 +454,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                       sz1 = Math.sqrt(Math.pow(x-this.x1,2) + Math.pow(y-this.y1,2))/fullsize,
                       sz2 = Math.sqrt(Math.pow(x-this.x2,2) + Math.pow(y-this.y2,2))/fullsize;
                   if (sz1>0.9) this.side = 1; else if (sz2>0.9) this.side = -1; else this.side = 0;
-               }
+               };
 
             if (!this.moveDrag)
                this.moveDrag = function(dx,dy) {
                   if (this.side != 1) { this.x1 += dx; this.y1 += dy; }
                   if (this.side != -1) { this.x2 += dx; this.y2 += dy; }
                   this.draw_g.select('path').attr("d", this.createPath());
-               }
+               };
 
             if (!this.moveEnd)
                this.moveEnd = function(not_changed) {
@@ -468,7 +474,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                   if (this.side != 1) exec += "SetX1(" + arrow.fX1 + ");;SetY1(" + arrow.fY1 + ");;";
                   if (this.side != -1) exec += "SetX2(" + arrow.fX2 + ");;SetY2(" + arrow.fY2 + ");;";
                   this.submitCanvExec(exec + "Notify();;");
-               }
+               };
 
             inter.addMoveHandler(this);
          });
@@ -548,7 +554,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
             if ((gxmin !== gxmax) && ((xx + 2*dx < gxmin) || (xx - 2*dx > gxmax))) continue;
             let yy = tf1.fSave[n];
 
-            if (!isNaN(yy)) res.push({ x : xx, y : yy });
+            if (Number.isFinite(yy)) res.push({ x : xx, y : yy });
          }
          return res;
       }
@@ -574,7 +580,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          let xx = xmin + n*dx;
          if (logx) xx = Math.exp(xx);
          let yy = tf1.evalPar(xx);
-         if (!isNaN(yy)) res.push({ x: xx, y: yy });
+         if (Number.isFinite(yy)) res.push({ x: xx, y: yy });
       }
       return res;
    }
@@ -814,8 +820,6 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    /** @summary Decode options  */
    TGraphPainter.prototype.decodeOptions = function(opt) {
 
-      if (!opt) opt = this.getMainPainter() ? "lp" : "alp";
-
       if ((typeof opt == "string") && (opt.indexOf("same ")==0))
          opt = opt.substr(5);
 
@@ -826,13 +830,20 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       JSROOT.extend(this.options, {
          Line: 0, Curve: 0, Rect: 0, Mark: 0, Bar: 0, OutRange: 0,  EF:0, Fill: 0, NoOpt: 0,
-         MainError: 1, Ends: 1, Axis: "", PadStats: false, PadTitle: false, original: opt
+         MainError: 1, Ends: 1, Axis: "", PadStats: false, original: opt
        });
 
       let res = this.options;
 
+      // check pad options first
       res.PadStats = d.check("USE_PAD_STATS");
-      res.PadTitle = d.check("USE_PAD_TITLE");
+      let hopt = "", checkhopt = ["USE_PAD_TITLE", "LOGXY", "LOGX", "LOGY", "LOGZ", "GRIDXY", "GRIDX", "GRIDY", "TICKXY", "TICKX", "TICKY"];
+      checkhopt.forEach(name => { if (d.check(name)) hopt += ";" + name; });
+
+      if (d.empty()) {
+         res.original = this.getMainPainter() ? "lp" : "alp";
+         d = new JSROOT.DrawOptions(res.original);
+      }
 
       res._pfc = d.check("PFC");
       res._plc = d.check("PLC");
@@ -888,11 +899,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          let pp = this.getPadPainter();
          let pad = pp ? pp.getRootPad(true) : null;
          if (!pad || (pad.fPrimitives && (pad.fPrimitives.arr[0] === graph))) res.Axis = "AXIS";
-      } else if (res.Axis.indexOf("A")<0) {
+      } else if (res.Axis.indexOf("A") < 0) {
          res.Axis = "AXIS," + res.Axis;
       }
 
-      if (res.PadTitle) res.Axis += ";USE_PAD_TITLE";
+      res.Axis += hopt;
 
       res.HOptions = res.Axis;
    }
@@ -971,7 +982,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       let graph = this.getObject();
 
       if (graph.fMinimum != -1111) minimum = ymin = graph.fMinimum;
-      if (graph.fMaximum != -1111) maximum = ymax = graph.fMaximum;
+      if (graph.fMaximum != -1111) maximum = graph.fMaximum;
       if ((minimum < 0) && (ymin >=0)) minimum = 0.9*ymin;
 
       histo = graph.fHistogram;
@@ -1485,7 +1496,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
              best_dist2 = dist2;
              findbin = this;
              best = rect;
-             best.exact = matchx && matchy;
+             best.exact = /* matchx && */ matchy;
           }
        });
 
@@ -1607,7 +1618,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
             if (IsInside(pnt.x, grx0, grx)) {
                // if inside interval, check Y distance
-               gry0 = pmain.gry(bin0.y)
+               gry0 = pmain.gry(bin0.y);
                gry = pmain.gry(bin.y);
 
                if (Math.abs(grx - grx0) < 1) {
@@ -1738,7 +1749,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                  .attr("width", 2*hint.radius)
                  .attr("height", 2*hint.radius);
          } else {
-            ttbin.append("svg:circle").attr("cy", Math.round(hint.gry1))
+            ttbin.append("svg:circle").attr("cy", Math.round(hint.gry1));
             if (Math.abs(hint.gry1-hint.gry2) > 1)
                ttbin.append("svg:circle").attr("cy", Math.round(hint.gry2));
 
@@ -2788,7 +2799,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       let name = this.getObjectHint();
       if (name.length > 0) res.lines.push(name);
-      res.lines.push("x = " + main.axisAsText("x", xx))
+      res.lines.push("x = " + main.axisAsText("x", xx));
       res.lines.push("y = " + main.axisAsText("y", yy));
       if (knot !== null) {
          res.lines.push("knot = " + indx);
@@ -2862,7 +2873,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          // for tooltips use markers only if nodes where not created
          let path = "";
 
-         this.createAttMarker({ attr: spline })
+         this.createAttMarker({ attr: spline });
 
          this.markeratt.resetPos();
 
@@ -3378,7 +3389,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    /** @summary draw speical histogram for axis
      * @returns {Promise} when ready */
-   TMultiGraphPainter.prototype.drawAxis = function() {
+   TMultiGraphPainter.prototype.drawAxis = function(hopt) {
 
       let mgraph = this.getObject(),
           pp = this.getPadPainter(),
@@ -3386,7 +3397,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       // histogram painter will be first in the pad, will define axis and
       // interactive actions
-      return JSROOT.draw(this.getDom(), histo, "AXIS");
+      return JSROOT.draw(this.getDom(), histo, "AXIS" + hopt);
    }
 
    /** @summary method draws next function from the functions list  */
@@ -3441,9 +3452,12 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       painter._plc = d.check("PLC");
       painter._pmc = d.check("PMC");
 
+      let hopt = "", checkhopt = ["USE_PAD_TITLE", "LOGXY", "LOGX", "LOGY", "LOGZ", "GRIDXY", "GRIDX", "GRIDY", "TICKXY", "TICKX", "TICKY"];
+      checkhopt.forEach(name => { if (d.check(name)) hopt += ";" + name; });
+
       let promise = Promise.resolve(painter);
       if (d.check("A") || !painter.getMainPainter())
-         promise = painter.drawAxis().then(fp => {
+         promise = painter.drawAxis(hopt).then(fp => {
             painter.firstpainter = fp;
             return painter;
          });
@@ -3451,7 +3465,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return promise.then(() => {
          painter.addToPadPrimitives();
          return painter.drawNextGraph(0, d.remain());
-      })
+      });
    }
 
    // =========================================================================================
@@ -3518,7 +3532,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                   check_attributes();
                   continue;
                case "x":
-                  this.createAttMarker({ attr: this.ReadAttr(arr[k], ["fMarkerColor", "fMarkerStyle", "fMarkerSize"]), force: true })
+                  this.createAttMarker({ attr: this.ReadAttr(arr[k], ["fMarkerColor", "fMarkerStyle", "fMarkerSize"]), force: true });
                   check_attributes();
                   continue;
                case "o":
@@ -3700,7 +3714,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                 fColorGreen: obj._blob[9],
                 fColorBlue: obj._blob[10],
                 fColorAlpha: obj._blob[11]
-            }
+            };
 
             obj.fWidth = obj._blob[12];
             obj.fHeight = obj._blob[13];
@@ -3756,7 +3770,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                let indx = Math.round((zval - this.arr[0]) / (this.arr[this.arr.length-1] - this.arr[0]) * (this.rgba.length-4)/4) * 4;
                return "rgba(" + this.rgba[indx] + "," + this.rgba[indx+1] + "," + this.rgba[indx+2] + "," + this.rgba[indx+3] + ")";
             }
-         }
+         };
          for (let k=0;k<200;k++)
             this.fContour.arr[k] = min + (max-min)/(200-1)*k;
 
@@ -3836,7 +3850,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
 
       if (url)
-         this.createG(true)
+         this.createG(fp ? true : false)
              .append("image")
              .attr("href", url)
              .attr("width", rect.width)
@@ -3978,7 +3992,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    function drawASImage(divid, obj, opt) {
       let painter = new TASImagePainter(divid, obj, opt);
       painter.decodeOptions(opt);
-      return jsrp.ensureTCanvas(painter)
+      return jsrp.ensureTCanvas(painter, false)
                  .then(() => painter.drawImage())
                  .then(() => {
                      painter.fillToolbar();

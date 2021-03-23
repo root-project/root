@@ -29,8 +29,11 @@ JSROOT.define(['d3'], (d3) => {
       this.part = "";
    }
 
-   /** @summary Returns true if remaining options are empty. */
-   DrawOptions.prototype.empty = function() { return this.opt.length === 0; }
+   /** @summary Returns true if remaining options are empty or contain only seperators symbols. */
+   DrawOptions.prototype.empty = function() {
+      if (this.opt.length === 0) return true;
+      return this.opt.replace(/[ ;_,]/g,"").length == 0;
+   }
 
    /** @summary Returns remaining part of the draw options. */
    DrawOptions.prototype.remain = function() { return this.opt; }
@@ -56,14 +59,14 @@ JSROOT.define(['d3'], (d3) => {
    DrawOptions.prototype.partAsInt = function(offset, dflt) {
       let val = this.part.replace(/^\D+/g, '');
       val = val ? parseInt(val, 10) : Number.NaN;
-      return isNaN(val) ? (dflt || 0) : val + (offset || 0);
+      return !Number.isInteger(val) ? (dflt || 0) : val + (offset || 0);
    }
 
    /** @summary Returns remaining part of found option as float. */
    DrawOptions.prototype.partAsFloat = function(offset, dflt) {
       let val = this.part.replace(/^\D+/g, '');
       val = val ? parseFloat(val) : Number.NaN;
-      return isNaN(val) ? (dflt || 0) : val + (offset || 0);
+      return !Number.isFinite(val) ? (dflt || 0) : val + (offset || 0);
    }
 
    // ============================================================================================
@@ -132,7 +135,7 @@ JSROOT.define(['d3'], (d3) => {
          let optimize = d.get("optimize");
          if (optimize) {
             optimize = parseInt(optimize);
-            if (!isNaN(optimize)) s.OptimizeDraw = optimize;
+            if (Number.isInteger(optimize)) s.OptimizeDraw = optimize;
          }
       }
 
@@ -198,7 +201,7 @@ JSROOT.define(['d3'], (d3) => {
 
       if (d.has("palette")) {
          let palette = parseInt(d.get("palette"));
-         if (!isNaN(palette) && (palette > 0) && (palette < 113)) s.Palette = palette;
+         if (Number.isInteger(palette) && (palette > 0) && (palette < 113)) s.Palette = palette;
       }
 
       let render3d = d.get("render3d");
@@ -746,8 +749,9 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Method used when color or pattern were changed with OpenUi5 widgets
      * @private */
    TAttFillHandler.prototype.verifyDirectChange = function(painter) {
-      if (typeof this.pattern == 'string') this.pattern = parseInt(this.pattern);
-      if (isNaN(this.pattern)) this.pattern = 0;
+      if (typeof this.pattern == 'string')
+         this.pattern = parseInt(this.pattern);
+      if (!Number.isInteger(this.pattern)) this.pattern = 0;
 
       this.change(this.color, this.pattern, painter ? painter.getCanvSvg() : null, true, painter);
    }
@@ -762,10 +766,10 @@ JSROOT.define(['d3'], (d3) => {
       delete this.pattern_url;
       this.changed = true;
 
-      if ((color !== undefined) && !isNaN(color) && !color_as_svg)
+      if ((color !== undefined) && Number.isInteger(parseInt(color)) && !color_as_svg)
          this.colorindx = parseInt(color);
 
-      if ((pattern !== undefined) && !isNaN(pattern)) {
+      if ((pattern !== undefined) && Number.isInteger(parseInt(pattern))) {
          this.pattern = parseInt(pattern);
          delete this.opacity;
          delete this.antialias;
@@ -1048,7 +1052,7 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Allign angle to step raster, add optional offset */
    FontHandler.prototype.roundAngle = function(step, offset) {
       this.angle = parseInt(this.angle || 0);
-      if (isNaN(this.angle)) this.angle = 0;
+      if (!Number.isInteger(this.angle)) this.angle = 0;
       this.angle = Math.round(this.angle/step) * step + (offset || 0);
       if (this.angle < 0)
          this.angle += 360;
@@ -1108,10 +1112,10 @@ JSROOT.define(['d3'], (d3) => {
       // decode time from ROOT string
       function next(separ, min, max) {
          let pos = sof.indexOf(separ);
-         if (pos < 0) { pos = ""; return min; }
+         if (pos < 0) return min;
          let val = parseInt(sof.substr(0, pos));
          sof = sof.substr(pos + 1);
-         if (isNaN(val) || (val < min) || (val > max)) { pos = ""; return min; }
+         if (!Number.isInteger(val) || (val < min) || (val > max)) return min;
          return val;
       }
 
@@ -1161,7 +1165,8 @@ JSROOT.define(['d3'], (d3) => {
       function jsroot_d3_svg_lineFiniteDifferences(points) {
          let i = 0, j = points.length - 1, m = [], p0 = points[0], p1 = points[1], d = m[0] = jsroot_d3_svg_lineSlope(p0, p1);
          while (++i < j) {
-            m[i] = (d + (d = jsroot_d3_svg_lineSlope(p0 = p1, p1 = points[i + 1]))) / 2;
+            p0 = p1; p1 = points[i + 1];
+            m[i] = (d + (d = jsroot_d3_svg_lineSlope(p0, p1))) / 2;
          }
          m[i] = d;
          return m;
@@ -1268,7 +1273,6 @@ JSROOT.define(['d3'], (d3) => {
             if (cminy != curry) res.path += "v" + (cminy - curry);
             res.path += "v" + (cmaxy - cminy);
             if (cmaxy != prevy) res.path += "v" + (prevy - cmaxy);
-            curry = prevy;
          }
 
       }
@@ -1296,7 +1300,7 @@ JSROOT.define(['d3'], (d3) => {
          let value = elem.style(name);
          if (!value || (typeof value !== 'string')) return 0;
          value = parseFloat(value.replace("px", ""));
-         return isNaN(value) ? 0 : Math.round(value);
+         return !Number.isFinite(value) ? 0 : Math.round(value);
       }
 
       let rect = elem.node().getBoundingClientRect();
@@ -2820,7 +2824,7 @@ JSROOT.define(['d3'], (d3) => {
                   let p = lastclname.lastIndexOf("::"),
                       shortname = (p > 0) ? lastclname.substr(p+2) : lastclname;
 
-                  _menu.add("sub:" + shortname.replace("<","_").replace(">","_"));
+                  _menu.add("sub:" + shortname.replace(/[<>]/g,"_"));
                }
 
                if ((item.fChecked === undefined) || (item.fChecked < 0))
@@ -3127,7 +3131,7 @@ JSROOT.define(['d3'], (d3) => {
       if (!delta || (test_ignore && item.ignore)) return;
 
       delta = (delta < 0) ? -0.2 : 0.2;
-      delta_left *= delta
+      delta_left *= delta;
       delta_right *= delta;
 
       let lmin = item.min = this.scale_min,
@@ -3931,7 +3935,7 @@ JSROOT.define(['d3'], (d3) => {
          box.node().appendChild(msg);
       }
 
-      if (!isNaN(tmout) && (tmout > 0)) {
+      if (Number.isFinite(tmout) && (tmout > 0)) {
          box.property("with_timeout", true);
          setTimeout(() => jsrp.showProgress('', -1), tmout);
       }
@@ -3953,7 +3957,7 @@ JSROOT.define(['d3'], (d3) => {
       fmt = fmt.slice(0,len-1);
       let isexp, prec = fmt.indexOf(".");
       prec = (prec<0) ? 4 : parseInt(fmt.slice(prec+1));
-      if (isNaN(prec) || (prec <=0)) prec = 4;
+      if (!Number.isInteger(prec) || (prec <=0)) prec = 4;
 
       let significance = false;
       if ((last=='e') || (last=='E')) { isexp = true; } else

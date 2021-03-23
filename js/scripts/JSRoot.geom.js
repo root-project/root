@@ -1313,7 +1313,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       let get_ctrl = mesh => {
          return mesh.get_ctrl ? mesh.get_ctrl() : new GeoDrawingControl(mesh, this.ctrl.bloom.enabled);
-      }
+      };
 
       // check if selections are the same
       if (!curr_mesh && !active_mesh) return false;
@@ -1878,7 +1878,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       }
 
       // remember additional nodes only if they include shape - otherwise one can ignore them
-      if (real_nodes) this._more_nodes = real_nodes;
+      if (real_nodes.length > 0)
+         this._more_nodes = real_nodes;
 
       if (!from_drawing) this.render3D();
    }
@@ -2012,7 +2013,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       }
 
       // keep light power of all soources constant
-      plights.forEach(ll => { ll.power = p*4*Math.PI/plights.length; })
+      plights.forEach(ll => { ll.power = p*4*Math.PI/plights.length; });
 
       if (need_render) this.render3D();
    }
@@ -2171,7 +2172,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          let box = this.getGeomBoundingBox(this._toplevel);
 
          // if detect of coordinates fails - ignore
-         if (isNaN(box.min.x)) return 1000;
+         if (!Number.isFinite(box.min.x)) return 1000;
 
          let sizex = box.max.x - box.min.x,
              sizey = box.max.y - box.min.y,
@@ -2252,7 +2253,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       let box = this.getGeomBoundingBox(this._toplevel);
 
       // if detect of coordinates fails - ignore
-      if (isNaN(box.min.x)) return;
+      if (!Number.isFinite(box.min.x)) return;
 
       let sizex = box.max.x - box.min.x,
           sizey = box.max.y - box.min.y,
@@ -2354,7 +2355,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       this.ctrl.rotatey = rotatey || 0;
       this.ctrl.rotatez = rotatez || 0;
       let preserve_zoom = false;
-      if (zoom && !isNaN(zoom)) {
+      if (zoom && Number.isFinite(zoom)) {
          this.ctrl.zoom = zoom;
       } else {
          preserve_zoom = true;
@@ -2464,7 +2465,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          if ((step==0) && (tm2-tm1 > 200)) frames = 20;
          step++;
          this._animating = step < frames;
-      }
+      };
 
       animate();
 
@@ -4371,7 +4372,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                geo.createItem(node, node._shape.fNode.fLeft, 'Left');
                geo.createItem(node, node._shape.fNode.fRight, 'Right');
                return true;
-            }
+            };
          }
 
          if (!sub._title && (obj._typename != "TGeoVolume")) sub._title = obj._typename;

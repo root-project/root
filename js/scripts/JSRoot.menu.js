@@ -20,7 +20,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
             for (let k = 1; k < arr.length; ++k)
                if (arr[k] == col) { id = k; break; }
          if ((id < 0) && (col.indexOf("rgb") == 0)) id = 9999;
-      } else if (!isNaN(col) && arr[col]) {
+      } else if (Number.isInteger(col) && arr[col]) {
          id = col;
          col = arr[id];
       }
@@ -169,7 +169,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
             let col = prompt("Enter color " + (useid ? "(only id number)" : "(name or id)"), value);
             if (col === null) return;
             let id = parseInt(col);
-            if (!isNaN(id) && jsrp.getColor(id)) {
+            if (Number.isInteger(id) && jsrp.getColor(id)) {
                col = jsrp.getColor(id);
             } else {
                if (useid) return;
@@ -201,7 +201,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
             let sz = prompt("Enter value of " + name, entry);
             if (!sz) return;
             sz = parseFloat(sz);
-            if (!isNaN(sz)) set_func((step >= 1) ? Math.round(sz) : sz);
+            if (Number.isFinite(sz)) set_func((step >= 1) ? Math.round(sz) : sz);
          });
          for (let sz = min; sz <= max; sz += step) {
             let entry = sz.toFixed(2);
@@ -320,7 +320,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
                let id = prompt("Enter line style id (1-solid)", 1);
                if (id === null) return;
                id = parseInt(id);
-               if (isNaN(id) || !jsrp.root_line_styles[id]) return;
+               if (!Number.isInteger(id) || !jsrp.root_line_styles[id]) return;
                this.lineatt.change(undefined, undefined, id);
                this.interactiveRedraw(true, "exec:SetLineStyle(" + id + ")");
             }.bind(painter));
@@ -358,7 +358,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
                let id = prompt("Enter fill style id (1001-solid, 3000..3010)", this.fillatt.pattern);
                if (id === null) return;
                id = parseInt(id);
-               if (isNaN(id)) return;
+               if (!Number.isInteger(id)) return;
                this.fillatt.change(undefined, id, this.getCanvSvg());
                this.interactiveRedraw(true, "exec:SetFillStyle(" + id + ")");
             }.bind(painter));
