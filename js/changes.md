@@ -7,6 +7,7 @@
 5. Provide tooltips when TH1 drawn with "E" or "P" option
 6. Fix problem with zooming of many overlayed histograms
 7. API change -> PadPainter.zoom function returns Promise now
+8. Support gridx/y, tickx/y, logx/y options for (multi) graphs painter
 
 
 ## Changes in 6.0.1

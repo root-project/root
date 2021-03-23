@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "16/03/2021";
+   JSROOT.version_date = "23/03/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -194,11 +194,14 @@
       return res;
    }
 
-   /** @summary Check if prototype string match to array (typed on untyped) */
+   /** @summary Check if prototype string match to array (typed on untyped)
+     * @returns {Number} 0 - not array, 1 - regular array, 2 - typed array */
    function is_array_proto(proto) {
-       if ((proto.length < 14) || (proto.indexOf('[object ') != 0)) return false;
+       if ((proto.length < 14) || (proto.indexOf('[object ') != 0)) return 0;
        let p = proto.indexOf('Array]');
-       return (p > 0) && (p == proto.length-6);
+       if ((p < 0) || (p != proto.length - 6)) return 0;
+       // plain array has only "[object Array]", typed array type name inside
+       return proto.length == 14 ? 1 : 2;
    }
 
    _.is_array_proto = is_array_proto;
@@ -848,7 +851,7 @@
          let proto = Object.prototype.toString.apply(value);
 
          // scan array - it can contain other objects
-         if (is_array_proto(proto)) {
+         if (is_array_proto(proto) > 0) {
              for (let i = 0; i < value.length; ++i) {
                 let res = unref_value(value[i]);
                 if (res!==undefined) value[i] = res;
@@ -962,10 +965,10 @@
          if (i >= 0) return map.clones[i];
       }
 
-      let proto = Object.prototype.toString.apply(src);
+      let arr_kind = is_array_proto(Object.prototype.toString.apply(src));
 
       // process normal array
-      if (proto === '[object Array]') {
+      if (arr_kind == 1) {
          let tgt = [];
          map.obj.push(src);
          map.clones.push(tgt);
@@ -979,7 +982,7 @@
       }
 
       // process typed array
-      if (is_array_proto(proto)) {
+      if (arr_kind == 2) {
          let tgt = [];
          map.obj.push(src);
          map.clones.push(tgt);
@@ -1032,10 +1035,8 @@
 
          if ((value===undefined) || (value===null) || (typeof value !== 'object')) return value;
 
-         let proto = Object.prototype.toString.apply(value);
-
          // typed array need to be converted into normal array, otherwise looks strange
-         if ((proto.length >= 14) && (proto.indexOf('[object ') == 0) && (proto.indexOf('Array]') == proto.length-6)) {
+         if (is_array_proto(Object.prototype.toString.apply(value)) > 0) {
             let arr = new Array(value.length);
             for (let i = 0; i < value.length; ++i)
                arr[i] = copy_value(value[i]);

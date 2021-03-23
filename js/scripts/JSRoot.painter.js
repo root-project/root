@@ -29,8 +29,11 @@ JSROOT.define(['d3'], (d3) => {
       this.part = "";
    }
 
-   /** @summary Returns true if remaining options are empty. */
-   DrawOptions.prototype.empty = function() { return this.opt.length === 0; }
+   /** @summary Returns true if remaining options are empty or contain only seperators symbols. */
+   DrawOptions.prototype.empty = function() {
+      if (this.opt.length === 0) return true;
+      return this.opt.replace(/[ ;_,]/g,"").length == 0;
+   }
 
    /** @summary Returns remaining part of the draw options. */
    DrawOptions.prototype.remain = function() { return this.opt; }

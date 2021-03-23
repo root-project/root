@@ -1482,8 +1482,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (d.check('NOTOOLTIP') && painter) painter.setTooltipAllowed(false);
       if (d.check('TOOLTIP') && painter) painter.setTooltipAllowed(true);
 
-      if (d.check('LOGX') && pad) { pad.fLogx = 1; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
-      if (d.check('LOGY') && pad) { pad.fLogy = 1; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
+      let lx = false, ly = false;
+      if (d.check('LOGXY')) lx = ly = true;
+      if (d.check('LOGX')) lx = true;
+      if (d.check('LOGY')) ly = true;
+      if (lx && pad) { pad.fLogx = 1; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
+      if (ly && pad) { pad.fLogy = 1; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
       if (d.check('LOGZ') && pad) pad.fLogz = 1;
       if (d.check('GRIDXY') && pad) pad.fGridx = pad.fGridy = 1;
       if (d.check('GRIDX') && pad) pad.fGridx = 1;

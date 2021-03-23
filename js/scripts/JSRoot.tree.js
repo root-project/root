@@ -102,13 +102,11 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
      * 2 - when plain (1-dim) array with same-type content */
    function checkArrayPrototype(arr, check_content) {
       if (typeof arr !== 'object') return 0;
-      let proto = Object.prototype.toString.apply(arr);
-      if (proto.indexOf('[object ') !== 0) return 0;
-      const pos = proto.indexOf('Array]');
-      if (pos < 0) return 0;
-      if (pos > 8) return 2; // this is typed array like Int32Array
 
-      if (!check_content) return 1; //
+      let arr_kind = JSROOT._.is_array_proto(Object.prototype.toString.apply(arr));
+
+      if (!check_content || (arr_kind != 1)) return arr_kind;
+
       let typ, plain = true;
       for (let k = 0; k < arr.length; ++k) {
          let sub = typeof arr[k];

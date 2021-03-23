@@ -281,7 +281,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          prnt = prnt._parent;
       }
 
-      let isarray = JSROOT._.is_array_proto(proto) && obj.length,
+      let isarray = (JSROOT._.is_array_proto(proto) > 0) && obj.length,
           compress = isarray && (obj.length > JSROOT.settings.HierarchyLimit),  arrcompress = false;
 
       if (isarray && (top._name==="Object") && !top._parent) top._name = "Array";
@@ -376,7 +376,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             proto = Object.prototype.toString.apply(fld);
 
-            if (JSROOT._.is_array_proto(proto)) {
+            if (JSROOT._.is_array_proto(proto) > 0) {
                item._title = "array len=" + fld.length;
                simple = (proto != '[object Array]');
                if (fld.length === 0) {
