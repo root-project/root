@@ -319,7 +319,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
             if (msg && msg.indexOf("OES_texture_half_float") < 0 && msg.indexOf("EXT_texture_filter_anisotropic") < 0 &&
                        msg.indexOf("WEBGL_depth_texture") < 0 && msg.indexOf("OES_vertex_array_object") < 0)
               console.log("NEW: " + msg);
-         }
+         };
          renderer = new THREE.WebGLRenderer(args);
 
          renderer.jsroot_output = new THREE.WebGLRenderTarget(width, height);
@@ -357,7 +357,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       renderer.setJSROOTSize = function(width, height) {
          if ((this.jsroot_render3d === JSROOT.constants.Render3D.WebGLImage) && !JSROOT.batch_mode && !JSROOT.nodejs)
             return d3.select(this.jsroot_dom).attr("width", width).attr("height", height);
-      }
+      };
 
       return renderer;
    }
@@ -524,7 +524,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
    TooltipFor3D.prototype.show = function(v /*, mouse_pos, status_func*/) {
       if (!v || (v==="")) return this.hide();
 
-      if (v && (typeof v =='object') && (v.lines || v.line)) {
+      if ((typeof v =='object') && (v.lines || v.line)) {
          if (v.only_status) return this.hide();
 
          if (v.line) {
@@ -1218,7 +1218,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          m.add(m.js_special);
       }
 
-      if (color) m.js_special.material.color = new THREE.Color(color);
+      m.js_special.material.color = new THREE.Color(color);
       if (index !== undefined) m.js_special.geometry.setDrawRange(index, 1);
    }
 

@@ -135,7 +135,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                _title: "NULL",
                _value: "null",
                _obj: null
-            }
+            };
          } else {
            item = {
              _name: obj.fName || obj.name,
@@ -155,8 +155,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
            if (do_context && jsrp.canDraw(obj._typename)) item._direct_context = true;
 
            // if name is integer value, it should match array index
-           if (!item._name || (!isNaN(parseInt(item._name)) && (parseInt(item._name)!==i))
-               || (lst.arr.indexOf(obj)<i)) {
+           if (!item._name || (Number.isInteger(parseInt(item._name)) && (parseInt(item._name)!==i))
+               || (lst.arr.indexOf(obj) < i)) {
               item._name = i.toString();
            } else {
               // if there are several such names, add cycle number to the item name
@@ -209,7 +209,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                item._expand = function(node, obj) {
                   // one can get expand call from child objects - ignore them
                   return keysHierarchy(node, obj.fKeys);
-               }
+               };
             } else {
                // remove cycle number - we have already directory
                item._name = key.fName;
@@ -281,7 +281,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          prnt = prnt._parent;
       }
 
-      let isarray = (proto.lastIndexOf('Array]') == proto.length-6) && (proto.indexOf('[object')==0) && !isNaN(obj.length),
+      let isarray = (JSROOT._.is_array_proto(proto) > 0) && obj.length,
           compress = isarray && (obj.length > JSROOT.settings.HierarchyLimit),  arrcompress = false;
 
       if (isarray && (top._name==="Object") && !top._parent) top._name = "Array";
@@ -297,14 +297,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!('_obj' in top))
          top._obj = obj;
-      else
-      if (top._obj !== obj) alert('object missmatch');
+      else if (top._obj !== obj)
+         alert('object missmatch');
 
       if (!top._title) {
          if (obj._typename)
             top._title = "ROOT." + obj._typename;
-         else
-         if (isarray) top._title = "Array len: " + obj.length;
+         else if (isarray)
+            top._title = "Array len: " + obj.length;
       }
 
       if (arrcompress) {
@@ -321,8 +321,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                   if (nextk===obj.length) break;
                   prevk = nextk;
                   nextk = Math.min(nextk+10,obj.length);
-               } else
-               if (prevk !== k) {
+               } else if (prevk !== k) {
                   // last block with similar
                   nextk = prevk;
                   allsame = true;
@@ -358,7 +357,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (compress && lastitem) {
             if (lastfield===fld) { ++cnt; lastkey = key; continue; }
-            if (cnt>0) lastitem._name += ".." + lastkey;
+            if (cnt > 0) lastitem._name += ".." + lastkey;
          }
 
          let item = { _parent: top, _name: key };
@@ -377,7 +376,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             proto = Object.prototype.toString.apply(fld);
 
-            if ((proto.lastIndexOf('Array]') == proto.length-6) && (proto.indexOf('[object')==0)) {
+            if (JSROOT._.is_array_proto(proto) > 0) {
                item._title = "array len=" + fld.length;
                simple = (proto != '[object Array]');
                if (fld.length === 0) {
@@ -479,7 +478,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let h = { _name : "StreamerInfo", _childs : [] };
 
       for (let i = 0; i < lst.arr.length; ++i) {
-         let entry = lst.arr[i]
+         let entry = lst.arr[i];
 
          if (entry._typename == "TList") continue;
 
@@ -946,7 +945,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                // when search for the elements it could be allowed to check index
                if (allow_index && /^\d+$/.test(localname)) {
                   let indx = parseInt(localname);
-                  if (!isNaN(indx) && (indx >= 0) && (indx < top._childs.length))
+                  if (Number.isInteger(indx) && (indx >= 0) && (indx < top._childs.length))
                      return process_child(top._childs[indx]);
                }
             }
@@ -1396,7 +1395,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if ((options.length == 1) && (options[0] == "iotest")) {
          this.clearHierarchy();
-         d3.select("#" + this.disp_frameid).html("<h2>Start I/O test</h2>")
+         d3.select("#" + this.disp_frameid).html("<h2>Start I/O test</h2>");
 
          let tm0 = new Date();
          return this.getObject(items[0]).then(() => {
@@ -1712,7 +1711,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          return Promise.resolve(-1);
-      }
+      };
 
       let promise = Promise.resolve(-1);
 
@@ -2009,7 +2008,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.h._get = (item, itemname, option) => {
             return this.getOnlineItem(item, itemname, option);
-         }
+         };
 
          this.h._expand = onlineHierarchy;
 
@@ -2130,7 +2129,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (interval) {
          interval = parseInt(interval);
-         if (!isNaN(interval) && (interval > 0)) {
+         if (Number.isInteger(interval) && (interval > 0)) {
             this._monitoring_interval = Math.max(100,interval);
             monitor_on = true;
          } else {
@@ -2359,14 +2358,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let d = JSROOT.decodeUrl(url);
 
-      function GetOption(opt) {
+      let GetOption = opt => {
          let res = d.get(opt, null);
          if ((res===null) && gui_div && !gui_div.empty() && gui_div.node().hasAttribute(opt))
             res = gui_div.attr(opt);
          return res;
-      }
+      };
 
-      function GetUrlOptionAsArray(opt) {
+      let GetUrlOptionAsArray = opt => {
 
          let res = [];
 
@@ -2387,9 +2386,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                res.push(val);
          }
          return res;
-      }
+      };
 
-      let GetOptionAsArray = (opt) => {
+      let GetOptionAsArray = opt => {
          let res = GetUrlOptionAsArray(opt);
          if (res.length>0 || !gui_div || gui_div.empty()) return res;
          while (opt.length>0) {
@@ -2409,7 +2408,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             else if (val!==null) res.push(val);
          }
          return res;
-      }
+      };
 
       let prereq = GetOption('prereq') || "",
           filesdir = d.get("path") || "", // path used in normal gui
@@ -2484,7 +2483,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          status = true;
       else if (status!==null) {
          statush = parseInt(status);
-         if (isNaN(statush) || (statush < 5)) statush = 0;
+         if (!Number.isInteger(statush) || (statush < 5)) statush = 0;
          status = true;
       }
       if (this.no_select === "") this.no_select = true;
@@ -2536,7 +2535,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                    });
 
          return promise.then(openAllFiles);
-      }
+      };
 
       let h0 = null;
       if (this.is_online) {
@@ -2987,7 +2986,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                kind = kind.substr(1);
             }
 
-            let separ = kind.indexOf("x"), sizex = 3, sizey = 3;
+            let separ = kind.indexOf("x"), sizex, sizey;
 
             if (separ > 0) {
                sizey = parseInt(kind.substr(separ + 1));
@@ -2996,8 +2995,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                sizex = sizey = parseInt(kind);
             }
 
-            if (isNaN(sizex)) sizex = 3;
-            if (isNaN(sizey)) sizey = 3;
+            if (!Number.isInteger(sizex)) sizex = 3;
+            if (!Number.isInteger(sizey)) sizey = 3;
 
             if (sizey > 1) {
                this.vertical = true;
@@ -3020,7 +3019,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (kind && kind.indexOf("_")>0) {
             let arg = parseInt(kind.substr(kind.indexOf("_")+1), 10);
-            if (!isNaN(arg) && (arg>10)) {
+            if (Number.isInteger(arg) && (arg > 10)) {
                kind = kind.substr(0, kind.indexOf("_"));
                sizes = [];
                while (arg>0) {
