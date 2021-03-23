@@ -157,7 +157,8 @@ public:
 \brief Meta-data for a set of ntuple clusters
 
 The cluster descriptor might carry information of only a subset of available clusters, for instance if multiple
-files are chained and not all of them have been processed yet.
+files are chained and not all of them have been processed yet. Clusters usually span across all available columns but
+in some cases they can describe only a subset of the columns, for instance when describing friend ntuples.
 */
 // clang-format on
 class RClusterDescriptor {
@@ -440,6 +441,9 @@ public:
    \class ROOT::Experimental::RNTupleDescriptor::RClusterDescriptorRange
    \ingroup NTuple
    \brief Used to loop over all the clusters of an ntuple (in unspecified order)
+
+   Enumerate all cluster IDs from the cluster descriptor.  No specific order can be assumed, use
+   FindNextClusterId and FindPrevClusterId to travers clusters by entry number.
    */
    // clang-format on
    class RClusterDescriptorRange {
@@ -706,6 +710,7 @@ public:
 
    void AddClustersFromFooter(void* footerBuffer);
 
+   /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
    void Reset();
 };
 

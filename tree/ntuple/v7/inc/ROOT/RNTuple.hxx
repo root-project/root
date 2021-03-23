@@ -132,6 +132,7 @@ public:
       bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
    };
 
+   /// Used to specify the underlying RNTuples in OpenFriends()
    struct ROpenSpec {
       std::string fNTupleName;
       std::string fStorage;
@@ -149,6 +150,9 @@ public:
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName,
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
+   /// Open RNTuples as one virtual, horizontally combined ntuple.  The underlying RNTuples must
+   /// have an identical number of entries.  Fields in the combined RNTuple are named with the ntuple name
+   /// as a prefix, e.g. myNTuple1.px and myNTuple2.pt (see tutorial ntpl006_friends)
    static std::unique_ptr<RNTupleReader> OpenFriends(std::span<ROpenSpec> ntuples);
 
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on
