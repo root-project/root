@@ -134,12 +134,12 @@ public:
    }
 
    // specific method for one-dim
-   /// set number of points rule
-   /// values of 1,2,3,4,5,6 corresponds to 15,21,31,41,51,61 and they are used in GSL adaptive
-   /// values > 6 corresponds to the actual points and they are used by teh GaussLegendre integrator
+   /// Set number of points for active integration rule.
+   /// - For the GSL adaptive integrator, `n = 1,2,3,4,5,6` correspond to the 15,21,31,41,51,61-point integration rules.
+   /// - For the GaussLegendre integrator, use values > 6, which correspond to the actual number of points being evaluated.
    void SetNPoints(unsigned int n) { fNCalls = n; }
 
-   /// maximum number of function calls
+   /// Number of points used by current integration rule. \see SetNPoints().
    unsigned int NPoints() const { return fNCalls; }
 
    /// name of 1D integrator
