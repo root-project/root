@@ -122,6 +122,7 @@ public:
    void Reset(NTupleSize_t rangeFirst) { fNElements = 0; fRangeFirst = rangeFirst; }
    void ResetCluster(const RClusterInfo &clusterInfo) { fNElements = 0; fClusterInfo = clusterInfo; }
 
+   /// Used by virtual page sources to map the physical column and cluster IDs to ther virtual counterparts
    void ChangeIds(DescriptorId_t columnId, DescriptorId_t clusterId)
    {
       fColumnId = columnId;
