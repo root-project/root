@@ -4908,7 +4908,7 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 ///
 /// \note Error checking and normalisation (of PDFs) will be performed in getValues().
 ///
-/// \param[in/out] evalData Object holding data that should be used in computations.
+/// \param[in,out] evalData Object holding data that should be used in computations.
 /// Computation results have to be stored here.
 /// \param[in]  normSet  Optional normalisation set passed down to the servers of this object.
 /// \return     Span pointing to the results. The memory is owned by `evalData`.
