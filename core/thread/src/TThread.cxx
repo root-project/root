@@ -354,7 +354,7 @@ void TThread::Init()
         // taking the same lock as 'tls_get_addr_tail', we can not use UniqueLockRecurseCount.
 #ifdef R__HAS_TBB
         ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::mutex, ROOT::Internal::RecurseCountsTBBUnique>();
-#else   
+#else
         ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::mutex, ROOT::Internal::RecurseCounts>();
 #endif
      }
