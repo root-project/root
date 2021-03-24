@@ -33,6 +33,8 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+- `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been removed. `TTreeProcessorMT::SetTasksPerWorkerHint` is a superior alternative.
+
 
 ## Core Libraries
 

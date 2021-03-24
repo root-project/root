@@ -44,6 +44,7 @@ The following people have contributed to this new version:
 ## Deprecation and Removal
 
 - [`RooAbsReal::evaluateBatch()`](https://root.cern.ch/doc/v624/classRooAbsReal.html#a261580dfe94f2b107f9b9a77cad78a62) has been removed in favour of the faster evaluateSpan(). See section "RooFit Libraries" for instructions on how to use [`RooAbsReal::evaluateSpan()`](https://root.cern.ch/doc/v624/classRooAbsReal.html#a1e5129ffbc63bfd04c01511fd354b1b8).
+- `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been deprecated in favour of `TTreeProcessorMT::SetTasksPerWorkerHint`.
 
 ## Core Libraries
 
@@ -73,6 +74,7 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 
 - `TTree` now supports the inclusion of leaves of types `long` and `unsigned long` (and therefore also `std::size_t` on most systems) also for branches in "leaflist mode". The corresponding leaflist letters are 'G' and 'g'.
 - when looping over a `TTree` with a friend with a larger number of entries, `TTreeReader` now ends the event loop when the entries in the _main_ `TTree` are exhausted, consistently with other interfaces. See [#6518](https://github.com/root-project/root/issues/6518) for more details.
+- `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` is now deprecated in favor of the more flexible and newly introduced `TTreeProcessorMT::SetTasksPerWorkerHint`. See the relevant entries in our reference guide for more information.
 
 ## RDataFrame
 
