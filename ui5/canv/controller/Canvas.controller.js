@@ -32,7 +32,8 @@ sap.ui.define([
                                      StatusIcon: chk_icon(false),
                                      ToolbarIcon: chk_icon(false),
                                      TooltipIcon: chk_icon(true),
-                                     StatusLbl1:"", StatusLbl2:"", StatusLbl3:"", StatusLbl4:"", Standalone: true });
+                                     StatusLbl1:"", StatusLbl2:"", StatusLbl3:"", StatusLbl4:"",
+                                     Standalone: true, isRoot6: true });
          this.getView().setModel(model);
 
          let vd = this.getView().getViewData();
@@ -65,9 +66,16 @@ sap.ui.define([
             cp.drawInUI5ProjectionArea = this.drawInProjectionArea.bind(this);
 
             cp.showUI5Panel = this.showPanelInLeftArea.bind(this);
+
+            if (cp.v7canvas) model.setProperty("/isRoot6", false);
          }
 
          // this.toggleGedEditor();
+      },
+
+      isv7: function() {
+         let cp = this.getCanvasPainter();
+         return cp && cp.v7canvas;
       },
 
       executeObjectMethod: function(painter, method, menu_obj_id) {
@@ -288,7 +296,8 @@ sap.ui.define([
              p = this.getCanvasPainter();
          if (p) p.registerForPadEvents(null);
          if (ged) ged.cleanupGed();
-         if (p && p.processChanges) p.processChanges("sbits", p);
+         if (p && p.processChanges)
+            p.processChanges("sbits", p);
       },
 
       getLeftController: function(name) {

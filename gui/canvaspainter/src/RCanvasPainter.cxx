@@ -34,6 +34,7 @@
 #include "TList.h"
 #include "TEnv.h"
 #include "TROOT.h"
+#include "TFile.h"
 #include "TClass.h"
 #include "TBufferJSON.h"
 #include "TBase64.h"
@@ -512,6 +513,12 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
       }
    } else if (check_header("SAVE:")) {
       SaveCreatedFile(cdata);
+   } else if (check_header("PRODUCE:")) {
+      R__LOG_DEBUG(0, CanvasPainerLog()) << "Create file " << cdata;
+
+      TFile *f = TFile::Open(cdata.c_str(), "RECREATE");
+      f->WriteObject(&fCanvas, "Canvas");
+      delete f;
    } else if (check_header("REQ:")) {
       auto req = TBufferJSON::FromJSON<RDrawableRequest>(cdata);
       if (req) {
