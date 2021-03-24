@@ -38,6 +38,7 @@ public:
       fCanvas->SetTitle(name.c_str());
       fCanvas->ResetBit(TCanvas::kShowEditor);
       fCanvas->ResetBit(TCanvas::kShowToolBar);
+      fCanvas->SetBit(TCanvas::kMenuBar, kTRUE);
       fCanvas->SetCanvas(fCanvas.get());
       fCanvas->SetBatch(kTRUE); // mark canvas as batch
       fCanvas->SetEditable(kTRUE); // ensure fPrimitives are created
