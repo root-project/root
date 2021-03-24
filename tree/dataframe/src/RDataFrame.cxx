@@ -52,6 +52,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
 - [Crash course](#crash-course)
 - [Working with collections](#collections)
 - [Efficient analysis in Python](#python)
+- [Distributed execution in Python](#distrdf)
 - [Transformations](#transformations) -- manipulating data
 - [Actions](#actions) -- getting results
 - [Performance tips and parallel execution](#parallel-execution) -- how to use it and common pitfalls
@@ -523,6 +524,76 @@ df = ROOT.RDataFrame("myTree", "myFile.root")
 cols = df.Filter("x > 10").AsNumpy(["x", "y"])
 print(cols["x"], cols["y"])
 ~~~
+
+##  <a name="distrdf"></a>Distributed execution in Python
+
+RDataFrame applications can be executed in parallel through distributed computing frameworks on a set of remote machines
+thanks to the Python package `ROOT.RDF.Experimental.Distributed`. This experimental, **Python-only** package allows to scale the
+optimized performance RDataFrame can achieve on a single machine to multiple nodes at the same time. It is designed so
+that different backends can be easily plugged in, currently supporting [Apache Spark](http://spark.apache.org/) and soon
+also [Dask](https://dask.org/). To make use of distributed RDataFrame, you only need to switch `ROOT.RDataFrame` with
+the backend-specific `RDataFrame` of your choice, for example:
+
+~~~{.py}
+import ROOT
+
+# Point RDataFrame calls to the Spark specific RDataFrame
+RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
+
+# It still accepts the same constructor arguments as traditional RDataFrame
+df = RDataFrame("mytree", "myfile.root")
+
+# Continue the application with the traditional RDataFrame API
+sum = df.Filter("x > 10").Sum("y")
+h = df.Histo1D("x")
+
+print(sum.GetValue())
+h.Draw()
+~~~
+
+The main goal of this package is to support running any RDataFrame application distributedly. Nonetheless, not all
+RDataFrame operations currently work with this package. The subset that is currently available is:
+- AsNumpy
+- Count
+- Define
+- Fill
+- Filter
+- Graph
+- Histo[1,2,3]D
+- Max
+- Mean
+- Min
+- Profile[1,2,3]D
+- Snapshot
+- Sum
+
+with support for more operations coming in the future. Data sources other than TTree and TChain (e.g. CSV, RNTuple) are
+currently not supported.
+
+### Connecting to a Spark cluster
+
+In order to distribute the RDataFrame workload, you can connect to a Spark cluster you have access to through the
+official [Spark API](https://spark.apache.org/docs/latest/rdd-programming-guide.html#initializing-spark), then hook the
+connection instance to the distributed `RDataFrame` object like so:
+
+~~~{.py}
+import pyspark
+import ROOT
+
+# Create a SparkContext object with the right configuration for your Spark cluster
+conf = SparkConf().setAppName(appName).setMaster(master)
+sc = SparkContext(conf=conf)
+
+# Point RDataFrame calls to the Spark specific RDataFrame
+RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
+
+# The Spark RDataFrame constructor accepts an optional "sparkcontext" parameter
+# and it will distribute the application to the connected cluster
+df = RDataFrame("mytree", "myfile.root", sparkcontext = sc)
+~~~
+
+If an instance of [SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
+is not provided, the default behaviour is to create one in the background for you.
 
 ##  <a name="transformations"></a>Transformations
 ### <a name="Filters"></a> Filters
