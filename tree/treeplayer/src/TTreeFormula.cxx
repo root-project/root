@@ -152,7 +152,7 @@ TTreeFormula::TTreeFormula(): ROOT::v5::TFormula(), fQuickLoad(kFALSE), fNeedLoa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal TTree Formula Constuctor
+/// Normal TTree Formula Constructor
 
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    :ROOT::v5::TFormula(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
@@ -173,7 +173,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Initialiation called from the constructors.
+/// Initialization called from the constructors.
 
 void TTreeFormula::Init(const char*name, const char* expression)
 {
@@ -938,7 +938,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             }
             TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, element, kTRUE);
 
-            // The following code was commmented out because in THIS case
+            // The following code was commented out because in THIS case
             // the dimension are actually handled by parsing the title and name of the leaf
             // and branch (see a little further)
             // The dimension needs to be handled!
@@ -990,7 +990,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                   new TFormLeafInfoCollection(collectionCl, 0, collectionCl, kTRUE);
             }
 
-            // The following code was commmented out because in THIS case
+            // The following code was commented out because in THIS case
             // the dimension are actually handled by parsing the title and name of the leaf
             // and branch (see a little further)
             // The dimension needs to be handled!
@@ -1280,7 +1280,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       for (i=0, current = &(work[0]); i<=nchname;i++ ) {
          // We will treated the terminator as a token.
          if (right[i] == '(') {
-            // Right now we do not allow nested paranthesis
+            // Right now we do not allow nested parenthesis
             do {
                *current++ = right[i++];
             } while(right[i]!=')' && right[i]);
@@ -2207,7 +2207,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
          ++paran_level;
 
          if (current==work+1) {
-            // If the expression starts with a paranthesis, we are likely
+            // If the expression starts with a parenthesis, we are likely
             // to have a cast operator inside.
             startWithParan = kTRUE;
             current--;
@@ -2223,13 +2223,13 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
       }
       if (cname[i] == ')') {
          if (paran_level==0) {
-            Error("DefinedVariable","Unmatched paranthesis in %s",fullExpression);
+            Error("DefinedVariable","Unmatched parenthesis in %s",fullExpression);
             return -1;
          }
          paran_level--;
 
          if (startWithParan) {
-            startWithParan = kFALSE; // the next match wont be against the starting paranthesis.
+            startWithParan = kFALSE; // the next match wont be against the starting parenthesis.
 
             // Let's see if work is a classname and thus we have a cast.
             *(--current) = 0;
@@ -2891,7 +2891,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
             Int_t aliasRes = DefinedVariable(thisAlias,action);
             if (aliasRes<0) {
                // We failed but DefinedVariable has not printed why yet.
-               // and because we want thoses to be printed _before_ the notice
+               // and because we want those to be printed _before_ the notice
                // of the failure of the substitution, we need to print them here.
                if (aliasRes==-1) {
                   Error("Compile", " Bad numerical expression : \"%s\"",thisAlias.Data());
@@ -3082,7 +3082,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                cl = branchEl->GetInfo() ? branchEl->GetInfo()->GetClass() : 0;
             } else if (type>60 || type==0) {
                // Case of an object data member.  Here we allow for the
-               // variable name to be ommitted.  Eg, for Event.root with split
+               // variable name to be omitted.  Eg, for Event.root with split
                // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
                TStreamerElement* element = branchEl->GetInfo()->GetElement(branchEl->GetID());
                if (element) cl = element->GetClassPointer();
@@ -3249,7 +3249,7 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char
          cl = branchEl->GetInfo() ? branchEl->GetInfo()->GetClass() : 0;
       } else if (type > 60) {
          // Case of an object data member.  Here we allow for the
-         // variable name to be ommitted.  Eg, for Event.root with split
+         // variable name to be omitted.  Eg, for Event.root with split
          // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
          TStreamerElement* element = branchEl->GetInfo()->GetElement(branchEl->GetID());
          if (element) {
@@ -3278,7 +3278,7 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char
          clones = (TClonesArray*) lobj->GetObject();
       } else if (branch->InheritsFrom(TBranchElement::Class())) {
          // We do not know exactly where the leaf of the TClonesArray is
-         // in the hierachy but we still need to get the correct class
+         // in the hierarchy but we still need to get the correct class
          // holder.
          TBranchElement* bc = (TBranchElement*) branch;
          if (bc == bc->GetMother()) {
@@ -3941,7 +3941,7 @@ template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t
 template<typename T>
 T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 {
-// Note that the redundance and structure in this code is tailored to improve
+// Note that the redundancy and structure in this code is tailored to improve
 // efficiencies.
    if (TestBit(kMissingLeaf)) return 0;
    if (fNoper == 1 && fNcodes > 0) {
@@ -4336,7 +4336,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 
                   tab[pos] = param; pos++;
                } else {
-                  // The primary is not in rancge, we will calculate the alternate value
+                  // The primary is not in range, we will calculate the alternate value
                   // via the next operation (which will be a intentional).
 
                   // kAlias no operations
@@ -4356,7 +4356,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                   ++i; // skip the alternate value.
 
                } else {
-                  // The primary is not in rancge, we will calculate the alternate value
+                  // The primary is not in range, we will calculate the alternate value
                   // via the next operation (which will be a kAlias).
 
                   // intentional no operations
@@ -4725,7 +4725,7 @@ Bool_t  TTreeFormula::IsLeafString(Int_t code) const
             // Need to find out if it is an 'array' or a pointer.
             if (leaf->GetLenStatic() > 1) return kTRUE;
 
-            // Now we need to differantiate between a variable length array and
+            // Now we need to differentiate between a variable length array and
             // a TClonesArray.
             if (leaf->GetLeafCount()) {
                const char* indexname = leaf->GetLeafCount()->GetName();
@@ -4913,7 +4913,7 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
             }
             if (expo) {
                // If there is an exponent we may be longer than planned.
-               // so let's trim off the excess precission!
+               // so let's trim off the excess precision!
                UInt_t declen = atoi(decform);
                if (strlen(value)>declen) {
                   UInt_t off = strlen(value)-declen;
@@ -5082,7 +5082,7 @@ void TTreeFormula::UpdateFormulaLeaves()
       if (fBranches[i] && leaf) {
          fBranches[i] = leaf->GetBranch();
          // Since sometimes we might no read all the branches for all the entries, we
-         // might sometimes only read the branch count and thus reset the colleciton
+         // might sometimes only read the branch count and thus reset the collection
          // but might not read the data branches, to insure that a subsequent read
          // from TTreeFormula will properly load the data branches even if fQuickLoad is true,
          // we reset the entry of all branches in the TTree.
@@ -5303,7 +5303,7 @@ void TTreeFormula::ResetDimensions() {
          // At this point fCumulSizes[i][k] actually contain the physical
          // dimension of the k-th dimensions.
          if ( (fCumulSizes[i][k]>=0) && (fIndexes[i][k] >= fCumulSizes[i][k]) ) {
-            // unreacheable element requested:
+            // unreachable element requested:
             fManager->CancelDimension(virt_dim2); // fCumulUsedSizes[virt_dim2] = 0;
          }
          if ( fIndexes[i][k] < 0 ) virt_dim2++;
@@ -5313,7 +5313,7 @@ void TTreeFormula::ResetDimensions() {
       // Add up the cumulative size
       for (k = fNdimensions[i]; (k > 0); k--) {
          // NOTE: When support for inside variable dimension is added this
-         // will become inacurate (since one of the value in the middle of the chain
+         // will become inaccurate (since one of the value in the middle of the chain
          // is unknown until GetNdata is called.
          fCumulSizes[i][k-1] *= TMath::Abs(fCumulSizes[i][k]);
       }
@@ -5491,7 +5491,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
                }
             }
          } else if (fIndexes[i][0] >= size) {
-            // unreacheable element requested:
+            // unreachable element requested:
             fManager->fUsedSizes[0] = 0;
             fNdata[i] = 0;
             outofbounds = kTRUE;
@@ -5500,7 +5500,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             info2 = (TFormLeafInfo *)fDataMembers.At(i);
             if (fIndexes[i][0]<0
                 || fIndexes[i][info2->GetVarDim()] >= info2->GetSize(fIndexes[i][0])) {
-               // unreacheable element requested:
+               // unreachable element requested:
                fManager->fUsedSizes[0] = 0;
                fNdata[i] = 0;
                outofbounds = kTRUE;
@@ -5521,7 +5521,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
                   fManager->fUsedSizes[0] = size;
                }
             } else if (fIndexes[i][0] >= size) {
-               // unreacheable element requested:
+               // unreachable element requested:
                fManager->fUsedSizes[0] = 0;
                fNdata[i] = 0;
                outofbounds = kTRUE;
@@ -5670,10 +5670,10 @@ void TTreeFormula::Convert(UInt_t oldversion)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert the underlying lookup method from the direct technique
 /// (dereferencing the address held by the branch) to the method using
-/// TFormLeafInfo.  This is in particular usefull in the case where we
+/// TFormLeafInfo.  This is in particular useful in the case where we
 /// need to append an additional TFormLeafInfo (for example to call a
 /// method).
-/// Return false if the switch was unsuccessfull (basically in the
+/// Return false if the switch was unsuccessful (basically in the
 /// case of an old style split tree).
 
 Bool_t TTreeFormula::SwitchToFormLeafInfo(Int_t code)

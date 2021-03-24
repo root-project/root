@@ -16,7 +16,7 @@ $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.
 
 The following methods are defined in this file:
 
-  - Begin():        called everytime a loop on the tree starts,
+  - Begin():        called every time a loop on the tree starts,
                     a convenient place to create your histograms.
   - SlaveBegin():   called after Begin(), when on PROOF called only on the
                     slave servers.

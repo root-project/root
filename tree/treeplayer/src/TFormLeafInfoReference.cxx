@@ -28,7 +28,7 @@ TFormLeafInfoReference::TFormLeafInfoReference(TClass* cl, TStreamerElement* e, 
 {
    TVirtualRefProxy* p = cl->GetReferenceProxy();
    if ( !p )  {
-      ::Error("TFormLeafInfoReference","No reference proxy for class %s availible",cl->GetName());
+      ::Error("TFormLeafInfoReference","No reference proxy for class %s available",cl->GetName());
       return;
    }
    fProxy = p->Clone();
@@ -42,7 +42,7 @@ TFormLeafInfoReference::TFormLeafInfoReference(const TFormLeafInfoReference& org
 {
    TVirtualRefProxy* p = org.fProxy;
    if ( !p )  {
-      ::Error("TFormLeafInfoReference","No reference proxy for class %s availible",fClass->GetName());
+      ::Error("TFormLeafInfoReference","No reference proxy for class %s available",fClass->GetName());
       return;
    }
    fProxy = p->Clone();

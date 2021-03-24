@@ -31,6 +31,9 @@ ClassImp(ROOT::Internal::TBranchProxyDescriptor);
 namespace ROOT {
 namespace Internal {
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Constructor.
+
    TBranchProxyDescriptor::TBranchProxyDescriptor(const char *dataname,
                                                   const char *type,
                                                   const char *branchname,
@@ -39,8 +42,6 @@ namespace Internal {
                                                   Bool_t isleaflist) :
       TNamed(dataname,type),fBranchName(branchname),fIsSplit(split),fBranchIsSkipped(skipped),fIsLeafList(isleaflist)
    {
-      // Constructor.
-
       fDataName = GetName();
       if (fDataName.Length() && fDataName[fDataName.Length()-1]=='.') fDataName.Remove(fDataName.Length()-1);
 
@@ -55,29 +56,36 @@ namespace Internal {
 
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Get the name of the data member.
+
    const char *TBranchProxyDescriptor::GetDataName()
    {
-      // Get the name of the data member.
       return fDataName;
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Get the name of the type of the data member
+
    const char *TBranchProxyDescriptor::GetTypeName()
    {
-      // Get the name of the type of the data member
       return GetTitle();
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Get the branch name.
+
    const char *TBranchProxyDescriptor::GetBranchName()
    {
-      // Get the branch name.
       return fBranchName.Data();
    }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return true if this description is the 'same' as the other description.
 
    Bool_t TBranchProxyDescriptor::IsEquivalent(const TBranchProxyDescriptor *other,
                                                Bool_t inClass)
    {
-      // Return true if this description is the 'same' as the other decription.
-
       if ( !other ) return false;
       if ( other == this ) return true;
 
@@ -94,23 +102,29 @@ namespace Internal {
       return true;
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return true if the branch is split
+
    Bool_t TBranchProxyDescriptor::IsSplit() const
    {
-      // Return true if the branch is split
       return fIsSplit;
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+  /// Output the declaration corresponding to this proxy
+
    void TBranchProxyDescriptor::OutputDecl(FILE *hf, int offset, UInt_t maxVarname)
    {
-      // Output the declaration corresponding to this proxy
       fprintf(hf,"%-*s%-*s %s;\n",  offset," ",  maxVarname, GetTypeName(), GetDataName()); // might want to add a comment
    }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Output the initialization corresponding to this proxy
 
    void TBranchProxyDescriptor::OutputInit(FILE *hf, int offset,
                                            UInt_t maxVarname,
                                            const char *prefix)
    {
-      // Output the initialization corresponding to this proxy
       if (fIsSplit) {
          const char *subbranchname = GetBranchName();
          const char *above = "";

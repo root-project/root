@@ -25,6 +25,9 @@ ClassImp(ROOT::Detail::TBranchProxy);
 
 using namespace ROOT::Internal;
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 ROOT::Detail::TBranchProxy::TBranchProxy() :
    fDirector(0), fInitialized(false), fIsMember(false), fIsClone(false), fIsaPointer(false),
    fHasLeafCount(false), fBranchName(""), fParent(0), fDataMember(""),
@@ -33,8 +36,10 @@ ROOT::Detail::TBranchProxy::TBranchProxy() :
    fNotify(this),
    fRead(-1), fWhere(0),fCollection(0)
 {
-   // Constructor.
 };
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char* top,
                                  const char* name) :
@@ -45,14 +50,15 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
    fNotify(this),
    fRead(-1),  fWhere(0),fCollection(0)
 {
-   // Constructor.
-
    if (fBranchName.Length() && fBranchName[fBranchName.Length()-1]!='.' && name) {
       ((TString&)fBranchName).Append(".");
    }
    if (name) ((TString&)fBranchName).Append(name);
    boss->Attach(this);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char *top, const char *name, const char *membername) :
    fDirector(boss), fInitialized(false), fIsMember(true), fIsClone(false), fIsaPointer(false),
@@ -62,8 +68,6 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char 
    fNotify(this),
    fRead(-1), fWhere(0),fCollection(0)
 {
-   // Constructor.
-
    if (name && strlen(name)) {
       if (fBranchName.Length() && fBranchName[fBranchName.Length()-1]!='.') {
          ((TString&)fBranchName).Append(".");
@@ -72,6 +76,9 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char 
    }
    boss->Attach(this);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBranchProxy *parent, const char* membername, const char* top,
                                  const char* name) :
@@ -82,8 +89,6 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBr
    fNotify(this),
    fRead(-1), fWhere(0),fCollection(0)
 {
-   // Constructor.
-
    if (name && strlen(name)) {
       if (fBranchName.Length() && fBranchName[fBranchName.Length()-1]!='.') {
          ((TString&)fBranchName).Append(".");
@@ -93,6 +98,9 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBr
    boss->Attach(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername) :
    fDirector(boss), fInitialized(false), fIsMember(membername != 0 && membername[0]), fIsClone(false), fIsaPointer(false),
    fHasLeafCount(false), fBranchName(branch->GetName()), fParent(0), fDataMember(membername),
@@ -101,18 +109,18 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* br
    fNotify(this),
    fRead(-1), fWhere(0),fCollection(0)
 {
-   // Constructor.
-
    boss->Attach(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 /// For a fullBranchName that might contain a leading friend tree path (but
 /// access elements designating a leaf), but the leaf name such that it matches
 /// the "path" to branch.
+
 static std::string GetFriendBranchName(TTree* directorTree, TBranch* branch, const char* fullBranchName)
 {
    // ROOT-10046: Here we need to ask for the tree with GetTree otherwise, if directorTree
-   // is a chain, this check is bogus and a bug can occour (ROOT-10046)
+   // is a chain, this check is bogus and a bug can occur (ROOT-10046)
    if (directorTree->GetTree() == branch->GetTree())
       return branch->GetFullName().Data();
 
@@ -126,8 +134,10 @@ static std::string GetFriendBranchName(TTree* directorTree, TBranch* branch, con
    return sFullBranchName;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 /// Constructor taking the branch name, possibly of a friended tree.
 /// Used by TTreeReaderValue in place of TFriendProxy.
+
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char* branchname, TBranch* branch, const char* membername) :
    fDirector(boss), fInitialized(false), fIsMember(membername != 0 && membername[0]), fIsClone(false), fIsaPointer(false),
    fHasLeafCount(false), fBranchName(GetFriendBranchName(boss->GetTree(), branch, branchname)), fParent(0), fDataMember(membername),
@@ -141,17 +151,20 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
    boss->Attach(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Typical Destructor
+
 ROOT::Detail::TBranchProxy::~TBranchProxy()
 {
-   // Typical Destructor
    if (fNotify.IsLinked() && fDirector && fDirector->GetTree())
       fNotify.RemoveLink(*(fDirector->GetTree()));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Completely reset the object.
+
 void ROOT::Detail::TBranchProxy::Reset()
 {
-   // Completely reset the object.
-
    fWhere = 0;
    fBranch = 0;
    fBranchCount = 0;
@@ -168,20 +181,22 @@ void ROOT::Detail::TBranchProxy::Reset()
    fCollection = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Display the content of the object
+
 void ROOT::Detail::TBranchProxy::Print()
 {
-   // Display the content of the object
-
    std::cout << "fBranchName " << fBranchName << std::endl;
    //std::cout << "fTree " << fDirector->fTree << std::endl;
    std::cout << "fBranch " << fBranch << std::endl;
    if (fBranchCount) std::cout << "fBranchCount " << fBranchCount << std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize/cache the necessary information.
+
 Bool_t ROOT::Detail::TBranchProxy::Setup()
 {
-   // Initialize/cache the necessary information.
-
    // Should we check the type?
 
    if (!fDirector->GetTree()) {
@@ -220,7 +235,7 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
          pcl = fCollection->GetValueClass();
          if (pcl == 0) {
             // coverity[dereference] fparent is checked jus a bit earlier and can not be null here
-            Error("Setup","Not finding TClass for collecion for the data member %s seems no longer be in class %s",fDataMember.Data(),fParent->GetClass()->GetName());
+            Error("Setup","Not finding TClass for collection for the data member %s seems no longer be in class %s",fDataMember.Data(),fParent->GetClass()->GetName());
             return false;
          }
       }
