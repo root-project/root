@@ -709,29 +709,33 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
          ndir->ResetBit(kMustCleanup);
          delete ndir;
       }
-   } else if (cl->InheritsFrom(TCollection::Class())) {
-      // Don't overwrite, if the object were not merged.
-      if (obj->Write(oldkeyname, canBeMerged ? TObject::kSingleKey | TObject::kOverwrite : TObject::kSingleKey) <=
-            0) {
-         status = kFALSE;
-      }
-      ((TCollection *)obj)->SetOwner();
-      delete obj;
    } else if (!canBeFound) { // Don't write the partial result for TTree and TH1
+
       // Don't overwrite, if the object were not merged.
       // NOTE: this is probably wrong for emulated objects.
-      if (cl->IsTObject()) {
-         if (obj->Write(oldkeyname, canBeMerged ? TObject::kOverwrite : 0) <= 0) {
+      if (cl->InheritsFrom(TCollection::Class())) {
+         // Don't overwrite, if the object were not merged.
+         if (obj->Write(oldkeyname, canBeMerged ? TObject::kSingleKey | TObject::kOverwrite : TObject::kSingleKey) <=
+               0) {
             status = kFALSE;
          }
-         obj->ResetBit(kMustCleanup);
+         ((TCollection *)obj)->SetOwner();
+         if (ownobj)
+            delete obj;
       } else {
-         if (target->WriteObjectAny((void *)obj, cl, oldkeyname, canBeMerged ? "OverWrite" : "") <= 0) {
-            status = kFALSE;
+         if (cl->IsTObject()) {
+            if (obj->Write(oldkeyname, canBeMerged ? TObject::kOverwrite : 0) <= 0) {
+               status = kFALSE;
+            }
+            obj->ResetBit(kMustCleanup);
+         } else {
+            if (target->WriteObjectAny((void *)obj, cl, oldkeyname, canBeMerged ? "OverWrite" : "") <= 0) {
+               status = kFALSE;
+            }
          }
+         if (ownobj)
+            cl->Destructor(obj); // just in case the class is not loaded.
       }
-      if (ownobj)
-         cl->Destructor(obj); // just in case the class is not loaded.
    }
    info.Reset();
 
