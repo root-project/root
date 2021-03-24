@@ -2879,10 +2879,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    RPadPainter.prototype.fillContextMenu = function(menu) {
 
-      if (this.pad)
-         menu.add("header: " + this.pad._typename + "::" + this.pad.fName);
+      if (this.iscan)
+         menu.add("header: RCanvas");
       else
-         menu.add("header: Canvas");
+         menu.add("header: RPad");
 
       menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
 
@@ -2922,7 +2922,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       menu.add("separator");
 
-      if (this.activateStatusBar)
+      if (typeof this.hasMenuBar == 'function' && typeof this.actiavteMenuBar == 'function')
+         menu.addchk(this.hasMenuBar(), "Menu bar", flag => this.actiavteMenuBar(flag));
+
+      if (typeof this.hasEventStatus == 'function' && typeof this.activateStatusBar == 'function')
          menu.addchk(this.hasEventStatus(), "Event status", () => this.activateStatusBar('toggle'));
 
       if (this.enlargeMain() || (this.has_canvas && this.hasObjectsToDraw()))
@@ -3223,7 +3226,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // if canvas size not specified in batch mode, temporary use 900x700 size
       // if (this.batch_mode && this.iscan && (!padattr.fCw || !padattr.fCh)) { padattr.fCw = 900; padattr.fCh = 700; }
 
-      if (this.iscan && snap.fTitle && (typeof document !== "undefined"))
+      if (this.iscan && snap.fTitle && !this.embed_canvas && (typeof document !== "undefined"))
          document.title = snap.fTitle;
 
       if (this.snapid === undefined) {
@@ -3770,6 +3773,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       RPadPainter.call(this, divid, canvas, true);
       this._websocket = null;
       this.tooltip_allowed = JSROOT.settings.Tooltip;
+      this.v7canvas = true;
    }
 
    RCanvasPainter.prototype = Object.create(RPadPainter.prototype);
@@ -3917,7 +3921,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    RCanvasPainter.prototype.saveCanvasAsFile = function(fname) {
       let pnt = fname.indexOf(".");
       this.createImage(fname.substr(pnt+1))
-          .then(res => this.sendWebsocket("SAVE:" + fname + ":" + res));
+          .then(res => { console.log('save', fname, res.length); this.sendWebsocket("SAVE:" + fname + ":" + res); });
    }
 
    /** @summary Send command to server to save canvas with specified name
