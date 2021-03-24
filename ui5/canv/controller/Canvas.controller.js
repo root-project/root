@@ -24,7 +24,7 @@ sap.ui.define([
          this.bottomVisible = false;
 
          let model = new JSONModel({ GedIcon: "", StatusIcon: "", ToolbarIcon: "", TooltipIcon: "sap-icon://accept",
-                                     StatusLbl1:"", StatusLbl2:"", StatusLbl3:"", StatusLbl4:"" });
+                                     StatusLbl1:"", StatusLbl2:"", StatusLbl3:"", StatusLbl4:"", Standalone: true });
          this.getView().setModel(model);
 
          let vd = this.getView().getViewData();
@@ -33,6 +33,9 @@ sap.ui.define([
          if (!cp) cp = Component.getOwnerComponentFor(this.getView()).getComponentData().canvas_painter;
 
          if (cp) {
+
+            if (cp.embed_canvas) model.setProperty("/Standalone", false);
+
             this.getView().byId("MainPanel").getController().setPainter(cp);
 
             cp.executeObjectMethod = this.executeObjectMethod.bind(this);
