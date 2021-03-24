@@ -71,8 +71,13 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 - cling's LLVM is upgraded to version 9.0
 - New interface to enable/disable optional cling features. Currently, it can be used to enable/disable support for redefinitions. See [this](https://github.com/root-project/cling/issues/360) issue for more information.
 
+### Multithreading
+- Fix an uninitialized variable in global read-write lock which could have caused deadlocks or crashes in some rare cases.
+- Default global read-write lock transitioned to new implementation based on TBB thread local storage when TBB is available on supported platforms (all except Windows).  This gives an O(10%) performance improvement for some typical RDataFrame scenarios with 256 threads due to reduced lock contention.
+
 ## I/O Libraries
 
+- Exclusive use of the global lock is reduced or migrated to finer grained read and write locks in a few hotspots that occur during file opening/closing or task initialization in RDataFrame.  This can lead to O(100x) improvements for some typical RDataFrame scenarios with 256 threads due to massively reduced lock contention.
 
 ## TTree Libraries
 
