@@ -146,7 +146,7 @@ sap.ui.define([], function() {
          }
 
          if (JSROOT.EVE.gDebug)
-            console.log("OnWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 1000) ? msg : (msg.substr(0, 1000) + "..."));
+            console.log("OnWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 100) ? msg : (msg.substr(0, 500) + "..."));
 
          let resp = JSON.parse(msg);
 
@@ -729,6 +729,7 @@ sap.ui.define([], function() {
          item.endChanges();
       }
 
+      this.handle.send("__REveDoneChanges");
       this.busyProcessingChanges = false;
    }
 
