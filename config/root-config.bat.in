@@ -28,6 +28,7 @@ set libdir=%ROOTSYS%\lib
 set incdir=%ROOTSYS%\include
 set etcdir=%ROOTSYS%\etc
 set tutdir=%ROOTSYS%\tutorials
+set all_features=@all_features@
 set features=@features@
 set configargs="@configargs@"
 set altcc=@altcc@
@@ -54,6 +55,7 @@ set rootevelibs=libEve.lib libEG.lib libGeom.lib libGed.lib libRGL.lib
 set rootlibs=libCore.lib libImt.lib libRIO.lib libNet.lib libHist.lib libGraf.lib libGraf3d.lib libGpad.lib libROOTVecOps.lib libTree.lib libTreePlayer.lib libRint.lib libPostscript.lib libMatrix.lib libPhysics.lib libMathCore.lib libThread.lib
 
 set out=
+set err=0
 
 for %%w in (%*) do (
    set arg=%%w
@@ -69,6 +71,7 @@ for %%w in (%*) do (
       rem Check for feature
       set feature=!arg:~6!
       set res=""
+      set known=""
       for %%f in (%features%) do (
          if %%f==!feature! (
             set res=%%f
@@ -76,7 +79,17 @@ for %%w in (%*) do (
          )
       )
       if !res!=="" (
-         set out=!out! no
+         for %%f in (%all_features%) do (
+            if %%f==!feature! (
+               set known=%%f
+            )
+         )
+         if !known!=="" (
+            set out=!out! --has-!feature!: unknown feature^^!
+         ) else (
+            set out=!out! no
+         )
+         set err=1
       )
    )
    if "!arg!"=="--version" (
@@ -90,7 +103,7 @@ for %%w in (%*) do (
          set out=!out! !ROOT_RELEASE!
       ) else (
          echo "cannot read ${incdir}/RVersion.h"
-         exit 1
+         exit /b 1
       )
    )
    if "!arg!"=="--git-revision" (
@@ -181,9 +194,15 @@ for %%w in (%*) do (
    )
 )
 
+if "!out!"=="" (
+   set err=1
+   echo !arg!: Unknown option or argument^^!
+   echo.
+   goto print_help
+)
 echo !out!
 
-exit /b 0
+exit /b !err!
 
 :print_help
 
@@ -216,4 +235,5 @@ echo   --cxx                 Print alternative C++ compiler specified when ROOT 
 echo   --f77                 Print alternative Fortran compiler specified when ROOT was built
 echo   --ld                  Print alternative Linker specified when ROOT was built
 echo   --help                Print this message
-exit /b 0
+
+exit /b !err!
