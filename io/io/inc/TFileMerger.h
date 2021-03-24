@@ -65,7 +65,7 @@ protected:
                 TFileMergeInfo &info, TString &oldkeyname, THashList &allNames, Bool_t &status, Bool_t &onlyListed,
                 const TString &path,
                 TDirectory *current_sourcedir, TFile *current_file,
-                TKey *key, TObject *obj);
+                TKey *key, TObject *obj, TIter &nextkey);
 public:
    /// Type of the partial merge
    enum EPartialMergeType {
