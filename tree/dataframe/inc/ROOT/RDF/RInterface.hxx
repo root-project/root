@@ -1607,7 +1607,7 @@ public:
    /// T must be a type that provides a copy- or move-constructor and a `T::Fill` method that takes as many arguments
    /// as the column names pass as columnList. The arguments of `T::Fill` must have type equal to the one of the
    /// specified columns (these types are passed as template parameters to this method).
-   /// \tparam FirstColumn The first type of the column the values of which are used to fill the object.
+   /// \tparam FirstColumn The first type of the column the values of which are used to fill the object. Inferred together with OtherColumns if not present.
    /// \tparam OtherColumns A list of the other types of the columns the values of which are used to fill the object.
    /// \tparam T The type of the object to fill. Automatically deduced.
    /// \param[in] model The model to be considered to build the new return value.
@@ -1622,46 +1622,21 @@ public:
    /// ### Example usage:
    /// ~~~{.cpp}
    /// MyClass obj;
-   /// auto myFilledObj = myDf.Fill<float>(obj, {"col0", "col1"});
-   /// ~~~
-   ///
-   template <typename FirstColumn, typename... OtherColumns, typename T> // need FirstColumn to disambiguate overloads
-   RResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
-   {
-      auto h = std::make_shared<T>(std::forward<T>(model));
-      if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
-         throw std::runtime_error("The absence of axes limits is not supported yet.");
-      }
-      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h, h);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*).
-   ///
-   /// This overload infers the types of the columns specified in columnList at runtime and just-in-time compiles the
-   /// method with these types. See previous overload for more information.
-   /// \tparam T The type of the object to fill. Automatically deduced.
-   /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] columnList The name of the columns read to fill the object.
-   /// \return the filled object wrapped in a RResultPtr.
-   ///
-   /// This overload of `Fill` infers the type of the specified columns at runtime and just-in-time compiles the
-   /// previous overload. Check the previous overload for more details on `Fill`.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// MyClass obj;
+   /// // Deduce column types (this invocation needs jitting internally, and in this case
+   /// // MyClass needs to be known to the interpreter)
    /// auto myFilledObj = myDf.Fill(obj, {"col0", "col1"});
+   /// // explicit column types
+   /// auto myFilledObj = myDf.Fill<float, float>(obj, {"col0", "col1"});
    /// ~~~
    ///
-   template <typename T>
+   template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename T>
    RResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
    {
       auto h = std::make_shared<T>(std::forward<T>(model));
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<RDFInternal::ActionTags::Fill, RDFDetail::RInferredType>(columnList, h, h, columnList.size());
+      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h, h, columnList.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
