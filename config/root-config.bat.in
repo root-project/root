@@ -28,6 +28,7 @@ set libdir=%ROOTSYS%\lib
 set incdir=%ROOTSYS%\include
 set etcdir=%ROOTSYS%\etc
 set tutdir=%ROOTSYS%\tutorials
+set all_features=@all_features@
 set features=@features@
 set configargs="@configargs@"
 set altcc=@altcc@
@@ -69,6 +70,7 @@ for %%w in (%*) do (
       rem Check for feature
       set feature=!arg:~6!
       set res=""
+      set known=""
       for %%f in (%features%) do (
          if %%f==!feature! (
             set res=%%f
@@ -76,7 +78,16 @@ for %%w in (%*) do (
          )
       )
       if !res!=="" (
-         set out=!out! no
+         for %%f in (%all_features%) do (
+            if %%f==!feature! (
+               set known=%%f
+            )
+         )
+         if !known!=="" (
+            set out=!out! --has-!feature!: unknown feature^^!
+         ) else (
+            set out=!out! no
+         )
       )
    )
    if "!arg!"=="--version" (
@@ -181,6 +192,11 @@ for %%w in (%*) do (
    )
 )
 
+if "!out!"=="" (
+   echo !arg!: Unknown option or argument^^!
+   echo.
+   goto print_help
+)
 echo !out!
 
 exit /b 0

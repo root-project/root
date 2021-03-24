@@ -838,6 +838,7 @@ if(WIN32)
 endif()
 
 #--Local root-configure
+set(all_features ${ROOT_ALL_OPTIONS})
 set(prefix $ROOTSYS)
 set(bindir $ROOTSYS/bin)
 set(libdir $ROOTSYS/lib)
