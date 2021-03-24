@@ -4,7 +4,7 @@
       showSubHeader="false" id="CanvasMainPage">
       <customHeader>
          <OverflowToolbar id="otb1">
-            <Button icon="sap-icon://log" type="Transparent"
+            <Button icon="sap-icon://log" type="Transparent" visible="{/Standalone}"
                tooltip="Quit ROOT session" press="onQuitRootPress" />
             <!--  Button icon="sap-icon://refresh" type="Transparent"
                tooltip="Reload canvas from server" press="onReloadPress" /-->
@@ -28,8 +28,8 @@
                            </items>
                         </MenuItem>
                         <MenuItem text="Save as ..." icon="sap-icon://save" enabled="false"/>
-                        <MenuItem text="Interrupt" startsSection="true" icon="sap-icon://stop" tooltip="Interrupts current event loop"/>
-                        <MenuItem text="Quit ROOT" icon="sap-icon://log" tooltip="Quit ROOT session"/>
+                        <MenuItem text="Interrupt" startsSection="true" icon="sap-icon://stop" enabled="{/Standalone}" tooltip="Interrupts current event loop"/>
+                        <MenuItem text="Quit ROOT" icon="sap-icon://log" enabled="{/Standalone}" tooltip="Quit ROOT session"/>
 
                      </items>
                   </Menu>
