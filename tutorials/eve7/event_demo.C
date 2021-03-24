@@ -223,10 +223,37 @@ void projectScenes(bool geomp, bool eventp)
 
 class EventManager : public REX::REveElement
 {
-public:
-   EventManager() = default;
+private:
+    class PlayTimer : public TTimer
+    {
+      
+      virtual bool Notify()
+      {
+         TurnOff();
+         printf("notify\n");
 
-   virtual ~EventManager() {}
+         Reset();
+         TurnOn();
+         return true;
+      }
+    };
+
+    bool fAutoplay{false};
+   // PlayTimer fTimer;
+   TTimer* fTimer{nullptr};
+
+public:
+   EventManager() { 
+
+   fTimer = new TTimer();
+fTimer->Connect("Timeout()", "EventManager",
+               this, "TimerDone()");
+//  timer->Start(2000, kTRUE);   // 2 seconds single-shot
+   }
+
+   virtual ~EventManager() {
+
+   }
 
    virtual void NextEvent()
    {
@@ -251,6 +278,25 @@ public:
       if (gApplication) gApplication->Terminate();
    }
 
+   virtual void TimerDone()
+   {
+      eveMng->GetWorld()->BeginAcceptingChanges();
+      eveMng->GetScenes()->AcceptChanges(true);
+      NextEvent();
+
+      eveMng->GetScenes()->AcceptChanges(false);
+      eveMng->GetWorld()->EndAcceptingChanges();
+      fTimer->Start(500, kTRUE); 
+   }
+
+   virtual void Autoplay()
+   {
+      fAutoplay = !fAutoplay;
+      if (fAutoplay)
+         fTimer->Start(0, kTRUE);
+      else
+         fTimer->Stop();
+   }
 };
 
 void event_demo()
@@ -269,6 +315,8 @@ void event_demo()
    eveMng->GetWorld()->AddCommand("QuitRoot", "sap-icon://log", eventMng, "QuitRoot()");
 
    eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", eventMng, "NextEvent()");
+
+   eveMng->GetWorld()->AddCommand("Autoplay", "sap-icon://refresh", eventMng, "Autoplay()");
 
    makeGeometryScene();
    makeEventScene();
