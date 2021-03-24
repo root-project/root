@@ -22,9 +22,9 @@
                               <MenuItem text="Canvas.svg" tooltip="Creates SVG snapshot of browser window"/>
                               <MenuItem text="Canvas.jpeg" tooltip="Creates JPEG snapshot of browser window"/>
                               <MenuItem text="Canvas.root" startsSection="true" tooltip="Produces ROOT output on C++ side"/>
-                              <MenuItem text="Canvas.pdf" tooltip="Produces PDF output on C++ side"/>
-                              <MenuItem text="Canvas.ps" tooltip="Produces PS output on C++ side"/>
-                              <MenuItem text="Canvas.C" tooltip="Produces C output on server side"/>
+                              <MenuItem text="Canvas.pdf" enabled="{/isRoot6}" tooltip="Produces PDF output on C++ side"/>
+                              <MenuItem text="Canvas.ps" enabled="{/isRoot6}" tooltip="Produces PS output on C++ side"/>
+                              <MenuItem text="Canvas.C" enabled="{/isRoot6}" tooltip="Produces C output on server side"/>
                            </items>
                         </MenuItem>
                         <MenuItem text="Save as ..." icon="sap-icon://save" enabled="false"/>
