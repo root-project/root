@@ -29,14 +29,14 @@ namespace Detail {
 namespace Internal{
    class TFriendProxy;
 
-   // Helper function to call SetReadEntry on all TFriendProxy
+   /// Helper function to call SetReadEntry on all TFriendProxy
    void ResetReadEntry(TFriendProxy *fp);
 
    class TBranchProxyDirector {
 
       //This class could actually be the selector itself.
-      TTree   *fTree;  // TTree we are currently looking at.
-      Long64_t fEntry; // Entry currently being read (in the local TTree rather than the TChain)
+      TTree   *fTree;  ///< TTree we are currently looking at.
+      Long64_t fEntry; ///< Entry currently being read (in the local TTree rather than the TChain)
 
       std::list<Detail::TBranchProxy*> fDirected;
       std::vector<TFriendProxy*> fFriends;

@@ -35,9 +35,9 @@ namespace ROOT {
 namespace Internal {
    class TTreeGeneratorBase {
       public:
-         TList    fListOfHeaders;     // List of included headers
-         TTree   *fTree;              // Pointer to the tree
-         TString  fOptionStr;         // User options as a string
+         TList    fListOfHeaders;     ///< List of included headers
+         TTree   *fTree;              ///< Pointer to the tree
+         TString  fOptionStr;         ///< User options as a string
 
          TTreeGeneratorBase(TTree *tree, const char *option);
 

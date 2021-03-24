@@ -32,12 +32,12 @@ class TBranch;
 class TFileDrawMap : public TNamed {
 
 protected:
-   TFile         *fFile;           //pointer to the file
-   TH1           *fFrame;          //histogram used to draw the map frame
-   TString        fKeys;           //list of keys
-   TString        fOption;         //drawing options
-   Int_t          fXsize;          //size in bytes of X axis
-   Int_t          fYsize;          //size in K/Mbytes of Y axis
+   TFile         *fFile;           ///< Pointer to the file
+   TH1           *fFrame;          ///< Histogram used to draw the map frame
+   TString        fKeys;           ///< List of keys
+   TString        fOption;         ///< Drawing options
+   Int_t          fXsize;          ///< Size in bytes of X axis
+   Int_t          fYsize;          ///< Size in K/Mbytes of Y axis
 
    virtual void     DrawMarker(Int_t marker, Long64_t eseek);
    virtual Bool_t   GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const;

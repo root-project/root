@@ -31,9 +31,7 @@
 #include <vector>
 
 class TMPWorkerTree : public TMPWorker {
-   /// \cond
-//   ClassDef(TMPWorkerTree, 0);
-   /// \endcond
+
 public:
    TMPWorkerTree();
    TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryList *entries, const std::string &treeName,
@@ -126,7 +124,7 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////////
-/// Auxilliary templated functions
+/// Auxiliary templated functions
 /// If the user lambda returns a TH1F*, TTree*, TEventList*, we incur in the
 /// problem of that object being automatically owned by the current open file.
 /// For these three types, we call SetDirectory(nullptr) to detach the returned
