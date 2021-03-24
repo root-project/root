@@ -418,5 +418,4 @@ template class TReentrantRWLock<std::mutex, ROOT::Internal::UniqueLockRecurseCou
 template class TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCountsTBB>;
 template class TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCountsTBBUnique>;
 #endif
-
 }
