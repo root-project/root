@@ -721,7 +721,7 @@ TEST(RWLock, VeryLargeconcurrentReadsStdTBBUnique)
 
 TEST(RWLock, VeryLargeconcurrentReadsSpin)
 {
-   concurrentReadsAndWrites(gRWMutexSpin,0,200,gRepetition / 100000);
+   concurrentReadsAndWrites(gRWMutexSpin, 0, 200, gRepetition / 100000);
 }
 
 TEST(RWLock, concurrentReadsAndWritesTL)

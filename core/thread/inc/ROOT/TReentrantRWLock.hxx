@@ -163,35 +163,35 @@ struct RecurseCountsTBB {
    tbb::enumerable_thread_specific<LocalCounts> fLocalCounts;
    size_t fWriteRecurse = 0; ///<! Number of re-entry in the lock by the same thread.
 
-   using local_t = LocalCounts*;
+   using local_t = LocalCounts *;
 
-   local_t GetLocal(){
-      return &fLocalCounts.local();
-   }
+   local_t GetLocal() { return &fLocalCounts.local(); }
 
-   Hint_t *IncrementReadCount(local_t &local) {
+   Hint_t *IncrementReadCount(local_t &local)
+   {
       ++(local->fReadersCount);
       return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&(local->fReadersCount));
    }
 
    template <typename MutexT>
-   Hint_t *IncrementReadCount(local_t &local, MutexT &) {
+   Hint_t *IncrementReadCount(local_t &local, MutexT &)
+   {
       return IncrementReadCount(local);
    }
 
-   Hint_t *DecrementReadCount(local_t &local) {
+   Hint_t *DecrementReadCount(local_t &local)
+   {
       --(local->fReadersCount);
       return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&(local->fReadersCount));
    }
 
    template <typename MutexT>
-   Hint_t *DecrementReadCount(local_t &local, MutexT &) {
+   Hint_t *DecrementReadCount(local_t &local, MutexT &)
+   {
       return DecrementReadCount(local);
    }
 
-   void ResetReadCount(local_t &local, int newvalue) {
-      local->fReadersCount = newvalue;
-   }
+   void ResetReadCount(local_t &local, int newvalue) { local->fReadersCount = newvalue; }
 
    bool IsCurrentWriter(local_t &local) { return local->fIsWriter; }
    bool IsNotCurrentWriter(local_t &local) { return !local->fIsWriter; }
@@ -219,38 +219,39 @@ struct RecurseCountsTBBUnique {
       size_t fReadersCount = 0;
       bool fIsWriter = false;
    };
-   tbb::enumerable_thread_specific<LocalCounts, tbb::cache_aligned_allocator<LocalCounts>, tbb::ets_key_per_instance> fLocalCounts;
+   tbb::enumerable_thread_specific<LocalCounts, tbb::cache_aligned_allocator<LocalCounts>, tbb::ets_key_per_instance>
+      fLocalCounts;
    size_t fWriteRecurse = 0; ///<! Number of re-entry in the lock by the same thread.
 
-   using local_t = LocalCounts*;
+   using local_t = LocalCounts *;
 
-   local_t GetLocal(){
-      return &fLocalCounts.local();
-   }
+   local_t GetLocal() { return &fLocalCounts.local(); }
 
-   Hint_t *IncrementReadCount(local_t &local) {
+   Hint_t *IncrementReadCount(local_t &local)
+   {
       ++(local->fReadersCount);
       return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&(local->fReadersCount));
    }
 
    template <typename MutexT>
-   Hint_t *IncrementReadCount(local_t &local, MutexT &) {
+   Hint_t *IncrementReadCount(local_t &local, MutexT &)
+   {
       return IncrementReadCount(local);
    }
 
-   Hint_t *DecrementReadCount(local_t &local) {
+   Hint_t *DecrementReadCount(local_t &local)
+   {
       --(local->fReadersCount);
       return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&(local->fReadersCount));
    }
 
    template <typename MutexT>
-   Hint_t *DecrementReadCount(local_t &local, MutexT &) {
+   Hint_t *DecrementReadCount(local_t &local, MutexT &)
+   {
       return DecrementReadCount(local);
    }
 
-   void ResetReadCount(local_t &local, int newvalue) {
-      local->fReadersCount = newvalue;
-   }
+   void ResetReadCount(local_t &local, int newvalue) { local->fReadersCount = newvalue; }
 
    bool IsCurrentWriter(local_t &local) { return local->fIsWriter; }
    bool IsNotCurrentWriter(local_t &local) { return !local->fIsWriter; }
