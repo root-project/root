@@ -217,9 +217,15 @@ sap.ui.define([
          let name = oEvent.getParameter("item").getText();
 
          switch (name) {
-            case "Close canvas": p.onWebsocketClosed(); p.closeWebsocket(true); break;
-            case "Interrupt": p.sendWebsocket("INTERRUPT"); break;
-            case "Quit ROOT": p.sendWebsocket("QUIT"); break;
+            case "Close canvas":
+               this.onCloseCanvasPress();
+               break;
+            case "Interrupt":
+               p.sendWebsocket("INTERRUPT");
+               break;
+            case "Quit ROOT":
+               p.sendWebsocket("QUIT");
+               break;
             case "Canvas.png":
             case "Canvas.jpeg":
             case "Canvas.svg":

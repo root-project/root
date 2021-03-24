@@ -635,28 +635,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.websocket.send("WIDGET_SELECTED:" + item.getKey());
       },
 
+      doCloseTabItem: function(item) {
+         let oTabContainer = this.byId("tabContainer");
+         if (item.getKey())
+            this.websocket.send("CLOSE_TAB:" + item.getKey());
+         oTabContainer.removeItem(item);
+      },
+
       /** @brief Close Tab event handler */
       handleTabClose: function(oEvent) {
          // prevent the tab being closed by default
          oEvent.preventDefault();
 
-         let oTabContainer = this.byId("tabContainer");
-         let oItemToClose = oEvent.getParameter('item');
-         let oModel = oItemToClose.getModel();
-
-         let closeItem = () => {
-            if (oItemToClose.getKey())
-               this.websocket.send("CLOSE_TAB:" + oItemToClose.getKey());
-            oTabContainer.removeItem(oItemToClose);
-         }
+         let oItemToClose = oEvent.getParameter('item'),
+             oModel = oItemToClose.getModel();
 
          if (oModel && oModel.getProperty("/can_close"))
-            return closeItem();
+            return this.doCloseTabItem(oItemToClose);
 
          MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
             onClose: oAction => {
                if (oAction === MessageBox.Action.OK) {
-                   closeItem();
+                   this.doCloseTabItem(oItemToClose);
                    MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', { duration: 1500 });
                 }
             }
@@ -1023,6 +1023,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          });
 
          item.addContent(oView);
+
+         let ctrl = oView.getController();
+         ctrl.onCloseCanvasPress = this.doCloseTabItem.bind(this, item);
+
       },
 
    });
