@@ -744,7 +744,7 @@ namespace Internal {
          }
 
          // Analyze sub-branches (if exist) and add readers
-         if (branch->GetListOfBranches()->GetEntries() == 0) { // Branch is non-splitted
+         if (branch->GetListOfBranches()->GetEntries() == 0) { // Branch is non-split
             if (cl) { // Non-split object
                if (desc) { // If there is a descriptor add reader (otherwise
                            // it was already added).
@@ -756,7 +756,7 @@ namespace Internal {
             } else { // Top-level RAW type
                AnalyzeOldBranch(branch); // Analyze branch and extract readers
             }
-         } else { // Branch is splitted
+         } else { // Branch is split
             TIter subnext( branch->GetListOfBranches() );
             if (desc) {
                // Analyze sub-branches and extract readers
