@@ -371,6 +371,67 @@ Bool_t TFileMerger::Merge(Bool_t)
    return PartialMerge(kAll | kRegular);
 }
 
+namespace {
+
+Bool_t IsMergeable(TClass *cl)
+{
+   return (cl->GetMerge() || cl->InheritsFrom(TDirectory::Class()) ||
+            (cl->IsTObject() && !cl->IsLoaded() &&
+            /* If it has a dictionary and GetMerge() is nullptr then we already know the answer
+               to the next question is 'no, if we were to ask we would useless trigger
+               auto-parsing */
+            (cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*") ||
+               cl->GetMethodWithPrototype("Merge", "TCollection*"))));
+};
+
+Bool_t WriteOneAndDelete(const TString &name, TClass *cl, TObject *obj, bool canBeMerged, TDirectory *target)
+{
+   Bool_t status = kTRUE;
+   if (cl->InheritsFrom(TCollection::Class())) {
+      // Don't overwrite, if the object were not merged.
+      if (obj->Write(name, canBeMerged ? TObject::kSingleKey | TObject::kOverwrite : TObject::kSingleKey) <= 0) {
+         status = kFALSE;
+      }
+      ((TCollection *)obj)->SetOwner();
+      delete obj;
+   } else {
+      // Don't overwrite, if the object were not merged.
+      // NOTE: this is probably wrong for emulated objects.
+      if (cl->IsTObject()) {
+         if (obj->Write(name, canBeMerged ? TObject::kOverwrite : 0) <= 0) {
+            status = kFALSE;
+         }
+         obj->ResetBit(kMustCleanup);
+      } else {
+         if (target->WriteObjectAny((void *)obj, cl, name, canBeMerged ? "OverWrite" : "") <= 0) {
+            status = kFALSE;
+         }
+      }
+      cl->Destructor(obj); // just in case the class is not loaded.
+   }
+   return status;
+}
+
+Bool_t WriteCycleInOrder(const TString &name, TIter &nextkey, TIter &peeknextkey, TDirectory *target)
+{
+   // Recurse until we find a different name or type appear.
+   TKey *key = (TKey*)peeknextkey();
+   if (!key || name != key->GetName()) {
+      return kTRUE;
+   }
+   TClass *cl = TClass::GetClass(key->GetClassName());
+   if (IsMergeable(cl))
+      return kTRUE;
+   // Now we can advance the real iterator
+   (void)nextkey();
+   Bool_t result = WriteCycleInOrder(name, nextkey, peeknextkey, target);
+   TObject *obj = key->ReadObj();
+
+   return WriteOneAndDelete(name, cl, obj, kFALSE, target) && result;
+};
+
+} // anonymous namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge all objects in a directory
 ///
@@ -455,13 +516,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             }
             // For mergeable objects we add the names in a local hashlist handling them
             // again (see above)
-            if (cl->GetMerge() || cl->InheritsFrom(TDirectory::Class()) ||
-               (cl->IsTObject() && !cl->IsLoaded() &&
-                 /* If it has a dictionary and GetMerge() is nullptr then we already know the answer
-                    to the next question is 'no, if we were to ask we would useless trigger
-                    auto-parsing */
-                 (cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*") ||
-                  cl->GetMethodWithPrototype("Merge", "TCollection*"))))
+            if (IsMergeable(cl))
                allNames.Add(new TObjString(key->GetName()));
 
             if (fNoTrees && cl->InheritsFrom(R__TTree_Class)) {
@@ -782,27 +837,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   }
                   nextsource = (TFile*)sourcelist->After( nextsource );
                }
-            } else if (cl->InheritsFrom( TCollection::Class() )) {
-               // Don't overwrite, if the object were not merged.
-               if ( obj->Write( oldkeyname, canBeMerged ? TObject::kSingleKey | TObject::kOverwrite : TObject::kSingleKey) <= 0 ) {
-                  status = kFALSE;
-               }
-               ((TCollection*)obj)->SetOwner();
-               delete obj;
+            } else if (!canBeMerged) {
+               TIter peeknextkey(nextkey);
+               status = WriteCycleInOrder(oldkeyname, nextkey, peeknextkey, target) && status;
+               status = WriteOneAndDelete(oldkeyname, cl, obj, kFALSE, target) && status;
             } else {
-               // Don't overwrite, if the object were not merged.
-               // NOTE: this is probably wrong for emulated objects.
-               if (cl->IsTObject()) {
-                  if ( obj->Write( oldkeyname, canBeMerged ? TObject::kOverwrite : 0) <= 0) {
-                     status = kFALSE;
-                  }
-                  obj->ResetBit(kMustCleanup);
-               } else {
-                  if ( target->WriteObjectAny( (void*)obj, cl, oldkeyname, canBeMerged ? "OverWrite" : "" ) <= 0) {
-                     status = kFALSE;
-                  }
-               }
-               cl->Destructor(obj); // just in case the class is not loaded.
+               status = WriteOneAndDelete(oldkeyname, cl, obj, kTRUE, target) && status;
             }
             info.Reset();
          } // while ( ( TKey *key = (TKey*)nextkey() ) )
