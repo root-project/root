@@ -32,6 +32,11 @@ public:
       fCanvas = RCanvas::Create(name);
    }
 
+   RBrowserRCanvasWidget(const std::string &name, std::shared_ptr<RCanvas> &canv) : RBrowserWidget(name)
+   {
+      fCanvas = std::move(canv);
+   }
+
    virtual ~RBrowserRCanvasWidget() = default;
 
    std::string GetKind() const override { return "rcanvas"s; }
@@ -79,7 +84,13 @@ protected:
 
    std::shared_ptr<RBrowserWidget> CreateFor(const std::string &name, std::shared_ptr<Browsable::RElement> &elem) final
    {
-      return nullptr;
+      auto holder = elem->GetObject();
+      if (!holder) return nullptr;
+
+      auto canv = holder->get_shared<RCanvas>();
+      if (!canv) return nullptr;
+
+      return std::make_shared<RBrowserRCanvasWidget>(name, canv);
    }
 
 public:
