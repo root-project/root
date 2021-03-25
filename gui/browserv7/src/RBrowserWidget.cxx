@@ -62,3 +62,26 @@ std::shared_ptr<RBrowserWidget> RBrowserWidgetProvider::CreateWidget(const std::
    }
    return iter->second->Create(name);
 }
+
+///////////////////////////////////////////////////////////////
+/// Create specified widget for existing object
+
+
+std::shared_ptr<RBrowserWidget> RBrowserWidgetProvider::CreateWidgetFor(const std::string &kind, const std::string &name, std::shared_ptr<Browsable::RElement> &element)
+{
+   auto &map = GetMap();
+   auto iter = map.find(kind);
+   if (iter == map.end()) {
+      // try to load necessary libraries
+      if (kind == "geom")
+         gSystem->Load("libROOTBrowserGeomWidget");
+      else if (kind == "tcanvas")
+         gSystem->Load("libROOTBrowserTCanvasWidget");
+      else if (kind == "rcanvas")
+         gSystem->Load("libROOTBrowserRCanvasWidget");
+      iter = map.find(kind);
+      if (iter == map.end())
+         return nullptr;
+   }
+   return iter->second->CreateFor(name, element);
+}

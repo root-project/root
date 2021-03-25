@@ -242,6 +242,31 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
    auto elem = fBrowsable.GetSubElement(path);
    if (!elem) return ""s;
 
+   auto dflt_action = elem->GetDefaultAction();
+   // special case when canvas is clicked - start new widget
+   if (dflt_action == Browsable::RElement::kActCanvas) {
+      std::string widget_kind;
+
+      if (elem->IsCapable(Browsable::RElement::kActDraw6))
+         widget_kind = "tcanvas";
+      else
+         widget_kind = "rcanvas";
+
+      std::string name = widget_kind + std::to_string(++fWidgetCnt);
+
+      auto new_widget = RBrowserWidgetProvider::CreateWidgetFor(widget_kind, name, elem);
+
+      if (!new_widget)
+         return ""s;
+
+      new_widget->Show("embed");
+      fWidgets.emplace_back(new_widget);
+      fActiveWidgetName = new_widget->GetName();
+
+      return NewWidgetMsg(new_widget);
+   }
+
+
    auto widget = GetActiveWidget();
    if (widget && widget->DrawElement(elem, drawingOptions)) {
       widget->SetPath(path);
@@ -254,8 +279,6 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
 
    if (iter != fWidgets.end())
       return "SELECT_WIDGET:"s + (*iter)->GetName();
-
-   auto dflt_action = elem->GetDefaultAction();
 
    // check if object can be drawn in RCanvas even when default action is drawing in TCanvas
    if ((dflt_action == Browsable::RElement::kActDraw6) && GetUseRCanvas() && elem->IsCapable(Browsable::RElement::kActDraw7))

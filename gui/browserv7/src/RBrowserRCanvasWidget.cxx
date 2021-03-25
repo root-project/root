@@ -76,6 +76,12 @@ protected:
    {
       return std::make_shared<RBrowserRCanvasWidget>(name);
    }
+
+   std::shared_ptr<RBrowserWidget> CreateFor(const std::string &name, std::shared_ptr<Browsable::RElement> &elem) final
+   {
+      return nullptr;
+   }
+
 public:
    RBrowserRCanvasProvider() : RBrowserWidgetProvider("rcanvas") {}
    ~RBrowserRCanvasProvider() = default;

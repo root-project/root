@@ -53,6 +53,7 @@ public:
       kActImage,   ///< can be shown in image viewer, can provide image
       kActDraw6,   ///< can be drawn inside ROOT6 canvas
       kActDraw7,   ///< can be drawn inside ROOT7 canvas
+      kActCanvas,  ///< indicate that it is canvas and should be drawn directly
       kActGeom     ///< can be shown in geometry viewer
    };
 
