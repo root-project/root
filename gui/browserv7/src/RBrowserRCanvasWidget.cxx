@@ -51,6 +51,11 @@ public:
       return "../"s + fCanvas->GetWindowAddr() + "/"s;
    }
 
+   std::string GetTitle() override
+   {
+      return fCanvas->GetTitle();
+   }
+
    bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &opt) override
    {
       if (!elem->IsCapable(Browsable::RElement::kActDraw7))
