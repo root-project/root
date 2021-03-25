@@ -243,14 +243,15 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
    if (!elem) return ""s;
 
    auto dflt_action = elem->GetDefaultAction();
-   // special case when canvas is clicked - start new widget
+
+   // special case when canvas is clicked - always start new widget
    if (dflt_action == Browsable::RElement::kActCanvas) {
       std::string widget_kind;
 
-      if (elem->IsCapable(Browsable::RElement::kActDraw6))
-         widget_kind = "tcanvas";
-      else
+      if (elem->IsCapable(Browsable::RElement::kActDraw7))
          widget_kind = "rcanvas";
+      else
+         widget_kind = "tcanvas";
 
       std::string name = widget_kind + std::to_string(++fWidgetCnt);
 
@@ -265,7 +266,6 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
 
       return NewWidgetMsg(new_widget);
    }
-
 
    auto widget = GetActiveWidget();
    if (widget && widget->DrawElement(elem, drawingOptions)) {
