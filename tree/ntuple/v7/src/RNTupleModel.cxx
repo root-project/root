@@ -69,9 +69,12 @@ void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fie
    if (!nameValid) {
       nameValid.Throw();
    }
-   auto fieldNameStr = std::string(fieldName);
-   if (fFieldNames.insert(fieldNameStr).second == false) {
-      throw RException(R__FAIL("field name '" + fieldNameStr + "' already exists in NTuple model"));
+   RHasFieldVisitor vis(fieldName);
+   fFieldZero->AcceptVisitor(vis);
+   if (vis.HasField()) {
+      throw RException(R__FAIL(
+         "field name '" + std::string(fieldName) + "' already exists in NTuple model"
+      ));
    }
 }
 

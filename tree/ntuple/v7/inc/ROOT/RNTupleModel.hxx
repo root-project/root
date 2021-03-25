@@ -23,7 +23,6 @@
 #include <ROOT/RStringView.hxx>
 
 #include <memory>
-#include <unordered_set>
 #include <utility>
 
 namespace ROOT {
@@ -48,8 +47,6 @@ class RNTupleModel {
    std::unique_ptr<RFieldZero> fFieldZero;
    /// Contains field values corresponding to the created top-level fields
    std::unique_ptr<REntry> fDefaultEntry;
-   /// Keeps track of which field names are taken.
-   std::unordered_set<std::string> fFieldNames;
 
    /// Checks that user-provided field names are valid in the context
    /// of this NTuple model. Throws an RException for invalid names.
