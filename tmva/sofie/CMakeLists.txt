@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -7,15 +7,15 @@
 ############################################################################
 # CMakeLists.txt file for building TMVA SOFIE package
 ############################################################################
-#Author: Sitong An, Lorenzo Moneta 10/03/2011
+#Author: Sitong An, Lorenzo Moneta 10/03/2021
 
 #sofie is built only if protobuf is found
 
-include_directories(SYSTEM ${Protobuf_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR} )
+#include_directories(SYSTEM ${Protobuf_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS "onnx_proto3")
 set_source_files_properties(${PROTO_SRCS} ${PROTO_HDRS} PROPERTIES GENERATED TRUE)
 
-ROOT_STANDARD_LIBRARY_PACKAGE(SOFIE
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   HEADERS
    TMVA/OperatorList.hxx
    TMVA/RModel.hxx
@@ -38,7 +38,3 @@ ROOT_STANDARD_LIBRARY_PACKAGE(SOFIE
     TMVA
    NO_CXXMODULE
 )
-
-message(STATUS ${PROTO_SRCS})
-message(STATUS ${PROTO_HDRS})
-message(STATUS ${Protobuf_LIBRARIES})
