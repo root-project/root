@@ -259,9 +259,9 @@ void TBrowser::Destructor()
    if (fImp) fImp->CloseTabs();
    R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfBrowsers()->Remove(this);
-   delete fContextMenu;
-   delete fTimer;
-   if (fImp) delete fImp;
+   SafeDelete(fContextMenu);
+   SafeDelete(fTimer);
+   SafeDelete(fImp);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
