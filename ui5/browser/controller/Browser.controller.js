@@ -653,7 +653,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (oModel && oModel.getProperty("/can_close"))
             return this.doCloseTabItem(oItemToClose);
 
-         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
+         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getAdditionalText() + '" tab?', {
             onClose: oAction => {
                if (oAction === MessageBox.Action.OK) {
                    this.doCloseTabItem(oItemToClose);
@@ -662,10 +662,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
          });
       },
-
-      /* ============================================ */
-      /* =============== TabContainer =============== */
-      /* ============================================ */
 
       /* ======================================== */
       /* =============== Terminal =============== */
@@ -991,13 +987,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          })).then(oView => item.addContent(oView));
       },
 
-      createCanvas: async function(kind, url, name) {
+      createCanvas: async function(kind, url, name, title) {
          if (!url || !name || (kind != "tcanvas" && kind != "rcanvas")) return;
 
          let item = new TabContainerItem({
-            name: "ROOT Canvas",
+            name: (kind == "rcanvas") ? "RCanvas" : "TCanvas",
             key: name,
-            additionalText: name,
+            additionalText: title || name,
             icon: "sap-icon://column-chart-dual-axis"
          });
 
@@ -1026,8 +1022,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          let ctrl = oView.getController();
          ctrl.onCloseCanvasPress = this.doCloseTabItem.bind(this, item);
-
-      },
+      }
 
    });
 
