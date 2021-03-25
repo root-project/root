@@ -3735,10 +3735,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Cleanup canvas painter */
    TCanvasPainter.prototype.cleanup = function() {
-     if (this._changed_layout)
-        this.setLayoutKind('simple');
-     delete this._changed_layout;
-     TPadPainter.prototype.cleanup.call(this);
+      if (this._changed_layout)
+         this.setLayoutKind('simple');
+      delete this._changed_layout;
+      TPadPainter.prototype.cleanup.call(this);
    }
 
    /** @summary Returns layout kind */
