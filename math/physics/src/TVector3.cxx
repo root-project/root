@@ -178,6 +178,15 @@ ClassImp(TVector3);
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Convert two angles Theta and Phi into a Cartesian Transformation Vector
+
+TVector3 TVector3::Cartesian(Double_t phi, Double_t theta)
+{
+   return TVector3 spherical(TMath::Sin(theta) * TMath::Cos(phi), TMath::Sin(theta) * TMath::Sin(phi),
+                             TMath::Cos(theta));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Multiplication operator
 
 TVector3 & TVector3::operator *= (const TRotation & m){
@@ -230,15 +239,6 @@ Double_t TVector3::Perp(const TVector3 & p) const
 Double_t TVector3::Phi() const
 {
    return fX == 0.0 && fY == 0.0 ? 0.0 : TMath::ATan2(fY,fX);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Convert two angles Theta and Phi into a Cartesian Transformation Vector
-
-TVector3 TVector3::Spherical(Double_t phi, Double_t theta)
-{
-   return TVector3 spherical(TMath::Sin(theta) * TMath::Cos(phi), TMath::Sin(theta) * TMath::Sin(phi),
-                             TMath::Cos(theta));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
