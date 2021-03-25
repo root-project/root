@@ -1,4 +1,4 @@
-#include "SOFIE_common.hxx"
+#include "TMVA/SOFIE_common.hxx"
 #include<cctype>
 
 namespace TMVA{
