@@ -217,6 +217,7 @@ TEST(RNTupleModel, HasField)
    auto model = RNTupleModel::Create();
    EXPECT_FALSE(model->HasField("pt"));
    auto field = model->MakeField<float>("pt", 42.0);
+   EXPECT_FALSE(model->HasField(""));
    EXPECT_TRUE(model->HasField("pt"));
 
    EXPECT_FALSE(model->HasField("muon"));
@@ -229,6 +230,9 @@ TEST(RNTupleModel, HasField)
    EXPECT_TRUE(model->HasField("muon"));
    EXPECT_TRUE(model->HasField("muon.pt"));
    EXPECT_TRUE(model->HasField("muon.sub.pt"));
+
+   auto ptrKlass = model->MakeField<CustomStruct>("klass");
+   EXPECT_TRUE(model->HasField("klass.a"));
 }
 
 TEST(RNTupleModel, EnforceValidFieldNames)

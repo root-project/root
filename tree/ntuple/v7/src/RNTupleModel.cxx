@@ -15,13 +15,53 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTuple.hxx>
 
 #include <cstdlib>
 #include <memory>
+#include <sstream>
 #include <utility>
 
+namespace {
+
+class RHasFieldVisitor : public ROOT::Experimental::Detail::RFieldVisitor {
+private:
+   std::string fRest;
+   bool fHasField = false;
+   bool StopRecurse() {
+      return fRest.empty();
+   }
+   std::string PopTopLevelField() {
+      std::istringstream iss(fRest);
+      std::string topLevelField;
+      std::getline(iss, topLevelField, '.');
+      std::string rest;
+      std::getline(iss, rest);
+      fRest = rest;
+      return topLevelField;
+   }
+public:
+   RHasFieldVisitor(std::string_view fieldName) : fRest(std::string(fieldName)) {}
+   bool HasField() const {
+      return fHasField;
+   }
+   void VisitField(const ROOT::Experimental::Detail::RFieldBase &field) final {
+      auto fieldName = PopTopLevelField();
+      for (auto f: field.GetSubFields()) {
+         if (fieldName == f->GetName()) {
+            if (StopRecurse()) {
+               fHasField = true;
+               return;
+            }
+            VisitField(*f);
+         }
+      }
+   }
+};
+
+} // anonymous namespace
 
 void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
 {
@@ -58,16 +98,15 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
 }
 
 bool ROOT::Experimental::RNTupleModel::HasField(std::string_view fieldName) const {
-   return fFieldNames.find(std::string(fieldName)) != fFieldNames.end();
+   RHasFieldVisitor vis(fieldName);
+   fFieldZero->AcceptVisitor(vis);
+   return vis.HasField();
 }
 
 std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental::RNTupleModel::MakeCollection(
    std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
 {
    EnsureValidFieldName(fieldName);
-   for (const auto& subField: collectionModel->fFieldNames) {
-      fFieldNames.insert(std::string(fieldName).append(".").append(subField));
-   }
    auto collectionNTuple = std::make_shared<RCollectionNTupleWriter>(std::move(collectionModel->fDefaultEntry));
    auto field = std::make_unique<RCollectionField>(fieldName, collectionNTuple, std::move(collectionModel));
    fDefaultEntry->CaptureValue(field->CaptureValue(collectionNTuple->GetOffsetPtr()));
