@@ -50,6 +50,19 @@ public:
       fCanvas->SetCanvasImp(fWebCanvas);
    }
 
+   RBrowserTCanvasWidget(const std::string &name, std::unique_ptr<TCanvas> &canv) : RBrowserWidget(name)
+   {
+      fCanvas = std::move(canv);
+      fCanvas->SetBatch(kTRUE); // mark canvas as batch
+
+      // create implementation
+      fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600);
+
+      // assign implementation
+      fCanvas->SetCanvasImp(fWebCanvas);
+   }
+
+
    virtual ~RBrowserTCanvasWidget() = default;
 
    std::string GetKind() const override { return "tcanvas"s; }
@@ -89,6 +102,18 @@ protected:
    {
       return std::make_shared<RBrowserTCanvasWidget>(name);
    }
+
+   std::shared_ptr<RBrowserWidget> CreateFor(const std::string &name, std::shared_ptr<Browsable::RElement> &elem) final
+   {
+      auto holder = elem->GetObject();
+      if (!holder) return nullptr;
+
+      auto canv = holder->get_unique<TCanvas>();
+      if (!canv) return nullptr;
+
+      return std::make_shared<RBrowserTCanvasWidget>(name, canv);
+   }
+
 public:
    RBrowserTCanvasProvider() : RBrowserWidgetProvider("tcanvas") {}
    ~RBrowserTCanvasProvider() = default;
