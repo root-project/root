@@ -89,6 +89,16 @@ public:
       }
   }
 
+   // Utilities functions when used as configuration object
+   Double_t getRealValue(const char* name, Double_t defVal=0, Bool_t verbose=kFALSE) const ;
+   const char* getCatLabel(const char* name, const char* defVal="", Bool_t verbose=kFALSE) const ;
+   Int_t getCatIndex(const char* name, Int_t defVal=0, Bool_t verbose=kFALSE) const ;
+   const char* getStringValue(const char* name, const char* defVal="", Bool_t verbose=kFALSE) const ;
+   Bool_t setRealValue(const char* name, Double_t newVal=0, Bool_t verbose=kFALSE) ;
+   Bool_t setCatLabel(const char* name, const char* newVal="", Bool_t verbose=kFALSE) ;
+   Bool_t setCatIndex(const char* name, Int_t newVal=0, Bool_t verbose=kFALSE) ;
+   Bool_t setStringValue(const char* name, const char* newVal="", Bool_t verbose=kFALSE) ;
+
   // Group operations on AbsArgs
   void setAttribAll(const Text_t* name, Bool_t value=kTRUE) ;
 
