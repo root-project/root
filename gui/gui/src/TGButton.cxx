@@ -623,8 +623,7 @@ TGTextButton::~TGTextButton()
 
 void TGTextButton::Layout()
 {
-   delete fTLayout;
-   fTLayout = nullptr;
+   SafeDelete(fTLayout);
 
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
@@ -3183,7 +3182,7 @@ Bool_t TGSplitButton::HandleMotion(Event_t *event)
 void TGSplitButton::Layout()
 {
    UInt_t dummya = 0, dummyb = 0;
-   delete fTLayout;
+   SafeDelete(fTLayout);
 
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
