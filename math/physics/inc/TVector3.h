@@ -76,7 +76,7 @@ public:
 
    Double_t Theta() const;
    // The polar angle.
-
+   
    inline Double_t CosTheta() const;
    // Cosine of the polar angle.
 
@@ -139,6 +139,12 @@ public:
 
    TVector3 Unit() const;
    // Unit vector parallel to this.
+   
+   TVector3 ToSpherical(const TVector3 &c) const;
+   // Converts a Cartesian Vector into a Spherical Vector
+   
+   TVector3 Cartesian(Double_t phi, Double_t theta) const;
+   // Converts two angles into a Cartesian Trabsformation Vector
 
    inline TVector3 Orthogonal() const;
    // Vector orthogonal to this (Geant4).
