@@ -14,6 +14,7 @@
 
 
 #include "TNamed.h"
+#include <vector>
 
 class TClass;
 class TObjString;
@@ -40,6 +41,8 @@ protected:
    TString **fOptions;    ///<![fNclasses] List of options per class
    TString   fSourceDir;  ///<Concatenated source directories
    TList   **fLinks;      ///<![fNclasses] for each class, the list of referenced(ing) classes
+   std::vector<Int_t> fNsons;  ///<! internal variable, used during painting
+   std::vector<Int_t> fNtsons;  ///<! internal variable, used during painting
 
    virtual  void FindClassPosition(const char *classname, Float_t &x, Float_t &y);
    virtual  void FindClassesUsedBy(Int_t iclass);
