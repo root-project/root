@@ -29,19 +29,24 @@ class TGVButtonGroup;
 class TTVRecord : public TObject {
 
 public:
-   TString              fName;                  // name of this record
-   TString              fX, fXAlias;            // X expression and alias
-   TString              fY, fYAlias;            // Y expression and alias
-   TString              fZ, fZAlias;            // Z expression and alias
-   TString              fCut, fCutAlias;        // cut expression and alias
-   TString              fOption;                // graphic option
-   Bool_t               fScanRedirected;        // redirect switch
-   Bool_t               fCutEnabled;            // true if current cut is active
-   TString              fUserCode;              // command executed when record is conected
-   Bool_t               fAutoexec;              // autoexecute user code command
+   TString              fName;                  ///< Name of this record
+   TString              fX;                     ///< X expression
+   TString              fXAlias;                ///< X alias
+   TString              fY;                     ///< Y expression
+   TString              fYAlias;                ///< Y alias
+   TString              fZ;                     ///< Z expression
+   TString              fZAlias;                ///< Z alias
+   TString              fCut;                   ///< Cut expression
+   TString              fCutAlias;              ///< Cut alias
+   TString              fOption;                ///< Graphic option
+   Bool_t               fScanRedirected;        ///< Redirect switch
+   Bool_t               fCutEnabled;            ///< True if current cut is active
+   TString              fUserCode;              ///< Command executed when record is connected
+   Bool_t               fAutoexec;              ///< Autoexecute user code command
+
 public:
-   TTVRecord();                                 // default constructor
-   ~TTVRecord() {}                              // destructor
+   TTVRecord();                                 ///< Default constructor
+   ~TTVRecord() {}                              ///< Destructor
 
    void           ExecuteUserCode();
    void           FormFrom(TTreeViewer *tv);
@@ -70,11 +75,11 @@ public:
 class TTVSession : public TObject {
 
 private:
-   TClonesArray  *fList;                        // list of TV records
-   TString        fName;                        // name of this session
-   TTreeViewer   *fViewer;                      // associated tree viewer
-   Int_t          fCurrent;                     // index of current record
-   Int_t          fRecords;                     // number of records
+   TClonesArray  *fList;                        ///< List of TV records
+   TString        fName;                        ///< Name of this session
+   TTreeViewer   *fViewer;                      ///< Associated tree viewer
+   Int_t          fCurrent;                     ///< Index of current record
+   Int_t          fRecords;                     ///< Number of records
 
 public:
    TTVSession(TTreeViewer *tv);
