@@ -59,8 +59,8 @@
       <ViewSettingsCustomTab icon="sap-icon://action-settings" >
         <content>
           <VBox>
-            <HBox>
-               <Label text="Sorting" wrapping="true" labelFor="sortMethodsCombo" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+            <HBox alignItems="Center">
+               <Label text="Sorting" wrapping="true" labelFor="sortMethodsCombo"/>
                <ComboBox id="sortMethodsCombo" items="{ path: '/SortMethods' }" selectedKey="{/SortMethod}">
                    <core:Item text="{name}" key="{value}"/>
                </ComboBox>
