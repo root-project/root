@@ -233,11 +233,31 @@ Double_t TVector3::Phi() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Convert two angles Theta and Phi into a Sperical Vector
+
+TVector3 TVector3::Spherical(Double_t phi, Double_t theta)
+{
+   return TVector3 spherical(TMath::Sin(theta) * TMath::Cos(phi), TMath::Sin(theta) * TMath::Sin(phi),
+                             TMath::Cos(theta));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the polar angle
 
 Double_t TVector3::Theta() const
 {
    return fX == 0.0 && fY == 0.0 && fZ == 0.0 ? 0.0 : TMath::ATan2(Perp(),fZ);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a Cartesian Vector into a Spherical Vector
+/// Spherical Vector: (r, theta, phi)
+
+TVector3 TVector3::ToSpherical(const TVector3 &c)
+{
+   return TVector3 sphericalVector(TMath::Sqrt(c.X() * c.X() + c.Y() * c.Y() + c.Z() * c.Z()),
+                                   TMath::ACos(c.Z() / TMath::Sqrt(c.X() * c.X() + c.Y() * c.Y() + c.Z() * c.Z())),
+                                   TMath::ATan(c.Y() / c.X()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
