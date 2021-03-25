@@ -233,7 +233,7 @@ Double_t TVector3::Phi() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert two angles Theta and Phi into a Sperical Vector
+/// Convert two angles Theta and Phi into a Cartesian Transformation Vector
 
 TVector3 TVector3::Spherical(Double_t phi, Double_t theta)
 {
