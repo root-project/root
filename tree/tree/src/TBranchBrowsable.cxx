@@ -341,7 +341,7 @@ void TVirtualBranchBrowsable::GetScope(TString & scope) const
 void TVirtualBranchBrowsable::RegisterDefaultGenerators()
 {
    if (fgGeneratorsSet) return;
-   // can't call RegisterGenerator - would be recursive infinite loop
+   // can't call RegisterGenerator - This would be lead to an infinite recursion.
    fgGenerators.push_back(&TMethodBrowsable::GetBrowsables);
    fgGenerators.push_back(&TNonSplitBrowsable::GetBrowsables);
    fgGenerators.push_back(&TCollectionPropertyBrowsable::GetBrowsables);
