@@ -2428,7 +2428,7 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
       fStopMapping = kFALSE;
    }
    //Map branches of friend Trees (if any)
-   //Look at tree->GetTree() to insure we see both the friendss of a chain
+   //Look at tree->GetTree() to insure we see both the friends of a chain
    //and the friends of the chain members
    TIter nextf( tree->GetTree()->GetListOfFriends() );
    TFriendElement *fr;

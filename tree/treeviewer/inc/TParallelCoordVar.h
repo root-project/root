@@ -29,27 +29,27 @@ public:
       kShowBarHisto  = BIT(16)
    };
 private:
-   Int_t             fNbins;        // Number of bins in fHistogram.
-   Int_t             fHistoLW;      // Line width used to draw the histogram line.
-   Int_t             fId;           // Id identifying the variable for the editor.
-   Long64_t          fNentries;      // Number of stored entries values.
-   Double_t          fX1;           // x1 coordinate of the axis.
-   Double_t          fX2;           // x2 coordinate of the axis.
-   Double_t          fY1;           // y1 coordinate of the axis.
-   Double_t          fY2;           // y2 coordinate of the axis.
-   Double_t          fMinInit;      // Memory of the minimum when first initialized.
-   Double_t          fMaxInit;      // Memory of the maximum when first initialized.
-   Double_t          fMean;         // Average.
-   Double_t          fMinCurrent;   // Current used minimum.
-   Double_t          fMaxCurrent;   // Current used maximum.
-   Double_t          fMed;          // Median value (Q2).
-   Double_t          fQua1;         // First quantile (Q1).
-   Double_t          fQua3;         // Third quantile (Q3).
-   Double_t          fHistoHeight;  // Histogram Height.
-   Double_t         *fVal;          //![fNentries] Entries values for the variable.
-   TList            *fRanges;       // List of the TParallelRange owned by TParallelCoordVar.
-   TParallelCoord   *fParallel;     // Pointer to the TParallelCoord which owns the TParallelCoordVar.
-   TH1F             *fHistogram;    //! Histogram holding the variable distribution.
+   Int_t             fNbins;        ///< Number of bins in fHistogram.
+   Int_t             fHistoLW;      ///< Line width used to draw the histogram line.
+   Int_t             fId;           ///< Id identifying the variable for the editor.
+   Long64_t          fNentries;     ///< Number of stored entries values.
+   Double_t          fX1;           ///< x1 coordinate of the axis.
+   Double_t          fX2;           ///< x2 coordinate of the axis.
+   Double_t          fY1;           ///< y1 coordinate of the axis.
+   Double_t          fY2;           ///< y2 coordinate of the axis.
+   Double_t          fMinInit;      ///< Memory of the minimum when first initialized.
+   Double_t          fMaxInit;      ///< Memory of the maximum when first initialized.
+   Double_t          fMean;         ///< Average.
+   Double_t          fMinCurrent;   ///< Current used minimum.
+   Double_t          fMaxCurrent;   ///< Current used maximum.
+   Double_t          fMed;          ///< Median value (Q2).
+   Double_t          fQua1;         ///< First quantile (Q1).
+   Double_t          fQua3;         ///< Third quantile (Q3).
+   Double_t          fHistoHeight;  ///< Histogram Height.
+   Double_t         *fVal;          ///<![fNentries] Entries values for the variable.
+   TList            *fRanges;       ///< List of the TParallelRange owned by TParallelCoordVar.
+   TParallelCoord   *fParallel;     ///< Pointer to the TParallelCoord which owns the TParallelCoordVar.
+   TH1F             *fHistogram;    ///<! Histogram holding the variable distribution.
 
 public:
    TParallelCoordVar();
