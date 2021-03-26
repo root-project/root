@@ -353,6 +353,13 @@ protected:
   
   TString _normRange ; // Normalization range
   static TString _normRangeOverride ; 
+
+private:
+  template<class Minimizer>
+  int calculateAsymptoticCorrectedCovMatrix(Minimizer& minimizer, RooAbsData const& data);
+
+  template<class Minimizer>
+  int calculateSumW2CorrectedCovMatrix(Minimizer& minimizer, RooAbsReal const& nll) const;
   
   ClassDef(RooAbsPdf,4) // Abstract PDF with normalization support
 };
