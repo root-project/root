@@ -212,7 +212,7 @@ Long64_t TEntryListFromFile::Next()
          }
          retentry = fCurrent->Next();
       } else {
-         Error("Next", "Something wrong with reading the current list, even though thefile #%d and the list exist\n", fTreeNumber);
+         Error("Next", "Something wrong with reading the current list, even though the file #%d and the list exist\n", fTreeNumber);
          return -1;
       }
 

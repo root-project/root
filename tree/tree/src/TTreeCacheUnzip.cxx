@@ -661,7 +661,7 @@ Int_t TTreeCacheUnzip::CreateTasks()
 /// pos and len are the original values as were passed to ReadBuffer
 /// but instead we will return the inflated buffer.
 /// Note!! : If *buf == 0 we will allocate the buffer and it will be the
-/// responsability of the caller to free it... it is useful for example
+/// responsibility of the caller to free it... it is useful for example
 /// to pass it to the creator of TBuffer
 
 Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_t *free)
@@ -789,7 +789,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 
    res = 0;
    if (!ReadBufferExt(fCompBuffer, pos, len, loc)) {
-      // Cache is invalidated and we need to wait for all unzipping tasks to befinished before fill new baskets in cache.
+      // Cache is invalidated and we need to wait for all unzipping tasks to be finished before fill new baskets in cache.
 #ifdef R__USE_IMT
       if(ROOT::IsImplicitMTEnabled() && fUnzipTaskGroup) {
          fUnzipTaskGroup->Cancel();
@@ -824,7 +824,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// static function: Sets the unzip relatibe buffer size
+/// static function: Sets the unzip relative buffer size
 
 void TTreeCacheUnzip::SetUnzipRelBufferSize(Float_t relbufferSize)
 {
