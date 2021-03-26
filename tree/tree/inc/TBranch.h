@@ -96,16 +96,16 @@ protected:
    friend class TBranchElement;
    friend class ROOT::Experimental::Internal::TBulkBranchRead;
 
-   // TBranch status bits
+   /// TBranch status bits
    enum EStatusBits {
-      kDoNotProcess = ::kDoNotProcess, // Active bit for branches
-      kIsClone      = ::kIsClone,      // to indicate a TBranchClones
-      kBranchObject = ::kBranchObject, // branch is a TObject*
-      kBranchAny    = ::kBranchAny,    // branch is an object*
+      kDoNotProcess = ::kDoNotProcess, ///< Active bit for branches
+      kIsClone      = ::kIsClone,      ///< To indicate a TBranchClones
+      kBranchObject = ::kBranchObject, ///< Branch is a TObject*
+      kBranchAny    = ::kBranchAny,    ///< Branch is an object*
       // kMapObject    = kBranchObject | kBranchAny;
       kAutoDelete   = BIT(15),
 
-      kDoNotUseBufferMap = BIT(22) // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
+      kDoNotUseBufferMap = BIT(22)     ///< If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
    };
 
    using BulkObj = ROOT::Experimental::Internal::TBulkBranchRead;

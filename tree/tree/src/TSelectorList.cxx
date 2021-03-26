@@ -26,7 +26,7 @@ ClassImp(TSelectorList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If the class of obj has the SetDirectory(TDirectory*) method
-/// call it to unset the directory assiciation. The objects in the
+/// call it to unset the directory association. The objects in the
 /// selector list or owned by the list and not by the directory that
 /// was active when they were created. Returns true in case of success.
 

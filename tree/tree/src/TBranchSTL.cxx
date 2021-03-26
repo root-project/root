@@ -525,7 +525,7 @@ Int_t TBranchSTL::GetExpectedType(TClass *&expectedClass,EDataType &expectedType
       expectedClass = TClass::GetClass( fContName );
    } else {
       // Case of an object data member.  Here we allow for the
-      // variable name to be ommitted.  Eg, for Event.root with split
+      // variable name to be omitted.  Eg, for Event.root with split
       // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
       TStreamerElement* element = GetInfo()->GetElement(fID);
       if (element) {
@@ -575,7 +575,7 @@ TStreamerInfo* TBranchSTL::GetInfo() const
                continue;
 
             //------------------------------------------------------------------
-            // If the checksum matches then retriev the info
+            // If the checksum matches then retrieve the info
             //------------------------------------------------------------------
             if( info->GetCheckSum() == fClCheckSum ) {
                fClassVersion = i;
@@ -612,7 +612,7 @@ void TBranchSTL::Print(const char *option) const
       Int_t *branchOffset = parent ? parent->GetBranchOffset() : 0;
 
       Printf("%-16s %2d SplitCollPtr %-16s %-16s %8x %-16s n/a\n",
-             info ? info->GetName() : "StreamerInfo unvailable", fID,
+             info ? info->GetName() : "StreamerInfo unavailable", fID,
              GetClassName(), fParent ? fParent->GetName() : "n/a",
              (branchOffset && parent && ind>=0) ? branchOffset[ind] : 0,
              fObject);

@@ -790,7 +790,7 @@ Long64_t TChain::Draw(const char* varexp, const TCut& selection,
                       Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
    if (fProofChain) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       fProofChain->SetEventList(fEventList);
@@ -810,7 +810,7 @@ Long64_t TChain::Draw(const char* varexp, const char* selection,
                       Option_t* option,Long64_t nentries, Long64_t firstentry)
 {
    if (fProofChain) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       fProofChain->SetEventList(fEventList);
@@ -828,7 +828,7 @@ Long64_t TChain::Draw(const char* varexp, const char* selection,
 TBranch* TChain::FindBranch(const char* branchname)
 {
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       return fProofChain->FindBranch(branchname);
@@ -849,7 +849,7 @@ TBranch* TChain::FindBranch(const char* branchname)
 TLeaf* TChain::FindLeaf(const char* searchname)
 {
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       return fProofChain->FindLeaf(searchname);
@@ -889,7 +889,7 @@ const char* TChain::GetAlias(const char* aliasName) const
 TBranch* TChain::GetBranch(const char* name)
 {
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       return fProofChain->GetBranch(name);
@@ -910,7 +910,7 @@ TBranch* TChain::GetBranch(const char* name)
 Bool_t TChain::GetBranchStatus(const char* branchname) const
 {
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
                                     " run TChain::SetProof(kTRUE, kTRUE) first");
@@ -948,7 +948,7 @@ Long64_t TChain::GetChainEntryNumber(Long64_t entry) const
 Long64_t TChain::GetEntries() const
 {
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          Warning("GetEntries", "PROOF proxy not up-to-date:"
                                " run TChain::SetProof(kTRUE, kTRUE) first");
@@ -1048,7 +1048,7 @@ TFile* TChain::GetFile() const
 TLeaf* TChain::GetLeaf(const char* branchname, const char *leafname)
 {
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       return fProofChain->GetLeaf(branchname, leafname);
@@ -1069,7 +1069,7 @@ TLeaf* TChain::GetLeaf(const char* branchname, const char *leafname)
 TLeaf* TChain::GetLeaf(const char* name)
 {
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       return fProofChain->GetLeaf(name);
@@ -1095,7 +1095,7 @@ TLeaf* TChain::GetLeaf(const char* name)
 TObjArray* TChain::GetListOfBranches()
 {
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       return fProofChain->GetListOfBranches();
@@ -1118,7 +1118,7 @@ TObjArray* TChain::GetListOfBranches()
 TObjArray* TChain::GetListOfLeaves()
 {
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       return fProofChain->GetListOfLeaves();
@@ -1190,7 +1190,7 @@ Int_t TChain::GetNbranches()
 Long64_t TChain::GetReadEntry() const
 {
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
                                     " run TChain::SetProof(kTRUE, kTRUE) first");
@@ -1360,7 +1360,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
          }
          if (needUpdate) {
             // Update the branch/leaf addresses and
-            // thelist of leaves in all TTreeFormula of the TTreePlayer (if any).
+            // the list of leaves in all TTreeFormula of the TTreePlayer (if any).
 
             // Set the branch statuses for the newly opened file.
             TChainElement *frelement;
@@ -2182,7 +2182,7 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
       // Find the last one
       Ssiz_t ppIdx = filename.Index(slash, pIdx + dotrl);
       if (ppIdx != kNPOS) {
-         // Good treename with the old receipe
+         // Good treename with the old recipe
          treename = filename(ppIdx + slashl, filename.Length());
          filename.Remove(ppIdx + slashl - 1);
          suffix.Insert(0, TString::Format("/%s", treename.Data()));
@@ -2220,7 +2220,7 @@ void TChain::Print(Option_t *option) const
 Long64_t TChain::Process(const char *filename, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
    if (fProofChain) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       fProofChain->SetEventList(fEventList);
@@ -2242,7 +2242,7 @@ Long64_t TChain::Process(const char *filename, Option_t *option, Long64_t nentri
 Long64_t TChain::Process(TSelector* selector, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
    if (fProofChain) {
-      // Make sure the element list is uptodate
+      // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       fProofChain->SetEventList(fEventList);

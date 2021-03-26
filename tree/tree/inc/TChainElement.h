@@ -27,7 +27,7 @@ class TBranch;
 
 class TChainElement : public TNamed {
 
-   // TChainElement status bits
+   /// TChainElement status bits
    enum EStatusBits {
       kHasBeenLookedUp = BIT(15)
    };

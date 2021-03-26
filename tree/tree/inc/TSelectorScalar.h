@@ -18,7 +18,7 @@
 // TSelectorScalar                                                      //
 //                                                                      //
 // Named scalar type, based on Long64_t, streamable, storable and       //
-// mergable. Ideally to be used in tree selectors in the PROOF          //
+// mergeable. Ideally to be used in tree selectors in the PROOF         //
 // environment due to its merge functionality which allows a single     //
 // merged value to be returned to the user.                             //
 //                                                                      //
@@ -42,7 +42,7 @@ public:
    void     Inc(Long_t n = 1);
    Int_t    Merge(TCollection *list);
 
-   ClassDef(TSelectorScalar,1)  //Mergable scalar
+   ClassDef(TSelectorScalar,1)  // Mergeable scalar
 };
 
 
