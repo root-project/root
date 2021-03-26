@@ -173,6 +173,7 @@ called for each data event.
 #include "RooNaNPacker.h"
 #include "RooHelpers.h"
 #include "RooBatchCompute.h"
+#include "RooFormulaVar.h"
 
 #include "TClass.h"
 #include "TMath.h"
@@ -915,7 +916,47 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooCmdArg& arg1, const 
   return createNLL(data,l) ;
 }
 
+namespace {
 
+RooAbsReal *createMultiRangeNLLCorrectionTerm(RooAbsPdf const &pdf, RooAbsData const &data, std::string const &baseName,
+                                              std::string const &rangeNames)
+{
+   double sumEntriesTotal = 0.0;
+
+   RooArgList termList;
+   RooArgList integralList;
+
+   for (const auto &currentRangeName : RooHelpers::tokenise(rangeNames, ",")) {
+      const std::string currentName = baseName + "_" + currentRangeName;
+
+      auto sumEntriesCurrent = data.sumEntries("1", currentRangeName.c_str());
+      sumEntriesTotal += sumEntriesCurrent;
+
+      auto pdfIntegralCurrent =
+         pdf.createIntegral(*pdf.getObservables(data), nullptr, nullptr, currentRangeName.c_str());
+
+      auto term = new RooFormulaVar((currentName + "_correctionTerm").c_str(),
+                                    (std::string("-(") + std::to_string(sumEntriesCurrent) + " * log(x[0]))").c_str(),
+                                    RooArgList(*pdfIntegralCurrent));
+
+      termList.add(*term);
+      integralList.add(*pdfIntegralCurrent);
+   }
+
+   auto integralFull = new RooAddition((baseName + "_correctionFullIntegralTerm").c_str(),
+                                       "integral",
+                                       integralList,
+                                       true);
+
+   auto fullRangeTerm = new RooFormulaVar((baseName + "_foobar").c_str(),
+                                          (std::string("(") + std::to_string(sumEntriesTotal) + " * log(x[0]))").c_str(),
+                                          RooArgList(*integralFull));
+
+   termList.add(*fullRangeTerm);
+   return new RooAddition((baseName + "_correction").c_str(), "correction", termList, true);
+}
+
+} // namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1095,7 +1136,19 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
       nllComp->batchMode(pc.getInt("BatchMode"));
       nllList.add(*nllComp) ;
     }
-    nll = new RooAddition(baseName.c_str(),"-log(likelihood)",nllList,kTRUE) ;
+
+    if (!ext) {
+      // Each RooNLLVar was created with the normalization set corresponding to
+      // the subrange, not the union range like it should be. We have to add an
+      // extra term to cancel this normalization problem. However, this is
+      // only necessarry for the non-extended case, because adding an extension
+      // term to the individual NLLs as done here is mathematicall equivalent
+      // to adding the normalization correction terms plus a global extension
+      // term.
+      nllList.add(*createMultiRangeNLLCorrectionTerm(*this, data, baseName, rangeName));
+    }
+
+    nll = new RooAddition(baseName.c_str(),"-log(likelihood)",nllList,true) ;
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
