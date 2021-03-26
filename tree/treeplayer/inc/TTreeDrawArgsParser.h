@@ -44,32 +44,32 @@ public:
       kHISTOGRAM3D
    };
 
-   static Int_t   fgMaxDimension;      // = 4
-   static Int_t   fgMaxParameters;     // = 9
+   static Int_t   fgMaxDimension;     ///< = 4
+   static Int_t   fgMaxParameters;    ///< = 9
 
 protected:
-   TString        fExp;        // complete variable expression
-   TString        fSelection;  // selection expression
-   TString        fOption;     // draw options
+   TString        fExp;               ///< Complete variable expression
+   TString        fSelection;         ///< Selection expression
+   TString        fOption;            ///< Draw options
 
-   Int_t          fDimension;  // dimension of the histogram/plot
-   TString        fVarExp[4];  // variable expression 0 - X, 1 - Y, 2 - Z, 3 - W
-                              // if dimension < fgMaxDimension then some
-                              // expressions are empty
+   Int_t          fDimension;         ///< Dimension of the histogram/plot
+   TString        fVarExp[4];         ///< Variable expression 0 - X, 1 - Y, 2 - Z, 3 - W
+                                      ///< If dimension < fgMaxDimension then some
+                                      ///< Expressions are empty
 
-   Bool_t         fAdd;        // values should be added to an existing object
-   TString        fName;       // histogram's/plot's name
+   Bool_t         fAdd;               ///< Values should be added to an existing object
+   TString        fName;              ///< Histogram's/plot's name
 
-   Int_t          fNoParameters;      // if dimensions of the plot was specified
-   Bool_t         fParameterGiven[9]; // true if the parameter was given, otherwise false
-   Double_t       fParameters[9];     // parameters in brackets
+   Int_t          fNoParameters;      ///< If dimensions of the plot was specified
+   Bool_t         fParameterGiven[9]; ///< True if the parameter was given, otherwise false
+   Double_t       fParameters[9];     ///< Parameters in brackets
 
-   Bool_t         fShouldDraw;        // if to draw the plot
-   Bool_t         fOptionSame;        // if option contained "same"
-   Bool_t         fEntryList;         // if fill a TEntryList
-   TObject       *fOriginal;          // original plot (if it is to be reused)
-   Bool_t         fDrawProfile;       // true if the options contain :"prof"
-   EOutputType    fOutputType;        // type of the output
+   Bool_t         fShouldDraw;        ///< If to draw the plot
+   Bool_t         fOptionSame;        ///< If option contained "same"
+   Bool_t         fEntryList;         ///< If fill a TEntryList
+   TObject       *fOriginal;          ///< Original plot (if it is to be reused)
+   Bool_t         fDrawProfile;       ///< True if the options contain :"prof"
+   EOutputType    fOutputType;        ///< Type of the output
 
    void           ClearPrevious();
    TTreeDrawArgsParser::EOutputType DefineType();

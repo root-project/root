@@ -59,14 +59,14 @@ public:
    TFormLeafInfo &operator=(const TFormLeafInfo &orig);
 
    // Data Members
-   TClass           *fClass;   //! This is the class of the data pointed to
-   //TStreamerInfo  *fInfo;    //! == fClass->GetStreamerInfo()
-   Long_t            fOffset;  //! Offset of the data pointed inside the class fClass
-   TStreamerElement *fElement; //! Descriptor of the data pointed to.
+   TClass           *fClass;   ///<! This is the class of the data pointed to
+   //TStreamerInfo  *fInfo;    ///<! == fClass->GetStreamerInfo()
+   Long_t            fOffset;  ///<! Offset of the data pointed inside the class fClass
+   TStreamerElement *fElement; ///<! Descriptor of the data pointed to.
          //Warning, the offset in fElement is NOT correct because it does not take into
          //account base classes and nested objects (which fOffset does).
    TFormLeafInfo    *fCounter;
-   TFormLeafInfo    *fNext;    // follow this to grab the inside information
+   TFormLeafInfo    *fNext;    ///< follow this to grab the inside information
    TString fClassName;
    TString fElementName;
 

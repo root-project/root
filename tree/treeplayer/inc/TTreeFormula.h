@@ -92,44 +92,44 @@ protected:
       Int_t fVirtAccumCache = 0;
    };
 
-   TTree      *fTree;             //! pointer to Tree
-   Int_t       fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
-   Int_t       fNdata[kMAXCODES]; //! This caches the physical number of element in the leaf or data member.
-   Int_t       fNcodes;           //  Number of leaves referenced in formula
-   Bool_t      fHasCast;          //  Record whether the formula contain a cast operation or not
-   Int_t       fMultiplicity;     //  Indicator of the variability of the formula
-   Int_t       fNindex;           //  Size of fIndex
-   Int_t      *fLookupType;       //[fNindex] array indicating how each leaf should be looked-up
-   TObjArray   fLeaves;           //!  List of leaf used in this formula.
-   TObjArray   fDataMembers;      //!  List of leaf data members
-   TObjArray   fMethods;          //!  List of leaf method calls
-   TObjArray   fExternalCuts;     //!  List of TCutG and TEntryList used in the formula
-   TObjArray   fAliases;          //!  List of TTreeFormula for each alias used.
-   TObjArray   fLeafNames;        //   List of TNamed describing leaves
-   TObjArray   fBranches;         //!  List of branches to read.  Similar to fLeaves but duplicates are zeroed out.
-   Bool_t      fQuickLoad;        //!  If true, branch GetEntry is only called when the entry number changes.
-   Bool_t      fNeedLoading;      //!  If true, the current entry has not been loaded yet.
+   TTree      *fTree;             ///<! Pointer to Tree
+   Int_t       fCodes[kMAXCODES]; ///<  List of leaf numbers referenced in formula
+   Int_t       fNdata[kMAXCODES]; ///<! This caches the physical number of element in the leaf or data member.
+   Int_t       fNcodes;           ///<  Number of leaves referenced in formula
+   Bool_t      fHasCast;          ///<  Record whether the formula contain a cast operation or not
+   Int_t       fMultiplicity;     ///<  Indicator of the variability of the formula
+   Int_t       fNindex;           ///<  Size of fIndex
+   Int_t      *fLookupType;       ///<[fNindex] Array indicating how each leaf should be looked-up
+   TObjArray   fLeaves;           ///<!  List of leaf used in this formula.
+   TObjArray   fDataMembers;      ///<!  List of leaf data members
+   TObjArray   fMethods;          ///<!  List of leaf method calls
+   TObjArray   fExternalCuts;     ///<!  List of TCutG and TEntryList used in the formula
+   TObjArray   fAliases;          ///<!  List of TTreeFormula for each alias used.
+   TObjArray   fLeafNames;        ///<   List of TNamed describing leaves
+   TObjArray   fBranches;         ///<!  List of branches to read.  Similar to fLeaves but duplicates are zeroed out.
+   Bool_t      fQuickLoad;        ///<!  If true, branch GetEntry is only called when the entry number changes.
+   Bool_t      fNeedLoading;      ///<!  If true, the current entry has not been loaded yet.
 
-   Int_t       fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
-   Int_t       fFixedSizes[kMAXCODES][kMAXFORMDIM];  //Physical sizes of lower dimensions for each leaf
-   UChar_t     fHasMultipleVarDim[kMAXCODES];        //True if the corresponding variable is an array with more than one variable dimension.
+   Int_t       fNdimensions[kMAXCODES];               ///< Number of array dimensions in each leaf
+   Int_t       fFixedSizes[kMAXCODES][kMAXFORMDIM];   ///< Physical sizes of lower dimensions for each leaf
+   UChar_t     fHasMultipleVarDim[kMAXCODES];         ///< True if the corresponding variable is an array with more than one variable dimension.
 
    //the next line should have a mutable in front. See GetNdata()
-   Int_t       fCumulSizes[kMAXCODES][kMAXFORMDIM];  //Accumulated sizes of lower dimensions for each leaf after variable dimensions has been calculated
-   Int_t       fIndexes[kMAXCODES][kMAXFORMDIM];     //Index of array selected by user for each leaf
-   TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM];  //Pointer to a variable index.
+   Int_t       fCumulSizes[kMAXCODES][kMAXFORMDIM];   ///< Accumulated sizes of lower dimensions for each leaf after variable dimensions has been calculated
+   Int_t       fIndexes[kMAXCODES][kMAXFORMDIM];      ///< Index of array selected by user for each leaf
+   TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM]; ///< Pointer to a variable index.
 
-   TAxis                    *fAxis;           //! pointer to histogram axis if this is a string
-   Bool_t                    fDidBooleanOptimization;  //! True if we executed one boolean optimization since the last time instance number 0 was evaluated
-   TTreeFormulaManager      *fManager;        //! The dimension coordinator.
+   TAxis                    *fAxis;                   ///<! pointer to histogram axis if this is a string
+   Bool_t                    fDidBooleanOptimization; ///<! True if we executed one boolean optimization since the last time instance number 0 was evaluated
+   TTreeFormulaManager      *fManager;                ///<! The dimension coordinator.
 
    // Helper members and function used during the construction and parsing
-   TList                    *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
-   std::vector<std::string>  fAliasesUsed;    //! List of aliases used during the parsing of the expression.
+   TList                    *fDimensionSetup;         ///<! list of dimension setups, for delayed creation of the dimension information.
+   std::vector<std::string>  fAliasesUsed;            ///<! List of aliases used during the parsing of the expression.
 
-   LongDouble_t*        fConstLD;   //! local version of fConsts able to store bigger numbers
+   LongDouble_t*        fConstLD;                     ///<! local version of fConsts able to store bigger numbers
 
-   RealInstanceCache fRealInstanceCache; //! Cache accelerating the GetRealInstance function
+   RealInstanceCache fRealInstanceCache;              ///<! Cache accelerating the GetRealInstance function
 
    TTreeFormula(const char *name, const char *formula, TTree *tree, const std::vector<std::string>& aliases);
    void Init(const char *name, const char *formula);

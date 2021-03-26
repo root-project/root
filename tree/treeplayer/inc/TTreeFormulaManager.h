@@ -30,17 +30,17 @@ class TArrayI;
 class TTreeFormulaManager : public TObject {
 private:
    TObjArray   fFormulas;
-   Int_t       fMultiplicity;     // Indicator of the variability of the formula
-   Bool_t      fMultiVarDim;      // True if one of the variable has 2 variable size dimensions.
-   Int_t       fNdata;            //! Last value calculated by GetNdata
+   Int_t       fMultiplicity;     ///< Indicator of the variability of the formula
+   Bool_t      fMultiVarDim;      ///< True if one of the variable has 2 variable size dimensions.
+   Int_t       fNdata;            ///<! Last value calculated by GetNdata
 
    //the next line should be: mutable Int_t fCumulUsedSizes[kMAXFORMDIM+1]; See GetNdata()
-   Int_t       fCumulUsedSizes[kMAXFORMDIM+1];      //Accumulated size of lower dimensions as seen for this entry
-   TArrayI    *fCumulUsedVarDims;                   //fCumulUsedSizes(1) for multi variable dimensions case
+   Int_t       fCumulUsedSizes[kMAXFORMDIM+1];      ///< Accumulated size of lower dimensions as seen for this entry
+   TArrayI    *fCumulUsedVarDims;                   ///< fCumulUsedSizes(1) for multi variable dimensions case
    //the next line should be: mutable Int_t fUsedSizes[kMAXFORMDIM+1]; See GetNdata()
-   Int_t       fUsedSizes[kMAXFORMDIM+1];           //Actual size of the dimensions as seen for this entry.
-   TArrayI    *fVarDims[kMAXFORMDIM+1];             //List of variable sizes dimensions.
-   Int_t       fVirtUsedSizes[kMAXFORMDIM+1];       //Virtual size of lower dimensions as seen for this formula
+   Int_t       fUsedSizes[kMAXFORMDIM+1];           ///< Actual size of the dimensions as seen for this entry.
+   TArrayI    *fVarDims[kMAXFORMDIM+1];             ///< List of variable sizes dimensions.
+   Int_t       fVirtUsedSizes[kMAXFORMDIM+1];       ///< Virtual size of lower dimensions as seen for this formula
 
    Bool_t      fNeedSync;         // Indicate whether a new formula has been added since the last synchronization
 

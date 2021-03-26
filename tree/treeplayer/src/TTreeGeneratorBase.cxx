@@ -24,6 +24,10 @@
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
 
+/** \class ROOT::Internal::TTreeGeneratorBase
+Base class for code generators like TTreeProxyGenerator and TTreeReaderGenerator
+*/
+
 namespace ROOT {
 namespace Internal {
 
