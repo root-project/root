@@ -29,8 +29,8 @@ class TH1;
 class TPaletteAxis : public TPave {
 
 protected:
-   TGaxis       fAxis;          //  palette axis
-   TH1         *fH;             //! pointer to parent histogram
+   TGaxis       fAxis;          ///<  Palette axis
+   TH1         *fH;             ///<! Pointer to parent histogram
 
 public:
    // TPaletteAxis status bits
