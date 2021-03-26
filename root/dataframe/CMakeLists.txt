@@ -216,3 +216,6 @@ ROOTTEST_ADD_TEST(test_progressiveCSV
                   COPY_TO_BUILDDIR test_progressiveCSV.csv
                   OUTREF test_progressiveCSV.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+# need the '+' to autogenerate required dictionaries with ACLiC
+ROOTTEST_ADD_TEST(test_nested_rvec_snapshot MACRO test_nested_rvec_snapshot.C+)
