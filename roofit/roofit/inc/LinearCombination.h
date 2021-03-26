@@ -11,7 +11,6 @@
 
 #include "Floats.h"
 
-//#ifdef USE_MULTIPRECISION_LC
 #include <vector>
 #include <list>
 #include <ostream>

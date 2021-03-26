@@ -1,6 +1,5 @@
 #include "Floats.h"
 #include "LinearCombination.h"
-
 ClassImp(RooLagrangianMorphing::LinearCombination);
 namespace {
   template<class T> inline void assign(RooLagrangianMorphing::SuperFloat& var, const T& val){

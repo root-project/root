@@ -40,7 +40,6 @@ as well as the Standard Model Effective Field Theory (SMEFT) described in
 // uncomment to force UBLAS multiprecision matrices
 // #define USE_UBLAS 1
 // #undef USE_UBLAS
-// uncomment to force multiprecision LinearCombination
 
 #include "Riostream.h"
 
@@ -69,7 +68,7 @@ as well as the Standard Model Effective Field Theory (SMEFT) described in
 #include "RooWrapperPdf.h"
 #include "RooSimultaneous.h"
 #include "LinearCombination.h"
-
+#include "RooMsgService.h"
 //#include "RooStats/HistFactory/PiecewiseInterpolation.h"
 #include "TH1.h"
 #include "TParameter.h"

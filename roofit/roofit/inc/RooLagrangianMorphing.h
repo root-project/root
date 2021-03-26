@@ -191,6 +191,8 @@ namespace RooLagrangianMorphing {
     ParamSet getParameters(const char* foldername) const;
     ParamSet getParameters() const;
 
+    RooLagrangianMorph* getLinear(); 
+ 
     int nParameters() const;
     int nSamples() const;
     int nPolynomials() const;
@@ -224,72 +226,70 @@ namespace RooLagrangianMorphing {
   
   protected:
 
-    class CacheElem;
-    void init();
-    void printAuthors() const;
-    void setup(bool ownParams = true);
-    bool _ownParameters = false;
+    class CacheElem ;
+    void init() ;
+    void printAuthors() const ;
+    void setup(bool ownParams = true) ;
+    bool _ownParameters = false ;
   
-    void disableInterference(const std::vector<const char*>& nonInterfering);
-    void disableInterferences(const std::vector<std::vector<const char*> >& nonInterfering);
+    void disableInterference(const std::vector<const char*>& nonInterfering) ;
+    void disableInterferences(const std::vector<std::vector<const char*> >& nonInterfering) ;
 
-    mutable RooObjCacheManager _cacheMgr; //! The cache manager
+    mutable RooObjCacheManager _cacheMgr ; //! The cache manager
  
-    void addFolders(const RooArgList& folders);
+    void addFolders(const RooArgList& folders) ;
 
-    InternalType* getInternal() const;
+    InternalType* getInternal() const ;
   
-    bool hasCache() const;
-    RooLagrangianMorph::CacheElem* getCache(const RooArgSet* nset) const;
-    void readParameters(TDirectory* f);
-    void collectInputs(TDirectory* f);
-    void updateSampleWeights();
-    RooRealVar* setupObservable(const char* obsname,TClass* mode,TObject* inputExample);
+    bool hasCache() const ;
+    RooLagrangianMorph::CacheElem* getCache(const RooArgSet* nset) const ;
+    void readParameters(TDirectory* f) ;
+    void collectInputs(TDirectory* f) ;
+    void updateSampleWeights() ;
+    RooRealVar* setupObservable(const char* obsname,TClass* mode,TObject* inputExample) ;
     
   public:
   
-    bool updateCoefficients();
-    bool useCoefficients(const TMatrixD& inverse);
-    bool useCoefficients(const char* filename);
-    bool writeCoefficients(const char* filename);
+    bool updateCoefficients() ;
+    bool useCoefficients(const TMatrixD& inverse) ;
+    bool useCoefficients(const char* filename) ;
+    bool writeCoefficients(const char* filename) ;
   
-    int countContributingFormulas() const;
-    RooParamHistFunc* getBaseTemplate();
-    RooAbsReal* getSampleWeight(const char* name);
-    void printSampleWeights() const;
-    void printWeights() const;
+    int countContributingFormulas() const ;
+    RooParamHistFunc* getBaseTemplate() ;
+    RooAbsReal* getSampleWeight(const char* name) ;
+    void printSampleWeights() const ;
+    void printWeights() const ;
 
-    void setScale(double val);
-    double getScale();
+    void setScale(double val) ;
+    double getScale() ;
     
-  RooRealSumFunc* getFunc() const;
-  RooRealSumFunc* cloneFunc() const;
+  RooRealSumFunc* getFunc() const ;
+  RooRealSumFunc* cloneFunc() const ;
   RooAbsPdf::ExtendMode extendMode() const ;
   Double_t expectedEvents(const RooArgSet* nset) const ;
   Double_t expectedEvents(const RooArgSet& nset) const ;
-  Double_t expectedEvents() const;
-  RooWrapperPdf* getPdf() const;
-  RooWrapperPdf* clonePdf() const;
+  Double_t expectedEvents() const ;
   Bool_t selfNormalized() const ;
   protected:
-    double _scale = 1;
-    std::string _fileName;
-    std::string _obsName;
-    std::string _objFilter;
-    std::string _baseFolder;
-    bool _allowNegativeYields;
-    std::vector<std::string>  _folderNames;
-    ParamMap _paramCards;
-    FlagMap _flagValues;
+    double _scale = 1 ;
+    std::string _fileName ;
+    std::string _obsName ;
+    std::string _objFilter ;
+    std::string _baseFolder ;
+    bool _allowNegativeYields ;
+    std::vector<std::string> _folderNames ;
+    ParamMap _paramCards ;
+    FlagMap _flagValues ;
     std::map<std::string,int>  _sampleMap;
-    RooListProxy _physics;
-    RooListProxy _operators;
+    RooListProxy _physics ;
+    RooListProxy _operators ;
     RooListProxy _observables ;
     RooListProxy _binWidths ;
-    RooListProxy _flags;
-    RooLagrangianMorphConfig _config;
-    std::vector<std::vector<RooListProxy*> > _diagrams;
-
+    RooListProxy _flags ;
+    RooLagrangianMorphConfig _config ;
+    std::vector<std::vector<RooListProxy*> > _diagrams ;
+    Bool_t _linearize ;
     mutable const RooArgSet* _curNormSet ; //!
 
   public:
