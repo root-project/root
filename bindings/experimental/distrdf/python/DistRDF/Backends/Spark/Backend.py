@@ -19,10 +19,9 @@ from DistRDF.Backends import Utils
 
 try:
     import pyspark
-except ModuleNotFoundError:
-    raise ModuleNotFoundError(
-        ("cannot import module 'pyspark'."
-         " Please make sure Spark is installed."))
+except ImportError:
+    raise ImportError(("cannot import module 'pyspark'. Refer to the Apache Spark documentation "
+                       "for installation instructions."))
 
 
 class SparkBackend(Base.BaseBackend):
