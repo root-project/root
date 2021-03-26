@@ -39,39 +39,39 @@ class TTreePerfStats : public TVirtualPerfStats {
 
 public:
    struct BasketInfo {
-      UInt_t fUsed = {0};       // Number of times the basket was requested from the disk.
-      UInt_t fLoaded = {0};     // Number of times the basket was put in the primary TTreeCache
-      UInt_t fLoadedMiss = {0}; // Number of times the basket was put in the secondary cache
-      UInt_t fMissed = {0};     // Number of times the basket was read directly from the file.
+      UInt_t fUsed = {0};        ///<  Number of times the basket was requested from the disk.
+      UInt_t fLoaded = {0};      ///<  Number of times the basket was put in the primary TTreeCache
+      UInt_t fLoadedMiss = {0};  ///<  Number of times the basket was put in the secondary cache
+      UInt_t fMissed = {0};      ///<  Number of times the basket was read directly from the file.
    };
 
    using BasketList_t = std::vector<std::pair<TBranch*, std::vector<size_t>>>;
 
 protected:
-   Int_t         fTreeCacheSize; //TTreeCache buffer size
-   Int_t         fNleaves;       //Number of leaves in the tree
-   Int_t         fReadCalls;     //Number of read calls
-   Int_t         fReadaheadSize; //Readahead cache size
-   Long64_t      fBytesRead;     //Number of bytes read
-   Long64_t      fBytesReadExtra;//Number of bytes (overhead) of the readahead cache
-   Double_t      fRealNorm;      //Real time scale factor for fGraphTime
-   Double_t      fRealTime;      //Real time
-   Double_t      fCpuTime;       //Cpu time
-   Double_t      fDiskTime;      //Time spent in pure raw disk IO
-   Double_t      fUnzipTime;     //Time spent uncompressing the data.
-   Long64_t      fUnzipInputSize;//Compressed bytes seen by the decompressor.
-   Long64_t      fUnzipObjSize;  //Uncompressed bytes produced by the decompressor.
-   Double_t      fCompress;      //Tree compression factor
-   TString       fName;          //name of this TTreePerfStats
-   TString       fHostInfo;      //name of the host system, ROOT version and date
-   TFile        *fFile;          //!pointer to the file containing the Tree
-   TTree        *fTree;          //!pointer to the Tree being monitored
-   TGraphErrors *fGraphIO ;      //pointer to the graph with IO data
-   TGraphErrors *fGraphTime ;    //pointer to the graph with timestamp info
-   TPaveText    *fPave;          //pointer to annotation pavetext
-   TStopwatch   *fWatch;         //TStopwatch pointer
-   TGaxis       *fRealTimeAxis;  //pointer to TGaxis object showing real-time
-   TText        *fHostInfoText;  //Graphics Text object with the fHostInfo data
+   Int_t         fTreeCacheSize; ///<  TTreeCache buffer size
+   Int_t         fNleaves;       ///<  Number of leaves in the tree
+   Int_t         fReadCalls;     ///<  Number of read calls
+   Int_t         fReadaheadSize; ///<  Read-ahead cache size
+   Long64_t      fBytesRead;     ///<  Number of bytes read
+   Long64_t      fBytesReadExtra;///<  Number of bytes (overhead) of the read-ahead cache
+   Double_t      fRealNorm;      ///<  Real time scale factor for fGraphTime
+   Double_t      fRealTime;      ///<  Real time
+   Double_t      fCpuTime;       ///<  Cpu time
+   Double_t      fDiskTime;      ///<  Time spent in pure raw disk IO
+   Double_t      fUnzipTime;     ///<  Time spent uncompressing the data.
+   Long64_t      fUnzipInputSize;///<  Compressed bytes seen by the decompressor.
+   Long64_t      fUnzipObjSize;  ///<  Uncompressed bytes produced by the decompressor.
+   Double_t      fCompress;      ///<  Tree compression factor
+   TString       fName;          ///<  Name of this TTreePerfStats
+   TString       fHostInfo;      ///<  Name of the host system, ROOT version and date
+   TFile        *fFile;          ///<! Pointer to the file containing the Tree
+   TTree        *fTree;          ///<! Pointer to the Tree being monitored
+   TGraphErrors *fGraphIO ;      ///<  Pointer to the graph with IO data
+   TGraphErrors *fGraphTime ;    ///<  Pointer to the graph with timestamp info
+   TPaveText    *fPave;          ///<  Pointer to annotation pavetext
+   TStopwatch   *fWatch;         ///<  TStopwatch pointer
+   TGaxis       *fRealTimeAxis;  ///<  Pointer to TGaxis object showing real-time
+   TText        *fHostInfoText;  ///<  Graphics Text object with the fHostInfo data
 
    std::unordered_map<TBranch*, size_t>  fBranchIndexCache; // Cache the index of the branch in the cache's array.
    std::vector<std::vector<BasketInfo> > fBasketsInfo;      // Details on which baskets was used, cached, 'miss-cached' or read uncached.Browse

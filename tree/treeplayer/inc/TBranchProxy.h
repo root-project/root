@@ -43,8 +43,8 @@ class TStreamerElement;
 
 namespace ROOT {
 namespace Internal {
-   //_______________________________________________
-   // String builder to be used in the constructors.
+   ////////////////////////////////////////////////////////////////////////////////
+   /// String builder to be used in the constructors.
    class TBranchProxyHelper {
    public:
       TString fName;
@@ -516,8 +516,8 @@ public:
 
 namespace Internal {
 
-   //____________________________________________________________________________________________
-   // Concrete Implementation of the branch proxy around the data members which are array of char
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Concrete Implementation of the branch proxy around the data members which are array of char
    class TArrayCharProxy : public Detail::TBranchProxy {
    public:
       void Print() override {
@@ -575,8 +575,8 @@ namespace Internal {
 
    };
 
-   //_______________________________________________________
-   // Base class for the proxy around object in TClonesArray.
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Base class for the proxy around object in TClonesArray.
    class TClaProxy : public Detail::TBranchProxy {
    public:
       void Print() override {
@@ -617,8 +617,8 @@ namespace Internal {
 
    };
 
-   //_______________________________________________
-   // Base class for the proxy around STL containers.
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Base class for the proxy around STL containers.
    class TStlProxy : public Detail::TBranchProxy {
    public:
       void Print() override {
@@ -657,8 +657,8 @@ namespace Internal {
 
    };
 
-   //______________________________________
-   // Template of the proxy around objects.
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template of the proxy around objects.
    template <class T>
    class TImpProxy : public Detail::TBranchProxy {
    public:
@@ -683,31 +683,31 @@ namespace Internal {
 
    };
 
-   //____________________________________________
-   // Helper template to be able to determine and
-   // use array dimentsions.
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Helper template to be able to determine and
+   /// use array dimensions.
    template <class T, int d = 0> struct TArrayType {
       typedef T type_t;
       typedef T array_t[d];
       static constexpr int gSize = d;
    };
-   //____________________________________________
-   // Helper class for proxy around multi dimension array
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Helper class for proxy around multi dimension array
    template <class T> struct TArrayType<T,0> {
       typedef T type_t;
       typedef T array_t;
       static constexpr int gSize = 0;
    };
-   //____________________________________________
-   // Helper class for proxy around multi dimension array
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Helper class for proxy around multi dimension array
    template <class T, int d> struct TMultiArrayType {
       typedef typename T::type_t type_t;
       typedef typename T::array_t array_t[d];
       static constexpr int gSize = d;
    };
 
-   //____________________________________________
-   // Template for concrete implementation of proxy around array of T
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template for concrete implementation of proxy around array of T
    template <class T>
    class TArrayProxy : public Detail::TBranchProxy {
    public:
@@ -747,8 +747,8 @@ namespace Internal {
       const array_t &operator [](UInt_t i) { return At(i); }
    };
 
-   //_____________________________________________________________________________________
-   // Template of the Concrete Implementation of the branch proxy around TClonesArray of T
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template of the Concrete Implementation of the branch proxy around TClonesArray of T
    template <class T>
    class TClaImpProxy : public TClaProxy {
    public:
@@ -777,8 +777,8 @@ namespace Internal {
 
    };
 
-   //_________________________________________________________________________________________
-   // Template of the Concrete Implementation of the branch proxy around an stl container of T
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template of the Concrete Implementation of the branch proxy around an stl container of T
    template <class T>
    class TStlImpProxy : public TStlProxy {
    public:
@@ -807,8 +807,8 @@ namespace Internal {
 
    };
 
-   //_________________________________________________________________________________________________
-   // Template of the Concrete Implementation of the branch proxy around an TClonesArray of array of T
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template of the Concrete Implementation of the branch proxy around an TClonesArray of array of T
    template <class T>
    class TClaArrayProxy : public TClaProxy {
    public:
@@ -836,8 +836,8 @@ namespace Internal {
    };
 
 
-   //__________________________________________________________________________________________________
-   // Template of the Concrete Implementation of the branch proxy around an stl container of array of T
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template of the Concrete Implementation of the branch proxy around an stl container of array of T
    template <class T>
    class TStlArrayProxy : public TStlProxy {
    public:
@@ -920,7 +920,7 @@ namespace Internal {
    typedef TClaArrayProxy<TArrayType<ULong_t> >     TClaArrayULongProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned long
    typedef TClaArrayProxy<TArrayType<ULong64_t> >   TClaArrayULong64Proxy;  // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned long long
    typedef TClaArrayProxy<TArrayType<UShort_t> >    TClaArrayUShortProxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned short
-   typedef TClaArrayProxy<TArrayType<UChar_t> >     TClaArrayUCharProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of nsigned char
+   typedef TClaArrayProxy<TArrayType<UChar_t> >     TClaArrayUCharProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned char
    typedef TClaArrayProxy<TArrayType<Int_t> >       TClaArrayIntProxy;      // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of int
    typedef TClaArrayProxy<TArrayType<Long_t> >      TClaArrayLongProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of long
    typedef TClaArrayProxy<TArrayType<Long64_t> >    TClaArrayLong64Proxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of long long
@@ -950,10 +950,10 @@ namespace Internal {
    typedef TStlArrayProxy<TArrayType<Float_t> >     TStlArrayFloatProxy;    // Concrete Implementation of the branch proxy around an stl container of float
    typedef TStlArrayProxy<TArrayType<Float16_t> >   TStlArrayFloat16Proxy;  // Concrete Implementation of the branch proxy around an stl container of float16_t
    typedef TStlArrayProxy<TArrayType<UInt_t> >      TStlArrayUIntProxy;     // Concrete Implementation of the branch proxy around an stl container of unsigned int
-   typedef TStlArrayProxy<TArrayType<ULong_t> >     TStlArrayULongProxy;    // Concrete Implementation of the branch proxy around an stl container of usigned long
+   typedef TStlArrayProxy<TArrayType<ULong_t> >     TStlArrayULongProxy;    // Concrete Implementation of the branch proxy around an stl container of unsigned long
    typedef TStlArrayProxy<TArrayType<ULong64_t> >   TStlArrayULong64Proxy;  // Concrete Implementation of the branch proxy around an stl contained of unsigned long long
-   typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayUShortProxy;   // Concrete Implementation of the branch proxy around an stl container of unisgned short
-   typedef TStlArrayProxy<TArrayType<UChar_t> >     TStlArrayUCharProxy;    // Concrete Implementation of the branch proxy around an stl container of unsingned char
+   typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayUShortProxy;   // Concrete Implementation of the branch proxy around an stl container of unsigned short
+   typedef TStlArrayProxy<TArrayType<UChar_t> >     TStlArrayUCharProxy;    // Concrete Implementation of the branch proxy around an stl container of unsigned char
    typedef TStlArrayProxy<TArrayType<Int_t> >       TStlArrayIntProxy;      // Concrete Implementation of the branch proxy around an stl container of int
    typedef TStlArrayProxy<TArrayType<Long_t> >      TStlArrayLongProxy;     // Concrete Implementation of the branch proxy around an stl container of long
    typedef TStlArrayProxy<TArrayType<Long64_t> >    TStlArrayLong64Proxy;   // Concrete Implementation of the branch proxy around an stl container of long long
