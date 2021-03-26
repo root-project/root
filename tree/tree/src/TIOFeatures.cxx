@@ -45,7 +45,7 @@ using namespace ROOT;
  * ~~~
  *
  * The method `TTree::SetIOFeatures` creates a copy of the feature set; subsequent changes
- * to the `TIOFeatures` object do not propogate to the `TTree`.
+ * to the `TIOFeatures` object do not propagate to the `TTree`.
  */
 
 

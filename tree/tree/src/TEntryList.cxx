@@ -91,7 +91,7 @@ an entry list. Example:
               branch->GetEntry(localEntry);
            or
               chain->GetEntry(entryNumber);
-           In the later case the LoadTree is then somewhat redudant.
+           In the later case the LoadTree is then somewhat redundant.
            ...
         }
      }

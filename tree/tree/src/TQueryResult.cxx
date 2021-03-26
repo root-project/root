@@ -511,7 +511,7 @@ Bool_t TQueryResult::Matches(const char *ref)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return first instance of class 'classname' in the input list.
-/// Usefull to access TDSet, TEventList, ...
+/// Useful to access TDSet, TEventList, ...
 
 TObject *TQueryResult::GetInputObject(const char *classname) const
 {

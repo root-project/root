@@ -114,7 +114,7 @@ const char *TLeafObject::GetTypeName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method must be overridden to handle object notifcation.
+/// This method must be overridden to handle object notification.
 
 Bool_t TLeafObject::Notify()
 {
