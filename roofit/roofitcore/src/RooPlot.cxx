@@ -1096,8 +1096,7 @@ void RooPlot::SetMinimum(Double_t minimum)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate and return reduced chi-squared of curve with given name with respect
-/// to histogram with given name.
+/// Calculate and return reduced chi-squared between a curve and a histogram.
 ///
 /// \param[in] curvename  Name of the curve or nullptr for last curve
 /// \param[in] histname   Name of the histogram to compare to or nullptr for last added histogram
@@ -1105,8 +1104,11 @@ void RooPlot::SetMinimum(Double_t minimum)
 /// number. This means that the curve was fitted to the data with nFitParam floating
 /// parameters, which needs to be reflected in the calculation of \f$\chi^2 / \mathrm{ndf}\f$.
 /// 
-/// \return \f$ \chi^2 / \mathrm{ndf} \f$
-
+/// \return \f$ \chi^2 / \mathrm{ndf} \f$ between the plotted curve and the data.
+///
+/// \note The \f$ \chi^2 \f$ is calculated between a *plot of the original distribution* and the data.
+/// It therefore has more rounding errors than directly calculating the \f$ \chi^2 \f$ from a PDF or
+/// function. To do this, use RooChi2Var.
 Double_t RooPlot::chiSquare(const char* curvename, const char* histname, int nFitParam) const
 {
 
