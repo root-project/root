@@ -22,6 +22,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <memory>
+#include <queue>
 #include <unordered_map>
 
 class TMap;
@@ -46,8 +47,6 @@ class REveManager
 {
    REveManager(const REveManager&) = delete;
    REveManager& operator=(const REveManager&) = delete;
-
-   bool WindowClientStatusData(unsigned connid, const std::string &arg);
 
 public:
    class RRedrawDisabler {
@@ -88,6 +87,17 @@ public:
 
       Conn() = default;
       Conn(unsigned int cId) : fId(cId) {}
+   };
+ 
+   class ServerState
+   {
+   public:
+      enum EServerState {Waiting, UpdatingScenes, UpdatingClients};
+
+      std::mutex fMutex{};
+      std::condition_variable fCV{};
+
+      EServerState fVal{Waiting};
    };
 
    typedef  std::function<void ()> ClientsFreeCB_t;
@@ -133,6 +143,9 @@ protected:
 
    std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
    std::vector<Conn>                                fConnList;
+   std::queue<std::string>                          fMIRqueue;
+
+   ServerState       fServerState;
 
    ClientsFreeCB_t      fCBClientsFree{nullptr};
 
@@ -229,6 +242,9 @@ public:
 
    static REveManager* Create();
    static void         Terminate();
+
+
+   void ExecuteCommand(const std::string &cmd);
 
    // Access to internals, needed for low-level control in advanced
    // applications.

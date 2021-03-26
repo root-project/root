@@ -241,7 +241,12 @@ void REveManager::DoRedraw3D()
 {
    static const REveException eh("REveManager::DoRedraw3D ");
 
-   if (fScenes->AnyChanges()) {
+printf("DoRedrawBegin()\n");
+   std::unique_lock lock(fServerState.fMutex);
+   if (fWorld->IsChanged() || fScenes->AnyChanges()) {
+      while (fServerState.fVal == ServerState::UpdatingClients) {
+         fServerState.fCV.wait(lock);
+      }
       nlohmann::json jobj = {};
 
       jobj["content"] = "BeginChanges";
@@ -253,6 +258,13 @@ void REveManager::DoRedraw3D()
 
       jobj["content"] = "EndChanges";
       fWebWindow->Send(0, jobj.dump());
+
+      fServerState.fVal = ServerState::UpdatingClients;
+      fServerState.fCV.notify_all();
+   } else {
+      // possible there has been no changes envoked by WindowData
+      fServerState.fVal = ServerState::Waiting;
+      fServerState.fCV.notify_all();
    }
    fResetCameras = kFALSE;
    fDropLogicals = kFALSE;
@@ -718,6 +730,12 @@ void REveManager::WindowConnect(unsigned connid)
    fConnList.emplace_back(connid);
    printf("connection established %u\n", connid);
 
+   std::unique_lock lock(fServerState.fMutex);
+   while (fServerState.fVal == ServerState::UpdatingScenes)
+   {
+       fServerState.fCV.wait(lock);
+   }
+
    // This prepares core and render data buffers.
    printf("\nEVEMNG ............. streaming the world scene.\n");
 
@@ -748,6 +766,10 @@ void REveManager::WindowConnect(unsigned connid)
          printf("   NOT sending binary, len = %d\n", scene->fTotalBinarySize);
       }
    }
+
+
+   fServerState.fVal = ServerState::Waiting;
+   fServerState.fCV.notify_all();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -791,18 +813,37 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
          break;
       }
    }
+
    // this should not happen, just check
    if (!found) {
       R__LOG_ERROR(EveLog()) << "Internal error - no connection with id " << connid << " found";
       return;
    }
+   // client status data
+   if (arg.compare("__REveDoneChanges") == 0) {
 
-   if (WindowClientStatusData(connid, arg))
-     return;
+      std::unique_lock lock(fServerState.fMutex);
+
+      for (auto &conn : fConnList) {
+         if (conn.fId == connid) {
+            conn.fState = Conn::Free;
+            break;
+         }
+      }
+
+      if (ClientConnectionsFree()) {
+         fServerState.fVal = ServerState::Waiting;
+         fServerState.fCV.notify_all();
+         if (fCBClientsFree)
+            (fCBClientsFree)();
+      }
+
+      return;
+   }
 
    nlohmann::json cj = nlohmann::json::parse(arg);
    if (gDebug > 0)
-      ::Info("REveManager::WindowData", "MIR test %s", cj.dump().c_str());
+      ::Info("REveManager::WindowData", "MIR test %s\n", cj.dump().c_str());
    std::string mir = cj["mir"];
    int id = cj["fElementId"];
 
@@ -819,63 +860,46 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
       }
       std::string ctype = cj["class"];
       cmd << "((" << ctype << "*)" << std::hex << std::showbase << (size_t)el << ")->" << mir << ";";
+      std::cout << cmd.str() << std::endl;
+   }
+
+   ExecuteCommand(cmd.str());
+}
+
+void REveManager::ExecuteCommand(const std::string &cmd)
+{
+   std::unique_lock lock(fServerState.fMutex);
+
+   
+   if (fServerState.fVal != ServerState::Waiting) {
+      printf("TODO .... add command to queue!!!!\n");
+      fMIRqueue.push(cmd);
+      return;
    }
 
    fWorld->BeginAcceptingChanges();
    fScenes->AcceptChanges(true);
 
    if (gDebug > 0)
-      ::Info("REveManager::WindowData", "MIR cmd %s", cmd.str().c_str());
+      ::Info("REveManager::ExecuteCommand", "MIR cmd %s", cmd.c_str());
 
    try {
-      gROOT->ProcessLine(cmd.str().c_str());
+      gROOT->ProcessLine(cmd.c_str());
    }
    catch (std::exception &e) {
-      std::cout << "REveManager::WindowData " << e.what() << std::endl;
-   }
+      std::cout << "REveManager::ExecuteCommand " << e.what() << std::endl;
+   } 
    catch (...) {
-      std::cout << "REveManager::WindowData unknown exception.\n";
+      std::cout << "REveManager::ExecuteCommand unknown exception.\n";
    }
 
    fScenes->AcceptChanges(false);
    fWorld->EndAcceptingChanges();
 
+   fServerState.fVal = ServerState::UpdatingScenes;
+   fServerState.fCV.notify_all(); // DO we need to notify or Redraw3D ???
+
    Redraw3D();
-
-   /*
-   nlohmann::json resp;
-   resp["function"] = "replaceElement";
-   //el->SetCoreJson(resp);
-   for (auto &conn : fConnList)
-      fWebWindow->Send(conn.fId, resp.dump());
-   */
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check for client status messages
-bool REveManager::WindowClientStatusData(unsigned connid, const std::string &arg)
-{
-   static const REveException eh("REveManager::WindowClientStatusData ");
-
-   static const std::string doneChanges = "__REveDoneChanges";
-   if (arg.compare("__REveDoneChanges") == 0) {
-      for (auto &conn : fConnList) {
-         if (conn.fId == connid) {
-            conn.fState = Conn::Free;
-            break;
-         }
-      }
-
-      // call function pointer for free status
-      // AMT TO
-      if (ClientConnectionsFree()) {
-         if (fCBClientsFree) {
-            (fCBClientsFree)();
-         }
-      }
-      return true;
-   }
-   return false;
 }
 
 void REveManager::Send(unsigned connid, const std::string &data)

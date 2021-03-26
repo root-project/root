@@ -246,8 +246,9 @@ public:
    EventManager() { 
 
    fTimer = new TTimer();
-fTimer->Connect("Timeout()", "EventManager",
+   fTimer->Connect("Timeout()", "EventManager",
                this, "TimerDone()");
+   eveMng->SetCBClientsFree([this]{XXX();});
 //  timer->Start(2000, kTRUE);   // 2 seconds single-shot
    }
 
@@ -286,7 +287,7 @@ fTimer->Connect("Timeout()", "EventManager",
 
       eveMng->GetScenes()->AcceptChanges(false);
       eveMng->GetWorld()->EndAcceptingChanges();
-      fTimer->Start(500, kTRUE); 
+      fTimer->Start(40, kTRUE); 
    }
 
    virtual void Autoplay()
@@ -296,6 +297,11 @@ fTimer->Connect("Timeout()", "EventManager",
          fTimer->Start(0, kTRUE);
       else
          fTimer->Stop();
+   }
+
+   void XXX() {
+      if (fAutoplay)
+        fTimer->Start(500, kTRUE); 
    }
 };
 
