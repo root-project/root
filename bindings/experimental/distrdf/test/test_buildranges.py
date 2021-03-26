@@ -1,5 +1,6 @@
 from DistRDF.Node import HeadNode
 from DistRDF.Node import RangesBuilder
+from DistRDF.Node import TreeInfo
 import warnings
 import unittest
 
@@ -116,7 +117,8 @@ class BuildRangesTest(unittest.TestCase):
         filelist = ["backend/Slimmed_ntuple.root"]
         headnode.npartitions = 1
 
-        crs = builder._get_clustered_ranges(treename, filelist)
+        treeinfo = TreeInfo([treename], filelist, None, None)
+        crs = builder._get_clustered_ranges(treeinfo)
         ranges = rangesToTuples(crs)
 
         ranges_reqd = [(0, 10)]
@@ -138,10 +140,10 @@ class BuildRangesTest(unittest.TestCase):
         headnode.npartitions = 2
 
         ranges_reqd = [(0, 10)]
-
+        treeinfo = TreeInfo([treename], filelist, None, None)
         with warnings.catch_warnings(record=True) as w:
             # Trigger warning
-            crs = builder._get_clustered_ranges(treename, filelist)
+            crs = builder._get_clustered_ranges(treeinfo)
             ranges = rangesToTuples(crs)
 
             # Verify ranges
@@ -164,7 +166,8 @@ class BuildRangesTest(unittest.TestCase):
         filelist = ["backend/2clusters.root"]
         headnode.npartitions = 2
 
-        crs = builder._get_clustered_ranges(treename, filelist)
+        treeinfo = TreeInfo([treename], filelist, None, None)
+        crs = builder._get_clustered_ranges(treeinfo)
         ranges = rangesToTuples(crs)
 
         ranges_reqd = [
@@ -187,7 +190,8 @@ class BuildRangesTest(unittest.TestCase):
         filelist = ["backend/4clusters.root"]
         headnode.npartitions = 4
 
-        crs = builder._get_clustered_ranges(treename, filelist)
+        treeinfo = TreeInfo([treename], filelist, None, None)
+        crs = builder._get_clustered_ranges(treeinfo)
         ranges = rangesToTuples(crs)
 
         ranges_reqd = [
@@ -212,7 +216,8 @@ class BuildRangesTest(unittest.TestCase):
         filelist = ["backend/1000clusters.root"]
         headnode.npartitions = 4
 
-        crs = builder._get_clustered_ranges(treename, filelist)
+        treeinfo = TreeInfo([treename], filelist, None, None)
+        crs = builder._get_clustered_ranges(treeinfo)
         ranges = rangesToTuples(crs)
 
         ranges_reqd = [
@@ -238,7 +243,8 @@ class BuildRangesTest(unittest.TestCase):
         filelist = ["backend/1000clusters.root"]
         headnode.npartitions = 1000
 
-        crs = builder._get_clustered_ranges(treename, filelist)
+        treeinfo = TreeInfo([treename], filelist, None, None)
+        crs = builder._get_clustered_ranges(treeinfo)
         ranges = rangesToTuples(crs)
 
         start = 0

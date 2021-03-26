@@ -110,6 +110,6 @@
 #pragma link C++ class TNotifyLink<ROOT::Detail::TBranchProxy>;
 #pragma link C++ class TNotifyLink<TTreeReader>;
 
+#pragma link C++ namespace ROOT::Internal::Parallelism;
+
 #endif
-
-

@@ -116,7 +116,6 @@ class BaseBackend(ABC):
         computation_graph_callable = generator.get_callable()
         # Arguments needed to create PyROOT RDF object
         rdf_args = headnode.args
-        treename = headnode.get_treename()
         selected_branches = headnode.get_branches()
 
         # Avoid having references to the instance inside the mapper
@@ -142,7 +141,6 @@ class BaseBackend(ABC):
                 action nodes in the computational graph.
             """
             import ROOT
-
             # We have to decide whether to do this in Dist or in subclasses
             # Utils.declare_headers(worker_includes)  # Declare headers if any
             # Run initialization method to prepare the worker runtime
@@ -153,43 +151,44 @@ class BaseBackend(ABC):
             start = int(current_range.start)
             end = int(current_range.end)
 
-            if treename:
+            if current_range.treename is not None:
                 # Build TChain of files for this range:
-                chain = ROOT.TChain(treename)
-                for f in current_range.filelist:
+                chain = ROOT.TChain(current_range.treename)
+                for f in current_range.treefilenames:
+                    # f can be Python string or C++ std::string
                     chain.Add(str(f))
 
                 # We assume 'end' is exclusive
                 chain.SetCacheEntryRange(start, end)
 
                 # Gather information about friend trees
-                friend_info = current_range.friend_info
-                if friend_info:
+                if current_range.friendnamesalias is not None:
                     # Zip together the treenames of the friend trees and the
                     # respective file names. Each friend treename can have
                     # multiple corresponding friend file names.
                     tree_files_names = zip(
-                        friend_info.friend_names,
-                        friend_info.friend_file_names
+                        current_range.friendnamesalias,
+                        current_range.friendfilenames
                     )
-                    for friend_treename, friend_filenames in tree_files_names:
+                    for friend_namealias, friend_filenames in tree_files_names:
                         # Start a TChain with the current friend treename
-                        friend_chain = ROOT.TChain(friend_treename)
+                        friend_chain = ROOT.TChain(friend_namealias.first)
                         # Add each corresponding file to the TChain
                         for filename in friend_filenames:
-                            friend_chain.Add(filename)
+                            # filename is an std::string, Add accepts a const char*
+                            friend_chain.Add(filename.c_str())
 
                         # Set cache on the same range as the parent TChain
                         friend_chain.SetCacheEntryRange(start, end)
-                        # Finally add friend TChain to the parent
-                        chain.AddFriend(friend_chain)
+                        # Finally add friend TChain to the parent (with alias)
+                        chain.AddFriend(friend_chain, friend_namealias.second)
 
                 if selected_branches:
-                    rdf = ROOT.ROOT.RDataFrame(chain, selected_branches)
+                    rdf = ROOT.RDataFrame(chain, selected_branches)
                 else:
-                    rdf = ROOT.ROOT.RDataFrame(chain)
+                    rdf = ROOT.RDataFrame(chain)
             else:
-                rdf = ROOT.ROOT.RDataFrame(*rdf_args)  # PyROOT RDF object
+                rdf = ROOT.RDataFrame(*rdf_args)  # PyROOT RDF object
 
             # # TODO : If we want to run multi-threaded in a Spark node in
             # # the future, use `TEntryList` instead of `Range`

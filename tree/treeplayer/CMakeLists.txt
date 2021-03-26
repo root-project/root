@@ -23,6 +23,7 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
   HEADERS
+    ROOT/ParallelismUtils.hxx
     ROOT/TTreeReaderFast.hxx
     ROOT/TTreeReaderValueFast.hxx
     TBranchProxyClassDescriptor.h
@@ -66,6 +67,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
     src/TFormLeafInfoReference.cxx
     src/TFriendProxy.cxx
     src/TFriendProxyDescriptor.cxx
+    src/ParallelismUtils.cxx
     src/TRefArrayProxy.cxx
     src/TRefProxy.cxx
     src/TSelectorDraw.cxx

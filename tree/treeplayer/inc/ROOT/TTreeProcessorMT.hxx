@@ -20,13 +20,12 @@
 #include "TTreeReader.h"
 #include "TError.h"
 #include "TEntryList.h"
-#include "TFriendElement.h"
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TThreadExecutor.hxx"
+#include "ROOT/ParallelismUtils.hxx"
 
 #include <functional>
-#include <utility> // std::pair
 #include <vector>
 
 /** \class TTreeView
@@ -48,15 +47,6 @@ the threaded object.
 
 namespace ROOT {
 namespace Internal {
-/// Names, aliases, and file names of a TTree's or TChain's friends
-using NameAlias = std::pair<std::string, std::string>;
-struct FriendInfo {
-   /// Pairs of names and aliases of friend trees/chains
-   std::vector<Internal::NameAlias> fFriendNames;
-   /// Names of the files where each friend is stored. fFriendFileNames[i] is the list of files for friend with
-   /// name fFriendNames[i]
-   std::vector<std::vector<std::string>> fFriendFileNames;
-};
 
 class TTreeView {
 private:
@@ -94,7 +84,6 @@ private:
    // Must be declared after fPool, for IMT to be initialized first!
    ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView{TNumSlots{ROOT::GetThreadPoolSize()}};
 
-   Internal::FriendInfo GetFriendInfo(TTree &tree);
    std::vector<std::string> FindTreeNames();
    static unsigned int fgMaxTasksPerFilePerWorker;
    static unsigned int fgTasksPerWorkerHint;

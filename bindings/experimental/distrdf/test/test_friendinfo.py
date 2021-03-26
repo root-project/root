@@ -3,12 +3,12 @@ import unittest
 from array import array
 
 import ROOT
-from DistRDF.Node import FriendInfo
 from DistRDF.Node import HeadNode
+from DistRDF.Node import TreeInfo
 
 
 class FriendInfoTest(unittest.TestCase):
-    """Unit test for the FriendInfo class"""
+    """Unit test to retrieve information from a TTree and insert it in a TreeInfo namedtuple."""
 
     def create_parent_tree(self):
         """Creates a .root file with the parent TTree"""
@@ -46,25 +46,9 @@ class FriendInfoTest(unittest.TestCase):
         ff.Write()
         ff.Close()
 
-    def test_empty_friend_info(self):
-        """Check that FriendInfo is initialized with two empty lists"""
-
-        friend_info = FriendInfo()
-
-        friend_names = friend_info.friend_names
-        friend_file_names = friend_info.friend_file_names
-
-        # Check that both lists in FriendInfo are empty
-        self.assertTrue(len(friend_names) == 0)
-        self.assertTrue(len(friend_file_names) == 0)
-
-        # Check functioning of __bool__ method
-        self.assertFalse(friend_info)
-
     def test_friend_info_with_ttree(self):
         """
-        Check that FriendInfo correctly stores information about the friend
-        trees
+        Check that correct information about the friend trees is stored in TreeInfo
         """
         self.create_parent_tree()
         self.create_friend_tree()
@@ -82,24 +66,27 @@ class FriendInfoTest(unittest.TestCase):
         friendtree.Add(friend_tree_filename)
 
         # Add friendTree to the parent
-        basetree.AddFriend(friendtree)
+        alias = "myfriendalias"
+        basetree.AddFriend(friendtree, alias)
 
         # Instantiate head node of the graph with the base TTree
         headnode = HeadNode(basetree)
 
         # Retrieve FriendInfo instance
-        friend_info = headnode._get_friend_info()
+        treeinfo = headnode.get_treeinfo()
 
         # Check that FriendInfo has non-empty lists
-        self.assertTrue(friend_info)
+        self.assertIsNotNone(treeinfo.friendnamesalias)
+        self.assertIsNotNone(treeinfo.friendfilenames)
 
         # Check that the two lists with treenames and filenames are populated
         # as expected.
-        self.assertListEqual(friend_info.friend_names, [friend_tree_name])
-        self.assertListEqual(
-            friend_info.friend_file_names,
-            [[friend_tree_filename]]
-        )
+        # friendnamesalias and friendfilenames are std::vector, convert to list
+        # and then check data is equal to expected values.
+        friendnamesalias = [(str(pair.first), str(pair.second)) for pair in treeinfo.friendnamesalias]
+        friendfilenames = [[str(filename) for filename in filelist] for filelist in treeinfo.friendfilenames]
+        self.assertListEqual(friendnamesalias, [(friend_tree_name, alias)])
+        self.assertListEqual(friendfilenames, [[friend_tree_filename]])
 
         # Remove unnecessary .root files
         os.remove(base_tree_filename)
