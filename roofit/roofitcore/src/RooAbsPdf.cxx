@@ -1149,8 +1149,128 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 }
 
 
+template <class Minimizer>
+int RooAbsPdf::calculateAsymptoticCorrectedCovMatrix(Minimizer &minimizer, RooAbsData const &data)
+{
+   // Calculated corrected errors for weighted likelihood fits
+   std::unique_ptr<RooFitResult> rw(minimizer.save());
+   // Weighted inverse Hessian matrix
+   const TMatrixDSym &matV = rw->covarianceMatrix();
+   coutI(Fitting)
+      << "RooAbsPdf::fitTo(" << this->GetName()
+      << ") Calculating covariance matrix according to the asymptotically correct approach. If you find this "
+         "method useful please consider citing https://arxiv.org/abs/1911.01303."
+      << endl;
 
+   // Initialise matrix containing first derivatives
+   auto nFloatPars = rw->floatParsFinal().getSize();
+   TMatrixDSym num(nFloatPars);
+   for (int k = 0; k < nFloatPars; k++) {
+      for (int l = 0; l < nFloatPars; l++) {
+         num(k, l) = 0.0;
+      }
+   }
+   RooArgSet *obs = this->getObservables(data);
+   // Create derivative objects
+   std::vector<std::unique_ptr<RooDerivative>> derivatives;
+   const RooArgList &floated = rw->floatParsFinal();
+   std::unique_ptr<RooArgSet> floatingparams{
+      static_cast<RooArgSet *>(this->getParameters(data)->selectByAttrib("Constant", false))};
+   for (const auto paramresult : floated) {
+      auto paraminternal = static_cast<RooRealVar *>(floatingparams->find(*paramresult));
+      assert(floatingparams->find(*paramresult)->IsA() == RooRealVar::Class());
+      derivatives.emplace_back(this->derivative(*paraminternal, *obs, 1));
+   }
 
+   // Loop over data
+   for (int j = 0; j < data.numEntries(); j++) {
+      // Sets obs to current data point, this is where the pdf will be evaluated
+      *obs = *data.get(j);
+      // Determine first derivatives
+      std::vector<double> diffs(floated.getSize(), 0.0);
+      for (int k = 0; k < floated.getSize(); k++) {
+         const auto paramresult = static_cast<RooRealVar *>(floated.at(k));
+         auto paraminternal = static_cast<RooRealVar *>(floatingparams->find(*paramresult));
+         // first derivative to parameter k at best estimate point for this measurement
+         double diff = derivatives[k]->getVal();
+         // need to reset to best fit point after differentiation
+         *paraminternal = paramresult->getVal();
+         diffs[k] = diff;
+      }
+      // Fill numerator matrix
+      double prob = getVal(obs);
+      for (int k = 0; k < floated.getSize(); k++) {
+         for (int l = 0; l < floated.getSize(); l++) {
+            num(k, l) += data.weight() * data.weight() * diffs[k] * diffs[l] / (prob * prob);
+         }
+      }
+   }
+   num.Similarity(matV);
+
+   // Propagate corrected errors to parameters objects
+   minimizer.applyCovarianceMatrix(num);
+
+   // The derivatives are found in RooFit and not with the minimizer (e.g.
+   // minuit), so the quality of the corrected covariance matrix corresponds to
+   // the quality of the original covariance matrix
+   return rw->covQual();
+}
+
+template <class Minimizer>
+int RooAbsPdf::calculateSumW2CorrectedCovMatrix(Minimizer &minimizer, RooAbsReal const &nll) const
+{
+
+   // Make list of RooNLLVar components of FCN
+   std::vector<RooNLLVar *> nllComponents;
+   std::unique_ptr<RooArgSet> comps{nll.getComponents()};
+   for (auto const &arg : *comps) {
+      if (RooNLLVar *nllComp = dynamic_cast<RooNLLVar *>(arg)) {
+         nllComponents.push_back(nllComp);
+      }
+   }
+
+   // Calculated corrected errors for weighted likelihood fits
+   std::unique_ptr<RooFitResult> rw{minimizer.save()};
+   for (auto &comp : nllComponents) {
+      comp->applyWeightSquared(true);
+   }
+   coutI(Fitting) << "RooAbsPdf::fitTo(" << this->GetName()
+                  << ") Calculating sum-of-weights-squared correction matrix for covariance matrix"
+                  << std::endl;
+   minimizer.hesse();
+   std::unique_ptr<RooFitResult> rw2{minimizer.save()};
+   for (auto &comp : nllComponents) {
+      comp->applyWeightSquared(false);
+   }
+
+   // Apply correction matrix
+   const TMatrixDSym &matV = rw->covarianceMatrix();
+   TMatrixDSym matC = rw2->covarianceMatrix();
+   ROOT::Math::CholeskyDecompGenDim<double> decomp(matC.GetNrows(), matC);
+   if (!decomp) {
+      coutE(Fitting) << "RooAbsPdf::fitTo(" << this->GetName()
+                     << ") ERROR: Cannot apply sum-of-weights correction to covariance matrix: correction "
+                        "matrix calculated with weight-squared is singular"
+                     << std::endl;
+      return -1;
+   }
+
+   // replace C by its inverse
+   decomp.Invert(matC);
+   // the class lies about the matrix being symmetric, so fill in the
+   // part above the diagonal
+   for (int i = 0; i < matC.GetNrows(); ++i) {
+      for (int j = 0; j < i; ++j) {
+         matC(j, i) = matC(i, j);
+      }
+   }
+   matC.Similarity(matV);
+   // C now contiains V C^-1 V
+   // Propagate corrected errors to parameters objects
+   minimizer.applyCovarianceMatrix(matC);
+
+   return std::min(rw->covQual(), rw2->covQual());
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1263,6 +1383,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 ///                                **Example** (Data as above):
 ///                                The errors are as big as if one fitted to 100 events.
 ///       </table>
+///       \note If the `SumW2Error` correction is enabled, the covariance matrix quality stored in the RooFitResult
+///             object will be the minimum of the original covariance matrix quality and the quality of the covariance
+///             matrix calculated with the squared weights.
 /// <tr><td> `AsymptoticError()`               <td> Use the asymptotically correct approach to estimate errors in the presence of weights.
 ///                                                 This is slower but more accurate than `SumW2Error`. See also https://arxiv.org/abs/1911.01303).
 /// <tr><td> `PrefitDataFraction(double fraction)`
@@ -1525,110 +1648,15 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	m.hesse() ;
       }
 
+      int corrCovQual = -1;
+
       //asymptotically correct approach
       if (doAsymptotic==1 && m.getNPar()>0) {
-	//Calculated corrected errors for weighted likelihood fits
-	std::unique_ptr<RooFitResult> rw(m.save());
-	//Weighted inverse Hessian matrix
-	const TMatrixDSym& matV = rw->covarianceMatrix();
-	coutI(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") Calculating covariance matrix according to the asymptotically correct approach. If you find this method useful please consider citing https://arxiv.org/abs/1911.01303." << endl;
-
-	//Initialise matrix containing first derivatives
-	TMatrixDSym num(rw->floatParsFinal().getSize());
-	for (int k=0; k<rw->floatParsFinal().getSize(); k++)
-	   for (int l=0; l<rw->floatParsFinal().getSize(); l++)
-	      num(k,l) = 0.0;
-	RooArgSet* obs = getObservables(data);
-	//Create derivative objects
-	std::vector<std::unique_ptr<RooDerivative> > derivatives;
-	const RooArgList& floated = rw->floatParsFinal();
-	std::unique_ptr<RooArgSet> floatingparams( (RooArgSet*)getParameters(data)->selectByAttrib("Constant", false) );
-	for (const auto paramresult : floated) {
-	   auto paraminternal = static_cast<RooRealVar*>(floatingparams->find(*paramresult));
-	   assert(floatingparams->find(*paramresult)->IsA() == RooRealVar::Class());
-	   std::unique_ptr<RooDerivative> deriv( derivative(*paraminternal, *obs, 1) );
-	   derivatives.push_back(std::move(deriv));
-	}
-
-	//Loop over data
-	for (int j=0; j<data.numEntries(); j++) {
-	   //Sets obs to current data point, this is where the pdf will be evaluated
-	   *obs = *data.get(j);
-	   //Determine first derivatives
-	   std::vector<Double_t> diffs(floated.getSize(), 0.0);
-	   for (int k=0; k < floated.getSize(); k++) {
-	      const auto paramresult = static_cast<RooRealVar*>(floated.at(k));
-	      auto paraminternal = static_cast<RooRealVar*>(floatingparams->find(*paramresult));
-	      //first derivative to parameter k at best estimate point for this measurement
-	      Double_t diff = derivatives.at(k)->getVal();
-	      //need to reset to best fit point after differentiation
-	      *paraminternal = paramresult->getVal();
-	      diffs.at(k) = diff;
-	   }
-	   //Fill numerator matrix
-	   Double_t prob = getVal(obs);
-	   for (int k=0; k<floated.getSize(); k++) {
-	      for (int l=0; l<floated.getSize(); l++) {
-	         num(k,l) += data.weight()*data.weight()*diffs.at(k)*diffs.at(l)/(prob*prob);
-	      }
-	   }
-	}
-	num.Similarity(matV);
-
-	//Propagate corrected errors to parameters objects
-	m.applyCovarianceMatrix(num);
+        corrCovQual = calculateAsymptoticCorrectedCovMatrix(m, data);
       }
 
       if (doSumW2==1 && m.getNPar()>0) {
-	// Make list of RooNLLVar components of FCN
-	RooArgSet* comps = nll->getComponents();
-	vector<RooNLLVar*> nllComponents;
-	nllComponents.reserve(comps->getSize());
-	TIterator* citer = comps->createIterator();
-	RooAbsArg* arg;
-	while ((arg=(RooAbsArg*)citer->Next())) {
-	  RooNLLVar* nllComp = dynamic_cast<RooNLLVar*>(arg);
-	  if (!nllComp) continue;
-	  nllComponents.push_back(nllComp);
-	}
-	delete citer;
-	delete comps;
-
-	// Calculated corrected errors for weighted likelihood fits
-	RooFitResult* rw = m.save();
-	for (vector<RooNLLVar*>::iterator it = nllComponents.begin(); nllComponents.end() != it; ++it) {
-	  (*it)->applyWeightSquared(kTRUE);
-	}
-	coutI(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") Calculating sum-of-weights-squared correction matrix for covariance matrix" << endl ;
-	m.hesse();
-	RooFitResult* rw2 = m.save();
-	for (vector<RooNLLVar*>::iterator it = nllComponents.begin(); nllComponents.end() != it; ++it) {
-	  (*it)->applyWeightSquared(kFALSE);
-	}
-
-	// Apply correction matrix
-	const TMatrixDSym& matV = rw->covarianceMatrix();
-	TMatrixDSym matC = rw2->covarianceMatrix();
-	using ROOT::Math::CholeskyDecompGenDim;
-	CholeskyDecompGenDim<Double_t> decomp(matC.GetNrows(), matC);
-	if (!decomp) {
-	  coutE(Fitting) << "RooAbsPdf::fitTo(" << GetName()
-			 << ") ERROR: Cannot apply sum-of-weights correction to covariance matrix: correction matrix calculated with weight-squared is singular" <<endl ;
-	} else {
-	  // replace C by its inverse
-	  decomp.Invert(matC);
-	  // the class lies about the matrix being symmetric, so fill in the
-	  // part above the diagonal
-	  for (int i = 0; i < matC.GetNrows(); ++i)
-	      for (int j = 0; j < i; ++j) matC(j, i) = matC(i, j);
-	  matC.Similarity(matV);
-	  // C now contiains V C^-1 V
-	  // Propagate corrected errors to parameters objects
-	  m.applyCovarianceMatrix(matC);
-	}
-
-	delete rw;
-	delete rw2;
+         corrCovQual = calculateSumW2CorrectedCovMatrix(m, *nll);
       }
 
       if (minos) {
@@ -1645,9 +1673,13 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	string name = Form("fitresult_%s_%s",GetName(),data.GetName()) ;
 	string title = Form("Result of fit of p.d.f. %s to dataset %s",GetName(),data.GetName()) ;
 	ret = m.save(name.c_str(),title.c_str()) ;
+         if((doSumW2==1 || doAsymptotic==1) && m.getNPar()>0) {
+            ret->setCovQual(corrCovQual);
+         }
       }
 
     }
+
     if (optConst) {
       m.optimizeConst(0) ;
     }
@@ -1707,111 +1739,15 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	m.hesse() ;
       }
 
+      int corrCovQual = -1;
+
       //asymptotically correct approach
       if (doAsymptotic==1 && m.getNPar()>0) {
-	//Calculated corrected errors for weighted likelihood fits
-	std::unique_ptr<RooFitResult> rw(m.save());
-	//Weighted inverse Hessian matrix
-	const TMatrixDSym& matV = rw->covarianceMatrix();
-	coutI(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") Calculating covariance matrix according to the asymptotically correct approach. If you find this method useful please consider citing https://arxiv.org/abs/1911.01303." << endl;
-
-	//Initialise matrix containing first derivatives
-	TMatrixDSym num(rw->floatParsFinal().getSize());
-	for (int k=0; k<rw->floatParsFinal().getSize(); k++)
-	   for (int l=0; l<rw->floatParsFinal().getSize(); l++)
-	      num(k,l) = 0.0;
-	RooArgSet* obs = getObservables(data);
-	//Create derivative objects
-	std::vector<std::unique_ptr<RooDerivative> > derivatives;
-	const RooArgList& floated = rw->floatParsFinal();
-	std::unique_ptr<RooArgSet> floatingparams( (RooArgSet*)getParameters(data)->selectByAttrib("Constant", false) );
-	for (int k=0; k<floated.getSize(); k++) {
-	   RooRealVar* paramresult = (RooRealVar*)floated.at(k);
-	   RooRealVar* paraminternal = (RooRealVar*)floatingparams->find(paramresult->getTitle());
-	   std::unique_ptr<RooDerivative> deriv( derivative(*paraminternal, *obs, 1) );
-	   derivatives.push_back(std::move(deriv));
-	}
-
-	//Loop over data
-	for (int j=0; j<data.numEntries(); j++) {
-	   //Sets obs to current data point, this is where the pdf will be evaluated
-	   *obs = *data.get(j);
-	   //Determine first derivatives
-	   std::vector<Double_t> diffs(floated.getSize(), 0.0);
-	   for (int k=0; k<floated.getSize(); k++) {
-	      RooRealVar* paramresult = (RooRealVar*)floated.at(k);
-	      RooRealVar* paraminternal = (RooRealVar*)floatingparams->find(paramresult->getTitle());
-	      //First derivative to parameter k at best estimate point for this measurement
-	      Double_t diff = derivatives.at(k)->getVal();
-	      //Need to reset to best fit point after differentiation
-	      *paraminternal = paramresult->getVal();
-	      diffs.at(k) = diff;
-	   }
-	   //Fill numerator matrix
-	   Double_t prob = getVal(obs);
-	   for (int k=0; k<floated.getSize(); k++) {
-	      for (int l=0; l<floated.getSize(); l++) {
-	         num(k,l) += data.weight()*data.weight()*diffs.at(k)*diffs.at(l)/(prob*prob);
-	      }
-	   }
-	}
-	num.Similarity(matV);
-
-	//Propagate corrected errors to parameters objects
-	m.applyCovarianceMatrix(num);
+        corrCovQual = calculateAsymptoticCorrectedCovMatrix(m, data);
       }
 
       if (doSumW2==1 && m.getNPar()>0) {
-
-	// Make list of RooNLLVar components of FCN
-	list<RooNLLVar*> nllComponents ;
-	RooArgSet* comps = nll->getComponents() ;
-	RooAbsArg* arg ;
-	TIterator* citer = comps->createIterator() ;
-	while((arg=(RooAbsArg*)citer->Next())) {
-	  RooNLLVar* nllComp = dynamic_cast<RooNLLVar*>(arg) ;
-	  if (nllComp) {
-	    nllComponents.push_back(nllComp) ;
-	  }
-	}
-	delete citer ;
-	delete comps ;
-
-	// Calculated corrected errors for weighted likelihood fits
-	RooFitResult* rw = m.save() ;
-	for (list<RooNLLVar*>::iterator iter1=nllComponents.begin() ; iter1!=nllComponents.end() ; ++iter1) {
-	  (*iter1)->applyWeightSquared(kTRUE) ;
-	}
-	coutI(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") Calculating sum-of-weights-squared correction matrix for covariance matrix" << endl ;
-	m.hesse() ;
-	RooFitResult* rw2 = m.save() ;
-	for (list<RooNLLVar*>::iterator iter2=nllComponents.begin() ; iter2!=nllComponents.end() ; ++iter2) {
-	  (*iter2)->applyWeightSquared(kFALSE) ;
-	}
-
-	// Apply correction matrix
-	const TMatrixDSym& matV = rw->covarianceMatrix();
-	TMatrixDSym matC = rw2->covarianceMatrix();
-	using ROOT::Math::CholeskyDecompGenDim;
-	CholeskyDecompGenDim<Double_t> decomp(matC.GetNrows(), matC);
-	if (!decomp) {
-	  coutE(Fitting) << "RooAbsPdf::fitTo(" << GetName()
-			 << ") ERROR: Cannot apply sum-of-weights correction to covariance matrix: correction matrix calculated with weight-squared is singular" <<endl ;
-	} else {
-	  // replace C by its inverse
-	  decomp.Invert(matC);
-	  // the class lies about the matrix being symmetric, so fill in the
-	  // part above the diagonal
-	  for (int i = 0; i < matC.GetNrows(); ++i)
-	      for (int j = 0; j < i; ++j) matC(j, i) = matC(i, j);
-	  matC.Similarity(matV);
-	  // C now contiains V C^-1 V
-	  // Propagate corrected errors to parameters objects
-	  m.applyCovarianceMatrix(matC);
-	}
-
-	delete rw ;
-	delete rw2 ;
+         corrCovQual = calculateSumW2CorrectedCovMatrix(m, *nll);
       }
 
       if (minos) {
@@ -1828,6 +1764,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	string name = Form("fitresult_%s_%s",GetName(),data.GetName()) ;
 	string title = Form("Result of fit of p.d.f. %s to dataset %s",GetName(),data.GetName()) ;
 	ret = m.save(name.c_str(),title.c_str()) ;
+         if((doSumW2==1 || doAsymptotic==1) && m.getNPar()>0) {
+            ret->setCovQual(corrCovQual);
+         }
       }
 
     }
