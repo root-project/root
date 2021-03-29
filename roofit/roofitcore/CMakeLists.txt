@@ -170,6 +170,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooProofDriverSelector.h
     RooPullVar.h
     RooQuasiRandomGenerator.h
+    RooRatio.h
     RooRandom.h
     RooRandomizeParamMCSModule.h
     RooRangeBinning.h
@@ -385,6 +386,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooProofDriverSelector.cxx
     src/RooPullVar.cxx
     src/RooQuasiRandomGenerator.cxx
+    src/RooRatio.cxx
     src/RooRandom.cxx
     src/RooRandomizeParamMCSModule.cxx
     src/RooRangeBinning.cxx
