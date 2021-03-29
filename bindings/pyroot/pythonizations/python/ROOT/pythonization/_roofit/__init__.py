@@ -1,2 +1,2 @@
-from ._rooabspdf import pythonize_rooabspdf
+from ._roopythonize import pythonize_roofit
 

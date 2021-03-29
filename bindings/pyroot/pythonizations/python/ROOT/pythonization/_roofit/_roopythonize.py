@@ -44,15 +44,39 @@ def _fitTo(self, *args, **kwargs):
         return self._OriginalFitTo(*nargs)
 
 
-@pythonization()
-def pythonize_rooabspdf(klass, name):
+def _plotOn(self, *args, **kwargs):
+    """
+    Docstring
+    """
+    # Redefinition of `RooAbsReal.plotOn` for keyword arguments.
+    # the keywords must correspond to the CmdArg of the `plotOn` function.
     # Parameters:
-    # klass: class to be pythonized
-    # name: string containing the name of the class
+    # self: instance of `RooAbsReal` class
+    # *args: arguments passed to `plotOn`
+    # **kwargs: keyword arguments passed to `plotOn`
+    if not kwargs:
+        return self._OriginalPlotOn(*args)
+    else:
+        nargs = args + tuple((__getter(k, v) for k, v in kwargs.items()))
+        return self._OriginalPlotOn(*nargs)
 
-    if name == 'RooAbsPdf':
-        # Add pythonization of `fitTo` function
-        klass._OriginalFitTo = klass.fitTo
-        klass.fitTo = _fitTo
+
+@pythonization()
+def pythonize_roofit(klass, name):
+    # Parameters:
+    # klass: class to pythonize
+    # name: string containing the name of the class
+    if "Roo" in name :
+        if name == 'RooAbsReal' :
+            # Add pythonization of `plotOn` function
+            klass._OriginalPlotOn = klass.plotOn
+            klass.plotOn = _plotOn
+
+        elif name == 'RooAbsPdf' :
+            # Add pythonization of `fitTo` function
+            klass._OriginalFitTo = klass.fitTo
+            klass.fitTo = _fitTo
+
+    else: return
 
     return True
