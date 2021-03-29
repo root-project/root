@@ -55,9 +55,8 @@ RooRatio::RooRatio(const char *name, const char *title,
  Double_t RooRatio::evaluate() const 
  { 
 
-   if _dr == 0.0 {
-          coutE(InputArguments) << "RooProduct::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-          << " is not of type RooAbsReal or RooAbsCategory" << endl ;
+   if(_dr == 0.0) {
+          coutE(InputArguments) << "RooRatio::ctor(" << GetName() << ") ERROR: denominator is 0 " << endl ;
       RooErrorHandler::softAbort() ;
    }
    else
