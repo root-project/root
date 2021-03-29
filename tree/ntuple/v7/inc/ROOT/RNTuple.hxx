@@ -180,14 +180,28 @@ public:
 
    /// Provides access to an individual field that can contain either a scalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
-   /// field of a collection itself, like GetView<NTupleSize_t>("particle")
+   /// field of a collection itself, like GetView<NTupleSize_t>("particle").
+   ///
+   /// Raises an exception if there is no field with the given name.
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
+      if (fieldId == kInvalidDescriptorId) {
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '"
+            + fSource->GetDescriptor().GetName() + "'"
+         ));
+      }
       return RNTupleView<T>(fieldId, fSource.get());
    }
+
+   /// Raises an exception if there is no field with the given name.
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
+      if (fieldId == kInvalidDescriptorId) {
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '"
+            + fSource->GetDescriptor().GetName() + "'"
+         ));
+      }
       return RNTupleViewCollection(fieldId, fSource.get());
    }
 

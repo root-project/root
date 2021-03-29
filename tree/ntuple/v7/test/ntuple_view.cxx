@@ -121,3 +121,43 @@ TEST(RNTuple, Composable)
    }
    EXPECT_EQ(8, nEv);
 }
+
+TEST(RNTuple, MissingViewNames)
+{
+   FileRaii fileGuard("test_ntuple_missing_view_names.root");
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   auto muonModel = RNTupleModel::Create();
+   auto muonPt = muonModel->MakeField<float>("pt", 42.0);
+   auto muon = model->MakeCollection("Muon", std::move(muonModel));
+   {
+      RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+   }
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto viewPt = ntuple->GetView<float>("pt");
+   auto viewMuon = ntuple->GetViewCollection("Muon");
+   try {
+      auto badView = ntuple->GetView<float>("pT");
+      FAIL() << "missing field names should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'pT' in RNTuple 'myNTuple'"));
+   }
+   try {
+      auto badView = ntuple->GetViewCollection("Moun");
+      FAIL() << "missing field names should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'Moun' in RNTuple 'myNTuple'"));
+   }
+   try {
+      auto badView = viewMuon.GetView<float>("badField");
+      FAIL() << "missing field names should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badField' in RNTuple 'myNTuple'"));
+   }
+   try {
+      auto badView = viewMuon.GetViewCollection("badC");
+      FAIL() << "missing field names should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badC' in RNTuple 'myNTuple'"));
+   }
+}
