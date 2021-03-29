@@ -29,7 +29,6 @@ endif (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
 
 #--- CPU tests. ----------------------------
 if (BLAS_FOUND AND imt)
-    include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 
     # GRU - Forward CPU
     ROOT_EXECUTABLE(testGRUForwardPassCpu TestGRUForwardPassCpu.cxx LIBRARIES ${Libraries})
