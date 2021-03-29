@@ -72,10 +72,12 @@ or by passing the appropriate parameter to executors' constructors, as in
 See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-11014) for more context.
 
 ### Interpreter
+
 - cling's LLVM is upgraded to version 9.0
 - New interface to enable/disable optional cling features. Currently, it can be used to enable/disable support for redefinitions. See [this](https://github.com/root-project/cling/issues/360) issue for more information.
 
 ### Multithreading
+
 - Fix an uninitialized variable in global read-write lock which could have caused deadlocks or crashes in some rare cases.
 - Default global read-write lock transitioned to new implementation based on TBB thread local storage when TBB is available on supported platforms (all except Windows).  This gives an O(10%) performance improvement for some typical RDataFrame scenarios with 256 threads due to reduced lock contention.
 
@@ -130,6 +132,7 @@ df = RDataFrame("mytree","myfile.root")
 ```
 
 The main goal of this package is to support running any RDataFrame application distributedly. Nonetheless, not all RDataFrame operations currently work with this package. The subset that is currently available is:
+
 - AsNumpy
 - Count
 - Define
@@ -147,9 +150,10 @@ The main goal of this package is to support running any RDataFrame application d
 with support for more operations coming in the future.
 
 Any distributed RDataFrame backend inherits the dependencies of the underlying software needed to distribute the applications. The Spark backend for example has the following runtime dependencies (ROOT will build just fine without, but the feature will be unavailable without these packages):
+
 - [pyspark](https://spark.apache.org/docs/latest/api/python/index.html), that in turn has its own set of dependencies:
-  - [Java](https://www.java.com/en/)
-  - [py4j](https://www.py4j.org/)
+- [Java](https://www.java.com/en/)
+- [py4j](https://www.py4j.org/)
 
 Tests for the Spark backend can be turned ON/OFF with the new build option `test_distrdf_pyspark` (OFF by default).
 
@@ -183,6 +187,7 @@ Tests for the Spark backend can be turned ON/OFF with the new build option `test
 
 
 ### Massive speed up of RooFit's `BatchMode` on CPUs with vector extensions
+
 RooFit's [`BatchMode`](https://root.cern/doc/master/classRooAbsPdf.html#a8f802a3a93467d5b7b089e3ccaec0fa8) has been around
 [since ROOT 6.20](https://root.cern/doc/v620/release-notes.html#fast-function-evaluation-and-vectorisation), but to
 fully use vector extensions of modern CPUs, a manual compilation of ROOT was necessary, setting the required compiler flags.
@@ -199,14 +204,18 @@ See [Demo notebook in SWAN](https://github.com/hageboeck/rootNotebooks),
 [arxiv:2012.02746](https://arxiv.org/abs/2012.02746).
 
 #### RooBatchCompute Library
+
 The library that contains the optimised computation functions is called `RooBatchCompute`. The PDFs contained in this library are highly optimized, and there is currently work in progress for further optimization using CUDA and multi-threaded computations. If you use PDFs that are not part of the official RooFit, you are very well invited to add them to RooFit by [submitting a ticket](https://github.com/root-project/root/issues/new) or a [pull request](https://github.com/root-project/root/pulls).
 
 #### Benefiting from batch computations by overriding `evaluateSpan()`
+
 For PDFs that are not part of RooFit, it is possible to benefit from batch computations without vector extensions. To do so, consult the [RooBatchCompute readme](https://github.com/root-project/root/tree/v6-24-00-patches/roofit/batchcompute).
 
 
 #### Migrating PDFs that override the deprecated `evaluateBatch()`
+
 In case you have created a custom PDF which overrides `evaluateBatch()`, please follow these steps to update your code to the newest version:
+
 1. Change the signature of the function both in the source and header file:
 ```diff
 - RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchSize) const
@@ -245,15 +254,18 @@ using namespace RooBatchCompute;
 ```
 
 ### Unbiased binned fits
+
 When RooFit performs binned fits, it takes the probability density at the bin centre as a proxy for the probability in the bin. This can lead to a bias.
 To alleviate this, the new class [RooBinSamplingPdf](https://root.cern/doc/v624/classRooBinSamplingPdf.html) has been added to RooFit.
 Also see [arxiv:2012.02746](https://arxiv.org/abs/2012.02746).
 
 ### More accurate residual and pull distributions
+
 When making residual or pull distributions with `RooPlot::residHist` or `RooPlot::pullHist`, the histogram is now compared with the curve's average values within a given bin by default, ensuring that residual and pull distributions are valid for strongly curved distributions.
 The old default behaviour was to interpolate the curve at the bin centres, which can still be enabled by setting the `useAverage` parameter of `RooPlot::residHist` or `RooPlot::pullHist` to `false`.
 
 ### Improved recovery from invalid parameters
+
 When a function in RooFit is undefined (Poisson with negative mean, PDF with negative values, etc), RooFit can now pass information about the
 "badness" of the violation to the minimiser. The minimiser can use this to compute a gradient to find its way out of the undefined region.
 This can drastically improve its ability to recover when unstable fit models are used, for example RooPolynomial.
@@ -262,12 +274,14 @@ For details, see the RooFit tutorial [rf612_recoverFromInvalidParameters.C](http
 and [arxiv:2012.02746](https://arxiv.org/abs/2012.02746).
 
 ### Modernised RooDataHist
+
 RooDataHist was partially modernised to improve const-correctness, to reduce side effects as well as its memory footprint, and to make
 it ready for RooFit's faster batch evaluations.
 Derived classes that directly access protected members might need to be updated. This holds especially for direct accesses to `_curWeight`,
 `_curWeightErrLo`, etc, which have been removed. (It doesn't make sense to write to these members from const functions when the same information
 can be retrieved using an index access operator of an array.) All similar accesses in derived classes should be replaced by the getters `get_curWeight()`
 or better `get_wgt(i)`, which were also supported in ROOT \<v6.24. More details on what happened:
+
 - Reduced side effects. This code produces undefined behaviour because the side effect of `get(i)`, i.e., loading the new weight into `_curWeight`
   is not guaranteed to happen before `weight()` is called:
 ```
@@ -306,6 +320,7 @@ or better `get_wgt(i)`, which were also supported in ROOT \<v6.24. More details 
   auto index = dataHist.getIndex(externalCoordinates); // No side effect
 ```
   This will allow for marking more functions const, or for lying less about const correctness.
+
 - RooDataHist now supports fits with RooFit's faster `BatchMode()`.
 - Lower memory footprint. If weight errors are not needed, RooDataHist now allocates only 40% of the memory that the old implementation used.
 
@@ -316,6 +331,7 @@ Two of these overloads accept a `sumSet` parameter to not sum over all variables
 These two overloads previously behaved inconsistently when the `correctForBinSize` or `inverseBinCor` flags were set.
 If you use the `RooDataHist::sum()` function in you own classes, please check that it can still be used with its new logic.
 The new and corrected bin correction behaviour is:
+
   - `correctForBinSize`: multiply counts in each bin by the bin volume corresponding to the variables in `sumSet`
   - `inverseBinCor`: divide counts in each bin by the bin volume corresponding to the variables *not* in `sumSet`
 
@@ -323,6 +339,7 @@ The new and corrected bin correction behaviour is:
 
 So far, the Crystal Ball distribution has been represented in RooFit only by the `RooCBShape` class, which has a Gaussian core and a single power-law tail on one side.
 This release introduces [`RooCrystalBall`](https://root.cern/doc/v624/classRooCrystalBall.html), which implements some common generalizations of the Crystal Ball shape:
+
   - symmetric or asymmetric power-law tails on both sides
   - different width parameters for the left and right sides of the Gaussian core
 
@@ -346,17 +363,20 @@ The new `RooCrystalBall` class can substitute the `RooDSCBShape` and `RooSDSCBSh
 ## Networking Libraries
 
 ### Multithreaded support for FastCGI
+
 Now when THttpServer creates FastCGI engine, 10 worker threads used to process requests
 received via FastCGI channel. This significantly increase a performance, especially when
 several clients are connected.
 
 ### Better security for THttpServer with webgui
+
 If THttpServer created for use with webgui widgets (RBrowser, RCanvas, REve), it only will
 provide access to the widgets via websocket connection - any other kind of requests like root.json
 or exe.json will be refused completely. Combined with connection tokens and https protocol,
 this makes usage of webgui components in public networks more secure.
 
 ### Enabled WLCG Bearer Tokens support in RDavix
+
 Bearer tokens are part of WLCG capability-based infrastructure with capability-based scheme which uses an infrastructure that describes what the bearer is allowed to do as opposed to who that bearer is. Token discovery procedure are developed according WLCG Bearer Token Discovery specification document (https://github.com/WLCG-AuthZ-WG/bearer-token-discovery/blob/master/specification.md). Short overview:
    1. If the `BEARER_TOKEN` environment variable is set, then the value is taken to be the token contents.
    2. If the `BEARER_TOKEN_FILE` environment variable is set, then its value is interpreted as a filename. The contents of the specified file are taken to be the token contents.
@@ -366,6 +386,7 @@ Bearer tokens are part of WLCG capability-based infrastructure with capability-b
 ## GUI Libraries
 
 ### RBrowser improvements
+
 - central factory methods to handle browsing, editing and drawing of different classes
 - simple possibility to extend RBrowser on user-defined classes
 - support of web-based geometry viewer
@@ -387,6 +408,7 @@ Bearer tokens are part of WLCG capability-based infrastructure with capability-b
 ## JavaScript ROOT
 
 ### Major JSROOT update to version 6
+
 - update all used libraries `d3.js`, `three.js`, `MathJax.js`, openui5
 - change to Promise based interface for all async methods, remove call-back arguments
 - change scripts names, core scripts name now `JSRoot.core.js`
