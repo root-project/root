@@ -1219,8 +1219,11 @@ void RWebWindow::SendBinary(unsigned connid, const void *data, std::size_t len)
 
 void RWebWindow::AssignThreadId()
 {
-   fUseServerThreads = false;
-   fProcessMT = false;
+   // Hack to execute in http ws thread.
+   fProcessMT = true;
+   fCallbacksThrdIdSet = false;
+   return;
+
    fCallbacksThrdIdSet = true;
    fCallbacksThrdId = std::this_thread::get_id();
    if (!RWebWindowsManager::IsMainThrd()) {
