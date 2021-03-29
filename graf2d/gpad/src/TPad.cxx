@@ -560,6 +560,7 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
             leg->AddEntry( obj, mes.Data(), opt );
          }
       }
+      opt = "";
    }
    if (leg) {
       TVirtualPad *gpadsave;
