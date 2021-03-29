@@ -18,7 +18,7 @@ if(CMAKE_VERSION VERSION_LESS 3.14.4)
         RESULT_VARIABLE NINJAVERSIONRES)
       if(${NINJAVERSIONRES} EQ 0)
         if(${NINJAVERSION} VERSION_GREATER 1.8.2)
-          message(FATAL_ERROR "You have hit https://gitlab.kitware.com/cmake/cmake/issues/19222\n"
+          message(WARNING "You have hit https://gitlab.kitware.com/cmake/cmake/issues/19222\n"
             "Your build will be indeterministic, i.e. unreliable for incremental builds."
             "To fix this, please install CMake >= 3.14.4!")
         endif()
