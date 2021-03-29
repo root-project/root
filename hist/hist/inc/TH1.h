@@ -59,14 +59,14 @@ class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 public:
 
-   // enumeration specifying type of statistics for bin errors
+   /// Enumeration specifying type of statistics for bin errors
    enum  EBinErrorOpt {
-         kNormal = 0,    ///< errors with Normal (Wald) approximation: errorUp=errorLow= sqrt(N)
-         kPoisson = 1 ,  ///< errors from Poisson interval at 68.3% (1 sigma)
-         kPoisson2 = 2   ///< errors from Poisson interval at 95% CL (~ 2 sigma)
+         kNormal = 0,    ///< Errors with Normal (Wald) approximation: errorUp=errorLow= sqrt(N)
+         kPoisson = 1 ,  ///< Errors from Poisson interval at 68.3% (1 sigma)
+         kPoisson2 = 2   ///< Errors from Poisson interval at 95% CL (~ 2 sigma)
    };
 
-   // enumeration specifying which axes can be extended
+   /// Enumeration specifying which axes can be extended
    enum {
       kNoAxis  = 0,      ///< NOTE: Must always be 0 !!!
       kXaxis = BIT(0),
@@ -85,36 +85,36 @@ public:
    friend class TH1Merger;
 
 protected:
-    Int_t         fNcells;          ///< number of bins(1D), cells (2D) +U/Overflows
-    TAxis         fXaxis;           ///< X axis descriptor
-    TAxis         fYaxis;           ///< Y axis descriptor
-    TAxis         fZaxis;           ///< Z axis descriptor
-    Short_t       fBarOffset;       ///< (1000*offset) for bar charts or legos
-    Short_t       fBarWidth;        ///< (1000*width) for bar charts or legos
-    Double_t      fEntries;         ///< Number of entries
-    Double_t      fTsumw;           ///< Total Sum of weights
-    Double_t      fTsumw2;          ///< Total Sum of squares of weights
-    Double_t      fTsumwx;          ///< Total Sum of weight*X
-    Double_t      fTsumwx2;         ///< Total Sum of weight*X*X
-    Double_t      fMaximum;         ///< Maximum value for plotting
-    Double_t      fMinimum;         ///< Minimum value for plotting
-    Double_t      fNormFactor;      ///< Normalization factor
-    TArrayD       fContour;         ///< Array to display contour levels
-    TArrayD       fSumw2;           ///< Array of sum of squares of weights
-    TString       fOption;          ///< histogram options
+    Int_t         fNcells;          ///<  Number of bins(1D), cells (2D) +U/Overflows
+    TAxis         fXaxis;           ///<  X axis descriptor
+    TAxis         fYaxis;           ///<  Y axis descriptor
+    TAxis         fZaxis;           ///<  Z axis descriptor
+    Short_t       fBarOffset;       ///<  (1000*offset) for bar charts or legos
+    Short_t       fBarWidth;        ///<  (1000*width) for bar charts or legos
+    Double_t      fEntries;         ///<  Number of entries
+    Double_t      fTsumw;           ///<  Total Sum of weights
+    Double_t      fTsumw2;          ///<  Total Sum of squares of weights
+    Double_t      fTsumwx;          ///<  Total Sum of weight*X
+    Double_t      fTsumwx2;         ///<  Total Sum of weight*X*X
+    Double_t      fMaximum;         ///<  Maximum value for plotting
+    Double_t      fMinimum;         ///<  Minimum value for plotting
+    Double_t      fNormFactor;      ///<  Normalization factor
+    TArrayD       fContour;         ///<  Array to display contour levels
+    TArrayD       fSumw2;           ///<  Array of sum of squares of weights
+    TString       fOption;          ///<  Histogram options
     TList        *fFunctions;       ///<->Pointer to list of functions (fits and user)
-    Int_t         fBufferSize;      ///< fBuffer size
+    Int_t         fBufferSize;      ///<  fBuffer size
     Double_t     *fBuffer;          ///<[fBufferSize] entry buffer
-    TDirectory   *fDirectory;       ///<!Pointer to directory holding this histogram
-    Int_t         fDimension;       ///<!Histogram dimension (1, 2 or 3 dim)
-    Double_t     *fIntegral;        ///<!Integral of bins used by GetRandom
-    TVirtualHistPainter *fPainter;  ///<!pointer to histogram painter
-    EBinErrorOpt  fBinStatErrOpt;   ///< option for bin statistical errors
-    EStatOverflows fStatOverflows;  ///< per object flag to use under/overflows in statistics
-    static Int_t  fgBufferSize;     ///<!default buffer size for automatic histograms
-    static Bool_t fgAddDirectory;   ///<!flag to add histograms to the directory
-    static Bool_t fgStatOverflows;  ///<!flag to use under/overflows in statistics
-    static Bool_t fgDefaultSumw2;   ///<!flag to call TH1::Sumw2 automatically at histogram creation time
+    TDirectory   *fDirectory;       ///<! Pointer to directory holding this histogram
+    Int_t         fDimension;       ///<! Histogram dimension (1, 2 or 3 dim)
+    Double_t     *fIntegral;        ///<! Integral of bins used by GetRandom
+    TVirtualHistPainter *fPainter;  ///<! Pointer to histogram painter
+    EBinErrorOpt  fBinStatErrOpt;   ///<  Option for bin statistical errors
+    EStatOverflows fStatOverflows;  ///<  Per object flag to use under/overflows in statistics
+    static Int_t  fgBufferSize;     ///<! Default buffer size for automatic histograms
+    static Bool_t fgAddDirectory;   ///<! Flag to add histograms to the directory
+    static Bool_t fgStatOverflows;  ///<! Flag to use under/overflows in statistics
+    static Bool_t fgDefaultSumw2;   ///<! Flag to call TH1::Sumw2 automatically at histogram creation time
 
 public:
    static Int_t FitOptionsMake(Option_t *option, Foption_t &Foption);
@@ -159,28 +159,28 @@ protected:
    static bool CheckConsistency(const TH1* h1, const TH1* h2);
 
 public:
-   // TH1 status bits
+   /// TH1 status bits
    enum EStatusBits {
-      kNoStats     = BIT(9),   ///< don't draw stats box
-      kUserContour = BIT(10),  ///< user specified contour levels
+      kNoStats     = BIT(9),   ///< Don't draw stats box
+      kUserContour = BIT(10),  ///< User specified contour levels
       // kCanRebin    = BIT(11), ///< FIXME DEPRECATED - to be removed, replaced by SetCanExtend / CanExtendAllAxes
       kLogX        = BIT(15),  ///< X-axis in log scale
-      kIsZoomed   = BIT(16),   ///< bit set when zooming on Y axis
-      kNoTitle     = BIT(17),  ///< don't draw the histogram title
+      kIsZoomed   = BIT(16),   ///< Bit set when zooming on Y axis
+      kNoTitle     = BIT(17),  ///< Don't draw the histogram title
       kIsAverage   = BIT(18),  ///< Bin contents are average (used by Add)
       kIsNotW      = BIT(19),  ///< Histogram is forced to be not weighted even when the histogram is filled with weighted
                                /// different than 1.
       kAutoBinPTwo = BIT(20),  ///< Use Power(2)-based algorithm for autobinning
       kIsHighlight = BIT(21)   ///< bit set if histo is highlight
    };
-   // size of statistics data (size of  array used in GetStats()/ PutStats )
-   // s[0]  = sumw       s[1]  = sumw2
-   // s[2]  = sumwx      s[3]  = sumwx2
-   // s[4]  = sumwy      s[5]  = sumwy2   s[6]  = sumwxy
-   // s[7]  = sumwz      s[8]  = sumwz2   s[9]  = sumwxz   s[10]  = sumwyz
-   // s[11] = sumwt      s[12] = sumwt2                 (11 and 12 used only by TProfile3D)
+   /// Size of statistics data (size of  array used in GetStats()/ PutStats )
+   ///  - s[0]  = sumw       s[1]  = sumw2
+   ///  - s[2]  = sumwx      s[3]  = sumwx2
+   ///  - s[4]  = sumwy      s[5]  = sumwy2   s[6]  = sumwxy
+   ///  - s[7]  = sumwz      s[8]  = sumwz2   s[9]  = sumwxz   s[10]  = sumwyz
+   ///  - s[11] = sumwt      s[12] = sumwt2                 (11 and 12 used only by TProfile3D)
    enum {
-      kNstat       = 13  // size of statistics data (up to TProfile3D)
+      kNstat       = 13  ///< Size of statistics data (up to TProfile3D)
    };
 
 

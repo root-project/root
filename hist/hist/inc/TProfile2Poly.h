@@ -75,7 +75,7 @@ public:
    Long64_t Merge(TCollection *in) override;
    virtual void Reset(Option_t *option = "") override;
 
-   // option to dispay different measures on bins
+   // option to display different measures on bins
    void SetContentToAverage(); // this one is used by default
    void SetContentToError();
 

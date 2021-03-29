@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.          *
  *                                                                    *
  **********************************************************************/
-//////////////////////////////////////////////////////////////////////////////
+
 /** \class TKDE
     \ingroup Hist
  Kernel Density Estimation class.
@@ -891,7 +891,7 @@ void TKDE::SetBinCountData() {
 //                  - Extra options can be passed in opt for the drawing of the corresponding TF1 or TGraph
 //
 // NOTE:  The functions GetDrawnFunction(), GetDrawnUpperFunction(), GetDrawnLowerFunction()
-//  and GetGraphWithErrors() return the corresponding drawn objects (which are maneged by the TKDE)
+//  and GetGraphWithErrors() return the corresponding drawn objects (which are managed by the TKDE)
 // They can be used to changes style, color, etc..
 ////
 void TKDE::Draw(const Option_t* opt) {
@@ -929,7 +929,7 @@ void TKDE::Draw(const Option_t* opt) {
 }
 
 ///////////////////////////////////////////////////////////////////////
-///  Draws a TGraphErrors wih KDE values and errors
+///  Draws a TGraphErrors with KDE values and errors
 void TKDE::DrawErrors(TString& drawOpt)
 {
    if (fGraph) delete fGraph;
@@ -1160,7 +1160,7 @@ Double_t TKDE::ComputeKernelIntegral() const {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/// Internal funciton to compute statistics (mean,stddev) using always all the provided data (i.e. no binning)
+/// Internal function to compute statistics (mean,stddev) using always all the provided data (i.e. no binning)
 void TKDE::ComputeDataStats() {
    /// in case of weights use
    if (!fEventWeights.empty() ) {
