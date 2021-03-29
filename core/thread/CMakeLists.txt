@@ -82,7 +82,7 @@ set_source_files_properties(src/RConcurrentHashColl.cxx
   PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/foundation/res)
 
 if((tbb OR builtin_tbb) AND NOT MSVC)
-  target_include_directories(Thread SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
+  target_include_directories(Thread PRIVATE ${TBB_INCLUDE_DIRS})
   target_link_libraries(Thread PRIVATE ${TBB_LIBRARIES})
   set_target_properties(Thread PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
 endif()
