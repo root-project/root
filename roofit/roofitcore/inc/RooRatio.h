@@ -41,15 +41,15 @@ protected:
   RooRealProxy _numerator ;
   RooRealProxy _denominator ;
 
-  class CacheElem : public RooAbsCacheElement {
-  public:
-      virtual ~CacheElem();
-      // Payload
-      RooAbsReal _numerator ;
-      RooAbsReal _denominator ;
-      RooArgList _ownedList ;
-  };
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager
+//  class CacheElem : public RooAbsCacheElement {
+//  public:
+//      virtual ~CacheElem();
+//      // Payload
+//      RooAbsReal _numerator ;
+//      RooAbsReal _denominator ;
+//      RooArgList _ownedList ;
+//  };
+//  mutable RooObjCacheManager _cacheMgr ; // The cache manager
 
   Double_t evaluate() const;
 
