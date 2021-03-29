@@ -8,10 +8,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/**
-  \defgroup vecops VecOps
-*/
-
 #ifndef ROOT_RVEC
 #define ROOT_RVEC
 
@@ -124,10 +120,18 @@ void EmplaceBack(std::vector<bool> &v, Args &&... args)
 } // End of Internal NS
 
 namespace VecOps {
+
+// Note that we open here with @{ the Doxygen group vecops and it is
+// closed again at the end of the C++ namespace VecOps
+/**
+  * \defgroup vecops VecOps
+  * A "std::vector"-like collection of values implementing handy operation to analyse them
+  * @{
+*/
+
 // clang-format off
 /**
 \class ROOT::VecOps::RVec
-\ingroup vecops
 \brief A "std::vector"-like collection of values implementing handy operation to analyse them
 \tparam T The type of the contained objects
 
@@ -1872,6 +1876,8 @@ RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
 #endif // R__HAS_VDT
 
 #endif // _VECOPS_USE_EXTERN_TEMPLATES
+
+/** @} */ // end of Doxygen group vecops
 
 } // End of VecOps NS
 
