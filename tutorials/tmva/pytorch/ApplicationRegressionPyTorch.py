@@ -24,7 +24,7 @@ reader = TMVA.Reader("Color:!Silent")
 
 # Load data
 if not isfile('tmva_reg_example.root'):
-    call(['curl', '-O', 'http://root.cern.ch/files/tmva_reg_example.root'])
+    call(['curl', '-O', 'http://root.cern.ch/files/tmva_reg_example.root', '-L'])
 
 data = TFile.Open('tmva_reg_example.root')
 tree = data.Get('TreeR')
