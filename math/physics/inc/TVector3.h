@@ -34,6 +34,9 @@ public:
    TVector3(const Float_t *);
    // Constructors from an array
 
+   TVector3(Double_t phi, Double_t theta);
+   // Creates a Cartesian TVector3 from two angles Phi and Theta
+
    TVector3(const TVector3 &);
    // The copy constructor.
 
@@ -104,7 +107,6 @@ public:
 
    inline void SetPerp(Double_t);
    // Set the transverse component keeping phi and z constant.
-
    inline Double_t Perp2(const TVector3 &) const;
    // The transverse component w.r.t. given axis squared.
 
@@ -139,12 +141,10 @@ public:
 
    TVector3 Unit() const;
    // Unit vector parallel to this.
-   
-   TVector3 ToSpherical(const TVector3 &c) const;
-   // Converts a Cartesian Vector into a Spherical Vector
-   
-   TVector3 Cartesian(Double_t phi, Double_t theta) const;
-   // Converts two angles into a Cartesian Trabsformation Vector
+
+   TVector3 ToSpherical() const;
+   /// Converts a Cartesian Vector into a Spherical Vector
+   /// Spherical Vector: (r, theta, phi)
 
    inline TVector3 Orthogonal() const;
    // Vector orthogonal to this (Geant4).
@@ -265,6 +265,10 @@ inline TVector3::TVector3(const Double_t * x0)
 inline TVector3::TVector3(const Float_t * x0)
 : fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}
 
+inline TVector3::TVector3(Double_t phi, Double_t theta)
+   : fX(TMath::Sin(theta) * TMath::Cos(phi)), fY(TMath::Sin(theta) * TMath::Sin(phi)), fZ(TMath::Cos(theta))
+{
+}
 
 inline Double_t TVector3::operator () (int i) const {
    switch(i) {

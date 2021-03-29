@@ -178,15 +178,6 @@ ClassImp(TVector3);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert two angles Theta and Phi into a Cartesian Transformation Vector
-
-TVector3 TVector3::Cartesian(Double_t phi, Double_t theta)
-{
-   return TVector3 spherical(TMath::Sin(theta) * TMath::Cos(phi), TMath::Sin(theta) * TMath::Sin(phi),
-                             TMath::Cos(theta));
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Multiplication operator
 
 TVector3 & TVector3::operator *= (const TRotation & m){
@@ -253,11 +244,11 @@ Double_t TVector3::Theta() const
 /// Convert a Cartesian Vector into a Spherical Vector
 /// Spherical Vector: (r, theta, phi)
 
-TVector3 TVector3::ToSpherical(const TVector3 &c)
+TVector3 TVector3::ToSpherical() const
 {
-   return TVector3 sphericalVector(TMath::Sqrt(c.X() * c.X() + c.Y() * c.Y() + c.Z() * c.Z()),
-                                   TMath::ACos(c.Z() / TMath::Sqrt(c.X() * c.X() + c.Y() * c.Y() + c.Z() * c.Z())),
-                                   TMath::ATan(c.Y() / c.X()));
+   TVector3 sphericalVector(TMath::Sqrt(fX * fX + fY * fY + fZ * fZ),
+                            TMath::ACos(fZ / TMath::Sqrt(fX * fX + fY * fY + fZ * fZ)), TMath::ATan(fY / fX));
+   return sphericalVector;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
