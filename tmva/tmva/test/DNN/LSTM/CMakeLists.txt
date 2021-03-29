@@ -41,7 +41,6 @@ endif (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
 
 #--- CPU tests. ----------------------------
 if (BLAS_FOUND AND imt)
-    include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 
     # LSTM - Forward CPU
     ROOT_EXECUTABLE(testLSTMForwardPassCpu TestLSTMForwardPassCpu.cxx LIBRARIES ${Libraries})
