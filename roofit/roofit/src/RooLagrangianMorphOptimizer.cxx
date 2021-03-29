@@ -81,7 +81,8 @@ void RooLagrangianMorphOptimizer::setupMorphFunc(){
    // }else{
       RooLagrangianMorphing::RooLagrangianMorphConfig config;
       config.setVertices(this->vertices); 
-      this->morphFunc = new RooLagrangianMorphing::RooLagrangianMorph("morphing","morphing","","xsection",config,this->temporaries_list);
+      config.setObservable("xsection");
+      this->morphFunc = new RooLagrangianMorphing::RooLagrangianMorphFunc("morphing","morphing",config,this->temporaries_list);
   //  }
   }
 }
@@ -267,8 +268,9 @@ RooLagrangianMorphOptimizer::RooLagrangianMorphOptimizer(const char* input, cons
 {
   // constructor without interference setting
   RooLagrangianMorphing::RooLagrangianMorphConfig config;
-  config.setVertices(this->vertices); 
-  this->xsHelper = new RooLagrangianMorphing::RooLagrangianMorph("xsHelper","xsHelper","",inputobservable.Data(),config,this->initInputs(xsInputsArg));
+  config.setVertices(this->vertices);
+  config.setObservable(inputobservable.Data());
+  this->xsHelper = new RooLagrangianMorphing::RooLagrangianMorphFunc("xsHelper","xsHelper",config,this->initInputs(xsInputsArg));
   this->setup(startvalues);
 }
 

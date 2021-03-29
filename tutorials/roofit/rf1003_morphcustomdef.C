@@ -30,7 +30,7 @@ void rf1003_morphcustomdef()
 
   // Define identifier for input sample foldernames,
   // require 15 samples to describe 3 paramter morphing function
-  std::vector<std::string> samplelist = {"kAwwkHwwkSM0","kAwwkHwwkSM1","kAwwkHwwkSM10","kAwwkHwwkSM11","kAwwkHwwkSM12",
+  std::vector<std::string> samplelist = {"kAwwkHwwkSM1","kAwwkHwwkSM0","kAwwkHwwkSM10","kAwwkHwwkSM11","kAwwkHwwkSM12",
                                          "kAwwkHwwkSM13","kAwwkHwwkSM2","kAwwkHwwkSM3","kAwwkHwwkSM4","kAwwkHwwkSM5",
                                          "kAwwkHwwkSM6","kAwwkHwwkSM7","kAwwkHwwkSM8","kAwwkHwwkSM9","kSM0"};
 
@@ -73,8 +73,10 @@ void rf1003_morphcustomdef()
   // in the Higgs Characterisation Model
   RooLagrangianMorphing::RooLagrangianMorphConfig config;
   config.setCouplings(prodCouplings, decCouplings);
-  RooLagrangianMorphing::RooLagrangianMorph morphfunc_ptjj("morphunc_ptjj","morphfuinc_ptjj",infilename.c_str(),"twoSelJets/ptjj", config, inputs);
-  RooLagrangianMorphing::RooLagrangianMorph morphfunc_etaj1("morphunc_etaj1","morphfunc_etaj1",infilename.c_str(),"twoSelJets/etaj1", config, inputs);
+  config.setFileName(infilename.c_str());
+
+  RooLagrangianMorphing::RooLagrangianMorphFunc morphfunc_ptjj("morphunc_ptjj","morphfuinc_ptjj","twoSelJets/ptjj", config, inputs);
+  RooLagrangianMorphing::RooLagrangianMorphFunc morphfunc_etaj1("morphunc_etaj1","morphfunc_etaj1","twoSelJets/etaj1", config, inputs);
 
   // Define identifier for validation sample
   std::string validationsample("v1");

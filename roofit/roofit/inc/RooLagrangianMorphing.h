@@ -17,7 +17,7 @@
 //
 // RooLagrangianMorph
 //
-// The RooLagrangianMorph is a type of RooAbsReal that allows to morph
+// The RooLagrangianMorphFunc is a type of RooAbsReal that allows to morph
 // different input EFT samples to some arbitrary output EFT
 // sample, as long as the desired set of output parameters lie
 // within the realm spanned by the input samples. More
@@ -38,7 +38,7 @@
 //  | | ...
 //  | ...
 //
-// The RooLagrangianMorph operates on this structure, extracts data
+// The RooLagrangianMorphFunc operates on this structure, extracts data
 // and meta-data and produces a morphing result as a RooRealSum
 // consisting of the input histograms with appropriate prefactors.
 //
@@ -65,164 +65,166 @@
 #include "TMatrixD.h"
 #include "RooAbsArg.h"
 
-class RooWorkspace;
-class RooParamHistFunc;
-class TPair;
-class TFolder;
+class RooWorkspace ;
+class RooParamHistFunc ;
+class TPair ;
+class TFolder ;
 #include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
 
 namespace RooLagrangianMorphing {
- class RooLagrangianMorph;
- typedef std::map<const std::string,double> ParamSet;
-  typedef std::map<const std::string,int> FlagSet;
-  typedef std::map<const std::string,RooLagrangianMorphing::ParamSet > ParamMap;
-  typedef std::map<const std::string,RooLagrangianMorphing::FlagSet > FlagMap;
-  extern bool gAllowExceptions;
-  double implementedPrecision();
-  RooWorkspace* makeCleanWorkspace(RooWorkspace* oldWS, const char* newName = 0, const char* mcname = "ModelConfig", bool keepData = false);
-  void importToWorkspace(RooWorkspace* ws, const RooAbsReal* object);
-  void importToWorkspace(RooWorkspace* ws, RooAbsData* object);
-  void append(RooLagrangianMorphing::ParamSet& set, const char* str, double val);
-  void append(RooLagrangianMorphing::ParamMap& map, const char* str, RooLagrangianMorphing::ParamSet& set);
+ class RooLagrangianMorphFunc ;
+ typedef std::map<const std::string,double> ParamSet ;
+  typedef std::map<const std::string,int> FlagSet ;
+  typedef std::map<const std::string,RooLagrangianMorphing::ParamSet > ParamMap ;
+  typedef std::map<const std::string,RooLagrangianMorphing::FlagSet > FlagMap ;
+  extern bool gAllowExceptions ;
+  double implementedPrecision() ;
+  RooWorkspace* makeCleanWorkspace(RooWorkspace* oldWS, const char* newName = 0, const char* mcname = "ModelConfig", bool keepData = false) ;
+  void importToWorkspace(RooWorkspace* ws, const RooAbsReal* object) ;
+  void importToWorkspace(RooWorkspace* ws, RooAbsData* object) ;
+  void append(RooLagrangianMorphing::ParamSet& set, const char* str, double val) ;
+  void append(RooLagrangianMorphing::ParamMap& map, const char* str, RooLagrangianMorphing::ParamSet& set) ;
     
-  void writeMatrixToFile(const TMatrixD& matrix, const char* fname);
-  void writeMatrixToStream(const TMatrixD& matrix, std::ostream& stream);
-  TMatrixD readMatrixFromFile(const char* fname);
-  TMatrixD readMatrixFromStream(std::istream& stream);
+  void writeMatrixToFile(const TMatrixD& matrix, const char* fname) ;
+  void writeMatrixToStream(const TMatrixD& matrix, std::ostream& stream) ;
+  TMatrixD readMatrixFromFile(const char* fname) ;
+  TMatrixD readMatrixFromStream(std::istream& stream) ;
 
-  RooDataHist* makeDataHistogram(TH1* hist, RooRealVar* observable, const char* histname = NULL);
-  void setDataHistogram(TH1* hist, RooRealVar* observable, RooDataHist* dh);
-  void printDataHistogram(RooDataHist* hist, RooRealVar* obs);
+  RooDataHist* makeDataHistogram(TH1* hist, RooRealVar* observable, const char* histname = NULL) ;
+  void setDataHistogram(TH1* hist, RooRealVar* observable, RooDataHist* dh) ;
+  void printDataHistogram(RooDataHist* hist, RooRealVar* obs) ;
 
-  int countSamples(std::vector<RooArgList*>& vertices);
-  int countSamples(int nprod, int ndec, int nboth);
+  int countSamples(std::vector<RooArgList*>& vertices) ;
+  int countSamples(int nprod, int ndec, int nboth) ;
 
-  TPair* makeCrosssectionContainer(double xs, double unc);
-  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<std::string>& couplings);
-  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<std::vector<std::string> >& vertices);
-  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings);
-  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const RooLagrangianMorphing::FlagMap& flagValues, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering);
-  RooArgSet createWeights(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const RooLagrangianMorphing::FlagMap& inputFlags, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering);
-  RooArgSet createWeights(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings);
+  TPair* makeCrosssectionContainer(double xs, double unc) ;
+  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<std::string>& couplings) ;
+  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<std::vector<std::string> >& vertices) ;
+  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings) ;
+  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const RooLagrangianMorphing::FlagMap& flagValues, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering) ;
+  RooArgSet createWeights(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const RooLagrangianMorphing::FlagMap& inputFlags, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering) ;
+  RooArgSet createWeights(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings) ;
 
-  // some helpers to make the template mapping work
-  template<class Base> struct Internal;
-  template<> struct Internal<RooAbsReal> { typedef RooRealSumFunc Type; };
 
  class RooLagrangianMorphConfig {
-  friend class RooLagrangianMorph;
+  friend class RooLagrangianMorphFunc ;
   public:
 
-  RooLagrangianMorphConfig();
-  RooLagrangianMorphConfig(const RooAbsCollection& couplings);
-  RooLagrangianMorphConfig(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings);
-  RooLagrangianMorphConfig(const RooLagrangianMorphConfig& other);
-  void setCouplings(const RooAbsCollection& couplings);
-  void setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings);
-  template <class T> void setVertices(const std::vector<T>& vertices);
-  template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams);
-  template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering);
-  template <class T> void addDiagrams(const std::vector<T>& diagrams);
+    RooLagrangianMorphConfig() ;
+    RooLagrangianMorphConfig(const RooAbsCollection& couplings) ;
+    RooLagrangianMorphConfig(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings) ;
+    RooLagrangianMorphConfig(const RooLagrangianMorphConfig& other) ;
+    void setFileName(const char* filename) ;
+    void setObservable(const char* obsname) ;
+    void setCouplings(const RooAbsCollection& couplings) ;
+    void setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings) ;
+    template <class T> void setVertices(const std::vector<T>& vertices) ;
+    template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams) ;
+    template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering) ;
+    template <class T> void addDiagrams(const std::vector<T>& diagrams) ;
+    void disableInterference(const std::vector<const char*>& nonInterfering) ;
+    void disableInterferences(const std::vector<std::vector<const char*> >& nonInterfering) ;
 
-  virtual ~RooLagrangianMorphConfig();
+  virtual ~RooLagrangianMorphConfig() ;
 
   protected:
-  std::vector<RooListProxy*> _vertices;
-  RooListProxy _couplings;
-  RooListProxy _prodCouplings;
-  RooListProxy _decCouplings;
-  std::vector<std::vector<RooListProxy*> > _configDiagrams;
-  std::vector<RooListProxy*> _nonInterfering;
+    std::string _obsName ;
+    std::string _fileName ;
+    std::vector<RooListProxy*> _vertices ;
+    RooListProxy _couplings ;
+    RooListProxy _prodCouplings ;
+    RooListProxy _decCouplings ;
+    std::vector<std::vector<RooListProxy*> > _configDiagrams ;
+    std::vector<RooListProxy*> _nonInterfering ;
 };
 
-  class RooLagrangianMorph : public RooAbsReal {
-    using InternalType = typename Internal<RooAbsReal>::Type;
+  class RooLagrangianMorphFunc : public RooAbsReal {
   public:
-    RooLagrangianMorph();
-    RooLagrangianMorph(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphConfig& config, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorph(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorph(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphConfig& config, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorph(const char *name, const char *title, const char* fileName, const char* obsName, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorph(const char *name, const char *title, const char* fileName, const char* obsName, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorph(const char *name, const char *title, const char* fileName, const char* obsName, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorph(const RooLagrangianMorph& other, const char *newName);
+    RooLagrangianMorphFunc() ;
+    RooLagrangianMorphFunc(const char *name, const char *title, const RooLagrangianMorphConfig& config, bool allowNegativeYields=true) ;
+    RooLagrangianMorphFunc(const char *name, const char *title, const RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, bool allowNegativeYields=true) ;
+    RooLagrangianMorphFunc(const char *name, const char *title, const RooLagrangianMorphConfig& config, const RooArgList& folders, bool allowNegativeYields=true) ;
+    RooLagrangianMorphFunc(const char *name, const char *title, bool allowNegativeYields=true) ;
+    RooLagrangianMorphFunc(const char *name, const char *title, const char* basefolder, const RooArgList& folders, bool allowNegativeYields=true) ;
+    RooLagrangianMorphFunc(const char *name, const char *title, const RooArgList& folders, bool allowNegativeYields=true) ;
+    RooLagrangianMorphFunc(const RooLagrangianMorphFunc& other, const char *newName) ;
  
-    virtual ~RooLagrangianMorph();
+    virtual ~RooLagrangianMorphFunc() ;
 
-    virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
-    virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
-    virtual Bool_t isBinnedDistribution(const RooArgSet& obs) const override;
-    virtual Double_t evaluate() const override;
-    virtual TObject* clone(const char* newname) const override;
-    virtual Double_t getValV(const RooArgSet* set=0) const override;
+    virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+    virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+    virtual Bool_t isBinnedDistribution(const RooArgSet& obs) const override ;
+    virtual Double_t evaluate() const override ;
+    virtual TObject* clone(const char* newname) const override ;
+    virtual Double_t getValV(const RooArgSet* set=0) const override ;
 
-    virtual Bool_t checkObservables(const RooArgSet *nset) const override;
-    virtual Bool_t forceAnalyticalInt(const RooAbsArg &arg) const override;
-    virtual Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet, const char *rangeName = 0) const override;
-    virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override;
-    virtual void printMetaArgs(std::ostream &os) const override;
-    virtual RooAbsArg::CacheMode canNodeBeCached() const override;
-    virtual void setCacheAndTrackHints(RooArgSet &) override;
+    virtual Bool_t checkObservables(const RooArgSet *nset) const override ;
+    virtual Bool_t forceAnalyticalInt(const RooAbsArg &arg) const override ;
+    virtual Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet, const char *rangeName = 0) const override ;
+    virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override ;
+    virtual void printMetaArgs(std::ostream &os) const override ;
+    virtual RooAbsArg::CacheMode canNodeBeCached() const override ;
+    virtual void setCacheAndTrackHints(RooArgSet &) override ;
 
-    void insert(RooWorkspace* ws);
+    void insert(RooWorkspace* ws) ;
     
-    void resetFlags();
-    void setParameters(const char* foldername);
-    void setParameters(TH1* paramhist);
-    void setParameter(const char* name, double value);
-    void setFlag(const char* name, double value);
-    void setParameters(const ParamSet& params);
-    void setParameters(const RooArgList* list);
-    double getParameterValue(const char* name) const;
-    RooRealVar* getParameter(const char* name) const;
-    RooRealVar* getFlag(const char* name) const;
-    bool hasParameter(const char* paramname) const;
-    bool isParameterUsed(const char* paramname) const;
-    bool isParameterConstant(const char* paramname) const;
-    void setParameterConstant(const char* paramname, bool constant) const;
-    void setParameter(const char* name, double value, double min, double max);
-    void setParameter(const char* name, double value, double min, double max, double error);
-    void randomizeParameters(double z);
-    const RooArgList* getParameterSet() const;
-    using RooAbsArg::getParameters;
-    ParamSet getParameters(const char* foldername) const;
-    ParamSet getParameters() const;
+    void resetFlags() ;
+    void setParameters(const char* foldername) ;
+    void setParameters(TH1* paramhist) ;
+    void setParameter(const char* name, double value) ;
+    void setFlag(const char* name, double value) ;
+    void setParameters(const ParamSet& params) ;
+    void setParameters(const RooArgList* list) ;
+    double getParameterValue(const char* name) const ;
+    RooRealVar* getParameter(const char* name) const ;
+    RooRealVar* getFlag(const char* name) const ;
+    bool hasParameter(const char* paramname) const ;
+    bool isParameterUsed(const char* paramname) const ;
+    bool isParameterConstant(const char* paramname) const ;
+    void setParameterConstant(const char* paramname, bool constant) const ;
+    void setParameter(const char* name, double value, double min, double max) ;
+    void setParameter(const char* name, double value, double min, double max, double error) ;
+    void randomizeParameters(double z) ;
+    const RooArgList* getParameterSet() const ;
+    using RooAbsArg::getParameters ;
+    ParamSet getParameters(const char* foldername) const ;
+    ParamSet getParameters() const ;
 
-    RooLagrangianMorph* getLinear(); 
+    RooLagrangianMorphFunc* getLinear() const ; 
  
-    int nParameters() const;
-    int nSamples() const;
-    int nPolynomials() const;
+    int nParameters() const ;
+    int nSamples() const ;
+    int nPolynomials() const ;
 
-    bool isCouplingUsed(const char* couplname) const;
-    const RooArgList* getCouplingSet() const;
-    ParamSet getCouplings() const;
+    bool isCouplingUsed(const char* couplname) const ;
+    const RooArgList* getCouplingSet() const ;
+    ParamSet getCouplings() const ;
 
-    TMatrixD getMatrix() const;
-    TMatrixD getInvertedMatrix() const;
-    double getCondition() const;
+    TMatrixD getMatrix() const ;
+    TMatrixD getInvertedMatrix() const ;
+    double getCondition() const ;
     
-    RooRealVar* getObservable() const;
-    RooRealVar* getBinWidth() const;
+    RooRealVar* getObservable() const ;
+    RooRealVar* getBinWidth() const ;
  
-    void printEvaluation() const;
-    void printCouplings() const;
-    void printParameters() const;
-    void printFlags() const;
-    void printParameters(const char* samplename) const;
-    void printSamples() const;
-    void printPhysics() const;
+    void printEvaluation() const ;
+    void printCouplings() const ;
+    void printParameters() const ;
+    void printFlags() const ;
+    void printParameters(const char* samplename) const ;
+    void printSamples() const ;
+    void printPhysics() const ;
 
-    RooProduct* getSumElement(const char* name) const;
+    RooProduct* getSumElement(const char* name) const ;
   
-    const std::vector<std::string>& getSamples() const;
+    const std::vector<std::string>& getSamples() const ;
   
-    double expectedUncertainty() const;
-    TH1* createTH1(const std::string& name, RooFitResult* r = NULL);
-    TH1* createTH1(const std::string& name, bool correlateErrors, RooFitResult* r = NULL);
+    double expectedUncertainty() const ;
+    TH1* createTH1(const std::string& name, RooFitResult* r = NULL) ;
+    TH1* createTH1(const std::string& name, bool correlateErrors, RooFitResult* r = NULL) ;
   
   protected:
 
@@ -238,11 +240,9 @@ namespace RooLagrangianMorphing {
     mutable RooObjCacheManager _cacheMgr ; //! The cache manager
  
     void addFolders(const RooArgList& folders) ;
-
-    InternalType* getInternal() const ;
   
     bool hasCache() const ;
-    RooLagrangianMorph::CacheElem* getCache(const RooArgSet* nset) const ;
+    RooLagrangianMorphFunc::CacheElem* getCache(const RooArgSet* nset) const ;
     void readParameters(TDirectory* f) ;
     void collectInputs(TDirectory* f) ;
     void updateSampleWeights() ;
@@ -266,6 +266,8 @@ namespace RooLagrangianMorphing {
     
   RooRealSumFunc* getFunc() const ;
   RooRealSumFunc* cloneFunc() const ;
+  RooWrapperPdf* createPdf() const ;
+
   RooAbsPdf::ExtendMode extendMode() const ;
   Double_t expectedEvents(const RooArgSet* nset) const ;
   Double_t expectedEvents(const RooArgSet& nset) const ;
@@ -273,18 +275,16 @@ namespace RooLagrangianMorphing {
   Bool_t selfNormalized() const ;
   protected:
     double _scale = 1 ;
-    std::string _fileName ;
-    std::string _obsName ;
-    std::string _objFilter ;
+  //  std::string _objFilter ;
     std::string _baseFolder ;
     bool _allowNegativeYields ;
     std::vector<std::string> _folderNames ;
     ParamMap _paramCards ;
     FlagMap _flagValues ;
-    std::map<std::string,int>  _sampleMap;
+    std::map<std::string,int> _sampleMap ;
     RooListProxy _physics ;
     RooListProxy _operators ;
-    RooListProxy _observables ;
+    RooListProxy _observable ;
     RooListProxy _binWidths ;
     RooListProxy _flags ;
     RooLagrangianMorphConfig _config ;
@@ -294,7 +294,7 @@ namespace RooLagrangianMorphing {
 
   public:
 
-    ClassDefOverride(RooLagrangianMorph,1)
+    ClassDefOverride(RooLagrangianMorphFunc,1)
   };
 
 }

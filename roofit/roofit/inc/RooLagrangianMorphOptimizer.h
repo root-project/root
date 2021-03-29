@@ -115,8 +115,8 @@ protected:
   
 protected:
   // temporaries
-  RooLagrangianMorphing::RooLagrangianMorph* morphFunc = NULL;
-  RooLagrangianMorphing::RooLagrangianMorph* xsHelper = NULL;
+  RooLagrangianMorphing::RooLagrangianMorphFunc* morphFunc = NULL;
+  RooLagrangianMorphing::RooLagrangianMorphFunc* xsHelper = NULL;
   TMinuit* ptMinuit = NULL;
   int ierflg;
   

@@ -60,7 +60,7 @@
 #pragma link C++ class RooUniform+ ;
 #pragma link C++ class RooJeffreysPrior+ ;
 #pragma link C++ class RooJohnson+;
-#pragma link C++ class RooLagrangianMorphing::RooLagrangianMorph+;
+#pragma link C++ class RooLagrangianMorphing::RooLagrangianMorphFunc+;
 #pragma link C++ typedef RooLagrangianMorphing::ParamSet;
 #pragma link C++ typedef RooLagrangianMorphing::ParamMap;
 #pragma link C++ namespace RooLagrangianMorphing;
