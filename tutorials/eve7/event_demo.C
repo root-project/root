@@ -258,7 +258,6 @@ public:
 
    virtual void NextEvent()
    {
-      eveMng->DisableRedraw();
       auto scene =  eveMng->GetEventScene();
       scene->DestroyElements();
       makeEventScene();
@@ -269,8 +268,6 @@ public:
          if (mngRhoZ)
          mngRhoZ  ->ImportElements(ie, rhoZEventScene);
       }
-      eveMng->EnableRedraw();
-      eveMng->DoRedraw3D();
    }
 
    virtual void QuitRoot()
@@ -281,13 +278,9 @@ public:
 
    virtual void TimerDone()
    {
-      eveMng->GetWorld()->BeginAcceptingChanges();
-      eveMng->GetScenes()->AcceptChanges(true);
-      NextEvent();
-
-      eveMng->GetScenes()->AcceptChanges(false);
-      eveMng->GetWorld()->EndAcceptingChanges();
-      fTimer->Start(40, kTRUE); 
+      std::stringstream cmd;
+      cmd << "((EventManager*)" << std::hex << std::showbase << (size_t)this << ")->NextEvent();";
+      eveMng->ExecuteCommand(cmd.str().c_str());
    }
 
    virtual void Autoplay()
@@ -301,7 +294,7 @@ public:
 
    void XXX() {
       if (fAutoplay)
-        fTimer->Start(500, kTRUE); 
+        fTimer->Start(10, kTRUE); 
    }
 };
 

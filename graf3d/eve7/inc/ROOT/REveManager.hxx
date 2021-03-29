@@ -49,6 +49,7 @@ class REveManager
    REveManager& operator=(const REveManager&) = delete;
 
 public:
+/*
    class RRedrawDisabler {
    private:
       RRedrawDisabler(const RRedrawDisabler &) = delete;
@@ -68,7 +69,7 @@ public:
             fMgr->EnableRedraw();
       }
    };
-
+*/
    class RExceptionHandler : public TStdExceptionHandler {
    public:
       RExceptionHandler() : TStdExceptionHandler() { Add(); }
@@ -121,14 +122,10 @@ protected:
 
    REveScene                *fGlobalScene{nullptr};
    REveScene                *fEventScene{nullptr};
-
-   Int_t                     fRedrawDisabled{0};
-   Bool_t                    fFullRedraw{kFALSE};
    Bool_t                    fResetCameras{kFALSE};
    Bool_t                    fDropLogicals{kFALSE};
    Bool_t                    fKeepEmptyCont{kFALSE};
    Bool_t                    fTimerActive{kFALSE};
-   TTimer                    fRedrawTimer;
 
    // ElementId management
    std::unordered_map<ElementId_t, REveElement*> fElementIdMap;
@@ -184,14 +181,12 @@ public:
    TFolder *GetMacroFolder() const { return fMacroFolder; }
    TMacro *GetMacro(const char *name) const;
 
-   void DisableRedraw() { ++fRedrawDisabled; }
-   void EnableRedraw()  { --fRedrawDisabled; if (fRedrawDisabled <= 0) Redraw3D(); }
+   void DisableRedraw() { printf("REveManager::DisableRedraw obsolete \n");}
+   void EnableRedraw()  {  printf("REveManager::EnableRedraw obsolete \n");}
 
    void Redraw3D(Bool_t resetCameras = kFALSE, Bool_t dropLogicals = kFALSE)
    {
-      if (fRedrawDisabled <= 0 && !fTimerActive) RegisterRedraw3D();
-      if (resetCameras) fResetCameras = kTRUE;
-      if (dropLogicals) fDropLogicals = kTRUE;
+     printf("REveManager::Redraw3D oboslete %d %d\n",resetCameras , dropLogicals);
    }
    void RegisterRedraw3D();
    void DoRedraw3D();
@@ -245,6 +240,7 @@ public:
 
 
    void ExecuteCommand(const std::string &cmd);
+   void PublishChanges();
 
    // Access to internals, needed for low-level control in advanced
    // applications.

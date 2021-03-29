@@ -71,8 +71,7 @@ REveManager::REveManager()
 
      fMacroFolder(nullptr),
 
-     fRedrawDisabled(0), fResetCameras(kFALSE), fDropLogicals(kFALSE), fKeepEmptyCont(kFALSE), fTimerActive(kFALSE),
-     fRedrawTimer()
+     fKeepEmptyCont(kFALSE), fTimerActive(kFALSE)
 {
    // Constructor.
 
@@ -94,7 +93,7 @@ REveManager::REveManager()
 
    fElementIdMap[0] = nullptr; // do not increase count for null element.
 
-   fRedrawTimer.Connect("Timeout()", "ROOT::Experimental::REveManager", this, "DoRedraw3D()");
+   // fRedrawTimer.Connect("Timeout()", "ROOT::Experimental::REveManager", this, "DoRedraw3D()");
    fMacroFolder = new TFolder("EVE", "Visualization macros");
    gROOT->GetListOfBrowsables()->Add(fMacroFolder);
 
@@ -164,7 +163,6 @@ REveManager::REveManager()
 REveManager::~REveManager()
 {
    // Stop timer and deny further redraw requests.
-   fRedrawTimer.Stop();
    fTimerActive = kTRUE;
 
    fGlobalScene->DecDenyDestroy();
@@ -229,8 +227,7 @@ TMacro *REveManager::GetMacro(const char *name) const
 
 void REveManager::RegisterRedraw3D()
 {
-   fRedrawTimer.Start(0, kTRUE);
-   fTimerActive = kTRUE;
+   printf("REveManager::RegisterRedraw3D() obsolete\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -239,37 +236,7 @@ void REveManager::RegisterRedraw3D()
 
 void REveManager::DoRedraw3D()
 {
-   static const REveException eh("REveManager::DoRedraw3D ");
-
-printf("DoRedrawBegin()\n");
-   std::unique_lock lock(fServerState.fMutex);
-   if (fWorld->IsChanged() || fScenes->AnyChanges()) {
-      while (fServerState.fVal == ServerState::UpdatingClients) {
-         fServerState.fCV.wait(lock);
-      }
-      nlohmann::json jobj = {};
-
-      jobj["content"] = "BeginChanges";
-      fWebWindow->Send(0, jobj.dump());
-
-      // Process changes in scenes.
-      fWorld->ProcessChanges();
-      fScenes->ProcessSceneChanges();
-
-      jobj["content"] = "EndChanges";
-      fWebWindow->Send(0, jobj.dump());
-
-      fServerState.fVal = ServerState::UpdatingClients;
-      fServerState.fCV.notify_all();
-   } else {
-      // possible there has been no changes envoked by WindowData
-      fServerState.fVal = ServerState::Waiting;
-      fServerState.fCV.notify_all();
-   }
-   fResetCameras = kFALSE;
-   fDropLogicals = kFALSE;
-
-   fTimerActive = kFALSE;
+   printf("REveManager::DoRedraw3D() obsolete\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -277,8 +244,7 @@ printf("DoRedrawBegin()\n");
 
 void REveManager::FullRedraw3D(Bool_t /*resetCameras*/, Bool_t /*dropLogicals*/)
 {
-   // XXXX fScenes ->RepaintAllScenes (dropLogicals);
-   // XXXX fViewers->RepaintAllViewers(resetCameras, dropLogicals);
+   printf("REveManager::FullRedraw3D() obsolete\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -730,12 +696,6 @@ void REveManager::WindowConnect(unsigned connid)
    fConnList.emplace_back(connid);
    printf("connection established %u\n", connid);
 
-   std::unique_lock lock(fServerState.fMutex);
-   while (fServerState.fVal == ServerState::UpdatingScenes)
-   {
-       fServerState.fCV.wait(lock);
-   }
-
    // This prepares core and render data buffers.
    printf("\nEVEMNG ............. streaming the world scene.\n");
 
@@ -769,7 +729,6 @@ void REveManager::WindowConnect(unsigned connid)
 
 
    fServerState.fVal = ServerState::Waiting;
-   fServerState.fCV.notify_all();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -833,7 +792,6 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 
       if (ClientConnectionsFree()) {
          fServerState.fVal = ServerState::Waiting;
-         fServerState.fCV.notify_all();
          if (fCBClientsFree)
             (fCBClientsFree)();
       }
@@ -868,15 +826,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 
 void REveManager::ExecuteCommand(const std::string &cmd)
 {
-   std::unique_lock lock(fServerState.fMutex);
-
-   
-   if (fServerState.fVal != ServerState::Waiting) {
-      printf("TODO .... add command to queue!!!!\n");
-      fMIRqueue.push(cmd);
-      return;
-   }
-
+   fServerState.fVal = ServerState::UpdatingScenes;
    fWorld->BeginAcceptingChanges();
    fScenes->AcceptChanges(true);
 
@@ -896,10 +846,24 @@ void REveManager::ExecuteCommand(const std::string &cmd)
    fScenes->AcceptChanges(false);
    fWorld->EndAcceptingChanges();
 
-   fServerState.fVal = ServerState::UpdatingScenes;
-   fServerState.fCV.notify_all(); // DO we need to notify or Redraw3D ???
+   PublishChanges();
+}
 
-   Redraw3D();
+void REveManager::PublishChanges()
+{
+   nlohmann::json jobj = {};
+
+   jobj["content"] = "BeginChanges";
+   fWebWindow->Send(0, jobj.dump());
+
+   // Process changes in scenes.
+   fWorld->ProcessChanges();
+   fScenes->ProcessSceneChanges();
+
+   jobj["content"] = "EndChanges";
+   fWebWindow->Send(0, jobj.dump());
+
+   fServerState.fVal = ServerState::UpdatingClients;
 }
 
 void REveManager::Send(unsigned connid, const std::string &data)
