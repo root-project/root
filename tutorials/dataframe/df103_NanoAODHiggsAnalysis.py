@@ -351,7 +351,15 @@ def df103_NanoAODHiggsAnalysis(run_fast = True):
     df_h_data_2el2mu = df_data_2el2mu_reco.Define("weight", "1.0")\
                                           .Histo1D(("h_data_2el2mu_doublemu", "", nbins, 70, 180), "H_mass", "weight")
 
-    # Trigger event loops and retrieve histograms
+    # RunGraphs allows to run the event loops of the separate RDataFrame graphs
+    # concurrently. This results in an improved usage of the available resources
+    # if each separate RDataFrame can not utilize all available resources, e.g.,
+    # because not enough data is available.
+    ROOT.RDF.RunGraphs([df_h_sig_4mu, df_h_bkg_4mu, df_h_data_4mu,
+                        df_h_sig_4el, df_h_bkg_4el, df_h_data_4el,
+                        df_h_sig_2el2mu, df_h_bkg_2el2mu, df_h_data_2el2mu])
+
+    # Get histograms (does not rerun the event loop)
     signal_4mu = df_h_sig_4mu.GetValue()
     background_4mu = df_h_bkg_4mu.GetValue()
     data_4mu = df_h_data_4mu.GetValue()
