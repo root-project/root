@@ -64,7 +64,10 @@ interfaces in recent TBB versions, as of v6.24 ROOT will not honor a maximum con
   ROOT::TThreadExecutor p2(/*nThreads=*/8); // will still use 2 threads
 ```
 
-Note that the preferred way to steer ROOT's concurrency level is still through `[ROOT::EnableImplicitMT](https://root.cern/doc/master/namespaceROOT.html#a06f2b8b216b615e5abbc872c9feff40f)` or by passing the appropriate parameter to executors' constructors, as in `[TThreadExecutor::TThreadExecutor](https://root.cern/doc/master/classROOT_1_1TThreadExecutor.html#ac7783d52c56cc7875d3954cf212247bb)`.
+Note that the preferred way to steer ROOT's concurrency level is still through
+[`ROOT::EnableImplicitMT`](https://root.cern/doc/master/namespaceROOT.html#a06f2b8b216b615e5abbc872c9feff40f)
+or by passing the appropriate parameter to executors' constructors, as in
+[`TThreadExecutor::TThreadExecutor`](https://root.cern/doc/master/classROOT_1_1TThreadExecutor.html#ac7783d52c56cc7875d3954cf212247bb).
 
 See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-11014) for more context.
 
@@ -209,7 +212,7 @@ In case you have created a custom PDF which overrides `evaluateBatch()`, please 
 - RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchSize) const
 + RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const
 ```
-2. Include `RunContext.h` and `BracketAdapter.h`. 
+2. Include `RunContext.h` and `BracketAdapter.h`.
 3. Use `getValues()` instead of `getValBatch()` to retrieve a RooSpan for the data of every value.
 ```diff
 - auto xData = x.getValBatch(begin, batchSize);
@@ -343,14 +346,14 @@ The new `RooCrystalBall` class can substitute the `RooDSCBShape` and `RooSDSCBSh
 ## Networking Libraries
 
 ### Multithreaded support for FastCGI
-Now when THttpServer creates FastCGI engine, 10 worker threds used to process requests
+Now when THttpServer creates FastCGI engine, 10 worker threads used to process requests
 received via FastCGI channel. This significantly increase a performance, especially when
 several clients are connected.
 
 ### Better security for THttpServer with webgui
 If THttpServer created for use with webgui widgets (RBrowser, RCanvas, REve), it only will
 provide access to the widgets via websocket connection - any other kind of requests like root.json
-or exe.json will be refused completely. Cobined with connection tokens and https protocol,
+or exe.json will be refused completely. Combined with connection tokens and https protocol,
 this makes usage of webgui components in public networks more secure.
 
 ### Enabled WLCG Bearer Tokens support in RDavix
@@ -362,7 +365,7 @@ Bearer tokens are part of WLCG capability-based infrastructure with capability-b
 
 ## GUI Libraries
 
-### RBrowser improvments
+### RBrowser improvements
 - central factory methods to handle browsing, editing and drawing of different classes
 - simple possibility to extend RBrowser on user-defined classes
 - support of web-based geometry viewer
