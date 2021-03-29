@@ -28,7 +28,6 @@ NamespaceImp(RooStats)
 #include "RooStats/ModelConfig.h"
 #include "RooStats/RooStatsUtils.h"
 #include <typeinfo>
-#include "RooLagrangianMorphing.h"
 using namespace std;
 
 namespace RooStats {
