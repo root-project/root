@@ -3242,10 +3242,10 @@ void TPad::FillCollideGridTGraph(TObject *o)
    Double_t ys   = (fY2-fY1)/fCGny;
 
    Int_t n = g->GetN();
+   Int_t s = TMath::Max(n/10,1);
    Double_t x1, x2, y1, y2;
-
-   for (Int_t i=1; i<n; i++) {
-      g->GetPoint(i-1,x1,y1);
+   for (Int_t i=s; i<n; i=i+s) {
+      g->GetPoint(TMath::Max(0,i-s),x1,y1);
       g->GetPoint(i  ,x2,y2);
       if (fLogx) {
          if (x1 > 0) x1 = TMath::Log10(x1);
