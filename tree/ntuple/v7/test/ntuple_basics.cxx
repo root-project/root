@@ -337,4 +337,59 @@ TEST(RNTuple, NullSafety)
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("null field fromWhere"));
    }
+
+   // RNTupleReader and RNTupleWriter
+   FileRaii fileGuard("test_ntuple_null_safety.root");
+   try {
+      RNTupleWriter ntuple(nullptr,
+         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+      FAIL() << "null models should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
+   }
+   try {
+      RNTupleWriter ntuple(std::move(model), nullptr);
+      FAIL() << "null sinks should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null sink"));
+   }
+   try {
+      auto ntuple = RNTupleWriter::Recreate(nullptr, "myNtuple", fileGuard.GetPath());
+      FAIL() << "null models should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
+   }
+   try {
+      auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "RECREATE", "", 101);
+      auto ntuple = RNTupleWriter::Append(nullptr, "myNtuple", *file);
+      FAIL() << "null models should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
+   }
+
+   try {
+      auto ntuple = RNTupleReader::Open(nullptr, "myNTuple", fileGuard.GetPath());
+      FAIL() << "null models should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
+   }
+   try {
+      RNTupleReader ntuple(nullptr,
+         std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
+      FAIL() << "null models should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
+   }
+   try {
+      RNTupleReader ntuple(RNTupleModel::Create(), nullptr);
+      FAIL() << "null sources should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null source"));
+   }
+   try {
+      RNTupleReader ntuple(nullptr);
+      FAIL() << "null sources should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null source"));
+   }
 }
