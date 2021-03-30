@@ -28,6 +28,7 @@
 
 #include <RVersion.h>
 #include <TError.h>
+#include <TFile.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -67,6 +68,9 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
    const RNTupleWriteOptions &options)
    : RPageSinkFile(ntupleName, options)
 {
+   if (RPageSink::fOptions.GetCompression() == RCompressionSetting::EDefaults::kUseAnalysis) {
+      RPageSink::fOptions.SetCompression(file.GetCompressionSettings());
+   }
    fWriter = std::unique_ptr<Internal::RNTupleFileWriter>(Internal::RNTupleFileWriter::Append(ntupleName, file));
 }
 
@@ -75,6 +79,9 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
    const RNTupleWriteOptions &options, std::unique_ptr<TFile> &file)
    : RPageSinkFile(ntupleName, options)
 {
+   if (RPageSink::fOptions.GetCompression() == RCompressionSetting::EDefaults::kUseAnalysis) {
+      RPageSink::fOptions.SetCompression(file->GetCompressionSettings());
+   }
    fWriter = std::unique_ptr<Internal::RNTupleFileWriter>(
       Internal::RNTupleFileWriter::Recreate(ntupleName, path, file));
 }

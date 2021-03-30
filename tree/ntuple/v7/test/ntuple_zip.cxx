@@ -84,3 +84,79 @@ TEST(RNTupleZip, Large)
    decompressor.Unzip(zipBuffer.get(), szZip, N, unzipBuffer.get());
    EXPECT_EQ(data, std::string(unzipBuffer.get(), N));
 }
+
+TEST(RNTupleZip, TFileCompressionSettings)
+{
+   // TFile compression will be set to 101 (zlib), but some RNTuples will override this setting
+
+   FileRaii fileGuard("test_ntuple_zip_tfile_comp.root");
+   // test using RPageSinkFile constructor taking std::unique_ptr<TFile>&
+   {
+      auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "RECREATE", "", 101);
+      auto model = RNTupleModel::Create();
+      auto field = model->MakeField<float>("field");
+      auto ntuple0 = std::make_unique<RNTupleWriter>(std::move(model),
+         std::make_unique<RPageSinkFile>("ntuple0", fileGuard.GetPath(), RNTupleWriteOptions(), file));
+      ntuple0->Fill();
+   }
+   std::ostringstream oss;
+   // ... ntuple0 uses the TFile's compression level
+   auto ntuple0 = RNTupleReader::Open("ntuple0", fileGuard.GetPath());
+   ntuple0->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
+   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 101"));
+   oss.str("");
+
+   RNTupleWriteOptions overrideCompression;
+   overrideCompression.SetCompression(505);
+   auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "RECREATE", "", 101);
+   // test using RPageSinkFile constructor taking TFile&
+   {
+      auto model = RNTupleModel::Create();
+      auto field = model->MakeField<float>("field");
+      auto ntuple1 = std::make_unique<RNTupleWriter>(std::move(model),
+         std::make_unique<RPageSinkFile>("ntuple1", fileGuard.GetPath(), overrideCompression, file));
+      ntuple1->Fill();
+   }
+   // test using RNTupleWriter::Append (which calls the RPageSinkFile TFile& constructor)
+   {
+      auto make_ntuple = [&](std::string name, const RNTupleWriteOptions& opt) {
+         auto model = RNTupleModel::Create();
+         auto field = model->MakeField<float>("field");
+         return RNTupleWriter::Append(std::move(model), name, *file, opt);
+      };
+      // ntuple2 has the default compression setting
+      auto ntuple2 = make_ntuple("ntuple2", RNTupleWriteOptions());
+      // ntuple3 has a specific compression setting
+      auto ntuple3 = make_ntuple("ntuple3", overrideCompression);
+      // ntuple4 has the default explicity set, but still takes on the file's setting
+      // because 404 is the default setting (equivalent to ntuple2)
+      RNTupleWriteOptions defaultCompression;
+      defaultCompression.SetCompression(404);
+      auto ntuple4 = make_ntuple("ntuple4", defaultCompression);
+      ntuple2->Fill();
+      ntuple3->Fill();
+      ntuple4->Fill();
+   }
+   file.reset();
+
+   // ... ntuple1 uses the specific compression level
+   auto ntuple1 = RNTupleReader::Open("ntuple1", fileGuard.GetPath());
+   ntuple1->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
+   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 505"));
+   oss.str("");
+   // ... ntuple2 uses the TFile's compression level
+   auto ntuple2 = RNTupleReader::Open("ntuple2", fileGuard.GetPath());
+   ntuple2->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
+   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 101"));
+   oss.str("");
+   // ... ntuple3 uses the specific compression level
+   auto ntuple3 = RNTupleReader::Open("ntuple3", fileGuard.GetPath());
+   ntuple3->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
+   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 505"));
+   oss.str("");
+   // ... ntuple4 uses the TFile's compression level
+   auto ntuple4 = RNTupleReader::Open("ntuple4", fileGuard.GetPath());
+   ntuple4->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
+   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 101"));
+   oss.str("");
+}

@@ -76,8 +76,12 @@ protected:
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
+   /// RNTuples with the default RNTupleWriteOptions compression setting will use the TFile's
+   /// compression setting.
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options,
                  std::unique_ptr<TFile> &file);
+   /// RNTuples with the default RNTupleWriteOptions compression setting will use the TFile's
+   /// compression setting.
    RPageSinkFile(std::string_view ntupleName, TFile &file, const RNTupleWriteOptions &options);
    RPageSinkFile(const RPageSinkFile&) = delete;
    RPageSinkFile& operator=(const RPageSinkFile&) = delete;
