@@ -92,6 +92,12 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(
    , fModel(std::move(model))
    , fMetrics("RNTupleReader")
 {
+   if (!fSource) {
+      throw RException(R__FAIL("null source"));
+   }
+   if (!fModel) {
+      throw RException(R__FAIL("null model"));
+   }
    InitPageSource();
    ConnectModel(*fModel);
 }
@@ -101,6 +107,9 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
    , fModel(nullptr)
    , fMetrics("RNTupleReader")
 {
+   if (!fSource) {
+      throw RException(R__FAIL("null source"));
+   }
    InitPageSource();
 }
 
@@ -255,6 +264,12 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    , fLastCommitted(0)
    , fNEntries(0)
 {
+   if (!fModel) {
+      throw RException(R__FAIL("null model"));
+   }
+   if (!fSink) {
+      throw RException(R__FAIL("null sink"));
+   }
    fSink->Create(*fModel.get());
    fMetrics.ObserveMetrics(fSink->GetMetrics());
 }

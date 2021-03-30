@@ -132,6 +132,7 @@ public:
    };
 
 
+   /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
                                               std::string_view ntupleName,
                                               std::string_view storage,
@@ -140,9 +141,14 @@ public:
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
 
-   /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
+   /// The user imposes an ntuple model, which must be compatible with the model found in the data on
+   /// storage.
+   ///
+   /// Throws an exception if the model or the source is null.
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the ntuple metadata on storage
+   ///
+   /// Throws an exception if the source is null.
    explicit RNTupleReader(std::unique_ptr<Detail::RPageSource> source);
    std::unique_ptr<RNTupleReader> Clone() { return std::make_unique<RNTupleReader>(fSource->Clone()); }
    ~RNTupleReader();
@@ -222,14 +228,17 @@ private:
    NTupleSize_t fNEntries;
 
 public:
+   /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleWriter> Recreate(std::unique_ptr<RNTupleModel> model,
                                                   std::string_view ntupleName,
                                                   std::string_view storage,
                                                   const RNTupleWriteOptions &options = RNTupleWriteOptions());
+   /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<RNTupleModel> model,
                                                 std::string_view ntupleName,
                                                 TFile &file,
                                                 const RNTupleWriteOptions &options = RNTupleWriteOptions());
+   /// Throws an exception if the model or the sink is null.
    RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
    RNTupleWriter(const RNTupleWriter&) = delete;
    RNTupleWriter& operator=(const RNTupleWriter&) = delete;
