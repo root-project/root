@@ -5,7 +5,7 @@
 /// \macro_output
 /// \macro_code
 /// \author 04/2016 - Carsten Burgard
-#include "RooLagrangianMorphing.h"
+#include "RooLagrangianMorphFunc.h"
 #include "RooStringVar.h"
 #include "RooArgList.h"
 #include "RooFormulaVar.h"
@@ -71,12 +71,12 @@ void rf1003_morphcustomdef()
   // transverse momentum of the di-jet system and the pseudorapidity 
   // of the leading jet in the process VBF Higgs decaying to W+ W-
   // in the Higgs Characterisation Model
-  RooLagrangianMorphConfig config;
+  RooLagrangianMorphFunc::Config config;
   config.setCouplings(prodCouplings, decCouplings);
   config.setFileName(infilename.c_str());
-  config.setObservable("twoSelJets/ptjj");
-  RooLagrangianMorphConfig config1(config);
-  config1.setObservable("twoSelJets/etaj1");
+  config.setObservableName("twoSelJets/ptjj");
+  RooLagrangianMorphFunc::Config config1(config);
+  config1.setObservableName("twoSelJets/etaj1");
   RooLagrangianMorphFunc morphfunc_ptjj("morphunc_ptjj","morphfunc_ptjj", config, inputs);
   RooLagrangianMorphFunc morphfunc_etaj1("morphunc_etaj1","morphfunc_etaj1", config1, inputs);
 

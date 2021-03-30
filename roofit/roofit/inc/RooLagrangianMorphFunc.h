@@ -197,13 +197,6 @@ class RooLagrangianMorphFunc : public RooAbsReal {
     RooRealVar* getObservable() const ;
     RooRealVar* getBinWidth() const ;
 
-    virtual std::string getObservableName() {}
-    virtual std::string getFileName() {}
-    virtual std::vector<std::vector<RooArgList*>> getDiagrams() {}
-    virtual RooArgSet getCouplings() {}
-    virtual RooArgList getProdCouplings() {}
-    virtual RooArgList getDecCouplings() {}
-
     void printEvaluation() const ;
     void printCouplings() const ;
     void printParameters() const ;

@@ -1814,8 +1814,8 @@ void RooLagrangianMorphFunc::readParameters(TDirectory* f)
 
 void RooLagrangianMorphFunc::collectInputs(TDirectory* file)
 {
-  std::string obsName = this->getObservableName();
-  cxcoutD(InputArguments) << "initializing physics inputs from file " << file->GetName() << " with object name(s) '" << obsName << "'" << std::endl;
+  std::string obsName = this->_config.getObservableName();
+  cxcoutP(InputArguments) << "initializing physics inputs from file " << file->GetName() << " with object name(s) '" << obsName << "'" << std::endl;
     
   TFolder* base = dynamic_cast<TFolder*>(file->Get(this->_folderNames[0].c_str()));
   TObject* obj = base->FindObject(obsName.c_str());
@@ -1870,7 +1870,7 @@ void RooLagrangianMorphFunc::addFolders(const RooArgList& folders)
 //      }
 //    }
   } else {
-    std::string filename = this->getFileName();
+    std::string filename = this->_config.getFileName();
     TDirectory* file = openFile(filename.c_str());
     TIter next(file->GetList());
     TObject *obj = NULL;
@@ -2098,7 +2098,7 @@ void RooLagrangianMorphFunc::setup(bool own)
 {
   cxcoutD(Eval) << "setup("<<own<<") called" << std::endl;
   this->_ownParameters = own;
-  auto diagrams = this->getDiagrams();
+  auto diagrams = this->_config.getDiagrams();
 
   if(diagrams.size() > 0){
     RooArgList operators;
@@ -2134,42 +2134,42 @@ void RooLagrangianMorphFunc::setup(bool own)
  }
 
 
-  else if(this->getCouplings().size() > 0){
+  else if(this->_config.getCouplings().size() > 0){
     RooArgList operators;
     std::vector<RooListProxy*> vertices;
     cxcoutD(InputArguments) << "couplings provided" << std::endl;
-    extractOperators(this->getCouplings(), operators);
+    extractOperators(this->_config.getCouplings(), operators);
     vertices.push_back(new RooListProxy("!couplings",     "set of couplings in the vertex",     this,kTRUE,kFALSE));
     if(own){
       cxcoutD(InputArguments) << "adding own operators" << std::endl;
       this->_operators.addOwned(operators);
-      vertices[0]->addOwned(this->getCouplings());
+      vertices[0]->addOwned(this->_config.getCouplings());
     } else {
       cxcoutD(InputArguments) << "adding non-own operators" << std::endl;
       this->_operators.add(operators);
-      vertices[0]->add(this->getCouplings());
+      vertices[0]->add(this->_config.getCouplings());
     }
   this->_diagrams.push_back(vertices);
   }
 
-  else if(this->getProdCouplings().size() > 0 && this->getDecCouplings().size() > 0){
+  else if(this->_config.getProdCouplings().size() > 0 && this->_config.getDecCouplings().size() > 0){
     std::vector<RooListProxy*> vertices;
     RooArgList operators;
     cxcoutD(InputArguments) << "prod/dec couplings provided" << std::endl;
-    extractOperators(this->getProdCouplings(), operators);
-    extractOperators(this->getDecCouplings(), operators);
+    extractOperators(this->_config.getProdCouplings(), operators);
+    extractOperators(this->_config.getDecCouplings(), operators);
     vertices.push_back(new RooListProxy("!production","set of couplings in the production vertex",this,kTRUE,kFALSE));
     vertices.push_back(new RooListProxy("!decay",     "set of couplings in the decay vertex",     this,kTRUE,kFALSE));
     if(own){
       cxcoutD(InputArguments) << "adding own operators" << std::endl;
       this->_operators.addOwned(operators);
-      vertices[0]->addOwned(this->getProdCouplings());
-      vertices[1]->addOwned(this->getDecCouplings());
+      vertices[0]->addOwned(this->_config.getProdCouplings());
+      vertices[1]->addOwned(this->_config.getDecCouplings());
     } else {
       cxcoutD(InputArguments) << "adding non-own operators" << std::endl;
       this->_operators.add(operators);
-      vertices[0]->add(this->getProdCouplings());
-      vertices[1]->add(this->getDecCouplings());
+      vertices[0]->add(this->_config.getProdCouplings());
+      vertices[1]->add(this->_config.getDecCouplings());
     }
   this->_diagrams.push_back(vertices);
   }
@@ -2180,7 +2180,7 @@ void RooLagrangianMorphFunc::setup(bool own)
 
 void RooLagrangianMorphFunc::init()
 {
-  std::string filename = this->getFileName();
+  std::string filename = this->_config.getFileName();
   TDirectory* file = openFile(filename.c_str());
   if(!file) coutE(InputArguments) << "unable to open file '"<<filename<<"'!" << std::endl;
   this->readParameters(file);
@@ -2567,7 +2567,7 @@ bool RooLagrangianMorphFunc::updateCoefficients()
 {
   auto cache = this->getCache(_curNormSet);
 
-  std::string filename = this->getFileName();
+  std::string filename = this->_config.getFileName();
   TDirectory* file = openFile(filename.c_str());
   if(!file){
     coutE(InputArguments) << "unable to open file '" << filename <<"'!" << std::endl;
@@ -2596,7 +2596,7 @@ bool RooLagrangianMorphFunc::useCoefficients(const TMatrixD& inverse)
   RooLagrangianMorphFunc::CacheElem* cache = (RooLagrangianMorphFunc::CacheElem*) _cacheMgr.getObj(0,(RooArgSet*)0);
   Matrix m = makeSuperMatrix(inverse);
   if (cache) {
-    std::string filename = this->getFileName();
+    std::string filename = this->_config.getFileName();
     cache->_inverse = m;
     TDirectory* file = openFile(filename.c_str());
     if(!file) coutE(InputArguments) << "unable to open file '"<<filename<<"'!" << std::endl;
@@ -2805,7 +2805,7 @@ void RooLagrangianMorphFunc::setParameters(TH1* paramhist)
 
 void RooLagrangianMorphFunc::setParameters(const char* foldername)
 {
-  std::string filename = this->getFileName();
+  std::string filename = this->_config.getFileName();
   TDirectory* file = openFile(filename.c_str());
   TH1* paramhist = getParamHist(file,foldername);
   setParams(paramhist,this->_operators,false);
