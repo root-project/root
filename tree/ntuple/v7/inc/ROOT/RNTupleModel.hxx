@@ -92,11 +92,13 @@ public:
    /// Throws an exception if the field is null.
    void AddField(std::unique_ptr<Detail::RFieldBase> field);
 
+   /// Throws an exception if fromWhere is null.
    template <typename T>
    void AddField(std::string_view fieldName, T* fromWhere) {
       AddField<T>({fieldName, ""}, fromWhere);
    }
 
+   /// Throws an exception if fromWhere is null.
    template <typename T>
    void AddField(std::pair<std::string_view, std::string_view> fieldNameDesc, T* fromWhere) {
       EnsureValidFieldName(fieldNameDesc.first);
