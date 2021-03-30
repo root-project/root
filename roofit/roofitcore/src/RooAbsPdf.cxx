@@ -495,9 +495,8 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   }
 
   // If not create it now
-  RooArgSet* depList = getObservables(iset) ;
+  std::unique_ptr<RooArgSet> depList{getObservables(iset)} ;
   RooAbsReal* norm = createIntegral(*depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName)) ;
-  delete depList ;
 
   // Store it in the cache
   cache = new CacheElem(*norm) ;
@@ -564,9 +563,9 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
 
   // Destroy old normalization & create new
   if (selfNormalized() || !dependsOn(*depList)) {
-    TString ntitle(GetTitle()) ; ntitle.Append(" Unit Normalization") ;
-    TString nname(GetName()) ; nname.Append("_UnitNorm") ;
-    _norm = new RooRealVar(nname.Data(),ntitle.Data(),1) ;
+    auto ntitle = std::string(GetTitle()) + " Unit Normalization";
+    auto nname = std::string(GetName()) + "_UnitNorm";
+    _norm = new RooRealVar(nname.c_str(),ntitle.c_str(),1) ;
   } else {
     const char* nr = (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : 0)) ;
 
@@ -578,11 +577,11 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
     const char* cacheParamsStr = getStringAttribute("CACHEPARAMINT") ;
     if (cacheParamsStr && strlen(cacheParamsStr)) {
 
-      RooArgSet* intParams = normInt->getVariables() ;
+      std::unique_ptr<RooArgSet> intParams{normInt->getVariables()} ;
 
       RooNameSet cacheParamNames ;
       cacheParamNames.setNameList(cacheParamsStr) ;
-      RooArgSet* cacheParams = cacheParamNames.select(*intParams) ;
+      std::unique_ptr<RooArgSet> cacheParams{cacheParamNames.select(*intParams)} ;
 
       if (cacheParams->getSize()>0) {
 	cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams->getSize()
@@ -598,8 +597,6 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
 	normInt= cachedIntegral ;
       }
 
-      delete cacheParams ;
-      delete intParams ;
     }
     _norm = normInt ;
   }
@@ -2042,8 +2039,8 @@ void RooAbsPdf::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TStr
   os << indent << "Cached value = " << _value << endl ;
   if (_norm) {
     os << indent << " Normalization integral: " << endl ;
-    TString moreIndent(indent) ; moreIndent.Append("   ") ;
-    _norm->printStream(os,kName|kAddress|kTitle|kValue|kArgs,kSingleLine,moreIndent.Data()) ;
+    auto moreIndent = std::string(indent.Data()) + "   " ;
+    _norm->printStream(os,kName|kAddress|kTitle|kValue|kArgs,kSingleLine,moreIndent.c_str()) ;
   }
 }
 
@@ -2943,15 +2940,15 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   Bool_t haveCompSel = ( (compSpec && strlen(compSpec)>0) || compSet) ;
 
   // Suffix for curve name
-  TString nameSuffix ;
+  std::string nameSuffix ;
   if (compSpec && strlen(compSpec)>0) {
-    nameSuffix.Append("_Comp[") ;
-    nameSuffix.Append(compSpec) ;
-    nameSuffix.Append("]") ;
+    nameSuffix.append("_Comp[") ;
+    nameSuffix.append(compSpec) ;
+    nameSuffix.append("]") ;
   } else if (compSet) {
-    nameSuffix.Append("_Comp[") ;
-    nameSuffix.Append(compSet->contentsString().c_str()) ;
-    nameSuffix.Append("]") ;
+    nameSuffix.append("_Comp[") ;
+    nameSuffix.append(compSet->contentsString().c_str()) ;
+    nameSuffix.append("]") ;
   }
 
   // Remove PDF-only commands from command list
@@ -2959,7 +2956,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
   // Adjust normalization, if so requested
   if (asymCat) {
-    RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.Data(),0,0,0) ;
+    RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.c_str(),0,0,0) ;
     cmdList.Add(&cnsuffix);
     return  RooAbsReal::plotOn(frame,cmdList) ;
   }
@@ -3000,7 +2997,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
           ccoutI(Plotting) << endl ;
         }
 
-        nameSuffix.Append(Form("_Range[%f_%f]",rangeLo,rangeHi)) ;
+        nameSuffix.append(Form("_Range[%f_%f]",rangeLo,rangeHi)) ;
 
       } else if (pc.hasProcessed("RangeWithName")) {
 
@@ -3023,7 +3020,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
           ccoutI(Plotting) << endl ;
         }
 
-        nameSuffix.Append(Form("_Range[%s]",pc.getString("rangeName"))) ;
+        nameSuffix.append(Form("_Range[%s]",pc.getString("rangeName"))) ;
       }
       // Specification of a normalization range override those in a regular range
       if (pc.hasProcessed("NormRange")) {
@@ -3041,7 +3038,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
         hasCustomRange = kTRUE ;
         coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f. curve is normalized using explicit choice of ranges '" << pc.getString("normRangeName", "", false) << "'" << endl ;
 
-        nameSuffix.Append(Form("_NormRange[%s]",pc.getString("rangeName"))) ;
+        nameSuffix.append(Form("_NormRange[%s]",pc.getString("rangeName"))) ;
 
       }
 
@@ -3141,7 +3138,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   }
 
 
-  RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.Data(),0,0,0) ;
+  RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.c_str(),0,0,0) ;
   cmdList.Add(&cnsuffix);
 
   RooPlot* ret =  RooAbsReal::plotOn(frame,cmdList) ;
@@ -3281,25 +3278,22 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   // Decode command line arguments
   RooArgSet* params = static_cast<RooArgSet*>(pc.getObject("params")) ;
   if (!params) {
-    params = getParameters(frame->getNormVars()) ;
+    std::unique_ptr<RooArgSet> paramsPtr{getParameters(frame->getNormVars())} ;
     if (pc.hasProcessed("FormatArgs")) {
       const RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
-      paramOn(frame,*params,showc,label,0,0,xmin,xmax,ymax,formatCmd) ;
+      paramOn(frame,*paramsPtr,showc,label,0,0,xmin,xmax,ymax,formatCmd) ;
     } else {
-      paramOn(frame,*params,showc,label,sigDigit,formatStr,xmin,xmax,ymax) ;
+      paramOn(frame,*paramsPtr,showc,label,sigDigit,formatStr,xmin,xmax,ymax) ;
     }
-    delete params ;
   } else {
-    RooArgSet* pdfParams = getParameters(frame->getNormVars()) ;
-    RooArgSet* selParams = static_cast<RooArgSet*>(pdfParams->selectCommon(*params)) ;
+    std::unique_ptr<RooArgSet> pdfParams{getParameters(frame->getNormVars())} ;
+    std::unique_ptr<RooArgSet> selParams{static_cast<RooArgSet*>(pdfParams->selectCommon(*params))} ;
     if (pc.hasProcessed("FormatArgs")) {
       const RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
       paramOn(frame,*selParams,showc,label,0,0,xmin,xmax,ymax,formatCmd) ;
     } else {
       paramOn(frame,*selParams,showc,label,sigDigit,formatStr,xmin,xmax,ymax) ;
     }
-    delete selParams ;
-    delete pdfParams ;
   }
 
   return frame ;
@@ -3315,10 +3309,9 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
 			    Int_t sigDigits, Option_t *options, Double_t xmin,
 			    Double_t xmax ,Double_t ymax)
 {
-  RooArgSet* params = getParameters(data) ;
+  std::unique_ptr<RooArgSet> params{getParameters(data)} ;
   TString opts(options) ;
   paramOn(frame,*params,opts.Contains("c"),label,sigDigits,options,xmin,xmax,ymax) ;
-  delete params ;
   return frame ;
 }
 
@@ -3448,26 +3441,23 @@ RooAbsPdf::CacheElem::~CacheElem()
 RooAbsPdf* RooAbsPdf::createProjection(const RooArgSet& iset)
 {
   // Construct name for new object
-  TString name(GetName()) ;
-  name.Append("_Proj[") ;
+  std::string name(GetName()) ;
+  name.append("_Proj[") ;
   if (iset.getSize()>0) {
-    TIterator* iter = iset.createIterator() ;
-    RooAbsArg* arg ;
-    Bool_t first(kTRUE) ;
-    while((arg=(RooAbsArg*)iter->Next())) {
+    bool first = true;
+    for(auto const& arg : iset) {
       if (first) {
-	first=kFALSE ;
+        first = false ;
       } else {
-	name.Append(",") ;
+        name.append(",") ;
       }
-      name.Append(arg->GetName()) ;
+      name.append(arg->GetName()) ;
     }
-    delete iter ;
   }
-  name.Append("]") ;
+  name.append("]") ;
 
   // Return projected p.d.f.
-  return new RooProjectedPdf(name.Data(),name.Data(),*this,iset) ;
+  return new RooProjectedPdf(name.c_str(),name.c_str(),*this,iset) ;
 }
 
 
@@ -3545,9 +3535,8 @@ RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg& arg1, c
     return createScanCdf(iset,nset,numScanBins,intOrder) ;
   }
   if (doScanNum) {
-    RooRealIntegral* tmp = (RooRealIntegral*) createIntegral(iset) ;
+    std::unique_ptr<RooRealIntegral> tmp{static_cast<RooRealIntegral*>(createIntegral(iset))} ;
     Int_t isNum= (tmp->numIntRealVars().getSize()>0) ;
-    delete tmp ;
 
     if (isNum) {
       coutI(NumIntegration) << "RooAbsPdf::createCdf(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << endl

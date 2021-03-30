@@ -506,23 +506,20 @@ void RooAbsReal::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TSt
 RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
 {
   // Construct name of profile object
-  TString name(Form("%s_Profile[",GetName())) ;
-  TIterator* iter = paramsOfInterest.createIterator() ;
-  RooAbsArg* arg ;
-  Bool_t first(kTRUE) ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  auto name = std::string(GetName()) + "_Profile[";
+  bool first = true;
+  for (auto const& arg : paramsOfInterest) {
     if (first) {
-      first=kFALSE ;
+      first = false ;
     } else {
-      name.Append(",") ;
+      name.append(",") ;
     }
-    name.Append(arg->GetName()) ;
+    name.append(arg->GetName()) ;
   }
-  delete iter ;
-  name.Append("]") ;
+  name.append("]") ;
 
   // Create and return profile object
-  return new RooProfileLL(name.Data(),Form("Profile of %s",GetTitle()),*this,paramsOfInterest) ;
+  return new RooProfileLL(name.c_str(),(std::string("Profile of ") + GetTitle()).c_str(),*this,paramsOfInterest) ;
 }
 
 
