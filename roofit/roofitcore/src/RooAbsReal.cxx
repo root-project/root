@@ -4913,10 +4913,6 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 /// \param[in]  normSet  Optional normalisation set passed down to the servers of this object.
 /// \return     Span pointing to the results. The memory is owned by `evalData`.
 RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  if (RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
-    coutI(FastEvaluations) << "The class " << IsA()->GetName() << " does not implement the faster batch evaluation interface."
-        << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
-  }
 
   // Find leaves of the computation graph. Assign known data values to these.
   RooArgSet allLeafs;
@@ -4949,6 +4945,16 @@ RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, 
   for (auto& i:leafValues) {
     dataSize=std::max(dataSize, i.size());
   }
+
+  // Advising to implement the batch interface makes only sense if the batch was not a scalar.
+  // Otherwise, there would be no speedup benefit.
+  if(dataSize > 1) {
+    if (RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
+      coutI(FastEvaluations) << "The class " << IsA()->GetName() << " does not implement the faster batch evaluation interface."
+          << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
+    }
+  }
+
   auto outputData = evalData.makeBatch(this, dataSize);
 
   {
