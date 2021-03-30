@@ -214,8 +214,7 @@ TEST(MiniFile, FailOnForwardIncompatibility)
    EXPECT_EQ(2u, fwrite(futureVersionLE, 1, 2, f));
    fclose(f);
 
-   try
-   {
+   try {
       auto readerFail = RNTupleReader::Open("ntuple", fileGuard.GetPath());
       FAIL() << "unsupported minimum version number should throw";
    } catch (const RException& err) {
