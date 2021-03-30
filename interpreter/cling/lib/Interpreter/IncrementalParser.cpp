@@ -711,7 +711,11 @@ namespace cling {
       }
     }
 
-    m_TransactionPool->releaseTransaction(&T);
+    if (!T.getScope()) {
+      // Do not unload a transaction for which an RAII is waiting to prevent
+      // double deletes (ROOT issue 7657).
+      m_TransactionPool->releaseTransaction(&T);
+    }
   }
 
   std::vector<const Transaction*> IncrementalParser::getAllTransactions() {
