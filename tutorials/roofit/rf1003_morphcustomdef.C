@@ -74,9 +74,11 @@ void rf1003_morphcustomdef()
   RooLagrangianMorphing::RooLagrangianMorphConfig config;
   config.setCouplings(prodCouplings, decCouplings);
   config.setFileName(infilename.c_str());
-
-  RooLagrangianMorphing::RooLagrangianMorphFunc morphfunc_ptjj("morphunc_ptjj","morphfuinc_ptjj","twoSelJets/ptjj", config, inputs);
-  RooLagrangianMorphing::RooLagrangianMorphFunc morphfunc_etaj1("morphunc_etaj1","morphfunc_etaj1","twoSelJets/etaj1", config, inputs);
+  config.setObservable("twoSelJets/ptjj");
+  RooLagrangianMorphing::RooLagrangianMorphConfig config1(config);
+  config1.setObservable("twoSelJets/etaj1");
+  RooLagrangianMorphing::RooLagrangianMorphFunc morphfunc_ptjj("morphunc_ptjj","morphfunc_ptjj", config, inputs);
+  RooLagrangianMorphing::RooLagrangianMorphFunc morphfunc_etaj1("morphunc_etaj1","morphfunc_etaj1", config1, inputs);
 
   // Define identifier for validation sample
   std::string validationsample("v1");

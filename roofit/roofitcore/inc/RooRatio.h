@@ -30,7 +30,7 @@ class RooRatio : public RooAbsReal {
 public:
 
   RooRatio() ;
-  RooRatio(const char *name, const char *title, const RooAbsReal& numerator, const RooAbsReal& denominator);
+  RooRatio(const char *name, const char *title, RooAbsReal& numerator, RooAbsReal& denominator);
 
   RooRatio(const RooRatio& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooRatio(*this, newname); }

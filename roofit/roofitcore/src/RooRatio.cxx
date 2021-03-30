@@ -34,34 +34,45 @@ A RooRatio represents the ratio of two given RooAbsReal objects.
 
 ClassImp(RooRatio);
 
+RooRatio::RooRatio() 
+{
+   TRACE_CREATE
+}
+ 
 RooRatio::RooRatio(const char *name, const char *title,
-                   const RooAbsReal& nr,
-                   const RooAbsReal& dr) :
-  RooAbsReal(name,title)
-  _nr(nr),
-  _dr(dr)
+                   RooAbsReal& nr,
+                   RooAbsReal& dr) :
+  RooAbsReal(name,title),
+  _numerator("numerator", "numerator", this, nr),
+  _denominator("denominator", "denominator", this, dr)
 {
     TRACE_CREATE
 }
 
+RooRatio::~RooRatio()
+{
+  TRACE_DESTROY
+}
 
- RooRatio::~RooRatio()
- {
-   TRACE_DESTROY
- }
+RooRatio::RooRatio(const RooRatio& other, const char* name) :
+  RooAbsReal(other, name),
+  _numerator("numerator",this, other._numerator),
+  _denominator("denominator", this, other._denominator)
+{
+  TRACE_CREATE
+}
 
 
+Double_t RooRatio::evaluate() const 
+{ 
 
- Double_t RooRatio::evaluate() const 
- { 
-
-   if(_dr == 0.0) {
-          coutE(InputArguments) << "RooRatio::ctor(" << GetName() << ") ERROR: denominator is 0 " << endl ;
-      RooErrorHandler::softAbort() ;
-   }
-   else
-     return _nr/_dr ;  
- } 
+  if(_denominator == 0.0) {
+    if(_numerator == 0.0) return std::numeric_limits<double>::quiet_NaN();
+    else return (_numerator > 0.0) ? RooNumber::infinity() : -1.0*RooNumber::infinity();
+  }
+  else
+    return _numerator/_denominator;  
+} 
 
 
 
