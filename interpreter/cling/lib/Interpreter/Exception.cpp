@@ -32,6 +32,13 @@ void* cling_runtime_internal_throwIfInvalidPointer(void* Interp, void* Expr,
 
   const clang::Expr* const E = (const clang::Expr*)Expr;
 
+#if defined(__APPLE__) && defined(__arm64__)
+  // See https://github.com/root-project/root/issues/7541
+  // llvm JIT fails to catch exceptions on M1, so let's throw less.
+  // This might still better than `terminate`...
+  (void)Interp;
+  (void)Expr;
+#else
   // The isValidAddress function return true even when the pointer is
   // null thus the checks have to be done before returning successfully from the
   // function in this specific order.
@@ -50,6 +57,7 @@ void* cling_runtime_internal_throwIfInvalidPointer(void* Interp, void* Expr,
     throw cling::InvalidDerefException(&S, E,
           cling::InvalidDerefException::DerefType::INVALID_MEM);
   }
+#endif
   return const_cast<void*>(Arg);
 }
 }
