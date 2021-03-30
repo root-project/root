@@ -162,15 +162,16 @@ public:
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an exception.
-   void LoadEntry(NTupleSize_t index) { LoadEntry(index, *fModel->GetDefaultEntry()); }
-   /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
-   void LoadEntry(NTupleSize_t index, REntry &entry) {
+   void LoadEntry(NTupleSize_t index) {
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
          fModel = fSource->GetDescriptor().GenerateModel();
          ConnectModel(*fModel);
       }
-
+      LoadEntry(index, *fModel->GetDefaultEntry());
+   }
+   /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
+   void LoadEntry(NTupleSize_t index, REntry &entry) {
       for (auto& value : entry) {
          value.GetField()->Read(index, &value);
       }
