@@ -139,6 +139,7 @@ REveManager::REveManager()
    TColor::SetColorThreshold(0.1);
 
    fWebWindow = RWebWindow::Create();
+   fWebWindow->AssignCallbackThreadId();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
 
    const char *gl_viewer = gEnv->GetValue("WebEve.GLViewer", "Three");
@@ -692,7 +693,13 @@ TStdExceptionHandler::EStatus REveManager::RExceptionHandler::Handle(std::except
 /// Process new connection from web window
 
 void REveManager::WindowConnect(unsigned connid)
-{
+{ 
+   std::unique_lock lock(fServerState.fMutex);
+   while (fServerState.fVal == ServerState::UpdatingScenes)
+   {
+       fServerState.fCV.wait(lock);
+   }
+
    fConnList.emplace_back(connid);
    printf("connection established %u\n", connid);
 
@@ -727,8 +734,6 @@ void REveManager::WindowConnect(unsigned connid)
       }
    }
 
-
-   fServerState.fVal = ServerState::Waiting;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -792,6 +797,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 
       if (ClientConnectionsFree()) {
          fServerState.fVal = ServerState::Waiting;
+         fServerState.fCV.notify_all();
          if (fCBClientsFree)
             (fCBClientsFree)();
       }
@@ -826,6 +832,11 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 
 void REveManager::ExecuteCommand(const std::string &cmd)
 {
+
+   std::unique_lock lock(fServerState.fMutex);
+   while (fServerState.fVal != ServerState::Waiting)
+      fServerState.fCV.wait(lock);
+
    fServerState.fVal = ServerState::UpdatingScenes;
    fWorld->BeginAcceptingChanges();
    fScenes->AcceptChanges(true);
@@ -846,11 +857,6 @@ void REveManager::ExecuteCommand(const std::string &cmd)
    fScenes->AcceptChanges(false);
    fWorld->EndAcceptingChanges();
 
-   PublishChanges();
-}
-
-void REveManager::PublishChanges()
-{
    nlohmann::json jobj = {};
 
    jobj["content"] = "BeginChanges";
@@ -864,6 +870,28 @@ void REveManager::PublishChanges()
    fWebWindow->Send(0, jobj.dump());
 
    fServerState.fVal = ServerState::UpdatingClients;
+  // PublishChanges();
+}
+
+void REveManager::PublishChanges()
+{
+   /*
+   std::unique_lock lock(fServerState.fMutex);
+   nlohmann::json jobj = {};
+
+   jobj["content"] = "BeginChanges";
+   fWebWindow->Send(0, jobj.dump());
+
+   // Process changes in scenes.
+   fWorld->ProcessChanges();
+   fScenes->ProcessSceneChanges();
+
+   jobj["content"] = "EndChanges";
+   fWebWindow->Send(0, jobj.dump());
+
+   fServerState.fVal = ServerState::UpdatingClients;
+   */
+
 }
 
 void REveManager::Send(unsigned connid, const std::string &data)
