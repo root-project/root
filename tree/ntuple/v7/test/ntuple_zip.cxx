@@ -99,12 +99,13 @@ TEST(RNTupleZip, TFileCompressionSettings)
          std::make_unique<RPageSinkFile>("ntuple0", fileGuard.GetPath(), RNTupleWriteOptions(), file));
       ntuple0->Fill();
    }
-   std::ostringstream oss;
-   // ... ntuple0 uses the TFile's compression level
-   auto ntuple0 = RNTupleReader::Open("ntuple0", fileGuard.GetPath());
-   ntuple0->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
-   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 101"));
-   oss.str("");
+   {
+      std::ostringstream oss;
+      // ... ntuple0 uses the TFile's compression level
+      auto ntuple0 = RNTupleReader::Open("ntuple0", fileGuard.GetPath());
+      ntuple0->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
+      EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 101"));
+   }
 
    RNTupleWriteOptions overrideCompression;
    overrideCompression.SetCompression(505);
@@ -114,7 +115,7 @@ TEST(RNTupleZip, TFileCompressionSettings)
       auto model = RNTupleModel::Create();
       auto field = model->MakeField<float>("field");
       auto ntuple1 = std::make_unique<RNTupleWriter>(std::move(model),
-         std::make_unique<RPageSinkFile>("ntuple1", fileGuard.GetPath(), overrideCompression, file));
+         std::make_unique<RPageSinkFile>("ntuple1", *file, overrideCompression));
       ntuple1->Fill();
    }
    // test using RNTupleWriter::Append (which calls the RPageSinkFile TFile& constructor)
@@ -139,6 +140,7 @@ TEST(RNTupleZip, TFileCompressionSettings)
    }
    file.reset();
 
+   std::ostringstream oss;
    // ... ntuple1 uses the specific compression level
    auto ntuple1 = RNTupleReader::Open("ntuple1", fileGuard.GetPath());
    ntuple1->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
