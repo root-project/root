@@ -12,6 +12,26 @@
 ///  .x ErrorIntegral.C
 /// ~~~
 ///
+/// After having computed the integral and its error using the integral and the integral error
+/// using the TF1 generic functions, we compute the integrals and its error analytically using
+/// the fact that the fitting function is \f$ f(x) = p[1]* sin(p[0]*x) \f$.
+///
+/// Therefore we have:
+///  - integral  in [0,1] : `ic = p[1]* (1-std::cos(p[0]) )/p[0]`
+///  - derivative of integral with respect to  p0:
+///    `c0c = p[1] * (std::cos(p[0]) + p[0]*std::sin(p[0]) -1.)/p[0]/p[0]`
+///  - derivative of integral with respect to p1:
+///   `c1c = (1-std::cos(p[0]) )/p[0]`
+///
+/// and then we can compute the integral error using error propagation and the covariance
+/// matrix for the parameters p obtained from the fit.
+///
+/// integral error :    `sic = std::sqrt( c0c*c0c * covMatrix(0,0) + c1c*c1c * covMatrix(1,1) + 2.* c0c*c1c * covMatrix(0,1))`
+///
+/// Note that if you can you should fit directly the function integrals (i.e. the number of events),
+/// so you will obtain a better estimate directly from the fit of the uncertainty.
+/// This is possible in ROOT when using the `TF1NormSum` class, see the tutorial fitNormSum.C
+///
 /// \macro_image
 /// \macro_output
 /// \macro_code
