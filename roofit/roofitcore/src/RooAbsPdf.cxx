@@ -362,18 +362,36 @@ RooSpan<const double> RooAbsPdf::getValues(RooBatchCompute::RunContext& evalData
       syncNormalization(normSet);
     }
     // Evaluate denominator
-    const double normVal = _norm->getVal();
+    // In most cases, the integral will be a scalar.  But it can still happen
+    // that the integral is a vector, for example in a conditional fit where
+    // pdf is parametrized by another observable that is also a batch. That's
+    // why we have to use the batch interface also for the integral.
+    auto const& normVals = _norm->getValues(evalData);
 
-    if (normVal < 0.
-        || (normVal == 0. && std::any_of(outputs.begin(), outputs.end(), [](double val){return val != 0;}))) {
-      logEvalError(Form("p.d.f normalization integral is zero or negative."
-          "\n\tInt(%s) = %f", GetName(), normVal));
-    }
+    if(normVals.size() > 1) {
+      for(std::size_t i = 0; i < outputs.size(); ++i) {
+        if (normVals[i] < 0. || (normVals[i] == 0. && outputs[i] != 0)) {
+          logEvalError(Form("p.d.f normalization integral is zero or negative."
+              "\n\tInt(%s) = %f", GetName(), normVals[i]));
+        }
+        if(normVals[i] != 1. && normVals[i] > 0.) {
+          outputs[i] /= normVals[i];
+        }
+      }
 
-    if (normVal != 1. && normVal > 0.) {
-      const double invNorm = 1./normVal;
-      for (double& val : outputs) { //CHECK_VECTORISE
-        val *= invNorm;
+    } else {
+      const double normVal = normVals[0];
+      if (normVal < 0.
+          || (normVal == 0. && std::any_of(outputs.begin(), outputs.end(), [](double val){return val != 0;}))) {
+        logEvalError(Form("p.d.f normalization integral is zero or negative."
+            "\n\tInt(%s) = %f", GetName(), normVal));
+      }
+
+      if (normVal != 1. && normVal > 0.) {
+        const double invNorm = 1./normVal;
+        for (double& val : outputs) { //CHECK_VECTORISE
+          val *= invNorm;
+        }
       }
     }
   }
