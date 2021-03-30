@@ -1,6 +1,8 @@
 #include "Floats.h"
 #include "LinearCombination.h"
+
 ClassImp(LinearCombination);
+
 namespace {
   template<class T> inline void assign(SuperFloat& var, const T& val){
     #ifdef USE_UBLAS

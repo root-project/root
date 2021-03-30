@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
- * Package: RooLagrangianMorphFun                                            *
+ * Package: RooLagrangianMorphing                                            *
  * @(#)root/roofit:$Id$
  * Authors:                                                                  *
  *  Lydia Brenner (lbrenner@cern.ch), Carsten Burgard (cburgard@cern.ch)     *
@@ -15,9 +15,9 @@
  *****************************************************************************/
 
 
-/** \class RooLagrangianMorphFunc
+/** \class RooLagrangianMorphing
     \ingroup Roofit
-Class RooLagrangianMorphFunc is a implementation of the method of Effective
+Class RooLagrangianMorphing is a implementation of the method of Effective
 Lagrangian Morphing, descibed in ATL-PHYS-PUB-2015-047.
 Effective Lagrangian Morphing is a method to construct a continuous signal
 model in the coupling parameter space. Basic assumption is that shape and
@@ -335,6 +335,7 @@ inline double invertMatrix(const Matrix& matrix, Matrix& inverse)
   return condition;
 }
 #endif
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // LOCAL FUNCTIONS AND DEFINITIONS //////////////////////////////////////////////
@@ -1562,7 +1563,7 @@ public:
 
   static RooLagrangianMorphFunc::CacheElem* createCache(const RooLagrangianMorphFunc* func)
   {
-    std::string obsName = func->_config._obsName;
+    std::string obsName = func->getObservable()->GetName();
     //cxcoutD(Caching) << "creating cache for RooLagrangianMorphFunc " << func << std::endl;
     RooLagrangianMorphFunc::ParamSet values = getParams(func->_operators);
 
@@ -1813,7 +1814,7 @@ void RooLagrangianMorphFunc::readParameters(TDirectory* f)
 
 void RooLagrangianMorphFunc::collectInputs(TDirectory* file)
 {
-  std::string obsName = this->_config._obsName;
+  std::string obsName = this->getObservableName();
   cxcoutD(InputArguments) << "initializing physics inputs from file " << file->GetName() << " with object name(s) '" << obsName << "'" << std::endl;
     
   TFolder* base = dynamic_cast<TFolder*>(file->Get(this->_folderNames[0].c_str()));
@@ -1869,7 +1870,7 @@ void RooLagrangianMorphFunc::addFolders(const RooArgList& folders)
 //      }
 //    }
   } else {
-    std::string filename = this->_config._fileName;
+    std::string filename = this->getFileName();
     TDirectory* file = openFile(filename.c_str());
     TIter next(file->GetList());
     TObject *obj = NULL;
@@ -1893,55 +1894,55 @@ void RooLagrangianMorphFunc::addFolders(const RooArgList& folders)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor 
-RooLagrangianMorphConfig::RooLagrangianMorphConfig(){}
+RooLagrangianMorphFunc::Config::Config(){}
  
 ////////////////////////////////////////////////////////////////////////////////
 /// parameterised constructor 
-RooLagrangianMorphConfig::RooLagrangianMorphConfig(const RooAbsCollection& couplings){
+RooLagrangianMorphFunc::Config::Config(const RooAbsCollection& couplings){
   extractCouplings(couplings,this->_couplings);
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// parameterised constructor 
- RooLagrangianMorphConfig::RooLagrangianMorphConfig(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings){
+ RooLagrangianMorphFunc::Config::Config(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings){
   extractCouplings(prodCouplings,this->_prodCouplings);
   extractCouplings(decCouplings,this->_decCouplings);
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for couplings
-void RooLagrangianMorphConfig::setCouplings(const RooAbsCollection& couplings){
+void RooLagrangianMorphFunc::Config::setCouplings(const RooAbsCollection& couplings){
   extractCouplings(couplings,this->_couplings);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for production and decay couplings
-void RooLagrangianMorphConfig::setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings){
+void RooLagrangianMorphFunc::Config::setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings){
   extractCouplings(prodCouplings,this->_prodCouplings);
   extractCouplings( decCouplings,this->_decCouplings);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for input file name
-void RooLagrangianMorphConfig::setFileName(const char* filename){
+void RooLagrangianMorphFunc::Config::setFileName(const char* filename){
   this->_fileName = filename;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for name of the the observable to be morphed
-void RooLagrangianMorphConfig::setObservable(const char* obsname){
+void RooLagrangianMorphFunc::Config::setObservableName(const char* obsname){
   this->_obsName = obsname;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for diagrams
 template <class T> 
-void RooLagrangianMorphConfig::setDiagrams(const std::vector<std::vector<T> >& diagrams)
+void RooLagrangianMorphFunc::Config::setDiagrams(const std::vector<std::vector<T> >& diagrams)
 {
   for(size_t j=0; j<diagrams.size(); ++j){
-    std::vector<RooListProxy*> vertices;
+    std::vector<RooArgList*> vertices;
     for(size_t i=0; i<diagrams[j].size(); i++){
-      vertices.push_back(new RooListProxy());
+      vertices.push_back(new RooArgList());
       vertices[i]->add(diagrams[j][i]);
     }
     this->_configDiagrams.push_back(vertices);
@@ -1951,21 +1952,21 @@ void RooLagrangianMorphConfig::setDiagrams(const std::vector<std::vector<T> >& d
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for vertices
 template <class T> 
- void RooLagrangianMorphConfig::setVertices(const std::vector<T>& vertices)
+ void RooLagrangianMorphFunc::Config::setVertices(const std::vector<T>& vertices)
 {
   std::vector<std::vector<T> > diagrams;
   diagrams.push_back(vertices);
   this->setDiagrams(diagrams);
 }
 
-template void RooLagrangianMorphConfig::setVertices<RooArgSet>(const std::vector<RooArgSet>&);
-template void RooLagrangianMorphConfig::setDiagrams<RooArgSet>(const std::vector<std::vector<RooArgSet>>&);
-template void RooLagrangianMorphConfig::setVertices<RooArgList>(const std::vector<RooArgList>&);
-template void RooLagrangianMorphConfig::setDiagrams<RooArgList>(const std::vector<std::vector<RooArgList>>&);
+template void RooLagrangianMorphFunc::Config::setVertices<RooArgSet>(const std::vector<RooArgSet>&);
+template void RooLagrangianMorphFunc::Config::setDiagrams<RooArgSet>(const std::vector<std::vector<RooArgSet>>&);
+template void RooLagrangianMorphFunc::Config::setVertices<RooArgList>(const std::vector<RooArgList>&);
+template void RooLagrangianMorphFunc::Config::setDiagrams<RooArgList>(const std::vector<std::vector<RooArgList>>&);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for vertices
-void RooLagrangianMorphConfig::disableInterference(const std::vector<const char*>& nonInterfering){
+void RooLagrangianMorphFunc::Config::disableInterference(const std::vector<const char*>& nonInterfering){
   // disable interference between the listed operators
   std::stringstream name;
   name << "noInteference";
@@ -1981,7 +1982,7 @@ void RooLagrangianMorphConfig::disableInterference(const std::vector<const char*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for vertices
-void RooLagrangianMorphConfig::disableInterferences(const std::vector<std::vector<const char*> >& nonInterfering){
+void RooLagrangianMorphFunc::Config::disableInterferences(const std::vector<std::vector<const char*> >& nonInterfering){
   // disable interferences between the listed groups of operators
   for(size_t i=0;i<nonInterfering.size();++i){
     this->disableInterference(nonInterfering[i]);
@@ -1989,12 +1990,12 @@ void RooLagrangianMorphConfig::disableInterferences(const std::vector<std::vecto
 }
 
 
- RooLagrangianMorphConfig::~RooLagrangianMorphConfig()
+ RooLagrangianMorphFunc::Config::~Config()
 {
   TRACE_DESTROY
 }
 
-RooLagrangianMorphConfig::RooLagrangianMorphConfig(const RooLagrangianMorphConfig& other) :
+RooLagrangianMorphFunc::Config::Config(const Config& other) :
   _obsName(other._obsName),
   _fileName(other._fileName),
   _vertices(other._vertices),
@@ -2004,9 +2005,9 @@ RooLagrangianMorphConfig::RooLagrangianMorphConfig(const RooLagrangianMorphConfi
   _nonInterfering(other._nonInterfering)
 {
   for(size_t j=0; j<other._configDiagrams.size(); ++j){
-    std::vector<RooListProxy*> diagram;
+    std::vector<RooArgList*> diagram;
     for(size_t i=0; i<other._configDiagrams[j].size(); ++i){
-      RooListProxy* list = other._configDiagrams[j][i];
+      RooArgList* list = other._configDiagrams[j][i];
       diagram.push_back(list);
     }
     this->_configDiagrams.push_back(diagram);
@@ -2014,10 +2015,34 @@ RooLagrangianMorphConfig::RooLagrangianMorphConfig(const RooLagrangianMorphConfi
   TRACE_CREATE
 }
 
+std::string RooLagrangianMorphFunc::Config::getObservableName() {
+  return this->_obsName;
+}
+
+std::string RooLagrangianMorphFunc::Config::getFileName() {
+  return this->_fileName;
+}
+
+std::vector<std::vector<RooArgList*>> RooLagrangianMorphFunc::Config::getDiagrams() {
+  return this->_configDiagrams;
+}
+
+RooArgList RooLagrangianMorphFunc::Config::getCouplings() {
+  return this->_couplings;
+}
+
+RooArgList RooLagrangianMorphFunc::Config::getProdCouplings() {
+  return this->_prodCouplings;
+}
+
+RooArgList RooLagrangianMorphFunc::Config::getDecCouplings() {
+  return this->_decCouplings;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// protected constructor with proper arguments
 
-RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, bool allowNegativeYields) :
+RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const Config& config, const char* basefolder, const RooArgList& folders, bool allowNegativeYields) :
   RooAbsReal(name,title),
   _cacheMgr(this,10,kTRUE,kTRUE),
  //_obsName(obsName),
@@ -2039,7 +2064,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
 ////////////////////////////////////////////////////////////////////////////////
 /// protected constructor with proper arguments
 
-RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const RooLagrangianMorphConfig& config, const RooArgList& folders, bool allowNegativeYields) :
+RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const Config& config, const RooArgList& folders, bool allowNegativeYields) :
   RooLagrangianMorphFunc(name,title,config,"",folders,allowNegativeYields) {
 //  this->disableInterferences(this->_nonInterfering);
   this->setup(false);
@@ -2047,7 +2072,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor with proper arguments
-RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const RooLagrangianMorphConfig& config, bool allowNegativeYields) :
+RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const Config& config, bool allowNegativeYields) :
   RooLagrangianMorphFunc(name,title,config,"",RooArgList(),allowNegativeYields)
 {
   this->setup(false);
@@ -2055,12 +2080,12 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
 }
 
 RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title,const char* basefolder, const RooArgList& folders, bool allowNegativeYields):
-  RooLagrangianMorphFunc(name,title,RooLagrangianMorphConfig(),basefolder,folders,allowNegativeYields)
+  RooLagrangianMorphFunc(name,title,Config(),basefolder,folders,allowNegativeYields)
 {
   TRACE_CREATE
 }
 RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const RooArgList& folders, bool allowNegativeYields):
-  RooLagrangianMorphFunc(name,title,RooLagrangianMorphConfig(),"",folders,allowNegativeYields)
+  RooLagrangianMorphFunc(name,title,Config(),"",folders,allowNegativeYields)
 {
   TRACE_CREATE
 }
@@ -2073,12 +2098,12 @@ void RooLagrangianMorphFunc::setup(bool own)
 {
   cxcoutD(Eval) << "setup("<<own<<") called" << std::endl;
   this->_ownParameters = own;
-  auto diagrams = this->_config._configDiagrams;
+  auto diagrams = this->getDiagrams();
 
   if(diagrams.size() > 0){
     RooArgList operators;
-    for(const std::vector<RooListProxy*> v:diagrams){
-      for( const RooListProxy* t:v){
+    for(const std::vector<RooArgList*> v:diagrams){
+      for( const RooArgList* t:v){
        extractOperators(*t,operators);
       }
     }
@@ -2109,42 +2134,42 @@ void RooLagrangianMorphFunc::setup(bool own)
  }
 
 
-  else if(this->_config._couplings.size() > 0){
+  else if(this->getCouplings().size() > 0){
     RooArgList operators;
     std::vector<RooListProxy*> vertices;
     cxcoutD(InputArguments) << "couplings provided" << std::endl;
-    extractOperators(this->_config._couplings, operators);
+    extractOperators(this->getCouplings(), operators);
     vertices.push_back(new RooListProxy("!couplings",     "set of couplings in the vertex",     this,kTRUE,kFALSE));
     if(own){
       cxcoutD(InputArguments) << "adding own operators" << std::endl;
       this->_operators.addOwned(operators);
-      vertices[0]->addOwned(this->_config._couplings);
+      vertices[0]->addOwned(this->getCouplings());
     } else {
       cxcoutD(InputArguments) << "adding non-own operators" << std::endl;
       this->_operators.add(operators);
-      vertices[0]->add(this->_config._couplings);
+      vertices[0]->add(this->getCouplings());
     }
   this->_diagrams.push_back(vertices);
   }
 
-  else if(this->_config._prodCouplings.size() > 0 && this->_config._decCouplings.size() > 0){
+  else if(this->getProdCouplings().size() > 0 && this->getDecCouplings().size() > 0){
     std::vector<RooListProxy*> vertices;
     RooArgList operators;
     cxcoutD(InputArguments) << "prod/dec couplings provided" << std::endl;
-    extractOperators(this->_config._prodCouplings, operators);
-    extractOperators(this->_config._decCouplings, operators);
+    extractOperators(this->getProdCouplings(), operators);
+    extractOperators(this->getDecCouplings(), operators);
     vertices.push_back(new RooListProxy("!production","set of couplings in the production vertex",this,kTRUE,kFALSE));
     vertices.push_back(new RooListProxy("!decay",     "set of couplings in the decay vertex",     this,kTRUE,kFALSE));
     if(own){
       cxcoutD(InputArguments) << "adding own operators" << std::endl;
       this->_operators.addOwned(operators);
-      vertices[0]->addOwned(this->_config._prodCouplings);
-      vertices[1]->addOwned(this->_config._decCouplings);
+      vertices[0]->addOwned(this->getProdCouplings());
+      vertices[1]->addOwned(this->getDecCouplings());
     } else {
       cxcoutD(InputArguments) << "adding non-own operators" << std::endl;
       this->_operators.add(operators);
-      vertices[0]->add(this->_config._prodCouplings);
-      vertices[1]->add(this->_config._decCouplings);
+      vertices[0]->add(this->getProdCouplings());
+      vertices[1]->add(this->getDecCouplings());
     }
   this->_diagrams.push_back(vertices);
   }
@@ -2155,7 +2180,7 @@ void RooLagrangianMorphFunc::setup(bool own)
 
 void RooLagrangianMorphFunc::init()
 {
-  std::string filename = this->_config._fileName;
+  std::string filename = this->getFileName();
   TDirectory* file = openFile(filename.c_str());
   if(!file) coutE(InputArguments) << "unable to open file '"<<filename<<"'!" << std::endl;
   this->readParameters(file);
@@ -2542,7 +2567,7 @@ bool RooLagrangianMorphFunc::updateCoefficients()
 {
   auto cache = this->getCache(_curNormSet);
 
-  std::string filename = this->_config._fileName;
+  std::string filename = this->getFileName();
   TDirectory* file = openFile(filename.c_str());
   if(!file){
     coutE(InputArguments) << "unable to open file '" << filename <<"'!" << std::endl;
@@ -2571,7 +2596,7 @@ bool RooLagrangianMorphFunc::useCoefficients(const TMatrixD& inverse)
   RooLagrangianMorphFunc::CacheElem* cache = (RooLagrangianMorphFunc::CacheElem*) _cacheMgr.getObj(0,(RooArgSet*)0);
   Matrix m = makeSuperMatrix(inverse);
   if (cache) {
-    std::string filename = this->_config._fileName;
+    std::string filename = this->getFileName();
     cache->_inverse = m;
     TDirectory* file = openFile(filename.c_str());
     if(!file) coutE(InputArguments) << "unable to open file '"<<filename<<"'!" << std::endl;
@@ -2780,7 +2805,7 @@ void RooLagrangianMorphFunc::setParameters(TH1* paramhist)
 
 void RooLagrangianMorphFunc::setParameters(const char* foldername)
 {
-  std::string filename = this->_config._fileName;
+  std::string filename = this->getFileName();
   TDirectory* file = openFile(filename.c_str());
   TH1* paramhist = getParamHist(file,foldername);
   setParams(paramhist,this->_operators,false);

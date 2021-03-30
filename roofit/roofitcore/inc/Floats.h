@@ -14,7 +14,6 @@
 #endif
 
 #include <limits>
-namespace RooLagrangianMorphing {
 #ifdef USE_UBLAS
   typedef boost::multiprecision::number<boost::multiprecision::cpp_dec_float<100> > SuperFloat;
   typedef std::numeric_limits< SuperFloat > SuperFloatPrecision;
@@ -22,6 +21,5 @@ namespace RooLagrangianMorphing {
    typedef double SuperFloat;
    typedef std::numeric_limits<double> SuperFloatPrecision;
 #endif
-}
 
 #endif

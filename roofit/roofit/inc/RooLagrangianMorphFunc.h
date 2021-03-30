@@ -75,49 +75,65 @@ class RooLagrangianMorphFunc ;
 #include <string>
 #include <iostream>
 #include <fstream>
-class RooLagrangianMorphConfig {
-  friend class RooLagrangianMorphFunc ;
-  public:
 
-    RooLagrangianMorphConfig() ;
-    RooLagrangianMorphConfig(const RooAbsCollection& couplings) ;
-    RooLagrangianMorphConfig(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings) ;
-    RooLagrangianMorphConfig(const RooLagrangianMorphConfig& other) ;
-    void setFileName(const char* filename) ;
-    void setObservable(const char* obsname) ;
-    void setCouplings(const RooAbsCollection& couplings) ;
-    void setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings) ;
-    template <class T> void setVertices(const std::vector<T>& vertices) ;
-    template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams) ;
-    template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering) ;
-    template <class T> void addDiagrams(const std::vector<T>& diagrams) ;
-    void disableInterference(const std::vector<const char*>& nonInterfering) ;
-    void disableInterferences(const std::vector<std::vector<const char*> >& nonInterfering) ;
-
-  virtual ~RooLagrangianMorphConfig() ;
-
-  protected:
-    std::string _obsName ;
-    std::string _fileName ;
-    std::vector<RooListProxy*> _vertices ;
-    RooListProxy _couplings ;
-    RooListProxy _prodCouplings ;
-    RooListProxy _decCouplings ;
-    std::vector<std::vector<RooListProxy*> > _configDiagrams ;
-    std::vector<RooArgList*> _nonInterfering ;
-};
 
 class RooLagrangianMorphFunc : public RooAbsReal {
   public:
+
+    class Config {
+      public:
+        Config() ;
+        Config(const RooAbsCollection& couplings) ;
+        Config(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings) ;
+        Config(const Config& other) ;
+        void setFileName(const char* filename) ;
+        void setObservableName(const char* obsname) ;
+        void setCouplings(const RooAbsCollection& couplings) ;
+        void setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings) ;
+        template <class T> void setVertices(const std::vector<T>& vertices) ;
+        template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams) ;
+        template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering) ;
+        template <class T> void addDiagrams(const std::vector<T>& diagrams) ;
+
+        std::string getFileName() ;
+        std::string getObservableName() ;
+        std::vector<std::vector<RooArgList*>> getDiagrams() ;
+        RooArgList getCouplings() ;
+        RooArgList getProdCouplings() ;
+        RooArgList getDecCouplings() ;
+
+//        void setCouplings(const RooAbsCollection& couplings) ;
+//        void setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings) ;
+//        template <class T> void setVertices(const std::vector<T>& vertices) ;
+//        template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams) ;
+//        template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering) ;
+//        template <class T> void addDiagrams(const std::vector<T>& diagrams) ;
+
+        void disableInterference(const std::vector<const char*>& nonInterfering) ;
+        void disableInterferences(const std::vector<std::vector<const char*> >& nonInterfering) ;
+        virtual ~Config() ;
+
+      protected:
+        std::string _obsName ;
+        std::string _fileName ;
+        std::vector<RooArgList*> _vertices ;
+        RooArgList _couplings ;
+        RooArgList _prodCouplings ;
+        RooArgList _decCouplings ;
+        std::vector<std::vector<RooArgList*>> _configDiagrams ;
+        std::vector<RooArgList*> _nonInterfering ;
+
+    };
+    
     typedef std::map<const std::string,double> ParamSet ;
     typedef std::map<const std::string,int> FlagSet ;
     typedef std::map<const std::string,ParamSet > ParamMap ;
     typedef std::map<const std::string,FlagSet > FlagMap ;
 
     RooLagrangianMorphFunc() ;
-    RooLagrangianMorphFunc(const char *name, const char *title, const RooLagrangianMorphConfig& config, bool allowNegativeYields=true) ;
-    RooLagrangianMorphFunc(const char *name, const char *title, const RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, bool allowNegativeYields=true) ;
-    RooLagrangianMorphFunc(const char *name, const char *title, const RooLagrangianMorphConfig& config, const RooArgList& folders, bool allowNegativeYields=true) ;
+    RooLagrangianMorphFunc(const char *name, const char *title, const Config& config, bool allowNegativeYields=true) ;
+    RooLagrangianMorphFunc(const char *name, const char *title, const Config& config, const char* basefolder, const RooArgList& folders, bool allowNegativeYields=true) ;
+    RooLagrangianMorphFunc(const char *name, const char *title, const Config& config, const RooArgList& folders, bool allowNegativeYields=true) ;
     RooLagrangianMorphFunc(const char *name, const char *title, bool allowNegativeYields=true) ;
     RooLagrangianMorphFunc(const char *name, const char *title, const char* basefolder, const RooArgList& folders, bool allowNegativeYields=true) ;
     RooLagrangianMorphFunc(const char *name, const char *title, const RooArgList& folders, bool allowNegativeYields=true) ;
@@ -180,7 +196,14 @@ class RooLagrangianMorphFunc : public RooAbsReal {
     
     RooRealVar* getObservable() const ;
     RooRealVar* getBinWidth() const ;
- 
+
+    virtual std::string getObservableName() {}
+    virtual std::string getFileName() {}
+    virtual std::vector<std::vector<RooArgList*>> getDiagrams() {}
+    virtual RooArgSet getCouplings() {}
+    virtual RooArgList getProdCouplings() {}
+    virtual RooArgList getDecCouplings() {}
+
     void printEvaluation() const ;
     void printCouplings() const ;
     void printParameters() const ;
@@ -285,7 +308,7 @@ class RooLagrangianMorphFunc : public RooAbsReal {
     RooListProxy _observable ;
     RooListProxy _binWidths ;
     RooListProxy _flags ;
-    RooLagrangianMorphConfig _config ;
+    Config _config ;
     std::vector<std::vector<RooListProxy*> > _diagrams ;
     Bool_t _linearize ;
     mutable const RooArgSet* _curNormSet ; //!
