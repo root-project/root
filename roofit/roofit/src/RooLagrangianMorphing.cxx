@@ -1612,7 +1612,7 @@ public:
     RooLagrangianMorphing::ParamSet values = getParams(func->_operators);
 
     RooLagrangianMorphFunc::CacheElem* cache = new RooLagrangianMorphFunc::CacheElem();
-    cache->createComponents(func->_paramCards,func->_flagValues,func->GetName(),func->_diagrams,func->_config._nonInterfering,func->_flags);
+    cache->createComponents(func->_paramCards,func->_flagValues,func->GetName(),func->_diagrams,func->_nonInterfering,func->_flags);
 
     DEBUG("performing matrix operations");
     cache->buildMatrix(func->_paramCards,func->_flagValues,func->_flags);
@@ -1645,7 +1645,7 @@ public:
     RooLagrangianMorphing::ParamSet values = getParams(func->_operators);
 
     RooLagrangianMorphFunc::CacheElem* cache = new RooLagrangianMorphFunc::CacheElem();
-    cache->createComponents(func->_paramCards,func->_flagValues,func->GetName(),func->_diagrams,func->_config._nonInterfering,func->_flags);
+    cache->createComponents(func->_paramCards,func->_flagValues,func->GetName(),func->_diagrams,func->_nonInterfering,func->_flags);
 
 #ifndef USE_UBLAS
     cache->_inverse.ResizeTo(inverse.GetNrows(),inverse.GetNrows());
@@ -2023,10 +2023,10 @@ void RooLagrangianMorphing::RooLagrangianMorphConfig::disableInterference(const 
   for(auto c:nonInterfering){
     name << c;
   }
- // RooListProxy* p = new RooListProxy(name.str().c_str(),name.str().c_str(),this,kTRUE,kFALSE);
-  this->_nonInterfering.push_back(new RooListProxy());
+  RooArgList* p = new RooArgList(name.str().c_str());
+  this->_nonInterfering.push_back(new RooArgList());
   for(auto c:nonInterfering){
-    p->addOwned(*(new RooStringVar(c,c,c)));
+    p->add(*(new RooStringVar(c,c,c)));
   }
 }
 
@@ -2052,7 +2052,7 @@ RooLagrangianMorphing::RooLagrangianMorphConfig::RooLagrangianMorphConfig(const 
   _couplings(other._couplings),
   _prodCouplings(other._prodCouplings),
   _decCouplings(other._decCouplings),
-  _nonInterfering(other._nonInterfering),
+  _nonInterfering(other._nonInterfering)
 {
   DEBUG("copy constructor called");
   for(size_t j=0; j<other._configDiagrams.size(); ++j){

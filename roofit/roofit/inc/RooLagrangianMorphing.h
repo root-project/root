@@ -138,7 +138,7 @@ namespace RooLagrangianMorphing {
     RooListProxy _prodCouplings ;
     RooListProxy _decCouplings ;
     std::vector<std::vector<RooListProxy*> > _configDiagrams ;
-    std::vector<RooListProxy*> _nonInterfering ;
+    std::vector<RooArgList*> _nonInterfering ;
 };
 
   class RooLagrangianMorphFunc : public RooAbsReal {
@@ -291,6 +291,8 @@ namespace RooLagrangianMorphing {
     std::vector<std::vector<RooListProxy*> > _diagrams ;
     Bool_t _linearize ;
     mutable const RooArgSet* _curNormSet ; //!
+    std::vector<RooListProxy*> _nonInterfering ;
+
 
   public:
 
