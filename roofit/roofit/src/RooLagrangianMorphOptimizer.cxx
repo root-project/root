@@ -28,7 +28,7 @@
 #include <RooLagrangianMorphing.h>
 
 #define ERROR(arg){                                                     \
-  if(RooLagrangianMorphing::gAllowExceptions){                                \
+  if(true){                                \
     std::stringstream err; err << arg << std::endl; throw(std::runtime_error(err.str())); \
   } else {                                                              \
     std::cerr << arg << std::endl;                                      \
