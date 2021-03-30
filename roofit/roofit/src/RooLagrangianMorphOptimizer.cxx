@@ -25,7 +25,9 @@
 #include <RooFormulaVar.h>
 
 #include <RooLagrangianMorphOptimizer.h>
-#include <RooLagrangianMorphing.h>
+#include <RooLagrangianMorphFunc.h>
+
+class RooLagrangianMorphFunc;
 
 #define ERROR(arg){                                                     \
   if(true){                                \
@@ -77,12 +79,12 @@ void RooLagrangianMorphOptimizer::setupMorphFunc(){
   } else {
     // empty string as filename makes RooLagrangianMorphFunc use the gDirectory for input
    // if(this->_nonInterfering.size()!=0){
-   //   this->morphFunc = new RooLagrangianMorphing::RooLagrangianMorph("morphing","morphing","","xsection",this->vertices,this->_nonInterfering,this->temporaries_list);
+   //   this->morphFunc = new RooLagrangianMorphFunc::RooLagrangianMorph("morphing","morphing","","xsection",this->vertices,this->_nonInterfering,this->temporaries_list);
    // }else{
-      RooLagrangianMorphing::RooLagrangianMorphConfig config;
+      RooLagrangianMorphConfig config;
       config.setVertices(this->vertices); 
       config.setObservable("xsection");
-      this->morphFunc = new RooLagrangianMorphing::RooLagrangianMorphFunc("morphing","morphing",config,this->temporaries_list);
+      this->morphFunc = new RooLagrangianMorphFunc("morphing","morphing",config,this->temporaries_list);
   //  }
   }
 }
@@ -259,7 +261,7 @@ RooLagrangianMorphOptimizer::RooLagrangianMorphOptimizer(const char* input, cons
 {
   // constructor with interference setting
   this->_nonInterfering = nonInterfering;
-  //this->xsHelper = new RooLagrangianMorphing::RooLagrangianMorph("xsHelper","xsHelper","",inputobservable.Data(),this->vertices,this->_nonInterfering,this->initInputs(xsInputsArg));
+  //this->xsHelper = new RooLagrangianMorphFunc::RooLagrangianMorph("xsHelper","xsHelper","",inputobservable.Data(),this->vertices,this->_nonInterfering,this->initInputs(xsInputsArg));
   this->setup(startvalues);
 }
 
@@ -267,10 +269,10 @@ RooLagrangianMorphOptimizer::RooLagrangianMorphOptimizer(const char* input, cons
   RooLagrangianMorphOptimizer(input,benchmarksArg,verticesArg,containerType)
 {
   // constructor without interference setting
-  RooLagrangianMorphing::RooLagrangianMorphConfig config;
+  RooLagrangianMorphConfig config;
   config.setVertices(this->vertices);
   config.setObservable(inputobservable.Data());
-  this->xsHelper = new RooLagrangianMorphing::RooLagrangianMorphFunc("xsHelper","xsHelper",config,this->initInputs(xsInputsArg));
+  this->xsHelper = new RooLagrangianMorphFunc("xsHelper","xsHelper",config,this->initInputs(xsInputsArg));
   this->setup(startvalues);
 }
 
@@ -361,7 +363,7 @@ void RooLagrangianMorphOptimizer::setup(const ParamCardSet& startvalues){
       f->Add(xs);
     } else if(this->fXSContainerType == TPair::Class()){
       // TPair version
-      TPair* p = RooLagrangianMorphing::makeCrosssectionContainer(1,0);
+      TPair* p = this->morphFunc->makeCrosssectionContainer(1,0);
       f->Add(p);
     }
 

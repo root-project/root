@@ -69,47 +69,13 @@ class RooWorkspace ;
 class RooParamHistFunc ;
 class TPair ;
 class TFolder ;
+class RooLagrangianMorphFunc ;
+
 #include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
-
-namespace RooLagrangianMorphing {
- class RooLagrangianMorphFunc ;
- typedef std::map<const std::string,double> ParamSet ;
-  typedef std::map<const std::string,int> FlagSet ;
-  typedef std::map<const std::string,RooLagrangianMorphing::ParamSet > ParamMap ;
-  typedef std::map<const std::string,RooLagrangianMorphing::FlagSet > FlagMap ;
-  extern bool gAllowExceptions ;
-  double implementedPrecision() ;
-  RooWorkspace* makeCleanWorkspace(RooWorkspace* oldWS, const char* newName = 0, const char* mcname = "ModelConfig", bool keepData = false) ;
-  void importToWorkspace(RooWorkspace* ws, const RooAbsReal* object) ;
-  void importToWorkspace(RooWorkspace* ws, RooAbsData* object) ;
-  void append(RooLagrangianMorphing::ParamSet& set, const char* str, double val) ;
-  void append(RooLagrangianMorphing::ParamMap& map, const char* str, RooLagrangianMorphing::ParamSet& set) ;
-    
-  void writeMatrixToFile(const TMatrixD& matrix, const char* fname) ;
-  void writeMatrixToStream(const TMatrixD& matrix, std::ostream& stream) ;
-  TMatrixD readMatrixFromFile(const char* fname) ;
-  TMatrixD readMatrixFromStream(std::istream& stream) ;
-
-  RooDataHist* makeDataHistogram(TH1* hist, RooRealVar* observable, const char* histname = NULL) ;
-  void setDataHistogram(TH1* hist, RooRealVar* observable, RooDataHist* dh) ;
-  void printDataHistogram(RooDataHist* hist, RooRealVar* obs) ;
-
-  int countSamples(std::vector<RooArgList*>& vertices) ;
-  int countSamples(int nprod, int ndec, int nboth) ;
-
-  TPair* makeCrosssectionContainer(double xs, double unc) ;
-  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<std::string>& couplings) ;
-  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<std::vector<std::string> >& vertices) ;
-  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings) ;
-  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const RooLagrangianMorphing::FlagMap& flagValues, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering) ;
-  RooArgSet createWeights(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const RooLagrangianMorphing::FlagMap& inputFlags, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering) ;
-  RooArgSet createWeights(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings) ;
-
-
- class RooLagrangianMorphConfig {
+class RooLagrangianMorphConfig {
   friend class RooLagrangianMorphFunc ;
   public:
 
@@ -141,8 +107,13 @@ namespace RooLagrangianMorphing {
     std::vector<RooArgList*> _nonInterfering ;
 };
 
-  class RooLagrangianMorphFunc : public RooAbsReal {
+class RooLagrangianMorphFunc : public RooAbsReal {
   public:
+    typedef std::map<const std::string,double> ParamSet ;
+    typedef std::map<const std::string,int> FlagSet ;
+    typedef std::map<const std::string,ParamSet > ParamMap ;
+    typedef std::map<const std::string,FlagSet > FlagMap ;
+
     RooLagrangianMorphFunc() ;
     RooLagrangianMorphFunc(const char *name, const char *title, const RooLagrangianMorphConfig& config, bool allowNegativeYields=true) ;
     RooLagrangianMorphFunc(const char *name, const char *title, const RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, bool allowNegativeYields=true) ;
@@ -250,6 +221,33 @@ namespace RooLagrangianMorphing {
     
   public:
   
+    double implementedPrecision() ;
+    void importToWorkspace(RooWorkspace* ws, const RooAbsReal* object) ;
+    void importToWorkspace(RooWorkspace* ws, RooAbsData* object) ;
+    void append(ParamSet& set, const char* str, double val) ;
+    void append(ParamMap& map, const char* str, ParamSet& set) ;
+    
+    void writeMatrixToFile(const TMatrixD& matrix, const char* fname) ;
+    void writeMatrixToStream(const TMatrixD& matrix, std::ostream& stream) ;
+    TMatrixD readMatrixFromFile(const char* fname) ;
+    TMatrixD readMatrixFromStream(std::istream& stream) ;
+
+    //RooDataHist* makeDataHistogram(TH1* hist, RooRealVar* observable, const char* histname = NULL) ;
+    //void setDataHistogram(TH1* hist, RooRealVar* observable, RooDataHist* dh) ;
+    //void printDataHistogram(RooDataHist* hist, RooRealVar* obs) ;
+
+    int countSamples(std::vector<RooArgList*>& vertices) ;
+    int countSamples(int nprod, int ndec, int nboth) ;
+
+    TPair* makeCrosssectionContainer(double xs, double unc) ;
+    std::map<std::string,std::string> createWeightStrings(const ParamMap& inputs, const std::vector<std::string>& couplings) ;
+    std::map<std::string,std::string> createWeightStrings(const ParamMap& inputs, const std::vector<std::vector<std::string> >& vertices) ;
+    std::map<std::string,std::string> createWeightStrings(const ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings) ;
+    std::map<std::string,std::string> createWeightStrings(const ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const FlagMap& flagValues, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering) ;
+    RooArgSet createWeights(const ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const FlagMap& inputFlags, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering) ;
+    RooArgSet createWeights(const ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings) ;
+
+
     bool updateCoefficients() ;
     bool useCoefficients(const TMatrixD& inverse) ;
     bool useCoefficients(const char* filename) ;
@@ -264,15 +262,15 @@ namespace RooLagrangianMorphing {
     void setScale(double val) ;
     double getScale() ;
     
-  RooRealSumFunc* getFunc() const ;
-  RooRealSumFunc* cloneFunc() const ;
-  RooWrapperPdf* createPdf() const ;
+    RooRealSumFunc* getFunc() const ;
+    RooRealSumFunc* cloneFunc() const ;
+    RooWrapperPdf* createPdf() const ;
 
-  RooAbsPdf::ExtendMode extendMode() const ;
-  Double_t expectedEvents(const RooArgSet* nset) const ;
-  Double_t expectedEvents(const RooArgSet& nset) const ;
-  Double_t expectedEvents() const ;
-  Bool_t selfNormalized() const ;
+    RooAbsPdf::ExtendMode extendMode() const ;
+    Double_t expectedEvents(const RooArgSet* nset) const ;
+    Double_t expectedEvents(const RooArgSet& nset) const ;
+    Double_t expectedEvents() const ;
+    Bool_t selfNormalized() const ;
   protected:
     double _scale = 1 ;
   //  std::string _objFilter ;
@@ -293,12 +291,9 @@ namespace RooLagrangianMorphing {
     mutable const RooArgSet* _curNormSet ; //!
     std::vector<RooListProxy*> _nonInterfering ;
 
-
   public:
 
     ClassDefOverride(RooLagrangianMorphFunc,1)
   };
-
-}
 
 #endif

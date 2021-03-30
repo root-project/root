@@ -10,12 +10,13 @@
 #ifndef ROO_LAGRANGIAN_MORPHING_OPTIMIZER
 #define ROO_LAGRANGIAN_MORPHING_OPTIMIZER
 
-#include "RooLagrangianMorphing.h"
+#include "RooLagrangianMorphFunc.h"
 #include <map>
 
 class TMinuit;
 class TClass;
 class TFolder;
+class RooLagrangianMorphFunc;
 
 class RooLagrangianMorphOptimizer {
 
@@ -26,7 +27,7 @@ protected:
   RooArgList initInputs(const std::vector<std::string>& xsInputs);
 
 public: 
-  typedef RooLagrangianMorphing::ParamSet ParamCard;
+  typedef RooLagrangianMorphFunc::ParamSet ParamCard;
   typedef std::map<const std::string, ParamCard> ParamCardSet;
 
   class RandomLagrangianGenerator;
@@ -115,8 +116,8 @@ protected:
   
 protected:
   // temporaries
-  RooLagrangianMorphing::RooLagrangianMorphFunc* morphFunc = NULL;
-  RooLagrangianMorphing::RooLagrangianMorphFunc* xsHelper = NULL;
+  RooLagrangianMorphFunc* morphFunc = NULL;
+  RooLagrangianMorphFunc* xsHelper = NULL;
   TMinuit* ptMinuit = NULL;
   int ierflg;
   

@@ -71,14 +71,14 @@ void rf1003_morphcustomdef()
   // transverse momentum of the di-jet system and the pseudorapidity 
   // of the leading jet in the process VBF Higgs decaying to W+ W-
   // in the Higgs Characterisation Model
-  RooLagrangianMorphing::RooLagrangianMorphConfig config;
+  RooLagrangianMorphConfig config;
   config.setCouplings(prodCouplings, decCouplings);
   config.setFileName(infilename.c_str());
   config.setObservable("twoSelJets/ptjj");
-  RooLagrangianMorphing::RooLagrangianMorphConfig config1(config);
+  RooLagrangianMorphConfig config1(config);
   config1.setObservable("twoSelJets/etaj1");
-  RooLagrangianMorphing::RooLagrangianMorphFunc morphfunc_ptjj("morphunc_ptjj","morphfunc_ptjj", config, inputs);
-  RooLagrangianMorphing::RooLagrangianMorphFunc morphfunc_etaj1("morphunc_etaj1","morphfunc_etaj1", config1, inputs);
+  RooLagrangianMorphFunc morphfunc_ptjj("morphunc_ptjj","morphfunc_ptjj", config, inputs);
+  RooLagrangianMorphFunc morphfunc_etaj1("morphunc_etaj1","morphfunc_etaj1", config1, inputs);
 
   // Define identifier for validation sample
   std::string validationsample("v1");

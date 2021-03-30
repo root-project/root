@@ -19,7 +19,6 @@
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
 
-namespace RooLagrangianMorphing {
   class LinearCombination : public RooAbsReal {
       RooListProxy _actualVars ;
       std::vector<SuperFloat> _coefficients;
@@ -42,7 +41,6 @@ namespace RooLagrangianMorphing {
       ClassDefOverride(LinearCombination,1)
       
   };
-}
 //#endif
 
 #endif
