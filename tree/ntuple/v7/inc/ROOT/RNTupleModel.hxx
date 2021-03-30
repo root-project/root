@@ -88,6 +88,8 @@ public:
    }
 
    /// Adds a field whose type is not known at compile time.  Thus there is no shared pointer returned.
+   ///
+   /// Throws an exception if the field is null.
    void AddField(std::unique_ptr<Detail::RFieldBase> field);
 
    template <typename T>
@@ -98,6 +100,9 @@ public:
    template <typename T>
    void AddField(std::pair<std::string_view, std::string_view> fieldNameDesc, T* fromWhere) {
       EnsureValidFieldName(fieldNameDesc.first);
+      if (!fromWhere) {
+         throw RException(R__FAIL("null field fromWhere"));
+      }
       auto field = std::make_unique<RField<T>>(fieldNameDesc.first);
       field->SetDescription(fieldNameDesc.second);
       fDefaultEntry->CaptureValue(field->CaptureValue(fromWhere));
@@ -110,6 +115,8 @@ public:
    }
 
    /// Ingests a model for a sub collection and attaches it to the current model
+   ///
+   /// Throws an exception if collectionModel is null.
    std::shared_ptr<RCollectionNTupleWriter> MakeCollection(
       std::string_view fieldName,
       std::unique_ptr<RNTupleModel> collectionModel);

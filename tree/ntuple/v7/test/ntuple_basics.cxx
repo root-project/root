@@ -314,3 +314,27 @@ TEST(RNTupleModel, CollectionFieldDescriptions)
    const auto& muon_desc = *ntuple->GetDescriptor().GetTopLevelFields().begin();
    EXPECT_EQ(std::string("muons after basic selection"), muon_desc.GetFieldDescription());
 }
+
+TEST(RNTuple, NullSafety)
+{
+   // RNTupleModel
+   auto model = RNTupleModel::Create();
+   try {
+      auto bad = model->MakeCollection("bad", nullptr);
+      FAIL() << "null submodels should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null collectionModel"));
+   }
+   try {
+      model->AddField(nullptr);
+      FAIL() << "null fields should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null field"));
+   }
+   try {
+      model->AddField<float>("pt", nullptr);
+      FAIL() << "null fields should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null field fromWhere"));
+   }
+}
