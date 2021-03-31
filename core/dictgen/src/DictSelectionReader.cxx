@@ -3,6 +3,7 @@
 #include "clang/AST/AST.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 
 #include "ClassSelectionRule.h"
 #include "SelectionRules.h"
@@ -27,7 +28,7 @@ DictSelectionReader::DictSelectionReader(cling::Interpreter &interp, SelectionRu
 
    {
       // We push a new transaction because we could deserialize decls here
-      cling::Interpreter::PushTransactionRAII RAII(&interp);
+      cling::PushTransactionRAII RAII(&interp);
       // Inspect the AST
       TraverseDecl(translUnitDecl);
    }

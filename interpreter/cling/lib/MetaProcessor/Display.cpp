@@ -11,6 +11,7 @@
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
@@ -525,7 +526,7 @@ void ClassPrinter::DisplayAllClasses()const
 
   fOut.Print("List of classes");
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   for (decl_iterator decl = tuDecl->decls_begin(); decl != tuDecl->decls_end(); ++decl)
     ProcessDecl(decl);
 }
@@ -612,7 +613,7 @@ void ClassPrinter::ProcessBlockDecl(decl_iterator decl)const
   assert(blockDecl != 0 && "ProcessBlockDecl, internal error - decl is not a BlockDecl");
 
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   for (decl_iterator it = blockDecl->decls_begin(); it != blockDecl->decls_end(); ++it)
     ProcessDecl(it);
 }
@@ -629,7 +630,7 @@ void ClassPrinter::ProcessFunctionDecl(decl_iterator decl)const
   assert(functionDecl != 0 && "ProcessFunctionDecl, internal error - decl is not a FunctionDecl");
 
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   for (decl_iterator it = functionDecl->decls_begin(); it != functionDecl->decls_end(); ++it)
     ProcessDecl(it);
 }
@@ -647,7 +648,7 @@ void ClassPrinter::ProcessNamespaceDecl(decl_iterator decl)const
   assert(namespaceDecl != 0 && "ProcessNamespaceDecl, 'decl' parameter is not a NamespaceDecl");
 
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   for (decl_iterator it = namespaceDecl->decls_begin(); it != namespaceDecl->decls_end(); ++it)
     ProcessDecl(it);
 }
@@ -663,7 +664,7 @@ void ClassPrinter::ProcessLinkageSpecDecl(decl_iterator decl)const
   assert(linkageSpec != 0 && "ProcessLinkageSpecDecl, decl is not a LinkageSpecDecl");
 
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   for (decl_iterator it = linkageSpec->decls_begin(); it != linkageSpec->decls_end(); ++it)
     ProcessDecl(it);
 }
@@ -685,7 +686,7 @@ void ClassPrinter::ProcessClassDecl(decl_iterator decl) const
   DisplayClassDecl(classDecl);
 
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   // Now we have to check nested scopes for class declarations.
   for (decl_iterator nestedDecl = classDecl->decls_begin();
        nestedDecl != classDecl->decls_end(); ++nestedDecl)
@@ -707,7 +708,7 @@ void ClassPrinter::ProcessClassTemplateDecl(decl_iterator decl)const
     return;
 
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   //Now we have to display all the specialization (/instantiations)
   for (ClassTemplateDecl::spec_iterator spec = templateDecl->spec_begin();
        spec != templateDecl->spec_end(); ++spec)
@@ -721,7 +722,7 @@ void ClassPrinter::DisplayClassDecl(const CXXRecordDecl* classDecl)const
   assert(fInterpreter != 0 && "DisplayClassDecl, fInterpreter is null");
 
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
 
   classDecl = classDecl->getDefinition();
   assert(classDecl != 0 && "DisplayClassDecl, invalid decl - no definition");
@@ -835,7 +836,7 @@ void ClassPrinter::DisplayBasesAsList(const CXXRecordDecl* classDecl)const
   //we print a list of base classes as one line, with access specifiers and 'virtual' if needed.
   std::string bases(": ");
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   for (base_decl_iterator baseIt = classDecl->bases_begin(); baseIt != classDecl->bases_end(); ++baseIt) {
     if (baseIt != classDecl->bases_begin())
       bases += ", ";
@@ -868,7 +869,7 @@ void ClassPrinter::DisplayBasesAsTree(const CXXRecordDecl* classDecl, unsigned n
 
   std::string textLine;
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   for (base_decl_iterator baseIt = classDecl->bases_begin(); baseIt != classDecl->bases_end(); ++baseIt) {
     textLine.assign(nSpaces, ' ');
     const RecordType* const type = baseIt->getType()->getAs<RecordType>();
@@ -906,7 +907,7 @@ void ClassPrinter::DisplayMemberFunctions(const CXXRecordDecl* classDecl)const
   std::string textLine;
 
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   for (ctor_iterator ctor = classDecl->ctor_begin(); ctor != classDecl->ctor_end(); ++ctor) {
     if (ctor->isImplicit())//Compiler-generated.
       continue;
@@ -988,7 +989,7 @@ void ClassPrinter::DisplayDataMembers(const CXXRecordDecl* classDecl, unsigned n
   const std::string gap(std::max(nSpaces, 1u), ' ');
 
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   for (field_iterator field = classDecl->field_begin();
        field != classDecl->field_end(); ++field) {
     textLine.clear();
@@ -1144,7 +1145,7 @@ void GlobalsPrinter::DisplayGlobals()const
   assert(tuDecl != 0 && "DisplayGlobals, translation unit is empty");
 
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
 
   //Try to print global macro definitions (object-like only).
   const Preprocessor& pp = compiler->getPreprocessor();
@@ -1182,7 +1183,7 @@ void GlobalsPrinter::DisplayGlobal(const std::string& name)const
   unsigned count = 0;
 
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   const Preprocessor& pp = compiler->getPreprocessor();
   for (macro_iterator macro = pp.macro_begin(); macro != pp.macro_end(); ++macro) {
     auto* MD = macro->second.getLatest();
@@ -1449,7 +1450,7 @@ void TypedefPrinter::ProcessNestedDeclarations(const DeclContext* decl)const
 {
   assert(decl != 0 && "ProcessNestedDeclarations, parameter 'decl' is null");
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   for (decl_iterator it = decl->decls_begin(), eIt = decl->decls_end(); it != eIt; ++it)
     ProcessDecl(it);
 }
@@ -1552,10 +1553,10 @@ void DisplayClass(llvm::raw_ostream& stream, const Interpreter* interpreter,
 void DisplayNamespaces(llvm::raw_ostream &stream, const Interpreter *interpreter)
 {
   assert(interpreter != 0 && "DisplayNamespaces, parameter 'interpreter' is null");
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(interpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(interpreter));
 
   NamespacePrinter printer(stream, interpreter);
-  Interpreter::PushTransactionRAII guard(const_cast<Interpreter *>(interpreter));
+  PushTransactionRAII guard(const_cast<Interpreter *>(interpreter));
   printer.Print();
 }
 
@@ -1566,7 +1567,7 @@ void DisplayGlobals(llvm::raw_ostream& stream, const Interpreter* interpreter)
 
   GlobalsPrinter printer(stream, interpreter);
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(interpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(interpreter));
   printer.DisplayGlobals();
 }
 
@@ -1578,7 +1579,7 @@ void DisplayGlobal(llvm::raw_ostream& stream, const Interpreter* interpreter,
 
   GlobalsPrinter printer(stream, interpreter);
   // Could trigger deserialization of decls.
-  Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(interpreter));
+  PushTransactionRAII RAII(const_cast<Interpreter*>(interpreter));
   printer.DisplayGlobal(name);
 }
 
@@ -1589,7 +1590,7 @@ void DisplayTypedefs(llvm::raw_ostream &stream, const Interpreter *interpreter)
 
    TypedefPrinter printer(stream, interpreter);
    // Could trigger deserialization of decls.
-   Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(interpreter));
+   PushTransactionRAII RAII(const_cast<Interpreter*>(interpreter));
    printer.DisplayTypedefs();
 }
 

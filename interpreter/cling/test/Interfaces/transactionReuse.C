@@ -15,6 +15,7 @@
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 
 #include "clang/AST/Decl.h"
 
@@ -25,7 +26,7 @@ using namespace cling;
 void generateNestedTransaction(int depth) {
   if (!depth)
     return;
-  cling::Interpreter::PushTransactionRAII RAIIT(gCling);
+  cling::PushTransactionRAII RAIIT(gCling);
   if (depth | 0x1) { // if odd
     char buff[100];
     sprintf(buff, "int i%d;", depth);

@@ -48,9 +48,10 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
 
-#include "cling/Interpreter/LookupHelper.h"
-#include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/LookupHelper.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
+#include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
 
 #include "llvm/Support/Path.h"
@@ -818,7 +819,7 @@ bool ROOT::TMetaUtils::RequireCompleteType(const cling::Interpreter &interp, cla
    clang::Sema& S = interp.getCI()->getSema();
    // Here we might not have an active transaction to handle
    // the caused instantiation decl.
-   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interp));
+   cling::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interp));
    return S.RequireCompleteType(Loc, Type, clang::diag::err_incomplete_type);
 }
 
@@ -1051,7 +1052,7 @@ bool ROOT::TMetaUtils::CheckDefaultConstructor(const clang::CXXRecordDecl* cl, c
    clang::CXXRecordDecl* ncCl = const_cast<clang::CXXRecordDecl*>(cl);
 
    // We may induce template instantiation
-   cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
+   cling::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
 
    if (auto* Ctor = interpreter.getCI()->getSema().LookupDefaultConstructor(ncCl)) {
       if (Ctor->getAccess() == clang::AS_public && !Ctor->isDeleted()) {
@@ -1084,7 +1085,7 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckIOConstructor(const cla
       return EIOCtorCategory::kAbsent;
 
    // FIXME: We should not iterate here. That costs memory!
-   cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
+   cling::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
    for (auto iter = cl->ctor_begin(), end = cl->ctor_end(); iter != end; ++iter)
       {
          if ((iter->getAccess() != clang::AS_public) || (iter->getNumParams() != 1))
@@ -1235,7 +1236,7 @@ bool ROOT::TMetaUtils::NeedDestructor(const clang::CXXRecordDecl *cl,
 
    if (cl->hasUserDeclaredDestructor()) {
 
-      cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interp));
+      cling::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interp));
       clang::CXXDestructorDecl *dest = cl->getDestructor();
       if (dest) {
          return (dest->getAccess() == clang::AS_public);
@@ -3067,7 +3068,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
             clang::TemplateTypeParmDecl *TTP = llvm::dyn_cast<clang::TemplateTypeParmDecl>(*Param);
             {
                // We may induce template instantiation
-               cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
+               cling::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
                clang::sema::HackForDefaultTemplateArg raii;
                bool HasDefaultArgs;
                clang::TemplateArgumentLoc ArgType = S.SubstDefaultTemplateArgumentIfAvailable(
@@ -3508,7 +3509,7 @@ void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
    // We need this because GetFullyQualifiedTypeName is triggering deserialization
    // This calling the same name function GetFullyQualifiedTypeName, but this should stay here because
    // callee doesn't have an interpreter pointer
-   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interpreter));
+   cling::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interpreter));
 
    GetFullyQualifiedTypeName(typenamestr,
                              qtype,
@@ -3665,7 +3666,7 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    TemplateArgument newArg = tArg;
    {
       clang::Sema& S = interp.getCI()->getSema();
-      cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interp));
+      cling::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interp));
       clang::sema::HackForDefaultTemplateArg raii; // Hic sunt leones
       bool HasDefaultArgs;
       TemplateArgumentLoc defTArgLoc = S.SubstDefaultTemplateArgumentIfAvailable(Template,
@@ -4024,7 +4025,7 @@ clang::QualType ROOT::TMetaUtils::GetNormalizedType(const clang::QualType &type,
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
 
    // Modules can trigger deserialization.
-   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interpreter));
+   cling::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interpreter));
    clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);
 
    // Readd missing default template parameters
@@ -4066,7 +4067,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    std::string normalizedNameStep1;
 
    // getAsStringInternal can trigger deserialization
-   cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
+   cling::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
    normalizedType.getAsStringInternal(normalizedNameStep1,policy);
 
    // Still remove the std:: and default template argument for STL container and

@@ -1049,7 +1049,7 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
       ::Info("TCling::__LoadModule", "Preloading module %s. \n",
              ModuleName.c_str());
 
-   cling::Interpreter::PushTransactionRAII deserRAII(&interp);
+   cling::PushTransactionRAII deserRAII(&interp);
    return interp.loadModule(ModuleName, /*Complain=*/true);
 }
 
@@ -1115,7 +1115,7 @@ static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp)
          RecreateIndex = true;
       }
       if (RecreateIndex) {
-         cling::Interpreter::PushTransactionRAII deserRAII(&interp);
+         cling::PushTransactionRAII deserRAII(&interp);
          clang::GlobalModuleIndex::UserDefinedInterestingIDs IDs;
 
          struct DefinitionFinder : public RecursiveASTVisitor<DefinitionFinder> {
@@ -1844,7 +1844,7 @@ void TCling::LoadPCM(std::string pcmFileNameFullPath)
       std::string RDictFileOpts = pcmFileNameFullPath + "?filetype=pcm";
       TMemFile pcmMemFile(RDictFileOpts.c_str(), range);
 
-      cling::Interpreter::PushTransactionRAII deserRAII(GetInterpreterImpl());
+      cling::PushTransactionRAII deserRAII(GetInterpreterImpl());
       LoadPCMImpl(pcmMemFile);
       fPendingRdicts.erase(pendingRdict);
 
@@ -2748,7 +2748,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
    {
       // Force possible deserializations first. We need to have no pending
       // Transaction when passing control flow to the inspector below (ROOT-7779).
-      cling::Interpreter::PushTransactionRAII deserRAII(GetInterpreterImpl());
+      cling::PushTransactionRAII deserRAII(GetInterpreterImpl());
 
       astContext.getASTRecordLayout(recordDecl);
 
@@ -3746,7 +3746,7 @@ Int_t TCling::DeleteVariable(const char* name)
       unscopedName += posScope + 2;
    }
    // Could trigger deserialization of decls.
-   cling::Interpreter::PushTransactionRAII RAII(GetInterpreterImpl());
+   cling::PushTransactionRAII RAII(GetInterpreterImpl());
    clang::NamedDecl* nVarDecl
       = cling::utils::Lookup::Named(&fInterpreter->getSema(), unscopedName, declCtx);
    if (!nVarDecl) {
@@ -4292,7 +4292,7 @@ void TCling::LoadEnums(TListOfEnums& enumList) const
    }
    // Iterate on the decl of the class and get the enums.
    if (const clang::DeclContext* DC = dyn_cast<clang::DeclContext>(D)) {
-      cling::Interpreter::PushTransactionRAII deserRAII(GetInterpreterImpl());
+      cling::PushTransactionRAII deserRAII(GetInterpreterImpl());
       // Collect all contexts of the namespace.
       llvm::SmallVector< DeclContext *, 4> allDeclContexts;
       const_cast< clang::DeclContext *>(DC)->collectAllContexts(allDeclContexts);
@@ -4341,7 +4341,7 @@ void TCling::LoadFunctionTemplates(TClass* cl) const
    }
    // Iterate on the decl of the class and get the enums.
    if (const clang::DeclContext* DC = dyn_cast<clang::DeclContext>(D)) {
-      cling::Interpreter::PushTransactionRAII deserRAII(GetInterpreterImpl());
+      cling::PushTransactionRAII deserRAII(GetInterpreterImpl());
       // Collect all contexts of the namespace.
       llvm::SmallVector< DeclContext *, 4> allDeclContexts;
       const_cast< clang::DeclContext *>(DC)->collectAllContexts(allDeclContexts);
@@ -4686,7 +4686,7 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
                   Sema::ForExternalRedeclaration);
 
    // Could trigger deserialization of decls.
-   cling::Interpreter::PushTransactionRAII RAII(GetInterpreterImpl());
+   cling::PushTransactionRAII RAII(GetInterpreterImpl());
    cling::utils::Lookup::Named(&SemaR, R);
 
    LookupResult::Filter F = R.makeFilter();
@@ -4727,7 +4727,7 @@ TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
          if (dc) {
             // If it is a data member enum.
             // Could trigger deserialization of decls.
-            cling::Interpreter::PushTransactionRAII RAII(GetInterpreterImpl());
+            cling::PushTransactionRAII RAII(GetInterpreterImpl());
             possibleEnum = cling::utils::Lookup::Tag(&fInterpreter->getSema(), name, dc);
          } else {
             Error("TCling::GetEnum", "DeclContext not found for %s .\n", name);
@@ -4736,7 +4736,7 @@ TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
    } else {
       // If it is a global enum.
       // Could trigger deserialization of decls.
-      cling::Interpreter::PushTransactionRAII RAII(GetInterpreterImpl());
+      cling::PushTransactionRAII RAII(GetInterpreterImpl());
       possibleEnum = cling::utils::Lookup::Tag(&fInterpreter->getSema(), name);
    }
    if (possibleEnum && (possibleEnum != (clang::Decl*)-1)
@@ -6807,7 +6807,7 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
          continue;
       }
       // Could trigger deserialization of decls.
-      cling::Interpreter::PushTransactionRAII RAII(GetInterpreterImpl());
+      cling::PushTransactionRAII RAII(GetInterpreterImpl());
       // Unlock the TClass for updates
       ((TCling*)gCling)->GetModTClasses().erase(*I);
 

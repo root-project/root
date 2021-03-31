@@ -72,6 +72,7 @@ namespace cling {
   class InterpreterCallbacks;
   class LookupHelper;
   class Value;
+  class PushTransactionRAII;
   class Transaction;
   class IncrementalCUDADeviceCompiler;
 
@@ -83,19 +84,6 @@ namespace cling {
      // IgnoreFilesFunc_t takes a const reference to avoid having to
      // include the actual definition of PresumedLoc.
      using IgnoreFilesFunc_t = bool (*)(const clang::PresumedLoc&);
-
-    ///\brief Pushes a new transaction, which will collect the decls that came
-    /// within the scope of the RAII object. Calls commit transaction at
-    /// destruction.
-    class PushTransactionRAII {
-    private:
-      Transaction* m_Transaction;
-      const Interpreter* m_Interpreter;
-    public:
-      PushTransactionRAII(const Interpreter* i);
-      ~PushTransactionRAII();
-      void pop() const;
-    };
 
     class StateDebuggerRAII {
     private:
@@ -827,6 +815,7 @@ namespace cling {
                           [](const clang::PresumedLoc&) { return false;}) const;
 
     friend class runtime::internal::LifetimeHandler;
+    friend class PushTransactionRAII;
   };
 } // namespace cling
 

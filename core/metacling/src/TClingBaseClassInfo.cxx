@@ -30,7 +30,7 @@ the Clang C++ compiler, not CINT.
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
-
+#include "cling/Interpreter/PushTransactionRAII.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -78,7 +78,7 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
    fDecl = CRD;
    {
       // In particular if the base are templated, this might deserialize.
-      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      cling::PushTransactionRAII RAII(fInterp);
       fIter = CRD->bases_begin();
    }
 }
@@ -111,7 +111,7 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
    clang::CXXBasePaths Paths;
 
    // CXXRecordDecl::isDerivedFrom can trigger deserialization.
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   cling::PushTransactionRAII RAII(fInterp);
 
    if (!CRD->isDerivedFrom(BaseCRD, Paths)) {
       //Not valid fBaseInfo = 0.
@@ -274,7 +274,7 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
          // now we process the bases of that base class.
 
          // At least getASTRecordLayout() might deserialize.
-         cling::Interpreter::PushTransactionRAII RAII(fInterp);
+         cling::PushTransactionRAII RAII(fInterp);
          fDescend = false;
          const clang::RecordType *Ty = fIter->getType()->
                                        getAs<clang::RecordType>();
@@ -389,7 +389,7 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
          continue;
 
        // Accumulate the base class offsets.
-       cling::Interpreter::PushTransactionRAII RAII(interp);
+       cling::PushTransactionRAII RAII(interp);
        const clang::ASTRecordLayout &L = Context.getASTRecordLayout(J->Class);
        Offset += L.getBaseClassOffset(J->Base->getType()->getAsCXXRecordDecl());
      }

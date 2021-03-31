@@ -34,6 +34,7 @@ compiler, not CINT.
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
@@ -69,7 +70,7 @@ TClingCXXRecMethIter::SpecFuncIter::SpecFuncIter(cling::Interpreter *interp, cla
       return;
 
    // Could trigger deserialization of decls.
-   cling::Interpreter::PushTransactionRAII RAII(interp);
+   cling::PushTransactionRAII RAII(interp);
 
    auto emplaceSpecFunIfNeeded = [&](clang::CXXMethodDecl *D) {
       if (!D)
@@ -201,7 +202,7 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
       }
    }
 
-   cling::Interpreter::PushTransactionRAII RAII(interp);
+   cling::PushTransactionRAII RAII(interp);
 
    // Now substitute the dependent function parameter types given defaultTemplateArgs.
    llvm::SmallVector<QualType, 8> paramTypes;
@@ -264,7 +265,7 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
       // DeclContext content!
 
       // Could trigger deserialization of decls.
-      cling::Interpreter::PushTransactionRAII RAII(interp);
+      cling::PushTransactionRAII RAII(interp);
 
       auto &SemaRef = interp->getSema();
       SemaRef.ForceDeclarationOfImplicitMembers(CXXRD);
@@ -594,7 +595,7 @@ std::string TClingMethodInfo::GetMangledName() const
    const FunctionDecl* D = GetTargetFunctionDecl();
 
    R__LOCKGUARD(gInterpreterMutex);
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   cling::PushTransactionRAII RAII(fInterp);
    GlobalDecl GD;
    if (const CXXConstructorDecl* Ctor = dyn_cast<CXXConstructorDecl>(D))
      GD = GlobalDecl(Ctor, Ctor_Complete);
@@ -690,7 +691,7 @@ const char *TClingMethodInfo::Title()
    R__LOCKGUARD(gInterpreterMutex);
 
    // Could trigger deserialization of decls.
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   cling::PushTransactionRAII RAII(fInterp);
    if (const FunctionDecl *AnnotFD
        = ROOT::TMetaUtils::GetAnnotatedRedeclarable(FD)) {
       if (AnnotateAttr *A = AnnotFD->getAttr<AnnotateAttr>()) {

@@ -32,6 +32,7 @@ from the Clang C++ compiler, not CINT.
 #include "TVirtualMutex.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 
 #include "clang/AST/Attr.h"
 #include "clang/AST/ASTContext.h"
@@ -335,7 +336,7 @@ long TClingDataMemberInfo::Offset()
       // Could trigger deserialization of decls, in particular in case
       // of constexpr, like:
       //   static constexpr Long64_t something = std::numeric_limits<Long64_t>::max();
-      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      cling::PushTransactionRAII RAII(fInterp);
 
       if (long addr = reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD))))
          return addr;
@@ -481,7 +482,7 @@ long TClingDataMemberInfo::Property() const
    const clang::TagType *tt = qt->getAs<clang::TagType>();
    if (tt) {
       // tt->getDecl() might deserialize.
-      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      cling::PushTransactionRAII RAII(fInterp);
       const clang::TagDecl *td = tt->getDecl();
       if (td->isClass()) {
          property |= kIsClass;

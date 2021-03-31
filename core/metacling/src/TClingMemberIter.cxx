@@ -13,12 +13,13 @@
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 
 #include "clang/AST/DeclTemplate.h"
 
 ClingMemberIterInternal::DCIter::DCIter(clang::DeclContext *DC, cling::Interpreter *interp) : fInterp(interp)
 {
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   cling::PushTransactionRAII RAII(fInterp);
    DC->collectAllContexts(fContexts);
    fDeclIter = fContexts[0]->decls_begin();
    // Skip initial empty decl contexts.
@@ -76,7 +77,7 @@ bool ClingMemberIterInternal::DCIter::IterNext()
       ++fDCIdx;
       if (fDCIdx == fContexts.size())
          return false;
-      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      cling::PushTransactionRAII RAII(fInterp);
       fDeclIter = fContexts[fDCIdx]->decls_begin();
    }
    return true;
@@ -91,7 +92,7 @@ bool ClingMemberIterInternal::DCIter::Next()
 ClingMemberIterInternal::UsingDeclIter::UsingDeclIter(const clang::UsingDecl *UD, cling::Interpreter *interp)
    : fInterp(interp)
 {
-   cling::Interpreter::PushTransactionRAII RAII(interp);
+   cling::PushTransactionRAII RAII(interp);
    fUsingIterStack.push({UD});
 }
 
@@ -109,7 +110,7 @@ bool ClingMemberIterInternal::UsingDeclIter::Next()
       }
       if (auto *UD = llvm::dyn_cast<clang::UsingDecl>(Iter()->getTargetDecl())) {
          if (UD->shadow_size()) {
-            cling::Interpreter::PushTransactionRAII RAII(fInterp);
+            cling::PushTransactionRAII RAII(fInterp);
             fUsingIterStack.push({UD});
             // Continue with child.
          }

@@ -33,6 +33,7 @@ but the class metadata comes from the Clang C++ compiler, not CINT.
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
@@ -148,7 +149,7 @@ long TClingClassInfo::ClassProperty() const
    const RecordDecl *RD = llvm::dyn_cast<RecordDecl>(GetDecl());
 
    // isAbstract and other calls can trigger deserialization
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   cling::PushTransactionRAII RAII(fInterp);
 
    if (!RD) {
       // We are an enum or namespace.
@@ -648,7 +649,7 @@ std::vector<std::string> TClingClassInfo::GetUsingNamespaces()
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   cling::PushTransactionRAII RAII(fInterp);
    const auto DC = dyn_cast<DeclContext>(fDecl);
    if (!DC)
       return res;
@@ -931,7 +932,7 @@ int TClingClassInfo::InternalNext()
    fDeclFileName.clear(); // invalidate decl file name.
    fNameCache.clear(); // invalidate the cache.
 
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   cling::PushTransactionRAII RAII(fInterp);
    if (fFirstTime) {
       // GetDecl() must be a DeclContext in order to iterate.
       const clang::DeclContext *DC = cast<DeclContext>(GetDecl());
@@ -1258,7 +1259,7 @@ long TClingClassInfo::Property() const
    property |= kIsCPPCompiled;
 
    // Modules can deserialize while querying the various decls for information.
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   cling::PushTransactionRAII RAII(fInterp);
 
    const clang::DeclContext *ctxt = GetDecl()->getDeclContext();
    clang::NamespaceDecl *std_ns =fInterp->getSema().getStdNamespace();
@@ -1342,7 +1343,7 @@ int TClingClassInfo::Size() const
       return 0;
    }
    ASTContext &Context = GetDecl()->getASTContext();
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   cling::PushTransactionRAII RAII(fInterp);
    const ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
    int64_t size = Layout.getSize().getQuantity();
    int clang_size = static_cast<int>(size);

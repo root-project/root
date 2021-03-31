@@ -12,6 +12,7 @@
 
 #include "DeclUnloader.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 #include "cling/Utils/AST.h"
 #include "cling/Utils/ParserStateRAII.h"
 
@@ -477,7 +478,7 @@ namespace cling {
     if (typeName.empty()) return TheQT;
 
     // Could trigger deserialization of decls.
-    Interpreter::PushTransactionRAII RAII(m_Interpreter);
+    PushTransactionRAII RAII(m_Interpreter);
 
     // Deal with the most common case.
     // Going through this custom finder is both much faster
@@ -538,7 +539,7 @@ namespace cling {
     // Here we might not have an active transaction to handle
     // the caused instantiation decl.
     // Also quickFindDecl could trigger deserialization of decls.
-    Interpreter::PushTransactionRAII pushedT(m_Interpreter);
+    PushTransactionRAII pushedT(m_Interpreter);
 
     // See if we can find it without a buffer and any clang parsing,
     // We need to go scope by scope.
@@ -890,7 +891,7 @@ namespace cling {
     }
     if (where) {
       // Great we now have a scope and something to search for,let's go ahead.
-      Interpreter::PushTransactionRAII pushedT(m_Interpreter);
+      PushTransactionRAII pushedT(m_Interpreter);
       DeclContext::lookup_result R
         = where->lookup(P.getCurToken().getIdentifierInfo());
       for (DeclContext::lookup_iterator I = R.begin(), E = R.end();
@@ -917,7 +918,7 @@ namespace cling {
 
     const clang::DeclContext *dc = llvm::cast<clang::DeclContext>(scopeDecl);
 
-    Interpreter::PushTransactionRAII pushedT(m_Interpreter);
+    PushTransactionRAII pushedT(m_Interpreter);
     DeclContext::lookup_result lookup = const_cast<clang::DeclContext*>(dc)->lookup(decl_name);
     for (DeclContext::lookup_iterator I = lookup.begin(), E = lookup.end();
          I != E; ++I) {
@@ -1570,7 +1571,7 @@ namespace cling {
     llvm::SmallVector<Expr*, 4> GivenArgs;
     if (!inputEval(GivenArgs,funcArgs,diagOnOff,P,Interp,LH)) return 0;
 
-    Interpreter::PushTransactionRAII pushedT(Interp);
+    PushTransactionRAII pushedT(Interp);
     return findFunction(foundDC,
                         funcName, GivenArgs, objectIsConst,
                         Context, Interp, functionSelector,
@@ -1924,7 +1925,7 @@ namespace cling {
       //  Parse the arguments now.
       //
 
-      Interpreter::PushTransactionRAII TforDeser(Interp);
+      PushTransactionRAII TforDeser(Interp);
       StartParsingRAII ParseStarted(LH, funcArgs,
                                     llvm::StringRef("func.args.file"),
                                     diagOnOff);
