@@ -62,7 +62,6 @@
 #pragma link C++ class RooJohnson+;
 #pragma link C++ class LinearCombination+;
 #pragma link C++ class RooLagrangianMorphFunc+;
-#pragma link C++ class RooLagrangianMorphOptimizer+;
 #pragma link C++ class RooFunctorBinding+ ;
 #pragma link C++ class RooFunctor1DBinding+ ;
 #pragma link C++ class RooFunctorPdfBinding+ ;

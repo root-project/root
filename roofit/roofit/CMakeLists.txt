@@ -48,7 +48,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     Floats.h
     LinearCombination.h
     RooLagrangianMorphFunc.h
-    RooLagrangianMorphOptimizer.h
     RooLandau.h
     RooLognormal.h
     RooMathCoreReg.h
@@ -111,7 +110,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooKeysPdf.cxx
     src/LinearCombination.cxx
     src/RooLagrangianMorphFunc.cxx
-    src/RooLagrangianMorphOptimizer.cxx
     src/RooLandau.cxx
     src/RooLognormal.cxx
     src/RooMathCoreReg.cxx
