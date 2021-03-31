@@ -39,21 +39,21 @@ public:
   enum FuncMode { Function, Pdf, ExtendedPdf } ;
 
   RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-             RooAbsTestStatistic::Configuration && cfg=RooAbsTestStatistic::Configuration{},
+             RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{},
              bool extended=false, RooDataHist::ErrorType=RooDataHist::SumW2) ;
 
   RooChi2Var(const char *name, const char *title, RooAbsReal& func, RooDataHist& data,
              const RooArgSet& projDeps, FuncMode funcMode,
-             RooAbsTestStatistic::Configuration && cfg=RooAbsTestStatistic::Configuration{},
+             RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{},
              RooDataHist::ErrorType=RooDataHist::SumW2) ;
 
   RooChi2Var(const RooChi2Var& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooChi2Var(*this,newname); }
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& dhist,
-                                      const RooArgSet& projDeps, RooAbsTestStatistic::Configuration && cfg) {
+                                      const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg) {
     // Virtual constructor
-    return new RooChi2Var(name,title,(RooAbsPdf&)pdf,(RooDataHist&)dhist,projDeps,_funcMode,std::move(cfg),_etype) ;
+    return new RooChi2Var(name,title,(RooAbsPdf&)pdf,(RooDataHist&)dhist,projDeps,_funcMode,cfg,_etype) ;
   }
   
   virtual ~RooChi2Var();
@@ -73,16 +73,6 @@ protected:
   virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const ;
   
   ClassDef(RooChi2Var,1) // Chi^2 function of p.d.f w.r.t a binned dataset
-
-private:
-  // RooChi2Var was the only class that had a default configuration value that
-  // was different form the default value in the base class
-  // RooAbsOptTestStatistic. This function changes the default confuration
-  // values to what they were in the past.
-  static inline RooAbsTestStatistic::Configuration& customizeCfgDefaults(RooAbsTestStatistic::Configuration & cfg) {
-      cfg.splitCutRange.setDefaultValue(true);
-      return cfg;
-  };
 };
 
 

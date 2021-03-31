@@ -32,7 +32,7 @@ public:
   RooAbsOptTestStatistic() ;
   RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
                          const RooArgSet& projDeps,
-                         RooAbsTestStatistic::Configuration && cfg);
+                         RooAbsTestStatistic::Configuration const& cfg);
   RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=0);
   virtual ~RooAbsOptTestStatistic();
 
@@ -64,6 +64,7 @@ protected:
 		 const char* addCoefRangeName)  ;
 
   friend class RooAbsReal ;
+  friend class RooAbsTestStatistic ;
 
   virtual Bool_t allowFunctionCache() { return kTRUE ;  }
   void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;

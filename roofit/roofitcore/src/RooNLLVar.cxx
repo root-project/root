@@ -124,15 +124,15 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 /// For internal use.
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
-                     RooAbsTestStatistic::Configuration && cfg, bool extended) :
-  RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),RooAbsTestStatistic::Configuration(cfg)),
+                     RooAbsTestStatistic::Configuration const& cfg, bool extended) :
+  RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),cfg),
   _extended(extended),
   _weightSq(kFALSE),
   _first(kTRUE)
 {
   // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
   // for a binned likelihood calculation
-  _binnedPdf = *cfg.binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
+  _binnedPdf = cfg.binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
 
   // Retrieve and cache bin widths needed to convert un-normalized binnedPdf values back to yields
   if (_binnedPdf) {
@@ -169,15 +169,15 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
                      const RooArgSet& projDeps,
-                     RooAbsTestStatistic::Configuration && cfg, bool extended) :
-  RooAbsOptTestStatistic(name,title,pdf,indata,projDeps, RooAbsTestStatistic::Configuration(cfg)),
+                     RooAbsTestStatistic::Configuration const& cfg, bool extended) :
+  RooAbsOptTestStatistic(name,title,pdf,indata,projDeps, cfg),
   _extended(extended),
   _weightSq(kFALSE),
   _first(kTRUE)
 {
   // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
   // for a binned likelihood calculation
-  _binnedPdf = *cfg.binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
+  _binnedPdf = cfg.binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
 
   // Retrieve and cache bin widths needed to convert un-normalized binnedPdf values back to yields
   if (_binnedPdf) {
@@ -224,15 +224,12 @@ RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
 /// Create a test statistic using several properties of the current instance. This is used to duplicate
 /// the test statistic in multi-processing scenarios.
 RooAbsTestStatistic* RooNLLVar::create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
-            const RooArgSet& projDeps, RooAbsTestStatistic::Configuration && cfg) {
+            const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg) {
   RooAbsPdf & thePdf = dynamic_cast<RooAbsPdf&>(pdf);
   // check if pdf can be extended
   bool extendedPdf = _extended && thePdf.canBeExtended();
 
-  // some configuration parameters are fixed
-  cfg.integrateOverBinsPrecision.setValue(_integrateBinsPrecision);
-
-  auto testStat = new RooNLLVar(name, title, thePdf, adata, projDeps, std::move(cfg), extendedPdf);
+  auto testStat = new RooNLLVar(name, title, thePdf, adata, projDeps, cfg, extendedPdf);
   testStat->batchMode(_batchEvaluations);
   return testStat;
 }
