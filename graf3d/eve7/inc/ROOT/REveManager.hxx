@@ -19,6 +19,7 @@
 #include "TSysEvtHandler.h"
 #include "TTimer.h"
 
+#include <thread>
 #include <mutex>
 #include <condition_variable>
 #include <memory>
@@ -89,7 +90,7 @@ public:
       Conn() = default;
       Conn(unsigned int cId) : fId(cId) {}
    };
- 
+
    class ServerState
    {
    public:
@@ -100,8 +101,6 @@ public:
 
       EServerState fVal{Waiting};
    };
-
-   typedef  std::function<void ()> ClientsFreeCB_t;
 
 protected:
    RExceptionHandler        *fExcHandler{nullptr};   //!< exception handler
@@ -142,13 +141,17 @@ protected:
    std::vector<Conn>                                fConnList;
    std::queue<std::string>                          fMIRqueue;
 
-   ServerState       fServerState;
+   std::thread                                      fMIRExecThread;
 
-   ClientsFreeCB_t      fCBClientsFree{nullptr};
+   ServerState       fServerState;
 
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
    void WindowDisconnect(unsigned connid);
+
+   void MIRExecThread();
+   void ExecuteMIR(const std::string &cmd);
+   void PublishChanges();
 
 public:
    REveManager(); // (Bool_t map_window=kTRUE, Option_t* opt="FI");
@@ -172,9 +175,6 @@ public:
 
    void SceneSubscriberProcessingChanges(unsigned cinnId);
    void SceneSubscriberWaitingResponse(unsigned cinnId);
-
-   ClientsFreeCB_t GetCBClientsFree()         const { return fCBClientsFree; }
-   void         SetCBClientsFree(ClientsFreeCB_t  f) { fCBClientsFree = f; }
 
    bool ClientConnectionsFree() const;
 
@@ -235,12 +235,11 @@ public:
    void SetDefaultHtmlPage(const std::string& path);
    void SetClientVersion(const std::string& version);
 
+   void ScheduleMIR(const std::string &cmd);
+
    static REveManager* Create();
    static void         Terminate();
 
-
-   void ExecuteCommand(const std::string &cmd);
-   void PublishChanges();
 
    // Access to internals, needed for low-level control in advanced
    // applications.
