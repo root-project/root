@@ -64,6 +64,8 @@
 #include "RooProduct.h"
 #include "TMatrixD.h"
 #include "RooAbsArg.h"
+#include "RooMsgService.h"
+#include "RooRatio.h"
 
 class RooWorkspace ;
 class RooParamHistFunc ;
@@ -78,10 +80,16 @@ class RooLagrangianMorphFunc ;
 
 
 class RooLagrangianMorphFunc : public RooAbsReal {
+
   public:
+    typedef std::map<const std::string,double> ParamSet ;
+    typedef std::map<const std::string,int> FlagSet ;
+    typedef std::map<const std::string,ParamSet > ParamMap ;
+    typedef std::map<const std::string,FlagSet > FlagMap ;
 
     class Config {
       public:
+
         Config() ;
         Config(const RooAbsCollection& couplings) ;
         Config(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings) ;
@@ -106,29 +114,45 @@ class RooLagrangianMorphFunc : public RooAbsReal {
         RooArgList getFolders() const ;
         Bool_t IsAllowNegativeYields() const ;
 
+        void append(ParamSet& set, const char* str, double val) ;
+        void append(ParamMap& map, const char* str, ParamSet& set) ;
+
         void disableInterference(const std::vector<const char*>& nonInterfering) ;
         void disableInterferences(const std::vector<std::vector<const char*> >& nonInterfering) ;
+
+        RooRealVar* getParameter(const char* name) const ;
+        bool hasParameter(const char* name) const ;
+
+        void addFolders(const RooArgList& folders) ;
+
+        ParamMap getParamCards() const { return _paramCards; } ;
+        FlagMap getFlagValues() const { return _flagValues; } ;
+        std::vector<std::string> getFolderNames() const { return _folderNames; } ;
+        void printSamples() const ;
+        void printPhysics() const ;
+        int  nSamples() const ;
+
         virtual ~Config() ;
 
       protected:
+
         std::string _obsName ;
         std::string _fileName ;
         RooArgList _folderlist ;
+        std::vector<std::string> _folderNames ;
+        ParamMap _paramCards ;
+        FlagMap _flagValues ;
         std::vector<RooArgList*> _vertices ;
         RooArgList _couplings ;
         RooArgList _prodCouplings ;
         RooArgList _decCouplings ;
+        RooArgList _observables ;
+        RooArgList _binWidths ;
         std::vector<std::vector<RooArgList*>> _configDiagrams ;
         std::vector<RooArgList*> _nonInterfering ;
         Bool_t _allowNegativeYields = true ;
 
-
     };
-    
-    typedef std::map<const std::string,double> ParamSet ;
-    typedef std::map<const std::string,int> FlagSet ;
-    typedef std::map<const std::string,ParamSet > ParamMap ;
-    typedef std::map<const std::string,FlagSet > FlagMap ;
 
     RooLagrangianMorphFunc() ;
     RooLagrangianMorphFunc(const char *name, const char *title, const Config& config) ;
@@ -177,7 +201,6 @@ class RooLagrangianMorphFunc : public RooAbsReal {
     RooLagrangianMorphFunc* getLinear() const ; 
  
     int nParameters() const ;
-    int nSamples() const ;
     int nPolynomials() const ;
 
     bool isCouplingUsed(const char* couplname) const ;
@@ -194,10 +217,7 @@ class RooLagrangianMorphFunc : public RooAbsReal {
 
     void printEvaluation() const ;
     void printCouplings() const ;
-    void printParameters() const ;
     void printFlags() const ;
-    void printParameters(const char* samplename) const ;
-    void printSamples() const ;
     void printPhysics() const ;
 
     RooProduct* getSumElement(const char* name) const ;
@@ -225,19 +245,16 @@ class RooLagrangianMorphFunc : public RooAbsReal {
   
     bool hasCache() const ;
     RooLagrangianMorphFunc::CacheElem* getCache(const RooArgSet* nset) const ;
-    void readParameters(TDirectory* f) ;
-    void collectInputs(TDirectory* f) ;
     void updateSampleWeights() ;
+  
     RooRealVar* setupObservable(const char* obsname,TClass* mode,TObject* inputExample) ;
-    
+  
   public:
   
     double implementedPrecision() ;
     void importToWorkspace(RooWorkspace* ws, const RooAbsReal* object) ;
     void importToWorkspace(RooWorkspace* ws, RooAbsData* object) ;
-    void append(ParamSet& set, const char* str, double val) ;
-    void append(ParamMap& map, const char* str, ParamSet& set) ;
-    
+
     void writeMatrixToFile(const TMatrixD& matrix, const char* fname) ;
     void writeMatrixToStream(const TMatrixD& matrix, std::ostream& stream) ;
     TMatrixD readMatrixFromFile(const char* fname) ;
@@ -266,12 +283,18 @@ class RooLagrangianMorphFunc : public RooAbsReal {
   
     int countContributingFormulas() const ;
     RooAbsReal* getSampleWeight(const char* name) ;
+    void printParameters(const char* samplename) const ;
+    void printParameters() const ;
+    void printSamples() const ;
     void printSampleWeights() const ;
     void printWeights() const ;
+
 
     void setScale(double val) ;
     double getScale() ;
     
+    int  nSamples() const ;
+
     RooRealSumFunc* getFunc() const ;
     RooRealSumFunc* cloneFunc() const ;
     RooWrapperPdf* createPdf() const ;
@@ -281,15 +304,19 @@ class RooLagrangianMorphFunc : public RooAbsReal {
     Double_t expectedEvents(const RooArgSet& nset) const ;
     Double_t expectedEvents() const ;
     Bool_t selfNormalized() const ;
+
+    void readParameters(TDirectory* f) ;
+    void collectInputs(TDirectory* f) ;
+
+    static RooRatio* makeRatio(RooArgList& nr, RooArgList& dr) ;
+
   protected:
+
     double _scale = 1 ;
-    std::vector<std::string> _folderNames ;
-    ParamMap _paramCards ;
-    FlagMap _flagValues ;
     std::map<std::string,int> _sampleMap ;
     RooListProxy _physics ;
     RooListProxy _operators ;
-    RooListProxy _observable ;
+    RooListProxy _observables ;
     RooListProxy _binWidths ;
     RooListProxy _flags ;
     Config _config ;
