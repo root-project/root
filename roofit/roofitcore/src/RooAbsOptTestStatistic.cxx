@@ -116,13 +116,12 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
 /// only unbinned PDFs fit to RooDataHist are integrated. If < 0, PDFs are never integrated.
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real,
                                                RooAbsData& indata, const RooArgSet& projDeps,
-                                               RooAbsTestStatistic::Configuration && cfg) :
-  // we explicitely copy the configuration instead of moving it so we can still use it in this constructor
-  RooAbsTestStatistic(name,title,real,indata,projDeps,RooAbsTestStatistic::Configuration(cfg)),
+                                               RooAbsTestStatistic::Configuration const& cfg) :
+  RooAbsTestStatistic(name,title,real,indata,projDeps,cfg),
   _projDeps(0),
   _sealed(kFALSE), 
   _optimized(kFALSE),
-  _integrateBinsPrecision(*cfg.integrateOverBinsPrecision)
+  _integrateBinsPrecision(cfg.integrateOverBinsPrecision)
 {
   // Don't do a thing in master mode
 

@@ -55,9 +55,9 @@ ClassImp(RooDataWeightedAverage);
 /// rather than a bulk-split pattern.
 
 RooDataWeightedAverage::RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& indata, 
-                                               const RooArgSet& projdeps, RooAbsTestStatistic::Configuration && cfg,
+                                               const RooArgSet& projdeps, RooAbsTestStatistic::Configuration const& cfg,
                                                bool showProgress) : 
-  RooAbsOptTestStatistic(name,title,pdf,indata,projdeps,std::move(cfg)),
+  RooAbsOptTestStatistic(name,title,pdf,indata,projdeps,cfg),
   _showProgress(showProgress)
 {
   if (_showProgress) {

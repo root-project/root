@@ -28,16 +28,16 @@ public:
   } ;  
 
   RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& real, RooAbsData& data, const RooArgSet& projDeps,
-                         RooAbsTestStatistic::Configuration && cfg, bool showProgress=false) ;
+                         RooAbsTestStatistic::Configuration const& cfg, bool showProgress=false) ;
 
   RooDataWeightedAverage(const RooDataWeightedAverage& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooDataWeightedAverage(*this,newname); }
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& adata,
                                       const RooArgSet& projDeps,
-                                      RooAbsTestStatistic::Configuration && cfg) {
+                                      RooAbsTestStatistic::Configuration const& cfg) {
     // Virtual constructor
-    return new RooDataWeightedAverage(name,title,real,adata,projDeps,std::move(cfg)) ;
+    return new RooDataWeightedAverage(name,title,real,adata,projDeps,cfg) ;
   }
 
   virtual Double_t globalNormalization() const ;

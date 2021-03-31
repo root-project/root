@@ -40,7 +40,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooXYChi2Var(*this,newname); }
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
-                                      const RooArgSet&, RooAbsTestStatistic::Configuration &&) {
+                                      const RooArgSet&, RooAbsTestStatistic::Configuration const&) {
     // Virtual constructor
     return new RooXYChi2Var(name,title,pdf,(RooDataSet&)adata) ;
   }
