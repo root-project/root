@@ -31,6 +31,9 @@ public:
 
   RooRatio() ;
   RooRatio(const char *name, const char *title, RooAbsReal& numerator, RooAbsReal& denominator);
+  RooRatio(const char *name, const char *title, RooAbsReal& numerator, Double_t denominator);
+  RooRatio(const char *name, const char *title, Double_t numerator, RooAbsReal& denominator);
+  RooRatio(const char *name, const char *title, Double_t numerator, Double_t denominator);
 
   RooRatio(const RooRatio& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooRatio(*this, newname); }
@@ -41,19 +44,9 @@ protected:
   RooRealProxy _numerator ;
   RooRealProxy _denominator ;
 
-//  class CacheElem : public RooAbsCacheElement {
-//  public:
-//      virtual ~CacheElem();
-//      // Payload
-//      RooAbsReal _numerator ;
-//      RooAbsReal _denominator ;
-//      RooArgList _ownedList ;
-//  };
-//  mutable RooObjCacheManager _cacheMgr ; // The cache manager
-
   Double_t evaluate() const;
 
-  ClassDef(RooRatio,2) // Product of RooAbsReal and/or RooAbsCategory terms
+  ClassDef(RooRatio,2) // Ratio of two RooAbsReal and/or numbers
 };
 
 #endif
