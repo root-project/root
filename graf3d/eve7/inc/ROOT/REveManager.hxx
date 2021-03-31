@@ -50,27 +50,6 @@ class REveManager
    REveManager& operator=(const REveManager&) = delete;
 
 public:
-/*
-   class RRedrawDisabler {
-   private:
-      RRedrawDisabler(const RRedrawDisabler &) = delete;
-      RRedrawDisabler &operator=(const RRedrawDisabler &) = delete;
-
-      REveManager *fMgr{nullptr};
-
-   public:
-      RRedrawDisabler(REveManager *m) : fMgr(m)
-      {
-         if (fMgr)
-            fMgr->DisableRedraw();
-      }
-      virtual ~RRedrawDisabler()
-      {
-         if (fMgr)
-            fMgr->EnableRedraw();
-      }
-   };
-*/
    class RExceptionHandler : public TStdExceptionHandler {
    public:
       RExceptionHandler() : TStdExceptionHandler() { Add(); }
