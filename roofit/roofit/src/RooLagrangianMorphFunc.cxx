@@ -2109,7 +2109,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
   _curNormSet(0)
 {
   this->printAuthors();
-  this->addFolders(_config.getFolders());
+  this->_config.addFolders(_config.getFolders());
   this->init();
   this->setup(false);
 
@@ -2220,7 +2220,6 @@ void RooLagrangianMorphFunc::init()
   TDirectory* file = openFile(filename.c_str());
   if(!file) coutE(InputArguments) << "unable to open file '"<<filename<<"'!" << std::endl;
   this->readParameters(file);
-  std::cout << "init" << std::endl;
   checkNameConflict(this->_config.getParamCards(),this->_operators);
   this->collectInputs(file);
   closeFile(file);
