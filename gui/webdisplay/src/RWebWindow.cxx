@@ -1196,9 +1196,14 @@ void RWebWindow::SendBinary(unsigned connid, const void *data, std::size_t len)
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Assign thread id which has to be used for callbacks
+/// WARNING!!!  only for expert use
+/// Automatically done at the moment when any callback function is invoked
+/// Can be invoked once again if window Run method will be invoked from other thread
+/// Normally should be invoked before Show() method is called
 
-void RWebWindow::AssignCallbackThreadId()
+void RWebWindow::AssignThreadId()
 {
+   fProcessMT = false;
    fCallbacksThrdIdSet = true;
    fCallbacksThrdId = std::this_thread::get_id();
    if (!RWebWindowsManager::IsMainThrd()) {
@@ -1208,6 +1213,21 @@ void RWebWindow::AssignCallbackThreadId()
       R__LOG_ERROR(WebGUILog()) << "create web window from main thread when THttpServer created with special thread - not supported";
    }
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Let use THttpServer threads to process requests
+/// WARNING!!! only for expert use
+/// Should be only used when application provides proper locking and
+/// does not block. Such mode provides minimal possible latency
+/// Must be called after callback are assigned
+
+void RWebWindow::UseServerThreads()
+{
+   fCallbacksThrdIdSet = false;
+   fProcessMT = true;
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Set call-back function for data, received from the clients via websocket
@@ -1232,7 +1252,7 @@ void RWebWindow::AssignCallbackThreadId()
 
 void RWebWindow::SetDataCallBack(WebWindowDataCallback_t func)
 {
-   AssignCallbackThreadId();
+   AssignThreadId();
    fDataCallback = func;
 }
 
@@ -1241,7 +1261,7 @@ void RWebWindow::SetDataCallBack(WebWindowDataCallback_t func)
 
 void RWebWindow::SetConnectCallBack(WebWindowConnectCallback_t func)
 {
-   AssignCallbackThreadId();
+   AssignThreadId();
    fConnCallback = func;
 }
 
@@ -1250,7 +1270,7 @@ void RWebWindow::SetConnectCallBack(WebWindowConnectCallback_t func)
 
 void RWebWindow::SetDisconnectCallBack(WebWindowConnectCallback_t func)
 {
-   AssignCallbackThreadId();
+   AssignThreadId();
    fDisconnCallback = func;
 }
 
@@ -1259,7 +1279,7 @@ void RWebWindow::SetDisconnectCallBack(WebWindowConnectCallback_t func)
 
 void RWebWindow::SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn)
 {
-   AssignCallbackThreadId();
+   AssignThreadId();
    fConnCallback = conn;
    fDataCallback = data;
    fDisconnCallback = disconn;

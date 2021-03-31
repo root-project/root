@@ -185,8 +185,6 @@ private:
 
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
 
-   void AssignCallbackThreadId();
-
    std::string GetConnToken() const;
 
 public:
@@ -310,6 +308,10 @@ public:
    void SetDataCallBack(WebWindowDataCallback_t func);
 
    void SetDisconnectCallBack(WebWindowConnectCallback_t func);
+
+   void AssignThreadId();
+
+   void UseServerThreads();
 
    int WaitFor(WebWindowWaitFunc_t check);
 
