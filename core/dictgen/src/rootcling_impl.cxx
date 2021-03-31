@@ -2114,6 +2114,10 @@ void AddPlatformDefines(std::vector<std::string> &clingArgs)
    clingArgs.push_back(platformDefines);
 # endif
 #endif
+#ifdef _WIN64
+   snprintf(platformDefines, 64, "-DG__WIN64=%ld", (long)_WIN64);
+   clingArgs.push_back(platformDefines);
+#endif
 #ifdef _MSC_VER
    snprintf(platformDefines, 64, "-DG__MSC_VER=%ld", (long)_MSC_VER);
    clingArgs.push_back(platformDefines);
