@@ -224,8 +224,8 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 /// name cutRange_{indexStateName}.
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& hdata,
-                       RooAbsTestStatistic::Configuration && cfg, bool extended, RooDataHist::ErrorType etype) :
-  RooAbsOptTestStatistic(name,title,pdf,hdata,RooArgSet(), std::move(customizeCfgDefaults(cfg))),
+                       RooAbsTestStatistic::Configuration const& cfg, bool extended, RooDataHist::ErrorType etype) :
+  RooAbsOptTestStatistic(name,title,pdf,hdata,RooArgSet(), cfg),
    _etype(etype), _funcMode(extended?ExtendedPdf:Pdf)
 {
 }
@@ -251,9 +251,9 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal& func, RooDataHist& hdata,
                        const RooArgSet& projDeps, RooChi2Var::FuncMode fmode,
-                       RooAbsTestStatistic::Configuration && cfg,
+                       RooAbsTestStatistic::Configuration const& cfg,
                        RooDataHist::ErrorType etype) : 
-  RooAbsOptTestStatistic(name,title,func,hdata,projDeps,std::move(customizeCfgDefaults(cfg))),
+  RooAbsOptTestStatistic(name,title,func,hdata,projDeps,cfg),
   _etype(etype), _funcMode(fmode)
 {
 }

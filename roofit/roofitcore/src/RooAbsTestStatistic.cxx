@@ -99,22 +99,22 @@ RooAbsTestStatistic::RooAbsTestStatistic() :
 /// if the categories are called "pi0" and "gamma".
 
 RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
-                                         const RooArgSet& projDeps, RooAbsTestStatistic::Configuration && cfg) :
+                                         const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg) :
   RooAbsReal(name,title),
   _paramSet("paramSet","Set of parameters",this),
   _func(&real),
   _data(&data),
   _projDeps((RooArgSet*)projDeps.Clone()),
-  _rangeName(*cfg.rangeName),
-  _addCoefRangeName(*cfg.addCoefRangeName),
-  _splitRange(*cfg.splitCutRange),
+  _rangeName(cfg.rangeName),
+  _addCoefRangeName(cfg.addCoefRangeName),
+  _splitRange(cfg.splitCutRange),
   _simCount(1),
-  _verbose(*cfg.verbose),
+  _verbose(cfg.verbose),
   _nGof(0),
   _gofArray(0),
-  _nCPU(*cfg.nCPU),
+  _nCPU(cfg.nCPU),
   _mpfeArray(0),
-  _mpinterl(*cfg.interleave),
+  _mpinterl(cfg.interleave),
   _doOffset(kFALSE),
   _evalCarry(0)
 {
@@ -470,7 +470,13 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
   cfg.interleave = _mpinterl;
   cfg.verbose = _verbose;
   cfg.splitCutRange = _splitRange;
-  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,std::move(cfg));
+  // This configuration parameter is stored in the RooAbsOptTestStatistic.
+  // It would have been cleaner to move the member variable into RooAbsTestStatistic,
+  // but to avoid incrementing the class version we do the dynamic_cast trick.
+  if(auto thisAsRooAbsOptTestStatistic = dynamic_cast<RooAbsOptTestStatistic const*>(this)) {
+    cfg.integrateOverBinsPrecision = thisAsRooAbsOptTestStatistic->_integrateBinsPrecision;
+  }
+  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,cfg);
   gof->recursiveRedirectServers(_paramSet);
 
   for (Int_t i = 0; i < _nCPU; ++i) {
@@ -576,6 +582,12 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       cfg.verbose = _verbose;
       cfg.splitCutRange = _splitRange;
       cfg.binnedL = binnedL;
+      // This configuration parameter is stored in the RooAbsOptTestStatistic.
+      // It would have been cleaner to move the member variable into RooAbsTestStatistic,
+      // but to avoid incrementing the class version we do the dynamic_cast trick.
+      if(auto thisAsRooAbsOptTestStatistic = dynamic_cast<RooAbsOptTestStatistic const*>(this)) {
+        cfg.integrateOverBinsPrecision = thisAsRooAbsOptTestStatistic->_integrateBinsPrecision;
+      }
       if (_splitRange && !rangeName.empty()) {
         cfg.rangeName = rangeName + "_" + catName;
         cfg.nCPU = _nCPU*(_mpinterl?-1:1);
@@ -583,7 +595,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
         cfg.rangeName = rangeName;
         cfg.nCPU = _nCPU;
       }
-      _gofArray[n] = create(catName.c_str(),catName.c_str(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,std::move(cfg));
+      _gofArray[n] = create(catName.c_str(),catName.c_str(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,cfg);
       _gofArray[n]->setSimCount(_nGof);
       // *** END HERE
 
