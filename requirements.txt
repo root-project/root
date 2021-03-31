@@ -12,5 +12,8 @@ cffi>=1.9.1
 notebook>=4.4.1
 metakernel>=0.20.0
 
-# Distributed RDataFrame: Spark backend
+# Distributed RDataFrame
+# Spark backend
 pyspark>=2.4
+# Checking RDataFrame operation type through enums. Requires pip 6.0 and later
+enum34 ; python_version < '3.4'
