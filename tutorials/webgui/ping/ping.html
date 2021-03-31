@@ -8,22 +8,23 @@
 
   <body>
      <button onclick="SendMsg('halt')">Halt</button>
-     <h2 id="main">Msg</h2>
-     <h3 id="counter"></h3>
+     <p>Main: <b id="output">Msg</b></p>
+     <div id="clients"></div>
   </body>
 
   <script>
 
     class PingPongHandler {
-       constructor() {
+       constructor(is_main, out_id) {
+          this.is_main = is_main;
+          this.out_id = out_id || "output";
           this.handle = null;
           this.last_ping = 0;
           this.sum = [0, 0, 0];
        }
 
-       setOutput(msg, id) {
-          if (!id) id = "main";
-          let elem = document.getElementById(id);
+       setOutput(msg) {
+          let elem = document.getElementById(this.out_id);
           if (elem) elem.innerHTML = msg;
        }
 
@@ -31,6 +32,8 @@
        onWebsocketOpened(handle) {
           this.handle = handle;
           this.setOutput("Connected");
+          if (this.is_main)
+             this.handle.send("first"); // request for configuration
           this.sendPing();
           this.configInterval(3000);
        }
@@ -42,7 +45,11 @@
              // AddOutput("bin: " + arr.toString());
           } else if (msg.indexOf("PING:") == 0) {
              this.processPing(msg.substr(5));
-          }
+          } else if (msg.indexOf("CLIENTS:") == 0) {
+             let nclients = parseInt(msg.substr(8));
+             if (this.is_main && (nclients > 1))
+                this.startMoreClients(nclients-1);
+           }
        }
 
        // method called when connection is gone
@@ -92,13 +99,29 @@
              dev = (dev > 0) ? Math.sqrt(dev) : 0;
           }
 
-          this.setOutput("Round-trip: " + mean.toFixed(1) + "ms " + (dev > 0 ? "&plusmn;" + dev.toFixed(0) : ""));
-          this.setOutput("Cnt: " + this.sum[0], "counter");
+          let v = "Cnt: " + this.sum[0];
+          v += " round-trip: " + mean.toFixed(1);
+          if (dev > 0) v += "&plusmn;" + dev.toFixed(0);
+          v+= " ms";
+          this.setOutput(v);
+
           this.sendPing();
+       }
+
+       startMoreClients(nclients) {
+          let html  = "";
+          for (let n = 0; n < nclients; ++n)
+             html += `<p>Client${n+1}:  <b id='out${n}'>output</b></p>`;
+          document.getElementById("clients").innerHTML = html;
+
+          for (let n = 0; n < nclients; ++n) {
+             let sub_handler = new PingPongHandler(false, "out" + n);
+             JSROOT.connectWebWindow( { receiver: sub_handler, socket_kind: this.handle.kind } );
+          }
        }
     }
 
-    let main_handler = new PingPongHandler();
+    let main_handler = new PingPongHandler(true);
 
     function SendMsg(txt) {
        if (main_handler && main_handler.handle)

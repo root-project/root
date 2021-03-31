@@ -13,22 +13,41 @@
 
 std::shared_ptr<ROOT::Experimental::RWebWindow> window;
 
+int num_clients = 1;
+
 void ProcessData(unsigned connid, const std::string &arg)
 {
    // printf("Get msg %s \n", arg.c_str());
 
    if (arg.find("PING:") == 0) {
       window->Send(connid, arg);
+   } else if (arg == "first") {
+      // first message to provide config
+      printf("Send number of clients %d\n", num_clients);
+      window->Send(connid, std::string("CLIENTS:") + std::to_string(num_clients));
    } else if (arg == "halt") {
       // terminate ROOT
       window->TerminateROOT();
    }
 }
 
-void ping()
+void ping(int nclients = 1)
 {
    // create window
    window = ROOT::Experimental::RWebWindow::Create();
+
+   num_clients = nclients;
+
+   // verify value
+   if (num_clients < 1)
+      num_clients = 1;
+   else if (num_clients > 1000)
+      num_clients = 1000;
+
+   window->SetConnLimit(num_clients);
+
+   if (num_clients > 5)
+      gEnv->SetValue("WebGui.HttpThreads", num_clients + 5);
 
    // configure default html page
    // either HTML code can be specified or just name of file after 'file:' prefix
