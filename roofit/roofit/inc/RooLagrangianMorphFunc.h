@@ -87,27 +87,24 @@ class RooLagrangianMorphFunc : public RooAbsReal {
         Config(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings) ;
         Config(const Config& other) ;
         void setFileName(const char* filename) ;
+        void setFolders(const RooArgList& folderlist) ;
         void setObservableName(const char* obsname) ;
         void setCouplings(const RooAbsCollection& couplings) ;
         void setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings) ;
+        void allowNegativeYields(Bool_t allowNegativeYields) ;
         template <class T> void setVertices(const std::vector<T>& vertices) ;
         template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams) ;
         template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering) ;
         template <class T> void addDiagrams(const std::vector<T>& diagrams) ;
 
-        std::string getFileName() ;
-        std::string getObservableName() ;
-        std::vector<std::vector<RooArgList*>> getDiagrams() ;
-        RooArgList getCouplings() ;
-        RooArgList getProdCouplings() ;
-        RooArgList getDecCouplings() ;
-
-//        void setCouplings(const RooAbsCollection& couplings) ;
-//        void setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings) ;
-//        template <class T> void setVertices(const std::vector<T>& vertices) ;
-//        template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams) ;
-//        template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering) ;
-//        template <class T> void addDiagrams(const std::vector<T>& diagrams) ;
+        std::string getFileName() const ;
+        std::string getObservableName() const ;
+        std::vector<std::vector<RooArgList*>> getDiagrams() const ;
+        RooArgList getCouplings() const ;
+        RooArgList getProdCouplings() const ;
+        RooArgList getDecCouplings() const ;
+        RooArgList getFolders() const ;
+        Bool_t IsAllowNegativeYields() const ;
 
         void disableInterference(const std::vector<const char*>& nonInterfering) ;
         void disableInterferences(const std::vector<std::vector<const char*> >& nonInterfering) ;
@@ -116,12 +113,15 @@ class RooLagrangianMorphFunc : public RooAbsReal {
       protected:
         std::string _obsName ;
         std::string _fileName ;
+        RooArgList _folderlist ;
         std::vector<RooArgList*> _vertices ;
         RooArgList _couplings ;
         RooArgList _prodCouplings ;
         RooArgList _decCouplings ;
         std::vector<std::vector<RooArgList*>> _configDiagrams ;
         std::vector<RooArgList*> _nonInterfering ;
+        Bool_t _allowNegativeYields = true ;
+
 
     };
     
@@ -131,12 +131,7 @@ class RooLagrangianMorphFunc : public RooAbsReal {
     typedef std::map<const std::string,FlagSet > FlagMap ;
 
     RooLagrangianMorphFunc() ;
-    RooLagrangianMorphFunc(const char *name, const char *title, const Config& config, bool allowNegativeYields=true) ;
-    RooLagrangianMorphFunc(const char *name, const char *title, const Config& config, const char* basefolder, const RooArgList& folders, bool allowNegativeYields=true) ;
-    RooLagrangianMorphFunc(const char *name, const char *title, const Config& config, const RooArgList& folders, bool allowNegativeYields=true) ;
-    RooLagrangianMorphFunc(const char *name, const char *title, bool allowNegativeYields=true) ;
-    RooLagrangianMorphFunc(const char *name, const char *title, const char* basefolder, const RooArgList& folders, bool allowNegativeYields=true) ;
-    RooLagrangianMorphFunc(const char *name, const char *title, const RooArgList& folders, bool allowNegativeYields=true) ;
+    RooLagrangianMorphFunc(const char *name, const char *title, const Config& config) ;
     RooLagrangianMorphFunc(const RooLagrangianMorphFunc& other, const char *newName) ;
  
     virtual ~RooLagrangianMorphFunc() ;
@@ -158,7 +153,6 @@ class RooLagrangianMorphFunc : public RooAbsReal {
 
     void insert(RooWorkspace* ws) ;
     
-    void resetFlags() ;
     void setParameters(const char* foldername) ;
     void setParameters(TH1* paramhist) ;
     void setParameter(const char* name, double value) ;
@@ -190,6 +184,7 @@ class RooLagrangianMorphFunc : public RooAbsReal {
     const RooArgList* getCouplingSet() const ;
     ParamSet getCouplings() const ;
 
+    virtual Bool_t IsAllowNegativeYields() const { return this->_config.IsAllowNegativeYields(); }
     TMatrixD getMatrix() const ;
     TMatrixD getInvertedMatrix() const ;
     double getCondition() const ;
@@ -270,7 +265,6 @@ class RooLagrangianMorphFunc : public RooAbsReal {
     bool writeCoefficients(const char* filename) ;
   
     int countContributingFormulas() const ;
-    RooParamHistFunc* getBaseTemplate() ;
     RooAbsReal* getSampleWeight(const char* name) ;
     void printSampleWeights() const ;
     void printWeights() const ;
@@ -289,9 +283,6 @@ class RooLagrangianMorphFunc : public RooAbsReal {
     Bool_t selfNormalized() const ;
   protected:
     double _scale = 1 ;
-  //  std::string _objFilter ;
-    std::string _baseFolder ;
-    bool _allowNegativeYields ;
     std::vector<std::string> _folderNames ;
     ParamMap _paramCards ;
     FlagMap _flagValues ;
