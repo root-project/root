@@ -40,6 +40,7 @@ namespace llvm {
 
 namespace cling {
   class IncrementalExecutor;
+  class PushTransactionRAII;
   class TransactionPool;
 
   ///\brief Contains information about the consumed input at once.
@@ -134,6 +135,10 @@ namespace cling {
     ///\brief The enclosing transaction if nested.
     ///
     Transaction* m_Parent;
+
+    ///\brief RAII owning this Transaction.
+    ///
+    const PushTransactionRAII* m_Scope = nullptr;
 
     unsigned m_State : 3;
 
@@ -306,6 +311,15 @@ namespace cling {
       assert(m_State != kNumStates
              && "Transaction already returned in the pool");
       m_State = val;
+    }
+
+    const PushTransactionRAII* getScope() const {
+      return m_Scope;
+    }
+
+    void setScope(const PushTransactionRAII& scope) {
+      assert(!m_Scope && "Cannot change ownership of a transaction");
+      m_Scope = &scope;
     }
 
     IssuedDiags getIssuedDiags() const {
