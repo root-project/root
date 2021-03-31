@@ -29,6 +29,7 @@ but the type metadata comes from the Clang C++ compiler, not CINT.
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
@@ -146,7 +147,7 @@ long TClingTypeInfo::Property() const
             property |= kIsUnion;
          }
          // isAbstract can trigger deserialization
-         cling::Interpreter::PushTransactionRAII RAII(fInterp);
+         cling::PushTransactionRAII RAII(fInterp);
          if (CRD->isThisDeclarationADefinition() && CRD->isAbstract()) {
             property |= kIsAbstract;
          }

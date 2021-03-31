@@ -33,6 +33,7 @@
 #include "cling/Interpreter/Exception.h"
 #include "cling/Interpreter/IncrementalCUDADeviceCompiler.h"
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
 #include "cling/Utils/AST.h"
@@ -91,30 +92,6 @@ namespace {
 } // unnamed namespace
 
 namespace cling {
-
-  Interpreter::PushTransactionRAII::PushTransactionRAII(const Interpreter* i)
-    : m_Interpreter(i) {
-    CompilationOptions CO = m_Interpreter->makeDefaultCompilationOpts();
-    CO.ResultEvaluation = 0;
-    CO.DynamicScoping = 0;
-
-    m_Transaction = m_Interpreter->m_IncrParser->beginTransaction(CO);
-  }
-
-  Interpreter::PushTransactionRAII::~PushTransactionRAII() {
-    pop();
-  }
-
-  void Interpreter::PushTransactionRAII::pop() const {
-    if (m_Transaction->getState() == Transaction::kRolledBack)
-      return;
-    IncrementalParser::ParseResultTransaction PRT
-      = m_Interpreter->m_IncrParser->endTransaction(m_Transaction);
-    if (PRT.getPointer()) {
-      assert(PRT.getPointer()==m_Transaction && "Ended different transaction?");
-      m_Interpreter->m_IncrParser->commitTransaction(PRT);
-    }
-  }
 
   Interpreter::StateDebuggerRAII::StateDebuggerRAII(const Interpreter* i)
     : m_Interpreter(i) {

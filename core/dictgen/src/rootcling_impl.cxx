@@ -63,6 +63,7 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 #include "cling/Interpreter/Value.h"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/Basic/Diagnostic.h"
@@ -3055,7 +3056,7 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl &rcd,
    std::list<std::string> headers;
 
    // We push a new transaction because we could deserialize decls here
-   cling::Interpreter::PushTransactionRAII RAII(&interp);
+   cling::PushTransactionRAII RAII(&interp);
 
    // Avoid infinite recursion
    if (!visitedDecls.insert(rcd.getCanonicalDecl()).second)
@@ -4341,7 +4342,7 @@ int RootClingMain(int argc,
          }
          DepMod = GetModuleNameFromRdictName(DepMod);
          // We might deserialize.
-         cling::Interpreter::PushTransactionRAII RAII(&interp);
+         cling::PushTransactionRAII RAII(&interp);
          if (!interp.loadModule(DepMod, /*complain*/false)) {
             ROOT::TMetaUtils::Error(0, "Module '%s' failed to load.\n",
                                     DepMod.data());
@@ -5031,7 +5032,7 @@ int RootClingMain(int argc,
    // appropriate deconstructors in the interpreter. This writes out the C++
    // module file that we currently generate.
    {
-      cling::Interpreter::PushTransactionRAII RAII(&interp);
+      cling::PushTransactionRAII RAII(&interp);
       CI->getSema().getASTConsumer().HandleTranslationUnit(CI->getSema().getASTContext());
    }
 

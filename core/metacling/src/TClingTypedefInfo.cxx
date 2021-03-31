@@ -117,7 +117,7 @@ int TClingTypedefInfo::InternalNext()
       return 0;
    }
    // Deserialization might happen during the iteration.
-   cling::Interpreter::PushTransactionRAII pushedT(fInterp);
+   cling::PushTransactionRAII pushedT(fInterp);
    while (true) {
       // Advance to next usable decl, or return if
       // there is no next usable decl.
@@ -214,7 +214,7 @@ int TClingTypedefInfo::Size() const
    }
 
    // Deserialization might happen during the size calculation.
-   cling::Interpreter::PushTransactionRAII pushedT(fInterp);
+   cling::PushTransactionRAII pushedT(fInterp);
 
    // Note: This is an int64_t.
    clang::CharUnits::QuantityType quantity =

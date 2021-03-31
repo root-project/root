@@ -10,6 +10,7 @@
 #include "ClingPragmas.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/Output.h"
 #include "cling/Utils/Paths.h"
@@ -154,7 +155,7 @@ namespace {
       m_Interp.getCI()->getASTContext().getTranslationUnitDecl();
       Sema::ContextAndScopeRAII pushedDCAndS(m_Interp.getSema(),
                                             TU, m_Interp.getSema().TUScope);
-      Interpreter::PushTransactionRAII pushedT(&m_Interp);
+      PushTransactionRAII pushedT(&m_Interp);
 
       for (const LibraryFileInfo& FI : FileInfos) {
         // FIXME: Consider the case where the library static init section has

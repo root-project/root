@@ -27,6 +27,7 @@ the Clang C++ compiler, not CINT.
 #include "ThreadLocalStorage.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
@@ -86,7 +87,7 @@ const char *TClingMethodArgInfo::DefaultValue() const
    // Instantiate default arg if needed
    if (pvd->hasUninstantiatedDefaultArg()) {
       // Could deserialize / create instantiated decls.
-      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      cling::PushTransactionRAII RAII(fInterp);
       auto fd = llvm::cast_or_null<clang::FunctionDecl>(TClingDeclInfo::GetDecl());
       fInterp->getSema().BuildCXXDefaultArgExpr(clang::SourceLocation(),
                                                 const_cast<clang::FunctionDecl*>(fd),

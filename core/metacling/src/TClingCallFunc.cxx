@@ -36,6 +36,7 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 #include "cling/Interpreter/Value.h"
 #include "cling/Utils/AST.h"
 
@@ -809,7 +810,7 @@ int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wra
       clang::FunctionDecl *FDmod = const_cast<clang::FunctionDecl *>(FD);
       clang::Sema &S = fInterp->getSema();
       // Could trigger deserialization of decls.
-      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      cling::PushTransactionRAII RAII(fInterp);
       S.InstantiateFunctionDefinition(SourceLocation(), FDmod,
                                       /*Recursive=*/true,
                                       /*DefinitionRequired=*/true);

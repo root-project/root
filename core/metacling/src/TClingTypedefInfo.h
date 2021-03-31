@@ -29,6 +29,7 @@
 #include "TClingDeclInfo.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -60,7 +61,7 @@ public:
    {
       const clang::TranslationUnitDecl *TU = fInterp->getCI()->getASTContext().getTranslationUnitDecl();
       const clang::DeclContext *DC = llvm::cast<clang::DeclContext>(TU);
-      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      cling::PushTransactionRAII RAII(fInterp);
       fIter = DC->decls_begin();
    }
 

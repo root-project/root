@@ -15,6 +15,7 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
+#include "cling/Interpreter/PushTransactionRAII.h"
 #include "cling/Interpreter/Value.h"
 #include "cling/Utils/AST.h"
 #include "cling/Utils/Casting.h"
@@ -577,7 +578,7 @@ static const char* BuildAndEmitVPWrapperBody(cling::Interpreter &Interp,
   clang::LookupResult R(S, PVDN, noSrcLoc, clang::Sema::LookupOrdinaryName);
 
   // The subsequent lookup might deserialize or instantiate.
-  Interpreter::PushTransactionRAII ScopedT(&Interp);
+  PushTransactionRAII ScopedT(&Interp);
   S.LookupQualifiedName(R, clingNS);
   clang::Expr *OverldExpr
     = clang::UnresolvedLookupExpr::Create(Ctx, nullptr /*namingClass*/,
