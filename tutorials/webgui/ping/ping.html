@@ -8,8 +8,10 @@
 
   <body>
      <button onclick="SendMsg('halt')">Halt</button>
+     <button onclick="ToggleDrawing()">Draw</button>
      <p>Main: <b id="output">Msg</b></p>
      <div id="clients"></div>
+     <div id="draw" style="position: absolute; left: 0px; right: 0px; bottom: 0px; height: 50%; overflow:hidden"></div>
   </body>
 
   <script>
@@ -19,7 +21,7 @@
           this.is_main = is_main;
           this.out_id = out_id || "output";
           this.handle = null;
-          this.last_ping = 0;
+          this.last_show = this.last_ping = new Date().getTime();
           this.sum = [0, 0, 0];
        }
 
@@ -35,7 +37,7 @@
           if (this.is_main)
              this.handle.send("first"); // request for configuration
           this.sendPing();
-          this.configInterval(3000);
+          this.configInterval(500);
        }
 
        // method with new message from server
@@ -72,10 +74,18 @@
              let tm = new Date().getTime();
              if (tm - this.last_ping > 2000)
                 this.sendPing();
+             if (this.is_main && this.handle && this.last_output && (tm - this.last_show > 2000)) {
+                this.handle.send("SHOW:" + this.last_output.replace("&plusmn;","+-"));
+                this.last_show = tm;
+             }
+
+             if (this.is_main && this.hist)
+                JSROOT.redraw("draw", this.hist);
+
           }, msec);
        }
 
-       // periodical handler
+       // send ping message
        sendPing() {
           let tm1 = new Date().getTime();
           this.last_ping = tm1;
@@ -83,14 +93,21 @@
              this.handle.send("PING:" + tm1);
        }
 
+       // process reply on ping message
        processPing(msg) {
-          let tm1 = parseInt(msg);
+          // calculate time difference
           let tm2 = new Date().getTime();
+          let tm1 = parseInt(msg);
           let diff = tm2 - tm1;
 
-          this.sum[0]+=1;
-          this.sum[1]+=diff;
-          this.sum[2]+=diff*diff;
+          // fill histogram if created
+          if (this.hist)
+             this.hist.Fill(diff);
+
+          // account statistic
+          this.sum[0] += 1;
+          this.sum[1] += diff;
+          this.sum[2] += diff*diff;
 
           let mean = this.sum[1] / this.sum[0], dev = "";
 
@@ -102,9 +119,12 @@
           let v = "Cnt: " + this.sum[0];
           v += " round-trip: " + mean.toFixed(1);
           if (dev > 0) v += "&plusmn;" + dev.toFixed(0);
-          v+= " ms";
+          v += " ms";
+          this.last_output = v;
+
           this.setOutput(v);
 
+          // send new ping message
           this.sendPing();
        }
 
@@ -114,10 +134,31 @@
              html += `<p>Client${n+1}:  <b id='out${n}'>output</b></p>`;
           document.getElementById("clients").innerHTML = html;
 
+          this.clients = [];
+
           for (let n = 0; n < nclients; ++n) {
              let sub_handler = new PingPongHandler(false, "out" + n);
              JSROOT.connectWebWindow( { receiver: sub_handler, socket_kind: this.handle.kind } );
+             this.clients.push(sub_handler);
           }
+       }
+
+       createHistogram() {
+          let mean = this.sum[0] > 10 ? this.sum[1] / this.sum[0] : 50;
+
+          this.hist = JSROOT.createHistogram("TH1I", 100);
+          this.hist.fTitle = "Roundtrip time";
+          this.hist.fXaxis.fTitle = "ms";
+          this.hist.fXaxis.fXmax = 100;
+
+          if (mean > 1000)
+             this.hist.fXaxis.fXmax = 5000;
+          else if (mean > 100)
+             this.hist.fXaxis.fXmax = 500;
+       }
+
+       clearHistogram() {
+          delete this.hist;
        }
     }
 
@@ -126,6 +167,21 @@
     function SendMsg(txt) {
        if (main_handler && main_handler.handle)
           main_handler.handle.send(txt);
+    }
+
+    function ToggleDrawing() {
+       let draw = document.getElementById("draw");
+       if (!draw) return;
+
+       if (main_handler.hist) {
+          JSROOT.cleanup(draw);
+          main_handler.clearHistogram();
+          draw.style.display = "none";
+          return;
+       }
+
+       main_handler.createHistogram();
+       draw.style.display = "";
     }
 
     // important this line, which need to be specially handled
