@@ -595,6 +595,22 @@ df = RDataFrame("mytree", "myfile.root", sparkcontext = sc)
 If an instance of [SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
 is not provided, the default behaviour is to create one in the background for you.
 
+### Processing data from numpy arrays
+
+In case you have data in numpy arrays in Python and you want to process the data with ROOT, you can easily
+create a RDataFrame using `ROOT.RDF.MakeNumpyDataFrame`. The factory function returns a new RDataFrame with
+the column names defined by the keys of the given dictionary with numpy arrays. This operation does not copy any data.
+
+~~~{.python}
+# Read data from numpy arrays
+# The column names in the RDataFrame are taken from the dictionary keys.
+x, y = numpy.array([1, 2, 3]), numpy.array([4, 5, 6])
+df = ROOT.RDF.MakeNumpyDataFrame({"x": x, "y": y})
+
+# Use RDataFrame as usual, e.g. write out a ROOT file
+df.Define("z", "x + y").Snapshot("tree", "file.root")
+~~~
+
 ##  <a name="transformations"></a>Transformations
 ### <a name="Filters"></a> Filters
 A filter is created through a call to `Filter(f, columnList)` or `Filter(filterString)`. In the first overload, `f` can
