@@ -135,6 +135,11 @@ RWebWindowsManager::~RWebWindowsManager()
 ///      WebGui.UseHttps: yes
 ///      WebGui.ServerCert: sertificate_filename.pem
 ///
+/// To processing incoming http requests and websockets, THttpServer allocate 10 threads
+/// One have to increase this number if more simultaneous connections are expected:
+///
+///      WebGui.HttpThrds: 10
+///
 /// One also can configure usage of special thread of processing of http server requests
 ///
 ///      WebGui.HttpThrd: no
@@ -226,6 +231,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    int http_port = gEnv->GetValue("WebGui.HttpPort", 0);
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
+   int http_thrds = gEnv->GetValue("WebGui.HttpThreads", 10);
    int http_wstmout = gEnv->GetValue("WebGui.HttpWSTmout", 10000);
    int http_maxage = gEnv->GetValue("WebGui.HttpMaxAge", -1);
    int fcgi_port = gEnv->GetValue("WebGui.FastCgiPort", 0);
@@ -280,7 +286,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
          fcgi_port = 0;
       } else if (http_port > 0) {
          url = use_secure ? "https://" : "http://";
-         engine.Form("%s:%d?websocket_timeout=%d", (use_secure ? "https" : "http"), http_port, http_wstmout);
+         engine.Form("%s:%d?thrds=%d&websocket_timeout=%d", (use_secure ? "https" : "http"), http_port, http_thrds, http_wstmout);
          if (assign_loopback) {
             engine.Append("&loopback");
             url.Append("localhost");
