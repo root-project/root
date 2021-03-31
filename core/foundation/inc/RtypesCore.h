@@ -74,8 +74,8 @@ typedef uintptr_t      ULongptr_t;  //Unsigned integer large enough to hold a po
 #else
 typedef long long          Long64_t; //Portable signed long integer 8 bytes
 typedef unsigned long long ULong64_t;//Portable unsigned long integer 8 bytes
-typedef long           Longptr_t
-typedef unsigned long  ULongptr_t
+typedef long           Longptr_t;
+typedef unsigned long  ULongptr_t;
 #endif
 typedef double         Axis_t;      //Axis values type (double)
 typedef double         Stat_t;      //Statistics type (double)
