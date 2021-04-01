@@ -47,6 +47,9 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include "RooConstVar.h"
 #include "RooDouble.h"
 #include "RooTrace.h"
+#include "RooHelpers.h"
+
+#include "ROOT/RMakeUnique.hxx"
 
 #include "TClass.h"
 
@@ -428,9 +431,21 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     oocxcoutI(&function,Integration) << function.GetName() << ": Function integrated observables " << _anaList << " internally with code " << _mode << endl ;
   }
 
+  // when _funcNormSet is a nullptr a warning message appears for RooAddPdf functions
+  // This is not a problem since we do noty use the returned value from getVal()
+  // we then disable the produced warning message in the RooFit::Eval topic
+  std::unique_ptr<RooHelpers::LocalChangeMsgLevel> msgChanger;
+  if (_funcNormSet == nullptr) {
+     // remove only the RooFit::Eval message topic from current active streams
+     // passed level can be whatever if we provide a false as last argument   
+     msgChanger = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING, 0u, RooFit::Eval, false);
+  }
 
   // WVE kludge: synchronize dset for use in analyticalIntegral
+  // LM : is this really needed ??
   function.getVal(_funcNormSet) ;
+  // delete LocalChangeMsgLevel which will restore previous message level
+  msgChanger.reset(nullptr); 
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * F) Make list of numerical integration variables consisting of:            *  
@@ -1133,5 +1148,3 @@ Int_t RooRealIntegral::getCacheAllNumeric()
 {
   return _cacheAllNDim ;
 }
-
-

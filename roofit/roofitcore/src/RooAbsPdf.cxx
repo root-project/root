@@ -1957,6 +1957,9 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataSet& data, const RooLinkedList& cmdList
 
 void RooAbsPdf::printValue(ostream& os) const
 {
+  // silent warning messages coming when evaluating a RooAddPdf without a normalization set
+  RooHelpers::LocalChangeMsgLevel locmsg(RooFit::WARNING, 0u, RooFit::Eval, false);
+
   getVal() ;
 
   if (_norm) {

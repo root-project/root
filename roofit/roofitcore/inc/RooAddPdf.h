@@ -82,6 +82,8 @@ public:
   const RooArgSet& getCoefNormalization() const { return _refCoefNorm ; }
   const char* getCoefRange() const { return _refCoefRangeName?RooNameReg::str(_refCoefRangeName):"" ; }
 
+  virtual Double_t getValV(const RooArgSet *set = 0) const;
+  
   virtual void resetErrorCounters(Int_t resetValue=10) ;
 
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
