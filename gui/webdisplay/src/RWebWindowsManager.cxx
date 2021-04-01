@@ -158,6 +158,11 @@ RWebWindowsManager::~RWebWindowsManager()
 ///      WebGui.UseHttps: yes
 ///      WebGui.ServerCert: sertificate_filename.pem
 ///
+/// All incoming requests processed in THttpServer in timer handler with 10 ms timeout.
+/// One may decrease value to improve latency or increase to minimize CPU load
+///
+///      WebGui.HttpTimer: 10
+///
 /// To processing incoming http requests and websockets, THttpServer allocate 10 threads
 /// One have to increase this number if more simultaneous connections are expected:
 ///
@@ -251,6 +256,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    int http_port = gEnv->GetValue("WebGui.HttpPort", 0);
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
+   int http_timer = gEnv->GetValue("WebGui.HttpTimer", 10);
    int http_thrds = gEnv->GetValue("WebGui.HttpThreads", 10);
    int http_wstmout = gEnv->GetValue("WebGui.HttpWSTmout", 10000);
    int http_maxage = gEnv->GetValue("WebGui.HttpMaxAge", -1);
@@ -269,6 +275,9 @@ bool RWebWindowsManager::CreateServer(bool with_http)
       R__LOG_ERROR(WebGUILog()) << "Not allowed to create HTTP server, check WebGui.HttpPort variable";
       return false;
    }
+
+   if (http_timer > 0)
+      fServer->SetTimer(http_timer);
 
    if (http_port < 0) {
       ntry = 0;
