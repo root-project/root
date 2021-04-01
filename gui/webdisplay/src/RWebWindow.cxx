@@ -75,6 +75,8 @@ RWebWindow::RWebWindow() = default;
 
 RWebWindow::~RWebWindow()
 {
+   StopThread();
+
    if (fMaster)
       fMaster->RemoveEmbedWindow(fMasterConnId, fMasterChannel);
 
@@ -1203,6 +1205,7 @@ void RWebWindow::SendBinary(unsigned connid, const void *data, std::size_t len)
 
 void RWebWindow::AssignThreadId()
 {
+   fUseServerThreads = false;
    fProcessMT = false;
    fCallbacksThrdIdSet = true;
    fCallbacksThrdId = std::this_thread::get_id();
@@ -1219,14 +1222,50 @@ void RWebWindow::AssignThreadId()
 /// WARNING!!! only for expert use
 /// Should be only used when application provides proper locking and
 /// does not block. Such mode provides minimal possible latency
-/// Must be called after callback are assigned
+/// Must be called before callbacks are assigned
 
 void RWebWindow::UseServerThreads()
 {
+   fUseServerThreads = true;
    fCallbacksThrdIdSet = false;
    fProcessMT = true;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Start special thread which will be used by the window to handle all callbacks
+/// One has to be sure, that access to global ROOT structures are minimized and
+/// protected with ROOT::EnableThreadSafety(); call
+
+void RWebWindow::StartThread()
+{
+   if (fHasWindowThrd) {
+      R__LOG_WARNING(WebGUILog()) << "thread already started for the window";
+      return;
+   }
+
+   fHasWindowThrd = true;
+
+   std::thread thrd([this] {
+      AssignThreadId();
+      while(fHasWindowThrd)
+         Run(0.1);
+      fCallbacksThrdIdSet = false;
+   });
+
+   fWindowThrd = std::move(thrd);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Stop special thread
+
+void RWebWindow::StopThread()
+{
+   if (!fHasWindowThrd)
+      return;
+
+   fHasWindowThrd = false;
+   fWindowThrd.join();
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1252,7 +1291,7 @@ void RWebWindow::UseServerThreads()
 
 void RWebWindow::SetDataCallBack(WebWindowDataCallback_t func)
 {
-   AssignThreadId();
+   if (!fUseServerThreads) AssignThreadId();
    fDataCallback = func;
 }
 
@@ -1261,7 +1300,7 @@ void RWebWindow::SetDataCallBack(WebWindowDataCallback_t func)
 
 void RWebWindow::SetConnectCallBack(WebWindowConnectCallback_t func)
 {
-   AssignThreadId();
+   if (!fUseServerThreads) AssignThreadId();
    fConnCallback = func;
 }
 
@@ -1270,7 +1309,7 @@ void RWebWindow::SetConnectCallBack(WebWindowConnectCallback_t func)
 
 void RWebWindow::SetDisconnectCallBack(WebWindowConnectCallback_t func)
 {
-   AssignThreadId();
+   if (!fUseServerThreads) AssignThreadId();
    fDisconnCallback = func;
 }
 
@@ -1279,7 +1318,7 @@ void RWebWindow::SetDisconnectCallBack(WebWindowConnectCallback_t func)
 
 void RWebWindow::SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn)
 {
-   AssignThreadId();
+   if (!fUseServerThreads) AssignThreadId();
    fConnCallback = conn;
    fDataCallback = data;
    fDisconnCallback = disconn;
