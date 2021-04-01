@@ -61,9 +61,6 @@ protected:
 
    TString CountHeader(const TString &buf, Int_t number = -1111) const;
 
-   /** Method used to modify content of web page used by web socket handler */
-   virtual void CheckWSPageContent(THttpWSHandler *) {}
-
 private:
    std::shared_ptr<THttpWSEngine> fWSEngine; ///<!  web-socket engine, which supplied to run created web socket
 
@@ -108,6 +105,12 @@ public:
 
    /** get web-socket id */
    UInt_t GetWSId() const { return fWSId; }
+
+   /** provide WS kind - websocket, longpoll, rawlongpoll */
+   virtual const char *GetWSKind() const { return "websocket"; }
+
+   /** provide WS platform - http, fastcgi, cef3, qt5 */
+   virtual const char *GetWSPlatform() const { return "http"; }
 
    /** set full set of request header */
    void SetRequestHeader(const char *h) { fRequestHeader = (h ? h : ""); }

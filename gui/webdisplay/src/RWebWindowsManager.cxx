@@ -33,6 +33,29 @@
 
 using namespace ROOT::Experimental;
 
+
+
+///////////////////////////////////////////////////////////////
+/// Parse boolean gEnv variable which should be "yes" or "no"
+/// Returns -1 if not defined
+/// Returns true or false
+
+int RWebWindowWSHandler::GetBoolEnv(const std::string &name, int dflt)
+{
+   const char *undef = "<undefined>";
+   const char *value = gEnv->GetValue(name.c_str(), undef);
+   if (!value) return dflt;
+   std::string svalue = value;
+   if (svalue == undef) return dflt;
+
+   if (svalue == "yes") return 1;
+   if (svalue == "no") return 0;
+
+   R__LOG_ERROR(WebGUILog()) << name << " has to be yes or no";
+   return dflt;
+}
+
+
 /** \class ROOT::Experimental::RWebWindowsManager
 \ingroup webdisplay
 
@@ -155,9 +178,15 @@ RWebWindowsManager::~RWebWindowsManager()
 /// By default, THttpServer created in restricted mode which only allows websocket handlers
 /// and processes only very few other related http requests. For security reasons such mode
 /// should be always enabled. Only if it is really necessary to process all other kinds
-/// of HTTP requests, one could specify 0 for following parameter (default 1):
+/// of HTTP requests, one could specify no for following parameter (default yes):
 ///
-///      WebGui.WSOnly: 1
+///      WebGui.WSOnly: yes
+///
+/// In some applications one may need to force longpoll websocket emulations from the beginning,
+/// for instance when clients connected via proxys. Although JSROOT should automatically fallback
+/// to longpoll engine, one can configure this directly (default no)
+///
+///      WebGui.WSLongpoll: no
 ///
 /// Following parameter controls browser max-age caching parameter for files (default 3600)
 ///
@@ -183,21 +212,13 @@ bool RWebWindowsManager::CreateServer(bool with_http)
 
       fServer = std::make_unique<THttpServer>("basic_sniffer");
 
-      const char *serv_thrd = gEnv->GetValue("WebGui.HttpThrd", "");
-      if (serv_thrd && strstr(serv_thrd, "yes"))
-         fUseHttpThrd = true;
-      else if (serv_thrd && strstr(serv_thrd, "no"))
-         fUseHttpThrd = false;
+      auto serv_thrd = RWebWindowWSHandler::GetBoolEnv("WebGui.HttpThrd");
+      if (serv_thrd != -1)
+         fUseHttpThrd = serv_thrd != 0;
 
-      const char *send_thrds = gEnv->GetValue("WebGui.SenderThrds", "");
-      if (send_thrds && *send_thrds) {
-         if (strstr(send_thrds, "yes"))
-            fUseSenderThreads = true;
-         else if (strstr(send_thrds, "no"))
-            fUseSenderThreads = false;
-         else
-            R__LOG_ERROR(WebGUILog()) << "WebGui.SenderThrds has to be yes or no";
-      }
+      auto send_thrds = RWebWindowWSHandler::GetBoolEnv("WebGui.SenderThrds");
+      if (send_thrds != -1)
+         fUseSenderThreads = send_thrds != 0;
 
       if (IsUseHttpThread())
          fServer->CreateServerThread();
@@ -205,8 +226,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
       if (gApplication)
          gApplication->Connect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
 
-      Int_t wsonly = gEnv->GetValue("WebGui.WSOnly", 1);
-      fServer->SetWSOnly(wsonly != 0);
+      fServer->SetWSOnly(RWebWindowWSHandler::GetBoolEnv("WebGui.WSOnly", 1) != 0);
 
       // this is location where all ROOT UI5 sources are collected
       // normally it is $ROOTSYS/ui5 or <prefix>/ui5 location
@@ -238,13 +258,11 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    int fcgi_thrds = gEnv->GetValue("WebGui.FastCgiThreads", 10);
    const char *fcgi_serv = gEnv->GetValue("WebGui.FastCgiServer", "");
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
-   const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
+   bool assign_loopback = RWebWindowWSHandler::GetBoolEnv("WebGui.HttpLoopback", 0) == 1;
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
-   const char *http_ssl = gEnv->GetValue("WebGui.UseHttps", "no");
+   bool use_secure = RWebWindowWSHandler::GetBoolEnv("WebGui.UseHttps", 0) == 1;
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
 
-   bool assign_loopback = http_loopback && strstr(http_loopback, "yes");
-   bool use_secure = http_ssl && strstr(http_ssl, "yes");
    int ntry = 100;
 
    if ((http_port < 0) && (fcgi_port <= 0)) {

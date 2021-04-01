@@ -210,16 +210,14 @@ protected:
 
    CefRefPtr<CefCallback> fCallBack{nullptr};
 
-   void CheckWSPageContent(THttpWSHandler *) override
-   {
-      std::string search = "JSROOT.connectWebWindow({";
-      std::string replace = search + "platform:\"cef3\",socket_kind:\"longpoll\",";
-
-      ReplaceAllinContent(search, replace, true);
-   }
-
 public:
    explicit TCefHttpCallArg() = default;
+
+   /** provide WS kind  */
+   const char *GetWSKind() const override { return "longpoll"; }
+
+   /** provide WS platform */
+   const char *GetWSPlatform() const override { return "cef3"; }
 
    void AssignCallback(CefRefPtr<CefCallback> cb) { fCallBack = cb; }
 

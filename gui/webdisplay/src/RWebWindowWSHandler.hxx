@@ -61,6 +61,15 @@ protected:
       }
 
       std::string more_args;
+
+      std::string wskind = arg->GetWSKind();
+      if ((wskind == "websocket") && (GetBoolEnv("WebGui.WSLongpoll") == 1))
+         wskind = "longpoll";
+      if (!wskind.empty() && (wskind != "websocket"))
+         more_args.append("socket_kind: \""s + wskind + "\","s);
+      std::string wsplatform = arg->GetWSPlatform();
+      if (!wsplatform.empty() && (wsplatform != "http"))
+         more_args.append("platform: \""s + wsplatform + "\","s);
       const char *ui5source = gEnv->GetValue("WebGui.openui5src","");
       if (ui5source && *ui5source)
          more_args.append("openui5src: \""s + ui5source + "\","s);
@@ -114,6 +123,8 @@ public:
 
    /// React on completion of multi-threaded send operation
    void CompleteWSSend(UInt_t wsid) override { if (!IsDisabled()) fWindow.CompleteWSSend(wsid); }
+
+   static int GetBoolEnv(const std::string &name, int dfl = -1);
 };
 
 } // namespace Experimental

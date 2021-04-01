@@ -826,8 +826,6 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
             }
 
             handler->VerifyDefaultPageContent(arg);
-
-            arg->CheckWSPageContent(handler);
          }
       }
 
