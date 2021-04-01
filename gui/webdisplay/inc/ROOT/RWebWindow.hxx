@@ -116,6 +116,7 @@ private:
    std::string fDefaultPage;                        ///<! HTML page (or file name) returned when window URL is opened
    std::string fPanelName;                          ///<! panel name which should be shown in the window
    unsigned fId{0};                                 ///<! unique identifier
+   bool fUseServerThreads{false};                       ///<! indicates that server thread is using, no special window thread
    bool fProcessMT{false};                          ///<! if window event processing performed in dedicated thread
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
    std::shared_ptr<RWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
@@ -132,6 +133,8 @@ private:
    WebWindowConnectCallback_t fDisconnCallback;     ///<! callback for disconnect event
    std::thread::id fCallbacksThrdId;                ///<! thread id where callbacks should be invoked
    bool fCallbacksThrdIdSet{false};                 ///<! flag indicating that thread id is assigned
+   bool fHasWindowThrd{false};                      ///<! indicate if special window thread was started
+   std::thread fWindowThrd;                         ///<! special thread for that window
    std::queue<QueueEntry> fInputQueue;              ///<! input queue for all callbacks
    std::mutex fInputQueueMutex;                     ///<! mutex to protect input queue
    unsigned fWidth{0};                              ///<! initial window width when displayed
@@ -318,6 +321,10 @@ public:
    int WaitForTimed(WebWindowWaitFunc_t check);
 
    int WaitForTimed(WebWindowWaitFunc_t check, double duration);
+
+   void StartThread();
+
+   void StopThread();
 
    void TerminateROOT();
 

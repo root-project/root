@@ -276,7 +276,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
       return false;
    }
 
-   if (http_timer > 0)
+   if ((http_timer > 0) && !IsUseHttpThread())
       fServer->SetTimer(http_timer);
 
    if (http_port < 0) {
@@ -382,6 +382,9 @@ std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
       }
       win->RecordData(fname, prefix);
    }
+
+   if (IsUseHttpThread())
+      win->UseServerThreads();
 
    const char *token = gEnv->GetValue("WebGui.ConnToken", "");
    if (token && *token)
