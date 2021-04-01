@@ -816,60 +816,69 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
    nlohmann::json cj = nlohmann::json::parse(arg);
    if (gDebug > 0)
       ::Info("REveManager::WindowData", "MIR test %s\n", cj.dump().c_str());
-   std::string mir = cj["mir"];
+
+   std::string cmd = cj["mir"];
    int id = cj["fElementId"];
+   std::string ctype = cj["class"];
 
-   // MIR
-   std::stringstream cmd;
-
-   if (id == 0) {
-      cmd << "((ROOT::Experimental::REveManager *)" << std::hex << std::showbase << (size_t)this << ")->" << mir << ";";
-   } else {
-      auto el = FindElementById(id);
-      if (!el) {
-         R__LOG_ERROR(EveLog()) << "Element with id " << id << " not found";
-         return;
-      }
-      std::string ctype = cj["class"];
-      cmd << "((" << ctype << "*)" << std::hex << std::showbase << (size_t)el << ")->" << mir << ";";
-      std::cout << cmd.str() << std::endl;
-   }
-
-   ScheduleMIR(cmd.str());
+   ScheduleMIR(cmd, id, ctype);
 }
 
 //
 //____________________________________________________________________
-void REveManager::ScheduleMIR(const std::string &cmd)
+void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std::string& ctype)
 {
    std::unique_lock lock(fServerState.fMutex);
-   fMIRqueue.push(cmd);
+   fMIRqueue.push(new MIR(cmd, id, ctype));
    if (fServerState.fVal == ServerState::Waiting)
       fServerState.fCV.notify_all();
 }
 
 //
 //____________________________________________________________________
-void REveManager::ExecuteMIR(const std::string &cmd)
+void REveManager::ExecuteMIR(MIR* mir)
 {
-   fWorld->BeginAcceptingChanges();
-   fScenes->AcceptChanges(true);
+   class ChangeSentry {
+   public:
+      ChangeSentry()
+      {
+         gEve->GetWorld()->BeginAcceptingChanges();
+         gEve->GetScenes()->AcceptChanges(true);
+      }
+      ~ChangeSentry()
+      {
+         gEve->GetScenes()->AcceptChanges(false);
+         gEve->GetWorld()->EndAcceptingChanges();
+      }
+   };
+   ChangeSentry cs;
 
    if (gDebug > 0)
-      ::Info("REveManager::ExecuteCommand", "MIR cmd %s", cmd.c_str());
+      ::Info("REveManager::ExecuteCommand", "MIR cmd %s", mir->fCmd.c_str());
 
    try {
-      gROOT->ProcessLine(cmd.c_str());
-   }
-   catch (std::exception &e) {
+      std::stringstream cmd;
+      if (mir->fId == 0) {
+         cmd << "((ROOT::Experimental::REveManager *)" << std::hex << std::showbase << (size_t)this << ")->"
+             << mir->fCmd << ";";
+      } else {
+         auto el = FindElementById(mir->fId);
+         if (!el) {
+            R__LOG_ERROR(EveLog()) << "Element with id " << mir->fId << " not found";
+            return;
+         }
+         std::string ctype = mir->fCtype;
+         cmd << "((" << ctype << "*)" << std::hex << std::showbase << (size_t)el << ")->" << mir->fCmd << ";";
+         // std::cout << cmd.str() << std::endl;
+      }
+
+      gROOT->ProcessLine(cmd.str().c_str());
+   } catch (std::exception &e) {
       std::cout << "REveManager::ExecuteCommand " << e.what() << std::endl;
-   }
-   catch (...) {
+   } catch (...) {
       std::cout << "REveManager::ExecuteCommand unknown exception.\n";
    }
 
-   fScenes->AcceptChanges(false);
-   fWorld->EndAcceptingChanges();
 }
 
 //
@@ -906,11 +915,11 @@ void REveManager::MIRExecThread()
       }
       else if (fServerState.fVal == ServerState::Waiting)
       {
-         std::string cmd = fMIRqueue.front();
+         MIR* mir = fMIRqueue.front();
          fMIRqueue.pop();
          fServerState.fVal = ServerState::UpdatingScenes;
          lock.unlock();
-         ExecuteMIR(cmd);
+         ExecuteMIR(mir);
          PublishChanges();
       }
    }

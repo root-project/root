@@ -81,6 +81,17 @@ public:
       EServerState fVal{Waiting};
    };
 
+   class MIR
+   {
+      public:
+       MIR(const std::string& cmd, ElementId_t id, const std::string& ctype)
+       :fCmd(cmd), fId(id), fCtype(ctype){}
+
+       std::string fCmd;
+       ElementId_t fId;
+       std::string fCtype;
+   };
+
 protected:
    RExceptionHandler        *fExcHandler{nullptr};   //!< exception handler
 
@@ -118,7 +129,7 @@ protected:
 
    std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
    std::vector<Conn>                                fConnList;
-   std::queue<std::string>                          fMIRqueue;
+   std::queue<MIR*>                                 fMIRqueue;
 
    std::thread                                      fMIRExecThread;
 
@@ -129,7 +140,7 @@ protected:
    void WindowDisconnect(unsigned connid);
 
    void MIRExecThread();
-   void ExecuteMIR(const std::string &cmd);
+   void ExecuteMIR(MIR* mir);
    void PublishChanges();
 
 public:
@@ -214,7 +225,7 @@ public:
    void SetDefaultHtmlPage(const std::string& path);
    void SetClientVersion(const std::string& version);
 
-   void ScheduleMIR(const std::string &cmd);
+   void ScheduleMIR(const std::string &cmd, ElementId_t i, const std::string& ctype);
 
    static REveManager* Create();
    static void         Terminate();

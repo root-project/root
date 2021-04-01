@@ -224,39 +224,21 @@ void projectScenes(bool geomp, bool eventp)
 class EventManager : public REX::REveElement
 {
 private:
-    class PlayTimer : public TTimer
-    {
-      
-      virtual bool Notify()
-      {
-         TurnOff();
-         printf("notify\n");
-
-         Reset();
-         TurnOn();
-         return true;
-      }
-    };
-
-    bool fAutoplay{false};
-   // PlayTimer fTimer;
+   bool fAutoplay{false};
    TTimer* fTimer{nullptr};
+   int     fPlayDelay{10};
 
 public:
-   EventManager() { 
-
-   fTimer = new TTimer();
-   fTimer->Connect("Timeout()", "EventManager",
-               this, "TimerDone()");
-   eveMng->SetCBClientsFree([this]{XXX();});
-//  timer->Start(2000, kTRUE);   // 2 seconds single-shot
+   EventManager() {
+      fTimer = new TTimer();
+      fTimer->Connect("Timeout()", "EventManager", this, "TimerDone()");
    }
 
    virtual ~EventManager() {
 
    }
 
-   virtual void NextEvent()
+   void NextEvent()
    {
       auto scene =  eveMng->GetEventScene();
       scene->DestroyElements();
@@ -268,6 +250,11 @@ public:
          if (mngRhoZ)
          mngRhoZ  ->ImportElements(ie, rhoZEventScene);
       }
+
+      if (fAutoplay) {
+        fTimer->Stop();
+        eveMng->ScheduleMIR("StartTimer()", this->GetElementId(), "EventManager");
+     }
    }
 
    virtual void QuitRoot()
@@ -278,12 +265,16 @@ public:
 
    virtual void TimerDone()
    {
-      std::stringstream cmd;
-      cmd << "((EventManager*)" << std::hex << std::showbase << (size_t)this << ")->NextEvent();";
-      eveMng->ExecuteCommand(cmd.str().c_str());
+      if (fAutoplay)
+         eveMng->ScheduleMIR("NextEvent()", this->GetElementId(), "EventManager");
    }
 
-   virtual void Autoplay()
+   void StartTimer()
+   {
+      fTimer->Start(fPlayDelay, true);
+   }
+
+   void Autoplay()
    {
       fAutoplay = !fAutoplay;
       if (fAutoplay)
@@ -292,10 +283,6 @@ public:
          fTimer->Stop();
    }
 
-   void XXX() {
-      if (fAutoplay)
-        fTimer->Start(10, kTRUE); 
-   }
 };
 
 void event_demo()
