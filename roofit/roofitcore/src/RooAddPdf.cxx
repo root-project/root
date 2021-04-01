@@ -793,6 +793,37 @@ std::pair<const RooArgSet*, RooAddPdf::CacheElem*> RooAddPdf::getNormAndCache(co
   return {nset, cache};
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Re-implementation of RooAbsPdf::getValV to deal with the un-normalized case.
+/// A RooAddPdf needs to have a normalization set defined, otherwise its coefficient will not
+/// be uniquely defined. Its shape depends on the normalization provided.
+/// Un-normalized calls to RooAddPdf can happen in Roofit,  when printing the pdf's or when
+/// computing integrals. In these case, if the pdf has a normalization set previously defined 
+/// (i.e. stored as a datamember in _normSet) it should used it by default when the pdf is evaluated 
+/// without passing a normalizations set (in pdf->getVal(nullptr) )
+/// In the case of no pre-defined normalization set exists, a warning will be produced, since the obtained value 
+/// will be arbitrary. 
+/// Note that to avoid unnecessary warning messages,  when calling RooAbsPdf::printValue or RooAbsPdf::graphVizTree, the 
+/// printing of the warning messages for the RooFit::Eval topic is explicitly disabled
+
+Double_t RooAddPdf::getValV(const RooArgSet *nset) const
+{
+   // special handling in case when an empty set is passed
+   // use saved normalization set when it is available
+   if (nset == nullptr) {
+      nset = _normSet;
+      // check that nset is not a null pointer
+      // in this case interpretation of coefficient is arbitrary
+      if (!nset) {
+         oocoutW(this, Eval) << "Evaluating RooAddPdf without a defined normalization set. This can lead to ambiguos "
+                                "coefficients definition and incorrect results."
+                             << " Use RooAddPdf::fixCoefNormalization(nset) to provide a normalization set for "
+                                "defining uniquely RooAddPdf coefficients!"
+                             << std::endl;
+      }
+   }
+   return RooAbsPdf::getValV(nset);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return the current value
@@ -802,11 +833,6 @@ Double_t RooAddPdf::evaluate() const
   auto normAndCache = getNormAndCache();
   const RooArgSet* nset = normAndCache.first;
   CacheElem* cache = normAndCache.second;
-  // check that nset is not a null pointer
-  // in this case interpretation of coefficient is arbitrary
-  if (!nset)
-     oocoutW(this, Eval) << "Evaluating RooAddPdf without a defined normalization set. This can lead to ambiguos coefficients definition and incorrect results."
-     << " Use RooAddPdf::fixCoefNormalization(nset) to provide a normalization set for defining uniquely RooAddPdf coefficients!" << std::endl;
 
   // Do running sum of coef/pdf pairs, calculate lastCoef.
   Double_t value(0);
