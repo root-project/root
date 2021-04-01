@@ -9,6 +9,7 @@ ROOT_ADD_GTEST(testHashRecursiveRemove testHashRecursiveRemove.cxx LIBRARIES Cor
 if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(testTClass testTClass.cxx LIBRARIES Core)
 endif()
+ROOT_ADD_GTEST(testTDataType testTDataType.cxx LIBRARIES Core)
 ROOT_ADD_GTEST(testTEnum testTEnum.cxx LIBRARIES Core)
 configure_file(stlDictCheck.h . COPYONLY)
 configure_file(stlDictCheckAux.h . COPYONLY)
