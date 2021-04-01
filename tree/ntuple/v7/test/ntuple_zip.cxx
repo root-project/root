@@ -85,11 +85,11 @@ TEST(RNTupleZip, Large)
    EXPECT_EQ(data, std::string(unzipBuffer.get(), N));
 }
 
-TEST(RNTupleZip, TFileCompressionSettings)
+TEST(RNTupleZip, TFilePtrCompressionSettings)
 {
-   // TFile compression will be set to 101 (zlib), but some RNTuples will override this setting
-
-   FileRaii fileGuard("test_ntuple_zip_tfile_comp.root");
+   // RNTuple added to a TFile using the std::unique_ptr<TFile>& method uses the
+   // TFile's compression
+   FileRaii fileGuard("test_ntuple_zip_tfileptr_comp.root");
    // test using RPageSinkFile constructor taking std::unique_ptr<TFile>&
    {
       auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "RECREATE", "", 101);
@@ -106,7 +106,12 @@ TEST(RNTupleZip, TFileCompressionSettings)
       ntuple0->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
       EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 101"));
    }
+}
 
+TEST(RNTupleZip, TFileCompressionSettings)
+{
+   // TFile compression will be set to 101 (zlib), but some RNTuples will override this setting
+   FileRaii fileGuard("test_ntuple_zip_tfile_comp.root");
    RNTupleWriteOptions overrideCompression;
    overrideCompression.SetCompression(505);
    auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "RECREATE", "", 101);
