@@ -479,7 +479,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       if (d.check("TRACKS")) res.tracks = true; // only for TGeoManager
       if (d.check("SHOWTOP")) res.showtop = true; // only for TGeoManager
-      if (d.check("NO_SCREEN")) res.no_screen = true; // use kVisOnScreen bits as visibility
+      if (d.check("NO_SCREEN")) res.no_screen = true; // ignore kVisOnScreen bits for visibility
 
       if (d.check("ORTHO_CAMERA_ROTATE")) { res.ortho_camera = true; res.can_rotate = true; }
       if (d.check("ORTHO_CAMERA")) { res.ortho_camera = true; res.can_rotate = false; }
@@ -4423,11 +4423,11 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
           _more: true,
           _geoobj: lst,
           _parent: parent,
-      }
+      };
 
       item._get = function(item /*, itemname */) {
          return Promise.resolve(item._geoobj || null);
-      }
+      };
 
       item._expand = function(node, lst) {
          // only childs
@@ -4445,7 +4445,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             geo.createItem(node, lst.arr[n]);
 
          return true;
-      }
+      };
 
       if (!parent._childs) parent._childs = [];
       parent._childs.push(item);
