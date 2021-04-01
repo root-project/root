@@ -11,7 +11,6 @@
 
 #include <ROOT/RWebWindow.hxx>
 
-#include <thread>
 #include <iostream>
 
 std::shared_ptr<ROOT::Experimental::RWebWindow> window;
@@ -36,39 +35,59 @@ void ProcessData(unsigned connid, const std::string &arg)
    }
 }
 
-/** Special thread to run web window */
-void RunWebWindow()
-{
-   window->AssignThreadId();
-
-   while (!window_terminated)
-     window->Run(1.); // run event loop for 1 sec
-}
-
 ////////////////////////////////////////////////////////
- /// @param nclients - number of clients
- /// @param special_thread - 0 - no thread, 1 - extra thread to process requests, 2 - use http server threads
+/// @param nclients - number of clients
+/// @param test_mode
+///  0 - default config, no special config
+///  1 - reduce http server timer dfigs pecial_thread - 0 - no thread, 1 - extra thread to process requests, 2 - use http server threads
 
-void ping(int nclients = 1, int special_thread = 0)
+enum TestModes {
+   modeDefault = 0,          // default configuration
+   modeMinimalTimer = 1,     // reduce THttpServer timer
+   modeHttpThread = 2,       // create and use THttpServer thread to handle window functionality
+   modeHttpWindowThread = 3, // with THttpServer thread also create thread for the window
+   modeCivetThread = 4       // directly use threads if civetweb, dangerous
+};
+
+enum MajorModes {
+   majorDefault = 0,         // default test suite, using websockets
+   majorLongpoll = 1         // force longpoll sockets
+};
+
+void ping(int nclients = 1, int test_mode = 0)
 {
    num_clients = nclients;
 
-   // verify value
+   // verify values
+   if (test_mode < 0) test_mode = 0;
+   int major_mode = test_mode / 10;
+   test_mode = test_mode % 10;
+   if (test_mode > modeCivetThread)
+      test_mode = modeDefault;
+
    if (num_clients < 1)
       num_clients = 1;
    else if (num_clients > 1000)
       num_clients = 1000;
 
+   // let force usage of longpoll engine instead of plain websocket
+   if (major_mode == majorLongpoll)
+      gEnv->SetValue("WebGui.WSLongpoll", "yes");
+
    if (num_clients > 5)
       gEnv->SetValue("WebGui.HttpThreads", num_clients + 5);
 
-   // let configure special thread which is used to handle incoming http requests
-   // gEnv->SetValue("WebGui.HttpThrd", "yes");
+   // allocate special thread for THttpServer, it will be automatically used by web window
+   if ((test_mode == modeHttpThread) || (test_mode == modeHttpWindowThread))
+      gEnv->SetValue("WebGui.HttpThrd", "yes");
+
+   // let reduce reaction time of THttpServer
+   if (test_mode == modeMinimalTimer)
+      gEnv->SetValue("WebGui.HttpTimer", 1);
 
    // let allocate special thread which will be used to perform data sending via websocket
    // should reduce consumption of webwindow thread when big data are send
    // gEnv->SetValue("WebGui.SenderThrds", "yes");
-
 
    // create window
    window = ROOT::Experimental::RWebWindow::Create();
@@ -87,22 +106,17 @@ void ping(int nclients = 1, int special_thread = 0)
    // also at this moment thread id is configured which supposed to be used to handle requests
    window->SetDataCallBack(ProcessData);
 
+   // allow to use server thread, which responsible for requests processing
+   if (test_mode == modeCivetThread)
+      window->UseServerThreads();
+
+   if (test_mode == modeHttpWindowThread)
+      window->StartThread();
+
    // instead of showing window one can create URL and type it in any browser window
    if (call_show)
       window->Show();
    else
       std::cout << "Window url is: " << window->GetUrl(true) << std::endl;
 
-   if (special_thread == 2) {
-      // allow use server threads,
-      // try to achieve minimal possible latency
-      window->UseServerThreads();
-   } else if (special_thread > 0) {
-      // run special thread for RWebWindow
-      std::thread thrd(RunWebWindow);
-      thrd.detach();
-   } else {
-      // do nothing, callbacks handled by ProcessEvents
-      // latency defined by the timer used in THttpServer
-   }
 }
