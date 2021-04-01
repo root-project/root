@@ -1,4 +1,4 @@
-## @author Vincenzo Eduardo Padulano
+# @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
@@ -10,19 +10,17 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from __future__ import print_function
-from enum import Enum
-
-
 class Operation(object):
     """
     A Generic representation of an operation. The operation could be a
-    transformation or an action.
+    transformation, an action or an instant action.
 
     Attributes:
-        Types: A class member that is an :obj:`Enum` of the types of
-            operations supported. This can be either :obj:`ACTION`,
-            :obj:`TRANSFORMATION` or :obj:`INSTANT_ACTION`.
+        ACTION (str): Action type string.
+
+        INSTANT_ACTION (str): Instant action type string.
+
+        TRANSFORMATION (str): Transformation type string.
 
         name (str): Name of the current operation.
 
@@ -31,33 +29,25 @@ class Operation(object):
         kwargs (dict): Arbitrary keyword arguments for the current operation.
 
         op_type: The type or category of the current operation
-            (:obj:`ACTION`,  :obj:`TRANSFORMATION` or :obj:`INSTANT_ACTION`).
+            (`ACTION`, `TRANSFORMATION` or `INSTANT_ACTION`).
 
-    For the list of operations that your current
-    backend supports, try :
-
-    Example::
-
-        import DistRDF
-        DistRDF.use(...) # Choose a backend
-
-        print(DistRDF.current_backend.supported_operations)
     """
 
-    Types = Enum("Types", "ACTION TRANSFORMATION INSTANT_ACTION")
+    ACTION = "ACTION"
+    INSTANT_ACTION = "INSTANT_ACTION"
+    TRANSFORMATION = "TRANSFORMATION"
 
     def __init__(self, name, *args, **kwargs):
         """
-        Creates a new :obj:`Operation` for the given name
-        and arguments.
+        Creates a new `Operation` for the given name and arguments.
 
         Args:
             name (str): Name of the current operation.
 
-        args (list): Variable length argument list for the current
-            operation.
+            args (list): Variable length argument list for the current
+                operation.
 
-        kwargs (dict): Keyword arguments for the current operation.
+            kwargs (dict): Keyword arguments for the current operation.
         """
         self.name = name
         self.args = list(args)
@@ -65,35 +55,35 @@ class Operation(object):
         self.op_type = self._classify_operation(name)
 
     def _classify_operation(self, name):
-        # Classifies the given operation as action or
-        # transformation and returns the type.
-
-        ops = Operation.Types
+        """
+        Classifies the given operation as action or transformation and
+        returns the type.
+        """
 
         operations_dict = {
-            'Define': ops.TRANSFORMATION,
-            'Filter': ops.TRANSFORMATION,
-            'Range': ops.TRANSFORMATION,
-            'Aggregate': ops.ACTION,
-            'Histo1D': ops.ACTION,
-            'Histo2D': ops.ACTION,
-            'Histo3D': ops.ACTION,
-            'Profile1D': ops.ACTION,
-            'Profile2D': ops.ACTION,
-            'Profile3D': ops.ACTION,
-            'Count': ops.ACTION,
-            'Min': ops.ACTION,
-            'Max': ops.ACTION,
-            'Mean': ops.ACTION,
-            'Sum': ops.ACTION,
-            'Fill': ops.ACTION,
-            'Reduce': ops.ACTION,
-            'Report': ops.ACTION,
-            'Take': ops.ACTION,
-            'Graph': ops.ACTION,
-            'Snapshot': ops.INSTANT_ACTION,
-            'Foreach': ops.INSTANT_ACTION,
-            'AsNumpy': ops.INSTANT_ACTION
+            "Define": Operation.TRANSFORMATION,
+            "Filter": Operation.TRANSFORMATION,
+            "Range": Operation.TRANSFORMATION,
+            "Aggregate": Operation.ACTION,
+            "Histo1D": Operation.ACTION,
+            "Histo2D": Operation.ACTION,
+            "Histo3D": Operation.ACTION,
+            "Profile1D": Operation.ACTION,
+            "Profile2D": Operation.ACTION,
+            "Profile3D": Operation.ACTION,
+            "Count": Operation.ACTION,
+            "Min": Operation.ACTION,
+            "Max": Operation.ACTION,
+            "Mean": Operation.ACTION,
+            "Sum": Operation.ACTION,
+            "Fill": Operation.ACTION,
+            "Reduce": Operation.ACTION,
+            "Report": Operation.ACTION,
+            "Take": Operation.ACTION,
+            "Graph": Operation.ACTION,
+            "Snapshot": Operation.INSTANT_ACTION,
+            "Foreach": Operation.INSTANT_ACTION,
+            "AsNumpy": Operation.INSTANT_ACTION
         }
 
         op_type = operations_dict.get(name)
@@ -109,7 +99,7 @@ class Operation(object):
         Returns:
             bool: True if the current operation is an action, False otherwise.
         """
-        return self.op_type == Operation.Types.ACTION
+        return self.op_type == Operation.ACTION
 
     def is_transformation(self):
         """
@@ -119,7 +109,7 @@ class Operation(object):
             bool: True if the current operation is a transformation,
             False otherwise.
         """
-        return self.op_type == Operation.Types.TRANSFORMATION
+        return self.op_type == Operation.TRANSFORMATION
 
     def is_instant_action(self):
         """
@@ -129,4 +119,4 @@ class Operation(object):
             bool: True if the current operation is an instant action,
                 False otherwise.
         """
-        return self.op_type == Operation.Types.INSTANT_ACTION
+        return self.op_type == Operation.INSTANT_ACTION
