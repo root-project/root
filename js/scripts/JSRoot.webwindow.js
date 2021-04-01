@@ -120,7 +120,8 @@ JSROOT.define([], () => {
       });
 
       req.handle = this;
-      if (kind === "dummy") this.req = req; // remember last dummy request, wait for reply
+      if (!this.req) this.req = req; // any request can be used for response, do not submit dummy until req is there
+      // if (kind === "dummy") this.req = req; // remember last dummy request, wait for reply
       req.send(post);
    }
 
@@ -133,36 +134,35 @@ JSROOT.define([], () => {
          this.connid = null;
          return;
       } else if (res === -1111) {
-         this.nope_cnt = (this.nope_cnt || 0) + 1;
          res = "";
-      } else {
-         delete this.nope_cnt;
       }
+
+      let dummy_tmout = 5;
 
       if (this.connid === "connect") {
          if (!res) {
             this.connid = null;
-            if (typeof this.onerror === 'function') this.onerror("connection rejected");
+            if (typeof this.onerror === 'function')
+               this.onerror("connection rejected");
             return;
          }
 
          this.connid = parseInt(res);
+         dummy_tmout = 100; // when establishing connection, wait a bit longer to submit dummy package
          console.log('Get new longpoll connection with id ' + this.connid);
          if (typeof this.onopen == 'function') this.onopen();
       } else if (this.connid === "close") {
-         if (typeof this.onclose == 'function') this.onclose();
+         if (typeof this.onclose == 'function')
+            this.onclose();
          return;
       } else {
          if ((typeof this.onmessage === 'function') && res)
             this.onmessage({ data: res, offset: _offset });
       }
 
-      if (!this.req) {
-         if (this.nope_cnt && (this.nope_cnt > 10))
-            setTimeout(() => { if (!this.req) this.nextRequest("", "dummy"); }, 50); // minimal timeout to reduce load
-         else
-            this.nextRequest("", "dummy"); // send new poll request when necessary
-      }
+      // minimal timeout to reduce load, generate dummy only if client not submit new request immediately
+      if (!this.req)
+         setTimeout(() => { if (!this.req) this.nextRequest("", "dummy"); }, dummy_tmout);
    }
 
    /** @summary Send data */
