@@ -269,7 +269,7 @@ private:
    }
    mutable std::atomic<UChar_t> fRuntimeProperties;    //! Properties that can only be evaluated at run-time
 
-   mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
+   mutable Longptr_t  fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    EState             fState;           //!Current 'state' of the class (Emulated,Interpreted,Loaded)
    mutable std::atomic<TVirtualStreamerInfo*>  fCurrentInfo;     //!cached current streamer info.
@@ -286,7 +286,7 @@ private:
 
    Bool_t             CanSplitBaseAllow();
    TListOfFunctions  *GetMethodList();
-   TMethod           *GetClassMethod(Long_t faddr);
+   TMethod           *GetClassMethod(Longptr_t faddr);
    TMethod           *FindClassOrBaseMethodWithId(DeclId_t faddr);
    Int_t              GetBaseClassOffsetRecurse(const TClass *toBase);
    void Init(const char *name, Version_t cversion, const std::type_info *info,
@@ -384,7 +384,7 @@ public:
    void               AdoptSchemaRules( ROOT::Detail::TSchemaRuleSet *rules );
    virtual void       Browse(TBrowser *b);
    void               BuildRealData(void *pointer=0, Bool_t isTransient = kFALSE);
-   void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl, Bool_t isTransient = kFALSE);
+   void               BuildEmulatedRealData(const char *name, Longptr_t offset, TClass *cl, Bool_t isTransient = kFALSE);
    void               CalculateStreamerOffset() const;
    Bool_t             CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient = kFALSE) const;
    Bool_t             CanSplit() const;
@@ -421,7 +421,7 @@ public:
    }
    Int_t              GetClassSize() const { return Size(); }
    TDataMember       *GetDataMember(const char *datamember) const;
-   Long_t             GetDataMemberOffset(const char *membername) const;
+   Longptr_t          GetDataMemberOffset(const char *membername) const;
    const char        *GetDeclFileName() const;
    Short_t            GetDeclFileLine() const { return fDeclFileLine; }
    ROOT::DelFunc_t    GetDelete() const;

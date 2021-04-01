@@ -43,8 +43,8 @@ private:
    TRint& operator=(const TRint&) = delete;
 
    void    ExecLogon();
-   Long_t  ProcessRemote(const char *line, Int_t *error = nullptr);
-   Long_t  ProcessLineNr(const char* filestem, const char *line, Int_t *error = nullptr);
+   Longptr_t ProcessRemote(const char *line, Int_t *error = nullptr);
+   Longptr_t ProcessLineNr(const char* filestem, const char *line, Int_t *error = nullptr);
 
 public:
    TRint(const char *appClassName, int *argc, char **argv,

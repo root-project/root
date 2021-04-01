@@ -48,7 +48,7 @@ protected:
    CallFunc_t    *fFunc;      // CINT method invocation environment
    ClassInfo_t   *fClass;     // CINT class for fFunc
    TFunction     *fMethod;    // slot method or global function
-   Long_t         fOffset;    // offset added to object pointer
+   Longptr_t      fOffset;    // offset added to object pointer
    TString        fName;      // full name of method
    Int_t          fExecuting; // true if one of this slot's ExecuteMethod methods is being called
 public:
@@ -57,7 +57,7 @@ public:
    virtual ~TQSlot();
 
    Bool_t      CheckSlot(Int_t nargs) const;
-   Long_t      GetOffset() const { return fOffset; }
+   Longptr_t   GetOffset() const { return fOffset; }
    CallFunc_t *StartExecuting();
    CallFunc_t *GetFunc() const { return fFunc; }
    void        EndExecuting();
@@ -74,7 +74,7 @@ public:
    void ExecuteMethod(void *object, Long64_t param);
    void ExecuteMethod(void *object, Double_t param);
    void ExecuteMethod(void *object, const char *params);
-   void ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam = -1);
+   void ExecuteMethod(void *object, Longptr_t *paramArr, Int_t nparam = -1);
    void Print(Option_t *opt = "") const;
    void ls(Option_t *opt = "") const {
       Print(opt);
@@ -249,7 +249,7 @@ TQSlot::~TQSlot()
 
 inline void TQSlot::ExecuteMethod(void *object)
 {
-   ExecuteMethod(object, (Long_t*)nullptr, 0);
+   ExecuteMethod(object, (Longptr_t*)nullptr, 0);
 
 }
 
@@ -300,8 +300,7 @@ void TQSlot::EndExecuting() {
 
 inline void TQSlot::ExecuteMethod(void *object, Long_t param)
 {
-   ExecuteMethod(object, &param, 1);
-
+   ExecuteMethod(object, (Longptr_t *)&param, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -310,9 +309,8 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t param)
 
 inline void TQSlot::ExecuteMethod(void *object, Long64_t param)
 {
-   Long_t *arg = reinterpret_cast<Long_t *>(&param);
+   Longptr_t *arg = reinterpret_cast<Longptr_t *>(&param);
    ExecuteMethod(object, arg, 1);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,9 +319,8 @@ inline void TQSlot::ExecuteMethod(void *object, Long64_t param)
 
 inline void TQSlot::ExecuteMethod(void *object, Double_t param)
 {
-   Long_t *arg = reinterpret_cast<Long_t *>(&param);
+   Longptr_t *arg = reinterpret_cast<Longptr_t *>(&param);
    ExecuteMethod(object, arg, 1);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -331,9 +328,8 @@ inline void TQSlot::ExecuteMethod(void *object, Double_t param)
 
 inline void TQSlot::ExecuteMethod(void *object, const char *param)
 {
-   Long_t arg = reinterpret_cast<Long_t>(param);
+   Longptr_t arg = reinterpret_cast<Longptr_t>(param);
    ExecuteMethod(object, &arg, 1);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -345,12 +341,12 @@ inline void TQSlot::ExecuteMethod(void *object, const char *param)
 /// Nargs is the number of all arguments and NargsOpt is the number
 /// of default arguments.
 
-inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam)
+inline void TQSlot::ExecuteMethod(void *object, Longptr_t *paramArr, Int_t nparam)
 {
    void *address = 0;
    R__LOCKGUARD(gInterpreterMutex);
    if (paramArr) gCling->CallFunc_SetArgArray(fFunc, paramArr, nparam);
-   if (object) address = (void *)((Long_t)object + fOffset);
+   if (object) address = (void *)((Longptr_t)object + fOffset);
    fExecuting++;
    gCling->CallFunc_Exec(fFunc, address);
    fExecuting--;
@@ -445,13 +441,13 @@ void TQSlotPool::Free(TQSlot *slot)
 
 static TQSlotPool gSlotPool;  // global pool of slots
 
-void TQConnection::SetArg(const Long_t *params, Int_t nparam/* = -1*/) {
+void TQConnection::SetArg(const Longptr_t *params, Int_t nparam/* = -1*/) {
    if (nparam == -1)
       nparam = fSlot->GetMethodNargs();
 
    // FIXME: Why TInterpreter needs non-const SetArgArray. TClingCallFunc
    // doesn't modify the value.
-   gInterpreter->CallFunc_SetArgArray(fSlot->GetFunc(), const_cast<Long_t*>(params), nparam);
+   gInterpreter->CallFunc_SetArgArray(fSlot->GetFunc(), const_cast<Longptr_t*>(params), nparam);
 }
 
 
@@ -621,7 +617,7 @@ void TQConnection::ExecuteMethod(Double_t param)
 /// Apply slot-method to the fReceiver object with variable
 /// number of argument values.
 
-void TQConnection::ExecuteMethod(Long_t *params, Int_t nparam)
+void TQConnection::ExecuteMethod(Longptr_t *params, Int_t nparam)
 {
    // This connection might be deleted in result of the method execution
    // (for example in case of a Disconnect).  Hence we do not assume
@@ -657,7 +653,7 @@ Bool_t TQConnection::CheckSlot(Int_t nargs) const {
 /// Return the object address to be passed to the function.
 
 void *TQConnection::GetSlotAddress() const {
-   if (fReceiver) return (void *)((Long_t)fReceiver + fSlot->GetOffset());
+   if (fReceiver) return (void *)((Longptr_t)fReceiver + fSlot->GetOffset());
    else return nullptr;
 }
 
