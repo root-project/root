@@ -95,6 +95,7 @@ for single nodes.
 #include "RooVectorDataStore.h"
 #include "RooTreeDataStore.h"
 #include "ROOT/RMakeUnique.hxx"
+#include "RooHelpers.h"
 
 #include <iostream>
 #include <fstream>
@@ -2026,6 +2027,9 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
   if (!os) {
     coutE(InputArguments) << "RooAbsArg::graphVizTree() ERROR: output stream provided as input argument is in invalid state" << endl ;
   }
+
+  // silent warning messages coming when evaluating a RooAddPdf without a normalization set
+  RooHelpers::LocalChangeMsgLevel locmsg(RooFit::WARNING, 0u, RooFit::Eval, false);
 
   // Write header
   os << "digraph \"" << GetName() << "\"{" << endl ;
