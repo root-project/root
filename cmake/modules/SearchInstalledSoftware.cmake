@@ -210,10 +210,17 @@ if(builtin_lzma)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
+    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+      set(LZMA_URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win64.tar.gz)
+      set(LZMA_URL_HASH SHA256=76ba7cdff547141f6d6810c8600a9d782feca343debde378fc8f6a307cbfd1d2)
+    else()
+      set(LZMA_URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz)
+      set(LZMA_URL_HASH SHA256=a923ee68d836de5492d8de0fec467b9536f2543c8579ca11f4b5e6f46a8cda8c)
+    endif()
     ExternalProject_Add(
       LZMA
-      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
-      URL_HASH SHA256=a923ee68d836de5492d8de0fec467b9536f2543c8579ca11f4b5e6f46a8cda8c
+      URL ${LZMA_URL}
+      URL_HASH ${LZMA_URL_HASH}
       PREFIX LZMA
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ""

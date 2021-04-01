@@ -64,7 +64,6 @@
 #define WINVER 0x0500
 #define CRTAPI1 _cdecl 
 #define CRTAPI2 _cdecl
-#define _X86_ 1 
 // #define _DLL  - used to be explicitly defined, 
 // but it's implicitely defined via /MD(d)
 #define G__REDIRECTIO 1
@@ -72,6 +71,14 @@
 #define G__UNIX 1
 #define G__ROOT 1
 #define G__WIN32 1
+
+#ifdef _WIN64
+#define __x86_64__ 1
+#define WIN64 1
+#define G__WIN64 1
+#else
+#define _X86_ 1
+#endif
 
 #if (_MSC_VER >= 1310)
 #  define G__NEWSTDHEADER 1

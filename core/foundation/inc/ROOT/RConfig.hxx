@@ -385,6 +385,14 @@
 //#   define __attribute__(X)
 //#   define thread_local static __declspec(thread)
 #endif
+#ifdef _WIN64
+#   define R__WIN64
+#   ifndef WIN64
+#      define WIN64
+#   endif
+#   define __x86_64__ 1
+#   define R__B64      /* enable when 64 bit machine */
+#endif
 
 #ifdef __SC__
 #   define SC
