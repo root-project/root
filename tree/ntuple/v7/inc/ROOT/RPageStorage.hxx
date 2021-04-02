@@ -148,7 +148,6 @@ up to the given entry number are committed.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
-friend class RPageSinkBuf; // to reorder page sink writes
 protected:
    RNTupleWriteOptions fOptions;
 
@@ -168,7 +167,6 @@ protected:
    /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
    RNTupleDescriptorBuilder fDescriptorBuilder;
-   virtual RNTupleDescriptorBuilder& GetDescriptorBuilder() { return fDescriptorBuilder; }
 
    virtual void CreateImpl(const RNTupleModel &model) = 0;
    virtual RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
