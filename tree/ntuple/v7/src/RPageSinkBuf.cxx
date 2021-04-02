@@ -15,6 +15,7 @@
  *************************************************************************/
 
 #include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 
 ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
@@ -22,24 +23,27 @@ ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink
 
 void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model)
 {
-   fInner->CreateImpl(model);
+   fInnerModel = model.Clone();
+   fInner->Create(*fInnerModel);
 }
 
 ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
-   return fInner->CommitPageImpl(columnHandle, page);
+   fInner->CommitPage(columnHandle, page);
+   return RClusterDescriptor::RLocator{};
 }
 
 ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::NTupleSize_t nEntries)
 {
-   return fInner->CommitClusterImpl(nEntries);
+   fInner->CommitCluster(nEntries);
+   return RClusterDescriptor::RLocator{};
 }
 
 void ROOT::Experimental::Detail::RPageSinkBuf::CommitDatasetImpl()
 {
-   fInner->CommitDatasetImpl();
+   fInner->CommitDataset();
 }
 
 ROOT::Experimental::Detail::RPage
