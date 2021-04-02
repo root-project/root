@@ -10,7 +10,7 @@ class RooAbsCollectionLen(unittest.TestCase):
     """
 
     num_elems = 3
-    rooabsarg_list = [ ROOT.RooStringVar(str(i),'','') for i in range(num_elems) ]
+    rooabsarg_list = [ROOT.RooStringVar(str(i), "", "") for i in range(num_elems)]
     tlist = ROOT.TList()
 
     # Setup
@@ -37,5 +37,5 @@ class RooAbsCollectionLen(unittest.TestCase):
         self.check_len(ROOT.RooArgSet(self.tlist))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
