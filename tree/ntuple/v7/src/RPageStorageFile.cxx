@@ -79,11 +79,11 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
    const RNTupleWriteOptions &options, std::unique_ptr<TFile> &file)
    : RPageSinkFile(ntupleName, options)
 {
+   fWriter = std::unique_ptr<Internal::RNTupleFileWriter>(
+      Internal::RNTupleFileWriter::Recreate(ntupleName, path, file));
    if (!options.IsCompressionOverride()) {
       RPageSink::fOptions.SetCompression(file->GetCompressionSettings());
    }
-   fWriter = std::unique_ptr<Internal::RNTupleFileWriter>(
-      Internal::RNTupleFileWriter::Recreate(ntupleName, path, file));
 }
 
 
