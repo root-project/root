@@ -35,14 +35,13 @@ namespace Detail {
 class RPageSinkBuf : public RPageSink {
 private:
    std::unique_ptr<RPageSink> fInner;
+   std::unique_ptr<RNTupleModel> fInnerModel;
 
 protected:
    void CreateImpl(const RNTupleModel &model) override;
    RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) override;
    RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) override;
    void CommitDatasetImpl() override;
-   // Forward calls to inner descriptor builder
-   RNTupleDescriptorBuilder& GetDescriptorBuilder() override { return fInner->fDescriptorBuilder; }
 
 public:
    explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
