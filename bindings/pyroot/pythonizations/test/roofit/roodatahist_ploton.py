@@ -18,20 +18,20 @@ class RooDataHistPlotOn(unittest.TestCase):
     def create_hist_and_frame(self):
         # Inspired by the code of rf402_datahandling.py
 
-        x = ROOT.RooRealVar('x', 'x', -10, 10)
-        y = ROOT.RooRealVar('y', 'y', 0, 40)
+        x = ROOT.RooRealVar("x", "x", -10, 10)
+        y = ROOT.RooRealVar("y", "y", 0, 40)
         x.setBins(10)
         y.setBins(10)
 
-        d = ROOT.RooDataSet('d', 'd', ROOT.RooArgSet(x, y))
+        d = ROOT.RooDataSet("d", "d", ROOT.RooArgSet(x, y))
         for i in range(10):
             x.setVal(i / 2)
             y.setVal(i)
             d.add(ROOT.RooArgSet(x, y))
 
-        dh = ROOT.RooDataHist('dh', 'binned version of d', ROOT.RooArgSet(x, y), d)
+        dh = ROOT.RooDataHist("dh", "binned version of d", ROOT.RooArgSet(x, y), d)
 
-        yframe = ROOT.RooPlot('yplot', 'Operations on binned datasets', y, 0, 40, 10)
+        yframe = ROOT.RooPlot("yplot", "Operations on binned datasets", y, 0, 40, 10)
 
         return dh, yframe
 
@@ -65,5 +65,5 @@ class RooDataHistPlotOn(unittest.TestCase):
         self.assertEqual(type(res), ROOT.RooPlot)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
