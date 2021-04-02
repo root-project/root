@@ -34,6 +34,25 @@ def ismagicfunc(name):
     return name.startswith("__") and name.endswith("__")
 
 
+def rebind_instancemethod(to_class, from_class, func_name):
+    """
+    Bind the instance method `from_class.func_name` also to class `to_class`.
+    """
+
+    from_method = getattr(from_class, func_name)
+
+    import sys
+
+    if sys.version_info > (3, 0):
+        to_method = from_method
+    else:
+        import new
+
+        to_method = new.instancemethod(from_method.__func__, None, to_class)
+
+    setattr(to_class, func_name, to_method)
+
+
 @pythonization()
 def pythonize_roofit(klass, name):
     # Parameters:
@@ -62,6 +81,6 @@ def pythonize_roofit(klass, name):
 
             setattr(klass, func_name_orig, getattr(klass, func_name))
 
-        setattr(klass, func_name, getattr(python_klass, func_name))
+        rebind_instancemethod(klass, python_klass, func_name)
 
     return
