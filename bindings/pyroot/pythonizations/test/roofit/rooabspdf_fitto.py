@@ -29,12 +29,15 @@ class RooAbsPdfFitTo(unittest.TestCase):
         # and lead to correct result
         gauss = self.gauss
         data = self.data
-        self.assertEqual(gauss.fitTo(data, Save=False, PrintLevel=-1), gauss.fitTo(data, ROOT.RooFit.Save(ROOT.kFALSE), ROOT.RooFit.PrintLevel(-1)))
+        self.assertEqual(
+            gauss.fitTo(data, Save=False, PrintLevel=-1),
+            gauss.fitTo(data, ROOT.RooFit.Save(ROOT.kFALSE), ROOT.RooFit.PrintLevel(-1)),
+        )
         self.assertTrue(bool(gauss.fitTo(data, Save=True, PrintLevel=-1)))
         self._reset_initial_values()
 
     def test_wrong_kwargs(self):
-        # test that AttributeError is raised 
+        # test that AttributeError is raised
         # if keyword does not correspong to CmdArg
         gauss = self.gauss
         data = self.data
@@ -64,5 +67,5 @@ class RooAbsPdfFitTo(unittest.TestCase):
         self.assertTrue(res_1.isIdentical(res_2))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
