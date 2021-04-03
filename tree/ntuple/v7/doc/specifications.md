@@ -35,12 +35,10 @@ TODO(jblomer): reference or describe the compression block format.
 Data stored in envelopes is encoded using the following type system.
 Note that this type system is independent (and different) from the regular ROOT serialization.
 
-Integer
-: Integers are encoded in two's complement, little-endian format.
+_Integer_: Integers are encoded in two's complement, little-endian format.
 They can be signed or unsigned and have lengths up to 64bit.
 
-String
-: A string is stored as a 32bit unsigned integer indicating the length of the string
+_String_: A string is stored as a 32bit unsigned integer indicating the length of the string
 followed by the characters.
 Strings are ASCII encoded; every character is a signed 8bit integer.
 
@@ -60,6 +58,7 @@ That means that readers need to continue reading feature flags as long as their 
 RNTuple envelopes can store records and lists of basic types and other records or lists by means of **frames**.
 The frame has the following format
 
+```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -69,16 +68,14 @@ The frame has the following format
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                         FRAME PAYLOAD                         |
 |                              ...                              |
+```
 
-Size (uint 31bit)
-: The size in bytes of the frame and the payload
+_Size_: The size in bytes of the frame and the payload
 
-T(ype)
-: Can be either 0 for a **record frame** or 1 for a **collection frame**.
+_T(ype)_: Can be either 0 for a **record frame** or 1 for a **collection frame**.
 The type can be interpreted as the sign bit of the size, i.e. negative sizes indicate collection frames.
 
-Reserved, Number of items (uint 28bit)
-: Only used for collection frames to indicate the length of the list in the frame payload.
+_Reserved, Number of items_: Only used for collection frames to indicate the length of the list in the frame payload.
 The reseved bits might be used in a future format versions.
 
 File format readers should use the size provided in the frame to seek to the data that follows a frame
@@ -94,6 +91,7 @@ For disk-based storage, the locator is just byte offset and byte size.
 For object stores, the locator can specify a certain object ID.
 The locator as the following format
 
+```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -103,17 +101,16 @@ The locator as the following format
 +                             Offset                            +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
 
-Size:
-If type is zero, the number of bytes to read, i.e. the compressed size of the referenced block.
+_Size_: If type is zero, the number of bytes to read, i.e. the compressed size of the referenced block.
 Otherwise the size of the locator itself.
 
-T(ype):
-Zero for an on-disk or in-file locator, 1 otherwise.
+_T(ype)_: Zero for an on-disk or in-file locator, 1 otherwise.
 Can be interpreted as the sign bit of the size, i.e. negative sizes indicate non-disk locators.
 In this case, the locator should be interpreted like a frame, i.e. size indicates the _frame size_.
 
-Offset:
+_Offset_:
 For on-disk / in-file locators, the 64bit byte offset of the referenced byte range.
 
 An envelope link consists of a locator followed by a 32bit unsigned integer
@@ -135,6 +132,7 @@ The following envelope types exist
 
 Envelopes have the following format
 
+```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -145,18 +143,17 @@ Envelopes have the following format
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                             CRC32                             |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
 
-Envelope version
-: Envelope types are versioned independently from each other.
+_Envelope version_: Envelope types are versioned independently from each other.
 The envelope version is the version that the writer used to build the envelope.
 
-Minimum version
+_Minimum version_:
 : A reader must support at least this version in order to extract meaningful data from the envelope.
 If the envelope version is larger than the minimum version, there might be additional data in the envelope
 that older readers can safely ignore.
 
-CRC32
-: Checksum of the envelope and the payload
+_CRC32_: Checksum of the envelope and the payload
 
 Note that the size of envelopes is given by the RNTuple anchor (header, footer)
 or by a locator that references the envelope.
@@ -177,6 +174,7 @@ The header consists of the following elements:
 
 Every element of the list of fields has the following contents
 
+```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -188,6 +186,7 @@ Every element of the list of fields has the following contents
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |        Structural Role        |             Flags             |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
 
 If the flag 0x01 (_repetitive field_) is set, the field represents a fixed sized array.
 In this case, an additional 64bit integer specifies the size of the array.
@@ -223,6 +222,7 @@ The structural role of the field can have on of the following values
 
 #### Column Description
 
+```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -232,6 +232,7 @@ The structural role of the field can have on of the following values
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                             Flags                             |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
 
 The order of columns matter: every column gets an implicit column ID
 which is equal to the zero-based index of the column in the serialized list.
