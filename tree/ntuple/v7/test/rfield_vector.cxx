@@ -1,5 +1,13 @@
 #include "ntuple_test.hxx"
 
+TEST(RNTuple, ClassNElts) {
+   auto floatField = std::make_unique<RField<float>>("f32");
+   EXPECT_EQ(0, floatField->GetNElements());
+
+   auto classField = std::make_unique<RField<CustomStruct>>("klass");
+   EXPECT_EQ(0, classField->GetNElements());
+}
+
 TEST(RNTuple, ClassVector)
 {
    FileRaii fileGuard("test_ntuple_classvector.root");

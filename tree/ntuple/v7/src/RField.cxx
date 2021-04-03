@@ -258,6 +258,17 @@ void ROOT::Experimental::Detail::RFieldBase::Attach(
    fSubFields.emplace_back(std::move(child));
 }
 
+ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RFieldBase::GetNElements() const {
+   if (fPrincipalColumn) {
+      return fPrincipalColumn->GetNElements();
+   }
+   // Class fields have subfields but no principal column
+   if (!fSubFields.empty()) {
+      return fSubFields[0]->GetNElements();
+   }
+   // otherwise, this field's columns have not been generated yet
+   return 0;
+}
 
 std::vector<ROOT::Experimental::Detail::RFieldBase *> ROOT::Experimental::Detail::RFieldBase::GetSubFields() const
 {
