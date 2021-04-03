@@ -161,3 +161,46 @@ TEST(RNTuple, MissingViewNames)
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badC' in RNTuple 'myNTuple'"));
    }
 }
+
+TEST(RNTuple, ViewRangeChecks)
+{
+   FileRaii fileGuard("test_ntuple_view_range_checks.root");
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   auto fieldVec = model->MakeField<std::vector<float>>("vec", std::vector<float>{1.0, 2.0, 3.0});
+   auto fieldKlass = model->MakeField<CustomStruct>("klass");
+   CustomStruct klass;
+   klass.a = 42.0;
+   klass.v1.emplace_back(2.0);
+   *fieldKlass = klass;
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      ntuple->Fill();
+      ntuple->Fill();
+   }
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto viewPt = ntuple->GetView<float>("pt");
+   auto viewVec = ntuple->GetView<std::vector<float>>("vec");
+   auto viewKlass = ntuple->GetView<CustomStruct>("klass");
+   try {
+      viewPt(2);
+      FAIL() << "out of bounds view accesses should fail";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(),
+         testing::HasSubstr("index 2 out of bounds for field 'pt' with 2 entries"));
+   }
+   try {
+      viewVec(2);
+      FAIL() << "out of bounds view accesses should fail";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(),
+         testing::HasSubstr("index 2 out of bounds for field 'vec' with 2 entries"));
+   }
+   try {
+      viewKlass(2);
+      FAIL() << "out of bounds view accesses should fail";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(),
+         testing::HasSubstr("index 2 out of bounds for field 'klass' with 2 entries"));
+   }
+}

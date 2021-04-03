@@ -182,13 +182,29 @@ public:
 
    RNTupleGlobalRange GetFieldRange() const { return RNTupleGlobalRange(0, fField.GetNElements()); }
 
+   /// Throws an exception if the index is out of bounds.
    template <typename C = T>
    typename std::enable_if_t<Internal::IsMappable<FieldT>::value, const C&>
-   operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
+   operator()(NTupleSize_t globalIndex) {
+      auto n_elts = fField.GetNElements();
+      if (globalIndex >= n_elts) {
+         throw RException(R__FAIL("index " + std::to_string(globalIndex) +
+            " out of bounds for field '" + fField.GetName() + "' with " +
+               std::to_string(n_elts) + ((n_elts == 1) ? " entry" : " entries")));
+      }
+      return *fField.Map(globalIndex);
+   }
 
+   /// Throws an exception if the index is out of bounds.
    template <typename C = T>
    typename std::enable_if_t<!Internal::IsMappable<FieldT>::value, const C&>
    operator()(NTupleSize_t globalIndex) {
+      auto n_elts = fField.GetNElements();
+      if (globalIndex >= n_elts) {
+         throw RException(R__FAIL("index " + std::to_string(globalIndex) +
+            " out of bounds for field '" + fField.GetName() + "' with " +
+               std::to_string(n_elts) + ((n_elts == 1) ? " entry" : " entries")));
+      }
       fField.Read(globalIndex, &fValue);
       return *fValue.Get<T>();
    }
