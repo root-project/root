@@ -128,7 +128,11 @@ The following envelope types exist
 | Footer                | Description of clusters, location of auxiliary meta-data          |
 | Page list             | Location of data pages                                            |
 | Auxiliary meta-data   | Key-value pairs of additional information about the data          |
-| Check point (?)       | Minimal footer at X MB boundaries for recovery of crashed writes  |
+| Checkpoint (?)        | Minimal footer at X MB boundaries for recovery of crashed writes  |
+
+To minimize the number of reads and seeks when opening a file, the envelopes are ususally written in the
+following order (but they don't have to!):
+anchor, header, pages and checkpoints, footer, extension headers, page lists, meta-data.
 
 Envelopes have the following format
 
@@ -273,7 +277,7 @@ The flags field can have one of the following bits set
 |----------|--------------------------------------------------------------|
 | 0x01     | Elements in the column are sorted (monotonically increasing) |
 | 0x02     | Elements in the column are sorted (monotonically decreasing) |
-| 0x04     | Elements have only positive values                           |
+| 0x04     | Elements have only non-negative values                       |
 
 
 #### Alias columns
@@ -281,17 +285,66 @@ The flags field can have one of the following bits set
 An alias column is just a 32bit integer that references the physical column ID.
 The ID of the alias column itself is given implicitly by the serialization order.
 In particular, alias columns have larger IDs than physical columns.
-In the footer and page list envelopes, only physical column IDs can be referenced.
+In the footer and page list envelopes, only physical column IDs must be referenced.
 
 ### Footer Envelope
+
+The footer envelope has the following structure:
 
 - Feature flags
 - Header checksum (CRC32)
 - Collection frame of extension header envelope links
 - Collection frame of meta-data block envelope links
-- Collection frame of cluster summaries
+- Collection frame of cluster summary record frames
 
+The header checksum can be used to cross-check that header and footer belong together.
 
+The extension headers are just additional headers with an empty name and description.
+They are necessary when fields have been backfilled during writing.
+
+The ntuple meta-data can be split over multiple meta-data envelopes (see below).
+
+The cluster summary record frame starts with the entry range:
+
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                       First Entry Number                      +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       Number of Entries                       |
++                                                       +-+-+-+-+
+|                                                       | Flags |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+The entry rage is followed by the page list envelope link.
+
+If flag 0x01 (partial cluster) is set, an additional collection frame follows with the column range.
+The column range is the list of column IDs that is used in the cluster.
+Of flags is zero, the cluster stores the event range of _all_ the columns.
+
+### Page List Envelope
+
+The page list envelope contains a collection frame where every item corresponds to a column
+and is itself a collection frame where the items correspond to the pages of the column in the cluster.
+The order of the outer items must match the order of the columns as specified in the cluster summary.
+For a complete cluster (covering all columns), the order is given by the column IDs (small to large).
+
+The order of the inner items must match the order of pages / elements.
+Every inner item (that describes a page) has the following structure:
+
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     Number of Elements                    |Fl.|
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Followed by a locator for the page.
+If flag 0x01 is set, a CRC32 page checksum is stored just after the page.
+
+Note that we do not need to store the uncompressed size of the page
+because the uncompressed size is given by the number of elements in the page and the element size.
 
 ### Auxiliary Meta-data envelope
 
@@ -305,6 +358,7 @@ TODO(jblomer)
 
 TODO(jblomer)
 
+Max page size: 100M / 1B elements
 maximum size of frame, envelope
 max number of fields, columns, clusters: 200M (due to frame limits)
   Due to switch column: 1M fields, columns
