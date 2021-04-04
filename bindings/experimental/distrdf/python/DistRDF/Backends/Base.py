@@ -113,10 +113,15 @@ class BaseBackend(ABC):
         """
         headnode = generator.headnode
         computation_graph_callable = generator.get_callable()
-        # Arguments needed to create PyROOT RDF object
-        rdf_args = headnode.args
-        treename = headnode.get_treename()
-        selected_branches = headnode.get_branches()
+        try:
+            # Functions available only for the TreeHeadNode class
+            treename = headnode.get_treename()
+            selected_branches = headnode.get_branches()
+        except AttributeError:
+            # RDataFrame built on a number of entries, no tree
+            treename = None
+            selected_branches = None
+            rdf_nentries = headnode.nentries
 
         # Avoid having references to the instance inside the mapper
         initialization = self.initialization
@@ -187,7 +192,8 @@ class BaseBackend(ABC):
                 else:
                     rdf = ROOT.ROOT.RDataFrame(chain)
             else:
-                rdf = ROOT.ROOT.RDataFrame(*rdf_args)  # PyROOT RDF object
+                # RDataFrame built with sequential entries
+                rdf = ROOT.ROOT.RDataFrame(rdf_nentries)
 
             # # TODO : If we want to run multi-threaded in a Spark node in
             # # the future, use `TEntryList` instead of `Range`
