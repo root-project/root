@@ -95,7 +95,7 @@ The locator as the following format
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                             Size                            |T|
+|                             Size              |     Type    |T|
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
 +                             Offset                            +
@@ -108,10 +108,20 @@ Otherwise the size of the locator itself.
 
 _T(ype)_: Zero for an on-disk or in-file locator, 1 otherwise.
 Can be interpreted as the sign bit of the size, i.e. negative sizes indicate non-disk locators.
-In this case, the locator should be interpreted like a frame, i.e. size indicates the _frame size_.
+In this case, the locator should be interpreted like a frame, i.e. size indicates the _size of the locator itself_.
+Only for non-disk locators, the last 8 bits of the size should be interpreted as a locator type.
+To determine the locator type, the absolute value of the 8bit integer should be taken.
+The type can take one of the following values
+
+| Type | Meaning         |
+|------|-----------------|
+| 0x01 | 64bit object ID |
+| 0x02 | URI string      |
 
 _Offset_:
 For on-disk / in-file locators, the 64bit byte offset of the referenced byte range.
+For object ID locators, specifies the 64bit object ID.
+FOr URI locators, the locator contains the ASCII characters of the URI following the size and the type.
 
 An envelope link consists of a locator followed by a 32bit unsigned integer
 that specifies the uncompressed size of the envelope.
@@ -433,6 +443,6 @@ TODO(jblomer)
       - Examples for LE formats: FAT, XLS
   - Field ID and column ID: 32 bit?
   - Take ROOT::Experimental::RNTuple out of experimental?
-  - Which locator types should we specify now? 64bit object ID, URL?
+  - Which locator types should we specify in addition? SHA-1 hash? 128bit UUID?
   - Reference fields
   - Column types complete? Should we have 128bit floats, ints? 8bit floats?
