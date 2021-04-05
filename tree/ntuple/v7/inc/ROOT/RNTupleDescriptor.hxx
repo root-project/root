@@ -775,10 +775,11 @@ public:
    static std::uint32_t SerializeEnvelopePreamble(void *buffer);
    // The size includes the 4 bytes for the final CRC32 checksum.
    static std::uint32_t DeserializeEnvelope(void *buffer, std::uint32_t size);
-   // There needs to be at least one flag in the vector
-   static std::uint32_t SerializeFeatureFlags(const std::vector<std::uint64_t> &flags, void *buffer);
+   // An empty flags vector will be serialized as a single, zero feature flag
+   // The most significant bit in every flag is reserved and must _not_ be set
+   static std::uint32_t SerializeFeatureFlags(const std::vector<std::int64_t> &flags, void *buffer);
    static std::uint32_t DeserializeFeatureFlags(const void *buffer, std::uint32_t size,
-                                                std::vector<std::uint64_t> &flags);
+                                                std::vector<std::int64_t> &flags);
 };
 
 }
