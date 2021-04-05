@@ -45,6 +45,53 @@ TEST(RNTuple, StreamEnvelope)
    }
 }
 
+TEST(RNTuple, StreamFeatureFlags)
+{
+   std::vector<std::int64_t> flags;
+   unsigned char buffer[16];
+
+   EXPECT_EQ(8u, RNTupleStreamer::SerializeFeatureFlags(flags, nullptr));
+   EXPECT_EQ(8u, RNTupleStreamer::SerializeFeatureFlags(flags, buffer));
+   EXPECT_EQ(8u, RNTupleStreamer::DeserializeFeatureFlags(buffer, 8, flags));
+   ASSERT_EQ(1u, flags.size());
+   EXPECT_EQ(0, flags[0]);
+
+   flags[0] = 1;
+   EXPECT_EQ(8u, RNTupleStreamer::SerializeFeatureFlags(flags, buffer));
+   EXPECT_EQ(8u, RNTupleStreamer::DeserializeFeatureFlags(buffer, 8, flags));
+   ASSERT_EQ(1u, flags.size());
+   EXPECT_EQ(1, flags[0]);
+
+   flags.push_back(-2);
+   try {
+      RNTupleStreamer::SerializeFeatureFlags(flags, buffer);
+      FAIL() << "negative feature flag should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("out of bounds"));
+   }
+
+   flags[1] = 2;
+   EXPECT_EQ(16u, RNTupleStreamer::SerializeFeatureFlags(flags, buffer));
+   EXPECT_EQ(16u, RNTupleStreamer::DeserializeFeatureFlags(buffer, 16, flags));
+   ASSERT_EQ(2u, flags.size());
+   EXPECT_EQ(1, flags[0]);
+   EXPECT_EQ(2, flags[1]);
+
+   try {
+      RNTupleStreamer::DeserializeFeatureFlags(nullptr, 0, flags);
+      FAIL() << "too small buffer should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+
+   try {
+      RNTupleStreamer::DeserializeFeatureFlags(buffer, 12, flags);
+      FAIL() << "too small buffer should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+}
+
 TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;
