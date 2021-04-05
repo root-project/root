@@ -829,14 +829,14 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std::string& ctype)
 {
    std::unique_lock lock(fServerState.fMutex);
-   fMIRqueue.push(new MIR(cmd, id, ctype));
+   fMIRqueue.push(std::shared_ptr<MIR>(new MIR(cmd, id, ctype)));
    if (fServerState.fVal == ServerState::Waiting)
       fServerState.fCV.notify_all();
 }
 
 //
 //____________________________________________________________________
-void REveManager::ExecuteMIR(MIR* mir)
+void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
 {
    class ChangeSentry {
    public:
@@ -915,7 +915,7 @@ void REveManager::MIRExecThread()
       }
       else if (fServerState.fVal == ServerState::Waiting)
       {
-         MIR* mir = fMIRqueue.front();
+         std::shared_ptr<MIR> mir = fMIRqueue.front();
          fMIRqueue.pop();
          fServerState.fVal = ServerState::UpdatingScenes;
          lock.unlock();

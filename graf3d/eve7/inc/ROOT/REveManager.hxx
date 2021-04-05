@@ -129,7 +129,7 @@ protected:
 
    std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
    std::vector<Conn>                                fConnList;
-   std::queue<MIR*>                                 fMIRqueue;
+   std::queue<std::shared_ptr<MIR> >                                 fMIRqueue;
 
    std::thread                                      fMIRExecThread;
 
@@ -140,7 +140,7 @@ protected:
    void WindowDisconnect(unsigned connid);
 
    void MIRExecThread();
-   void ExecuteMIR(MIR* mir);
+   void ExecuteMIR(std::shared_ptr<MIR> mir);
    void PublishChanges();
 
 public:
