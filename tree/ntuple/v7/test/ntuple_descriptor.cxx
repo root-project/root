@@ -1,5 +1,36 @@
 #include "ntuple_test.hxx"
 
+TEST(RNTuple, StreamString)
+{
+   std::string s;
+   EXPECT_EQ(4, RNTupleStreamer::SerializeString(s, nullptr));
+   s = "xyz";
+   unsigned char buffer[8];
+   EXPECT_EQ(7, RNTupleStreamer::SerializeString(s, buffer));
+
+   try {
+      RNTupleStreamer::DeserializeString(nullptr, 0, s);
+      FAIL() << "too small buffer should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+
+   try {
+      RNTupleStreamer::DeserializeString(buffer, 6, s);
+      FAIL() << "too small buffer should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+
+   EXPECT_EQ(7, RNTupleStreamer::DeserializeString(buffer, 8, s));
+   EXPECT_EQ("xyz", s);
+   s.clear();
+   EXPECT_EQ(4, RNTupleStreamer::SerializeString(s, buffer));
+   s = "other content";
+   EXPECT_EQ(4, RNTupleStreamer::DeserializeString(buffer, 8, s));
+   EXPECT_TRUE(s.empty());
+}
+
 TEST(RNTuple, StreamEnvelope)
 {
    try {

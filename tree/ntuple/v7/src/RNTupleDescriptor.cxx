@@ -476,6 +476,35 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeUInt64(c
    return DeserializeInt64(buffer, *reinterpret_cast<std::int64_t *>(&val));
 }
 
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeString(const std::string &val, void *buffer)
+{
+   if (buffer != nullptr) {
+      auto pos = reinterpret_cast<unsigned char *>(buffer);
+      pos += SerializeUInt32(val.length(), pos);
+      memcpy(pos, val.data(), val.length());
+   }
+   return sizeof(std::uint32_t) + val.length();
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeString(
+   const void *buffer, std::uint32_t size, std::string &val)
+{
+   if (size < sizeof(std::uint32_t))
+      throw RException(R__FAIL("buffer too short"));
+   size -= sizeof(std::uint32_t);
+
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
+   auto bytes = base;
+   std::uint32_t length;
+   bytes += DeserializeUInt32(buffer, length);
+   if (size < length)
+      throw RException(R__FAIL("buffer too short"));
+
+   val.resize(length);
+   memcpy(&val[0], bytes, length);
+   return sizeof(std::uint32_t) + length;
+}
+
 
 /// Currently all enevelopes have the same version number (1). At a later point, different envelope types
 /// may have different version numbers
