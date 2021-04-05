@@ -516,6 +516,47 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeEnvelope
    return sizeof(protocolVersionAtWrite) + sizeof(protocolVersionMinRequired);
 }
 
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeFeatureFlags(
+   const std::vector<std::int64_t> &flags, void *buffer)
+{
+   if (flags.empty())
+      return SerializeInt64(0, buffer);
+
+   if (buffer) {
+      auto bytes = reinterpret_cast<unsigned char *>(buffer);
+
+      for (unsigned i = 0; i < flags.size(); ++i) {
+         if (flags[i] < 0)
+            throw RException(R__FAIL("feature flag out of bounds"));
+
+         if (i == (flags.size() - 1))
+            SerializeInt64(flags[i], bytes);
+         else
+            bytes += SerializeInt64(-flags[i], bytes);
+      }
+   }
+   return (flags.size() * sizeof(std::int64_t));
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeFeatureFlags(
+   const void *buffer, std::uint32_t size, std::vector<std::int64_t> &flags)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+
+   flags.clear();
+   std::int64_t f;
+   do {
+      if (size < sizeof(std::int64_t))
+         throw RException(R__FAIL("buffer too short"));
+      bytes += DeserializeInt64(bytes, f);
+      size -= sizeof(std::int64_t);
+      flags.emplace_back(abs(f));
+   } while (f < 0);
+
+   return (flags.size() * sizeof(std::int64_t));
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
