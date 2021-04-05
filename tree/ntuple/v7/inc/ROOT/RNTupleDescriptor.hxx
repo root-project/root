@@ -771,6 +771,8 @@ public:
    static std::uint32_t SerializeUInt64(std::uint64_t val, void *buffer);
    static std::uint32_t DeserializeUInt64(const void *buffer, std::uint64_t &val);
 
+   static std::uint32_t SerializeString(const std::string &val, void *buffer);
+   static std::uint32_t DeserializeString(const void *buffer, std::uint32_t size, std::string &val);
 
    static std::uint32_t SerializeEnvelopePreamble(void *buffer);
    // The size includes the 4 bytes for the final CRC32 checksum.
