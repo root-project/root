@@ -1,5 +1,50 @@
 #include "ntuple_test.hxx"
 
+TEST(RNTuple, StreamEnvelope)
+{
+   try {
+      RNTupleStreamer::DeserializeEnvelope(nullptr, 0);
+      FAIL() << "too small envelope should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+
+   struct {
+      std::uint16_t writerVersion = 0;
+      std::uint16_t minVersion = 0;
+      std::uint32_t crc32 = 0;
+   } testEnvelope;
+
+   try {
+      RNTupleStreamer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope));
+      FAIL() << "CRC32 mismatch should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("CRC32"));
+   }
+
+   RNTupleStreamer::SerializeCRC32(reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32);
+   try {
+      RNTupleStreamer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope));
+      FAIL() << "unsupported version should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too old"));
+   }
+
+   testEnvelope.writerVersion = RNTupleStreamer::kEnvelopeCurrentVersion;
+   RNTupleStreamer::SerializeCRC32(reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32);
+   EXPECT_EQ(4u, RNTupleStreamer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)));
+
+   testEnvelope.writerVersion = RNTupleStreamer::kEnvelopeCurrentVersion + 1;
+   testEnvelope.minVersion = RNTupleStreamer::kEnvelopeCurrentVersion + 1;
+   RNTupleStreamer::SerializeCRC32(reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32);
+   try {
+      RNTupleStreamer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope));
+      FAIL() << "unsupported version should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too new"));
+   }
+}
+
 TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;

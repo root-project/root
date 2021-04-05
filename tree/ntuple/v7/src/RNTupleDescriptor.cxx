@@ -284,7 +284,8 @@ void VerifyCrc32(const unsigned char *data, std::uint32_t length)
    checksumReal = R__crc32(checksumReal, data, length);
    std::uint32_t checksumFound;
    DeserializeUInt32(data + length, &checksumFound);
-   R__ASSERT(checksumFound == checksumReal);
+   if (checksumFound != checksumReal)
+      throw ROOT::Experimental::RException(R__FAIL("CRC32 checksum mismatch"));
 }
 
 std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &val, void *buffer)
@@ -358,6 +359,162 @@ std::uint32_t SerializeClusterSummary(const ROOT::Experimental::RClusterDescript
 }
 
 } // anonymous namespace
+
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeCRC32(
+   const unsigned char *data, std::uint32_t length, void *buffer)
+{
+   if (buffer != nullptr) {
+      auto checksum = R__crc32(0, nullptr, 0);
+      checksum = R__crc32(checksum, data, length);
+      SerializeUInt32(checksum, buffer);
+   }
+   return 4;
+}
+
+void ROOT::Experimental::Internal::RNTupleStreamer::VerifyCRC32(const unsigned char *data, std::uint32_t length)
+{
+   auto checksumReal = R__crc32(0, nullptr, 0);
+   checksumReal = R__crc32(checksumReal, data, length);
+   std::uint32_t checksumFound;
+   DeserializeUInt32(data + length, checksumFound);
+   if (checksumFound != checksumReal)
+      throw ROOT::Experimental::RException(R__FAIL("CRC32 checksum mismatch"));
+}
+
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeInt16(std::int16_t val, void *buffer)
+{
+   if (buffer != nullptr) {
+      auto bytes = reinterpret_cast<unsigned char *>(buffer);
+      bytes[0] = (val & 0x00FF);
+      bytes[1] = (val & 0xFF00) >> 8;
+   }
+   return 2;
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeInt16(const void *buffer, std::int16_t &val)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   val = std::int16_t(bytes[0]) + (std::int16_t(bytes[1]) << 8);
+   return 2;
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeUInt16(std::uint16_t val, void *buffer)
+{
+   return SerializeInt16(val, buffer);
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeUInt16(const void *buffer, std::uint16_t &val)
+{
+   return DeserializeInt16(buffer, *reinterpret_cast<std::int16_t *>(&val));
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeInt32(std::int32_t val, void *buffer)
+{
+   if (buffer != nullptr) {
+      auto bytes = reinterpret_cast<unsigned char *>(buffer);
+      bytes[0] = (val & 0x000000FF);
+      bytes[1] = (val & 0x0000FF00) >> 8;
+      bytes[2] = (val & 0x00FF0000) >> 16;
+      bytes[3] = (val & 0xFF000000) >> 24;
+   }
+   return 4;
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeInt32(const void *buffer, std::int32_t &val)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   val = std::int32_t(bytes[0]) + (std::int32_t(bytes[1]) << 8) +
+         (std::int32_t(bytes[2]) << 16) + (std::int32_t(bytes[3]) << 24);
+   return 4;
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeUInt32(std::uint32_t val, void *buffer)
+{
+   return SerializeInt32(val, buffer);
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeUInt32(const void *buffer, std::uint32_t &val)
+{
+   return DeserializeInt32(buffer, *reinterpret_cast<std::int32_t *>(&val));
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeInt64(std::int64_t val, void *buffer)
+{
+   if (buffer != nullptr) {
+      auto bytes = reinterpret_cast<unsigned char *>(buffer);
+      bytes[0] = (val & 0x00000000000000FF);
+      bytes[1] = (val & 0x000000000000FF00) >> 8;
+      bytes[2] = (val & 0x0000000000FF0000) >> 16;
+      bytes[3] = (val & 0x00000000FF000000) >> 24;
+      bytes[4] = (val & 0x000000FF00000000) >> 32;
+      bytes[5] = (val & 0x0000FF0000000000) >> 40;
+      bytes[6] = (val & 0x00FF000000000000) >> 48;
+      bytes[7] = (val & 0xFF00000000000000) >> 56;
+   }
+   return 8;
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeInt64(const void *buffer, std::int64_t &val)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   val = std::int64_t(bytes[0]) + (std::int64_t(bytes[1]) << 8) +
+         (std::int64_t(bytes[2]) << 16) + (std::int64_t(bytes[3]) << 24) +
+         (std::int64_t(bytes[4]) << 32) + (std::int64_t(bytes[5]) << 40) +
+         (std::int64_t(bytes[6]) << 48) + (std::int64_t(bytes[7]) << 56);
+   return 8;
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeUInt64(std::uint64_t val, void *buffer)
+{
+   return SerializeInt64(val, buffer);
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeUInt64(const void *buffer, std::uint64_t &val)
+{
+   return DeserializeInt64(buffer, *reinterpret_cast<std::int64_t *>(&val));
+}
+
+
+/// Currently all enevelopes have the same version number (1). At a later point, different envelope types
+/// may have different version numbers
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeEnvelopePreamble(void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   pos += SerializeUInt16(kEnvelopeCurrentVersion, &where);
+   pos += SerializeUInt16(kEnvelopeMinVersion, &where);
+   return pos - base;
+}
+
+/// Currently all enevelopes have the same version number (1). At a later point, different envelope types
+/// may have different version numbers
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeEnvelope(void *buffer, std::uint32_t size)
+{
+   if (size < 8)
+      throw RException(R__FAIL("invalid envelope, too short"));
+
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   VerifyCRC32(bytes, size - 4);
+
+   std::uint16_t protocolVersionAtWrite;
+   std::uint16_t protocolVersionMinRequired;
+   bytes += DeserializeUInt16(bytes, protocolVersionAtWrite);
+   // RNTuple compatible back to version 1 (but not to version 0)
+   if (protocolVersionAtWrite < 1)
+      throw RException(R__FAIL("The RNTuple format is too old (version 0)"));
+
+   bytes += DeserializeUInt16(bytes, protocolVersionMinRequired);
+   if (protocolVersionMinRequired > kEnvelopeCurrentVersion) {
+      throw RException(R__FAIL(std::string("The RNTuple format is too new (version ") +
+                                           std::to_string(protocolVersionMinRequired) + ")"));
+   }
+
+   return sizeof(protocolVersionAtWrite) + sizeof(protocolVersionMinRequired);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

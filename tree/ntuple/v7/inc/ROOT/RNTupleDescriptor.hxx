@@ -728,6 +728,62 @@ public:
    void Reset();
 };
 
+
+namespace Internal {
+
+// clang-format off
+/**
+\class ROOT::Experimental::Internal::RNTupleStreamer
+\ingroup NTuple
+\brief A helper class for serializing and deserialization of the RNTuple binary format
+
+All serialization and deserialization routines return the number of bytes processed (written or read).
+
+The serialization routines can be called with a nullptr buffer, in which case only the size required to perform
+a serialization is returned. Deserialization routines must be called with a buffer that is sufficiently large.
+
+Deserialization errors throw exceptions. Only when indicated or when passed as a parameter is the buffer size checked.
+*/
+// clang-format on
+class RNTupleStreamer {
+public:
+   /// In order to handle changes to the serialization routine in future ntuple versions
+   static constexpr std::uint16_t kEnvelopeCurrentVersion = 1;
+   static constexpr std::uint16_t kEnvelopeMinVersion = 1;
+
+   /// Writes a CRC32 checksum of the byte range given by data and length.
+   static std::uint32_t SerializeCRC32(const unsigned char *data, std::uint32_t length, void *buffer);
+   /// Expects a CRC32 checksum in the 4 bytes following data + length and verifies it.
+   static void VerifyCRC32(const unsigned char *data, std::uint32_t length);
+
+   static std::uint32_t SerializeInt16(std::int16_t val, void *buffer);
+   static std::uint32_t DeserializeInt16(const void *buffer, std::int16_t &val);
+   static std::uint32_t SerializeUInt16(std::uint16_t val, void *buffer);
+   static std::uint32_t DeserializeUInt16(const void *buffer, std::uint16_t &val);
+
+   static std::uint32_t SerializeInt32(std::int32_t val, void *buffer);
+   static std::uint32_t DeserializeInt32(const void *buffer, std::int32_t &val);
+   static std::uint32_t SerializeUInt32(std::uint32_t val, void *buffer);
+   static std::uint32_t DeserializeUInt32(const void *buffer, std::uint32_t &val);
+
+   static std::uint32_t SerializeInt64(std::int64_t val, void *buffer);
+   static std::uint32_t DeserializeInt64(const void *buffer, std::int64_t &val);
+   static std::uint32_t SerializeUInt64(std::uint64_t val, void *buffer);
+   static std::uint32_t DeserializeUInt64(const void *buffer, std::uint64_t &val);
+
+
+   static std::uint32_t SerializeEnvelopePreamble(void *buffer);
+   // The size includes the 4 bytes for the final CRC32 checksum.
+   static std::uint32_t DeserializeEnvelope(void *buffer, std::uint32_t size);
+   // There needs to be at least one flag in the vector
+   static std::uint32_t SerializeFeatureFlags(const std::vector<std::uint64_t> &flags, void *buffer);
+   static std::uint32_t DeserializeFeatureFlags(const void *buffer, std::uint32_t size,
+                                                std::vector<std::uint64_t> &flags);
+};
+
+}
+
+
 } // namespace Experimental
 } // namespace ROOT
 
