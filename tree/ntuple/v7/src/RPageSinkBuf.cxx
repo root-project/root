@@ -23,6 +23,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink
 
 void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model)
 {
+   fBufferedColumns.resize(fLastColumnId);
    fInnerModel = model.Clone();
    fInner->Create(*fInnerModel);
 }
@@ -30,14 +31,27 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &mo
 ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
-   fInner->CommitPage(columnHandle, page);
+   fBufferedColumns.at(columnHandle.fId).BufferPage(columnHandle, page);
+   // at this point we're feeding bad locators to fOpenPageRanges
+   // but it may not matter if they are never written out
    return RClusterDescriptor::RLocator{};
 }
 
 ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::NTupleSize_t nEntries)
 {
+   for (const auto& bufColumn : fBufferedColumns) {
+      const auto& columnHandle = bufColumn.GetHandle();
+      for (const auto& bufPage : bufColumn.GetBufferedPages()) {
+         fInner->CommitPage(columnHandle, bufPage);
+      }
+   }
+   for (auto& bufColumn : fBufferedColumns) {
+      bufColumn.Clear();
+   }
    fInner->CommitCluster(nEntries);
+   // at this point we're feeding bad locators to fOpenColumnRanges
+   // but it may not matter if they are never written out
    return RClusterDescriptor::RLocator{};
 }
 

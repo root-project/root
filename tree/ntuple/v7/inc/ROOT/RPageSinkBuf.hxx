@@ -29,19 +29,38 @@ namespace Detail {
 /**
 \class ROOT::Experimental::Detail::RPageSinkBuf
 \ingroup NTuple
-\brief Abstract sink that reorders cluster page writes
+\brief Abstract sink that coalesces cluster column page writes
 */
 // clang-format on
 class RPageSinkBuf : public RPageSink {
 private:
+   /// A buffered column
+   class RColumnBuf {
+   private:
+      std::pair<RPageStorage::ColumnHandle_t, std::vector<RPage>> fBuf;
+   public:
+      void BufferPage(RPageStorage::ColumnHandle_t columnHandle, const RPage &page) {
+         if (!fBuf.first) {
+            fBuf.first = columnHandle;
+         }
+         fBuf.second.emplace_back(page);
+      }
+      const RPageStorage::ColumnHandle_t& GetHandle() const { return fBuf.first; }
+      const std::vector<RPage>& GetBufferedPages() const { return fBuf.second; }
+      void Clear() { fBuf.second.clear(); }
+   };
+
+private:
    std::unique_ptr<RPageSink> fInner;
    std::unique_ptr<RNTupleModel> fInnerModel;
+   /// Vector of buffered column pages. Indexed by column id.
+   std::vector<RColumnBuf> fBufferedColumns;
 
 protected:
-   void CreateImpl(const RNTupleModel &model) override;
-   RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) override;
-   RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) override;
-   void CommitDatasetImpl() override;
+   void CreateImpl(const RNTupleModel &model) final;
+   RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
+   RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) final;
+   void CommitDatasetImpl() final;
 
 public:
    explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
@@ -51,10 +70,8 @@ public:
    RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
    virtual ~RPageSinkBuf() = default;
 
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) override;
-   void ReleasePage(RPage &page) override;
-
-   RNTupleMetrics &GetMetrics() override { return fInner->GetMetrics(); }
+   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
+   void ReleasePage(RPage &page) final;
 };
 
 } // namespace Detail
