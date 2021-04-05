@@ -77,25 +77,30 @@ TEST(RPageSinkBuf, Basics)
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt", 42.0);
+      auto fieldKlassVec = model->MakeField<std::vector<CustomStruct>>("klassVec");
+      CustomStruct klass;
+      klass.a = 42.0;
+      klass.v1.emplace_back(2.0);
+      fieldKlassVec->emplace_back(klass);
+
       // PageSinkBuf wraps a concrete page source
-      std::unique_ptr<RPageSink> sink = std::make_unique<RPageSinkBuf>(
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions())
-      );
-      //std::unique_ptr<RPageSink> sink = std::make_unique<RPageSinkFile>(
-      //   "myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()
-      //);
-      sink->Create(*model.get());
-      sink->CommitDataset();
-      model = nullptr;
+      auto ntuple = std::make_unique<RNTupleWriter>(std::move(model),
+         std::make_unique<RPageSinkBuf>(std::make_unique<RPageSinkFile>(
+            "myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()
+      )));
+      ntuple->Fill();
+      ntuple->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   ntuple->PrintInfo();
    auto viewPt = ntuple->GetView<float>("pt");
+   auto viewKlassVec = ntuple->GetView<std::vector<CustomStruct>>("klassVec");
    int n = 0;
    for (auto i : ntuple->GetEntryRange()) {
       EXPECT_EQ(42.0, viewPt(i));
+      EXPECT_EQ(42.0, viewKlassVec(i).at(0).a);
+      EXPECT_EQ(std::vector<float>{2.0}, viewKlassVec(i).at(0).v1);
       n++;
    }
-   EXPECT_EQ(1, n);
+   EXPECT_EQ(2, n);
 }
