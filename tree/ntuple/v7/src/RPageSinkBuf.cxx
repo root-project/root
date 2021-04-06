@@ -40,14 +40,10 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
 ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::NTupleSize_t nEntries)
 {
-   for (const auto &bufColumn : fBufferedColumns) {
-      const auto &columnHandle = bufColumn.GetHandle();
-      for (const auto &bufPage : bufColumn.GetBufferedPages()) {
-         fInner->CommitPage(columnHandle, bufPage);
-      }
-   }
    for (auto &bufColumn : fBufferedColumns) {
-      bufColumn.Clear();
+      for (const auto &bufPage : bufColumn.DrainBufferedPages()) {
+         fInner->CommitPage(bufColumn.GetHandle(), bufPage);
+      }
    }
    fInner->CommitCluster(nEntries);
    // at this point we're feeding bad locators to fOpenColumnRanges
