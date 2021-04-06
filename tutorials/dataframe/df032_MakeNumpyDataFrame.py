@@ -18,7 +18,8 @@ y = np.array([4, 5, 6], dtype=np.float64)
 
 # Read the data with RDataFrame
 # The column names in the RDataFrame are defined by the keys of the dictionary.
-# Please note that only fundamental types (int, float, ...) are supported.
+# Please note that only fundamental types (int, float, ...) are supported and
+# the arrays must have the same length.
 df = ROOT.RDF.MakeNumpyDataFrame({'x': x, 'y': y})
 
 # You can now use the RDataFrame as usualy, e.g. add a column ...
