@@ -31,6 +31,7 @@
 #include <ROOT/REvePointSet.hxx>
 #include <ROOT/REveJetCone.hxx>
 #include <ROOT/REveTrans.hxx>
+#include <ROOT/REveChange.hxx>
 
 #include <ROOT/REveTrack.hxx>
 #include <ROOT/REveTrackPropagator.hxx>
@@ -225,64 +226,95 @@ class EventManager : public REX::REveElement
 {
 private:
    bool fAutoplay{false};
-   TTimer* fTimer{nullptr};
-   int     fPlayDelay{10};
+   int fPlayDelay{10};
+
+   std::chrono::time_point<std::chrono::system_clock> fPrevTime;
+   std::chrono::duration<double> fDeltaTime{1};
+
+   std::thread* fTimerThread{nullptr};
+   std::mutex fMutex;
+   std::condition_variable fCV;
+
 
 public:
-   EventManager() {
-      fTimer = new TTimer();
-      fTimer->Connect("Timeout()", "EventManager", this, "TimerDone()");
+   EventManager()
+   {
+      std::chrono::milliseconds ms(100);
+      fDeltaTime = ms;
    }
 
-   virtual ~EventManager() {
-
-   }
+   virtual ~EventManager() {}
 
    void NextEvent()
    {
-      auto scene =  eveMng->GetEventScene();
+      auto scene = eveMng->GetEventScene();
       scene->DestroyElements();
       makeEventScene();
-      for (auto &ie : scene->RefChildren())
-      {
+      for (auto &ie : scene->RefChildren()) {
          if (mngRhoPhi)
-         mngRhoPhi->ImportElements(ie, rPhiEventScene);
+            mngRhoPhi->ImportElements(ie, rPhiEventScene);
          if (mngRhoZ)
-         mngRhoZ  ->ImportElements(ie, rhoZEventScene);
+            mngRhoZ->ImportElements(ie, rhoZEventScene);
       }
+   }
 
-      if (fAutoplay) {
-        fTimer->Stop();
-        eveMng->ScheduleMIR("StartTimer()", this->GetElementId(), "EventManager");
-     }
+   void autoplay_scheduler()
+   {
+      while (true) {
+         bool autoplay;
+         {
+            std::unique_lock<std::mutex> lock{fMutex};
+            if (!fAutoplay) {
+                  // printf("exit thread pre wait\n");
+                  return;
+            }
+            if (fCV.wait_for(lock, fDeltaTime) != std::cv_status::timeout) {
+               printf("autoplay not timed out \n");
+               if (!fAutoplay) {
+                  printf("exit thread post wait\n");
+                  return;
+               } else {
+                  continue;
+               }
+            }
+            autoplay = fAutoplay;
+         }
+         if (autoplay)
+         {
+               REX::REveManager::ChangeGuard ch;
+               NextEvent();
+         } else {
+            return;
+         }
+      }
+   }
+
+   void Autoplay()
+   {
+      static std::mutex autoplay_mutex;
+      std::unique_lock<std::mutex> aplock{autoplay_mutex};
+      {
+         std::unique_lock<std::mutex> lock{fMutex};
+         fAutoplay = !fAutoplay;
+         if (fAutoplay) {
+            if (fTimerThread) {
+               fTimerThread->join();
+               delete fTimerThread;
+               fTimerThread = nullptr;
+            }
+            fTimerThread = new std::thread{[this] { autoplay_scheduler(); }};
+         } else {
+            fCV.notify_all();
+         }
+      }
    }
 
    virtual void QuitRoot()
    {
       printf("Quit ROOT\n");
-      if (gApplication) gApplication->Terminate();
+      if (gApplication)
+         gApplication->Terminate();
    }
-
-   virtual void TimerDone()
-   {
-      if (fAutoplay)
-         eveMng->ScheduleMIR("NextEvent()", this->GetElementId(), "EventManager");
-   }
-
-   void StartTimer()
-   {
-      fTimer->Start(fPlayDelay, true);
-   }
-
-   void Autoplay()
-   {
-      fAutoplay = !fAutoplay;
-      if (fAutoplay)
-         fTimer->Start(0, kTRUE);
-      else
-         fTimer->Stop();
-   }
-
 };
 
 void event_demo()
