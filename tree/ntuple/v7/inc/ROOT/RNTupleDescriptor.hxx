@@ -775,8 +775,17 @@ public:
    static std::uint32_t DeserializeString(const void *buffer, std::uint32_t size, std::string &val);
 
    static std::uint32_t SerializeEnvelopePreamble(void *buffer);
+   static std::uint32_t SerializeEnvelopePostscript(const unsigned char *envelope, std::uint32_t size, void *buffer);
    // The size includes the 4 bytes for the final CRC32 checksum.
    static std::uint32_t DeserializeEnvelope(void *buffer, std::uint32_t size);
+
+   static std::uint32_t SerializeRecordFramePreamble(void *buffer);
+   static std::uint32_t SerializeListFramePreamble(std::uint32_t nitems, void *buffer);
+   static std::uint32_t SerializeFramePostscript(void *frame, std::int32_t size);
+   static std::uint32_t DeserializeFrame(void *buffer, std::uint32_t bufSize,
+                                         std::uint32_t &frameSize, std::uint32_t &nitems);
+   static std::uint32_t DeserializeFrame(void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize);
+
    // An empty flags vector will be serialized as a single, zero feature flag
    // The most significant bit in every flag is reserved and must _not_ be set
    static std::uint32_t SerializeFeatureFlags(const std::vector<std::int64_t> &flags, void *buffer);

@@ -478,7 +478,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeUInt64(c
 
 std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeString(const std::string &val, void *buffer)
 {
-   if (buffer != nullptr) {
+   if (buffer) {
       auto pos = reinterpret_cast<unsigned char *>(buffer);
       pos += SerializeUInt32(val.length(), pos);
       memcpy(pos, val.data(), val.length());
@@ -514,9 +514,16 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeEnvelopePr
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   pos += SerializeUInt16(kEnvelopeCurrentVersion, &where);
-   pos += SerializeUInt16(kEnvelopeMinVersion, &where);
+   pos += SerializeUInt16(kEnvelopeCurrentVersion, *where);
+   pos += SerializeUInt16(kEnvelopeMinVersion, *where);
    return pos - base;
+}
+
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeEnvelopePostscript(
+   const unsigned char *envelope, std::uint32_t size, void *buffer)
+{
+   return SerializeCRC32(envelope, size, buffer);
 }
 
 /// Currently all enevelopes have the same version number (1). At a later point, different envelope types
@@ -543,6 +550,84 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeEnvelope
    }
 
    return sizeof(protocolVersionAtWrite) + sizeof(protocolVersionMinRequired);
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeRecordFramePreamble(void *buffer)
+{
+   // Marker: multiply the final size with 1
+   return SerializeInt32(1, buffer);
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeListFramePreamble(
+   std::uint32_t nitems, void *buffer)
+{
+   if (nitems >= (1 << 28))
+      throw RException(R__FAIL("list frame too large: " + std::to_string(nitems)));
+
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   // Marker: multiply the final size with -1
+   pos += RNTupleStreamer::SerializeInt32(-1, *where);
+   pos += SerializeUInt32(nitems, *where);
+   return pos - base;
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeFramePostscript(
+   void *frame, std::int32_t size)
+{
+   if (size < 0)
+      throw RException(R__FAIL("Frame too large: " + std::to_string(size)));
+   if (size < static_cast<std::int32_t>(sizeof(std::int32_t)))
+      throw RException(R__FAIL("Frame too short: " + std::to_string(size)));
+   if (frame) {
+      std::int32_t marker;
+      DeserializeInt32(frame, marker);
+      if ((marker < 0) && (size < static_cast<std::int32_t>(2 * sizeof(std::int32_t))))
+         throw RException(R__FAIL("Frame too short: " + std::to_string(size)));
+
+      SerializeInt32(marker * size, frame);
+   }
+   return 0;
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeFrame(
+   void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize, std::uint32_t &nitems)
+{
+   if (bufSize < sizeof(std::int32_t))
+      throw RException(R__FAIL("frame too short"));
+
+   std::int32_t *ssize = reinterpret_cast<std::int32_t *>(&frameSize);
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   bytes += DeserializeInt32(bytes, *ssize);
+   if (*ssize >= 0) {
+      // Record frame
+      nitems = 1;
+      if (frameSize < sizeof(std::int32_t))
+         throw RException(R__FAIL("corrupt frame size"));
+   } else {
+      // List frame
+      if (bufSize < 2 * sizeof(std::int32_t))
+         throw RException(R__FAIL("frame too short"));
+      bytes += DeserializeUInt32(bytes, nitems);
+      nitems &= (2 << 28) - 1;
+      *ssize = -(*ssize);
+      if (frameSize < 2 * sizeof(std::int32_t))
+         throw RException(R__FAIL("corrupt frame size"));
+   }
+
+   if (bufSize < frameSize)
+      throw RException(R__FAIL("frame too short"));
+
+   return bytes - reinterpret_cast<const unsigned char *>(buffer);
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeFrame(
+   void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize)
+{
+   std::uint32_t nitems;
+   return DeserializeFrame(buffer, bufSize, frameSize, nitems);
 }
 
 std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeFeatureFlags(
