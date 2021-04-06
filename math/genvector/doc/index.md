@@ -63,7 +63,7 @@ In more detail, the main characteristics of GenVector are:
         *   ROOT::Math::PtEtaPhiE4D, based on based on <em>(pt,eta,phi,E)</em>;
         *   ROOT::Math::PtEtaPhiM4D, based on based on <em>(pt,eta,phi,M)</em>;
 
-    The angle _eta_ is defined between [0,\f$\pi\f$] and _phi_ between [-\f$\pi\f$,\f$\pi\f$].
+    The angle _theta_ is defined between [0,\f$\pi\f$] and _phi_ between [-\f$\pi\f$,\f$\pi\f$].
     The angles are expressed in radians.
 
     Users can define the Vectors according to the coordinate type which
