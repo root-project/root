@@ -2836,7 +2836,7 @@ return kNone;
 ```
 
 `Atom_t HandleDNDposition(Int_t x,Int_t y,Atom_t action,Int_t xroot,
-Int_t yroot)-` this
+Int_t yroot)` - this
 method should be used to handle the drag position in widget coordinates
 (`x,y`) or in root coordinates (`xroot,yroot`).
 
@@ -2850,7 +2850,7 @@ if (pad) {
 return action;
 ```
 
-`Bool_t HandleDNDdrop(`TDNDdata *data`) - this is the place where the
+`Bool_t HandleDNDdrop(TDNDdata *data)` - this is the place where the
 widget actually receives the data. First, check the data format (see
 description of **`TDNDData`** - Drag and Drop data class) and then use
 it accordingly. In the case of ROOT object, here is an example of how to
