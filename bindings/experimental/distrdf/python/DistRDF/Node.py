@@ -557,29 +557,6 @@ class RangesBuilder(object):
 
         return clustered_ranges
 
-    def _get_filelist(self, files):
-        """
-        Convert single file into list of files and expand globbing
-
-        Args:
-            files (str, list): String containing name of a single file or list
-                with several file names, both cases may contain globbing
-                characters.
-
-        Returns:
-            list: list of file names.
-        """
-        if isinstance(files, str):
-            # Expand globbing excluding remote files
-            remote_prefixes = ("root:", "http:", "https:")
-            if not files.startswith(remote_prefixes):
-                files = glob.glob(files)
-            else:
-                # Convert single file into a filelist
-                files = [files, ]
-
-        return files
-
     def build_ranges(self):
         """
         Define two type of ranges based on the arguments passed to the
@@ -602,14 +579,16 @@ class RangesBuilder(object):
             # Restrict 'npartitions' if it's greater than 'nentries'
             self.npartitions = nentries
 
-        if treename and inputfiles:
-            filelist = self._get_filelist(inputfiles)
+        if treename is not None:
+            if inputfiles is None:
+                raise RuntimeError(("Found tree with name {} but no files associated with it. "
+                                    "Make sure your dataset is saved to disk first."))
             logger.debug("Building clustered ranges for tree %s with the "
                          "following input files:\n%s",
                          treename,
                          list(inputfiles)
                          )
-            return self._get_clustered_ranges(treename, filelist, friendinfo)
+            return self._get_clustered_ranges(treename, inputfiles, friendinfo)
         else:
             logger.debug(
                 "Building balanced ranges for %d entries.", nentries)
@@ -709,12 +688,9 @@ class HeadNode(Node):
 
         """
         first_arg = self.args[0]
-        if isinstance(first_arg, ROOT.TChain):
-            # Get name from a given TChain
+        if isinstance(first_arg, ROOT.TTree):
+            # Get name from a given TTree/TChain
             return first_arg.GetName()
-        elif isinstance(first_arg, ROOT.TTree):
-            # Get name directly from the TTree
-            return first_arg.GetUserInfo().At(0).GetName()
         elif isinstance(first_arg, str):
             # First argument was the name of the tree
             return first_arg
@@ -740,27 +716,49 @@ class HeadNode(Node):
         """
         Get list of input files.
 
-        This list can be extracted from a given TChain or from the list of
-        arguments.
-
         Returns:
-            (str, list, None): Name of a single file, list of files (both may
-            contain globbing characters), or None if there are no input files.
-
+            (list, None): List of files, or None if there are no input files.
         """
-        first_arg = self.args[0]
-        if isinstance(first_arg, ROOT.TChain):
+        firstarg = self.args[0]
+        if isinstance(firstarg, ROOT.TChain):
             # Extract file names from a given TChain
-            chain = first_arg
+            chain = firstarg
             return [chainElem.GetTitle()
                     for chainElem in chain.GetListOfFiles()]
+        elif isinstance(firstarg, ROOT.TTree):
+            # Retrieve the associated file
+            treefile = firstarg.GetCurrentFile()
+            if not treefile:
+                # The tree has no associated input file
+                raise RuntimeError(("Trees with no associated files are not supported. "
+                                    "Please save your tree to a file and retry."))
+            else:
+                return [treefile.GetName()]
+
         if len(self.args) > 1:
-            second_arg = self.args[1]
-            if isinstance(second_arg, (str, ROOT.std.vector("string"), list)):
-                # Get file(s) from second argument
-                # (may contain globbing characters)
-                return second_arg
-        # RDataFrame may have been created with no input files
+            # Second argument can be:
+            # 1. A simple string representing a file or a glob of files
+            # 2. A vector of filename strings
+            # 3. A pointer to a TDirectory (i.e. the file of the dataset)
+            secondarg = self.args[1]
+            if isinstance(secondarg, str):
+                # Expand globbing excluding remote files
+                remote_prefixes = ("root:", "http:", "https:")
+                if not secondarg.startswith(remote_prefixes):
+                    return glob.glob(secondarg)
+                else:
+                    return [secondarg]
+            elif isinstance(secondarg, (list, ROOT.std.vector("string"))):
+                # Make sure this returns a list of Python strings
+                return [str(filename) for filename in secondarg]
+            elif isinstance(secondarg, ROOT.TDirectory):
+                # Return the name of the file
+                return [str(secondarg.GetName())]
+
+        # Since the dataset could be just an empty dataframe with some entries,
+        # aka RDataFrame(ULong64_t numEntries), we still have to return None
+        # here. Would be nice to have separate head nodes for different data
+        # sources to better separate the roles.
         return None
 
     def _get_friend_info(self):
