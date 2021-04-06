@@ -28,27 +28,27 @@ class TView;
 class TPainter3dAlgorithms : public TAttLine, public TAttFill {
 
 private:
-   Double_t     fRmin[3];          /// Lower limits of lego
-   Double_t     fRmax[3];          /// Upper limits of lego
-   Double_t     *fAphi;            ///
-   Int_t        fNaphi;            /// Size of fAphi
-   Int_t        fSystem;           /// Coordinate system
-   Int_t       *fColorMain;        ///
-   Int_t       *fColorDark;        ///
-   Int_t        fColorTop;         ///
-   Int_t        fColorBottom;      ///
-   Int_t       *fEdgeColor;        ///
-   Int_t       *fEdgeStyle;        ///
-   Int_t       *fEdgeWidth;        ///
-   Int_t        fEdgeIdx;          ///
-   Int_t        fMesh;             /// (=1 if mesh to draw, o otherwise)
-   Int_t        fNStack;           /// Number of histograms in the stack to be painted
-   Double_t     fFmin;             /// IsoSurface minimum function value
-   Double_t     fFmax;             /// IsoSurface maximum function value
-   Int_t        fNcolor;           /// Number of colours per Iso surface
-   Int_t        fIc1;              /// Base colour for the 1st Iso Surface
-   Int_t        fIc2;              /// Base colour for the 2nd Iso Surface
-   Int_t        fIc3;              /// Base colour for the 3rd Iso Surface
+   Double_t     fRmin[3];          ///< Lower limits of lego
+   Double_t     fRmax[3];          ///< Upper limits of lego
+   Double_t     *fAphi;            ///<
+   Int_t        fNaphi;            ///< Size of fAphi
+   Int_t        fSystem;           ///< Coordinate system
+   Int_t       *fColorMain;        ///<
+   Int_t       *fColorDark;        ///<
+   Int_t        fColorTop;         ///<
+   Int_t        fColorBottom;      ///<
+   Int_t       *fEdgeColor;        ///<
+   Int_t       *fEdgeStyle;        ///<
+   Int_t       *fEdgeWidth;        ///<
+   Int_t        fEdgeIdx;          ///<
+   Int_t        fMesh;             ///< (=1 if mesh to draw, o otherwise)
+   Int_t        fNStack;           ///< Number of histograms in the stack to be painted
+   Double_t     fFmin;             ///< IsoSurface minimum function value
+   Double_t     fFmax;             ///< IsoSurface maximum function value
+   Int_t        fNcolor;           ///< Number of colours per Iso surface
+   Int_t        fIc1;              ///< Base colour for the 1st Iso Surface
+   Int_t        fIc2;              ///< Base colour for the 2nd Iso Surface
+   Int_t        fIc3;              ///< Base colour for the 3rd Iso Surface
 
 public:
    typedef void (TPainter3dAlgorithms::*DrawFaceFunc_t)(Int_t *, Double_t *, Int_t, Int_t *, Double_t *);
@@ -56,9 +56,9 @@ public:
    typedef void (TPainter3dAlgorithms::*SurfaceFunc_t)(Int_t,Int_t,Double_t*,Double_t*);
 
 private:
-   DrawFaceFunc_t  fDrawFace;        /// pointer to face drawing function
-   LegoFunc_t      fLegoFunction;    /// pointer to lego function
-   SurfaceFunc_t   fSurfaceFunction; /// pointer to surface function
+   DrawFaceFunc_t  fDrawFace;        ///< Pointer to face drawing function
+   LegoFunc_t      fLegoFunction;    ///< Pointer to lego function
+   SurfaceFunc_t   fSurfaceFunction; ///< Pointer to surface function
 
 public:
    TPainter3dAlgorithms();
@@ -123,8 +123,8 @@ private:
 
    void    Luminosity(TView *view, Double_t *anorm, Double_t &flum);
 
-//       Light and surface properties
-//
+///@{
+/// @name Light and surface properties
 public:
    void    LightSource(Int_t nl, Double_t yl, Double_t xscr, Double_t yscr, Double_t zscr, Int_t &irep);
    void    SurfaceProperty(Double_t qqa, Double_t qqd, Double_t qqs, Int_t nnqs, Int_t &irep);
@@ -139,10 +139,11 @@ private:
    Double_t     fQD;
    Double_t     fQS;
    Int_t        fNqs;
+///@}
 
-//        Moving screen - specialized hidden line removal algorithm
-//        for rendering 2D histograms
-//
+///@{
+/// @name Moving screen
+/// Specialized hidden line removal algorithm for rendering 2D histograms
 public:
    void    InitMoveScreen(Double_t xmin, Double_t xmax);
    void    FindVisibleDraw(Double_t *r1, Double_t *r2);
@@ -158,10 +159,11 @@ private:
    static const Int_t    NumOfSlices = 2000;
    Double_t    fU[NumOfSlices*2];
    Double_t    fD[NumOfSlices*2];
+///@}
 
-//        Raster screen - specialized hidden line removal algorithm
-//        for rendering 3D polygons ordered by depth (front-to-back)
-//
+///@{
+/// @name Raster screen
+/// Specialized hidden line removal algorithm for rendering 3D polygons ordered by depth (front-to-back)
 public:
    void    InitRaster(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, Int_t nx, Int_t ny);
    void    ClearRaster();
@@ -169,19 +171,21 @@ public:
    void    FillPolygonBorder(Int_t nn, Double_t *xy);
 
 private:
-   Double_t    fXrast;     // minimal x
-   Double_t    fYrast;     // minimal y
-   Double_t    fDXrast;    // x size
-   Double_t    fDYrast;    // y size
-   Int_t       fNxrast;    // number of pixels in x
-   Int_t       fNyrast;    // number of pixels in y
-   Int_t       fIfrast;    // flag, if it not zero them the algorithm is off
-   Int_t       *fRaster;   // pointer to raster buffer
-   Int_t       fJmask[30]; // indices of subsets of n-bit masks (n is from 1 to 30)
-   Int_t       fMask[465]; // set of masks (30+29+28+...+1)=465
+   Double_t    fXrast;     ///< Minimal x
+   Double_t    fYrast;     ///< Minimal y
+   Double_t    fDXrast;    ///< X size
+   Double_t    fDYrast;    ///< Y size
+   Int_t       fNxrast;    ///< Number of pixels in x
+   Int_t       fNyrast;    ///< Number of pixels in y
+   Int_t       fIfrast;    ///< Flag, if it not zero them the algorithm is off
+   Int_t       *fRaster;   ///< Pointer to raster buffer
+   Int_t       fJmask[30]; ///< Indices of subsets of n-bit masks (n is from 1 to 30)
+   Int_t       fMask[465]; ///< Set of masks (30+29+28+...+1)=465
+///@}
 
-//        Marching Cubes 33 - construction of iso-surfaces, see publication CERN-CN-95-17
-//
+///@{
+/// @name Marching Cubes
+/// Construction of iso-surfaces, see publication CERN-CN-95-17
 public:
    void    MarchingCube(Double_t fiso, Double_t p[8][3], Double_t f[8], Double_t g[8][3], Int_t &nnod, Int_t &ntria, Double_t xyz[][3], Double_t grad[][3], Int_t itria[][3]);
 
@@ -200,17 +204,20 @@ protected:
    void    MarchingCubeFindNodes(Int_t nnod, Int_t *ie, Double_t xyz[52][3], Double_t grad[52][3]);
 
 private:
-   Double_t    fP8[8][3]; // vertices
-   Double_t    fF8[8];    // function values
-   Double_t    fG8[8][3]; // function gradients
+   Double_t    fP8[8][3]; ///< Vertices
+   Double_t    fF8[8];    ///< Function values
+   Double_t    fG8[8][3]; ///< Function gradients
+///@}
 
-//        Z-depth sorting algorithm for set of triangles
-//
+///@{
+/// @name Z-depth
+/// Sorting algorithm for set of triangles
 public:
    void    ZDepth(Double_t xyz[52][3], Int_t &nface, Int_t iface[48][3], Double_t dface[48][6], Double_t abcd[48][4], Int_t *iorder);
 
 protected:
    void    TestEdge(Double_t del, Double_t xyz[52][3], Int_t i1, Int_t i2, Int_t iface[3], Double_t abcd[4], Int_t &irep);
+///@}
 
 };
 

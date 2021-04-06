@@ -29,8 +29,8 @@ ClassImp(TPaletteAxis);
 ////////////////////////////////////////////////////////////////////////////////
 
 /*! \class TPaletteAxis
-\ingroup Histpainter
-\brief The palette painting class.
+    \ingroup Histpainter
+    \brief The palette painting class.
 
 A `TPaletteAxis` object is used to display the color palette when
 drawing 2-d histograms.
@@ -82,13 +82,14 @@ As default labels and ticks are drawn by `TGAxis` at equidistant (lin or log)
 points as controlled by SetNdivisions.
 If option "CJUST" is given labels and ticks are justified at the
 color boundaries defined by the contour levels.
-In this case no optimization can be done. It is responsiblity of the
+In this case no optimization can be done. It is responsibility of the
 user to adjust minimum, maximum of the histogram and/or the contour levels
 to get a reasonable look of the plot.
 Only overlap of the labels is avoided if too many contour levels are used.
 
 This option is especially useful with user defined contours.
 An example is shown here:
+
 Begin_Macro(source)
 {
    gStyle->SetOptStat(0);

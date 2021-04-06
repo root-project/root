@@ -66,8 +66,8 @@
 #include "strlcpy.h"
 
 /*! \class THistPainter
-\ingroup Histpainter
-\brief The histogram painter class. Implements all histograms' drawing's options.
+    \ingroup Histpainter
+    \brief The histogram painter class. Implements all histograms' drawing's options.
 
 - [Introduction](#HP00)
 - [Histograms' plotting options](#HP01)
@@ -260,6 +260,7 @@ using `TH1::GetOption`:
 | "X0"     | When used with one of the "E" option, it suppress the error bar along X as `gStyle->SetErrorX(0)` would do.|
 | "L"      | Draw a line through the bin contents.|
 | "P"      | Draw current marker at each bin except empty bins.|
+| "P*"     | Draw a star marker at each bin except empty bins.|
 | "P0"     | Draw current marker at each bin including empty bins.|
 | "PIE"    | Draw histogram as a Pie Chart.|
 | "*H"     | Draw histogram with a * at each bin.|
@@ -268,53 +269,57 @@ using `TH1::GetOption`:
 
 #### <a name="HP01c"></a> Options supported for 2D histograms
 
-| Option    | Description                                                      |
-|-----------|------------------------------------------------------------------|
-| " "       | Default (scatter plot).|
-| "ARR"     | Arrow mode. Shows gradient between adjacent cells.|
-| "BOX"     | A box is drawn for each cell with surface proportional to the content's absolute value. A negative content is marked with a X.|
-| "BOX1"    | A button is drawn for each cell with surface proportional to content's absolute value. A sunken button is drawn for negative values a raised one for positive.|
-| "COL"     | A box is drawn for each cell with a color scale varying with contents. All the none empty bins are painted. Empty bins are not painted unless some bins have a negative content because in that case the null bins might be not empty.  `TProfile2D` histograms are handled differently because, for this type of 2D histograms, it is possible to know if an empty bin has been filled or not. So even if all the bins' contents are positive some empty bins might be painted. And vice versa, if some bins have a negative content some empty bins might be not painted.|
-| "COLZ"    | Same as "COL". In addition the color palette is also drawn.|
-| "COL2"    | Alternative rendering algorithm to "COL". Can significantly improve rendering performance for large, non-sparse 2-D histograms.|
-| "COLZ2"   | Same as "COL2". In addition the color palette is also drawn.|
-| "Z CJUST" | In combination with colored options "COL","CONT0" etc: Justify labels in the color palette at color boudaries. For more details see `TPaletteAxis`|
-| "CANDLE"  | Draw a candle plot along X axis.|
-| "CANDLEX" | Same as "CANDLE".|
-| "CANDLEY" | Draw a candle plot along Y axis.|
-| "CANDLEXn"| Draw a candle plot along X axis. Different candle-styles with n from 1 to 6.|
-| "CANDLEYn"| Draw a candle plot along Y axis. Different candle-styles with n from 1 to 6.|
-| "VIOLIN"  | Draw a violin plot along X axis.|
-| "VIOLINX" | Same as "VIOLIN".|
-| "VIOLINY" | Draw a violin plot along Y axis.|
-| "VIOLINXn"| Draw a violin plot along X axis. Different violin-styles with n being 1 or 2.|
-| "VIOLINYn"| Draw a violin plot along Y axis. Different violin-styles with n being 1 or 2.|
-| "CONT"    | Draw a contour plot (same as CONT0).|
-| "CONT0"   | Draw a contour plot using surface colors to distinguish contours.|
-| "CONT1"   | Draw a contour plot using line styles to distinguish contours.|
-| "CONT2"   | Draw a contour plot using the same line style for all contours.|
-| "CONT3"   | Draw a contour plot using fill area colors.|
-| "CONT4"   | Draw a contour plot using surface colors (SURF option at theta = 0).|
-| "CONT5"   | (TGraph2D only) Draw a contour plot using Delaunay triangles.|
-| "LIST"    | Generate a list of TGraph objects for each contour.|
-| "CYL"     | Use Cylindrical coordinates. The X coordinate is mapped on the angle and the Y coordinate on the cylinder length.|
-| "POL"     | Use Polar coordinates. The X coordinate is mapped on the angle and the Y coordinate on the radius.|
-| "SAME0"   | Same as "SAME" but do not use the z-axis range of the first plot. |
-| "SAMES0"  | Same as "SAMES" but do not use the z-axis range of the first plot. |
-| "SPH"     | Use Spherical coordinates. The X coordinate is mapped on the latitude and the Y coordinate on the longitude.|
-| "PSR"     | Use PseudoRapidity/Phi coordinates. The X coordinate is mapped on Phi.|
-| "SURF"    | Draw a surface plot with hidden line removal.|
-| "SURF1"   | Draw a surface plot with hidden surface removal.|
-| "SURF2"   | Draw a surface plot using colors to show the cell contents.|
-| "SURF3"   | Same as SURF with in addition a contour view drawn on the top.|
-| "SURF4"   | Draw a surface using Gouraud shading.|
-| "SURF5"   | Same as SURF3 but only the colored contour is drawn. Used with option CYL, SPH or PSR it allows to draw colored contours on a sphere, a cylinder or a in pseudo rapidity space. In cartesian or polar coordinates, option SURF3 is used.|
-| "LEGO9"   | Draw the 3D axis only. Mainly needed for internal use |
-| "FB"      | With LEGO or SURFACE, suppress the Front-Box.|
-| "BB"      | With LEGO or SURFACE, suppress the Back-Box.|
-| "A"       | With LEGO or SURFACE, suppress the axis.|
-| "SCAT"    | Draw a scatter-plot (default).|
-| "[cutg]"  | Draw only the sub-range selected by the TCutG named "cutg".|
+| Option       | Description                                                      |
+|--------------|------------------------------------------------------------------|
+| " "          | Default (scatter plot).|
+| "ARR"        | Arrow mode. Shows gradient between adjacent cells.|
+| "BOX"        | A box is drawn for each cell with surface proportional to the content's absolute value. A negative content is marked with a X.|
+| "BOX1"       | A button is drawn for each cell with surface proportional to content's absolute value. A sunken button is drawn for negative values a raised one for positive.|
+| "COL"        | A box is drawn for each cell with a color scale varying with contents. All the none empty bins are painted. Empty bins are not painted unless some bins have a negative content because in that case the null bins might be not empty.  `TProfile2D` histograms are handled differently because, for this type of 2D histograms, it is possible to know if an empty bin has been filled or not. So even if all the bins' contents are positive some empty bins might be painted. And vice versa, if some bins have a negative content some empty bins might be not painted.|
+| "COLZ"       | Same as "COL". In addition the color palette is also drawn.|
+| "COL2"       | Alternative rendering algorithm to "COL". Can significantly improve rendering performance for large, non-sparse 2-D histograms.|
+| "COLZ2"      | Same as "COL2". In addition the color palette is also drawn.|
+| "Z CJUST"   | In combination with colored options "COL","CONT0" etc: Justify labels in the color palette at color boudaries. For more details see `TPaletteAxis`|
+| "CANDLE"     | Draw a candle plot along X axis.|
+| "CANDLEX"    | Same as "CANDLE".|
+| "CANDLEY"    | Draw a candle plot along Y axis.|
+| "CANDLEXn"   | Draw a candle plot along X axis. Different candle-styles with n from 1 to 6.|
+| "CANDLEYn"   | Draw a candle plot along Y axis. Different candle-styles with n from 1 to 6.|
+| "VIOLIN"     | Draw a violin plot along X axis.|
+| "VIOLINX"    | Same as "VIOLIN".|
+| "VIOLINY"    | Draw a violin plot along Y axis.|
+| "VIOLINXn"   | Draw a violin plot along X axis. Different violin-styles with n being 1 or 2.|
+| "VIOLINYn"   | Draw a violin plot along Y axis. Different violin-styles with n being 1 or 2.|
+| "CONT"       | Draw a contour plot (same as CONT0).|
+| "CONT0"      | Draw a contour plot using surface colors to distinguish contours.|
+| "CONT1"      | Draw a contour plot using line styles to distinguish contours.|
+| "CONT2"      | Draw a contour plot using the same line style for all contours.|
+| "CONT3"      | Draw a contour plot using fill area colors.|
+| "CONT4"      | Draw a contour plot using surface colors (SURF option at theta = 0).|
+| "CONT5"      | (TGraph2D only) Draw a contour plot using Delaunay triangles.|
+| "LIST"       | Generate a list of TGraph objects for each contour.|
+| "SAME0"      | Same as "SAME" but do not use the z-axis range of the first plot. |
+| "SAMES0"     | Same as "SAMES" but do not use the z-axis range of the first plot. |
+| "CYL"        | Use Cylindrical coordinates. The X coordinate is mapped on the angle and the Y coordinate on the cylinder length.|
+| "POL"        | Use Polar coordinates. The X coordinate is mapped on the angle and the Y coordinate on the radius.|
+| "SPH"        | Use Spherical coordinates. The X coordinate is mapped on the latitude and the Y coordinate on the longitude.|
+| "PSR"        | Use PseudoRapidity/Phi coordinates. The X coordinate is mapped on Phi.|
+| "SURF"       | Draw a surface plot with hidden line removal.|
+| "SURF1"      | Draw a surface plot with hidden surface removal.|
+| "SURF2"      | Draw a surface plot using colors to show the cell contents.|
+| "SURF3"      | Same as SURF with in addition a contour view drawn on the top.|
+| "SURF4"      | Draw a surface using Gouraud shading.|
+| "SURF5"      | Same as SURF3 but only the colored contour is drawn. Used with option CYL, SPH or PSR it allows to draw colored contours on a sphere, a cylinder or a in pseudo rapidity space. In cartesian or polar coordinates, option SURF3 is used.|
+| "AITOFF"     | Draw a contour via an AITOFF projection.|
+| "MERCATOR"   | Draw a contour via an Mercator projection.|
+| "SINUSOIDAL" | Draw a contour via an Sinusoidal projection.|
+| "PARABOLIC"  | Draw a contour via an Parabolic projection.|
+| "LEGO9"      | Draw the 3D axis only. Mainly needed for internal use |
+| "FB"         | With LEGO or SURFACE, suppress the Front-Box.|
+| "BB"         | With LEGO or SURFACE, suppress the Back-Box.|
+| "A"          | With LEGO or SURFACE, suppress the axis.|
+| "SCAT"       | Draw a scatter-plot (default).|
+| "[cutg]"     | Draw only the sub-range selected by the TCutG named "cutg".|
 
 
 #### <a name="HP01d"></a> Options supported for 3D histograms
@@ -3975,14 +3980,14 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    strlcpy(chopt,choptin,128);
    Int_t hdim = fH->GetDimension();
 
-   Hoption.Axis = Hoption.Bar    = Hoption.Curve   = Hoption.Error   = 0;
-   Hoption.Hist = Hoption.Line   = Hoption.Mark    = Hoption.Fill    = 0;
-   Hoption.Same = Hoption.Func   = Hoption.Scat                      = 0;
-   Hoption.Star = Hoption.Arrow  = Hoption.Box     = Hoption.Text    = 0;
-   Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx    = 0;
-   Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf    = 0;
-   Hoption.Off  = Hoption.Tri    = Hoption.Proj    = Hoption.AxisPos = 0;
-   Hoption.Spec = Hoption.Pie    = Hoption.Candle  = 0;
+   Hoption.Axis    = Hoption.Bar     = Hoption.Curve   = Hoption.Error   = 0;
+   Hoption.Hist    = Hoption.Line    = Hoption.Mark    = Hoption.Fill    = 0;
+   Hoption.Same    = Hoption.Func    = Hoption.Scat    = Hoption.Star    = 0;
+   Hoption.Arrow   = Hoption.Box     = Hoption.Text    = Hoption.Color   = 0;
+   Hoption.Contour = Hoption.Logx    = Hoption.Logy    = Hoption.Logz    = 0;
+   Hoption.Lego    = Hoption.Surf    = Hoption.Off     = Hoption.Tri     = 0;
+   Hoption.Proj    = Hoption.AxisPos = Hoption.Spec    = Hoption.Pie     = 0;
+   Hoption.Candle  = 0;
 
    //    special 2D options
    Hoption.List     = 0;
@@ -4225,7 +4230,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          Hoption.Hist = 1;
       }
    }
-   l = strstr(chopt,"CHAR"); if (l) { Hoption.Char   = 1; memcpy(l,"    ",4); Hoption.Scat = 0; }
    l = strstr(chopt,"FUNC"); if (l) { Hoption.Func   = 2; memcpy(l,"    ",4); Hoption.Hist = 0; }
    l = strstr(chopt,"HIST"); if (l) { Hoption.Hist   = 2; memcpy(l,"    ",4); Hoption.Func = 0; Hoption.Error = 0;}
    l = strstr(chopt,"AXIS"); if (l) { Hoption.Axis   = 1; memcpy(l,"    ",4); }
