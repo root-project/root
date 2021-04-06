@@ -55,7 +55,7 @@ public:
    /// name of 1D integrator
    virtual std::string  Integrator() const = 0;
 
-   /** non-static methods for  retrivieng options */
+   /** non-static methods for  retrieving options */
 
    /// absolute tolerance
    double AbsTolerance() const { return  fAbsTolerance; }
@@ -90,12 +90,12 @@ protected:
 
    void ClearExtra();
 
-   int       fIntegType;   // Integrator type (value converted from enum)
+   int       fIntegType;        ///< Integrator type (value converted from enum)
 
-   unsigned int fWKSize;        // workspace size
-   unsigned int fNCalls;        // (max) funxtion calls
-   double fAbsTolerance;        // absolute tolerance
-   double fRelTolerance;        // relative tolerance
+   unsigned int fWKSize;        ///< workspace size
+   unsigned int fNCalls;        ///< (max) function calls
+   double fAbsTolerance;        ///< absolute tolerance
+   double fRelTolerance;        ///< relative tolerance
 
 
    // extra options
@@ -115,18 +115,18 @@ class IntegratorOneDimOptions : public BaseIntegratorOptions {
 public:
 
 
-   // constructor using the default options
-   // can pass a pointer to extra options (N.B. pointer will be managed by the class)
+   /// constructor using the default options
+   /// can pass a pointer to extra options (N.B. pointer will be managed by the class)
    IntegratorOneDimOptions(IOptions * extraOpts = 0);
 
    virtual ~IntegratorOneDimOptions() {}
 
-   // copy constructor
+   /// copy constructor
    IntegratorOneDimOptions(const IntegratorOneDimOptions & rhs) :
       BaseIntegratorOptions(rhs)
    {}
 
-   // assignment operator
+   /// assignment operator
    IntegratorOneDimOptions & operator=(const IntegratorOneDimOptions & rhs) {
       if (this == &rhs) return *this;
       static_cast<BaseIntegratorOptions &>(*this) = rhs;
@@ -172,7 +172,7 @@ public:
    /// retrieve specific options - if not existing create a IOptions
    static ROOT::Math::IOptions & Default(const char * name);
 
-   // find specific options - return 0 if not existing
+   /// find specific options - return 0 if not existing
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// print only the specified default options
@@ -196,18 +196,18 @@ class IntegratorMultiDimOptions : public BaseIntegratorOptions {
 public:
 
 
-   // constructor using the default options
-   // can pass a pointer to extra options (N.B. pointer will be managed by the class)
+   /// constructor using the default options
+   /// can pass a pointer to extra options (N.B. pointer will be managed by the class)
    IntegratorMultiDimOptions(IOptions * extraOpts = 0);
 
    virtual ~IntegratorMultiDimOptions() {}
 
-   // copy constructor
+   /// copy constructor
    IntegratorMultiDimOptions(const IntegratorMultiDimOptions & rhs) :
       BaseIntegratorOptions(rhs)
    {}
 
-   // assignment operator
+   /// assignment operator
    IntegratorMultiDimOptions & operator=(const IntegratorMultiDimOptions & rhs) {
       if (this == &rhs) return *this;
       static_cast<BaseIntegratorOptions &>(*this) = rhs;
@@ -248,10 +248,10 @@ public:
    static unsigned int DefaultWKSize();
    static unsigned int DefaultNCalls();
 
-   // retrieve specific options
+   /// retrieve specific options
    static ROOT::Math::IOptions & Default(const char * name);
 
-   // find specific options - return 0 if not existing
+   /// find specific options - return 0 if not existing
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// print only the specified default options

@@ -42,7 +42,6 @@ namespace Math {
    Users should not use directly this class but the concrete classes ROOT::Math::IntegratorOneDim or
    ROOT::Math::IntegratorMultiDim
 
-
    @ingroup  Integration
 
 */
@@ -50,7 +49,7 @@ class VirtualIntegrator{
 
 public:
 
-   // destructor: no operation
+   /// destructor: no operation
    virtual ~VirtualIntegrator() {}
 
    /**
@@ -84,20 +83,17 @@ public:
    */
    virtual int NEval() const { return -1; }
 
-
-
-
 };
+
 
 //___________________________________________________________________
 /**
    Interface (abstract) class for 1D numerical integration
-   It must be implemented by the concrate Integrator classes like
+   It must be implemented by the concrete Integrator classes like
    ROOT::Math::GSLIntegrator.
    Plug-in's exist in ROOT to be able to instantiate the derived classes via the
    plug-in manager.
    Users should not use directly this class but the concrete classes ROOT::Math::IntegratorOneDim.
-
 
    @ingroup  Integration
 
@@ -134,7 +130,7 @@ public:
    /// must be implemented by derived class
    virtual ROOT::Math::IntegratorOneDimOptions Options() const = 0;
 
-   // return type of integrator
+   /// return type of integrator
    virtual ROOT::Math::IntegrationOneDim::Type Type() const {
       return Options().IntegratorType();
    }
@@ -146,9 +142,8 @@ public:
       SetAbsTolerance(opt.AbsTolerance() );
    }
 
-
-
 };
+
 
 //___________________________________________________________________
 /**
@@ -158,7 +153,6 @@ public:
    Plug-in's exist in ROOT to be able to instantiate the derived classes via the
    plug-in manager.
    Users should not use directly this class but the concrete classes ROOT::Math::IntegratorMultiDim.
-
 
    @ingroup  Integration
 
@@ -177,10 +171,10 @@ public:
    virtual void SetFunction(const IMultiGenFunction &)  = 0;
 
    ///  get the option used for the integration
-   /// impelement by derived class otherwise return default ones
+   /// implement by derived class otherwise return default ones
    virtual ROOT::Math::IntegratorMultiDimOptions Options() const = 0;
 
-   // return type of integrator
+   /// return type of integrator
    virtual ROOT::Math::IntegrationMultiDim::Type Type() const {
       return Options().IntegratorType();
    }
@@ -190,7 +184,6 @@ public:
       SetRelTolerance(opt.RelTolerance() );
       SetAbsTolerance(opt.AbsTolerance() );
    }
-
 
 };
 

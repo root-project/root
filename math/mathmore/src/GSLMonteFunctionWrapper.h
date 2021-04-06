@@ -81,7 +81,7 @@ public:
 
    gsl_monte_function * GetFunc() { return &fFunc; }
 
-    // evaluate the function and derivatives
+    /// evaluate the function and derivatives
     double operator() (const double * x) {  return GSL_MONTE_FN_EVAL(&fFunc, const_cast<double *>(x) ); }
 
 

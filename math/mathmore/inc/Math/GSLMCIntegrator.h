@@ -94,7 +94,7 @@ namespace Math {
       @param relTol desired relative Error  (this parameter is actually not used and it can be ignored. The tolerance is fixed by the number of given calls)
       @param calls maximum number of function calls
 
-      NOTE: When the default values are used , the options are taken from teh static method of ROOT::Math::IntegratorMultiDimOptions
+      NOTE: When the default values are used , the options are taken from the static method of ROOT::Math::IntegratorMultiDimOptions
       */
       explicit
       GSLMCIntegrator(MCIntegration::Type type = MCIntegration::kVEGAS, double absTol = -1, double relTol = -1, unsigned int calls = 0 );
@@ -130,7 +130,7 @@ public:
          /**
          method to set the a generic integration function
 
-          @param f integration function. The function type must implement the assigment operator, <em>  double  operator() (  double  x ) </em>
+          @param f integration function. The function type must implement the assignment operator, <em>  double  operator() (  double  x ) </em>
 
           */
 
@@ -266,7 +266,7 @@ public:
 
       /**
           return the type
-          (need to be called GetType to avois a conflict with typedef)
+          (need to be called GetType to avoid a conflict with typedef)
       */
       MCIntegration::Type GetType() const { return fType; }
 
@@ -297,7 +297,7 @@ public:
 
 
    private:
-      //type of intergation method
+      //type of integration method
       MCIntegration::Type fType;
 
       GSLRngWrapper * fRng;
