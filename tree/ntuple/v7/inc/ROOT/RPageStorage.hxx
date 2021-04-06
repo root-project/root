@@ -131,7 +131,7 @@ public:
    /// Returns an empty metrics.  Page storage implementations usually have their own metrics.
    virtual RNTupleMetrics &GetMetrics();
    /// Returns the NTuple name.
-   const std::string& GetNTupleName() const { return fNTupleName; }
+   const std::string &GetNTupleName() const { return fNTupleName; }
 
    void SetTaskScheduler(RTaskScheduler *taskScheduler) { fTaskScheduler = taskScheduler; }
 };
@@ -194,7 +194,7 @@ public:
                                             const RNTupleWriteOptions &options = RNTupleWriteOptions());
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
    /// Returns the sink's write options.
-   const RNTupleWriteOptions& GetWriteOptions() const { return fOptions; }
+   const RNTupleWriteOptions &GetWriteOptions() const { return fOptions; }
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
@@ -267,7 +267,7 @@ public:
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
-   const RNTupleReadOptions& GetReadOptions() const { return fOptions; }
+   const RNTupleReadOptions &GetReadOptions() const { return fOptions; }
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
    void DropColumn(ColumnHandle_t columnHandle) final;
 
