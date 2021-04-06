@@ -10,8 +10,8 @@
  *************************************************************************/
 
 /*! \class TPainter3dAlgorithms
-\ingroup Histpainter
-\brief The Legos and Surfaces painter class.
+    \ingroup Histpainter
+    \brief The Legos and Surfaces painter class.
 
 3D graphics representations package.
 
@@ -780,8 +780,8 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
    }
 
    //          Subdivide quadrilateral in two triangles
-   Int_t npol[2] = { np, 0 }; // number of vertices in subpolygons
-   Int_t ipol[2] = {  0, 0 }; // first vertices in subpolygons
+   Int_t npol[2] = { np, 0 }; // number of vertices in sub-polygons
+   Int_t ipol[2] = {  0, 0 }; // first vertices in sub-polygons
    if (np == 4 && icodes[2] != 0) {
       p3[4*3 + 0] = p3[0];
       p3[4*3 + 1] = p3[1];
@@ -864,8 +864,8 @@ void TPainter3dAlgorithms::DrawLevelLines(Int_t *icodes, Double_t *xyz, Int_t np
    }
 
    //          Subdivide quadrilateral in two triangles
-   Int_t npol[2] = { np, 0 }; // number of vertices in subpolygons
-   Int_t ipol[2] = {  0, 0 }; // first vertices in subpolygons
+   Int_t npol[2] = { np, 0 }; // number of vertices in sub-polygons
+   Int_t ipol[2] = {  0, 0 }; // first vertices in sub-polygons
    if (np == 4 && icodes[2] != 0) {
       p3[4*3 + 0] = p3[0];
       p3[4*3 + 1] = p3[1];
