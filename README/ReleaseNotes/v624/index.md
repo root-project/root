@@ -40,6 +40,7 @@ The following people have contributed to this new version:
  Andrea Sciandra, SCIPP-UCSC/Atlas, \
  Oksana Shadura, UNL/CMS,\
  Enric Tejedor Saavedra, CERN/SFT,\
+ Christian Tacke, GSI, \
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
@@ -70,6 +71,20 @@ or by passing the appropriate parameter to executors' constructors, as in
 [`TThreadExecutor::TThreadExecutor`](https://root.cern/doc/master/classROOT_1_1TThreadExecutor.html#ac7783d52c56cc7875d3954cf212247bb).
 
 See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-11014) for more context.
+
+### Dynamic Path: `ROOT_LIBRARY_PATH`
+
+A new way to set ROOT's "Dynamic Path" was added: the
+environment variable `ROOT_LIBRARY_PATH`.  On Unix it should contain a colon
+separated list of paths, on Windows a semicolon separated list. It is
+intended to be cross platform and to be specific to ROOT (and thus not
+interfere with the system's shared linker).
+The final "Dynamic Path" is now composed of these sources in order:
+1. `ROOT_LIBRARY_PATH` environment variable
+2. System specific shared linker environment variables like
+   `LD_LIBRARY_PATH`, `LIBPATH`, or `PATH`.
+3. Setting from rootrc
+4. ROOT's builtin library directory
 
 ### Interpreter
 
