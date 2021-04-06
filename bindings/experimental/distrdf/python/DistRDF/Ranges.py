@@ -3,6 +3,11 @@ import logging
 
 import ROOT
 
+try:
+    from functools import lru_cache
+except ImportError:
+    from backports.functools_lru_cache import lru_cache
+
 EntriesRange = collections.namedtuple("EntriesRange", ["start", "end", "nentries"])
 TreeRange = collections.namedtuple(
     "TreeRange", ["start", "end", "treename", "treefilenames", "friendnamesalias", "friendfilenames", "friendchainsubnames", "defaultbranches"])
@@ -51,6 +56,7 @@ def _n_even_chunks(iterable, n_chunks):
         last = cur
 
 
+@lru_cache(maxsize=None)
 def get_clusters(treename, filelist):
     """
     Extract a list of cluster boundaries for the given tree and files
@@ -111,6 +117,7 @@ def get_clusters(treename, filelist):
     return clusters
 
 
+@lru_cache(maxsize=None)
 def get_balanced_ranges(nentries, npartitions):
     """
     Builds range pairs from the given values of the number of entries in
@@ -257,7 +264,7 @@ def get_clustered_ranges(clustersinfiles, npartitions, treename, friendnamesalia
         TreeRange(
             min(clusters)[0] - clusters[0].offset,  # type: int
             max(clusters)[1] - clusters[0].offset,  # type: int
-            treename, # type: str
+            treename,  # type: str
             [
                 filetuple.filename
                 for filetuple in sorted(set([
