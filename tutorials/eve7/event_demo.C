@@ -70,7 +70,7 @@ void addPoints()
 {
    REX::REveElement* event = eveMng->GetEventScene();
 
-   auto pntHolder = new REX::REveElement("Hits");
+   auto pntHolder = new REX::REveCompound("Hits");
 
    auto ps1 = getPointSet(20, 100);
    ps1->SetName("Points_1");
@@ -97,7 +97,7 @@ void addTracks()
    prop->SetMaxZ(600);
    prop->SetMaxOrbs(6);
 
-   auto trackHolder = new REX::REveElement("Tracks");
+   auto trackHolder = new REX::REveCompound("Tracks");
 
    double v = 0.2;
    double m = 5;
@@ -129,7 +129,7 @@ void addJets()
    TRandom &r = *gRandom;
 
    REX::REveElement *event = eveMng->GetEventScene();
-   auto jetHolder = new REX::REveElement("Jets");
+   auto jetHolder = new REX::REveCompound("Jets");
 
    int N_Jets = 5 + r.Integer(5);
    for (int i = 0; i < N_Jets; i++)

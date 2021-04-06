@@ -195,7 +195,7 @@ sap.ui.define([], function() {
 
       if ((this.handle.kind != "file") || (mir_call == "NextEvent()")) {
 
-         var req = {
+         let req = {
             "mir" : mir_call,
             "fElementId" : element_id,
             "class" : element_class
@@ -210,7 +210,7 @@ sap.ui.define([], function() {
     * onSceneChanged */
    EveManager.prototype.RegisterSceneReceiver = function(id, receiver, func_name) {
 
-      var elem = this.GetElement(id);
+      let elem = this.GetElement(id);
 
       if (!elem) return;
 
@@ -230,8 +230,8 @@ sap.ui.define([], function() {
    /** Invoke function on all receiver of scene events - when such function exists */
    EveManager.prototype.callSceneReceivers = function (scene, fname, arg) {
       if (scene.$receivers) {
-          for (var i=0; i < scene.$receivers.length; i++) {
-              var receiver = scene.$receivers[i];
+          for (let i=0; i < scene.$receivers.length; i++) {
+              let receiver = scene.$receivers[i];
               if (typeof receiver[fname] == "function")
                  receiver[fname](arg);
           }
@@ -249,16 +249,16 @@ sap.ui.define([], function() {
       if (arr[0].fTotalBinarySize)
          this.last_json = arr;
 
-      for (var n = 1; n < arr.length; ++n)
+      for (let n = 1; n < arr.length; ++n)
       {
-         var elem = arr[n];
+         let elem = arr[n];
 
-         var obj = this.map[elem.fElementId];
+         let obj = this.map[elem.fElementId];
 
          if ( ! obj) // YYYY isn't it an error if obj exists?
          {
             // element did not exist up to now
-            var parent = null;
+            let parent = null;
             if (elem.fMotherId !== 0) {
                parent = this.map[elem.fMotherId];
             } else {
@@ -274,8 +274,7 @@ sap.ui.define([], function() {
 
             parent.childs.push(elem);
 
-            // YYYY why?
-            obj = this.map[elem.fElementId] = elem;
+            this.map[elem.fElementId] = elem;
          }
 
          this.ParseUpdateTriggersAndProcessPostStream(elem);
@@ -289,23 +288,24 @@ sap.ui.define([], function() {
 
    //______________________________________________________________________________
 
-   EveManager.prototype.RecursiveRemove = function(elem, delSet) {
-      var elId = elem.fElementId;
-      var motherId = elem.fMotherId;
+   EveManager.prototype.RecursiveRemove = function(elem, delSet)
+   {
+      let elId     = elem.fElementId;
+      let motherId = elem.fMotherId;
 
       // iterate children
       if (elem.childs !== undefined) {
          while (elem.childs.length > 0) {
-            var n = 0;
-            var sub = elem.childs[n];
+            let n = 0;
+            let sub = elem.childs[n];
             this.RecursiveRemove(sub, delSet);
          }
       }
 
-      // delete myself from mater
-      var mother = this.GetElement(motherId);
-      var mc = mother.childs;
-      for (var i = 0; i < mc.length; ++i) {
+      // delete myself from master
+      let mother = this.GetElement(motherId);
+      let mc = mother.childs;
+      for (let i = 0; i < mc.length; ++i) {
 
          if (mc[i].fElementId === elId) {
             mc.splice(i, 1);
@@ -323,39 +323,38 @@ sap.ui.define([], function() {
 
    EveManager.prototype.ImportSceneChangeJson = function(msg)
    {
-      var arr = msg.arr;
       this.last_json = null;
       this.scene_changes = msg;
 
-      var scene = this.GetElement(msg.header.fSceneId);
+      let scene = this.GetElement(msg.header.fSceneId);
       // console.log("ImportSceneChange", scene.fName, msg);
 
       // notify scenes for beginning of changes and
       // notify for element removal
-      var removedIds = msg.header["removedElements"]; // AMT empty set should not be sent at the first place
+      let removedIds = msg.header["removedElements"]; // AMT empty set should not be sent at the first place
       if (removedIds.length)
          this.callSceneReceivers(scene, "elementsRemoved", removedIds);
 
-      var delSet = new Set();
-      for (var r = 0; r < removedIds.length; ++r) {
-         var id  = removedIds[r];
+      let delSet = new Set();
+      for (let r = 0; r < removedIds.length; ++r) {
+         let id  = removedIds[r];
          delSet.add(id);
       }
-     // console.log("start with delSet ", delSet);
+      // console.log("start with delSet ", delSet);
       while (delSet.size != 0) {
-         var it = delSet.values();
-         var id = it.next().value;
+         let it = delSet.values();
+         let id = it.next().value;
          // console.log("going to call RecursiveRemove .... ", this.map[id]);
          this.RecursiveRemove(this.GetElement(id), delSet);
-         // console.log("complete RecursiveREmove ", delSet);
+         // console.log("complete RecursiveRemove ", delSet);
       }
 
       // wait for binary if needed
       if (msg.header.fTotalBinarySize)
       {
           this.last_json = [1];
-          for (var i = 0; i < arr.length; ++i)
-              this.last_json.push(arr[i]);
+          for (let i = 0; i < msg.arr.length; ++i)
+              this.last_json.push(msg.arr[i]);
 
       } else {
          this.CompleteSceneChanges();
@@ -369,28 +368,28 @@ sap.ui.define([], function() {
    {
       if (!this.scene_changes) return;
 
-      var arr = this.scene_changes.arr;
-      var header = this.scene_changes.header;
-      var scene = this.GetElement(header.fSceneId);
-      var nModified = header["numRepresentationChanged"];
+      let arr = this.scene_changes.arr;
+      let header = this.scene_changes.header;
+      let scene = this.GetElement(header.fSceneId);
+      let nModified = header["numRepresentationChanged"];
 
       // first import new elements in element map
-      for (var n=0; n<arr.length; ++n)
+      for (let n=0; n<arr.length; ++n)
       {
-         var em = arr[n];
+         let em = arr[n];
          if (em.changeBit & this.EChangeBits.kCBAdded) {
             this.map[em.fElementId] = em;
          }
       }
 
-      for (var n=0; n<arr.length; ++n)
+      for (let n=0; n<arr.length; ++n)
       {
-         var em = arr[n];
+         let em = arr[n];
 
          em.tag = "changeBit";
          if (em.changeBit & this.EChangeBits.kCBAdded) {
              // create new
-            var parent = this.map[em.fMotherId];
+            let parent = this.map[em.fMotherId];
             if (!parent.childs) // YYYY do we really need to create arrays here? Can it really be undef?
                parent.childs = [];
             parent.childs.push(em);
@@ -401,7 +400,7 @@ sap.ui.define([], function() {
          }
 
          // merge new and old element
-         var obj = this.map[em.fElementId];
+         let obj = this.map[em.fElementId];
          if(!obj) {
             console.log("ERRROR can't find element in map ", em); continue;
          }
@@ -444,10 +443,10 @@ sap.ui.define([], function() {
    EveManager.prototype.FindViewers = function(chlds) {
       if (chlds === undefined) chlds = this.childs;
 
-      for (var k=0;k<chlds.length;++k) {
+      for (let k=0;k<chlds.length;++k) {
          if (!chlds[k].childs) continue;
          if (chlds[k]._typename == "ROOT::Experimental::REveViewerList") return chlds[k].childs;
-         var res = this.FindViewers(chlds[k].childs);
+         let res = this.FindViewers(chlds[k].childs);
          if (res) return res;
       }
    }
@@ -456,17 +455,17 @@ sap.ui.define([], function() {
 
       if (!this.last_json || !rawdata || !rawdata.byteLength) return;
 
-      var arr = this.last_json;
+      let arr = this.last_json;
       this.last_json = null;
 
-      var lastoff = offset;
+      let lastoff = offset;
 
-      for (var n=1; n<arr.length;++n) {
-         var elem = arr[n];
+      for (let n=1; n<arr.length;++n) {
+         let elem = arr[n];
 
          if (!elem.render_data) continue;
 
-         var rd = elem.render_data,
+         let rd = elem.render_data,
              off = offset + rd.rnr_offset,
              obj = this.GetElement(elem.fElementId);
 
@@ -562,7 +561,7 @@ sap.ui.define([], function() {
          return;
       }
 
-      var oldMap = new Map();
+      let oldMap = new Map();
       sel.prev_sel_list.forEach(function(rec) {
          let iset = new Set(rec.sec_idcs);
          let x    = { "valid": true, "implied": rec.implied, "set": iset, "extra": rec.extra };
@@ -574,7 +573,7 @@ sap.ui.define([], function() {
       // I probably can't just throw them out, especially not for the selection primary as it is used
       // as a key.
 
-      var newMap = new Map();
+      let newMap = new Map();
       sel.sel_list.forEach(function(rec) {
          let iset = new Set(rec.sec_idcs);
          let x    = { "valid": true, "implied": rec.implied, "set": iset, "extra": rec.extra };
@@ -607,17 +606,17 @@ sap.ui.define([], function() {
          }
       }
 
-      var changedSet = new Set();
-      for (var [id, value] of oldMap.entries())
+      let changedSet = new Set();
+      for (let [id, value] of oldMap.entries())
       {
          if (JSROOT.EVE.DebugSelection)
             console.log("UnSel prim", id, this.GetElement(id), this.GetElement(id).fSceneId);
 
          this.UnselectElement(sel, id);
-         var iel = this.GetElement(id);
+         let iel = this.GetElement(id);
          changedSet.add(iel.fSceneId);
 
-         for (var imp of value.implied)
+         for (let imp of value.implied)
          {
             if (JSROOT.EVE.DebugSelection)
                console.log("UnSel impl", imp, this.GetElement(imp), this.GetElement(imp).fSceneId);
@@ -627,13 +626,13 @@ sap.ui.define([], function() {
          }
       }
 
-      for (var [id, value] of newMap.entries())
+      for (let [id, value] of newMap.entries())
       {
          if (JSROOT.EVE.DebugSelection)
             console.log("Sel prim", id, this.GetElement(id), this.GetElement(id).fSceneId);
 
-         var secIdcs = Array.from(value.set);
-         var iel = this.GetElement(id);
+         let secIdcs = Array.from(value.set);
+         let iel = this.GetElement(id);
          if ( ! iel) {
             console.log("EveManager.prototype.UT_Selection_Refresh_State this should not happen ", iel);
             continue;
@@ -641,7 +640,7 @@ sap.ui.define([], function() {
          changedSet.add(iel.fSceneId);
          this.SelectElement(sel, id, secIdcs, value.extra);
 
-         for (var imp of value.implied)
+         for (let imp of value.implied)
          {
             if (JSROOT.EVE.DebugSelection)
                console.log("Sel impl", imp, this.GetElement(imp), this.GetElement(imp).fSceneId);
@@ -716,11 +715,11 @@ sap.ui.define([], function() {
    EveManager.prototype.ServerEndRedrawCallback = function()
    {
       // console.log("ServerEndRedrawCallback ", this.listScenesToRedraw);
-      var recs = new Set();
-      for ( var i =0; i < this.listScenesToRedraw.length; i++) {
-         var scene = this.listScenesToRedraw[i];
+      let recs = new Set();
+      for ( let i =0; i < this.listScenesToRedraw.length; i++) {
+         let scene = this.listScenesToRedraw[i];
          if (scene.$receivers) {
-            for (var r=0; r < scene.$receivers.length; r++) {
+            for (let r=0; r < scene.$receivers.length; r++) {
                recs.add( scene.$receivers[r]);
             }
          }
@@ -735,10 +734,10 @@ sap.ui.define([], function() {
 
    /** Method invoked from server message to browse to element elid */
    EveManager.prototype.BrowseElement = function(elid) {
-      var scenes = this.getSceneElements();
+      let scenes = this.getSceneElements();
 
-      for (var i = 0; i < scenes.length; ++i) {
-         var scene = this.GetElement(scenes[i].fElementId);
+      for (let i = 0; i < scenes.length; ++i) {
+         let scene = this.GetElement(scenes[i].fElementId);
          this.callSceneReceivers(scene, "BrowseElement", elid);
          break; // normally default scene is enough
       }
@@ -773,10 +772,10 @@ sap.ui.define([], function() {
 
    /** find elements ids where fMasterId equal to provided */
    EveManager.prototype.FindElemetsForMaster = function(elementId, collect_ids) {
-      var res = [];
+      let res = [];
 
-      for (var elid in this.map) {
-         var el = this.map[elid];
+      for (let elid in this.map) {
+         let el = this.map[elid];
          if ((el.fMasterId === elementId) && (el.fElementId !== elementId))
             res.push(collect_ids ? el.fElementId : el);
       }
@@ -787,9 +786,9 @@ sap.ui.define([], function() {
    /** used to intercept NewElementPicked for hightlight and selection @private */
    EveManager.prototype._intercept_NewElementPicked = function(elementId) {
 
-      var mirElem = this.GetElement(this._intercept_id);
+      let mirElem = this.GetElement(this._intercept_id);
 
-      var msg1 = { content: "BeginChanges" }, msg3 = { content: "EndChanges" },
+      let msg1 = { content: "BeginChanges" }, msg3 = { content: "EndChanges" },
           msg2 = { arr: [ JSROOT.extend({UT_PostStream:"UT_Selection_Refresh_State", changeBit: 4}, mirElem) ],
                    header:{ content:"ElementsRepresentaionChanges", fSceneId: mirElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[] }};
 
@@ -802,7 +801,7 @@ sap.ui.define([], function() {
 
    /** used to intercept BrowseElement call @private */
    EveManager.prototype._intercept_BrowseElement = function(elementId) {
-      var msg1 = { content: "BrowseElement", id: elementId },
+      let msg1 = { content: "BrowseElement", id: elementId },
           msg2 = { content: "BeginChanges" },
           msg3 = { content: "EndChanges" };
 
@@ -812,10 +811,10 @@ sap.ui.define([], function() {
    /** @summary used to intercept SetRnrSelf call
      * @private */
    EveManager.prototype._intercept_SetRnrSelf = function(flag) {
-      var messages = [{ content: "BeginChanges" }];
+      let messages = [{ content: "BeginChanges" }];
 
-      var mirElem = this.GetElement(this._intercept_id);
-      var msg = { arr: [{ changeBit:8, fElementId: mirElem.fElementId, fRnrChildren: mirElem.fRnrChildren, fRnrSelf: flag }],
+      let mirElem = this.GetElement(this._intercept_id);
+      let msg = { arr: [{ changeBit:8, fElementId: mirElem.fElementId, fRnrChildren: mirElem.fRnrChildren, fRnrSelf: flag }],
                   header:{ content: "ElementsRepresentaionChanges", fSceneId: mirElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[]}};
 
       messages.push(msg);
@@ -833,12 +832,12 @@ sap.ui.define([], function() {
    /** @summary used to intercept SetMainColorRGB
      * @private */
    EveManager.prototype._intercept_SetMainColorRGB = function(colr, colg, colb) {
-      var messages = [{ content: "BeginChanges" }];
+      let messages = [{ content: "BeginChanges" }];
 
-      var newColor = JSROOT.Painter.addColor("rgb(" + colr + "," + colg + "," + colb + ")");
+      let newColor = JSROOT.Painter.addColor("rgb(" + colr + "," + colg + "," + colb + ")");
 
-      var mirElem = this.GetElement(this._intercept_id);
-      var msg = { arr: [ JSROOT.extend({changeBit:1}, mirElem) ],
+      let mirElem = this.GetElement(this._intercept_id);
+      let msg = { arr: [ JSROOT.extend({changeBit:1}, mirElem) ],
                   header:{ content: "ElementsRepresentaionChanges", fSceneId: mirElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[]}};
 
       msg.arr[0].fMainColor = newColor;
@@ -847,7 +846,7 @@ sap.ui.define([], function() {
       messages.push(msg);
 
       this.FindElemetsForMaster(this._intercept_id).forEach(function(subElem) {
-         var msg = { arr: [ JSROOT.extend({changeBit:1}, subElem) ],
+         let msg = { arr: [ JSROOT.extend({changeBit:1}, subElem) ],
                header: { content: "ElementsRepresentaionChanges", fSceneId: subElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[]}};
          msg.arr[0].fMainColor = newColor;
          msg.arr[0].sel_list = msg.arr[0].prev_sel_list = msg.arr[0].render_data = undefined;
@@ -866,7 +865,7 @@ sap.ui.define([], function() {
          return false;
 
       // just do not intercept
-      var do_intercept = false;
+      let do_intercept = false;
 
       if (((mir_call.indexOf("NewElementPicked(") == 0) && ((element_id == this.global_highlight_id) || (element_id == this.global_selection_id))) ||
           ((mir_call.indexOf("BrowseElement(") == 0) && (element_id == 0)) ||
@@ -884,7 +883,7 @@ sap.ui.define([], function() {
       if (mir_call.indexOf("SetMainColorRGB(") == 0)
          mir_call = mir_call.replace(/\(UChar_t\)/g, '');
 
-      var func = new Function('JSROOT.$eve7mir._intercept_' + mir_call);
+      let func = new Function('JSROOT.$eve7mir._intercept_' + mir_call);
 
       try {
          func();
