@@ -1,5 +1,19 @@
 #include "ntuple_test.hxx"
 
+TEST(RNTuple, StreamInt)
+{
+   std::int32_t value;
+   unsigned char buffer[4];
+
+   EXPECT_EQ(4, RNTupleStreamer::SerializeInt32(42, buffer));
+   EXPECT_EQ(4, RNTupleStreamer::DeserializeInt32(buffer, value));
+   EXPECT_EQ(42, value);
+
+   EXPECT_EQ(4, RNTupleStreamer::SerializeInt32(-1, buffer));
+   EXPECT_EQ(4, RNTupleStreamer::DeserializeInt32(buffer, value));
+   EXPECT_EQ(-1, value);
+}
+
 TEST(RNTuple, StreamString)
 {
    std::string s;
@@ -53,7 +67,8 @@ TEST(RNTuple, StreamEnvelope)
       EXPECT_THAT(err.what(), testing::HasSubstr("CRC32"));
    }
 
-   RNTupleStreamer::SerializeCRC32(reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32);
+   EXPECT_EQ(4u, RNTupleStreamer::SerializeEnvelopePostscript(
+      reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32));
    try {
       RNTupleStreamer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope));
       FAIL() << "unsupported version should throw";
@@ -62,18 +77,86 @@ TEST(RNTuple, StreamEnvelope)
    }
 
    testEnvelope.writerVersion = RNTupleStreamer::kEnvelopeCurrentVersion;
-   RNTupleStreamer::SerializeCRC32(reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32);
+   RNTupleStreamer::SerializeEnvelopePostscript(
+      reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32);
    EXPECT_EQ(4u, RNTupleStreamer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)));
 
    testEnvelope.writerVersion = RNTupleStreamer::kEnvelopeCurrentVersion + 1;
    testEnvelope.minVersion = RNTupleStreamer::kEnvelopeCurrentVersion + 1;
-   RNTupleStreamer::SerializeCRC32(reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32);
+   EXPECT_EQ(4u, RNTupleStreamer::SerializeEnvelopePostscript(
+      reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32));
    try {
       RNTupleStreamer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope));
       FAIL() << "unsupported version should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too new"));
    }
+}
+
+TEST(RNTuple, StreamFrame)
+{
+   std::uint32_t frameSize;
+   std::uint32_t nitems;
+
+   try {
+      RNTupleStreamer::DeserializeFrame(nullptr, 0, frameSize);
+      FAIL() << "too small frame should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+
+   unsigned char buffer[12];
+   EXPECT_EQ(4u, RNTupleStreamer::SerializeRecordFramePreamble(buffer));
+   try {
+      RNTupleStreamer::SerializeFramePostscript(buffer, 3);
+      FAIL() << "too small frame should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+   EXPECT_EQ(0u, RNTupleStreamer::SerializeFramePostscript(buffer, 6));
+
+   try {
+      RNTupleStreamer::DeserializeFrame(buffer, 4, frameSize);
+      FAIL() << "too small frame should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+   EXPECT_EQ(4u, RNTupleStreamer::DeserializeFrame(buffer, 6, frameSize, nitems));
+   EXPECT_EQ(6u, frameSize);
+   EXPECT_EQ(1u, nitems);
+
+   EXPECT_EQ(4u, RNTupleStreamer::SerializeRecordFramePreamble(buffer));
+   try {
+      RNTupleStreamer::SerializeFramePostscript(buffer, -2);
+      FAIL() << "too big frame should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too large"));
+   }
+
+   try {
+      RNTupleStreamer::SerializeListFramePreamble(1 << 29, buffer);
+      FAIL() << "too big list frame should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too large"));
+   }
+   EXPECT_EQ(8u, RNTupleStreamer::SerializeListFramePreamble(2, buffer));
+   try {
+      RNTupleStreamer::SerializeFramePostscript(buffer, 7);
+      FAIL() << "too small frame should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+   EXPECT_EQ(0u, RNTupleStreamer::SerializeFramePostscript(buffer, 12));
+
+   try {
+      RNTupleStreamer::DeserializeFrame(buffer, 6, frameSize, nitems);
+      FAIL() << "too short list frame should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+   EXPECT_EQ(8u, RNTupleStreamer::DeserializeFrame(buffer, 12, frameSize, nitems));
+   EXPECT_EQ(12u, frameSize);
+   EXPECT_EQ(2u, nitems);
 }
 
 TEST(RNTuple, StreamFeatureFlags)
