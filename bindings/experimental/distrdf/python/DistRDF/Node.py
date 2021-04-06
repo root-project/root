@@ -10,12 +10,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import collections
-import glob
 import logging
-import warnings
-
-import ROOT
 
 from DistRDF.Operation import Operation
 

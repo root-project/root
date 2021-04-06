@@ -1,13 +1,11 @@
 import collections
-import glob
 import logging
-import warnings
 
 import ROOT
 
-EntriesRange = collections.namedtuple("EntriesRange", ["start", "end"])
+EntriesRange = collections.namedtuple("EntriesRange", ["start", "end", "nentries"])
 TreeRange = collections.namedtuple(
-    "TreeRange", ["start", "end", "treename", "treefilenames", "friendnames", "friendfilenames"])
+    "TreeRange", ["start", "end", "treename", "treefilenames", "friendnamesalias", "friendfilenames", "friendchainsubnames", "defaultbranches"])
 
 logger = logging.getLogger(__name__)
 
@@ -147,12 +145,12 @@ def get_balanced_ranges(nentries, npartitions):
             end = i = end + 1
             remainder -= 1
 
-        ranges.append(EntriesRange(start, end))
+        ranges.append(EntriesRange(start, end, nentries))
 
     return ranges
 
 
-def get_clustered_ranges(clustersinfiles, npartitions, treename, friend_info):
+def get_clustered_ranges(clustersinfiles, npartitions, treename, friendnamesalias, friendfilenames, friendchainsubnames, defaultbranches):
     """
     Builds ``Range`` objects taking into account the clusters of the
     dataset. Each range will represent the entries processed within a single
@@ -266,8 +264,10 @@ def get_clustered_ranges(clustersinfiles, npartitions, treename, friend_info):
                     cluster.filetuple for cluster in clusters
                 ]), key=lambda curtuple: curtuple[1])
             ],  # type: list[str]
-            friend_info.friend_names,  # type: list[str]
-            friend_info.friend_file_names  # type: list[str]
+            friendnamesalias,  # type: list[str]
+            friendfilenames,  # type: list[str]
+            friendchainsubnames, # type: list[str]
+            defaultbranches,  # type: list[str]
         )  # type: collections.namedtuple
         for clusters in _n_even_chunks(clustersinfiles, npartitions)
     ]

@@ -10,51 +10,6 @@ from DistRDF import Ranges
 logger = logging.getLogger(__name__)
 
 
-class FriendInfo(object):
-    """
-    A simple class to hold information about friend trees.
-
-    Attributes:
-        friend_names (list): A list with the names of the `ROOT.TTree` objects
-            which are friends of the main `ROOT.TTree`.
-
-        friend_file_names (list): A list with the paths to the files
-            corresponding to the trees in the `friend_names` attribute. Each
-            element of `friend_names` can correspond to multiple file names.
-    """
-
-    def __init__(self, friend_names=[], friend_file_names=[]):
-        """
-        Create an instance of FriendInfo
-
-        Args:
-            friend_names (list): A list containing the treenames of the friend
-                trees.
-
-            friend_file_names (list): A list containing the file names
-                corresponding to a given treename in friend_names. Each
-                treename can correspond to multiple file names.
-        """
-        self.friend_names = friend_names
-        self.friend_file_names = friend_file_names
-
-    def __bool__(self):
-        """
-        Define the behaviour of FriendInfo instance when boolean evaluated.
-        Both lists have to be non-empty in order to return True.
-
-        Returns:
-            bool: True if both lists are non-empty, False otherwise.
-        """
-        return bool(self.friend_names) and bool(self.friend_file_names)
-
-    def __nonzero__(self):
-        """
-        Python 2 dunder method for __bool__. Kept for compatibility.
-        """
-        return self.__bool__()
-
-
 class Factory(object):
     """
     A factory for different kinds of root nodes of the RDataFrame computation
@@ -95,6 +50,8 @@ class EntriesHeadNode(Node.Node):
     The head node of a computation graph where the RDataFrame is created from
     a number of entries.
     """
+
+    TYPE = "ENTRIES"
 
     def __init__(self, nentries):
         """
@@ -141,6 +98,8 @@ class TreeHeadNode(Node.Node):
     `RDataFrame <https://root.cern/doc/master/classROOT_1_1RDataFrame.html>`_)
     """
 
+    TYPE = "TREE"
+
     def __init__(self, *args):
         """
         Creates a new RDataFrame instance for the given arguments.
@@ -181,6 +140,11 @@ class TreeHeadNode(Node.Node):
     def inputfiles(self):
         """List of input files of the dataset if any"""
         return self.get_inputfiles()
+
+    @property
+    def friendinfo(self):
+        """Retrieve information about friend trees"""
+        return self.get_friendinfo()
 
     def get_branches(self):
         """Gets list of default branches if passed by the user."""
@@ -232,16 +196,13 @@ class TreeHeadNode(Node.Node):
             (str, None): Name of the TTree, or :obj:`None` if there is no tree.
 
         """
-        first_arg = self.args[0]
-        if isinstance(first_arg, ROOT.TChain):
-            # Get name from a given TChain
-            return first_arg.GetName()
-        elif isinstance(first_arg, ROOT.TTree):
-            # Get name directly from the TTree
-            return first_arg.GetUserInfo().At(0).GetName()
-        elif isinstance(first_arg, str):
+        firstarg = self.args[0]
+        if isinstance(firstarg, ROOT.TTree):
+            treefullpaths = ROOT.Internal.TreeUtils.GetTreeFullPaths(firstarg)
+            return treefullpaths[0]
+        elif isinstance(firstarg, str):
             # First argument was the name of the tree
-            return first_arg
+            return firstarg
         else:
             raise RuntimeError("Could not find name of the input tree.")
 
@@ -272,19 +233,10 @@ class TreeHeadNode(Node.Node):
 
         """
         firstarg = self.args[0]
-        if isinstance(firstarg, ROOT.TChain):
+        if isinstance(firstarg, ROOT.TTree):
             # Extract file names from a given TChain
-            chain = firstarg
-            return [chainElem.GetTitle()
-                    for chainElem in chain.GetListOfFiles()]
-        elif isinstance(firstarg, ROOT.TTree):
-            # Retrieve the associated file
-            treefile = firstarg.GetCurrentFile()
-            if not treefile:
-                # The tree has no associated input file
-                return None
-            else:
-                return [treefile.GetName()]
+            filenames = ROOT.Internal.TreeUtils.GetFileNamesFromTree(firstarg)
+            return [str(filename) for filename in filenames]
 
         if len(self.args) > 1:
             # Second argument can be:
@@ -306,73 +258,68 @@ class TreeHeadNode(Node.Node):
                 # Return the name of the file
                 return [str(secondarg.GetName())]
 
-        return None
+        # We should be able to retrieve file names from the input arguments.
+        # Otherwise, error out since distributed processing of a tree with no
+        # input files is not supported.
+        raise RuntimeError("Could not find input files of the tree.")
 
-    def _get_friend_info(self):
+    def get_friendinfo(self):
         """
-        Retrieve friend tree names and filenames of a given `ROOT.TTree`
-        object.
-
-        Args:
-            tree (ROOT.TTree): the ROOT.TTree instance used as an argument to
-                DistRDF.RDataFrame(). ROOT.TChain inherits from ROOT.TTree so it
-                is a valid argument too.
-
+        Retrieve information about the friends of the tree used to construct
+        this RDataFrame
         Returns:
-            (FriendInfo): A FriendInfo instance with two lists as variables.
-                The first list holds the names of the friend tree(s), the
-                second list holds the file names of each of the trees in the
-                first list, each tree name can correspond to multiple file
-                names.
+            (tuple): The list of names and aliases of the friends and their
+                corresponding filenames. If the argument to the constructor is
+                not a TTree/TChain the elements of the tuple are None.
         """
-        friend_names = []
-        friend_file_names = []
+        # Reconstruct friendinfo from the input tree
+        firstarg = self.args[0]
+        if isinstance(firstarg, ROOT.TTree):
+            # RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {})
+            # The first argument to the constructor is a TTree or TChain
+            treefriendinfo = ROOT.Internal.TreeUtils.GetFriendInfo(firstarg)
 
-        # Retrieve the TTree instance
-        tree = self.get_tree()
-
-        # Early return if the dataframe wasn't constructed from a TTree.
-        if tree is None:
-            return FriendInfo()
-
-        # Get a list of ROOT.TFriendElement objects
-        friends = tree.GetListOfFriends()
-        if not friends:
-            # RDataFrame may have been created with a TTree without
-            # friend trees.
-            return FriendInfo()
-
-        for friend in friends:
-            friend_tree = friend.GetTree()  # ROOT.TTree
-            real_name = friend_tree.GetName()  # Treename as string
-
-            # TChain inherits from TTree
-            if isinstance(friend_tree, ROOT.TChain):
-                cur_friend_files = [
-                    # The title of a TFile is the file name
-                    chain_file.GetTitle()
-                    for chain_file
-                    # Get a list of ROOT.TFile objects
-                    in friend_tree.GetListOfFiles()
-                ]
-
-            else:
-                cur_friend_files = [
-                    friend_tree.
-                    GetCurrentFile().  # ROOT.TFile
-                    GetName()  # Filename as string
-                ]
-            friend_file_names.append(cur_friend_files)
-            friend_names.append(real_name)
-
-        return FriendInfo(friend_names, friend_file_names)
+            # Convert to tuples to be able to hash them and cache the clustered ranges
+            friendnamesalias = tuple((str(namealias.first), str(namealias.second))
+                                     for namealias in treefriendinfo.fFriendNames)
+            friendfilenames = tuple(tuple(str(filename) for filename in filenames)
+                                    for filenames in treefriendinfo.fFriendFileNames)
+            friendchainsubnames = tuple(tuple(str(subname) for subname in chainsubnames)
+                                    for chainsubnames in treefriendinfo.fFriendChainSubNames)
+            return friendnamesalias, friendfilenames, friendchainsubnames
+        else:
+            return None, None, None
 
     def build_ranges(self):
         """Build the ranges for this dataset."""
-        # Empty datasets cannot be processed distributedly
+
+        # Empty trees cannot be processed distributedly
         if not self.nentries:
             raise RuntimeError(
-                ("Cannot build a distributed RDataFrame with zero entries. "
-                 "Distributed computation will fail. "))
+                ("No entries in the TTree. "
+                 "Distributed computation will fail. "
+                 "Please make sure your dataset is not empty."))
 
-        return Ranges.get_clustered_ranges(self.treename, self.inputfiles, self._get_friend_info())
+        treename = self.treename
+        inputfiles = self.inputfiles
+        friendnamesalias, friendfilenames, friendchainsubnames = self.friendinfo
+        defaultbranches = self.defaultbranches
+
+        logger.debug("Building ranges for tree %s with the "
+                     "following input files:\n%s", treename, inputfiles)
+
+        # Retrieve a tuple of clusters for all files of the tree
+        clustersinfiles = Ranges.get_clusters(treename, tuple(inputfiles))
+        numclusters = len(clustersinfiles)
+
+        # Restrict `npartitions` if it's greater than clusters of the dataset
+        if self.npartitions > numclusters:
+            msg = ("Number of partitions is greater than number of clusters "
+                   "in the dataset. Using {} partition(s)".format(numclusters))
+            warnings.warn(msg, UserWarning, stacklevel=2)
+            self.npartitions = numclusters
+
+        logger.debug("%s clusters will be split along %s partitions.",
+                     numclusters, self.npartitions)
+        return Ranges.get_clustered_ranges(tuple(clustersinfiles), self.npartitions, treename, friendnamesalias,
+                                           friendfilenames, friendchainsubnames, defaultbranches)
