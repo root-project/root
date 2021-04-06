@@ -1,4 +1,5 @@
 import unittest
+from array import array
 
 import ROOT
 from DistRDF import Node
@@ -20,6 +21,20 @@ class DataFrameConstructorTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             # No argument case
             Node.HeadNode()
+
+    def test_inmemory_tree(self):
+        """Constructor with an in-memory-only tree is not supported"""
+        tree = ROOT.TTree("tree", "Tree in memory")
+        x = array("i", [0])
+        tree.Branch("x", x, "x/I")
+        for i in range(100):
+            x[0] = i
+            tree.Fill()
+
+        headnode = Node.HeadNode(tree)
+        with self.assertRaises(RuntimeError):
+            # Trees with no associated files are not supported
+            headnode.get_inputfiles()
 
     def assertArgs(self, args_list1, args_list2):
         """
