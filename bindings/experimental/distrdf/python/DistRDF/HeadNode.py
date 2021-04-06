@@ -5,6 +5,7 @@ import warnings
 import ROOT
 
 from DistRDF import Node
+from DistRDF import Ranges
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +123,7 @@ class EntriesHeadNode(Node.Node):
                    "in the dataframe. Using {1} partition(s)".format(self.npartitions, self.nentries))
             warnings.warn(msg, UserWarning, stacklevel=2)
             self.npartitions = self.nentries
-        return Node.RangesBuilder(self).get_balanced_ranges(self.nentries)
+        return Ranges.get_balanced_ranges(self.nentries, self.npartitions)
 
 
 class TreeHeadNode(Node.Node):
@@ -374,4 +375,4 @@ class TreeHeadNode(Node.Node):
                 ("Cannot build a distributed RDataFrame with zero entries. "
                  "Distributed computation will fail. "))
 
-        return Node.RangesBuilder(self).get_clustered_ranges(self.treename, self.inputfiles, self._get_friend_info())
+        return Ranges.get_clustered_ranges(self.treename, self.inputfiles, self._get_friend_info())
