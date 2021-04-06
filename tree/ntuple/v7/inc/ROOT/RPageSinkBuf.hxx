@@ -46,8 +46,11 @@ private:
          fBuf.second.emplace_back(page);
       }
       const RPageStorage::ColumnHandle_t &GetHandle() const { return fBuf.first; }
-      const std::vector<RPage> &GetBufferedPages() const { return fBuf.second; }
-      void Clear() { fBuf.second.clear(); }
+      std::vector<RPage> DrainBufferedPages() {
+         std::vector<RPage> drained;
+         std::swap(fBuf.second, drained);
+         return drained;
+      }
    };
 
 private:
