@@ -44,6 +44,7 @@ class REveSceneList;
 class RWebWindow;
 class REveGeomViewer;
 
+
 class REveManager
 {
    REveManager(const REveManager&) = delete;
@@ -58,6 +59,12 @@ public:
       virtual EStatus  Handle(std::exception& exc);
 
       ClassDef(RExceptionHandler, 0);
+   };
+
+   class ChangeGuard {
+      public:
+      ChangeGuard();
+      ~ChangeGuard();
    };
 
    struct Conn
@@ -162,6 +169,9 @@ public:
 
    REveViewer *SpawnNewViewer(const char *name, const char *title = "");
    REveScene *SpawnNewScene(const char *name, const char *title = "");
+
+   void BeginChangeGuard();
+   void EndChangeGuard();
 
    void SceneSubscriberProcessingChanges(unsigned cinnId);
    void SceneSubscriberWaitingResponse(unsigned cinnId);
