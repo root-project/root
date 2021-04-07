@@ -725,9 +725,9 @@ guarantee on the order in which Snapshot() will _write_ entries: they could be s
 
 \warning By default, RDataFrame will use as many threads as the hardware supports, using up **all** the resources on
 a machine. This might be undesirable on shared computing resources such as a batch cluster. Therefore, when running on shared computing resources, use
-```
+~~~{.cpp}
 ROOT::EnableImplicitMT(i)
-```
+~~~
 replacing `i` with the number of CPUs/slots that were allocated for this job.
 
 ### Thread-safety of user-defined expressions
