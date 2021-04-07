@@ -68,6 +68,14 @@ RooFit now contains two RDataFrame action helpers, `RooDataSetHelper` and `RooDa
 ```
 For more details, consult the tutorial [rf408_RDataFrameToRooFit](https://root.cern/doc/v626/rf408__RDataFrameToRooFit_8C.html).
 
+### Changes in `RooAbsPdf::fitTo` behaviour for multi-range fits
+
+The `RooAbsPdf::fitTo` and `RooAbsPdf::createNLL` functions accept a command argument to specify the fit range.
+One can also fit in multiple ranges simultaneously.
+The definition of such multi-range likelihoods for non-extended fits changes in this release.
+Previously, the individual likelihoods were normalized separately in each range, which meant that the relative number of events in each sub-range was not used to estimate the PDF parameters.
+From now on, the likelihoods are normalized by the sum of integrals in each range. This implies that the likelihood takes into account all inter-range and intra-range information.
+
 ## 2D Graphics Libraries
 
 
