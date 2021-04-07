@@ -528,13 +528,13 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeEnvelopePo
 
 /// Currently all enevelopes have the same version number (1). At a later point, different envelope types
 /// may have different version numbers
-std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeEnvelope(void *buffer, std::uint32_t size)
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeEnvelope(void *buffer, std::uint32_t bufSize)
 {
-   if (size < 8)
+   if (bufSize < (2 * sizeof(std::uint16_t) + sizeof(std::uint32_t)))
       throw RException(R__FAIL("invalid envelope, too short"));
 
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   VerifyCRC32(bytes, size - 4);
+   VerifyCRC32(bytes, bufSize - 4);
 
    std::uint16_t protocolVersionAtWrite;
    std::uint16_t protocolVersionMinRequired;
@@ -668,6 +668,93 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeFeatureF
    } while (f < 0);
 
    return (flags.size() * sizeof(std::int64_t));
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeLocator(
+   const RClusterDescriptor::RLocator &locator, void *buffer)
+{
+   std::uint32_t size = 0;
+   if (!locator.fUrl.empty()) {
+      if (locator.fUrl.length() >= (1 << 24))
+         throw RException(R__FAIL("locator too large"));
+      std::int32_t head = locator.fUrl.length();
+      head |= 0x02 << 24;
+      head = -head;
+      size += SerializeInt32(head, buffer);
+      if (buffer)
+         memcpy(reinterpret_cast<unsigned char *>(buffer) + size, locator.fUrl.data(), locator.fUrl.length());
+      size += locator.fUrl.length();
+      return size;
+   }
+
+   if (static_cast<std::int32_t>(locator.fBytesOnStorage) < 0)
+      throw RException(R__FAIL("locator too large"));
+   size += SerializeUInt32(locator.fBytesOnStorage, buffer);
+   size += SerializeUInt64(locator.fPosition, buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
+   return size;
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeLocator(
+   const void *buffer, std::uint32_t bufSize, RClusterDescriptor::RLocator &locator)
+{
+   if (bufSize < sizeof(std::int32_t))
+      throw RException(R__FAIL("too short locator"));
+
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   std::int32_t head;
+
+   bytes += DeserializeInt32(bytes, head);
+   bufSize -= sizeof(std::int32_t);
+   if (head < 0) {
+      head = -head;
+      int type = head >> 24;
+      if (type != 0x02)
+         throw RException(R__FAIL("unsupported locator type: " + std::to_string(type)));
+      std::uint32_t locatorSize = static_cast<std::uint32_t>(head) & 0x00FFFFFF;
+      if (bufSize < locatorSize)
+         throw RException(R__FAIL("too short locator"));
+      locator.fBytesOnStorage = 0;
+      locator.fPosition = 0;
+      locator.fUrl.resize(locatorSize);
+      memcpy(&locator.fUrl[0], bytes, locatorSize);
+      bytes += locatorSize;
+   } else {
+      if (bufSize < sizeof(std::uint64_t))
+         throw RException(R__FAIL("too short locator"));
+      std::uint64_t offset;
+      bytes += DeserializeUInt64(bytes, offset);
+      locator.fUrl.clear();
+      locator.fBytesOnStorage = head;
+      locator.fPosition = offset;
+   }
+
+   return bytes - reinterpret_cast<const unsigned char *>(buffer);
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeEnvelopeLink(
+   const REnvelopeLink &envelopeLink, void *buffer)
+{
+   auto size = SerializeUInt32(envelopeLink.fUnzippedSize, buffer);
+   size += SerializeLocator(envelopeLink.fLocator,
+                            buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
+   return size;
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeEnvelopeLink(
+   const void *buffer, std::uint32_t bufSize, REnvelopeLink &envelopeLink)
+{
+   if (bufSize < sizeof(std::int32_t))
+      throw RException(R__FAIL("too short locator"));
+
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   std::uint32_t unzippedSize;
+   bytes += DeserializeUInt32(bytes, unzippedSize);
+   bufSize -= sizeof(std::uint32_t);
+   envelopeLink.fUnzippedSize = unzippedSize;
+   RClusterDescriptor::RLocator locator;
+   bytes += DeserializeLocator(bytes, bufSize, locator);
+   envelopeLink.fLocator = locator;
+   return bytes - reinterpret_cast<const unsigned char *>(buffer);
 }
 
 

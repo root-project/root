@@ -206,6 +206,99 @@ TEST(RNTuple, StreamFeatureFlags)
    }
 }
 
+TEST(RNTuple, StreamLocator)
+{
+   unsigned char buffer[16];
+   RLocator locator;
+   locator.fPosition = 1;
+   locator.fBytesOnStorage = 2;
+
+   EXPECT_EQ(12u, RNTupleStreamer::SerializeLocator(locator, nullptr));
+   EXPECT_EQ(12u, RNTupleStreamer::SerializeLocator(locator, buffer));
+   locator.fBytesOnStorage = static_cast<std::uint32_t>(-1);
+   try {
+      RNTupleStreamer::SerializeLocator(locator, buffer);
+      FAIL() << "too big locator should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too large"));
+   }
+
+   locator.fPosition = 0;
+   locator.fBytesOnStorage = 0;
+   locator.fUrl = "xyz";
+   try {
+      RNTupleStreamer::DeserializeLocator(buffer, 3, locator);
+      FAIL() << "too short locator buffer should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+   try {
+      RNTupleStreamer::DeserializeLocator(buffer, 11, locator);
+      FAIL() << "too short locator buffer should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+   EXPECT_EQ(12u, RNTupleStreamer::DeserializeLocator(buffer, 12, locator));
+   EXPECT_EQ(1u, locator.fPosition);
+   EXPECT_EQ(2u, locator.fBytesOnStorage);
+   EXPECT_TRUE(locator.fUrl.empty());
+
+   locator.fUrl = "X";
+   EXPECT_EQ(5u, RNTupleStreamer::SerializeLocator(locator, nullptr));
+   EXPECT_EQ(5u, RNTupleStreamer::SerializeLocator(locator, buffer));
+   locator.fPosition = 42;
+   locator.fBytesOnStorage = 42;
+   locator.fUrl.clear();
+   try {
+      RNTupleStreamer::DeserializeLocator(buffer, 4, locator);
+      FAIL() << "too short locator buffer should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+   EXPECT_EQ(5u, RNTupleStreamer::DeserializeLocator(buffer, 5, locator));
+   EXPECT_EQ(0u, locator.fPosition);
+   EXPECT_EQ(0u, locator.fBytesOnStorage);
+   EXPECT_EQ("X", locator.fUrl);
+
+   locator.fUrl = "abcdefghijkl";
+   EXPECT_EQ(16u, RNTupleStreamer::SerializeLocator(locator, buffer));
+   locator.fUrl.clear();
+   EXPECT_EQ(16u, RNTupleStreamer::DeserializeLocator(buffer, 16, locator));
+   EXPECT_EQ("abcdefghijkl", locator.fUrl);
+
+   std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
+   *head = (0x3 << 24) | *head;
+   try {
+      RNTupleStreamer::DeserializeLocator(buffer, 16, locator);
+      FAIL() << "unsupported locator type should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unsupported locator type"));
+   }
+}
+
+TEST(RNTuple, StreamEnvelopeLink)
+{
+   RNTupleStreamer::REnvelopeLink link;
+   link.fUnzippedSize = 42;
+   link.fLocator.fPosition = 137;
+   link.fLocator.fBytesOnStorage = 7;
+
+   unsigned char buffer[16];
+   EXPECT_EQ(16u, RNTupleStreamer::SerializeEnvelopeLink(link, nullptr));
+   EXPECT_EQ(16u, RNTupleStreamer::SerializeEnvelopeLink(link, buffer));
+   try {
+      RNTupleStreamer::DeserializeEnvelopeLink(buffer, 3, link);
+      FAIL() << "too short envelope link buffer should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+
+   RNTupleStreamer::REnvelopeLink reconstructedLink;
+   EXPECT_EQ(16u, RNTupleStreamer::DeserializeEnvelopeLink(buffer, 16, reconstructedLink));
+   EXPECT_EQ(link.fUnzippedSize, reconstructedLink.fUnzippedSize);
+   EXPECT_EQ(link.fLocator, reconstructedLink.fLocator);
+}
+
 TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;
