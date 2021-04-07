@@ -168,6 +168,7 @@ public:
    /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
    /// for a local file fUrl might be unsused and fPosition might be a file offset. Objects on storage can be compressed
    /// and therefore we need to store their actual size.
+   /// TODO(jblomer): should move the RNTUpleDescriptor and should be an std::variant
    struct RLocator {
       std::int64_t fPosition = 0;
       std::uint32_t fBytesOnStorage = 0;
@@ -751,6 +752,11 @@ public:
    static constexpr std::uint16_t kEnvelopeCurrentVersion = 1;
    static constexpr std::uint16_t kEnvelopeMinVersion = 1;
 
+   struct REnvelopeLink {
+      std::uint32_t fUnzippedSize = 0;
+      RClusterDescriptor::RLocator fLocator;
+   };
+
    /// Writes a CRC32 checksum of the byte range given by data and length.
    static std::uint32_t SerializeCRC32(const unsigned char *data, std::uint32_t length, void *buffer);
    /// Expects a CRC32 checksum in the 4 bytes following data + length and verifies it.
@@ -777,7 +783,7 @@ public:
    static std::uint32_t SerializeEnvelopePreamble(void *buffer);
    static std::uint32_t SerializeEnvelopePostscript(const unsigned char *envelope, std::uint32_t size, void *buffer);
    // The size includes the 4 bytes for the final CRC32 checksum.
-   static std::uint32_t DeserializeEnvelope(void *buffer, std::uint32_t size);
+   static std::uint32_t DeserializeEnvelope(void *buffer, std::uint32_t bufSize);
 
    static std::uint32_t SerializeRecordFramePreamble(void *buffer);
    static std::uint32_t SerializeListFramePreamble(std::uint32_t nitems, void *buffer);
@@ -791,6 +797,12 @@ public:
    static std::uint32_t SerializeFeatureFlags(const std::vector<std::int64_t> &flags, void *buffer);
    static std::uint32_t DeserializeFeatureFlags(const void *buffer, std::uint32_t size,
                                                 std::vector<std::int64_t> &flags);
+
+   static std::uint32_t SerializeLocator(const RClusterDescriptor::RLocator &locator, void *buffer);
+   static std::uint32_t DeserializeLocator(const void *buffer, std::uint32_t bufSize,
+                                           RClusterDescriptor::RLocator &locator);
+   static std::uint32_t SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);
+   static std::uint32_t DeserializeEnvelopeLink(const void *buffer, std::uint32_t bufSize, REnvelopeLink &envelopeLink);
 };
 
 }
