@@ -123,8 +123,8 @@ For on-disk / in-file locators, the 64bit byte offset of the referenced byte ran
 For object ID locators, specifies the 64bit object ID.
 FOr URI locators, the locator contains the ASCII characters of the URI following the size and the type.
 
-An envelope link consists of a locator followed by a 32bit unsigned integer
-that specifies the uncompressed size of the envelope.
+An envelope link consists of a 32bit unsigned integer that specifies the uncompressed size of the envelope
+followed by a locator.
 
 
 ## Envelopes
@@ -139,10 +139,6 @@ The following envelope types exist
 | Page list         | Location of data pages                                            |
 | User meta-data    | Key-value pairs of additional information about the data          |
 | Checkpoint (?)    | Minimal footer at X MB boundaries for recovery of crashed writes  |
-
-To minimize the number of reads and seeks when opening a file, the envelopes are ususally written in the
-following order (but they don't have to!):
-anchor, header, pages and checkpoints, footer, extension headers, page lists, meta-data.
 
 Envelopes have the following format
 
@@ -201,6 +197,8 @@ Every element of the list of fields has the following contents
 |        Structural Role        |             Flags             |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
+
+The field version and type version are used for schema evolution.
 
 If the flag 0x01 (_repetitive field_) is set, the field represents a fixed sized array.
 In this case, an additional 64bit integer specifies the size of the array.
