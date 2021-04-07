@@ -239,7 +239,7 @@ private:
 public:
    EventManager()
    {
-      std::chrono::milliseconds ms(100);
+      std::chrono::milliseconds ms(50);
       fDeltaTime = ms;
    }
 
@@ -265,8 +265,8 @@ public:
          {
             std::unique_lock<std::mutex> lock{fMutex};
             if (!fAutoplay) {
-                  // printf("exit thread pre wait\n");
-                  return;
+               // printf("exit thread pre wait\n");
+               return;
             }
             if (fCV.wait_for(lock, fDeltaTime) != std::cv_status::timeout) {
                printf("autoplay not timed out \n");
@@ -279,10 +279,9 @@ public:
             }
             autoplay = fAutoplay;
          }
-         if (autoplay)
-         {
-               REX::REveManager::ChangeGuard ch;
-               NextEvent();
+         if (autoplay) {
+            REX::REveManager::ChangeGuard ch;
+            NextEvent();
          } else {
             return;
          }
@@ -302,6 +301,7 @@ public:
                delete fTimerThread;
                fTimerThread = nullptr;
             }
+            NextEvent();
             fTimerThread = new std::thread{[this] { autoplay_scheduler(); }};
          } else {
             fCV.notify_all();
@@ -312,6 +312,7 @@ public:
    virtual void QuitRoot()
    {
       printf("Quit ROOT\n");
+      if (fAutoplay) Autoplay();
       if (gApplication)
          gApplication->Terminate();
    }
