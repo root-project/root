@@ -728,7 +728,8 @@ sap.ui.define([], function() {
          item.endChanges();
       }
 
-      this.handle.send("__REveDoneChanges");
+      if (this.handle.kind != "file")
+         this.handle.send("__REveDoneChanges");
       this.busyProcessingChanges = false;
    }
 
