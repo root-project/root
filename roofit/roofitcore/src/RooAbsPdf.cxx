@@ -1358,6 +1358,10 @@ int RooAbsPdf::calculateSumW2CorrectedCovMatrix(Minimizer &minimizer, RooAbsReal
 /// <tr><td> `ConditionalObservables(const RooArgSet& set)`  <td>  Do not normalize PDF over listed observables
 /// <tr><td> `Extended(Bool_t flag)`           <td>  Add extended likelihood term, off by default
 /// <tr><td> `Range(const char* name)`         <td>  Fit only data inside range with given name. Multiple comma-separated range names can be specified.
+///                                                  In this case, the unnormalized PDF \f$f(x)\f$ is normalized by the integral over all ranges \f$r_i\f$:
+///                                                  \f[
+///                                                      p(x) = \frac{f(x)}{\sum_i \int_{r_i} f(x) dx}.
+///                                                  \f]
 /// <tr><td> `Range(Double_t lo, Double_t hi)` <td>  Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 /// <tr><td> `SumCoefRange(const char* name)`  <td>  Set the range in which to interpret the coefficients of RooAddPdf components
 /// <tr><td> `NumCPU(int num, int strat)`      <td> Parallelize NLL calculation on `num` CPUs
