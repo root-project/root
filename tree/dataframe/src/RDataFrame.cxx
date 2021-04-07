@@ -57,6 +57,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
 - [Actions](#actions) -- getting results
 - [Performance tips and parallel execution](#parallel-execution) -- how to use it and common pitfalls
 - [More features](#more-features)
+   - [RDataFrame objects as function arguments and return values](#rnode)
    - [Storing RDataFrame objects in collections](#RDFCollections)
    - [Executing callbacks every N events](#callbacks)
    - [Default branch lists](#default-branches)
@@ -67,7 +68,6 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
    - [Reading file formats other than ROOT's](#other-file-formats)
    - [Call graphs (storing and reusing sets of transormations](#callgraphs)
    - [Visualizing the computation graph](#representgraph)
-   - [RDataFrame objects as function arguments and return values](#rnode)
 - [Class reference](#reference) -- most methods are implemented in the ROOT::RDF::RInterface base class
 
 ## <a name="cheatsheet"></a>Cheat sheet
@@ -799,9 +799,41 @@ Secondly, just-in-time compilation of string expressions or non-templated action
 Here is a list of the most important features that have been omitted in the "Crash course" for brevity.
 You don't need to read all these to start using RDataFrame, but they are useful to save typing time and runtime.
 
+### <a name="rnode"></a>RDataFrame objects as function arguments and return values
+RDataFrame variables/nodes are relatively cheap to copy and it's possible to both pass them to (or move them into)
+functions and to return them from functions. However, in general each dataframe node will have a different C++ type,
+which includes all available compile-time information about what that node does. One way to cope with this complication
+is to use template functions and/or C++14 auto return types:
+~~~{.cpp}
+template <typename RDF>
+auto ApplySomeFilters(RDF df)
+{
+   return df.Filter("x > 0").Filter([](int y) { return y < 0; }, {"y"});
+}
+~~~
+
+A possibly simpler, C++11-compatible alternative is to take advantage of the fact that any dataframe node can be
+converted (implicitly or via an explicit cast) to the common type ROOT::RDF::RNode:
+~~~{.cpp}
+// a function that conditionally adds a Range to a RDataFrame node.
+RNode MaybeAddRange(RNode df, bool mustAddRange)
+{
+   return mustAddRange ? df.Range(1) : df;
+}
+// use as :
+ROOT::RDataFrame df(10);
+auto maybeRangedDF = MaybeAddRange(df, true);
+~~~
+
+The conversion to ROOT::RDF::RNode is cheap, but it will introduce an extra virtual call during the RDataFrame event 
+loop (in most cases, the resulting performance impact should be negligible).
+
+As a final note, remember that RDataFrame actions do not return another dataframe, but a ROOT::RDF::RResultPtr<T>, where T is the
+type of the result of the action.
+
 ### <a name="RDFCollections"></a>Storing RDataFrame objects in collections
 
-Any RDataFrame node can be converted to the common type ROOT::RDF::RNode. The cast can happen either implicitly by the C++ casting rules or by passing any dataframe object to RNode's constructor. This allows to organize RDataFrame nodes in any collection, e.g. a `std::vector<ROOT::RDF::RNode>`. Note that this adds an extra virtual call during the RDataFrame event loop and can have a minor performance impact.
+ROOT::RDF::RNode also makes it simple to store RDataFrame nodes in collections, e.g. a `std::vector<RNode>` or a `std::map<std::string, RNode>`:
 
 ~~~{.cpp}
 std::vector<ROOT::RDF::RNode> dfs;
@@ -1031,40 +1063,6 @@ ROOT::RDF::SaveGraph(rd1, "./mydot.dot");
 // Prints the graph to standard output
 ROOT::RDF::SaveGraph(rd1);
 ~~~
-
-### <a name="rnode"></a>RDataFrame variables as function arguments and return values
-RDataFrame variables/nodes are relatively cheap to copy and it's possible to both pass them to (or move them into)
-functions and to return them from functions. However, in general each dataframe node will have a different C++ type,
-which includes all available compile-time information about what that node does. One way to cope with this complication
-is to use template functions and/or C++14 auto return types:
-~~~{.cpp}
-template <typename RDF>
-auto ApplySomeFilters(RDF df)
-{
-   return df.Filter("x > 0").Filter([](int y) { return y < 0; }, {"y"});
-}
-~~~
-
-A possibly simpler, C++11-compatible alternative is to take advantage of the fact that any dataframe node can be
-converted to the common type ROOT::RDF::RNode:
-~~~{.cpp}
-// a function that conditionally adds a Range to a RDataFrame node.
-RNode MaybeAddRange(RNode df, bool mustAddRange)
-{
-   return mustAddRange ? df.Range(1) : df;
-}
-// use as :
-ROOT::RDataFrame df(10);
-auto maybeRangedDF = MaybeAddRange(df, true);
-~~~
-
-The conversion to ROOT::RDF::RNode is cheap, but it will introduce an extra virtual call during the RDataFrame event 
-loop (in most cases, the resulting performance impact should be negligible).
-
-As a final note, remember that RDataFrame actions do not return another dataframe, but a ROOT::RDF::RResultPtr<T>, where T is the
-type of the result of the action.
-
-Read more on this topic [here](https://root.cern.ch/doc/master/classROOT_1_1RDF_1_1RInterface.html#a6909f04c05723de79f97a14b092318b1).
 
 <a name="reference"></a>
 */
