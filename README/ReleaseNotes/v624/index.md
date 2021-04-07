@@ -106,9 +106,10 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 - For some `TTrees`, `RDataFrame::GetColumnNames` might now returns multiple valid spellings for a given column. For example, leaf `"l"` under branch `"b"` might now be mentioned as `"l"` as well as `"b.l"`, while only one of the two spellings might have been recognized before.
 - Certain RDF-related types in the `ROOT::Detail` and `ROOT::Internal` namespaces have been renamed, most notably `RCustomColumn` is now `RDefine`. This does not impact code that only makes use of entities in the public ROOT namespace, and should not impact downstream code unless it was patching or reusing internal `RDataFrame` types.
 
-### Notable bug fixes
+### Notable bug fixes and improvements
 
 - A critical issue has been fixed that could potentially result in wrong data being silently read in multi-thread runs when an input `TChain` contained more than one `TTree` coming from the _same_ input file. More details are available at [#7143](https://github.com/root-project/root/issues/7143).
+- The start-up time of event loops with large computation graphs with many just-in-time-compiled expressions (e.g. thousands of string `Filter`s and `Define`s) has been greatly reduced. See [the corresponding pull request](https://github.com/root-project/root/pull/7651) for more details.
 
 The full list of bug fixes for this release is available below.
 
