@@ -772,12 +772,10 @@ public:
 
    virtual void NextEvent()
    {
-      eveMng->DisableRedraw();
       eveMng->GetSelection()->ClearSelection();
       eveMng->GetHighlight()->ClearSelection();
       fEvent->Create();
       fCMng->LoadEvent();
-      eveMng->EnableRedraw();
    }
 };
 
