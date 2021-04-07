@@ -664,7 +664,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          snprintf(&line[kvalue],kline-kvalue,"->0");
       else if (!isbasic) {
          if (!fNoAddr) {
-            snprintf(&line[kvalue],kline-kvalue,"->%llx ", (Long64_t)p3pointer);
+            snprintf(&line[kvalue],kline-kvalue,"->%zx ", (Longptr_t)p3pointer);
          }
       } else if (membertype) {
          if (!strcmp(membertype->GetTypeName(), "char")) {
@@ -705,7 +705,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          }
       } else {
          if (!fNoAddr) {
-            snprintf(&line[kvalue],kline-kvalue,"->%llx ", (Long64_t)p3pointer);
+            snprintf(&line[kvalue],kline-kvalue,"->%zx ", (Longptr_t)p3pointer);
          }
       }
    } else if (membertype) {
@@ -727,7 +727,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          snprintf(&line[kvalue],kline-kvalue,"%s",str->Data());
       } else {
          if (!fNoAddr) {
-            snprintf(&line[kvalue],kline-kvalue,"->%llx ", (Long64_t)pointer);
+            snprintf(&line[kvalue],kline-kvalue,"->%zx ", (Longptr_t)pointer);
          }
       }
    }
