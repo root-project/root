@@ -799,13 +799,6 @@ Secondly, just-in-time compilation of string expressions or non-templated action
 Here is a list of the most important features that have been omitted in the "Crash course" for brevity.
 You don't need to read all these to start using RDataFrame, but they are useful to save typing time and runtime.
 
-### Programmatically get the list of column names
-The GetColumnsNames() method returns the list of valid column names for the dataset:
-~~~{.cpp}
-RDataFrame d("myTree", "file.root");
-std::vector<std::string> colNames = d.GetColumnNames();
-~~~
-
 ### <a name="RDFCollections"></a>Storing RDataFrame objects in collections
 
 Any RDataFrame node can be converted to the common type ROOT::RDF::RNode. The cast can happen either implicitly by the C++ casting rules or by passing any dataframe object to RNode's constructor. This allows to organize RDataFrame nodes in any collection, e.g. a `std::vector<ROOT::RDF::RNode>`. Note that this adds an extra virtual call during the RDataFrame event loop and can have a minor performance impact.
