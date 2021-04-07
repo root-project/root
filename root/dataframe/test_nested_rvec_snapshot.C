@@ -1,5 +1,6 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RVec.hxx>
+#include <TSystem.h>
 using namespace ROOT::VecOps;
 
 struct TwoInts {
@@ -44,12 +45,18 @@ void test_nested_rvec_snapshot()
          {"vv", "vvv", "vvti"});
    };
 
-   // compiled
-   auto out_df1 =
-      df.Snapshot<RVec<RVec<int>>, RVec<RVec<RVec<int>>>, RVec<RVec<TwoInts>>>("t", fname, {"vv", "vvv", "vvti"});
-   check(*out_df1);
+   {
+      // compiled
+      auto out_df1 =
+         df.Snapshot<RVec<RVec<int>>, RVec<RVec<RVec<int>>>, RVec<RVec<TwoInts>>>("t", fname, {"vv", "vvv", "vvti"});
+      check(*out_df1);
+   }
 
-   // jitted
-   auto out_df2 = df.Snapshot("t", fname, {"vv", "vvv", "vvti"});
-   check(*out_df2);
+   {
+      // jitted
+      auto out_df2 = df.Snapshot("t", fname, {"vv", "vvv", "vvti"});
+      check(*out_df2);
+   }
+
+   gSystem->Unlink(fname);
 }
