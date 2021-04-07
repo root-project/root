@@ -57,6 +57,17 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
 - [Actions](#actions) -- getting results
 - [Performance tips and parallel execution](#parallel-execution) -- how to use it and common pitfalls
 - [More features](#more-features)
+   - [Storing RDataFrame objects in collections](#RDFCollections)
+   - [Executing callbacks every N events](#callbacks)
+   - [Default branch lists](#default-branches)
+   - [Special helper columns: `rdfentry_` and `rdfslot_`](#helper-cols)
+   - [Just-in-time compilation: branch type inference and explicit declaration of branch types](#jitting)
+   - [Generic actions](#generic-actions)
+   - [Friend trees](#friends)
+   - [Reading file formats other than ROOT's](#other-file-formats)
+   - [Call graphs (storing and reusing sets of transormations](#callgraphs)
+   - [Visualizing the computation graph](#representgraph)
+   - [RDataFrame objects as function arguments and return values](#rnode)
 - [Class reference](#reference) -- most methods are implemented in the ROOT::RDF::RInterface base class
 
 ## <a name="cheatsheet"></a>Cheat sheet
@@ -795,7 +806,7 @@ RDataFrame d("myTree", "file.root");
 std::vector<std::string> colNames = d.GetColumnNames();
 ~~~
 
-### Organizing RDataFrame in collections
+### <a name="RDFCollections"></a>Storing RDataFrame objects in collections
 
 Any RDataFrame node can be converted to the common type ROOT::RDF::RNode. The cast can happen either implicitly by the C++ casting rules or by passing any dataframe object to RNode's constructor. This allows to organize RDataFrame nodes in any collection, e.g. a `std::vector<ROOT::RDF::RNode>`. Note that this adds an extra virtual call during the RDataFrame event loop and can have a minor performance impact.
 
@@ -805,7 +816,7 @@ dfs.emplace_back(ROOT::RDataFrame(10));
 dfs.emplace_back(dfs[0].Define("x", "42.f"));
 ~~~
 
-### Callbacks
+### <a name="callbacks"></a>Executing callbacks every N events
 It's possible to schedule execution of arbitrary functions (callbacks) during the event loop.
 Callbacks can be used e.g. to inspect partial results of the analysis while the event loop is running,
 drawing a partially-filled histogram every time a certain number of new entries is processed, or event
@@ -825,7 +836,7 @@ and return nothing. RDataFrame will invoke registered callbacks passing partial 
 
 Read more on ROOT::RDF::RResultPtr::OnPartialResult().
 
-### Default branch lists
+### <a name="default-branches"></a>Default branch lists
 When constructing a RDataFrame object, it is possible to specify a **default column list** for your analysis, in the
 usual form of a list of strings representing branch/column names. The default column list will be used as a fallback
 whenever a list specific to the transformation/action is not present. RDataFrame will take as many of these columns as
@@ -842,7 +853,7 @@ auto min = d2.Filter([](double b2) { return b2 > 0; }, {"b2"}) // we can still s
              .Min(); // returns the minimum value of "b1" for the filtered entries
 ~~~
 
-### <a name="ImplicitColumns"></a> Implicit Columns
+### <a name="helper-cols"></a> Special helper columns: `rdfentry_` and `rdfslot_`
 Every instance of RDataFrame is created with two special columns called `rdfentry_` and `rdfslot_`. The `rdfentry_`
 column is of type `ULong64_t` and it holds the current entry number while `rdfslot_` is an `unsigned int`
 holding the index of the current data processing slot.
@@ -855,7 +866,7 @@ most notably the case where filters are used before deriving a cached/persistifi
 Note that in multi-thread event loops the values of `rdfentry_` _do not_ correspond to what would be the entry numbers
 of a TChain constructed over the same set of ROOT files, as the entries are processed in an unspecified order.
 
-### Just-in-time compilation: branch type inference and explicit declaration of branch types
+### <a name="jitting"></a>Just-in-time compilation: branch type inference and explicit declaration of branch types
 C++ is a statically typed language: all types must be known at compile-time. This includes the types of the TTree
 branches we want to work on. For filters, temporary columns and some of the actions, **branch types are deduced from the
 signature** of the relevant filter function/temporary column expression/action function:
@@ -886,7 +897,7 @@ from Filters or Defines. This is typically perfectly fine and avoids certain com
 Classes and other complex types are read by non-constant references to avoid copies and to permit calls to non-const member functions.
 Note that calling non-const member functions will often not be thread-safe.
 
-### Generic actions
+### <a name="generic-actions"></a>Generic actions
 RDataFrame strives to offer a comprehensive set of standard actions that can be performed on each event. At the same
 time, it **allows users to execute arbitrary code (i.e. a generic action) inside the event loop** through the Foreach()
 and ForeachSlot() actions.
@@ -930,7 +941,7 @@ std::cout << "rms of b: " << std::sqrt(sumSq / n) << std::endl;
 You see how we created one `double` variable for each thread in the pool, and later merged their results via
 `std::accumulate`.
 
-### Friend trees
+### <a name="friends"></a>Friend trees
 Friend trees are supported by RDataFrame.
 In order to deal with friend trees with RDataFrame, the user is required to build
 the tree and its friends and instantiate a RDataFrame with it.
@@ -945,14 +956,14 @@ auto f = d.Filter("myFriend.MyCol == 42");
 
 Friend TTrees with a TTreeIndex are supported from ROOT v6.24.
 
-### Reading file formats different from ROOT's
-RDataFrame can be interfaced with RDataSources. The RDataSource interface defines an API that RDataFrame can use to read arbitrary data formats.
+### <a name="other-file-formats"></a>Reading file formats other than ROOT's
+RDataFrame can be interfaced with RDataSources. The ROOT::RDF::RDataSource interface defines an API that RDataFrame can use to read arbitrary data formats.
 
-A concrete RDataSource implementation (i.e. a class that inherits from RDataSource and implements all of its pure
+A concrete ROOT::RDF::RDataSource implementation (i.e. a class that inherits from RDataSource and implements all of its pure
 methods) provides an adaptor that RDataFrame can leverage to read any kind of tabular data formats.
 RDataFrame calls into RDataSource to retrieve information about the data, retrieve (thread-local) readers or "cursors" for selected columns
 and to advance the readers to the desired data entry.
-Some predefined RDataSources are natively provided by ROOT such as the RCsvDS which allows to read comma separated files:
+Some predefined RDataSources are natively provided by ROOT such as the ROOT::RDF::RCsvDS which allows to read comma separated files:
 ~~~{.cpp}
 auto tdf = ROOT::RDF::MakeCsvDataFrame("MuRun2010B.csv");
 auto filteredEvents =
@@ -1003,7 +1014,7 @@ Objects read from each column are **built once and never copied**, for maximum e
 When "upstream" filters are not passed, subsequent filters, temporary column expressions and actions are not evaluated,
 so it might be advisable to put the strictest filters first in the chain.
 
-### <a name="representgraph"></a>Printing the computation graph
+### <a name="representgraph"></a>Visualizing the computation graph
 It is possible to print the computation graph from any node to obtain a dot representation either on the standard output
 or in a file.
 
@@ -1028,7 +1039,7 @@ ROOT::RDF::SaveGraph(rd1, "./mydot.dot");
 ROOT::RDF::SaveGraph(rd1);
 ~~~
 
-### RDataFrame variables as function arguments and return values
+### <a name="rnode"></a>RDataFrame variables as function arguments and return values
 RDataFrame variables/nodes are relatively cheap to copy and it's possible to both pass them to (or move them into)
 functions and to return them from functions. However, in general each dataframe node will have a different C++ type,
 which includes all available compile-time information about what that node does. One way to cope with this complication
