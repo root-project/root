@@ -968,67 +968,6 @@ void REveManager::SceneSubscriberWaitingResponse(unsigned cinnId)
    }
 }
 
-//------------------------------------------------------------------------------
-
-void REveManager::DestroyElementsOf(REveElement::List_t &els)
-{
-   // XXXXX - not called, what's with end accepting changes?
-
-   fWorld->EndAcceptingChanges();
-   fScenes->AcceptChanges(false);
-
-   nlohmann::json jarr = nlohmann::json::array();
-
-   nlohmann::json jhdr = {};
-   jhdr["content"] = "REveManager::DestroyElementsOf";
-
-   nlohmann::json jels = nlohmann::json::array();
-
-   for (auto &ep : els) {
-      jels.push_back(ep->GetElementId());
-
-      ep->DestroyElements();
-   }
-
-   jhdr["element_ids"] = jels;
-
-   jarr.push_back(jhdr);
-
-   std::string msg = jarr.dump();
-
-   // XXXX Do we have broadcast?
-
-   for (auto &conn : fConnList) {
-      fWebWindow->Send(conn.fId, msg);
-   }
-}
-
-void REveManager::BroadcastElementsOf(REveElement::List_t &els)
-{
-   // XXXXX - not called, what's with begin accepting changes?
-
-   for (auto &ep : els) {
-      REveScene *scene = dynamic_cast<REveScene *>(ep);
-      assert(scene != nullptr);
-
-      printf("\nEVEMNG ............. streaming scene %s [%s]\n", scene->GetCTitle(), scene->GetCName());
-
-      // This prepares core and render data buffers.
-      scene->StreamElements();
-
-      for (auto &conn : fConnList) {
-         printf("   sending json, len = %d --> to conn_id = %d\n", (int)scene->fOutputJson.size(), conn.fId);
-         fWebWindow->Send(conn.fId, scene->fOutputJson);
-         printf("   sending binary, len = %d --> to conn_id = %d\n", scene->fTotalBinarySize, conn.fId);
-         fWebWindow->SendBinary(conn.fId, &scene->fOutputBinary[0], scene->fTotalBinarySize);
-      }
-   }
-
-   // AMT: These calls may not be necessary
-   fScenes->AcceptChanges(true);
-   fWorld->BeginAcceptingChanges();
-}
-
 //////////////////////////////////////////////////////////////////
 /// Show eve manager in specified browser.
 

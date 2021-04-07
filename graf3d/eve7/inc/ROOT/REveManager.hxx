@@ -252,10 +252,6 @@ public:
    void Send(unsigned connid, const std::string &data);
    void SendBinary(unsigned connid, const void *data, std::size_t len);
 
-   void DestroyElementsOf(REveElement::List_t &els);
-
-   void BroadcastElementsOf(REveElement::List_t &els);
-
    void Show(const RWebDisplayArgs &args = "");
 
    std::shared_ptr<REveGeomViewer> ShowGeometry(const RWebDisplayArgs &args = "");
