@@ -27,11 +27,12 @@ class TF1;
 /*
    Kernel Density Estimation class.
    The three main references are
+
    (1) "Scott DW, Multivariate Density Estimation.Theory, Practice and Visualization. New York: Wiley",
    (2) "Jann Ben - ETH Zurich, Switzerland -, Univariate kernel density estimation document for KDENS: Stata module for univariate kernel density estimation."
    (3) "Hardle W, Muller M, Sperlich S, Werwatz A, Nonparametric and Semiparametric Models. Springer."The algorithm is briefly described in
-   (4) "Cranmer KS, Kernel Estimation in High-Energy Physics. Computer Physics Communications 136:198-207,2001" - e-Print Archive: hep ex/0011057.
-   A binned version is also implemented to address the performance issue due to its data size dependence.
+       "Cranmer KS, Kernel Estimation in High-Energy Physics. Computer Physics Communications 136:198-207,2001" - e-Print Archive: hep ex/0011057.
+       A binned version is also implemented to address the performance issue due to its data size dependence.
 */
 class TKDE : public TNamed  {
 public:
