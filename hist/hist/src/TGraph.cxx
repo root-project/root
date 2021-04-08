@@ -2557,7 +2557,7 @@ void TGraph::UseCurrentStyle()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adds all graphs from the collection to this graph.
-/// Returns the total number of poins in the result or -1 in case of an error.
+/// Returns the total number of points in the result or -1 in case of an error.
 
 Int_t TGraph::Merge(TCollection* li)
 {

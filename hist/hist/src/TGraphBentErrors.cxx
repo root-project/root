@@ -188,15 +188,15 @@ TGraphBentErrors::~TGraphBentErrors()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// apply a function to all data points
-/// y = f(x,y)
+/// Apply a function to all data points \f$ y = f(x,y) \f$.
 ///
-/// Errors are calculated as eyh = f(x,y+eyh)-f(x,y) and
-/// eyl = f(x,y)-f(x,y-eyl)
+/// Errors are calculated as \f$ eyh = f(x,y+eyh)-f(x,y) \f$ and
+/// \f$ eyl = f(x,y)-f(x,y-eyl) \f$.
 ///
 /// Special treatment has to be applied for the functions where the
 /// role of "up" and "down" is reversed.
-/// function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
+///
+/// Function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
 
 void TGraphBentErrors::Apply(TF1 *f)
 {
@@ -298,8 +298,8 @@ void TGraphBentErrors::CopyAndRelease(Double_t **newarrays,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy errors from fE*** to arrays[***]
-/// or to f*** Copy points.
+/// Copy errors from `fE*** `to `arrays[***]`
+/// or to `f***` Copy points.
 
 Bool_t TGraphBentErrors::CopyPoints(Double_t **arrays,
                                     Int_t ibegin, Int_t iend, Int_t obegin)
@@ -333,7 +333,7 @@ Bool_t TGraphBentErrors::CopyPoints(Double_t **arrays,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Should be called from ctors after fNpoints has been set
+/// Should be called from ctors after `fNpoints` has been set.
 
 Bool_t TGraphBentErrors::CtorAllocate(void)
 {
@@ -354,7 +354,7 @@ Bool_t TGraphBentErrors::CtorAllocate(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  protected function to perform the merge operation of a graph with asymmetric errors
+/// Protected function to perform the merge operation of a graph with asymmetric errors.
 
 Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
 {
@@ -390,7 +390,7 @@ Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by GraphFitChisquare.
-/// It returns the error along X at point i.
+/// It returns the error along X at point `i`.
 
 Double_t TGraphBentErrors::GetErrorX(Int_t i) const
 {
@@ -405,7 +405,7 @@ Double_t TGraphBentErrors::GetErrorX(Int_t i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by GraphFitChisquare.
-/// It returns the error along Y at point i.
+/// It returns the error along Y at point `i`.
 
 Double_t TGraphBentErrors::GetErrorY(Int_t i) const
 {
@@ -463,7 +463,7 @@ Double_t TGraphBentErrors::GetErrorYlow(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set zero values for point arrays in the range [begin, end)
+/// Set zero values for point arrays in the range `[begin, end]`
 
 void TGraphBentErrors::FillZero(Int_t begin, Int_t end,
                                  Bool_t from_ctor)
@@ -496,7 +496,7 @@ void TGraphBentErrors::Print(Option_t *) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save primitive as a C++ statement(s) on output stream out
+/// Save primitive as a C++ statement(s) on output stream out.
 
 void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
@@ -634,7 +634,7 @@ void TGraphBentErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, D
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set ex and ey values for point number i.
+/// Set ex and ey values for point number `i`.
 
 void TGraphBentErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh,
                                      Double_t exld, Double_t exhd, Double_t eyld, Double_t eyhd)
