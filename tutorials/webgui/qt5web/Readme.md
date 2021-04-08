@@ -17,7 +17,7 @@ As a result, `qt5web` application should be created.
 
 Run x86 native tools shell from MS VC. Configure ROOT and Qt5 pathes like:
 
-    set PATH=%PATH%;C:\Qt\5.12.6\msvc2017\bin
+    set PATH=%PATH%;C:\Qt5\5.15.2\msvc2019\bin
     call C:\root\bin\thisroot.bat
     cmake -G"Visual Studio 16 2019" -A Win32 -Thost=x64 c:\root\tutorials\webgui\qt5web
     cmake --build . --config Debug -- /maxcpucount
