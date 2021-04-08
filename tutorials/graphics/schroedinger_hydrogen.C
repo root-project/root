@@ -23,29 +23,29 @@ double WaveFunction(double x, double y) {
 }
 
 void schroedinger_hydrogen() {
-    TH2F *h2D = new TH2F("Hydrogen Atom", "#Psi^{2}_{200} i.e. n = 2, l = 0, m = 0", 1000, -10, 10, 1000, -10, 10); // for 2D view
-    TGraph2D *h3D = new TGraph2D(); // for 3D view
+   TH2F *h2D = new TH2F("Hydrogen Atom",
+                        "#Psi^{2}_{200} i.e. n = 2, l = 0, m = 0; Position in x direction; Position in y direction",
+                        1000, -10, 10, 1000, -10, 10); // for 2D view
 
-    for (float i = -10; i < 10; i+=0.01){
-        for (float j = -10; j < 10; j+=0.01){
-            h2D->Fill(i, j, WaveFunction(i, j));
-            h3D->SetPoint(h3D->GetN(), i, j, WaveFunction(i, j));
-        }
+   TGraph2D *h3D = new TGraph2D(); // for 3D view
+   h3D->SetTitle("3D view of probability amplitude");
+
+   for (float i = -10; i < 10; i += 0.01) {
+      for (float j = -10; j < 10; j += 0.01) {
+         h2D->Fill(i, j, WaveFunction(i, j));
+         h3D->SetPoint(h3D->GetN(), i, j, WaveFunction(i, j));
+      }
     }
     
-    gStyle->SetPalette(53); 
-    TCanvas *c1 = new TCanvas("c1", "Schroedinger's Hydrogen Atom", 1500, 700);
+    gStyle->SetPalette(53);
+    gStyle->SetOptStat(0);
+    TCanvas *c1 = new TCanvas("c1", "Schroedinger's Hydrogen Atom", 1500, 750);
     c1->Divide(2, 1);
 
     c1->cd(1);
-    h2D->GetXaxis()->SetTitle("Position in x direction");
-    h2D->GetYaxis()->SetTitle("Position in y direction");
     h2D->Draw("colz");
 
     c1->cd(2);
-    h3D->SetTitle("3D view of probability amplitude");
     h3D->Draw("surf1");
-
-    cout << "The Electron is more likely to be in the yellow areas than the brown ones" << endl;
 }
 
