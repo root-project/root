@@ -4212,7 +4212,7 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
    }
 
    if (decl)
-      return decl;
+      return kKnown;
    else
       return kUnknown;
 
