@@ -21,8 +21,8 @@ class TF1NormSum : public TF1AbsComposition {
 protected:
    unsigned int fNOfFunctions;                         ///< Number of functions to add
    Double_t     fScale;                                ///< Fixed Scale parameter to normalize function (e.g. bin width)
-   Double_t fXmin;                                     /// Minimal bound of range of NormSum
-   Double_t fXmax;                                     /// Maximal bound of range of NormSum
+   Double_t fXmin;                                     ///< Minimal bound of range of NormSum
+   Double_t fXmax;                                     ///< Maximal bound of range of NormSum
    std::vector<std::unique_ptr<TF1>> fFunctions;       ///< Vector of size fNOfFunctions containing TF1 functions
    std::vector < Double_t  > fCoeffs;                  ///< Vector of size afNOfFunctions containing coefficients in front of each function
    std::vector < Int_t     > fCstIndexes;              ///< Vector with size of fNOfFunctions containing the index of the constant parameter/ function (the removed ones)

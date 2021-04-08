@@ -37,18 +37,23 @@ public:
    inline virtual TObjArray* GetErrorNames() { return &fIds;}
    virtual void SetOwner(bool swtch=kTRUE);
 private:
-   // The arrays used to store the packed inputs
-   TObjArray fSignal;            //packed input signal
-   TObjArray fBackground;        //packed input background
-   TObjArray fCandidates;        //packed input candidates (data)
-   TObjArray fErrorOnSignal;     //packed error sources for signal
-   TObjArray fErrorOnBackground; //packed error sources for background
-   TObjArray fIds;               //packed IDs for the different error sources
-   // some dummy objects that the class will use and delete
-   TObjArray fDummyTA;         //array of dummy object (used for bookeeping)
-   TObjArray fDummyIds;          //array of dummy object (used for bookeeping)
+   /// @name Arrays used to store the packed inputs
+   ///@{
+   TObjArray fSignal;            ///< Packed input signal
+   TObjArray fBackground;        ///< Packed input background
+   TObjArray fCandidates;        ///< Packed input candidates (data)
+   TObjArray fErrorOnSignal;     ///< Packed error sources for signal
+   TObjArray fErrorOnBackground; ///< Packed error sources for background
+   TObjArray fIds;               ///< Packed IDs for the different error sources
+   ///@}
 
-   ClassDef(TLimitDataSource, 2 ) // input for TLimit routines
+   /// Dummy objects the class will use and delete
+   ///@{
+   TObjArray fDummyTA;           ///< Array of dummy object (used for bookeeping)
+   TObjArray fDummyIds;          ///< Array of dummy object (used for bookeeping)
+   ///@}
+
+   ClassDef(TLimitDataSource, 2 ) // Input for TLimit routines
 };
 
 #endif

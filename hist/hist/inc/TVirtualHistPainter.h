@@ -30,7 +30,7 @@ class TList;
 class TVirtualHistPainter : public TObject {
 
 private:
-   static TClass   *fgPainter; //Pointer to class painter
+   static TClass   *fgPainter; ///< Pointer to class painter
 
 public:
    TVirtualHistPainter() { }

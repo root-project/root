@@ -31,13 +31,13 @@ class TProfile2D;
 class TH3 : public TH1, public TAtt3D {
 
 protected:
-   Double_t     fTsumwy;          //Total Sum of weight*Y
-   Double_t     fTsumwy2;         //Total Sum of weight*Y*Y
-   Double_t     fTsumwxy;         //Total Sum of weight*X*Y
-   Double_t     fTsumwz;          //Total Sum of weight*Z
-   Double_t     fTsumwz2;         //Total Sum of weight*Z*Z
-   Double_t     fTsumwxz;         //Total Sum of weight*X*Z
-   Double_t     fTsumwyz;         //Total Sum of weight*Y*Z
+   Double_t     fTsumwy;          ///< Total Sum of weight*Y
+   Double_t     fTsumwy2;         ///< Total Sum of weight*Y*Y
+   Double_t     fTsumwxy;         ///< Total Sum of weight*X*Y
+   Double_t     fTsumwz;          ///< Total Sum of weight*Z
+   Double_t     fTsumwz2;         ///< Total Sum of weight*Z*Z
+   Double_t     fTsumwxz;         ///< Total Sum of weight*X*Z
+   Double_t     fTsumwyz;         ///< Total Sum of weight*Y*Z
 
    TH3();
    TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup

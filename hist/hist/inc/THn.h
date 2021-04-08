@@ -81,9 +81,8 @@ public:
       return const_cast<const THn*>(this)->GetBin(name);
    }
 
+   /// Increment the bin content of "bin" by "w", return the bin index.
    void FillBin(Long64_t bin, Double_t w) {
-      // Increment the bin content of "bin" by "w",
-      // return the bin index.
       GetArray().AddAt(bin, w);
       if (GetCalculateErrors()) {
          fSumw2.AddAt(bin, w * w);
@@ -91,21 +90,21 @@ public:
       FillBinBase(w);
    }
 
+   /// Forwards to THnBase::SetBinContent().
+   /// Non-virtual, CINT-compatible replacement of a using declaration.
    void SetBinContent(const Int_t* idx, Double_t v) {
-      // Forwards to THnBase::SetBinContent().
-      // Non-virtual, CINT-compatible replacement of a using declaration.
       THnBase::SetBinContent(idx, v);
    }
-    void SetBinContent(Long64_t bin, Double_t v) {
+   void SetBinContent(Long64_t bin, Double_t v) {
       GetArray().SetAsDouble(bin, v);
    }
    void SetBinError2(Long64_t bin, Double_t e2) {
       if (!GetCalculateErrors()) Sumw2();
       fSumw2.At(bin) = e2;
    }
+   /// Forwards to THnBase::SetBinContent().
+   /// Non-virtual, CINT-compatible replacement of a using declaration.
    void AddBinContent(const Int_t* idx, Double_t v = 1.) {
-      // Forwards to THnBase::SetBinContent().
-      // Non-virtual, CINT-compatible replacement of a using declaration.
       THnBase::AddBinContent(idx, v);
    }
    void AddBinContent(Long64_t bin, Double_t v = 1.) {
@@ -114,13 +113,13 @@ public:
    void AddBinError2(Long64_t bin, Double_t e2) {
       fSumw2.At(bin) += e2;
    }
+   /// Forwards to THnBase::GetBinContent() overload.
+   /// Non-virtual, CINT-compatible replacement of a using declaration.
    Double_t GetBinContent(const Int_t *idx) const {
-      // Forwards to THnBase::GetBinContent() overload.
-      // Non-virtual, CINT-compatible replacement of a using declaration.
       return THnBase::GetBinContent(idx);
    }
+   /// Get the content of bin, and set its index if idx is != 0.
    Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const {
-      // Get the content of bin, and set its index if idx is != 0.
       if (idx) {
          const TNDArray& arr = GetArray();
          Long64_t prevCellSize = arr.GetNbins();
@@ -141,26 +140,23 @@ public:
 
    void Sumw2();
 
+   /// Forwards to THnBase::Projection().
+   /// Non-virtual, as a CINT-compatible replacement of a using declaration.
    TH1D*      Projection(Int_t xDim, Option_t* option = "") const {
-      // Forwards to THnBase::Projection().
-      // Non-virtual, as a CINT-compatible replacement of a using
-      // declaration.
       return THnBase::Projection(xDim, option);
    }
 
+   /// Forwards to THnBase::Projection().
+   /// Non-virtual, as a CINT-compatible replacement of a using declaration.
    TH2D*      Projection(Int_t yDim, Int_t xDim,
                          Option_t* option = "") const {
-      // Forwards to THnBase::Projection().
-      // Non-virtual, as a CINT-compatible replacement of a using
-      // declaration.
       return THnBase::Projection(yDim, xDim, option);
    }
 
+   /// Forwards to THnBase::Projection().
+   /// Non-virtual, as a CINT-compatible replacement of a using declaration.
    TH3D*      Projection(Int_t xDim, Int_t yDim, Int_t zDim,
                          Option_t* option = "") const {
-      // Forwards to THnBase::Projection().
-      // Non-virtual, as a CINT-compatible replacement of a using
-      // declaration.
       return THnBase::Projection(xDim, yDim, zDim, option);
    }
 
@@ -186,7 +182,6 @@ protected:
 };
 
 
-
 //______________________________________________________________________________
 /** \class THnT
  Templated implementation of the abstract base THn.
@@ -197,7 +192,7 @@ protected:
  what the format for the bin content is. The actual storage is delegated to
  TNDArrayT<T>.
 
- Typedefs exist for template parematers with ROOT's generic types:
+ Typedefs exist for template parameters with ROOT's generic types:
 
  Templated name   |     Typedef   |    Bin content type
  -----------------|---------------|--------------------
@@ -210,7 +205,7 @@ protected:
 
  We recommend to use THnC wherever possible, and to map its value space
  of 256 possible values to e.g. float values outside the class. This saves an
- enourmous amount of memory. Only if more than 256 values need to be
+ enormous amount of memory. Only if more than 256 values need to be
  distinguished should e.g. THnS or even THnF be chosen.
 
  Implementation detail: the derived, templated class is kept extremely small
@@ -233,8 +228,8 @@ public:
    TNDArray& GetArray() { return fArray; }
 
 protected:
-   TNDArrayT<T> fArray; // bin content
-   ClassDef(THnT, 1); // multi-dimensional histogram with templated storage
+   TNDArrayT<T> fArray; ///< Bin content
+   ClassDef(THnT, 1);   ///< Multi-dimensional histogram with templated storage
 };
 
 typedef THnT<Float_t>  THnF;

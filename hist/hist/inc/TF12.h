@@ -25,9 +25,9 @@
 class TF12 : public TF1 {
 
 protected:
-   Double_t    fXY;           //Value along Y (if projection X) or X (if projection Y)
-   Int_t       fCase;         //projection along X(0), or Y(1)
-   TF2        *fF2;           //pointer to the mother TF2
+   Double_t    fXY;           ///< Value along Y (if projection X) or X (if projection Y)
+   Int_t       fCase;         ///< Projection along X(0), or Y(1)
+   TF2        *fF2;           ///< Pointer to the mother TF2
 
 public:
    TF12();

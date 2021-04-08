@@ -54,8 +54,8 @@ public:
 
 private:
 
-   int fStatus;                            // fit status code
-   std::shared_ptr<TFitResult>  fPointer;  //! Smart Pointer to TFitResult class
+   int fStatus;                            ///< fit status code
+   std::shared_ptr<TFitResult>  fPointer;  ///<! Smart Pointer to TFitResult class
 
    ClassDef(TFitResultPtr,2)  //indirection to TFitResult
 };

@@ -28,24 +28,24 @@ class TH1;
 
 class TBinIterator {
 private:
-   int fBin;  // global bin number used to advanced
-   int fXbin; //  bin X number
-   int fYbin; // bin y number
-   int fZbin; // bin Z number
+   int fBin;   ///< Global bin number used to advanced
+   int fXbin;  ///< Bin X number
+   int fYbin;  ///< Bin y number
+   int fZbin;  ///< Bin Z number
 
-   int fNx;   // total x size (nbins+2)
-   int fNy;   //  y size
-   int fNz;   // z size
-   int fXmin; // min x value
-   int fXmax; // max x value
-   int fYmin; // min y value
-   int fYmax; // max y value
-   int fZmin; // min z value
-   int fZmax; // max z value
+   int fNx;    ///< Total x size (nbins+2)
+   int fNy;    ///< y size
+   int fNz;    ///< z size
+   int fXmin;  ///< Min x value
+   int fXmax;  ///< Max x value
+   int fYmin;  ///< Min y value
+   int fYmax;  ///< Max y value
+   int fZmin;  ///< Min z value
+   int fZmax;  ///< Max z value
 
-   int fDim; // histogram dimension
+   int fDim;   ///< Histogram dimension
 
-   // compute global bin number given x,y,x bin numbers
+   /// Compute global bin number given x,y,x bin numbers
    void SetGlobalBin()
    {
       if (fDim == 1)
@@ -66,12 +66,12 @@ private:
 public:
    friend class THistRange;
 
-   // enum defining option range type:
+   /// enum defining option range type:
    enum ERangeType {
-      kHistRange, // use range provided by histogram
-      kAxisBins,  // use allbins within axis limits (no underflow/overflows)
-      kAllBins,   // use all bins including underflows/overflows
-      kUnOfBins   // collection of all underflow/overflow bins
+      kHistRange, ///< use range provided by histogram
+      kAxisBins,  ///< use allbins within axis limits (no underflow/overflows)
+      kAllBins,   ///< use all bins including underflows/overflows
+      kUnOfBins   ///< collection of all underflow/overflow bins
    };
 
    TBinIterator(const TH1 *h, ERangeType type);

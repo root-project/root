@@ -42,20 +42,20 @@ namespace Internal {
 
 class THnBase: public TNamed {
 protected:
-   Int_t      fNdimensions;  // number of dimensions
-   TObjArray  fAxes;         // axes of the histogram
-   TObjArray  fBrowsables;   //! browser-helpers for each axis
-   Double_t   fEntries;      // number of entries, spread over chunks
-   Double_t   fTsumw;        // total sum of weights
-   Double_t   fTsumw2;       // total sum of weights squared; -1 if no errors are calculated
-   TArrayD    fTsumwx;       // total sum of weight*X for each dimension
-   TArrayD    fTsumwx2;      // total sum of weight*X*X for each dimension
-   Double_t  *fIntegral;     //! array with bin weight sums
+   Int_t      fNdimensions;  ///<  Number of dimensions
+   TObjArray  fAxes;         ///<  Axes of the histogram
+   TObjArray  fBrowsables;   ///<! Browser-helpers for each axis
+   Double_t   fEntries;      ///<  Number of entries, spread over chunks
+   Double_t   fTsumw;        ///<  Total sum of weights
+   Double_t   fTsumw2;       ///<  Total sum of weights squared; -1 if no errors are calculated
+   TArrayD    fTsumwx;       ///<  Total sum of weight*X for each dimension
+   TArrayD    fTsumwx2;      ///<  Total sum of weight*X*X for each dimension
+   Double_t  *fIntegral;     ///<! Array with bin weight sums
    enum {
       kNoInt,
       kValidInt,
       kInvalidInt
-   } fIntegralStatus;        //! status of integral
+   } fIntegralStatus;        ///<! status of integral
 
 private:
    THnBase(const THnBase&); // Not implemented

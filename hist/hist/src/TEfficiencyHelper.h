@@ -23,9 +23,9 @@
 #include "Math/PdfFuncMathCore.h"
 
 
-// Helper class impelementing the
-// binomial probability and the likelihood ratio
-// used for ordering the interval in the FeldmanCousins interval class
+/// Helper class impelementing the
+/// binomial probability and the likelihood ratio
+/// used for ordering the interval in the FeldmanCousins interval class
 class BinomialProbHelper {
 public:
    BinomialProbHelper(double rho, int x, int n)
@@ -62,12 +62,10 @@ private:
 };
 
 
-
-// Implement noncentral binomial confidence intervals using the Neyman
-// construction. The Sorter class gives the ordering of points,
-// i.e. it must be a functor implementing a greater-than relationship
-// between two prob_helper instances. See feldman_cousins for an
-// example.
+/// Implement noncentral binomial confidence intervals using the Neyman
+/// construction. The Sorter class gives the ordering of points,
+/// i.e. it must be a functor implementing a greater-than relationship
+/// between two prob_helper instances. See feldman_cousins for an example.
 template <typename Sorter>
 class BinomialNeymanInterval  {
 public:

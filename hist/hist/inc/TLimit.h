@@ -47,8 +47,8 @@ public:
                                          bool stat = false,
                                          TRandom * generator = 0);
  private:
-   static TArrayD *fgTable;              // a log table... just to speed up calculation
-   static TOrdCollection *fgSystNames;   // Collection of systematics names
+   static TArrayD *fgTable;              ///< A log table... just to speed up calculation
+   static TOrdCollection *fgSystNames;   ///< Collection of systematics names
    ClassDef(TLimit, 2)          // Class to compute 95% CL limits
 };
 

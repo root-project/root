@@ -123,28 +123,34 @@ private:
    static TVectorD VecDiv                 ( const TVectorD& vec1, const TVectorD& vec2, Int_t zero = 0 );
    static void     RegularisedSymMatInvert( TMatrixDSym& mat, Double_t eps = 1e-3 );
 
-   // Class members
-   Int_t       fNdim;        //! Truth and reconstructed dimensions
-   Int_t       fDdim;        //! Derivative for curvature matrix
-   Bool_t      fNormalize;   //! Normalize unfolded spectrum to 1
-   Int_t       fKReg;        //! Regularisation parameter
-   TH1D*       fDHist;       //! Distribution of d (for checking regularization)
-   TH1D*       fSVHist;      //! Distribution of singular values
-   TH2D*       fXtau;        //! Computed regularized covariance matrix
-   TH2D*       fXinv;        //! Computed inverse of covariance matrix
+   /// @name Class members
+   ///@{
+   Int_t       fNdim;        ///<! Truth and reconstructed dimensions
+   Int_t       fDdim;        ///<! Derivative for curvature matrix
+   Bool_t      fNormalize;   ///<! Normalize unfolded spectrum to 1
+   Int_t       fKReg;        ///<! Regularisation parameter
+   TH1D*       fDHist;       ///<! Distribution of d (for checking regularization)
+   TH1D*       fSVHist;      ///<! Distribution of singular values
+   TH2D*       fXtau;        ///<! Computed regularized covariance matrix
+   TH2D*       fXinv;        ///<! Computed inverse of covariance matrix
+   ///@}
 
-   // Input histos
-   const TH1D* fBdat;        // measured distribution (data)
-   TH2D* fBcov;        // covariance matrix of measured distribution (data)
-   const TH1D* fBini;        // reconstructed distribution (MC)
-   const TH1D* fXini;        // truth distribution (MC)
-   const TH2D* fAdet;        // Detector response matrix
+   /// @name Input histos
+   ///@{
+   const TH1D* fBdat;        ///< Measured distribution (data)
+   TH2D* fBcov;              ///< Covariance matrix of measured distribution (data)
+   const TH1D* fBini;        ///< Reconstructed distribution (MC)
+   const TH1D* fXini;        ///< Truth distribution (MC)
+   const TH2D* fAdet;        ///< Detector response matrix
+   ///@}
 
-   // Evaluation of covariance matrices
-   TH1D*       fToyhisto;    //! Toy MC histogram
-   TH2D*       fToymat;      //! Toy MC detector response matrix
-   Bool_t      fToyMode;     //! Internal switch for covariance matrix propagation
-   Bool_t      fMatToyMode;  //! Internal switch for evaluation of statistical uncertainties from response matrix
+   /// @name Evaluation of covariance matrices
+   ///@{
+   TH1D*       fToyhisto;    ///<! Toy MC histogram
+   TH2D*       fToymat;      ///<! Toy MC detector response matrix
+   Bool_t      fToyMode;     ///<! Internal switch for covariance matrix propagation
+   Bool_t      fMatToyMode;  ///<! Internal switch for evaluation of statistical uncertainties from response matrix
+   ///@}
 
 
    ClassDef( TSVDUnfold, 0 ) // Data unfolding using Singular Value Decomposition (hep-ph/9509307)

@@ -83,42 +83,43 @@ public:
    virtual Int_t     SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh);
 
    virtual void      SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t) );
-   // for using interpreted function passed by the user
+
+   /// For using interpreted function passed by the user
    virtual void SetMethodCall(TMethodCall * m) { fMethodCall = m; }
 
-   // get reference to Fit configuration (NOTE: it will be invalid when class is deleted)
+   /// Get reference to Fit configuration (NOTE: it will be invalid when class is deleted)
    ROOT::Fit::FitConfig & GetFitConfig()  { return fFitter->Config(); }
 
-   // get reference to Fit Result object (NOTE: it will be invalid when class is deleted)
+   /// Get reference to Fit Result object (NOTE: it will be invalid when class is deleted)
    const ROOT::Fit::FitResult & GetFitResult() const { return fFitter->Result(); }
 
-   // get a copy of the Fit result returning directly a new  TFitResult
+   /// Get a copy of the Fit result returning directly a new  TFitResult
    TFitResult * GetTFitResult() const;
 
-   // get reference to Fit Data object (NOTE: it will be invalid when class is deleted)
+   /// Get reference to Fit Data object (NOTE: it will be invalid when class is deleted)
    const ROOT::Fit::FitData & GetFitData() const { return *fFitData; }
 
-   // return pointer to last used minimizer
+   // Return pointer to last used minimizer
    ROOT::Math::Minimizer * GetMinimizer() const;
 
-   // return pointer to last used objective function
+   // Return pointer to last used objective function
    ROOT::Math::IMultiGenFunction * GetObjFunction() const;
 
-   // scan likelihood value of  parameter and fill the given graph.
+   // Scan likelihood value of  parameter and fill the given graph.
    bool  Scan(unsigned int ipar, TGraph * gr, double xmin = 0, double xmax = 0);
 
    //    scan likelihood value for two  parameters and fill the given graph.
    //    bool  Scan2D(unsigned int ipar, unsigned int jpar, TGraph2D * gr,
    //                         double xmin = 0, double xmax = 0, double ymin = 0, double ymax = 0);
 
-   // create contour of two parameters around the minimum
+   // Create contour of two parameters around the minimum
    // pass as option confidence level:  default is a value of 0.683
    bool  Contour(unsigned int ipar, unsigned int jpar, TGraph * gr , double confLevel = 0.683);
 
-   // set FCN using new interface
+   // Set FCN using new interface
    virtual void SetObjFunction(  ROOT::Math::IMultiGenFunction * f);
 
-   // recreate minimizer and FCN for TMinuit fits and standard printout
+   // Recreate minimizer and FCN for TMinuit fits and standard printout
    void ReCreateMinimizer();
 
 
@@ -130,12 +131,12 @@ protected:
 private:
 
    //ROOT::Fit::FitData * fFitData;
-   std::shared_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit
-   std::shared_ptr<ROOT::Fit::Fitter>   fFitter;   //! pointer to fitter object
+   std::shared_ptr<ROOT::Fit::FitData>  fFitData;  ///<! Data of the fit
+   std::shared_ptr<ROOT::Fit::Fitter>   fFitter;   ///<! Pointer to fitter object
    ROOT::Math::Minimizer * fMinimizer;
    ROOT::Math::IMultiGenFunction * fObjFunc;
    ROOT::Math::IParamMultiFunction * fModelFunc;
-   mutable std::vector<double> fCovar; // cached covariance matrix (NxN)
+   mutable std::vector<double> fCovar;             ///< Cached covariance matrix (NxN)
 
 
 

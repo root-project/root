@@ -30,10 +30,10 @@ class TProfile;
 class TH2 : public TH1 {
 
 protected:
-   Double_t     fScalefactor;     //Scale factor
-   Double_t     fTsumwy;          //Total Sum of weight*Y
-   Double_t     fTsumwy2;         //Total Sum of weight*Y*Y
-   Double_t     fTsumwxy;         //Total Sum of weight*X*Y
+   Double_t     fScalefactor;     ///< Scale factor
+   Double_t     fTsumwy;          ///< Total Sum of weight*Y
+   Double_t     fTsumwy2;         ///< Total Sum of weight*Y*Y
+   Double_t     fTsumwxy;         ///< Total Sum of weight*X*Y
 
    TH2();
    TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup

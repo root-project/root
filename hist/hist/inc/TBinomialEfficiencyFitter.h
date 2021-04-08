@@ -42,14 +42,14 @@ namespace ROOT {
 class TBinomialEfficiencyFitter: public TObject {
 
 protected:
-   TH1             *fDenominator;    //Denominator histogram
-   TH1             *fNumerator;      //Numerator histogram
-   TF1             *fFunction;       //Function to fit
-   Double_t         fEpsilon;        //Precision required for function integration (option "I")
-   Bool_t           fFitDone;        //Set to kTRUE when the fit has been done
-   Bool_t           fAverage;        //True if the fit function must be averaged over the bin
-   Bool_t           fRange;          //True if the fit range must be taken from the function range
-   ROOT::Fit::Fitter *fFitter;       //pointer to the real fitter
+   TH1             *fDenominator;    ///< Denominator histogram
+   TH1             *fNumerator;      ///< Numerator histogram
+   TF1             *fFunction;       ///< Function to fit
+   Double_t         fEpsilon;        ///< Precision required for function integration (option "I")
+   Bool_t           fFitDone;        ///< Set to kTRUE when the fit has been done
+   Bool_t           fAverage;        ///< True if the fit function must be averaged over the bin
+   Bool_t           fRange;          ///< True if the fit range must be taken from the function range
+   ROOT::Fit::Fitter *fFitter;       ///< pointer to the real fitter
 
 private:
 

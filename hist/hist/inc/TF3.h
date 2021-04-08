@@ -28,11 +28,11 @@
 class TF3 : public TF2 {
 
 protected:
-   Double_t  fZmin;        //Lower bound for the range in z
-   Double_t  fZmax;        //Upper bound for the range in z
-   Int_t     fNpz;         //Number of points along z used for the graphical representation
-   Bool_t    fClipBoxOn{kFALSE}; //! is clip box on
-   Double_t  fClipBox[3];        //! coordinates of clipbox
+   Double_t  fZmin;              ///<  Lower bound for the range in z
+   Double_t  fZmax;              ///<  Upper bound for the range in z
+   Int_t     fNpz;               ///<  Number of points along z used for the graphical representation
+   Bool_t    fClipBoxOn{kFALSE}; ///<! Is clip box on
+   Double_t  fClipBox[3];        ///<! Coordinates of clipbox
 public:
    TF3();
    TF3(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
@@ -44,19 +44,17 @@ public:
        Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0, Int_t ndim = 3);
 #endif
 
-   // constructor using a functor
-
+   // Constructor using a functor
    TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Double_t zmin=0, Double_t zmax=1, Int_t npar = 0, Int_t ndim = 3);
 
-
-   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
-   // MemFn.
+   /// Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type MemFn.
    template <class PtrObj, typename MemFn>
    TF3(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,
        Int_t ndim = 3) :
       TF2(name,p,memFn,xmin,xmax,ymin,ymax,npar,ndim),
       fZmin(zmin), fZmax(zmax), fNpz(30)
    {   }
+
    /// Backward compatible ctor
    template <class PtrObj, typename MemFn>
    TF3(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,
@@ -64,15 +62,16 @@ public:
       TF2(name,p,memFn,xmin,xmax,ymin,ymax,npar,3),
       fZmin(zmin), fZmax(zmax), fNpz(30)
    {   }
-   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *)
-   // and returning a double.
+
+   /// Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) and returning a double.
    template <typename Func>
    TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,
        Int_t ndim = 3 ) :
       TF2(name,f,xmin,xmax,ymin,ymax,npar,ndim),
       fZmin(zmin), fZmax(zmax), fNpz(30)
    { }
-   /// backward compatible ctor
+
+   /// Backward compatible ctor
    template <typename Func>
    TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,
        const char *  ) :

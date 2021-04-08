@@ -31,15 +31,15 @@ public:
    friend class TH1Merger;
 
 protected:
-   TArrayD       fBinEntries;      //number of entries per bin
-   EErrorType    fErrorMode;       //Option to compute errors
-   Double_t      fTmin;            //Lower limit in T (if set)
-   Double_t      fTmax;            //Upper limit in T (if set)
-   Bool_t        fScaling;         //!True when TProfile3D::Scale is called
-   Double_t      fTsumwt;          //Total Sum of weight*T
-   Double_t      fTsumwt2;         //Total Sum of weight*T*T
-   TArrayD       fBinSumw2;        //Array of sum of squares of weights per bin
-   static Bool_t fgApproximate;    //bin error approximation option
+   TArrayD       fBinEntries;      ///< Number of entries per bin
+   EErrorType    fErrorMode;       ///< Option to compute errors
+   Double_t      fTmin;            ///< Lower limit in T (if set)
+   Double_t      fTmax;            ///< Upper limit in T (if set)
+   Bool_t        fScaling;         ///<! True when TProfile3D::Scale is called
+   Double_t      fTsumwt;          ///< Total Sum of weight*T
+   Double_t      fTsumwt2;         ///< Total Sum of weight*T*T
+   TArrayD       fBinSumw2;        ///< Array of sum of squares of weights per bin
+   static Bool_t fgApproximate;    ///< Bin error approximation option
 
    virtual Int_t    BufferFill(Double_t, Double_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Double_t, Double_t, Double_t) {return -2;} //may not use
