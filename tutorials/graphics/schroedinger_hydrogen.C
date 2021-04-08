@@ -23,12 +23,13 @@ double WaveFunction(double x, double y) {
 }
 
 void schroedinger_hydrogen() {
-   TH2F *h2D = new TH2F("Hydrogen Atom",
+	   TH2F *h2D = new TH2F("Hydrogen Atom",
                         "#Psi^{2}_{200} i.e. n = 2, l = 0, m = 0; Position in x direction; Position in y direction",
                         1000, -10, 10, 1000, -10, 10); // for 2D view
 
    TGraph2D *h3D = new TGraph2D(); // for 3D view
    h3D->SetTitle("3D view of probability amplitude");
+   
 
    for (float i = -10; i < 10; i += 0.01) {
       for (float j = -10; j < 10; j += 0.01) {
@@ -39,13 +40,19 @@ void schroedinger_hydrogen() {
 
     gStyle->SetPalette(kDarkBodyRadiator);
     gStyle->SetOptStat(0);
+    gStyle->SetLabelSize(0.02, "Z");
+    
     TCanvas *c1 = new TCanvas("c1", "Schroedinger's Hydrogen Atom", 1500, 750);
     c1->Divide(2, 1);
 
     c1->cd(1);
     h2D->Draw("colz");
-
+    
+    TLatex *l = new TLatex(-10, -12.5, "#scale[0.4]{The Electron is more likely to be found in the yellow areas and less likely to be found in the dark areas.}");
+    l->Draw();
+	
     c1->cd(2);
+    
     h3D->Draw("surf1");
 }
 
