@@ -1,9 +1,9 @@
-<ui version="4.0" stdsetdef="1" >
+<ui version="4.0">
   <author>Sergey Linev</author>
   <comment></comment>
   <exportmacro></exportmacro>
   <class>ExampleWidget</class>
-  <widget class="QWidget" name="ExampleWidget" >
+  <widget class="QWidget" name="ExampleWidget">
     <property name="geometry" >
       <rect>
         <x>0</x>
@@ -171,11 +171,6 @@
     </layout>
   </widget>
   <layoutdefault spacing="3" margin="3" />
-  <includes>
-    <include location="local">RCanvasWidget.h</include>
-    <include location="local">TCanvasWidget.h</include>
-    <include location="local">RGeomViewerWidget.h</include>
-  </includes>
   <connections>
     <connection>
       <sender>InfoBtn</sender>
@@ -199,12 +194,21 @@
   <customwidgets>
     <customwidget>
       <class>RCanvasWidget</class>
+      <extends>QWidget</extends>
+      <header>RCanvasWidget.h</header>
+      <container>0</container>
     </customwidget>
     <customwidget>
       <class>TCanvasWidget</class>
+      <extends>QWidget</extends>
+      <header>TCanvasWidget.h</header>
+      <container>0</container>
     </customwidget>
     <customwidget>
       <class>RGeomViewerWidget</class>
+      <extends>QWidget</extends>
+      <header>RGeomViewerWidget.h</header>
+      <container>0</container>
     </customwidget>
   </customwidgets>
 </ui>
