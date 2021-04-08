@@ -36,8 +36,8 @@ void schroedinger_hydrogen() {
          h3D->SetPoint(h3D->GetN(), i, j, WaveFunction(i, j));
       }
     }
-    
-    gStyle->SetPalette(53);
+
+    gStyle->SetPalette(kDarkBodyRadiator);
     gStyle->SetOptStat(0);
     TCanvas *c1 = new TCanvas("c1", "Schroedinger's Hydrogen Atom", 1500, 750);
     c1->Divide(2, 1);
