@@ -41,12 +41,12 @@ class THnSparseArrayChunk: public TObject {
    THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont);
    virtual ~THnSparseArrayChunk();
 
-   Int_t    fCoordinateAllocationSize; //! size of the allocated coordinate buffer; -1 means none or fCoordinatesSize
-   Int_t    fSingleCoordinateSize; // size of a single bin coordinate
-   Int_t    fCoordinatesSize;      // size of the bin coordinate buffer
-   Char_t  *fCoordinates;          //[fCoordinatesSize] compact bin coordinate buffer
-   TArray  *fContent;              // bin content
-   TArrayD *fSumw2;                // bin errors
+   Int_t    fCoordinateAllocationSize; ///<! Size of the allocated coordinate buffer; -1 means none or fCoordinatesSize
+   Int_t    fSingleCoordinateSize;     ///<  Size of a single bin coordinate
+   Int_t    fCoordinatesSize;          ///<  Size of the bin coordinate buffer
+   Char_t  *fCoordinates;              ///<[fCoordinatesSize] compact bin coordinate buffer
+   TArray  *fContent;                  ///<  Bin content
+   TArrayD *fSumw2;                    ///<  Bin errors
 
    void AddBin(Int_t idx, const Char_t* idxbuf);
    void AddBinContent(Int_t idx, Double_t v = 1.) {
@@ -56,10 +56,11 @@ class THnSparseArrayChunk: public TObject {
    }
    void Sumw2();
    Int_t GetEntries() const { return fCoordinatesSize / fSingleCoordinateSize; }
+
+   /// Check whether bin at idx batches idxbuf.
+   /// If we don't store indexes we trust the caller that it does match,
+   /// see comment in THnSparseCompactBinCoord::GetHash().
    Bool_t Matches(Int_t idx, const Char_t* idxbuf) const {
-      // Check whether bin at idx batches idxbuf.
-      // If we don't store indexes we trust the caller that it does match,
-      // see comment in THnSparseCompactBinCoord::GetHash().
       return fSingleCoordinateSize <= 8 ||
          !memcmp(fCoordinates + idx * fSingleCoordinateSize, idxbuf, fSingleCoordinateSize); }
 

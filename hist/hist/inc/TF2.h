@@ -29,10 +29,10 @@
 class TF2 : public TF1 {
 
 protected:
-   Double_t  fYmin;        //Lower bound for the range in y
-   Double_t  fYmax;        //Upper bound for the range in y
-   Int_t     fNpy;         //Number of points along y used for the graphical representation
-   TArrayD   fContour;     //Array to display contour levels
+   Double_t  fYmin;        ///< Lower bound for the range in y
+   Double_t  fYmax;        ///< Upper bound for the range in y
+   Int_t     fNpy;         ///< Number of points along y used for the graphical representation
+   TArrayD   fContour;     ///< Array to display contour levels
 
 public:
    TF2();
@@ -42,13 +42,10 @@ public:
    TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0, Int_t ndim = 2);
 #endif
 
-   // constructor using a functor
-
+   // Constructor using a functor
    TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Int_t npar = 0, Int_t ndim = 2);
 
-
-   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
-   // MemFn.
+   /// Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type MemFn.
    template <class PtrObj, typename MemFn>
    TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2) :
       TF1(name,p,memFn,xmin,xmax,npar,ndim),
@@ -56,7 +53,8 @@ public:
    {
       fNpx = 30;
    }
-   /// backward compatible ctor
+
+   /// Backward compatible ctor
    template <class PtrObj, typename MemFn>
    TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * , const char *) :
       TF1(name,p,memFn,xmin,xmax,npar,2),
@@ -65,8 +63,7 @@ public:
       fNpx = 30;
    }
 
-   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *)
-   // and returning a double.
+   /// Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) and returning a double.
    template <typename Func>
    TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,Int_t ndim = 2) :
       TF1(name,f,xmin,xmax,npar,ndim),
@@ -74,7 +71,8 @@ public:
    {
       fNpx = 30;
    }
-   /// backward compatible ctor
+
+   /// Backward compatible ctor
    template <typename Func>
    TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,const char *) :
       TF1(name,f,xmin,xmax,npar,2),

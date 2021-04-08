@@ -1178,7 +1178,7 @@ void TProfile::LabelsOption(Option_t *option, Option_t * /*ax */)
 /// add bin contents, errors and statistics.
 /// If overflows are present and limits are different the function will fail.
 /// The function returns the total number of entries in the result histogram
-/// if the merge is successfull, -1 otherwise.
+/// if the merge is successful, -1 otherwise.
 ///
 /// IMPORTANT remark. The axis x may have different number
 /// of bins and different limits, BUT the largest bin width must be
@@ -1630,7 +1630,7 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out<<"   "<<std::endl;
    out<<"   "<<ClassName()<<" *";
 
-   //histogram pointer has by default teh histogram name.
+   //histogram pointer has by default the histogram name.
    //however, in case histogram has no directory, it is safer to add a incremental suffix
    static Int_t hcounter = 0;
    TString histName = GetName();

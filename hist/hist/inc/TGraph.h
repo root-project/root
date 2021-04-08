@@ -67,11 +67,11 @@ protected:
 public:
    // TGraph status bits
    enum EStatusBits {
-      kClipFrame     = BIT(10),  ///< clip to the frame boundary
+      kClipFrame     = BIT(10),  ///< Clip to the frame boundary
       kResetHisto    = BIT(17),  ///< fHistogram must be reset in GetHistogram
-      kNotEditable   = BIT(18),  ///< bit set if graph is non editable
-      kIsSortedX     = BIT(19),  ///< graph is sorted in X points
-      kIsHighlight   = BIT(20)   ///< bit set if graph is highlight
+      kNotEditable   = BIT(18),  ///< Bit set if graph is non editable
+      kIsSortedX     = BIT(19),  ///< Graph is sorted in X points
+      kIsHighlight   = BIT(20)   ///< Bit set if graph is highlight
    };
 
    TGraph();

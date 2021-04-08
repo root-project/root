@@ -143,7 +143,7 @@ private:
 
 namespace ROOT {
    namespace Internal {
-      /// Internal class used by TF1 for defining
+      /// %Internal class used by TF1 for defining
       /// template specialization for different TF1 constructors
       template<class Func>
       struct TF1Builder {
@@ -155,8 +155,8 @@ namespace ROOT {
          static void Build(TF1 *f, Func *func);
       };
 
-      // Internal class used by TF1 for obtaining the type from a functor
-      // out of the set of valid operator() signatures.
+      /// %Internal class used by TF1 for obtaining the type from a functor
+      /// out of the set of valid operator() signatures.
       template<typename T>
       struct GetFunctorType {
       };
@@ -181,8 +181,8 @@ namespace ROOT {
          using type = T;
       };
 
-      // Internal class used by TF1 to get the right operator() signature
-      // from a Functor with several ones.
+      /// %Internal class used by TF1 to get the right operator() signature
+      /// from a Functor with several ones.
       template<typename T, typename F>
       auto GetTheRightOp(T(F::*opPtr)(const T *, const double *)) -> decltype(opPtr)
       {
@@ -216,7 +216,7 @@ class TF1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
    friend struct ROOT::Internal::TF1Builder;
 
 public:
-   // Add to list behavior
+   /// Add to list behavior
    enum class EAddToList {
       kDefault,
       kAdd,
@@ -232,42 +232,42 @@ public:
 protected:
 
    enum EFType {
-      kFormula = 0,      // formula functions which can be stored,
-      kPtrScalarFreeFcn, // pointer to scalar free function,
-      kInterpreted,      // interpreted functions constructed by name,
-      kTemplVec,         // vectorized free functions or TemplScalar functors evaluating on vectorized parameters,
-      kTemplScalar,      // TemplScalar functors evaluating on scalar parameters
+      kFormula = 0,      ///< Formula functions which can be stored,
+      kPtrScalarFreeFcn, ///< Pointer to scalar free function,
+      kInterpreted,      ///< Interpreted functions constructed by name,
+      kTemplVec,         ///< Vectorized free functions or TemplScalar functors evaluating on vectorized parameters,
+      kTemplScalar,      ///< TemplScalar functors evaluating on scalar parameters
       kCompositionFcn
    }; // formula based on composition class (e.g. NSUM, CONV)
 
-   Double_t    fXmin{-1111};        //Lower bounds for the range
-   Double_t    fXmax{-1111};        //Upper bounds for the range
-   Int_t       fNpar{};        //Number of parameters
-   Int_t       fNdim{};        //Function dimension
-   Int_t       fNpx{100};   //Number of points used for the graphical representation
+   Double_t    fXmin{-1111};                        ///<  Lower bounds for the range
+   Double_t    fXmax{-1111};                        ///<  Upper bounds for the range
+   Int_t       fNpar{};                             ///<  Number of parameters
+   Int_t       fNdim{};                             ///<  Function dimension
+   Int_t       fNpx{100};                           ///<  Number of points used for the graphical representation
    EFType      fType{EFType::kTemplScalar};
-   Int_t       fNpfits{};    //Number of points used in the fit
-   Int_t       fNDF{};       //Number of degrees of freedom in the fit
-   Double_t    fChisquare{}; //Function fit chisquare
-   Double_t    fMinimum{-1111};     //Minimum value for plotting
-   Double_t    fMaximum{-1111};     //Maximum value for plotting
-   std::vector<Double_t>    fParErrors;  //Array of errors of the fNpar parameters
-   std::vector<Double_t>    fParMin;     //Array of lower limits of the fNpar parameters
-   std::vector<Double_t>    fParMax;     //Array of upper limits of the fNpar parameters
-   std::vector<Double_t>    fSave;       //Array of fNsave function values
-   std::vector<Double_t>    fIntegral;   //!Integral of function binned on fNpx bins
-   std::vector<Double_t>    fAlpha;      //!Array alpha. for each bin in x the deconvolution r of fIntegral
-   std::vector<Double_t>    fBeta;       //!Array beta.  is approximated by x = alpha +beta*r *gamma*r**2
-   std::vector<Double_t>    fGamma;      //!Array gamma.
-   TObject     *fParent{nullptr};     //!Parent object hooking this function (if one)
-   TH1         *fHistogram{nullptr};  //!Pointer to histogram used for visualisation
-   std::unique_ptr<TMethodCall> fMethodCall; //!Pointer to MethodCall in case of interpreted function
-   Bool_t      fNormalized{false};    //Normalization option (false by default)
-   Double_t    fNormIntegral{};        //Integral of the function before being normalized
-   std::unique_ptr<TF1FunctorPointer>  fFunctor; //! Functor object to wrap any C++ callable object
-   std::unique_ptr<TFormula>   fFormula;        //Pointer to TFormula in case when user define formula
-   std::unique_ptr<TF1Parameters> fParams;   //Pointer to Function parameters object (exists only for not-formula functions)
-   std::unique_ptr<TF1AbsComposition> fComposition; //Pointer to composition (NSUM or CONV)
+   Int_t       fNpfits{};                           ///<  Number of points used in the fit
+   Int_t       fNDF{};                              ///<  Number of degrees of freedom in the fit
+   Double_t    fChisquare{};                        ///<  Function fit chisquare
+   Double_t    fMinimum{-1111};                     ///<  Minimum value for plotting
+   Double_t    fMaximum{-1111};                     ///<  Maximum value for plotting
+   std::vector<Double_t>    fParErrors;             ///<  Array of errors of the fNpar parameters
+   std::vector<Double_t>    fParMin;                ///<  Array of lower limits of the fNpar parameters
+   std::vector<Double_t>    fParMax;                ///<  Array of upper limits of the fNpar parameters
+   std::vector<Double_t>    fSave;                  ///<  Array of fNsave function values
+   std::vector<Double_t>    fIntegral;              ///<! Integral of function binned on fNpx bins
+   std::vector<Double_t>    fAlpha;                 ///<! Array alpha. for each bin in x the deconvolution r of fIntegral
+   std::vector<Double_t>    fBeta;                  ///<! Array beta.  is approximated by x = alpha +beta*r *gamma*r**2
+   std::vector<Double_t>    fGamma;                 ///<! Array gamma.
+   TObject     *fParent{nullptr};                   ///<! Parent object hooking this function (if one)
+   TH1         *fHistogram{nullptr};                ///<! Pointer to histogram used for visualisation
+   std::unique_ptr<TMethodCall> fMethodCall;        ///<! Pointer to MethodCall in case of interpreted function
+   Bool_t      fNormalized{false};                  ///<  Normalization option (false by default)
+   Double_t    fNormIntegral{};                     ///<  Integral of the function before being normalized
+   std::unique_ptr<TF1FunctorPointer>  fFunctor;    ///<! Functor object to wrap any C++ callable object
+   std::unique_ptr<TFormula>   fFormula;            ///<  Pointer to TFormula in case when user define formula
+   std::unique_ptr<TF1Parameters> fParams;          ///<  Pointer to Function parameters object (exists only for not-formula functions)
+   std::unique_ptr<TF1AbsComposition> fComposition; ///<  Pointer to composition (NSUM or CONV)
 
    /// General constructor for TF1. Most of the other constructors delegate on it
    TF1(EFType functionType, const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList, TF1Parameters *params = nullptr, TF1FunctorPointer * functor = nullptr):

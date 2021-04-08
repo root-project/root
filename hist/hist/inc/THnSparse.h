@@ -35,12 +35,12 @@ class THnSparseCompactBinCoord;
 
 class THnSparse: public THnBase {
  private:
-   Int_t      fChunkSize;    // number of entries for each chunk
-   Long64_t   fFilledBins;   // number of filled bins
-   TObjArray  fBinContent;   // array of THnSparseArrayChunk
-   TExMap     fBins;         //! filled bins
-   TExMap     fBinsContinued;//! filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
-   THnSparseCompactBinCoord *fCompactCoord; //! compact coordinate
+   Int_t      fChunkSize;                   ///<  Number of entries for each chunk
+   Long64_t   fFilledBins;                  ///<  Number of filled bins
+   TObjArray  fBinContent;                  ///<  Array of THnSparseArrayChunk
+   TExMap     fBins;                        ///<! Filled bins
+   TExMap     fBinsContinued;               ///<! Filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
+   THnSparseCompactBinCoord *fCompactCoord; ///<! Compact coordinate
 
    THnSparse(const THnSparse&); // Not implemented
    THnSparse& operator=(const THnSparse&); // Not implemented
