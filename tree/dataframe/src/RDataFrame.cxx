@@ -65,7 +65,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
    - [Just-in-time compilation: branch type inference and explicit declaration of branch types](#jitting)
    - [Generic actions](#generic-actions)
    - [Friend trees](#friends)
-   - [Reading file formats other than ROOT's](#other-file-formats)
+   - [Reading data formats other than ROOT trees](#other-file-formats)
    - [Call graphs (storing and reusing sets of transormations](#callgraphs)
    - [Visualizing the computation graph](#representgraph)
 - [Class reference](#reference) -- most methods are implemented in the ROOT::RDF::RInterface base class
@@ -981,7 +981,7 @@ auto f = d.Filter("myFriend.MyCol == 42");
 
 Friend TTrees with a TTreeIndex are supported from ROOT v6.24.
 
-### <a name="other-file-formats"></a>Reading file formats other than ROOT's
+### <a name="other-file-formats"></a>Reading data formats other than ROOT trees
 RDataFrame can be interfaced with RDataSources. The ROOT::RDF::RDataSource interface defines an API that RDataFrame can use to read arbitrary data formats.
 
 A concrete ROOT::RDF::RDataSource implementation (i.e. a class that inherits from RDataSource and implements all of its pure
