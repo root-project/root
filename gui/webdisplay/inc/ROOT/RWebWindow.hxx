@@ -56,7 +56,7 @@ class RWebWindow {
    friend class RWebWindowWSHandler;
    friend class RWebDisplayHandle;
 
-public:
+private:
    using timestamp_t = std::chrono::time_point<std::chrono::system_clock>;
 
    struct QueueItem {
