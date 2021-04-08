@@ -916,9 +916,14 @@ void REveManager::MIRExecThread()
       {
          std::shared_ptr<MIR> mir = fMIRqueue.front();
          fMIRqueue.pop();
+
          fServerState.fVal = ServerState::UpdatingScenes;
          lock.unlock();
+
          ExecuteMIR(mir);
+
+         lock.lock();
+         fServerState.fVal = fConnList.empty() ? ServerState::Waiting : ServerState::UpdatingClients;
          PublishChanges();
       }
    }
@@ -1023,11 +1028,9 @@ void REveManager::EndChangeGuard()
 
    PublishChanges();
 
-   {
-      std::unique_lock lock(fServerState.fMutex);
-      fServerState.fVal = ServerState::UpdatingClients;
-      fServerState.fCV.notify_all();
-   }
+   std::unique_lock lock(fServerState.fMutex);
+   fServerState.fVal = fConnList.empty() ? ServerState::Waiting : ServerState::UpdatingClients;
+   fServerState.fCV.notify_all();
 }
 //////////////////////////////////////////////////////////////////////
 //
