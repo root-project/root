@@ -29,12 +29,13 @@ namespace Detail {
 /**
 \class ROOT::Experimental::Detail::RPageSinkBuf
 \ingroup NTuple
-\brief Abstract sink that coalesces cluster column page writes
+\brief Wrapper sink that coalesces cluster column page writes
 */
 // clang-format on
 class RPageSinkBuf : public RPageSink {
 private:
-   /// A buffered column
+   /// A buffered column. The column is not responsible for RPage memory management (i.e.
+   /// ReservePage/ReleasePage), which is handled by the enclosing RPageSinkBuf.
    class RColumnBuf {
    private:
       std::pair<RPageStorage::ColumnHandle_t, std::vector<RPage>> fBuf;
@@ -43,7 +44,7 @@ private:
          if (!fBuf.first) {
             fBuf.first = columnHandle;
          }
-         fBuf.second.emplace_back(page);
+         fBuf.second.push_back(page);
       }
       const RPageStorage::ColumnHandle_t &GetHandle() const { return fBuf.first; }
       std::vector<RPage> DrainBufferedPages() {
@@ -54,7 +55,10 @@ private:
    };
 
 private:
+   /// The inner sink, responsible for actually performing I/O.
    std::unique_ptr<RPageSink> fInner;
+   /// The buffered page sink maintains a copy of the RNTupleModel for the inner sink.
+   /// For the unbuffered case, the RNTupleModel is instead managed by a RNTupleWriter.
    std::unique_ptr<RNTupleModel> fInnerModel;
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
