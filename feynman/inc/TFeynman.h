@@ -14,8 +14,11 @@ class TFeynman {
 		}
 
 		// Fermions:
-		//Leptons;
-		void Electron(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY);
+		// Quarks:
+		void Quark(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, Double_t quarkName);
+
+		// Leptons;
+		void Lepton(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, Double_t leptonName);
 		void Positron(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY);
 
 		// Bosons: 

@@ -6,16 +6,59 @@
 #include <TArc.h>
 #include <TLine.h>
 
+void TFeynman::Quark(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, Double_t quarkName) {
+    TArrow * q;
+    
+    q = new TArrow(x1, y1, x2, y2, 0.02, "->-");
+    
+    const char *quark;
 
-void TFeynman::Electron(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY) {
+    if (quarkName == 1) {
+        quark = "Up";
+    }
+    else if (quarkName == 2) {
+        quark = "Down";
+    }
+    else if (quarkName == 3) {
+        quark = "Charm";
+    }
+    else if (quarkName == 4) {
+        quark = "Strange";
+    }
+    else if (quarkName == 5) {
+        quark = "Top";
+    }
+    else if (quarkName == 6) {
+        quark = "Bottom";
+    }
+
+    TLatex t;
+    t.SetTextSize(0.05);
+    t.DrawLatex(labelPositionX, labelPositionY, quark);
+
+    q->Draw();
+}
+
+void TFeynman::Lepton(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, Double_t leptonName) {
     TArrow * e;
     
     e = new TArrow(x1, y1, x2, y2, 0.02, "->-");
     
+    const char *lepton;
+
+    if (leptonName == 1) {
+        lepton = "e^{-}";
+    }
+    else if (leptonName == 2) {
+        lepton = "#mu^{-}";
+    }
+    else if (leptonName == 3) {
+        lepton = "#tau^{-}";
+    }
 
     TLatex t;
     t.SetTextSize(0.1);
-    t.DrawLatex(labelPositionX, labelPositionY, "e^{-}");
+    t.DrawLatex(labelPositionX, labelPositionY, lepton);
 
     e->Draw();
 }
@@ -69,4 +112,6 @@ void TFeynman::CurvedGluon(Double_t x1, Double_t y1, Double_t rad, Double_t phim
     t.SetTextSize(0.1);
     t.DrawLatex(labelPositionX, labelPositionY, "g");
 }
+
+
 
