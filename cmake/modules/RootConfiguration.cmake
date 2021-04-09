@@ -6,7 +6,7 @@
 
 INCLUDE (CheckCXXSourceCompiles)
 
-#---Define a function to do not polute the top level namespace with unneeded variables-----------------------
+#---Define a function not to pollute the top level namespace with unneeded variables-----------------------
 function(RootConfigure)
 
 #---Define all sort of variables to bridge between the old Module.mk and the new CMake equivalents-----------
