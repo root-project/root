@@ -30,6 +30,27 @@ NamespaceImp(RooStats)
 #include <typeinfo>
 using namespace std;
 
+
+namespace {
+     template<class listT, class stringT> void getParameterNames(const listT* l,std::vector<stringT>& names){
+       // extract the parameter names from a list
+       if(!l) return;
+       RooAbsArg* obj;
+       RooFIter itr(l->fwdIterator());
+       while((obj = itr.next())){
+         names.push_back(obj->GetName());
+       }
+     }
+     void getArgs(RooWorkspace* ws, const std::vector<TString> names, RooArgSet& args){
+       for(const auto& p:names){
+         RooRealVar* v = ws->var(p.Data());
+         if(v){
+           args.add(*v);
+         }
+       }
+     }
+   }   
+
 namespace RooStats {
 
    RooStatsConfig& GetGlobalRooStatsConfig() {
@@ -331,148 +352,87 @@ namespace RooStats {
       }
       os << ")\n";
    }
-}
 
-namespace {
-// freeing members from RooWorkspace:
-template <typename RooWorkspaceTag> struct RooWorkspaceHackResult {
-  typedef typename RooWorkspaceTag::type type;
-  static type ptr;
-};
-
-template <typename RooWorkspaceTag>
-typename RooWorkspaceHackResult<RooWorkspaceTag>::type
-    RooWorkspaceHackResult<RooWorkspaceTag>::ptr;
-
-template <typename RooWorkspaceTag, typename RooWorkspaceTag::type p>
-struct RooWorkspaceRob : RooWorkspaceHackResult<RooWorkspaceTag> {
-  struct RooWorkspaceFiller {
-    RooWorkspaceFiller() { RooWorkspaceHackResult<RooWorkspaceTag>::ptr = p; }
-  };
-  static RooWorkspaceFiller rooworkspacefiller_obj;
-};
-
-template <typename RooWorkspaceTag, typename RooWorkspaceTag::type p>
-typename RooWorkspaceRob<RooWorkspaceTag, p>::RooWorkspaceFiller
-    RooWorkspaceRob<RooWorkspaceTag, p>::rooworkspacefiller_obj;
-
-// now expose some members of RooWorkspace that we need to access
-struct RooWorkspace_snapshots {
-  typedef RooLinkedList(RooWorkspace::*type);
-};
-template struct RooWorkspaceRob<RooWorkspace_snapshots,
-                               &RooWorkspace::_snapshots>;
-} // namespace
-
-namespace {
-template <class listT, class stringT>
-void getParameterNames(const listT *l, std::vector<stringT> &names) {
-  // extract the parameter names from a list
-  if (!l)
-    return;
-  RooAbsArg *obj;
-  RooFIter itr(l->fwdIterator());
-  while ((obj = itr.next())) {
-    names.push_back(obj->GetName());
-  }
-}
-
-template <class listT, class stringT>
-void getArgs(RooWorkspace *ws, const std::vector<stringT> &names, listT &args) {
-  for (const auto &p : names) {
-    RooAbsArg *v = (RooAbsArg *)ws->obj(p);
-    if (v) {
-      args.add(*v);
-    }
-  }
-}
-} // namespace
-
-RooWorkspace* makeCleanWorkspace(RooWorkspace *oldWS, const char *newName,
-                                 bool copySnapshots, const char *mcname,
-                                 const char *newmcname) {
-  // clone a workspace, copying all needed components and discarding all others
-
-  // start off with the old workspace
-  auto objects = oldWS->allGenericObjects();
-  RooStats::ModelConfig *oldMC =
-      dynamic_cast<RooStats::ModelConfig *>(oldWS->obj(mcname));
-  auto data = oldWS->allData();
-  for (auto it : objects) {
-    if (!oldMC) {
-      oldMC = dynamic_cast<RooStats::ModelConfig *>(it);
-    }
-  }
-  if (!oldMC)
-    throw std::runtime_error("unable to retrieve ModelConfig");
-
-  RooAbsPdf *origPdf = oldMC->GetPdf();
-
-  // start off with the old modelconfig
-  std::vector<TString> poilist;
-  std::vector<TString> nplist;
-  std::vector<TString> obslist;
-  std::vector<TString> globobslist;
-  RooAbsPdf *pdf = NULL;
-  if (oldMC) {
-    pdf = oldMC->GetPdf();
-    ::getParameterNames(oldMC->GetParametersOfInterest(), poilist);
-    ::getParameterNames(oldMC->GetNuisanceParameters(), nplist);
-    ::getParameterNames(oldMC->GetObservables(), obslist);
-    ::getParameterNames(oldMC->GetGlobalObservables(), globobslist);
-  }
-  if (!pdf) {
-    if (origPdf)
-      pdf = origPdf;
-  }
-  if (!pdf) {
-    return NULL;
+   // clone a workspace, copying all needed components and discarding all others
+   // start off with the old workspace
+   RooWorkspace* MakeCleanWorkspace(RooWorkspace *oldWS, const char *newName,
+                                   bool copySnapshots, const char *mcname,
+                                   const char *newmcname) {
+      auto objects = oldWS->allGenericObjects();
+      RooStats::ModelConfig *oldMC =
+          dynamic_cast<RooStats::ModelConfig *>(oldWS->obj(mcname));
+      auto data = oldWS->allData();
+      for (auto it : objects) {
+        if (!oldMC) {
+          oldMC = dynamic_cast<RooStats::ModelConfig *>(it);
+        }
+      }
+      if (!oldMC)
+        throw std::runtime_error("unable to retrieve ModelConfig");
+  
+      RooAbsPdf *origPdf = oldMC->GetPdf();
+  
+      // start off with the old modelconfig
+      std::vector<TString> poilist;
+      std::vector<TString> nplist;
+      std::vector<TString> obslist;
+      std::vector<TString> globobslist;
+      RooAbsPdf *pdf = NULL;
+      if (oldMC) {
+        pdf = oldMC->GetPdf();
+        ::getParameterNames(oldMC->GetParametersOfInterest(), poilist);
+        ::getParameterNames(oldMC->GetNuisanceParameters(), nplist);
+        ::getParameterNames(oldMC->GetObservables(), obslist);
+        ::getParameterNames(oldMC->GetGlobalObservables(), globobslist);
+      }
+      if (!pdf) {
+        if (origPdf)
+          pdf = origPdf;
+      }
+      if (!pdf) {
+        return NULL;
+      }
+  
+      // create them anew
+      RooWorkspace *newWS = new RooWorkspace(newName ? newName : oldWS->GetName());
+      newWS->autoImportClassCode(true);
+      RooStats::ModelConfig *newMC = new RooStats::ModelConfig(newmcname, newWS);
+  
+      // Copy snapshots
+      if (copySnapshots) {
+        RooFIter itr(oldWS->getSnapshots().fwdIterator());
+        RooArgSet *snap;
+        while ((snap = (RooArgSet *)itr.next())) {
+          RooArgSet *snapClone = (RooArgSet *)snap->snapshot();
+          snapClone->setName(snap->GetName());
+          newWS->getSnapshots().Add(snapClone);
+        }
+      }
+  
+      newWS->import(*pdf, RooFit::RecycleConflictNodes());
+      RooAbsPdf *newPdf = newWS->pdf(pdf->GetName());
+      newMC->SetPdf(*newPdf);
+  
+      for (auto d : data) {
+        newWS->import(*d);
+      }
+  
+      RooArgSet poiset;
+      ::getArgs(newWS, poilist, poiset);
+      RooArgSet npset;
+      ::getArgs(newWS, nplist, npset);
+      RooArgSet obsset;
+      ::getArgs(newWS, obslist, obsset);
+      RooArgSet globobsset;
+      ::getArgs(newWS, globobslist, globobsset);
+  
+      newMC->SetParametersOfInterest(poiset);
+      newMC->SetNuisanceParameters(npset);
+      newMC->SetObservables(obsset);
+      newMC->SetGlobalObservables(globobsset);
+      newWS->import(*newMC);
+  
+      return newWS;
   }
 
-  // create them anew
-  RooWorkspace *newWS = new RooWorkspace(newName ? newName : oldWS->GetName());
-  newWS->autoImportClassCode(true);
-  RooStats::ModelConfig *newMC = new RooStats::ModelConfig(newmcname, newWS);
-
-  // Copy snapshots
-  // Fancy ways to avoid public-private hack used in the following, simplified
-  // version in comments above the respective lines
-  if (copySnapshots) {
-    RooFIter itr(
-        ((*oldWS).*::RooWorkspaceHackResult<RooWorkspace_snapshots>::ptr)
-            .fwdIterator());
-    RooArgSet *snap;
-    while ((snap = (RooArgSet *)itr.next())) {
-      RooArgSet *snapClone = (RooArgSet *)snap->snapshot();
-      snapClone->setName(snap->GetName());
-      // newWS->_snapshots.Add(snapClone) ;
-      ((*newWS).*::RooWorkspaceHackResult<RooWorkspace_snapshots>::ptr)
-          .Add(snapClone);
-    }
-  }
-
-  newWS->import(*pdf, RooFit::RecycleConflictNodes());
-  RooAbsPdf *newPdf = newWS->pdf(pdf->GetName());
-  newMC->SetPdf(*newPdf);
-
-  for (auto d : data) {
-    newWS->import(*d);
-  }
-
-  RooArgSet poiset;
-  ::getArgs(newWS, poilist, poiset);
-  RooArgSet npset;
-  ::getArgs(newWS, nplist, npset);
-  RooArgSet obsset;
-  ::getArgs(newWS, obslist, obsset);
-  RooArgSet globobsset;
-  ::getArgs(newWS, globobslist, globobsset);
-
-  newMC->SetParametersOfInterest(poiset);
-  newMC->SetNuisanceParameters(npset);
-  newMC->SetObservables(obsset);
-  newMC->SetGlobalObservables(globobsset);
-  newWS->import(*newMC);
-
-  return newWS;
 }

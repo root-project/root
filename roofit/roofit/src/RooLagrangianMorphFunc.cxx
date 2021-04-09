@@ -14,7 +14,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-/** \class RooLagrangianMorphing
+/** \class RooLagrangianMorphFunc
     \ingroup Roofit
 Class RooLagrangianMorphing is a implementation of the method of Effective
 Lagrangian Morphing, descibed in ATL-PHYS-PUB-2015-047.
