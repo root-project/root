@@ -13,27 +13,30 @@ void TFeynman::Quark(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_
     
     const char *quark;
 
-    if (quarkName == 1) {
-        quark = "Up";
+    if (quarkName == 0) {
+        quark = "q";
+    }
+    else if (quarkName == 1) {
+        quark = "u";
     }
     else if (quarkName == 2) {
-        quark = "Down";
+        quark = "d";
     }
     else if (quarkName == 3) {
-        quark = "Charm";
+        quark = "s";
     }
     else if (quarkName == 4) {
-        quark = "Strange";
+        quark = "s";
     }
     else if (quarkName == 5) {
-        quark = "Top";
+        quark = "t";
     }
     else if (quarkName == 6) {
-        quark = "Bottom";
+        quark = "b";
     }
 
     TLatex t;
-    t.SetTextSize(0.05);
+    t.SetTextSize(0.1);
     t.DrawLatex(labelPositionX, labelPositionY, quark);
 
     q->Draw();
@@ -63,14 +66,26 @@ void TFeynman::Lepton(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double
     e->Draw();
 }
 
-void TFeynman::Positron(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY) {
+void TFeynman::AntiLepton(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, Double_t leptonName) {
     TArrow * eplus;
 
     eplus = new TArrow(x1, y1, x2, y2, 0.02, "-<-");
 
+    const char *lepton;
+
+    if (leptonName == 1) {
+        lepton = "e^{+}";
+    }
+    else if (leptonName == 2) {
+        lepton = "#mu^{+}";
+    }
+    else if (leptonName == 3) {
+        lepton = "#tau^{+}";
+    }
+
     TLatex t;
     t.SetTextSize(0.1);
-    t.DrawLatex(labelPositionX, labelPositionY, "e^{+}");
+    t.DrawLatex(labelPositionX, labelPositionY, lepton);
 
     eplus->Draw();
 }
