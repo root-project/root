@@ -10,6 +10,7 @@
 
 #include <QTimer>
 #include <QApplication>
+#include <QtWebEngine>
 
 #include "TApplication.h"
 #include "TSystem.h"
@@ -18,6 +19,8 @@
 
 int main(int argc, char **argv)
 {
+   QtWebEngine::initialize();
+
    argc = 1; // hide all additional parameters from ROOT and Qt
    TApplication app("uno", &argc, argv); // ROOT application
 
@@ -31,7 +34,7 @@ int main(int argc, char **argv)
    QTimer timer;
    QObject::connect( &timer, &QTimer::timeout, []() { gSystem->ProcessEvents();  });
    timer.setSingleShot(false);
-   timer.start(20);
+   timer.start(4);
 
    // top widget
    ExampleWidget* widget = new ExampleWidget();
