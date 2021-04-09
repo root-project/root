@@ -24,6 +24,8 @@
 
 #include <sstream>
 
+#include <nlohmann/json.hpp>
+
 using namespace ROOT::Experimental;
 
 

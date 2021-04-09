@@ -14,7 +14,6 @@
 #include "ROOT/REveProjections.hxx"
 #include "ROOT/REveProjectionManager.hxx"
 #include "ROOT/REveRGBAPalette.hxx"
-//#include "ROOT/REveText.hxx"
 #include "ROOT/REveRenderData.hxx"
 #include "ROOT/REveTrans.hxx"
 
@@ -23,10 +22,10 @@
 #include "TMath.h"
 #include "TAxis.h"
 
-// #include "TGLUtil.h"
-
 #include <cassert>
 #include <iostream>
+
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
 
