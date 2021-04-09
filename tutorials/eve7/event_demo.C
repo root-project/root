@@ -31,7 +31,6 @@
 #include <ROOT/REvePointSet.hxx>
 #include <ROOT/REveJetCone.hxx>
 #include <ROOT/REveTrans.hxx>
-#include <ROOT/REveChange.hxx>
 
 #include <ROOT/REveTrack.hxx>
 #include <ROOT/REveTrackPropagator.hxx>
@@ -239,7 +238,7 @@ private:
 public:
    EventManager()
    {
-      std::chrono::milliseconds ms(50);
+      std::chrono::milliseconds ms(100);
       fDeltaTime = ms;
    }
 
@@ -312,7 +311,6 @@ public:
    virtual void QuitRoot()
    {
       printf("Quit ROOT\n");
-      if (fAutoplay) Autoplay();
       if (gApplication)
          gApplication->Terminate();
    }
