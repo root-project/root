@@ -187,6 +187,7 @@ called for each data event.
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <stdexcept>
 
 using namespace std;
 
@@ -1099,40 +1100,35 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal* nll ;
   string baseName = Form("nll_%s_%s",GetName(),data.GetName()) ;
+  RooAbsTestStatistic::Configuration cfg;
+  cfg.addCoefRangeName = addCoefRangeName ? addCoefRangeName : "";
+  cfg.nCPU = numcpu;
+  cfg.interleave = interl;
+  cfg.verbose = verbose;
+  cfg.splitCutRange = static_cast<bool>(splitr);
+  cfg.cloneInputData = static_cast<bool>(cloneData);
+  cfg.integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
+  cfg.binnedL = false;
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: default range, or single restricted range
     //cout<<"FK: Data test 1: "<<data.sumEntries()<<endl;
 
-    RooAbsTestStatistic::Configuration cfg;
     cfg.rangeName = rangeName ? rangeName : "";
-    cfg.addCoefRangeName = addCoefRangeName ? addCoefRangeName : "";
-    cfg.nCPU = numcpu;
-    cfg.interleave = interl;
-    cfg.verbose = verbose;
-    cfg.splitCutRange = static_cast<bool>(splitr);
-    cfg.cloneInputData = static_cast<bool>(cloneData);
-    cfg.integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
-    cfg.binnedL = false;
-    auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps,std::move(cfg), ext);
+    auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps,cfg, ext);
     theNLL->batchMode(pc.getInt("BatchMode"));
     nll = theNLL;
   } else {
     // Composite case: multiple ranges
     RooArgList nllList ;
     auto tokens = RooHelpers::tokenise(rangeName, ",");
+    if (RooHelpers::checkIfRangesOverlap(*this, data, tokens)) {
+      throw std::runtime_error(
+              std::string("Error in RooAbsPdf::createNLL! The ranges ") + rangeName + " are overlapping!");
+    }
     for (const auto& token : tokens) {
-      RooAbsTestStatistic::Configuration cfg;
       cfg.rangeName = token;
-      cfg.addCoefRangeName = addCoefRangeName ? addCoefRangeName : "";
-      cfg.nCPU = numcpu;
-      cfg.interleave = interl;
-      cfg.verbose = verbose;
-      cfg.splitCutRange = static_cast<bool>(splitr);
-      cfg.cloneInputData = static_cast<bool>(cloneData);
-      cfg.integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
-      cfg.binnedL = false;
-      auto nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token.c_str()),"-log(likelihood)",
-                                   *this,data,projDeps,std::move(cfg),ext);
+      auto nllComp = new RooNLLVar((baseName + "_" + token).c_str(),"-log(likelihood)",
+                                   *this,data,projDeps,cfg,ext);
       nllComp->batchMode(pc.getInt("BatchMode"));
       nllList.add(*nllComp) ;
     }
