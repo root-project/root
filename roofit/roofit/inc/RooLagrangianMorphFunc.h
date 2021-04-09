@@ -327,7 +327,6 @@ public:
   int nSamples() const;
 
   RooRealSumFunc *getFunc() const;
-  //    std::unique_ptr<RooRealSumFunc> cloneFunc() const ;
   std::unique_ptr<RooWrapperPdf> createPdf() const;
 
   RooAbsPdf::ExtendMode extendMode() const;
@@ -353,7 +352,6 @@ protected:
   RooListProxy _flags;
   Config _config;
   std::vector<std::vector<RooListProxy *>> _diagrams;
-  Bool_t _linearize;
   mutable const RooArgSet *_curNormSet; //!
   std::vector<RooListProxy *> _nonInterfering;
 
