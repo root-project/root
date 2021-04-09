@@ -38,7 +38,7 @@ void schroedinger_hydrogen() {
    gStyle->SetPalette(kCividis);
    gStyle->SetOptStat(0);
 
-   TCanvas *c1 = new TCanvas("c1", "Schroedinger's Hydrogen Atom", 1500, 750);
+   TCanvas *c1 = new TCanvas("c1", "Schroedinger's Hydrogen Atom", 750, 1500);
    c1->Divide(1, 2);
 
    auto c1_1 = c1->cd(1);
