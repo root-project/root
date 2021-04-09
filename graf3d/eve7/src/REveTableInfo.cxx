@@ -21,6 +21,8 @@
 
 #include <sstream>
 
+#include <nlohmann/json.hpp>
+
 using namespace ROOT::Experimental;
 
 REveTableViewInfo::REveTableViewInfo(const std::string &name, const std::string &title)

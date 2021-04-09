@@ -11,9 +11,12 @@
 
 #include <ROOT/REveDataTable.hxx>
 #include <ROOT/REveDataCollection.hxx>
-#include <TClass.h>
+#include "TClass.h"
+#include "TROOT.h"
+
 #include <sstream>
-#include <TROOT.h>
+
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
 

@@ -15,9 +15,6 @@
 #include "ROOT/REveManager.hxx"
 #include "ROOT/REveSelection.hxx"
 
-
-// #include "TGLSelectRecord.h"
-
 #include "TAxis.h"
 #include "THStack.h"
 #include "TH2.h"
@@ -27,6 +24,8 @@
 #include <cassert>
 #include <algorithm>
 #include <set>
+
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
 

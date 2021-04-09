@@ -17,6 +17,8 @@
 #include "TRandom.h"
 #include <cassert>
 
+#include <nlohmann/json.hpp>
+
 using namespace::ROOT::Experimental;
 
 /** \class REveBoxSet

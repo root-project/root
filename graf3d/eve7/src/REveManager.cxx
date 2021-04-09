@@ -41,6 +41,8 @@
 #include <sstream>
 #include <iostream>
 
+#include <nlohmann/json.hpp>
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
@@ -825,7 +827,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
    }
    catch (std::exception &e) {
       std::cout << "REveManager::WindowData " << e.what() << std::endl;
-   } 
+   }
    catch (...) {
       std::cout << "REveManager::WindowData unknown exception.\n";
    }
