@@ -31,9 +31,14 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &mo
 ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
-   fBufferedColumns.at(columnHandle.fId).BufferPage(columnHandle, page);
-   // at this point we're feeding bad locators to fOpenPageRanges
-   // but it may not matter if they are never written out
+   // TODO avoid frequent (de)allocations by holding on to allocated buffers in RColumnBuf
+   RPage bufPage = ReservePage(columnHandle, page.GetNElements());
+   // make sure the page is aware of how many elements it will have
+   R__ASSERT(bufPage.TryGrow(page.GetNElements()));
+   memcpy(bufPage.GetBuffer(), page.GetBuffer(), page.GetSize());
+   fBufferedColumns.at(columnHandle.fId).BufferPage(columnHandle, bufPage);
+   // we're feeding bad locators to fOpenPageRanges but it should not matter
+   // because they never get written out
    return RClusterDescriptor::RLocator{};
 }
 
@@ -41,13 +46,14 @@ ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::NTupleSize_t nEntries)
 {
    for (auto &bufColumn : fBufferedColumns) {
-      for (const auto &bufPage : bufColumn.DrainBufferedPages()) {
+      for (auto &bufPage : bufColumn.DrainBufferedPages()) {
          fInner->CommitPage(bufColumn.GetHandle(), bufPage);
+         ReleasePage(bufPage);
       }
    }
    fInner->CommitCluster(nEntries);
-   // at this point we're feeding bad locators to fOpenColumnRanges
-   // but it may not matter if they are never written out
+   // we're feeding bad locators to fOpenPageRanges but it should not matter
+   // because they never get written out
    return RClusterDescriptor::RLocator{};
 }
 
