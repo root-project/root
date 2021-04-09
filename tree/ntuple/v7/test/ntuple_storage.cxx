@@ -73,34 +73,66 @@ TEST(RNTuple, Extended)
 
 TEST(RPageSinkBuf, Basics)
 {
+   struct TestModel {
+      std::unique_ptr<RNTupleModel> fModel;
+      std::shared_ptr<float> fFloatField;
+      std::shared_ptr<std::vector<CustomStruct>> fFieldKlassVec;
+      TestModel() {
+         fModel = RNTupleModel::Create();
+         fFloatField = fModel->MakeField<float>("pt");
+         fFieldKlassVec = fModel->MakeField<std::vector<CustomStruct>>("klassVec");
+      }
+   };
+
+   FileRaii fileGuardBuf("test_ntuple_sinkbuf_basics_buf.root");
    FileRaii fileGuard("test_ntuple_sinkbuf_basics.root");
    {
-      auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("pt", 42.0);
-      auto fieldKlassVec = model->MakeField<std::vector<CustomStruct>>("klassVec");
-      CustomStruct klass;
-      klass.a = 42.0;
-      klass.v1.emplace_back(2.0);
-      fieldKlassVec->emplace_back(klass);
-
+      TestModel bufModel;
       // PageSinkBuf wraps a concrete page source
-      auto ntuple = std::make_unique<RNTupleWriter>(std::move(model),
+      auto ntupleBuf = std::make_unique<RNTupleWriter>(std::move(bufModel.fModel),
          std::make_unique<RPageSinkBuf>(std::make_unique<RPageSinkFile>(
-            "myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()
+            "buf", fileGuardBuf.GetPath(), RNTupleWriteOptions()
       )));
-      ntuple->Fill();
-      ntuple->Fill();
+
+      TestModel unbufModel;
+      auto ntuple = std::make_unique<RNTupleWriter>(std::move(unbufModel.fModel),
+         std::make_unique<RPageSinkFile>("unbuf", fileGuard.GetPath(), RNTupleWriteOptions()
+      ));
+
+      for (int i = 0; i < 20000; i++) {
+         *bufModel.fFloatField = static_cast<float>(i);
+         *unbufModel.fFloatField = static_cast<float>(i);
+         CustomStruct klass;
+         klass.a = 42.0;
+         klass.v1.emplace_back(static_cast<float>(i));
+         klass.v2.emplace_back(std::vector<float>(3, static_cast<float>(i)));
+         klass.s = "hi" + std::to_string(i);
+         *bufModel.fFieldKlassVec = std::vector<CustomStruct>{klass};
+         *unbufModel.fFieldKlassVec = std::vector<CustomStruct>{klass};
+
+         ntupleBuf->Fill();
+         ntuple->Fill();
+
+         if (i % 15000 == 0) {
+            ntupleBuf->CommitCluster();
+            ntuple->CommitCluster();
+         }
+      }
    }
 
-   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto ntupleBuf = RNTupleReader::Open("buf", fileGuardBuf.GetPath());
+   auto ntuple = RNTupleReader::Open("unbuf", fileGuard.GetPath());
+   EXPECT_EQ(ntuple->GetNEntries(), ntupleBuf->GetNEntries());
+
+   auto viewPtBuf = ntupleBuf->GetView<float>("pt");
+   auto viewKlassVecBuf = ntupleBuf->GetView<std::vector<CustomStruct>>("klassVec");
    auto viewPt = ntuple->GetView<float>("pt");
    auto viewKlassVec = ntuple->GetView<std::vector<CustomStruct>>("klassVec");
-   int n = 0;
-   for (auto i : ntuple->GetEntryRange()) {
-      EXPECT_EQ(42.0, viewPt(i));
-      EXPECT_EQ(42.0, viewKlassVec(i).at(0).a);
-      EXPECT_EQ(std::vector<float>{2.0}, viewKlassVec(i).at(0).v1);
-      n++;
+   for (auto i : ntupleBuf->GetEntryRange()) {
+      EXPECT_EQ(static_cast<float>(i), viewPtBuf(i));
+      EXPECT_EQ(viewPt(i), viewPtBuf(i));
+      EXPECT_EQ(viewKlassVec(i).at(0).v1, viewKlassVecBuf(i).at(0).v1);
+      EXPECT_EQ(viewKlassVec(i).at(0).v2, viewKlassVecBuf(i).at(0).v2);
+      EXPECT_EQ(viewKlassVec(i).at(0).s, viewKlassVecBuf(i).at(0).s);
    }
-   EXPECT_EQ(2, n);
 }
