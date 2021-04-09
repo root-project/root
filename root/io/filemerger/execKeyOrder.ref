@@ -1,0 +1,21 @@
+
+Processing roottest/root/io/filemerger/execKeyOrder.C...
+TFile**		inputKeyOrder.root	
+ TFile*		inputKeyOrder.root	
+  KEY: TNamed	Alt_01;1	
+  KEY: TNamed	first;4	Fourth [current cycle]
+  KEY: TNamed	first;3	Third [backup cycle]
+  KEY: TNamed	first;2	Second [backup cycle]
+  KEY: TNamed	first;1	first [backup cycle]
+  KEY: TNamed	Alt_02;1	
+  KEY: TNamed	Alt_03;1	
+TFile**		outputKeyOrder.root	
+ TFile*		outputKeyOrder.root	
+  KEY: TNamed	Alt_01;1	
+  KEY: TNamed	first;4	Fourth [current cycle]
+  KEY: TNamed	first;3	Third [backup cycle]
+  KEY: TNamed	first;2	Second [backup cycle]
+  KEY: TNamed	first;1	first [backup cycle]
+  KEY: TNamed	Alt_02;1	
+  KEY: TNamed	Alt_03;1	
+(int) 0
