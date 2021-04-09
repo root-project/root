@@ -74,8 +74,7 @@ protected:
       int fCounter{0}; ///< counter used to number handlers
       QApplication *qapp{nullptr};  ///< created QApplication
       int qargc{1};                 ///< arg counter
-      char *qargv[10];              ///< arg values
-      bool fInitEngine{false};      ///< does engine was initialized
+      char *qargv[2];               ///< arg values
       std::unique_ptr<TQt5Timer> fTimer; ///< timer to process ROOT events
       std::unique_ptr<RootUrlSchemeHandler> fHandler; ///< specialized handler
    public:
@@ -89,22 +88,20 @@ protected:
          // if (fHandler)
          //   QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
 
-         printf("Deleting Qt5Creator\n");
+         R__LOG_DEBUG(0, QtWebDisplayLog()) << "Deleting Qt5Creator";
       }
 
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override
       {
-         if (!fInitEngine) {
-            QtWebEngine::initialize();
-            fInitEngine = true;
-         }
-
          if (!qapp && !QApplication::instance()) {
 
             if (!gApplication) {
-               R__LOG_ERROR(QtWebDisplayLog()) << "NOT FOUND gApplication to create QApplication";
+               R__LOG_ERROR(QtWebDisplayLog()) << "Not found gApplication to create QApplication";
                return nullptr;
             }
+
+            // initialize web engine only before creating QApplication
+            QtWebEngine::initialize();
 
             #if QT_VERSION >= 0x050C00
             QWebEngineUrlScheme scheme("rootscheme");
@@ -120,6 +117,8 @@ protected:
             qapp = new QApplication(qargc, qargv);
          }
 
+         // create timer to process Qt events from inside ROOT process events
+         // very much improve performance, even when Qt even loop runs by QApplication normally
          if (!fTimer && !args.IsHeadless()) {
             Int_t interval = gEnv->GetValue("WebGui.Qt5Timer", 1);
             if (interval > 0) {
