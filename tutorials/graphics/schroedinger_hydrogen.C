@@ -6,6 +6,8 @@
 /// Visualize the Amplitude of a Hydrogen Atom in the n = 2, l = 0, m = 0 state.
 /// Demonstrates how TH2F can be used in Quantum Mechanics.
 ///
+/// The formula for Hydrogen in this energy state is \f$ \psi_{200} = \frac{1}{4\sqrt{2\pi}a_0 ^{\frac{3}{2}}}(2-\frac{\sqrt{x^2+y^2}}{a_0})e^{-\frac{\sqrt{x^2+y^2}}{2a_0}} \f$
+///
 /// \macro_image
 /// \macro_code
 ///
@@ -14,17 +16,17 @@
 #include <cmath>
 
 double WaveFunction(double x, double y) {
-   double r = sqrt(x * x + y * y);
+   double r = sqrt(x *x + y*y);
 
-   double w = (1 / pow((4 * sqrt(2 * TMath::Pi()) * 1), 1.5)) *
-              (2 - (r / 1) * pow(TMath::E(), (-1 * r) / 2)); // Wavefunction formula for psi 2,0,0
+   double w = (1/pow((4*sqrt(2*TMath::Pi())* 1), 1.5)) * (2 - (r / 1)*pow(TMath::E(), (-1 * r)/2)); // Wavefunction formula for psi 2,0,0
 
-   return w * w; // Amplitude
+   return w*w; // Amplitude
+
 }
 
 void schroedinger_hydrogen() {
    TH2F *h2D = new TH2F("Hydrogen Atom",
-                        "#Psi^{2}_{200} i.e. n = 2, l = 0, m = 0; Position in x direction; Position in y direction",
+                        "Hydrogen in n = 2, l = 0, m = 0 state; Position in x direction; Position in y direction",
                         200, -10, 10, 200, -10, 10);
 
    for (float i = -10; i < 10; i += 0.01) {
@@ -47,9 +49,7 @@ void schroedinger_hydrogen() {
    h2D->SetContour(50);
    h2D->Draw("colz");
 
-   TLatex *l = new TLatex(
-      -10, -12.43,
-      "The Electron is more likely to be found in the yellow areas and less likely to be found in the blue areas.");
+   TLatex *l = new TLatex(-10, -12.43, "The Electron is more likely to be found in the yellow areas and less likely to be found in the blue areas.");
    l->SetTextFont(42);
    l->SetTextSize(0.02);
    l->Draw();
@@ -57,7 +57,7 @@ void schroedinger_hydrogen() {
    auto c1_2 = c1->cd(2);
    c1_2->SetTheta(42.);
 
-   TH2D *h2Dc = (TH2D *)h2D->Clone();
+   TH2D *h2Dc = (TH2D*)h2D->Clone();
    h2Dc->SetTitle("3D view of probability amplitude;;");
    h2Dc->Draw("surf2");
 }
