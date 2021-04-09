@@ -139,7 +139,7 @@ REveManager::REveManager()
    TColor::SetColorThreshold(0.1);
 
    fWebWindow = RWebWindow::Create();
-   fWebWindow->AssignCallbackThreadId();
+   fWebWindow->UseServerThreads();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
 
    const char *gl_viewer = gEnv->GetValue("WebEve.GLViewer", "Three");
