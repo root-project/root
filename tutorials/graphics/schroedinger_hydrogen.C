@@ -39,7 +39,7 @@ void schroedinger_hydrogen() {
    gStyle->SetOptStat(0);
 
    TCanvas *c1 = new TCanvas("c1", "Schroedinger's Hydrogen Atom", 1500, 750);
-   c1->Divide(2, 1);
+   c1->Divide(1, 2);
 
    auto c1_1 = c1->cd(1);
    c1_1->SetRightMargin(0.14);
