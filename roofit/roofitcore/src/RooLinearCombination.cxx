@@ -27,20 +27,13 @@
 ClassImp(RooLinearCombination);
 
 namespace {
-template <class T> inline void assign(SuperFloat &var, const T &val) {
-#ifdef USE_UBLAS
-  var.assign(val);
-#else
-  var = val;
-#endif
-}
-inline double convertToDouble(const SuperFloat &var) {
-#ifdef USE_UBLAS
-  return var.convert_to<double>();
-#else
-  return var;
-#endif
-}
+  template <class T> inline void assign(SuperFloat &var, const T &val) {
+  #ifdef USE_UBLAS
+    var.assign(val);
+  #else
+    var = val;
+  #endif
+  }
 } // namespace
 
 RooLinearCombination::RooLinearCombination()
