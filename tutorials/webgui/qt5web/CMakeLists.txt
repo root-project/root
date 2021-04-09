@@ -9,6 +9,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
 find_package(Qt5 COMPONENTS Widgets REQUIRED WebEngine WebEngineWidgets)
 
 add_executable(qt5web
@@ -19,8 +21,6 @@ add_executable(qt5web
     TCanvasWidget.cpp
     ExampleMain.cpp
 )
-
-target_include_directories(qt5web PRIVATE ${CMAKE_SOURCE_DIR})
 
 target_link_libraries(qt5web
    Qt5::Core Qt5::Widgets Qt5::WebEngine Qt5::WebEngineWidgets
