@@ -1,7 +1,13 @@
-// A ROOT file is a suite of consecutive data records (TKey's) with
-// the following format (see also the TKey class). If the key is
-// located past the 32 bit file limit (> 2 GB) then some fields will
-// be 8 instead of 4 bytes:
+// Format of the root (first) directory record in release 6.22.06.  It is never compressed.
+//
+// This directory record differs from subdirectories (see TDirectory.txt) in the additional
+// Name and Title at the beginning of the DATA (after the TKey).
+//
+// If the SeekKeys or SeekPdir in the TKey are located past the 32 bit file limit (> 2000000000),
+// then these fields will be 8 instead of 4 bytes and 1000 is added to the TKey Version.
+//
+// If the SeekDir, SeekParent, or SeekKeys in the TDirectory header are past the 32 bit file limit,
+// then these fields will be 8 instead of 4 bytes and 1000 is added to the TDirectory Version.
 // ----------TKey---------------
 //  byte 0->3           Nbytes    = Number of bytes compressed record (TKey+data)          TKey::fNbytes
 //       4->5           Version   = TKey class version identifier                          TKey::fVersion
@@ -23,8 +29,7 @@
 //       1->.. Name      = lName bytes with the name of the TFile <file name>              TNamed::fName
 //       0->0           lTitle    = Number of bytes in the TFile title                     TNamed::fTitle
 //       1->..          Title     = lTitle bytes with the title of the TFile <file title>  TNamed::fTitle
-//       0->0           Modified  = True if directory has been modified                    TDirectory::fModified
-//       1->1           Writable = True if directory is writable                           TDirectory::fWriteable
+//       0->1           Version   = TDirectory class version identifier                    TDirectory::Class_Version()
 //       2->5           DatimeC   = Date and time when directory was created               TDirectory::fDatimeC
 //                       | (year-1995)<<26|month<<22|day<<17|hour<<12|minute<<6|second
 //       6->9           DatimeM   = Date and time when directory was last modified         TDirectory::fDatimeM
