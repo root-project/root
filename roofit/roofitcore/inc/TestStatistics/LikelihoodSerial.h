@@ -26,7 +26,7 @@ namespace TestStatistics {
 
 class LikelihoodSerial : public LikelihoodWrapper {
 public:
-   LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, RooMinimizer *minimizer);
+   LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean/*, RooMinimizer *minimizer*/);
    LikelihoodSerial* clone() const override;
 
    void init_vars();
@@ -36,8 +36,6 @@ public:
 
    void evaluate() override;
    double return_result() const override;
-
-   void enable_offsetting(bool flag) override;
 
 private:
    double result = 0;

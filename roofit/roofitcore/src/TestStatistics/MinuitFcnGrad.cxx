@@ -37,11 +37,11 @@ double MinuitFcnGrad::DoEval(const double *x) const
 //   std::cout << "MinuitFcnGrad::DoEval @ PID" << getpid() << ": " DEBUG_STREAM(parameters_changed);
 
    // Calculate the function for these parameters
-   RooAbsReal::setHideOffset(kFALSE);
+//   RooAbsReal::setHideOffset(kFALSE);
    likelihood->evaluate();
    double fvalue = likelihood->return_result();
    calculation_is_clean->likelihood = true;
-   RooAbsReal::setHideOffset(kTRUE);
+//   RooAbsReal::setHideOffset(kTRUE);
 
 //   std::cout DEBUG_STREAM(fvalue) << std::endl;
 
@@ -318,6 +318,10 @@ void MinuitFcnGrad::setOptimizeConst(Int_t flag)
    }
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+}
+
+void MinuitFcnGrad::enable_likelihood_offsetting(bool flag) {
+   likelihood->enable_offsetting(flag);
 }
 
 } // namespace TestStatistics

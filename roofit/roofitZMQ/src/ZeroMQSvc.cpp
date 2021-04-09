@@ -91,13 +91,13 @@ zmq::message_t ZeroMQSvc::encode(const std::string& item) const {
 
 
 bool ZeroMQSvc::send(zmq::socket_t& socket, const char* item, int flags) const {
-  return retry_send(socket, 1, encode(item), flags);
+  return retry_send(socket, 2, encode(item), flags);
 }
 
 bool ZeroMQSvc::send(zmq::socket_t& socket, zmq::message_t& msg, int flags) const {
-  return retry_send(socket, 1, std::ref(msg), flags);
+  return retry_send(socket, 2, std::ref(msg), flags);
 }
 
 bool ZeroMQSvc::send(zmq::socket_t& socket, zmq::message_t&& msg, int flags) const {
-  return retry_send(socket, 1, std::move(msg), flags);
+  return retry_send(socket, 2, std::move(msg), flags);
 }

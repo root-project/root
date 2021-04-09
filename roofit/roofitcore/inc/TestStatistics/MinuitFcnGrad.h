@@ -86,6 +86,8 @@ public:
    std::string getFunctionName() const override;
    std::string getFunctionTitle() const override;
 
+   void enable_likelihood_offsetting(bool flag);
+
 private:
    template <typename LikelihoodWrapperT = RooFit::TestStatistics::LikelihoodJob,
              typename LikelihoodGradientWrapperT = RooFit::TestStatistics::LikelihoodGradientJob>
@@ -140,7 +142,7 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
    synchronize_parameter_settings(parameters, kTRUE, verbose);
 
    calculation_is_clean = std::make_shared<WrapperCalculationCleanFlags>();
-   likelihood = std::make_shared<LikelihoodWrapperT>(_likelihood, calculation_is_clean, _context);
+   likelihood = std::make_shared<LikelihoodWrapperT>(_likelihood, calculation_is_clean/*, _context*/);
    gradient = std::make_shared<LikelihoodGradientWrapperT>(_likelihood, calculation_is_clean, get_nDim(), _context);
 
    likelihood->synchronize_parameter_settings(parameters);

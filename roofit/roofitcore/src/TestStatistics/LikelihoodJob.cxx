@@ -30,8 +30,8 @@ namespace RooFit {
 namespace TestStatistics {
 
 
-LikelihoodJob::LikelihoodJob(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, RooMinimizer *minimizer)
-  : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean), minimizer)
+LikelihoodJob::LikelihoodJob(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean/*, RooMinimizer *minimizer*/)
+  : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean)/*, minimizer*/)
 {
    init_vars();
    // determine likelihood type
@@ -99,7 +99,7 @@ void LikelihoodJob::update_bool(std::size_t ix, bool value) {
    } else if (get_manager()->process_manager().is_worker()) {
       switch(ix) {
       case 0: {
-         likelihood_->enable_offsetting(value);
+         LikelihoodWrapper::enable_offsetting(value);
          break;
       }
       default: {
@@ -167,6 +167,7 @@ void LikelihoodJob::evaluate() {
 //      // sum task results
 //      std::tie(result, carry) = sum_of_kahan_sums(results_vec, carrys_vec);
       std::tie(result, carry) = sum_of_kahan_sums(results, carrys);
+      apply_offsetting(result, carry);
    }
 }
 
@@ -232,7 +233,7 @@ void LikelihoodJob::evaluate_task(std::size_t task) {
 
 void LikelihoodJob::enable_offsetting(bool flag) {
    update_bool(0, flag);
-   likelihood_->enable_offsetting(flag);
+   LikelihoodWrapper::enable_offsetting(flag);
 }
 
 }

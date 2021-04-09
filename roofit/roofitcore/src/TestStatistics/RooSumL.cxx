@@ -13,6 +13,7 @@
  */
 #include <TestStatistics/RooSumL.h>
 #include <RooAbsData.h>
+#include <TestStatistics/RooSubsidiaryL.h>
 
 #include <algorithm> // min, max
 
@@ -48,6 +49,11 @@ double RooSumL::evaluate_partition(Section events, std::size_t components_begin,
       //      components...
 
       double y = components_[ix]->evaluate_partition(events, 0, 0);
+
+//      if (dynamic_cast<RooSubsidiaryL*>(components_[ix].get()) != nullptr) {
+//         printf("subsidiary component %d = %f\n", ix, y);
+//      }
+
       eval_carry_ += components_[ix]->get_carry();
       y -= eval_carry_;
       double t = ret + y;
@@ -59,6 +65,20 @@ double RooSumL::evaluate_partition(Section events, std::size_t components_begin,
    // SimComponents interleaving support here, this should be implemented by calculator, if desired.
 
    return ret;
+}
+
+// note: this assumes there is only one subsidiary component!
+std::tuple<double, double> RooSumL::get_subsidiary_value()
+{
+   // iterate in reverse, because the subsidiary component is usually at the end:
+   for (auto component = components_.rbegin(); component != components_.rend(); ++component) {
+      if (dynamic_cast<RooSubsidiaryL *>((*component).get()) != nullptr) {
+         double value = (*component)->evaluate_partition({0, 1}, 0, 0);
+         double carry = (*component)->get_carry();
+         return {value, carry};
+      }
+   }
+   return {0, 0};
 }
 
 } // namespace TestStatistics

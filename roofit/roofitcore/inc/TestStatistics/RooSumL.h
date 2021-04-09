@@ -30,6 +30,9 @@ public:
    double evaluate_partition(Section events, std::size_t components_begin,
                              std::size_t components_end) override;
 
+   // necessary only for legacy offsetting mode in LikelihoodWrapper; TODO: remove this if legacy mode is ever removed
+   std::tuple<double, double> get_subsidiary_value();
+
 private:
    bool processEmptyDataSets() const;
 

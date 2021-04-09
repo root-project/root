@@ -30,9 +30,9 @@
 namespace RooFit {
 namespace TestStatistics {
 
-LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
-                                   RooMinimizer *minimizer)
-   : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean), minimizer)
+LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean/*,
+                                   RooMinimizer *minimizer*/)
+   : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean)/*, minimizer*/)
 {
    init_vars();
    // determine likelihood type
@@ -116,17 +116,14 @@ void LikelihoodSerial::evaluate() {
       break;
    }
    }
+
+   apply_offsetting(result, carry);
 }
 
 double LikelihoodSerial::return_result() const
 {
    return result;
 }
-
-void LikelihoodSerial::enable_offsetting(bool flag) {
-   likelihood_->enable_offsetting(flag);
-}
-
 
 } // namespace TestStatistics
 } // namespace RooFit

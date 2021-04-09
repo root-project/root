@@ -54,13 +54,13 @@ ProcessManager::~ProcessManager()
 volatile sig_atomic_t ProcessManager::_sigterm_received = 0;
 
 // static function
-void ProcessManager::handle_sigterm(int /*signum*/) {
+void ProcessManager::handle_sigterm(int signum) {
    // We need this to tell the children to die, because we can't talk
    // to them anymore during JobManager destruction, because that kills
    // the Messenger first. We do that with SIGTERMs. The sigterm_received()
    // should be checked in message loops to stop them when it's true.
    _sigterm_received = 1;
-//   printf("handled %s on PID %d\n", strsignal(signum), getpid());
+   printf("handled %s on PID %d\n", strsignal(signum), getpid());
 }
 
 // static function
@@ -97,6 +97,9 @@ void ProcessManager::initialize_processes(bool cpu_pinning) {
          _is_master = true;
       }
    }
+
+//   printf("ATTACH NOOOOOOW PID %d\n", getpid());
+//   sleep(30);
 
    // set the sigterm handler on the child processes
    if (!_is_master) {

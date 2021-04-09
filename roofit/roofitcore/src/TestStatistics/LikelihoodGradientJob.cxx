@@ -184,17 +184,12 @@ void LikelihoodGradientJob::clear_results()
 void LikelihoodGradientJob::receive_results_on_master()
 {
    std::size_t N_completed_tasks = get_manager()->messenger().receive_from_queue_on_master<std::size_t>();
-//   std::cout << "receive " << N_completed_tasks << " completed tasks on master: ";
    for (unsigned int sync_ix = 0u; sync_ix < N_completed_tasks; ++sync_ix) {
       std::size_t task = get_manager()->messenger().receive_from_queue_on_master<std::size_t>();
       _grad[task].derivative = get_manager()->messenger().receive_from_queue_on_master<double>();
       _grad[task].second_derivative = get_manager()->messenger().receive_from_queue_on_master<double>();
       _grad[task].step_size = get_manager()->messenger().receive_from_queue_on_master<double>();
-//      std::cout << "\t"
-//                << "task=" << task << " grad=" << _grad[task].derivative << " g2=" << _grad[task].second_derivative
-//                << " gstep=" << _grad[task].step_size;
    }
-//   std::cout << std::endl;
 }
 
 // END SYNCHRONIZATION FROM WORKERS TO MASTER

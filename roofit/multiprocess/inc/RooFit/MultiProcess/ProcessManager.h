@@ -49,6 +49,10 @@ public:
    static void handle_sigterm(int signum);
    static bool sigterm_received();
 
+   // for debugging/testing:
+   pid_t get_queue_pid() {return queue_pid;}
+   std::vector<pid_t> get_worker_pids() {return worker_pids;}
+
 private:
    void initialize_processes(bool cpu_pinning = true);
    void shutdown_processes();

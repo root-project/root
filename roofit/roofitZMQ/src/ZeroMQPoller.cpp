@@ -49,6 +49,7 @@ std::vector<std::pair<size_t, int>> ZeroMQPoller::poll(int timeo) {
   return r;
 }
 
+// This function can throw (from inside ZMQ::ppoll), so wrap in try-catch!
 std::vector<std::pair<size_t, int>> ZeroMQPoller::ppoll(int timeo, const sigset_t * sigmask_) {
    if (m_items.empty()) {
       throw std::runtime_error("No sockets registered");

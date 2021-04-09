@@ -89,8 +89,7 @@ RooAbsL::RooAbsL(RooAbsPdf *inpdf, RooAbsData *indata, std::size_t N_events, std
 
 
 RooAbsL::RooAbsL(const RooAbsL &other)
-   : pdf_(other.pdf_), data_(other.data_),
-     _do_offset(other._do_offset), _offset(other._offset), _offset_carry(other._offset_carry), N_events(other.N_events),
+   : pdf_(other.pdf_), data_(other.data_), N_events(other.N_events),
      N_components(other.N_components), extended_(other.extended_), sim_count_(other.sim_count_), eval_carry_(other.eval_carry_)
 {
    // it can never be one, since we just copied the shared_ptr; if it is, something really weird is going on; also they must be equal (usually either zero or two)
@@ -445,20 +444,6 @@ double RooAbsL::defaultErrorLevel() const
 std::size_t RooAbsL::numDataEntries() const
 {
    return static_cast<std::size_t>(data_->numEntries());
-}
-
-bool RooAbsL::is_offsetting() const
-{
-   return _do_offset;
-}
-void RooAbsL::enable_offsetting(bool flag)
-{
-   _do_offset = flag;
-   // Clear offset if feature is disabled so that it is recalculated next time it is enabled
-   if (!_do_offset) {
-      _offset = 0;
-      _offset_carry = 0;
-   }
 }
 
 void RooAbsL::optimize_pdf()

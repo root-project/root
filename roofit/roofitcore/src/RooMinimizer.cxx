@@ -989,3 +989,12 @@ Int_t RooMinimizer::getPrintLevel()
 void RooMinimizer::set_function_parameter_value(std::size_t ix, double value) const {
    fitterFcn()->SetPdfParamVal(ix, value);
 }
+
+void RooMinimizer::enable_likelihood_offsetting(bool flag) {
+   auto minuit_fcn_grad = dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad *>(fitterFcn());
+   if (minuit_fcn_grad != nullptr) {
+      minuit_fcn_grad->enable_likelihood_offsetting(flag);
+   } else {
+      throw std::logic_error("cannot enable likelihood offsetting through minimizer on old style likelihood, please switch to new MinuitFcnGrad based RooMinimizer");
+   }
+}

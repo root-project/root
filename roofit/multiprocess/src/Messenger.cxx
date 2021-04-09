@@ -16,6 +16,7 @@
 #include <csignal>  // sigprocmask etc
 #include <cstdio>  // sprintf
 
+#include <RooFit/MultiProcess/util.h>
 #include "RooFit/MultiProcess/Messenger.h"
 
 namespace RooFit {
@@ -30,16 +31,23 @@ void set_socket_immediate(ZmqLingeringSocketPtr<> &socket)
 Messenger::Messenger(const ProcessManager &process_manager)
 {
    sigemptyset(&ppoll_sigmask);
+
+   // high water mark for master-queue sending, which can be quite a busy channel, especially at the start of a run
+   int hwm = 0;
    // create zmq connections (zmq context is automatically created in the ZeroMQSvc class and maintained as singleton)
    // and pollers where necessary
    try {
       if (process_manager.is_master()) {
          mq_push.reset(zmqSvc().socket_ptr(zmq::PUSH));
+         auto rc = zmq_setsockopt (*mq_push, ZMQ_SNDHWM, &hwm, sizeof hwm);
+         assert (rc == 0);
          mq_push->bind("ipc:///tmp/roofitMP_from_master_to_queue");
 
          mq_push_poller.register_socket(*mq_push, zmq::POLLOUT);
 
          mq_pull.reset(zmqSvc().socket_ptr(zmq::PULL));
+         rc = zmq_setsockopt (*mq_pull, ZMQ_RCVHWM, &hwm, sizeof hwm);
+         assert (rc == 0);
          mq_pull->bind("ipc:///tmp/roofitMP_from_queue_to_master");
 
          mq_pull_poller.register_socket(*mq_pull, zmq::POLLIN);
@@ -73,11 +81,15 @@ Messenger::Messenger(const ProcessManager &process_manager)
 
          // then the master-queue sockets
          mq_push.reset(zmqSvc().socket_ptr(zmq::PUSH));
+         auto rc = zmq_setsockopt (*mq_push, ZMQ_SNDHWM, &hwm, sizeof hwm);
+         assert (rc == 0);
          mq_push->connect("ipc:///tmp/roofitMP_from_queue_to_master");
 
          mq_push_poller.register_socket(*mq_push, zmq::POLLOUT);
 
          mq_pull.reset(zmqSvc().socket_ptr(zmq::PULL));
+         rc = zmq_setsockopt (*mq_pull, ZMQ_RCVHWM, &hwm, sizeof hwm);
+         assert (rc == 0);
          mq_pull->connect("ipc:///tmp/roofitMP_from_master_to_queue");
 
          mq_pull_poller.register_socket(*mq_pull, zmq::POLLIN);
@@ -116,6 +128,7 @@ Messenger::Messenger(const ProcessManager &process_manager)
 }
 
 Messenger::~Messenger() {
+   printf("Messenger dtor on PID %d\n", getpid());
    if (close_MQ_on_destruct_) {
       try {
          mq_push.reset(nullptr);
@@ -173,31 +186,47 @@ void Messenger::test_send(X2X ping_value, test_snd_pipes snd_pipe, std::size_t w
 void Messenger::test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id) {
    X2X handshake;
 
-   try {
-      switch (rcv_pipe) {
-      case test_rcv_pipes::fromMonQ: {
-         handshake = receive_from_master_on_queue<X2X>();
-         break;
-      }
-      case test_rcv_pipes::fromQonM : {
-         handshake = receive_from_queue_on_master<X2X>();
-         break;
-      }
-      case test_rcv_pipes::fromQonW: {
-         handshake = receive_from_queue_on_worker<X2X>();
-         break;
-      }
-      case test_rcv_pipes::fromWonQ: {
-         handshake = receive_from_worker_on_queue<X2X>(worker_id);
-         break;
-      }
-      }
-
-   } catch (zmq::error_t &e) {
-      if (e.num() == EAGAIN) {
-         throw std::runtime_error("Messenger::test_connections: RECEIVE over master-queue connection timed out!");
-      } else {
-         throw;
+   std::size_t max_tries = 3, tries = 0;
+   bool carry_on = true;
+   while (carry_on && (tries++ < max_tries)) {
+      try {
+         switch (rcv_pipe) {
+         case test_rcv_pipes::fromMonQ: {
+            handshake = receive_from_master_on_queue<X2X>();
+            break;
+         }
+         case test_rcv_pipes::fromQonM: {
+            handshake = receive_from_queue_on_master<X2X>();
+            break;
+         }
+         case test_rcv_pipes::fromQonW: {
+            handshake = receive_from_queue_on_worker<X2X>();
+            break;
+         }
+         case test_rcv_pipes::fromWonQ: {
+            handshake = receive_from_worker_on_queue<X2X>(worker_id);
+            break;
+         }
+         }
+         carry_on = false;
+      } catch (ZMQ::ppoll_error_t &e) {
+         auto response = handle_zmq_ppoll_error(e);
+         if (response == zmq_ppoll_error_response::abort) {
+            throw std::runtime_error("EINTR in test_receive and SIGTERM received, aborting\n");
+         } else if (response == zmq_ppoll_error_response::unknown_eintr) {
+            printf("EINTR in test_receive but no SIGTERM received, try %d\n", tries);
+            continue;
+         } else if (response == zmq_ppoll_error_response::retry) {
+            printf("EAGAIN in test_receive, try %d\n", tries);
+            continue;
+         }
+      } catch (zmq::error_t &e) {
+         if (e.num() == EAGAIN) {
+            throw std::runtime_error("Messenger::test_connections: RECEIVE over master-queue connection timed out!");
+         } else {
+            printf("unhandled zmq::error_t (not a ppoll_error_t) in Messenger::test_receive with errno %d: %s\n", e.num(), e.what());
+            throw;
+         }
       }
    }
 
@@ -232,27 +261,9 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
       while (!process_manager.sigterm_received() && (poller.size() > 0)) {
          // poll: wait until status change (-1: infinite timeout)
          std::vector<std::pair<size_t, int>> poll_result;
-         try { // watch for zmq_error from ppoll caused by SIGTERM from master
-            poll_result = poller.ppoll(-1, &ppoll_sigmask);
-         } catch (zmq::error_t& e) {
-            if ((e.num() == EINTR) && (ProcessManager::sigterm_received())) {
-               break;
-            } else if (e.num() == EAGAIN) {
-               // This can happen from recv if ppoll initially gets a read-ready signal for a socket,
-               // but the received data does not pass the checksum test, so the socket becomes unreadable
-               // again or from non-blocking send if the socket becomes unwritable either due to the HWM
-               // being reached or the socket not being connected (anymore). The latter case usually means
-               // the connection has been severed from the other side, meaning it has probably been killed
-               // and in that case the next ppoll call will probably also receive a SIGTERM, ending the
-               // loop. In case something else is wrong, this message will print multiple times, which
-               // should be taken as a cue for writing a bug report :)
-               // TODO: handle this more rigorously
-               std::cout << "EAGAIN in Queue::loop() (from either send or receive), continuing" << std::endl;
-               continue;
-            } else {
-               throw;
-            }
-         }
+         bool abort;
+         std::tie(poll_result, abort) = careful_ppoll(poller, ppoll_sigmask);
+         if (abort) break;
 
          // then process incoming messages from sockets
          for (auto readable_socket : poll_result) {
@@ -288,6 +299,7 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
 
    // clean up signal management modifications
    sigprocmask(SIG_SETMASK, &ppoll_sigmask, nullptr);
+   printf("done with test_connections on PID %d\n", getpid());
 }
 
 

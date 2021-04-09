@@ -12,6 +12,7 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 #include <TestStatistics/RooSubsidiaryL.h>
+#include <TestStatistics/kahan_sum.h>
 #include <RooAbsPdf.h> // for dynamic cast
 #include <RooErrorHandler.h>
 
@@ -43,13 +44,15 @@ RooSubsidiaryL::evaluate_partition(RooAbsL::Section events, std::size_t /*compon
                                             << std::endl;
    }
 
-   double sum = 0;
+   double sum = 0, carry = 0;
    RooAbsReal *comp;
    RooFIter setIter1 = subsidiary_pdfs_.fwdIterator();
 
    while ((comp = (RooAbsReal *)setIter1.next())) {
-      sum -= ((RooAbsPdf *)comp)->getLogVal(&parameter_set_);
+      double term = -((RooAbsPdf *)comp)->getLogVal(&parameter_set_);
+      std::tie(sum, carry) = kahan_add(sum, term, carry);
    }
+   eval_carry_ = carry;
 
    return sum;
 }

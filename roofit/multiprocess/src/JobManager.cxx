@@ -24,6 +24,7 @@
 #include "RooFit/MultiProcess/Job.h"
 #include "RooFit/MultiProcess/Queue.h"  // complete type for JobManager::queue()
 #include "RooFit/MultiProcess/worker.h"
+#include "RooFit/MultiProcess/util.h"
 
 
 namespace RooFit {
@@ -117,8 +118,9 @@ void JobManager::retrieve() {
       bool carry_on = true;
       while (carry_on) {
          messenger().send_from_master_to_queue(M2Q::retrieve);
-         auto handshake = messenger().receive_from_queue_on_master<Q2M>();
-         switch (handshake) {
+         try {
+            auto handshake = messenger().receive_from_queue_on_master<Q2M>();
+            switch (handshake) {
             case Q2M::retrieve_accepted: {
                carry_on = false;
                auto N_jobs = messenger().receive_from_queue_on_master<std::size_t>();
@@ -126,18 +128,38 @@ void JobManager::retrieve() {
                   auto job_object_id = messenger().receive_from_queue_on_master<std::size_t>();
                   JobManager::get_job_object(job_object_id)->receive_results_on_master();
                }
-            }
-            break;
+            } break;
             case Q2M::retrieve_later: {
                carry_on = true;
-            }
-            break;
+            } break;
             case Q2M::retrieve_rejected: {
                carry_on = false;
-               throw std::logic_error("Master sent M2Q::retrieve, but queue had no tasks yet: Q2M::retrieve_rejected. Aborting!");
+               throw std::logic_error(
+                  "Master sent M2Q::retrieve, but queue had no tasks yet: Q2M::retrieve_rejected. Aborting!");
+            } break;
             }
-            break;
+         } catch (ZMQ::ppoll_error_t &e) {
+            zmq_ppoll_error_response response;
+            try {
+               response = handle_zmq_ppoll_error(e);
+            } catch (std::logic_error& e) {
+               printf("JobManager::retrieve got unhandleable ZMQ::ppoll_error_t\n");
+               throw;
+            }
+            if (response == zmq_ppoll_error_response::abort) {
+               throw std::logic_error("in JobManager::retrieve: master received a SIGTERM, aborting");
+            } else if (response == zmq_ppoll_error_response::unknown_eintr) {
+               printf("EINTR in JobManager::retrieve, continuing\n");
+               continue;
+            } else if (response == zmq_ppoll_error_response::retry) {
+               printf("EAGAIN from ppoll in JobManager::retrieve, continuing\n");
+               continue;
+            }
+         } catch (zmq::error_t& e) {
+            printf("unhandled zmq::error_t (not a ppoll_error_t) in JobManager::retrieve with errno %d: %s\n", e.num(), e.what());
+            throw;
          }
+
       }
    }
 }

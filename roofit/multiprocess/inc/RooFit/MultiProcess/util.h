@@ -16,9 +16,19 @@
 #define ROOT_ROOFIT_MultiProcess_util
 
 #include <unistd.h> // getpid, pid_t
+
+#include <RooFit_ZMQ/ppoll.h> // for ZMQ::ppoll_error_t
+#include <RooFit_ZMQ/ZeroMQPoller.h>
+
 namespace RooFit {
-  namespace MultiProcess {
-    int wait_for_child(pid_t child_pid, bool may_throw, int retries_before_killing);
-  }
-}
-#endif //ROOT_ROOFIT_MultiProcess_util
+namespace MultiProcess {
+
+int wait_for_child(pid_t child_pid, bool may_throw, int retries_before_killing);
+
+enum class zmq_ppoll_error_response { abort, unknown_eintr, retry };
+zmq_ppoll_error_response handle_zmq_ppoll_error(ZMQ::ppoll_error_t &e);
+std::tuple<std::vector<std::pair<size_t, int>>, bool> careful_ppoll(ZeroMQPoller &poller, const sigset_t &ppoll_sigmask, std::size_t max_tries = 2);
+
+} // namespace MultiProcess
+} // namespace RooFit
+#endif // ROOT_ROOFIT_MultiProcess_util

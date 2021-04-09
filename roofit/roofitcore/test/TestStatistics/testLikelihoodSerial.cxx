@@ -35,6 +35,8 @@
 #include <RooFit/MultiProcess/JobManager.h>
 #include <RooFit/MultiProcess/ProcessManager.h> // need to complete type for debugging
 #include <RooNLLVar.h>
+#include <TestStatistics/RooRealL.h>
+#include <TestStatistics/kahan_sum.h>
 
 #include "gtest/gtest.h"
 #include "../test_lib.h" // generate_1D_gaussian_pdf_nll
@@ -95,7 +97,7 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussian1D)
 {
    std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
    likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    auto nll0 = nll->getVal();
 
@@ -111,7 +113,7 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussianND)
 
    std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000);
    likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    auto nll0 = nll->getVal();
 
@@ -128,7 +130,7 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, UnbinnedPdf)
    nll.reset(pdf->createNLL(*data));
 
    likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    auto nll0 = nll->getVal();
 
@@ -147,7 +149,7 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, UnbinnedPdfWithBinnedLikelihoodAttribu
    nll.reset(pdf->createNLL(*data));
 
    likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    auto nll0 = nll->getVal();
 
@@ -178,7 +180,7 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, BinnedManualNLL)
                         numcpu, interl, cpuAffinity, verbose, splitr, cloneData, /*binnedL=*/true);
 
    likelihood = std::make_shared<RooFit::TestStatistics::RooBinnedL>(pdf, data);
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    auto nll0 = nll_manual.getVal();
 
@@ -226,7 +228,7 @@ TEST_F(LikelihoodSerialTest, SimBinned)
    nll.reset(pdf->createNLL(*data));
 
    likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data);
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    auto nll0 = nll->getVal();
 
@@ -277,7 +279,7 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
 //      std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
 //      std::make_shared<RooFit::TestStatistics::RooSumL>(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs")}));
       RooFit::TestStatistics::build_unbinned_constrained_likelihood(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs")}));
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    nll_ts.evaluate();
    auto nll1 = nll_ts.return_result();
@@ -304,7 +306,7 @@ TEST_F(LikelihoodSerialTest, SimUnbinned)
    auto nll0 = nll->getVal();
 
    likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data);
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    nll_ts.evaluate();
    auto nll1 = nll_ts.return_result();
@@ -335,7 +337,7 @@ TEST_F(LikelihoodSerialTest, SimUnbinnedNonExtended)
    nll.reset(pdf->createNLL(*data));
 
    likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data);
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    auto nll0 = nll->getVal();
 
@@ -402,7 +404,7 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, BasicParameters)
 
    likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(
          pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    nll_ts.evaluate();
    auto nll1 = nll_ts.return_result();
@@ -423,11 +425,23 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
    likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(
          pdf, data, RooFit::TestStatistics::ConstrainedParameters({*w.var("alpha_bkg_obs_A")}),
          RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_B")}));
-   likelihood->enable_offsetting(true);
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
+   nll_ts.enable_offsetting(true);
 
    nll_ts.evaluate();
-   auto nll1 = nll_ts.return_result();
+   double nll1, carry1;
+   std::tie(nll1, carry1) = RooFit::kahan_add(nll_ts.return_result(), nll_ts.offset(), nll_ts.offset_carry() + likelihood->get_carry());
 
    EXPECT_DOUBLE_EQ(nll0, nll1);
+   EXPECT_FALSE(nll_ts.offset() == 0);
+
+   // also check against RooRealL value
+   RooFit::TestStatistics::RooRealL nll_real("real_nll", "RooRealL version", likelihood);
+
+   auto nll2 = nll_real.getVal();
+
+   EXPECT_EQ(nll0, nll2);
+   EXPECT_DOUBLE_EQ(nll1, nll2);
+
+//   printf("nll0: %a\tnll1: %a\tnll2: %a\tnll_ts.return_result(): %a\tnll_ts.offset: %a\tnll_ts.offset_carry: %a\tlikelihood.get_carry: %a\tcarry1: %a\n", nll0, nll1, nll2, nll_ts.return_result(), nll_ts.offset(), nll_ts.offset_carry(), likelihood->get_carry(), carry1);
 }

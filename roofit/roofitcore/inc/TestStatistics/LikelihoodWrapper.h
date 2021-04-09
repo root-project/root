@@ -38,9 +38,18 @@ enum class LikelihoodType {
    sum
 };
 
+// Previously, offsetting was only implemented for RooNLLVar components of a likelihood,
+// not for RooConstraintSum terms. To emulate this behavior, use OffsettingMode::legacy. To
+// also offset the RooSubsidiaryL component (equivalent of RooConstraintSum) of RooSumL
+// likelihoods, use OffsettingMode::full.
+enum class OffsettingMode {
+   legacy,
+   full
+};
+
 class LikelihoodWrapper {
 public:
-   LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, RooMinimizer* minimizer);
+   LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean/*, RooMinimizer* minimizer*/);
    virtual ~LikelihoodWrapper() = default;
    virtual LikelihoodWrapper* clone() const = 0;
 
@@ -65,12 +74,25 @@ public:
 
    virtual bool is_offsetting() const;
    virtual void enable_offsetting(bool flag);
+   void set_offsetting_mode(OffsettingMode mode);
+   double offset();
+   double offset_carry();
+   void set_apply_weight_squared(bool flag);
 
 protected:
    std::shared_ptr<RooAbsL> likelihood_;
-   RooMinimizer* _minimizer;
-//   RooAbsMinimizerFcn* _minimizer_fcn;
+//   RooMinimizer* minimizer_;
+//   RooAbsMinimizerFcn* minimizer_fcn_;
    std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean_;
+
+   bool do_offset_ = false;
+   double offset_ = 0;
+   double offset_carry_ = 0;
+   double offset_save_ = 0;      //!
+   double offset_carry_save_ = 0; //!
+   OffsettingMode offsetting_mode_ = OffsettingMode::legacy;
+   void apply_offsetting(double &current_value, double &carry);
+   void swap_offsets();
 };
 
 }

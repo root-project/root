@@ -17,6 +17,7 @@
 #include "RooFit/MultiProcess/ProcessManager.h"
 #include "RooFit/MultiProcess/Job.h"  // complete Job object for JobManager::get_job_object()
 #include "RooFit/MultiProcess/Queue.h"
+#include "RooFit/MultiProcess/util.h"
 
 namespace RooFit {
 namespace MultiProcess {
@@ -192,24 +193,26 @@ void Queue::loop()
                process_worker_message(this_worker_id, message);
             }
          }
-      } catch (zmq::error_t& e) {
-         if ((e.num() == EINTR) && (ProcessManager::sigterm_received())) {
-            break;
-         } else if (e.num() == EAGAIN) {
-            // This can happen from recv if ppoll initially gets a read-ready signal for a socket,
-            // but the received data does not pass the checksum test, so the socket becomes unreadable
-            // again or from non-blocking send if the socket becomes unwritable either due to the HWM
-            // being reached or the socket not being connected (anymore). The latter case usually means
-            // the connection has been severed from the other side, meaning it has probably been killed
-            // and in that case the next ppoll call will probably also receive a SIGTERM, ending the
-            // loop. In case something else is wrong, this message will print multiple times, which
-            // should be taken as a cue for writing a bug report :)
-            // TODO: handle this more rigorously
-            std::cout << "EAGAIN in Queue::loop() (from either send or receive), continuing" << std::endl;
-            continue;
-         } else {
+      } catch (ZMQ::ppoll_error_t& e) {
+         zmq_ppoll_error_response response;
+         try {
+            response = handle_zmq_ppoll_error(e);
+         } catch (std::logic_error& e) {
+            printf("queue loop got unhandleable ZMQ::ppoll_error_t\n");
             throw;
          }
+         if (response == zmq_ppoll_error_response::abort) {
+            break;
+         } else if (response == zmq_ppoll_error_response::unknown_eintr) {
+            printf("EINTR in queue loop but no SIGTERM received, continuing\n");
+            continue;
+         } else if (response == zmq_ppoll_error_response::retry) {
+            printf("EAGAIN from ppoll in queue loop, continuing\n");
+            continue;
+         }
+      } catch (zmq::error_t& e) {
+         printf("unhandled zmq::error_t (not a ppoll_error_t) in queue loop with errno %d: %s\n", e.num(), e.what());
+         throw;
       }
    }
 

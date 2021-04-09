@@ -79,6 +79,8 @@ std::pair<ValueType, ValueType> sum_of_kahan_sums(const std::map<IndexType, Valu
    return std::pair<ValueType, ValueType>(sum, carry);
 }
 
+std::tuple<double, double> kahan_add(double sum, double additive, double carry);
+
 }
 
 #endif // ROOT_ROOFIT_kahan_sum

@@ -155,7 +155,7 @@ public:
    T receive(zmq::socket_t& socket, int flags = 0, bool* more = nullptr) const {
       // receive message
       zmq::message_t msg;
-      auto nbytes = retry_recv(socket, 1, &msg, flags);
+      auto nbytes = retry_recv(socket, 2, &msg, flags);
       if (0 == nbytes) {
          throw ZMQ::TimeOutException{};
       }
@@ -170,7 +170,7 @@ public:
    T receive(zmq::socket_t& socket, int flags = 0, bool* more = nullptr) const {
       // receive message
       zmq::message_t msg;
-      auto nbytes = retry_recv(socket, 1, &msg, flags);
+      auto nbytes = retry_recv(socket, 2, &msg, flags);
       if (0 == nbytes) {
          throw ZMQ::TimeOutException{};
       }

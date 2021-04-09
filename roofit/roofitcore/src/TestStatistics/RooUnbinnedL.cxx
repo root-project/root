@@ -43,9 +43,7 @@ RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data,
 {}
 
 RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
-   : RooAbsL(other), apply_weight_squared(other.apply_weight_squared), _first(other._first),
-     _offset_save_weight_squared(other._offset_save_weight_squared),
-     _offset_carry_save_weight_squared(other._offset_carry_save_weight_squared)
+   : RooAbsL(other), apply_weight_squared(other.apply_weight_squared), _first(other._first)
 {}
 
 
@@ -56,14 +54,15 @@ bool RooUnbinnedL::processEmptyDataSets() const
 
 //////////////////////////////////////////////////////////////////////////////////
 
-void RooUnbinnedL::set_apply_weight_squared(bool flag)
+/// Returns true if value was changed, false otherwise.
+bool RooUnbinnedL::set_apply_weight_squared(bool flag)
 {
-   if (flag != apply_weight_squared) {
+   if (apply_weight_squared != flag) {
       apply_weight_squared = flag;
-      std::swap(_offset, _offset_save_weight_squared);
-      std::swap(_offset_carry, _offset_carry_save_weight_squared);
+      return true;
    }
    //   setValueDirty();
+   return false;
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -184,25 +183,6 @@ double RooUnbinnedL::evaluate_partition(Section events,
    if (_first) {
       _first = false;
       pdf_->wireAllCaches();
-   }
-
-   // Check if value offset flag is set.
-   if (_do_offset) {
-
-      // If no offset is stored enable this feature now
-      if (_offset == 0 && result != 0) {
-         oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
-            << "RooUnbinnedL::evaluate_partition(" << GetName() << ") first = " << events.begin(N_events)
-            << " last = " << events.end(N_events) << " Likelihood offset now set to " << result << std::endl;
-         _offset = result;
-         _offset_carry = carry;
-      }
-
-      // Substract offset
-      Double_t y = -_offset - (carry + _offset_carry);
-      Double_t t = result + y;
-      carry = (t - result) - y;
-      result = t;
    }
 
    eval_carry_ = carry;

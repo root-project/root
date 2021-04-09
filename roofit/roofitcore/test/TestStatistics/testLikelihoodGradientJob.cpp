@@ -426,29 +426,7 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, BasicParameters)
 
    likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(
       pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
-
-   nll_ts.evaluate();
-   auto nll1 = nll_ts.return_result();
-
-   EXPECT_DOUBLE_EQ(nll0, nll1);
-}
-
-TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
-{
-   // a variation to test some additional parameters (ConstrainedParameters and offsetting)
-   nll.reset(pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-                            RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(kTRUE)));
-
-   // --------
-
-   auto nll0 = nll->getVal();
-
-   likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(
-      pdf, data, RooFit::TestStatistics::ConstrainedParameters({*w.var("alpha_bkg_obs_A")}),
-      RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_B")}));
-   likelihood->enable_offsetting(true);
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
+   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    nll_ts.evaluate();
    auto nll1 = nll_ts.return_result();
@@ -482,91 +460,123 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, Minimize)
    m0->setMinimizerType("Minuit2");
    m0->setStrategy(0);
 //   m0->setVerbose(true);
-   m0->setPrintLevel(-1);
+   m0->setPrintLevel(1);
 
    m0->migrad();
-   values->Print("v");
 
    RooFitResult *m0result = m0->lastMinuitFit();
-   double minNll0 = m0result->minNll();
-   double edm0 = m0result->edm();
-//   double mu0 = mu->getVal();
-//   double muerr0 = mu->getError();
+   double minNll_nominal = m0result->minNll();
+   double edm_nominal = m0result->edm();
+   double alpha_bkg_A_nominal = w.var("alpha_bkg_A")->getVal();
+   double alpha_bkg_A_error_nominal = w.var("alpha_bkg_A")->getError();
+   double alpha_bkg_B_nominal = w.var("alpha_bkg_B")->getVal();
+   double alpha_bkg_B_error_nominal = w.var("alpha_bkg_B")->getError();
+   double mu_sig_nominal = w.var("mu_sig")->getVal();
+   double mu_sig_error_nominal = w.var("mu_sig")->getError();
 
    *values = *savedValues;
-   values->Print("v");
 
    RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
 
    auto likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(
       pdf, data, RooFit::TestStatistics::ConstrainedParameters({*w.var("alpha_bkg_obs_A")}),
       RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_B")}));
-   likelihood->enable_offsetting(true);
 
    std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(likelihood);
+   m1->enable_likelihood_offsetting(true);
 
    m1->setMinimizerType("Minuit2");
    m1->setStrategy(0);
 //   m1->setVerbose(true);
-   m1->setPrintLevel(-1);
+   m1->setPrintLevel(1);
 
    m1->migrad();
-   values->Print("v");
 
    RooFitResult *m1result = m1->lastMinuitFit();
-   double minNll1 = m1result->minNll();
-   double edm1 = m1result->edm();
-//   double mu1 = mu->getVal();
-//   double muerr1 = mu->getError();
+   double minNll_GradientJob = m1result->minNll();
+   double edm_GradientJob = m1result->edm();
+   double alpha_bkg_A_GradientJob = w.var("alpha_bkg_A")->getVal();
+   double alpha_bkg_A_error_GradientJob = w.var("alpha_bkg_A")->getError();
+   double alpha_bkg_B_GradientJob = w.var("alpha_bkg_B")->getVal();
+   double alpha_bkg_B_error_GradientJob = w.var("alpha_bkg_B")->getError();
+   double mu_sig_GradientJob = w.var("mu_sig")->getVal();
+   double mu_sig_error_GradientJob = w.var("mu_sig")->getError();
 
-   EXPECT_EQ(minNll0, minNll1);
-//   EXPECT_EQ(mu0, mu1);
-//   EXPECT_EQ(muerr0, muerr1);
-   EXPECT_EQ(edm0, edm1);
+   EXPECT_EQ(minNll_nominal, minNll_GradientJob);
+   EXPECT_EQ(edm_nominal, edm_GradientJob);
+   EXPECT_EQ(alpha_bkg_A_nominal, alpha_bkg_A_GradientJob);
+   EXPECT_EQ(alpha_bkg_A_error_nominal, alpha_bkg_A_error_GradientJob);
+   EXPECT_EQ(alpha_bkg_B_nominal, alpha_bkg_B_GradientJob);
+   EXPECT_EQ(alpha_bkg_B_error_nominal, alpha_bkg_B_error_GradientJob);
+   EXPECT_EQ(mu_sig_nominal, mu_sig_GradientJob);
+   EXPECT_EQ(mu_sig_error_nominal, mu_sig_error_GradientJob);
 
    m1->cleanup(); // necessary in tests to clean up global _theFitter
 }
 
-TEST(CarstenGGFWorkspace, Minimize)
-{
-   bool use_multiprocess = false;
-   std::size_t NumCPU = 2;
+class CarstenGGFWorkspaceTest: public ::testing::Test {
+protected:
+   void SetUp() override {
+      RooRandom::randomGenerator()->SetSeed(seed);
 
-   std::size_t seed = 1;
-   RooRandom::randomGenerator()->SetSeed(seed);
+      TFile *_file0 = TFile::Open("/Users/pbos/projects/apcocsm/carsten/lxplus/ggF/ggF-stxs1-v1.root");
 
-   TFile *_file0 = TFile::Open("/Users/pbos/projects/apcocsm/carsten/lxplus/ggF/ggF-stxs1-v1.root");
+      w = static_cast<RooWorkspace*>(gDirectory->Get("HWWRun2GGF"));
 
-   RooWorkspace* w = static_cast<RooWorkspace*>(gDirectory->Get("HWWRun2GGF"));
-
-   RooAbsData *data = w->data("obsData");
-   auto mc = dynamic_cast<RooStats::ModelConfig *>(w->genobj("ModelConfig"));
-   auto global_observables = mc->GetGlobalObservables();
-   auto nuisance_parameters = mc->GetNuisanceParameters();
-   RooAbsPdf *pdf = w->pdf(mc->GetPdf()->GetName());
-
-   std::unique_ptr<RooMinimizer> m;
-
-   if (use_multiprocess) {
-      RooFit::MultiProcess::JobManager::default_N_workers = NumCPU;
-      auto likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data, RooFit::TestStatistics::ConstrainedParameters(*nuisance_parameters), RooFit::TestStatistics::GlobalObservables(*global_observables));
-      likelihood->enable_offsetting(true);
-      m = RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(likelihood);
-   } else {
-      RooAbsReal *nll = pdf->createNLL(*data,
-                                       RooFit::GlobalObservables(*global_observables),
-                                       RooFit::Constrain(*nuisance_parameters),
-                                       RooFit::Offset(kTRUE));
-
-      m = RooMinimizer::create(*nll);
+      data = w->data("obsData");
+      auto mc = dynamic_cast<RooStats::ModelConfig *>(w->genobj("ModelConfig"));
+      global_observables = mc->GetGlobalObservables();
+      nuisance_parameters = mc->GetNuisanceParameters();
+      pdf = w->pdf(mc->GetPdf()->GetName());
    }
 
-   m->setPrintLevel(-1);
+   std::size_t seed = 23;
+   RooWorkspace* w;
+   RooAbsPdf *pdf;
+   RooAbsData *data;
+   const RooArgSet *global_observables;
+   const RooArgSet *nuisance_parameters;
+   std::unique_ptr<RooMinimizer> m;
+};
+
+TEST_F(CarstenGGFWorkspaceTest, DISABLED_NoMultiProcess)
+{
+   RooAbsReal *nll = pdf->createNLL(*data,
+                                    RooFit::GlobalObservables(*global_observables),
+                                    RooFit::Constrain(*nuisance_parameters),
+                                    RooFit::Offset(kTRUE));
+
+   m = RooMinimizer::create(*nll);
+
+   m->setPrintLevel(1);
    m->setStrategy(0);
    m->setProfile(false);
    m->optimizeConst(2);
    m->setMinimizerType("Minuit2");
-   // m->setVerbose(kTRUE);
+//    m->setVerbose(kTRUE);
+   m->setEps(10);
 
    m->migrad();
+
+   m->cleanup(); // necessary in tests to clean up global _theFitter
+}
+
+TEST_F(CarstenGGFWorkspaceTest, DISABLED_MultiProcess)
+{
+   RooFit::MultiProcess::JobManager::default_N_workers = 2;
+   auto likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data, RooFit::TestStatistics::ConstrainedParameters(*nuisance_parameters), RooFit::TestStatistics::GlobalObservables(*global_observables));
+   m = RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(likelihood);
+   m->enable_likelihood_offsetting(true);
+
+   m->setPrintLevel(1);
+   m->setStrategy(0);
+   m->setProfile(false);
+   m->optimizeConst(2);
+   m->setMinimizerType("Minuit2");
+//    m->setVerbose(kTRUE);
+   m->setEps(10);
+
+   m->migrad();
+
+   m->cleanup(); // necessary in tests to clean up global _theFitter
 }

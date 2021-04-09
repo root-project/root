@@ -129,6 +129,8 @@ public:
    ROOT::Math::IMultiGenFunction* getFitterMultiGenFcn() const;
    ROOT::Math::IMultiGenFunction* getMultiGenFcn() const;
 
+   void enable_likelihood_offsetting(bool flag);
+
 protected:
    friend class RooAbsPdf;
    void applyCovarianceMatrix(TMatrixDSym &V);

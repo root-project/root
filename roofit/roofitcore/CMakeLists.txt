@@ -509,6 +509,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/TestStatistics/RooUnbinnedL.cxx
         src/TestStatistics/optional_parameter_types.cxx
         src/TestStatistics/likelihood_builders.cxx
+        src/TestStatistics/kahan_sum.cxx
         src/RooAbsMinimizerFcn.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"

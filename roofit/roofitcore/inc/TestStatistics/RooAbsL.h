@@ -97,9 +97,6 @@ public:
    // necessary in LikelihoodJob
    virtual std::size_t numDataEntries() const;
 
-   bool is_offsetting() const;
-   void enable_offsetting(bool flag);
-
    std::size_t get_N_events() const;
    std::size_t get_N_components() const;
 
@@ -118,9 +115,6 @@ protected:
    std::shared_ptr<RooAbsPdf> pdf_;
    std::shared_ptr<RooAbsData> data_;
    std::unique_ptr<RooArgSet> _normSet;      // Pointer to set with observables used for normalization
-   bool _do_offset = false;
-   double _offset = 0;
-   double _offset_carry = 0;
 
    std::size_t N_events = 1;
    std::size_t N_components = 1;

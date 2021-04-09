@@ -163,25 +163,6 @@ double RooBinnedL::evaluate_partition(Section bins, std::size_t /*components_beg
       pdf_->wireAllCaches();
    }
 
-   // Check if value offset flag is set.
-   if (_do_offset) {
-
-      // If no offset is stored enable this feature now
-      if (_offset == 0 && result != 0) {
-         oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
-            << "RooBinnedL::evaluate_partition(" << GetName() << ") first = " << bins.begin(N_events)
-            << " last = " << bins.end(N_events) << " Likelihood offset now set to " << result << std::endl;
-         _offset = result;
-         _offset_carry = carry;
-      }
-
-      // Substract offset
-      Double_t y = -_offset - (carry + _offset_carry);
-      Double_t t = result + y;
-      carry = (t - result) - y;
-      result = t;
-   }
-
    eval_carry_ = carry;
    return result;
 }
