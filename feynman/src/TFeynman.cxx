@@ -6,13 +6,80 @@
 #include <TArc.h>
 #include <TLine.h>
 
-void TFeynman::Quark(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, const char * quarkName) {
+void TFeynman::Quark(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, const char * quarkName, bool isMatter) {
     TArrow * q;
     
     q = new TArrow(x1, y1, x2, y2, 0.02, "->-");
 
     const char * usedQuarkName;
-    
+
+    if (isMatter == true) {
+        if (quarkName == std::string("q")) {
+            usedQuarkName = "q";
+        }
+        else if (quarkName == std::string("u")) {
+            usedQuarkName = "u";
+        }
+        else if (quarkName == std::string("d")) {
+            usedQuarkName = "d";
+        }
+        else if (quarkName == std::string("c")) {
+            usedQuarkName = "c";
+        }
+        else if (quarkName == std::string("s")) {
+            usedQuarkName = "s";
+        }
+        else if (quarkName == std::string("t")) {
+            usedQuarkName = "t";
+        }
+        else if (quarkName == std::string("b")) {
+            usedQuarkName = "b";
+        }
+        else{
+            usedQuarkName = "q";
+        }
+    }
+
+    if (isMatter == false) {
+        if (quarkName == std::string("q")) {
+        usedQuarkName = "\bar{q}";
+        }
+        else if (quarkName == std::string("u")) {
+        usedQuarkName = "\bar{u}";
+        }
+        else if (quarkName == std::string("d")) {
+        usedQuarkName = "\bar{d}";
+        }
+        else if (quarkName == std::string("c")) {
+        usedQuarkName = "\bar{c}";
+        }
+        else if (quarkName == std::string("s")) {
+        usedQuarkName = "\bar{s}";
+        }
+        else if (quarkName == std::string("t")) {
+        usedQuarkName = "\bar{t}";
+        }
+        else if (quarkName == std::string("b")) {
+        usedQuarkName = "\bar{b}";
+        }
+        else{
+        usedQuarkName = "\bar{b}";
+        }
+    }
+    TLatex t;
+    t.SetTextSize(0.1);
+    t.DrawLatex(labelPositionX, labelPositionY, usedQuarkName);
+
+    q->Draw();
+}
+
+void CurvedQuark(Double_t x1, Double_t y1, Double_t rad, Double_t phimin, Double_t phimax, Double_t labelPositionX, Double_t labelPositionY, const char * quarkName, bool isMatter) {
+    TArc *quarkCurved = new TArc(x1, y1, rad, phimin, phimax);
+
+    quarkCurved->Draw();
+
+    const char * usedQuarkName;
+
     if (quarkName == std::string("q")) {
         usedQuarkName = "q";
     }
@@ -37,35 +104,146 @@ void TFeynman::Quark(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_
     else{
         usedQuarkName = "q";
     }
+
+    if (isMatter == false) {
+        if (quarkName == std::string("q")) {
+        usedQuarkName = "\bar{q}";
+        }
+        else if (quarkName == std::string("u")) {
+        usedQuarkName = "\bar{u}";
+        }
+        else if (quarkName == std::string("d")) {
+        usedQuarkName = "\bar{d}";
+        }
+        else if (quarkName == std::string("c")) {
+        usedQuarkName = "\bar{c}";
+        }
+        else if (quarkName == std::string("s")) {
+        usedQuarkName = "\bar{s}";
+        }
+        else if (quarkName == std::string("t")) {
+        usedQuarkName = "\bar{t}";
+        }
+        else if (quarkName == std::string("b")) {
+        usedQuarkName = "\bar{b}";
+        }
+        else{
+        usedQuarkName = "\bar{b}";
+        }
+
+    }
+
     TLatex t;
     t.SetTextSize(0.1);
-    t.DrawLatex(labelPositionX, labelPositionY, usedQuarkName);
-
-    q->Draw();
+    t.DrawLatex(labelPositionX, labelPositionY, "#gamma");
 }
 
-void TFeynman::Electron(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY) {
+void TFeynman::Lepton(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, const char * whichLepton, bool isMatter) {
     TArrow * e;
     
     e = new TArrow(x1, y1, x2, y2, 0.02, "->-");
 
+    const char * usedLeptonName;
+    if (isMatter == true){
+        if (whichLepton == std::string("e")) {
+            usedLeptonName = "e^{-}";
+        }
+        else if (whichLepton == std::string("m")) {
+            usedLeptonName = "#mu^{-}";
+        }
+        else if (whichLepton == std::string("t")) {
+            usedLeptonName = "#tau^{-}";
+        }
+        else if (whichLepton == std::string("en")) {
+            usedLeptonName = "#nu_{e}";
+        }
+        else if (whichLepton == std::string("mn")) {
+            usedLeptonName = "#nu_{#mu}";
+        }
+        else if (whichLepton == std::string("tn")) {
+            usedLeptonName = "#nu_{#tau}";
+        }
+    }
+
+    if (isMatter == false) {
+        if (whichLepton == std::string("e")) {
+        usedLeptonName = "e^{+}";
+        }
+        else if (whichLepton == std::string("m")) {
+        usedLeptonName = "#mu^{+}";
+        }
+        else if (whichLepton == std::string("t")) {
+        usedLeptonName = "#tau^{+}";
+        } 
+        else if (whichLepton == std::string("en")) {
+            usedLeptonName = "\bar{#nu_{e}}";
+        }
+        else if (whichLepton == std::string("mn")) {
+            usedLeptonName = "\bar{#nu_{#mu}}";
+        }
+        else if (whichLepton == std::string("tn")) {
+            usedLeptonName = "\bar{#nu_{#tau}}";
+        }
+    }
+
     TLatex t;
     t.SetTextSize(0.1);
-    t.DrawLatex(labelPositionX, labelPositionY, "e^{-}");
+    t.DrawLatex(labelPositionX, labelPositionY, usedLeptonName);
 
     e->Draw();
 }
 
-void TFeynman::Positron(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY) {
-    TArrow * eplus;
+void CurvedLepton(Double_t x1, Double_t y1, Double_t rad, Double_t phimin, Double_t phimax, Double_t labelPositionX, Double_t labelPositionY, const char * whichLepton, bool isMatter) {
+    TArc *curvedLepton = new TArc(x1, y1, rad, phimin, phimax);
+    curvedLepton->Draw();
 
-    eplus = new TArrow(x1, y1, x2, y2, 0.02, "-<-");
+    const char * usedLeptonName;
+
+    if (isMatter == true) {
+        if (whichLepton == std::string("e")) {
+            usedLeptonName = "e_{-}";
+        }
+        else if (whichLepton == std::string("m")) {
+            usedLeptonName = "#mu_{-}";
+        }
+        else if (whichLepton == std::string("t")) {
+            usedLeptonName = "#tau_{-}";
+        }
+        else if (whichLepton == std::string("en")) {
+            usedLeptonName = "#nu_{e}";
+        }
+        else if (whichLepton == std::string("mn")) {
+            usedLeptonName = "#nu_{#mu}";
+        }
+        else if (whichLepton == std::string("tn")) {
+            usedLeptonName = "#nu_{#tau}";
+        }
+    }
+
+    if (isMatter == false) {
+        if (whichLepton == std::string("e")) {
+        usedLeptonName = "e_{+}";
+        }
+        else if (whichLepton == std::string("m")) {
+        usedLeptonName = "#mu_{+}";
+        }
+        else if (whichLepton == std::string("t")) {
+        usedLeptonName = "#tau_{+}";
+        } 
+        else if (whichLepton == std::string("en")) {
+            usedLeptonName = "\bar{#nu_{e}}";
+        }
+        else if (whichLepton == std::string("mn")) {
+            usedLeptonName = "\bar{#nu_{#mu}}";
+        }
+        else if (whichLepton == std::string("tn")) {
+            usedLeptonName = "\bar{#nu_{#tau}}";
+        }
+    }
 
     TLatex t;
     t.SetTextSize(0.1);
-    t.DrawLatex(labelPositionX, labelPositionY, "e^{-}");
-
-    eplus->Draw();
+    t.DrawLatex(labelPositionX, labelPositionY, usedLeptonName);
 }
 
 void TFeynman::StraightPhoton(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY) {
@@ -124,6 +302,26 @@ void TFeynman::CurvedWeakBoson(Double_t x1, Double_t y1, Double_t rad, Double_t 
     TLatex t;
     t.SetTextSize(0.1);
     t.DrawLatex(labelPositionX, labelPositionY, whichWeakBoson);
+}
+
+void TFeynman::Higgs(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY) {
+    TCurlyLine *higgs = new TCurlyLine(x1, y1, x2, y2);
+    higgs->SetWavy();
+    higgs->Draw();
+
+    TLatex t;
+    t.SetTextSize(0.1);
+    t.DrawLatex(labelPositionX, labelPositionY, "H");
+}
+
+void TFeynman::CurvedHiggs(Double_t x1, Double_t y1, Double_t rad, Double_t phimin, Double_t phimax, Double_t labelPositionX, Double_t labelPositionY) {
+    TCurlyArc *higgsCurved = new TCurlyArc(x1, y1, rad, phimin, phimax);
+    higgsCurved->SetWavy();
+    higgsCurved->Draw();
+
+    TLatex t;
+    t.SetTextSize(0.1);
+    t.DrawLatex(labelPositionX, labelPositionY, "H");
 }
 
 
