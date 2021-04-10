@@ -6,38 +6,40 @@
 #include <TArc.h>
 #include <TLine.h>
 
-void TFeynman::Quark(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, Double_t quarkName) {
+void TFeynman::Quark(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, const char * quarkName) {
     TArrow * q;
     
     q = new TArrow(x1, y1, x2, y2, 0.02, "->-");
+
+    const char * usedQuarkName;
     
-    const char *quark;
-
-    if (quarkName == 0) {
-        quark = "q";
+    if (quarkName == std::string("q")) {
+        usedQuarkName = "q";
     }
-    else if (quarkName == 1) {
-        quark = "u";
+    else if (quarkName == std::string("u")) {
+        usedQuarkName = "u";
     }
-    else if (quarkName == 2) {
-        quark = "d";
+    else if (quarkName == std::string("d")) {
+        usedQuarkName = "d";
     }
-    else if (quarkName == 3) {
-        quark = "s";
+    else if (quarkName == std::string("c")) {
+        usedQuarkName = "c";
     }
-    else if (quarkName == 4) {
-        quark = "s";
+    else if (quarkName == std::string("s")) {
+        usedQuarkName = "s";
     }
-    else if (quarkName == 5) {
-        quark = "t";
+    else if (quarkName == std::string("t")) {
+        usedQuarkName = "t";
     }
-    else if (quarkName == 6) {
-        quark = "b";
+    else if (quarkName == std::string("b")) {
+        usedQuarkName = "b";
     }
-
+    else{
+        usedQuarkName = "q";
+    }
     TLatex t;
     t.SetTextSize(0.1);
-    t.DrawLatex(labelPositionX, labelPositionY, quark);
+    t.DrawLatex(labelPositionX, labelPositionY, usedQuarkName);
 
     q->Draw();
 }
@@ -102,6 +104,26 @@ void TFeynman::CurvedGluon(Double_t x1, Double_t y1, Double_t rad, Double_t phim
     TLatex t;
     t.SetTextSize(0.1);
     t.DrawLatex(labelPositionX, labelPositionY, "g");
+}
+
+void TFeynman::StraightWeakBoson(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, const char *whichWeakBoson) {
+    TCurlyLine *weakBoson = new TCurlyLine(x1, y1, x2, y2);
+    weakBoson->SetWavy();
+    weakBoson->Draw();
+
+    TLatex t;
+    t.SetTextSize(0.1);
+    t.DrawLatex(labelPositionX, labelPositionY, whichWeakBoson);
+}
+
+void TFeynman::CurvedWeakBoson(Double_t x1, Double_t y1, Double_t rad, Double_t phimin, Double_t phimax, Double_t labelPositionX, Double_t labelPositionY, const char* whichWeakBoson) {
+    TCurlyArc *weakCurved = new TCurlyArc(x1, y1, rad, phimin, phimax);
+    weakCurved->SetWavy();
+    weakCurved->Draw();
+
+    TLatex t;
+    t.SetTextSize(0.1);
+    t.DrawLatex(labelPositionX, labelPositionY, whichWeakBoson);
 }
 
 
