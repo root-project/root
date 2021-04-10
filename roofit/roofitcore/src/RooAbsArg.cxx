@@ -74,7 +74,6 @@ for single nodes.
 #include "strlcpy.h"
 
 #include "RooSecondMoment.h"
-#include "RooNameSet.h"
 #include "RooWorkspace.h"
 
 #include "RooMsgService.h"
@@ -641,11 +640,12 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* observables, bool stripDisc
 
 bool RooAbsArg::getParameters(const RooArgSet* observables, RooArgSet& outputSet, bool stripDisconnected) const
 {
+   using RooHelpers::getColonSeparatedNameString;
 
    // Check for cached parameter set
    if (_myws) {
-      RooNameSet nsetObs(observables ? *observables : RooArgSet());
-      const RooArgSet *paramSet = _myws->set(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.content()));
+      auto nsetObs = getColonSeparatedNameString(observables ? *observables : RooArgSet());
+      const RooArgSet *paramSet = _myws->set(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.c_str()));
       if (paramSet) {
          outputSet.add(*paramSet);
          return false;
@@ -660,9 +660,9 @@ bool RooAbsArg::getParameters(const RooArgSet* observables, RooArgSet& outputSet
    outputSet.sort();
 
    // Cache parameter set
-   if (_myws && outputSet.getSize() > 10) {
-      RooNameSet nsetObs(observables ? *observables : RooArgSet());
-      _myws->defineSetInternal(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.content()), outputSet);
+   if (_myws && outputSet.size() > 10) {
+      auto nsetObs = getColonSeparatedNameString(observables ? *observables : RooArgSet());
+      _myws->defineSetInternal(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.c_str()), outputSet);
       // cout << " caching parameters in workspace for pdf " << IsA()->GetName() << "::" << GetName() << endl ;
    }
 
