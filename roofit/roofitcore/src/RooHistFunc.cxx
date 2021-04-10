@@ -35,6 +35,7 @@ discrete dimensions and may have negative values.
 #include "RooCategory.h"
 #include "RooWorkspace.h"
 #include "RooHistPdf.h"
+#include "RooHelpers.h"
 
 #include "TError.h"
 
@@ -501,7 +502,8 @@ Bool_t RooHistFunc::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
     dh2.get(i) ;
     if (fabs(dh1.weight()-dh2.weight())>1e-8) return kFALSE ;
   }
-  if (!(RooNameSet(*dh1.get())==RooNameSet(*dh2.get()))) return kFALSE ;
+  using RooHelpers::getColonSeparatedNameString;
+  if (getColonSeparatedNameString(*dh1.get()) != getColonSeparatedNameString(*dh2.get())) return kFALSE ;
   return kTRUE ;
 }
 
