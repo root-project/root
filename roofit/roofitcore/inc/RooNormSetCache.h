@@ -18,9 +18,9 @@
 
 #include <vector>
 #include <map>
+#include <string>
 
 #include "Rtypes.h"
-#include "RooNameSet.h"
 
 class RooAbsArg;
 class RooArgSet;
@@ -75,8 +75,8 @@ public:
 
   const RooArgSet* lastSet1() const { return _pairs.empty()?0:_pairs.back().first; }
   const RooArgSet* lastSet2() const { return _pairs.empty()?0:_pairs.back().second; }
-  const RooNameSet& nameSet1() const { return _name1; }
-  const RooNameSet& nameSet2() const { return _name2; }
+  const std::string& nameSet1() const { return _name1; }
+  const std::string& nameSet2() const { return _name2; }
 
   Bool_t autoCache(const RooAbsArg* self, const RooArgSet* set1,
       const RooArgSet* set2 = 0, const TNamed* set2RangeName = 0,
@@ -94,8 +94,8 @@ protected:
   ULong_t _max; //!
   ULong_t _next; //!
 
-  RooNameSet _name1;   //!
-  RooNameSet _name2;   //!
+  std::string _name1;   //!
+  std::string _name2;   //!
   TNamed*    _set2RangeName; //!
 
   ClassDef(RooNormSetCache, 0) // Management tool for tracking sets of similar integration/normalization sets

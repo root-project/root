@@ -309,8 +309,8 @@ Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
   if (cache==0) { 
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
-    std::unique_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) );
-    Int_t code2 = getPartIntList(iset.get(),rangeName)+1;
+    RooArgSet iset = _cacheMgr.selectFromSet2(*vars, code-1);
+    Int_t code2 = getPartIntList(&iset,rangeName)+1;
     assert(code==code2); // must have revived the right (sterilized) slot...
     return analyticalIntegral(code2,rangeName);
   }

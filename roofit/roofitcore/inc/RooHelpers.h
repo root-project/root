@@ -121,6 +121,9 @@ std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const 
 
 bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vector<std::string> const& rangeNames);
 
+std::string getColonSeparatedNameString(RooArgSet const& argSet);
+RooArgSet selectFromArgSet(RooArgSet const&, std::string const& names);
+
 }
 
 

@@ -39,7 +39,6 @@ which returns spans pointing directly to the data.
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
 #include "RooCategory.h"
-#include "RooNameSet.h"
 #include "RooHistError.h"
 #include "RooTrace.h"
 #include "RooHelpers.h"
@@ -1008,7 +1007,6 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   std::vector<RooArgSet*> argObsList ;
 
   // Now need to attach branch buffers of clones
-  RooArgSet *anset(0), *acset(0) ;
   for (const auto arg : cloneSet) {
     arg->attachToVStore(*newCache) ;
     
@@ -1019,20 +1017,17 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
     const char* catNset = arg->getStringAttribute("CATNormSet") ;
     if (catNset) {
 //       cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a normalization set specification CATNormSet = " << catNset << endl ;
-      RooNameSet rns ;
-      rns.setNameList(catNset) ;
-      anset = rns.select(nset?*nset:RooArgSet()) ;
-      normSet = (RooArgSet*) anset->selectCommon(*argObs) ;
+
+      RooArgSet anset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catNset);
+      normSet = (RooArgSet*) anset.selectCommon(*argObs) ;
       
     }
     const char* catCset = arg->getStringAttribute("CATCondSet") ;
     if (catCset) {
 //       cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a conditional observable set specification CATCondSet = " << catCset << endl ;
-      RooNameSet rns ;
-      rns.setNameList(catCset) ;
-      acset = rns.select(nset?*nset:RooArgSet()) ;
-      
-      argObs->remove(*acset,kTRUE,kTRUE) ;
+
+      RooArgSet acset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catCset);
+      argObs->remove(acset,kTRUE,kTRUE) ;
       normSet = argObs ;
     }
 

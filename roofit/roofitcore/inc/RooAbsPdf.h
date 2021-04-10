@@ -17,8 +17,6 @@
 #define ROO_ABS_PDF
 
 #include "RooAbsReal.h"
-//#include "RooRealIntegral.h"
-#include "RooNameSet.h"
 #include "RooObjCacheManager.h"
 #include "RooCmdArg.h"
 

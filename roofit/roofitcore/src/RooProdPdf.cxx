@@ -1787,21 +1787,15 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 
   // If cache has been sterilized, revive this slot
   if (cache==0) {
-    RooArgSet* vars = getParameters(RooArgSet()) ;
-    RooArgSet* nset = _cacheMgr.nameSet1ByIndex(code-1)->select(*vars) ;
-    RooArgSet* iset = _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) ;
+    std::unique_ptr<RooArgSet> vars{getParameters(RooArgSet())} ;
+    RooArgSet nset = _cacheMgr.selectFromSet1(*vars, code-1) ;
+    RooArgSet iset = _cacheMgr.selectFromSet2(*vars, code-1) ;
 
-    Int_t code2 = getPartIntList(nset, iset, rangeName) ;
-
-    delete vars ;
+    Int_t code2 = getPartIntList(&nset, &iset, rangeName) ;
 
     // preceding call to getPartIntList guarantees non-null return
     // coverity[NULL_RETURNS]
-    cache = (CacheElem*) _cacheMgr.getObj(nset,iset,&code2,rangeName) ;
-
-    delete nset ;
-    delete iset ;
-
+    cache = (CacheElem*) _cacheMgr.getObj(&nset,&iset,&code2,rangeName) ;
   }
 
   Double_t val = calculate(*cache,kTRUE) ;
@@ -2240,13 +2234,12 @@ void RooProdPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
       RooArgSet* pdf_nset = findPdfNSet((RooAbsPdf&)(*parg)) ;
       if (pdf_nset) {
         // Check if conditional normalization is specified
+        using RooHelpers::getColonSeparatedNameString;
         if (string("nset")==pdf_nset->GetName() && pdf_nset->getSize()>0) {
-          RooNameSet n(*pdf_nset) ;
-          parg->setStringAttribute("CATNormSet",n.content()) ;
+          parg->setStringAttribute("CATNormSet",getColonSeparatedNameString(*pdf_nset).c_str()) ;
         }
         if (string("cset")==pdf_nset->GetName()) {
-          RooNameSet c(*pdf_nset) ;
-          parg->setStringAttribute("CATCondSet",c.content()) ;
+          parg->setStringAttribute("CATCondSet",getColonSeparatedNameString(*pdf_nset).c_str()) ;
         }
       } else {
         coutW(Optimization) << "RooProdPdf::setCacheAndTrackHints(" << GetName() << ") WARNING product pdf does not specify a normalization set for component " << parg->GetName() << endl ;
