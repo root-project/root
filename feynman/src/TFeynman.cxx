@@ -88,6 +88,7 @@ void TFeynman::QuarkAntiQuark(Double_t x1, Double_t y1, Double_t rad, Double_t l
     t.SetTextSize(0.1);
     t.DrawLatex(labelPositionX, labelPositionY, quarkName);
     t.DrawLatex(labelPositionX + 2*rad, labelPositionY - 2*rad, result);
+    delete quarkCurved;
 }
 
 void TFeynman::Lepton(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, const char * whichLepton, bool isMatter) {
@@ -143,6 +144,7 @@ void TFeynman::Lepton(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double
     t.DrawLatex(labelPositionX, labelPositionY, usedLeptonName);
 
     e->Draw();
+    delete e;
 }
 
 void TFeynman::LeptonAntiLepton(Double_t x1, Double_t y1, Double_t rad, Double_t labelPositionX, Double_t labelPositionY, const char * whichLepton, const char * whichAntiLepton) {
