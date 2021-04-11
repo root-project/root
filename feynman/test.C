@@ -3,9 +3,9 @@
 
 
 void test(){
-   TFeynman *f = new TFeynman(600, 300);
+   TFeynman *f = new TFeynman(800, 400);
 
-	f->Lepton(10, 10, 30, 30, 7, 6, "e", true);
+   f->Lepton(10, 10, 30, 30, 7, 6, "e", true);
 	f->Lepton(10, 50, 30, 30, 5, 55, "e", false);
 	f->CurvedPhoton(30, 30, 12.5*sqrt(2), 135, 225, 7, 30);
 	f->Photon(30, 30, 55, 30, 42.5, 37.7);
