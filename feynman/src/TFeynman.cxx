@@ -80,7 +80,7 @@ void TFeynman::QuarkAntiQuark(Double_t x1, Double_t y1, Double_t rad, Double_t l
 
     char result[7];
     strcpy(result, "#bar{");
-    strcat(result, quarkName);
+    strncat(result, quarkName, 1);
     strcat(result, "}");
 
     TLatex t;
