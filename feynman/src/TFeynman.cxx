@@ -72,6 +72,7 @@ void TFeynman::Quark(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_
     t.DrawLatex(labelPositionX, labelPositionY, usedQuarkName);
 
     q->Draw();
+    delete q;
 }
 
 void TFeynman::QuarkAntiQuark(Double_t x1, Double_t y1, Double_t rad, Double_t labelPositionX, Double_t labelPositionY, const char * quarkName) {
