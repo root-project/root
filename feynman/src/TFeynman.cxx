@@ -145,57 +145,14 @@ void TFeynman::Lepton(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double
     e->Draw();
 }
 
-void CurvedLepton(Double_t x1, Double_t y1, Double_t rad, Double_t phimin, Double_t phimax, Double_t labelPositionX, Double_t labelPositionY, const char * whichLepton, bool isMatter) {
-    TArc *curvedLepton = new TArc(x1, y1, rad, phimin, phimax);
+void TFeynman::LeptonAntiLepton(Double_t x1, Double_t y1, Double_t rad, Double_t labelPositionX, Double_t labelPositionY, const char * whichLepton, const char * whichAntiLepton) {
+    TArc *curvedLepton = new TArc(x1, y1, rad);
     curvedLepton->Draw();
-
-    const char * usedLeptonName;
-
-    if (isMatter == true) {
-        if (whichLepton == std::string("e")) {
-            usedLeptonName = "e_{-}";
-        }
-        else if (whichLepton == std::string("m")) {
-            usedLeptonName = "#mu_{-}";
-        }
-        else if (whichLepton == std::string("t")) {
-            usedLeptonName = "#tau_{-}";
-        }
-        else if (whichLepton == std::string("en")) {
-            usedLeptonName = "#nu_{e}";
-        }
-        else if (whichLepton == std::string("mn")) {
-            usedLeptonName = "#nu_{#mu}";
-        }
-        else if (whichLepton == std::string("tn")) {
-            usedLeptonName = "#nu_{#tau}";
-        }
-    }
-
-    if (isMatter == false) {
-        if (whichLepton == std::string("e")) {
-        usedLeptonName = "e_{+}";
-        }
-        else if (whichLepton == std::string("m")) {
-        usedLeptonName = "#mu_{+}";
-        }
-        else if (whichLepton == std::string("t")) {
-        usedLeptonName = "#tau_{+}";
-        } 
-        else if (whichLepton == std::string("en")) {
-            usedLeptonName = "\bar{#nu_{e}}";
-        }
-        else if (whichLepton == std::string("mn")) {
-            usedLeptonName = "\bar{#nu_{#mu}}";
-        }
-        else if (whichLepton == std::string("tn")) {
-            usedLeptonName = "\bar{#nu_{#tau}}";
-        }
-    }
 
     TLatex t;
     t.SetTextSize(0.1);
-    t.DrawLatex(labelPositionX, labelPositionY, usedLeptonName);
+    t.DrawLatex(labelPositionX, labelPositionY, whichLepton);
+    t.DrawLatex(labelPositionX + 2*rad, labelPositionY - 2*rad, whichAntiLepton);
 }
 
 void TFeynman::Photon(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY) {
