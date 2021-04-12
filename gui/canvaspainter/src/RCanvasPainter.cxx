@@ -411,7 +411,7 @@ void RCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
       connid = fWindow->GetConnectionId();
    } else {
       // create batch job to execute action
-      connid = fWindow->MakeBatch();
+      // connid = fWindow->MakeBatch();
    }
 
    if (!connid) {

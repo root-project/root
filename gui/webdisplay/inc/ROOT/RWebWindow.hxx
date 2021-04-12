@@ -68,7 +68,7 @@ private:
 
    struct WebConn {
       unsigned fConnId{0};                 ///<! connection id (unique inside the window)
-      bool fBatchMode{false};              ///<! indicate if connection represent batch job
+      bool fHeadlessMode{false};           ///<! indicate if connection represent batch job
       std::string fKey;                    ///<! key value supplied to the window (when exists)
       std::unique_ptr<RWebDisplayHandle> fDisplayHandle;  ///<! handle assigned with started web display (when exists)
       std::shared_ptr<THttpCallArg> fHold; ///<! request used to hold headless browser
@@ -87,8 +87,8 @@ private:
       WebConn() = default;
       WebConn(unsigned connid) : fConnId(connid) {}
       WebConn(unsigned connid, unsigned wsid) : fConnId(connid), fActive(true), fWSId(wsid) {}
-      WebConn(unsigned connid, bool batch_mode, const std::string &key)
-         : fConnId(connid), fBatchMode(batch_mode), fKey(key)
+      WebConn(unsigned connid, bool headless_mode, const std::string &key)
+         : fConnId(connid), fHeadlessMode(headless_mode), fKey(key)
       {
          ResetStamps();
       }
@@ -180,7 +180,7 @@ private:
 
    void CheckInactiveConnections();
 
-   unsigned AddDisplayHandle(bool batch_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle);
+   unsigned AddDisplayHandle(bool headless_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle);
 
    unsigned AddEmbedWindow(std::shared_ptr<RWebWindow> window, int channel);
 
@@ -189,6 +189,10 @@ private:
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
 
    std::string GetConnToken() const;
+
+   unsigned MakeHeadless(bool create_new = false);
+
+   unsigned FindHeadlessConnection();
 
 public:
 
@@ -283,10 +287,6 @@ public:
 
    /// Returns true when window was shown at least once
    bool IsShown() const { return GetDisplayConnection() != 0; }
-
-   unsigned MakeBatch(bool create_new = false, const RWebDisplayArgs &args = "");
-
-   unsigned FindBatch();
 
    bool CanSend(unsigned connid, bool direct = true) const;
 
