@@ -1,5 +1,6 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RTrivialDS.hxx"
+#include "ROOT/RCsvDS.hxx"
 #include "TMemFile.h"
 #include "TSystem.h"
 #include "TTree.h"
@@ -618,7 +619,6 @@ TEST(RDataFrameInterface, Describe)
    EXPECT_EQ(df3.Describe(), ref2);
 }
 
-// https://sft.its.cern.ch/jira/browse/ROOT-9558
 TEST(RDFSimpleTests, LeafWithDifferentNameThanBranch)
 {
    TTree t("t", "t");
@@ -628,4 +628,77 @@ TEST(RDFSimpleTests, LeafWithDifferentNameThanBranch)
 
    auto m = ROOT::RDataFrame(t).Max<int>("x");
    EXPECT_EQ(*m, 42);
+}
+
+TEST(RDataFrameInterface, DescribeDataset)
+{
+   // trivial/empty datasource
+   ROOT::RDataFrame df1a(1);
+   EXPECT_EQ(df1a.DescribeDataset(), "Empty dataframe filling 1 row");
+
+   ROOT::RDataFrame df1b(2);
+   EXPECT_EQ(df1b.DescribeDataset(), "Empty dataframe filling 2 rows");
+
+   // ttree/tchain
+   // case: in-memory tree
+   TTree tree("someName", "someTitle");
+   ROOT::RDataFrame df2a(tree);
+   EXPECT_EQ(df2a.DescribeDataset(), "Dataframe from TTree someName (in-memory)");
+
+   // case: ctor from a single file
+   // NOTE: using the RDataFrame("tree", "file.root") ctor, it's always a TChain
+   TFile f1("testDescribeDataset1.root", "recreate");
+   TTree t1("myTree", "foo");
+   t1.Write();
+   f1.Close();
+   ROOT::RDataFrame df2b("myTree", "testDescribeDataset1.root");
+   std::stringstream ss1;
+   ss1 << "Dataframe from TChain myTree in file testDescribeDataset1.root";
+   EXPECT_EQ(df2b.DescribeDataset(), ss1.str());
+
+   // case: ctor with multiple files
+   TFile f2("testDescribeDataset2.root", "recreate");
+   TTree t2("myTree", "foo");
+   t2.Write();
+   f2.Close();
+   ROOT::RDataFrame df2d("myTree", {"testDescribeDataset1.root", "testDescribeDataset2.root"});
+   std::stringstream ss2;
+   ss2 << "Dataframe from TChain myTree in files\n"
+       << "  testDescribeDataset1.root\n"
+       << "  testDescribeDataset2.root";
+   EXPECT_EQ(df2d.DescribeDataset(), ss2.str());
+
+   // case: ttree/tchain with friends
+   TFile f3("testDescribeDataset3.root", "recreate");
+   TTree t3("myTree", "foo");
+   t3.Write();
+   f3.Close();
+   TFile f4("testDescribeDataset1.root");
+   auto t4 = f4.Get<TTree>("myTree");
+   TFile f5("testDescribeDataset2.root");
+   auto t5 = f5.Get<TTree>("myTree");
+   TFile f6("testDescribeDataset3.root");
+   auto t6 = f6.Get<TTree>("myTree");
+   TChain chain1("myTree");
+   chain1.AddFile("testDescribeDataset2.root");
+   chain1.AddFile("testDescribeDataset3.root");
+   t4->AddFriend(t5);
+   t4->AddFriend(t6, "myAlias");
+   t4->AddFriend(&chain1, "myAlias2");
+   ROOT::RDataFrame df2e(*t4);
+   std::stringstream ss3;
+   ss3 << "Dataframe from TTree myTree in file testDescribeDataset1.root\n"
+       << "with friends\n"
+       << "  myTree testDescribeDataset2.root\n"
+       << "  myTree (myAlias) testDescribeDataset3.root\n"
+       << "  myTree (myAlias2)\n"
+       << "    myTree testDescribeDataset2.root\n"
+       << "    myTree testDescribeDataset3.root";
+   EXPECT_EQ(df2e.DescribeDataset(), ss3.str());
+   f3.Close();
+   f4.Close();
+
+   // others with an actual fDataSource, like csv
+   auto df3 = ROOT::RDF::MakeCsvDataFrame("RCsvDS_test_headers.csv");
+   EXPECT_EQ(df3.DescribeDataset(), "Dataframe from datasource RCsv");
 }
