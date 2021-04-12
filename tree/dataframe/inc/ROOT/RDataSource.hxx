@@ -112,9 +112,6 @@ protected:
    virtual std::string AsString() { return "generic data source"; };
 
 public:
-   /// Tag type used to indicate that newer versions of RDataSource interfaces should be invoked
-   static struct RV2Interface{} V2;
-
    virtual ~RDataSource() = default;
 
    // clang-format off
