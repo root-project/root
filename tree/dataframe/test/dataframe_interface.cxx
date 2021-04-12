@@ -1,5 +1,6 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RTrivialDS.hxx"
+#include <ROOT/RCsvDS.hxx>
 #include "TMemFile.h"
 #include "TSystem.h"
 #include "TTree.h"
@@ -572,4 +573,20 @@ TEST(RDataFrameInterface, JittedExprWithManyVars)
                           .Count()
                           .GetValue();
    EXPECT_EQ(counts, 1ull);
+}
+
+TEST(RDataFrameInterface, GetDataSourceInfo)
+{
+   // trivial/empty datasource
+   ROOT::RDataFrame df1(1);
+   EXPECT_EQ(df1.GetDataSourceInfo(), "trivial datasource");
+
+   // ttree/tchain datasource
+   TTree tree("tree", "tree");
+   ROOT::RDataFrame df2(tree);
+   EXPECT_EQ(df2.GetDataSourceInfo(), "TTree datasource");
+
+   // others with an actual fDataSource, like csv
+   auto df3 = ROOT::RDF::MakeCsvDataFrame("RCsvDS_test_headers.csv");
+   EXPECT_EQ(df3.GetDataSourceInfo(), "RCsv");
 }

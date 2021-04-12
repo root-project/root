@@ -2106,6 +2106,28 @@ public:
    /// ~~~
    unsigned int GetNRuns() const { return fLoopManager->GetNRuns(); }
 
+   /// \brief Gets descriptive information about the datasource
+   /// \return Info describing the datasource
+   ///
+   /// The information returned by this convenience function is meant for interactive
+   /// use. The exact string format should not be parsed automatically and can be subject to change.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::RDataFrame df("tree", "file.root");
+   /// std::cout << df.GetDataSourceInfo() << std::endl;
+   /// // prints "TTree datasource"
+   /// ~~~
+   std::string GetDataSourceInfo() const {
+      if (fLoopManager->GetTree()) {
+         return "TTree datasource";
+      } else if (fDataSource) {
+         return fDataSource->GetLabel();
+      } else {
+         return "trivial datasource";
+      }
+   }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot.
