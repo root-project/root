@@ -36,7 +36,10 @@ The following people have contributed to this new version:
 ## Deprecation and Removal
 
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been removed. `TTreeProcessorMT::SetTasksPerWorkerHint` is a superior alternative.
-
+- `TArray?::AddAt()` has been removed: it confused users because it doesn't add but set. Making it add would have been a silent, backward incompatible change and caused more havoc than its removal.
+ If you see a compilation error from this function please make sure you did want to *set* the value at the index: `arr.AddAt(newValue, idx)`, and if so, simply use `arr.SetAt(newValue, idx)` instead. If you meant to add, use `arr[idx] += newValue`.
+ Apologies for this incompatible change, but we feel that the confusion caused by its name justifies the breakage this might cause, potentially fixing user code.
+ A new overload `SetAt(T, idx)` was added, with `T` being the scalar type of the `TArrayX` class, i.e. `Int_t` for `TArrayI` etc, to prevent conversions to `double`. This can be invoked if the exact array type is known, instead of invoking the base class's virtual function.
 
 ## Core Libraries
 
