@@ -10,7 +10,6 @@
 /// \author Sergey Linev
 
 #include <ROOT/RWebWindow.hxx>
-
 #include <iostream>
 
 std::shared_ptr<ROOT::Experimental::RWebWindow> window;
@@ -18,6 +17,8 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> window;
 int num_clients = 1;
 bool window_terminated = false;
 bool call_show = true;
+bool batch_mode = false;
+int current_counter = 0;
 
 void ProcessData(unsigned connid, const std::string &arg)
 {
@@ -27,7 +28,15 @@ void ProcessData(unsigned connid, const std::string &arg)
       // first message to provide config
       window->Send(connid, std::string("CLIENTS:") + std::to_string(num_clients));
    } else if (arg.find("SHOW:") == 0) {
-      std::cout << arg.substr(5) << std::endl;
+      std::string msg = arg.substr(5);
+      if (!batch_mode)
+         std::cout << msg << std::endl;
+      if (msg.find("Cnt:") == 0) {
+         int counter = std::stoi(msg.substr(4));
+         if (counter > 0)
+            current_counter = counter;
+      }
+
    } else if (arg == "halt") {
       // terminate ROOT
       window_terminated = true;
@@ -38,8 +47,12 @@ void ProcessData(unsigned connid, const std::string &arg)
 ////////////////////////////////////////////////////////
 /// @param nclients - number of clients
 /// @param test_mode
-///  0 - default config, no special config
-///  1 - reduce http server timer dfigs pecial_thread - 0 - no thread, 1 - extra thread to process requests, 2 - use http server threads
+///  0 - default config, no special threads
+///  1 - reduce http server timer
+///  2 - create special thread in THttpServer and use it
+///  3 - also create special thread for RWebWindow
+///  4 - directly use civetweb threads (only for experts)
+/// 10 - force longpoll socket with default config
 
 enum TestModes {
    modeDefault = 0,          // default configuration
@@ -57,6 +70,8 @@ enum MajorModes {
 void ping(int nclients = 1, int test_mode = 0)
 {
    num_clients = nclients;
+
+   batch_mode = gROOT->IsBatch();
 
    // verify values
    if (test_mode < 0) test_mode = 0;
@@ -115,8 +130,18 @@ void ping(int nclients = 1, int test_mode = 0)
 
    // instead of showing window one can create URL and type it in any browser window
    if (call_show)
-      window->Show();
+      window->Show(batch_mode ? "headless" : "");
    else
       std::cout << "Window url is: " << window->GetUrl(true) << std::endl;
 
+   // provide blocking method to let run
+   if (batch_mode) {
+      const int run_limit = 200;
+      const double run_time = 50.;
+      window->WaitFor([=](double tm) { return (current_counter >= run_limit) || (tm > run_time) ? 1 : 0; });
+      if (current_counter >= run_limit)
+         std::cout << "PING-PONG TEST COMPLETED" << std::endl;
+      else
+         std::cout << "PING-PONG TEST FAIL" << std::endl;
+   }
 }
