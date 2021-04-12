@@ -78,7 +78,7 @@
                 this.sendPing();
              }
              if (this.is_main && this.handle && this.last_output && (tm - this.last_show > 2000)) {
-                // this.handle.send("SHOW:" + this.last_output.replace("&plusmn;","+-"));
+                this.handle.send("SHOW:" + this.last_output.replace("&plusmn;","+-"));
                 this.last_show = tm;
              }
 
