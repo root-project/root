@@ -24,6 +24,7 @@
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"
+#include "ROOT/InternalTreeUtils.hxx" // for GetFileNamesFromTree and GetFriendInfo
 #include "RtypesCore.h" // for ULong64_t
 #include "TDirectory.h"
 #include "TH1.h"        // For Histo actions
@@ -32,6 +33,7 @@
 #include "TProfile.h"
 #include "TProfile2D.h"
 #include "TStatistic.h"
+#include "TChain.h"     // for checking fLoopManger->GetTree() return type
 
 #include <algorithm>
 #include <cstddef>
@@ -2190,6 +2192,97 @@ public:
    /// std::cout << df.GetNRuns() << std::endl; // prints "2"
    /// ~~~
    unsigned int GetNRuns() const { return fLoopManager->GetNRuns(); }
+
+   /// \brief Get descriptive information about the dataset.
+   /// \return Info describing the dataset as a multi-line string
+   ///
+   /// The information returned by this convenience function is meant for interactive
+   /// use. The exact string format should not be parsed automatically and can be subject to change.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::RDataFrame df("Events", "sample.root");
+   /// std::cout << df.DescribeDataset() << std::endl;
+   /// // prints "Dataframe from TTree Events in file sample.root"
+   /// ~~~
+   std::string DescribeDataset() const
+   {
+      // TTree/TChain as input
+      const auto tree = fLoopManager->GetTree();
+      if (tree) {
+         const auto treeName = tree->GetName();
+         const auto isTChain = dynamic_cast<TChain *>(tree) ? true : false;
+         const auto treeType = isTChain ? "TChain" : "TTree";
+         const auto isInMemory = !isTChain && !tree->GetCurrentFile() ? true : false;
+         const auto friendInfo = ROOT::Internal::TreeUtils::GetFriendInfo(*tree);
+         const auto hasFriends = friendInfo.fFriendNames.empty() ? false : true;
+         std::stringstream ss;
+         ss << "Dataframe from " << treeType << " " << treeName;
+         if (isInMemory) {
+            ss << " (in-memory)";
+         } else {
+            const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
+            const auto numFiles = files.size();
+            if (numFiles == 1) {
+               ss << " in file " << files[0];
+            } else {
+               ss << " in files\n";
+               for (auto i = 0u; i < numFiles; i++) {
+                  ss << "  " << files[i];
+                  if (i < numFiles - 1)
+                     ss << '\n';
+               }
+            }
+         }
+         if (hasFriends) {
+            const auto numFriends = friendInfo.fFriendNames.size();
+            if (numFriends == 1) {
+               ss << "\nwith friend\n";
+            } else {
+               ss << "\nwith friends\n";
+            }
+            for (auto i = 0u; i < numFriends; i++) {
+               const auto nameAlias = friendInfo.fFriendNames[i];
+               const auto files = friendInfo.fFriendFileNames[i];
+               const auto numFiles = files.size();
+               const auto subnames = friendInfo.fFriendChainSubNames[i];
+               ss << "  " << nameAlias.first;
+               if (nameAlias.first != nameAlias.second)
+                  ss << " (" << nameAlias.second << ")";
+               // case: TTree as friend
+               if (numFiles == 1) {
+                   ss << " " << files[0];
+               }
+               // case: TChain as friend
+               else {
+                  ss << '\n';
+                  for (auto j = 0u; j < numFiles; j++) {
+                     ss << "    " << subnames[j] << " " << files[j];
+                     if (j < numFiles - 1)
+                        ss << '\n';
+                  }
+               }
+               if (i < numFriends - 1)
+                  ss << '\n';
+            }
+         }
+         return ss.str();
+      }
+      // Datasource as input
+      else if (fDataSource) {
+         const auto datasourceLabel = fDataSource->GetLabel();
+         return "Dataframe from datasource " + datasourceLabel;
+      }
+      // Trivial/empty datasource
+      else {
+         const auto n = fLoopManager->GetNEmptyEntries();
+         if (n == 1) {
+            return "Empty dataframe filling 1 row";
+         } else {
+            return "Empty dataframe filling " + std::to_string(n) + " rows";
+         }
+      }
+   }
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
