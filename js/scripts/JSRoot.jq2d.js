@@ -1859,7 +1859,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
          main.html("<div class='treedraw_buttons' style='padding-left:0.5em'>" +
                "<button class='treedraw_exe' title='Execute draw expression'>Draw</button>" +
-               " Expr:<input class='treedraw_varexp ui-corner-all ui-widget' style='width:12em;margin-left:5px' title='draw expression'></input> " +
+               " Expr:<input class='treedraw_varexp treedraw_varexp_info ui-corner-all ui-widget' style='width:12em;margin-left:5px' title='draw expression'></input> " +
+               "<label class='treedraw_varexp_info'>\u24D8</label>" +
                (show_extra ? "" : "<button class='treedraw_more'>More</button>") +
                "</div>" +
                "<hr/>" +
@@ -1872,11 +1873,23 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          let p = this;
 
          if (this.local_tree)
-            main.find('.treedraw_buttons').attr('title', "Tree draw player for: " + this.local_tree.fName);
-         main.find('.treedraw_exe').button().click(() => p.PerformDraw());
+            main.find('.treedraw_buttons')
+                .prop("title", "Tree draw player for: " + this.local_tree.fName);
+         main.find('.treedraw_exe')
+             .button().click(() => p.PerformDraw());
          main.find('.treedraw_varexp')
               .val(args && args.parse_expr ? args.parse_expr : (this.dflt_expr || "px:py"))
               .keyup(this.keyup);
+         main.find('.treedraw_varexp_info')
+             .prop('title', "Example of valid draw expressions:\n" +
+                          "  px  - 1-dim draw\n" +
+                          "  px:py  - 2-dim draw\n" +
+                          "  px:py:pz  - 3-dim draw\n" +
+                          "  px+py:px-py - use any expressions\n" +
+                          "  px:py>>Graph - create and draw TGraph\n" +
+                          "  px:py>>dump - dump extracted variables\n" +
+                          "  px:py>>h(50,-5,5,50,-5,5) - custom histogram\n" +
+                          "  px:py;hbins:100 - custom number of bins");
 
          if (show_extra) {
             this.ShowExtraButtons(args);
@@ -1888,6 +1901,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          }
 
          this.checkResize();
+
+         jsrp.registerForResize(this);
       }
 
       player.PerformLocalDraw = function() {
