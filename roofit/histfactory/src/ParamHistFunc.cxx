@@ -164,11 +164,10 @@ Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
 
   for (auto comp : vars) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
-      std::cout << "ParamHistFunc::GetNumBins" << vars.GetName() << ") ERROR: component " 
-	   << comp->GetName() 
-	   << " in vars list is not of type RooRealVar" << std::endl ;
-      RooErrorHandler::softAbort() ;
-      return -1;
+      auto errorMsg = std::string("ParamHistFunc::GetNumBins") + vars.GetName() + ") ERROR: component "
+                      + comp->GetName() + " in vars list is not of type RooRealVar";
+      oocoutE(static_cast<TObject*>(nullptr), InputArguments) <<  errorMsg << std::endl;
+      throw std::runtime_error(errorMsg);
     }
     RooRealVar* var = (RooRealVar*) comp;
 
@@ -556,11 +555,10 @@ std::vector<int> const& ParamHistFunc::getParamSetBinMap() const {
 Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
   for(auto const& comp : vars) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
-      coutE(InputArguments) << "ParamHistFunc::(" << GetName() << ") ERROR: component " 
-                            << comp->GetName() << " in variables list is not of type RooRealVar" 
-                            << std::endl;
-      RooErrorHandler::softAbort() ;
-      return 1;
+      auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
+                      + comp->GetName() + " in variables list is not of type RooRealVar";
+      coutE(InputArguments) <<  errorMsg << std::endl;
+      throw std::runtime_error(errorMsg);
     }
     _dataVars.add( *comp );
   }
@@ -599,11 +597,10 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*) paramIter.next())) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
-      coutE(InputArguments) << "ParamHistFunc::(" << GetName() << ") ERROR: component " 
-			    << comp->GetName() << " in paramater list is not of type RooRealVar" 
-			    << std::endl;
-      RooErrorHandler::softAbort() ;
-      return 1;
+      auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
+                      + comp->GetName() + " in paramater list is not of type RooRealVar";
+      coutE(InputArguments) <<  errorMsg << std::endl;
+      throw std::runtime_error(errorMsg);
     }
 
     _paramSet.add( *comp );
