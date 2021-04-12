@@ -97,7 +97,7 @@ protected:
   //RooAbsBinning* _binning;  // Holds the binning of the dataVar (at construction time)
 
   Int_t _numBins;
-  mutable std::map<Int_t, Int_t> _binMap;
+  mutable std::vector<int> _binMapVector; //!
   mutable RooDataHist _dataSet;
    //Bool_t _normalized;
 
@@ -110,7 +110,10 @@ protected:
   static Int_t GetNumBins( const RooArgSet& vars );
   Double_t evaluate() const;
 
-  ClassDef(ParamHistFunc,5) // Sum of RooAbsReal objects
+private:
+  std::vector<int> const& getParamSetBinMap() const;
+
+  ClassDef(ParamHistFunc,6) // Sum of RooAbsReal objects
 };
 
 #endif
