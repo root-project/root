@@ -213,6 +213,19 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.add("endsub:");
       }
 
+      addRebinMenu(rebin_func) {
+        this.add("sub:Rebin", function() {
+            let sz = prompt("Enter rebin value", 2);
+            if (!sz) return;
+            sz = parseInt(sz);
+            if (Number.isInteger(sz) && (sz > 1)) rebin_func(sz);
+         });
+         for (let sz = 2; sz <= 7; sz++) {
+            this.add(sz.toString(), sz, res => rebin_func(parseInt(res)));
+         }
+         this.add("endsub:");
+      }
+
       /** @summary Add selection menu entries
         * @protected */
       addSelectMenu(name, values, value, set_func) {

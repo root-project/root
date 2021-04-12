@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "1/04/2021";
+   JSROOT.version_date = "12/04/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -933,6 +933,9 @@
             delete value['$pair'];
             return; // pair object is not counted in the objects map
          }
+
+        // prevent endless loop
+        if (map.indexOf(value) >= 0) return;
 
          // add object to object map
          map.push(value);

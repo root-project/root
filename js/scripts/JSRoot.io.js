@@ -224,10 +224,12 @@ JSROOT.define(['rawinflate'], () => {
                   return new Promise((resolveFunc, rejectFunc) => {
 
                      ZstdCodec.run(zstd => {
-                        const simple = new zstd.Simple();
-                        // streaming = new zstd.Streaming();
+                        // const simple = new zstd.Simple();
+                        const streaming = new zstd.Streaming();
 
-                        const data2 = simple.decompress(uint8arr);
+                        // const data2 = simple.decompress(uint8arr);
+                        const data2 = streaming.decompress(uint8arr);
+
                         // console.log(`tgtsize ${tgtsize} zstd size ${data2.length} offset ${data2.byteOffset} rawlen ${data2.buffer.byteLength}`);
 
                         const reslen = data2.length;

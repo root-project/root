@@ -670,8 +670,8 @@ JSROOT.define([], () => {
 
       let d = JSROOT.decodeUrl();
 
-      // special hold script, prevents headless browser from too early exit
-      if (d.has("batch_mode") && d.get("key") && (JSROOT.browser.isChromeHeadless || JSROOT.browser.isChrome))
+      // special holder script, prevents headless chrome browser from too early exit
+      if (d.has("headless") && d.get("key") && (JSROOT.browser.isChromeHeadless || JSROOT.browser.isChrome))
          JSROOT.loadScript("root_batch_holder.js?key=" + d.get("key"));
 
       if (!arg.platform)
@@ -683,7 +683,7 @@ JSROOT.define([], () => {
          JSROOT.browser.cef3 = true;
 
       if (arg.batch === undefined)
-         arg.batch = d.has("batch_mode");
+         arg.batch = d.has("headless");
 
       if (arg.batch) JSROOT.batch_mode = true;
 
