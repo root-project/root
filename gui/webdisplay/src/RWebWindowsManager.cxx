@@ -436,7 +436,6 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Show web window in specified location.
 ///
-/// \param batch_mode indicates that browser will run in headless mode
 /// \param user_args specifies where and how display web window
 ///
 /// As display args one can use string like "firefox" or "chrome" - these are two main supported web browsers.
@@ -469,10 +468,10 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 ///
 ///   HTTP-server related parameters documented in RWebWindowsManager::CreateServer() method
 
-unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const RWebDisplayArgs &user_args)
+unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &user_args)
 {
    // silently ignore regular Show() calls in batch mode
-   if (!batch_mode && gROOT->IsWebDisplayBatch())
+   if (!user_args.IsHeadless() && gROOT->IsWebDisplayBatch())
       return 0;
 
    // for embedded window no any browser need to be started
@@ -503,12 +502,11 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const 
 
    RWebDisplayArgs args(user_args);
 
-   if (batch_mode && !args.IsSupportHeadless()) {
+   if (args.IsHeadless() && !args.IsSupportHeadless()) {
       R__LOG_ERROR(WebGUILog()) << "Cannot use batch mode with " << args.GetBrowserName();
       return 0;
    }
 
-   args.SetHeadless(batch_mode);
    if (args.GetWidth() <= 0) args.SetWidth(win.GetWidth());
    if (args.GetHeight() <= 0) args.SetHeight(win.GetHeight());
 
@@ -529,7 +527,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const 
    args.SetUrl(url);
 
    args.AppendUrlOpt(std::string("key=") + key);
-   if (batch_mode) args.AppendUrlOpt("batch_mode");
+   if (args.IsHeadless()) args.AppendUrlOpt("headless"); // used to create holder request
    if (!token.empty())
       args.AppendUrlOpt(std::string("token=") + token);
 
@@ -543,7 +541,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const 
       return 0;
    }
 
-   return win.AddDisplayHandle(batch_mode, key, handle);
+   return win.AddDisplayHandle(args.IsHeadless(), key, handle);
 }
 
 //////////////////////////////////////////////////////////////////////////

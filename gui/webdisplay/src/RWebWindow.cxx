@@ -164,41 +164,45 @@ THttpServer *RWebWindow::GetServer()
 
 unsigned RWebWindow::Show(const RWebDisplayArgs &args)
 {
-   return fMgr->ShowWindow(*this, false, args);
+   return fMgr->ShowWindow(*this, args);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Create batch job for specified window
-/// Normally only single batch job is used, but many can be created
+/// Start headless browser for specified window
+/// Normally only single instance is used, but many can be created
 /// See ROOT::Experimental::RWebWindowsManager::Show() docu for more info
 /// returns (future) connection id (or 0 when fails)
 
-unsigned RWebWindow::MakeBatch(bool create_new, const RWebDisplayArgs &args)
+unsigned RWebWindow::MakeHeadless(bool create_new)
 {
    unsigned connid = 0;
    if (!create_new)
-      connid = FindBatch();
-   if (!connid)
-      connid = fMgr->ShowWindow(*this, true, args);
+      connid = FindHeadlessConnection();
+   if (!connid) {
+      RWebDisplayArgs args;
+      args.SetHeadless(true);
+      connid = fMgr->ShowWindow(*this, args);
+   }
    return connid;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Returns connection id of batch job
+/// Returns connection id of window running in headless mode
+/// This can be special connection which may run picture production jobs in background
 /// Connection to that job may not be initialized yet
 /// If connection does not exists, returns 0
 
-unsigned RWebWindow::FindBatch()
+unsigned RWebWindow::FindHeadlessConnection()
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    for (auto &entry : fPendingConn) {
-      if (entry->fBatchMode)
+      if (entry->fHeadlessMode)
          return entry->fConnId;
    }
 
    for (auto &conn : fConn) {
-      if (conn->fBatchMode)
+      if (conn->fHeadlessMode)
          return conn->fConnId;
    }
 
@@ -216,12 +220,12 @@ unsigned RWebWindow::GetDisplayConnection() const
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    for (auto &entry : fPendingConn) {
-      if (!entry->fBatchMode)
+      if (!entry->fHeadlessMode)
          return entry->fConnId;
    }
 
    for (auto &conn : fConn) {
-      if (!conn->fBatchMode)
+      if (!conn->fHeadlessMode)
          return conn->fConnId;
    }
 
@@ -414,13 +418,13 @@ void RWebWindow::InvokeCallbacks(bool force)
 /// Key is random number generated when starting new window
 /// When client is connected, key should be supplied to correctly identify it
 
-unsigned RWebWindow::AddDisplayHandle(bool batch_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle)
+unsigned RWebWindow::AddDisplayHandle(bool headless_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    ++fConnCnt;
 
-   auto conn = std::make_shared<WebConn>(fConnCnt, batch_mode, key);
+   auto conn = std::make_shared<WebConn>(fConnCnt, headless_mode, key);
 
    std::swap(conn->fDisplayHandle, handle);
 
@@ -502,7 +506,7 @@ void RWebWindow::CheckInactiveConnections()
       auto pred = [&](std::shared_ptr<WebConn> &conn) {
          std::chrono::duration<double> diff = stamp - conn->fSendStamp;
          // introduce large timeout
-         if ((diff.count() > batch_tmout) && conn->fBatchMode) {
+         if ((diff.count() > batch_tmout) && conn->fHeadlessMode) {
             conn->fActive = false;
             clr.emplace_back(conn);
             return true;

@@ -40,6 +40,7 @@ protected:
    protected:
       std::string fProg;  ///< browser executable
       std::string fExec;  ///< standard execute line
+      std::string fHeadlessExec; ///< headless execute line
       std::string fBatchExec; ///< batch execute line
 
       void TestProg(const std::string &nexttry, bool check_std_paths = false);

@@ -178,6 +178,13 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       kind.erase(pos, epos-pos);
    }
 
+   pos = kind.rfind("headless");
+   if ((pos != std::string::npos) && (pos == kind.length() - 8)) {
+      SetHeadless(true);
+      kind.resize(pos);
+      if ((pos > 0) && (kind[pos-1] == ';')) kind.resize(pos-1);
+   }
+
    // very special handling of qt5 which can specify pointer as a string
    if (kind.find("qt5:") == 0) {
       SetDriverData((void *) std::stoul(kind.substr(4)));
