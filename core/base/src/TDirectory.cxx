@@ -1202,7 +1202,7 @@ Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_
    }
    TString cmd;
    if (fname.Index(".json") > 0) {
-      cmd.Form("TBufferJSON::ExportToFile(\"%s\",(TObject*) %s, \"%s\");", fname.Data(), TString::LLtoa((Long_t)obj, 10).Data(), (option ? option : ""));
+      cmd.Form("TBufferJSON::ExportToFile(\"%s\",(TObject*) %s, \"%s\");", fname.Data(), TString::LLtoa((Longptr_t)obj, 10).Data(), (option ? option : ""));
       nbytes = gROOT->ProcessLine(cmd);
    } else {
       cmd.Form("TFile::Open(\"%s\",\"recreate\");",fname.Data());

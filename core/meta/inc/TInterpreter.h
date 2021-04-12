@@ -177,8 +177,8 @@ public:
    virtual Int_t    ReloadAllSharedLibraryMaps() = 0;
    virtual Int_t    UnloadAllSharedLibraryMaps() = 0;
    virtual Int_t    UnloadLibraryMap(const char *library) = 0;
-   virtual Long_t   ProcessLine(const char *line, EErrorCode *error = 0) = 0;
-   virtual Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
+   virtual Longptr_t ProcessLine(const char *line, EErrorCode *error = 0) = 0;
+   virtual Longptr_t ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
    virtual void     PrintIntro() = 0;
    virtual bool     RegisterPrebuiltModulePath(const std::string& FullPath,
                                                const std::string& ModuleMapName = "module.modulemap") const = 0;
@@ -235,7 +235,7 @@ public:
    virtual void     Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0) = 0;
    virtual void     ExecuteWithArgsAndReturn(TMethod *method, void* address, const void* args[] = 0, int /*nargs*/ = 0, void* ret= 0) const = 0;
-   virtual Long_t   ExecuteMacro(const char *filename, EErrorCode *error = 0) = 0;
+   virtual Longptr_t ExecuteMacro(const char *filename, EErrorCode *error = 0) = 0;
    virtual Bool_t   IsErrorMessagesEnabled() const = 0;
    virtual Bool_t   SetErrorMessages(Bool_t enable = kTRUE) = 0;
    virtual Bool_t   IsProcessLineLocked() const = 0;
@@ -316,7 +316,7 @@ public:
    virtual void   CallFunc_Exec(CallFunc_t * /* func */, void * /* address */, TInterpreterValue& /* val */) const {;}
    virtual void   CallFunc_ExecWithReturn(CallFunc_t * /* func */, void * /* address */, void * /* ret */) const {;}
    virtual void   CallFunc_ExecWithArgsAndReturn(CallFunc_t * /* func */, void * /* address */, const void* /* args */ [] = 0, int /*nargs*/ = 0, void * /* ret */ = 0) const {}
-   virtual Long_t    CallFunc_ExecInt(CallFunc_t * /* func */, void * /* address */) const {return 0;}
+   virtual Longptr_t CallFunc_ExecInt(CallFunc_t * /* func */, void * /* address */) const {return 0;}
    virtual Long64_t  CallFunc_ExecInt64(CallFunc_t * /* func */, void * /* address */) const {return 0;}
    virtual Double_t  CallFunc_ExecDouble(CallFunc_t * /* func */, void * /* address */) const {return 0;}
    virtual CallFunc_t   *CallFunc_Factory() const {return 0;}
@@ -327,7 +327,7 @@ public:
    virtual Bool_t CallFunc_IsValid(CallFunc_t * /* func */) const {return 0;}
    virtual CallFuncIFacePtr_t CallFunc_IFacePtr(CallFunc_t * /* func */) const {return CallFuncIFacePtr_t();}
    virtual void   CallFunc_ResetArg(CallFunc_t * /* func */) const {;}
-   virtual void   CallFunc_SetArgArray(CallFunc_t * /* func */, Long_t * /* paramArr */, Int_t /* nparam */) const {;}
+   virtual void   CallFunc_SetArgArray(CallFunc_t * /* func */, Longptr_t * /* paramArr */, Int_t /* nparam */) const {;}
    virtual void   CallFunc_SetArgs(CallFunc_t * /* func */, const char * /* param */) const {;}
 
    virtual void   CallFunc_SetArg(CallFunc_t * /*func */, Long_t /* param */) const = 0;
@@ -337,26 +337,26 @@ public:
    virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Long64_t /* param */) const = 0;
    virtual void   CallFunc_SetArg(CallFunc_t * /* func */, ULong64_t /* param */) const = 0;
 
-   void CallFunc_SetArg(CallFunc_t * func, Char_t param) const { CallFunc_SetArg(func,(Long_t)param); }
-   void CallFunc_SetArg(CallFunc_t * func, Short_t param) const { CallFunc_SetArg(func,(Long_t)param); }
-   void CallFunc_SetArg(CallFunc_t * func, Int_t param) const { CallFunc_SetArg(func,(Long_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, Char_t param) const { CallFunc_SetArg(func,(Longptr_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, Short_t param) const { CallFunc_SetArg(func,(Longptr_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, Int_t param) const { CallFunc_SetArg(func,(Longptr_t)param); }
 
-   void CallFunc_SetArg(CallFunc_t * func, UChar_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
-   void CallFunc_SetArg(CallFunc_t * func, UShort_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
-   void CallFunc_SetArg(CallFunc_t * func, UInt_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, UChar_t param) const { CallFunc_SetArg(func,(ULongptr_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, UShort_t param) const { CallFunc_SetArg(func,(ULongptr_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, UInt_t param) const { CallFunc_SetArg(func,(ULongptr_t)param); }
 
    template <typename T>
-   void CallFunc_SetArgRef(CallFunc_t * func, T &param) const { CallFunc_SetArg(func,(ULong_t)&param); }
+   void CallFunc_SetArgRef(CallFunc_t * func, T &param) const { CallFunc_SetArg(func,(ULongptr_t)&param); }
 
    void CallFunc_SetArg(CallFunc_t *func, void *arg)
    {
-      CallFunc_SetArg(func,(Long_t) arg);
+      CallFunc_SetArg(func,(Longptr_t) arg);
    }
 
    template <typename T>
    void CallFunc_SetArg(CallFunc_t *func, const T *arg)
    {
-      CallFunc_SetArg(func,(Long_t) arg);
+      CallFunc_SetArg(func,(Longptr_t) arg);
    }
 
    void CallFunc_SetArgImpl(CallFunc_t * /* func */)
@@ -385,13 +385,13 @@ public:
       CallFunc_SetArgImpl(func,args...);
    }
 
-   virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, bool /* objectIsConst */, Long_t * /* Offset */) const {;}
-   virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, Long_t * /* Offset */) const {;}
+   virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, bool /* objectIsConst */, Longptr_t * /* Offset */) const {;}
+   virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, Longptr_t * /* Offset */) const {;}
    virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, MethodInfo_t * /* info */) const {;}
-   virtual void   CallFunc_SetFuncProto(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* proto */, Long_t * /* Offset */, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {;}
-   virtual void   CallFunc_SetFuncProto(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* proto */, bool /* objectIsConst */, Long_t * /* Offset */, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {;}
-   virtual void   CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const std::vector<TypeInfo_t*> &proto, Long_t* Offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const = 0;
-   virtual void   CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const std::vector<TypeInfo_t*> &proto, bool objectIsConst, Long_t* Offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const = 0;
+   virtual void   CallFunc_SetFuncProto(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* proto */, Longptr_t * /* Offset */, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {;}
+   virtual void   CallFunc_SetFuncProto(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* proto */, bool /* objectIsConst */, Longptr_t * /* Offset */, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {;}
+   virtual void   CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const std::vector<TypeInfo_t*> &proto, Longptr_t* Offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const = 0;
+   virtual void   CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const std::vector<TypeInfo_t*> &proto, bool objectIsConst, Longptr_t* Offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const = 0;
 
    virtual std::string CallFunc_GetWrapperCode(CallFunc_t *func) const = 0;
 
@@ -406,7 +406,7 @@ public:
    virtual ClassInfo_t  *ClassInfo_Factory(ClassInfo_t * /* cl */) const = 0;
    virtual ClassInfo_t  *ClassInfo_Factory(const char * /* name */) const = 0;
    virtual ClassInfo_t  *ClassInfo_Factory(DeclId_t declid) const = 0;
-   virtual Long_t   ClassInfo_GetBaseOffset(ClassInfo_t* /* fromDerived */,
+   virtual Longptr_t ClassInfo_GetBaseOffset(ClassInfo_t* /* fromDerived */,
                                             ClassInfo_t* /* toBase */, void* /* address */ = 0, bool /*isderived*/ = true) const {return 0;}
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Bool_t /* objectIsConst */ = false, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {return 0;}
    virtual Bool_t ClassInfo_HasDefaultConstructor(ClassInfo_t * /* info */, Bool_t = kFALSE) const {return kFALSE;}
@@ -419,8 +419,8 @@ public:
    virtual EDataType ClassInfo_GetUnderlyingType(ClassInfo_t * /* info */) const {return kNumDataTypes;}
    virtual Bool_t ClassInfo_IsLoaded(ClassInfo_t * /* info */) const {return 0;}
    virtual Bool_t ClassInfo_IsValid(ClassInfo_t * /* info */) const {return 0;}
-   virtual Bool_t ClassInfo_IsValidMethod(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Long_t * /* offset */, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {return 0;}
-   virtual Bool_t ClassInfo_IsValidMethod(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Bool_t /* objectIsConst */, Long_t * /* offset */, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {return 0;}
+   virtual Bool_t ClassInfo_IsValidMethod(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Longptr_t * /* offset */, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {return 0;}
+   virtual Bool_t ClassInfo_IsValidMethod(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Bool_t /* objectIsConst */, Longptr_t * /* offset */, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {return 0;}
    virtual int    ClassInfo_Next(ClassInfo_t * /* info */) const {return 0;}
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */) const {return 0;}
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */, int /* n */) const {return 0;}
@@ -428,7 +428,7 @@ public:
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */, void * /* arena */) const {return 0;}
    virtual Long_t ClassInfo_Property(ClassInfo_t * /* info */) const {return 0;}
    virtual int    ClassInfo_Size(ClassInfo_t * /* info */) const {return 0;}
-   virtual Long_t ClassInfo_Tagnum(ClassInfo_t * /* info */) const {return 0;}
+   virtual Longptr_t ClassInfo_Tagnum(ClassInfo_t * /* info */) const {return 0;}
    virtual const char *ClassInfo_FileName(ClassInfo_t * /* info */) const {return 0;}
    virtual const char *ClassInfo_FullName(ClassInfo_t * /* info */) const {return 0;}
    virtual const char *ClassInfo_Name(ClassInfo_t * /* info */) const {return 0;}
@@ -443,9 +443,9 @@ public:
                                                    ClassInfo_t* /* base */) const {return 0;}
    virtual int    BaseClassInfo_Next(BaseClassInfo_t * /* bcinfo */) const {return 0;}
    virtual int    BaseClassInfo_Next(BaseClassInfo_t * /* bcinfo */, int  /* onlyDirect */) const {return 0;}
-   virtual Long_t BaseClassInfo_Offset(BaseClassInfo_t * /* toBaseClassInfo */, void* /* address */ = 0 /*default for non-virtual*/, bool /*isderived*/ = true /*default for non-virtual*/) const {return 0;}
+   virtual Longptr_t BaseClassInfo_Offset(BaseClassInfo_t * /* toBaseClassInfo */, void* /* address */ = 0 /*default for non-virtual*/, bool /*isderived*/ = true /*default for non-virtual*/) const {return 0;}
    virtual Long_t BaseClassInfo_Property(BaseClassInfo_t * /* bcinfo */) const {return 0;}
-   virtual Long_t BaseClassInfo_Tagnum(BaseClassInfo_t * /* bcinfo */) const {return 0;}
+   virtual Longptr_t BaseClassInfo_Tagnum(BaseClassInfo_t * /* bcinfo */) const {return 0;}
    virtual ClassInfo_t*BaseClassInfo_ClassInfo(BaseClassInfo_t * /* bcinfo */) const = 0;
    virtual const char *BaseClassInfo_FullName(BaseClassInfo_t * /* bcinfo */) const {return 0;}
    virtual const char *BaseClassInfo_Name(BaseClassInfo_t * /* bcinfo */) const {return 0;}
@@ -460,7 +460,7 @@ public:
    virtual Bool_t DataMemberInfo_IsValid(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual int    DataMemberInfo_MaxIndex(DataMemberInfo_t * /* dminfo */, Int_t  /* dim */) const {return 0;}
    virtual int    DataMemberInfo_Next(DataMemberInfo_t * /* dminfo */) const {return 0;}
-   virtual Long_t DataMemberInfo_Offset(DataMemberInfo_t * /* dminfo */) const {return 0;}
+   virtual Longptr_t DataMemberInfo_Offset(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual Long_t DataMemberInfo_Property(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual Long_t DataMemberInfo_TypeProperty(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual int    DataMemberInfo_TypeSize(DataMemberInfo_t * /* dminfo */) const {return 0;}

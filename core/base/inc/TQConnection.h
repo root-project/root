@@ -58,7 +58,7 @@ protected:
    virtual void SetArg(ULong64_t param) override { SetArgImpl(param); }
    virtual void SetArg(const char * param) override { SetArgImpl(param); }
 
-   virtual void SetArg(const Long_t *params, Int_t nparam = -1) override;
+   virtual void SetArg(const Longptr_t *params, Int_t nparam = -1) override;
 
    template <typename T> void SetArgImpl(T arg)
    {
@@ -110,7 +110,7 @@ public:
    void ExecuteMethod(Long_t param);
    void ExecuteMethod(Long64_t param);
    void ExecuteMethod(Double_t param);
-   void ExecuteMethod(Long_t *params, Int_t nparam = -1);
+   void ExecuteMethod(Longptr_t *params, Int_t nparam = -1);
    void ExecuteMethod(const char *params);
    void ls(Option_t *option="") const override;
 

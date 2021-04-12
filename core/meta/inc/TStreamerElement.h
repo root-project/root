@@ -111,7 +111,7 @@ public:
    virtual const char *GetFullName() const;
    virtual const char *GetInclude() const {return "";}
    Int_t            GetMaxIndex(Int_t i) const {return fMaxIndex[i];}
-   virtual ULong_t  GetMethod() const {return ULong_t(fStreamer);}
+   virtual ULongptr_t GetMethod() const {return ULongptr_t(fStreamer);}
    TMemberStreamer *GetStreamer() const;
    virtual Int_t    GetSize() const;
    Int_t            GetNewType() const {return fNewType;}
@@ -177,7 +177,7 @@ public:
    const char      *GetErrorMessage() const { return fErrorMsg; }
    const char      *GetInclude() const;
    TClass          *GetNewBaseClass() { return fNewBaseClass; }
-   ULong_t          GetMethod() const {return 0;}
+   ULongptr_t       GetMethod() const {return 0;}
    Int_t            GetSize() const;
    TVirtualStreamerInfo *GetBaseStreamerInfo () const { return fStreamerInfo; }
    virtual void     Init(TVirtualStreamerInfo *obj=0);
@@ -218,7 +218,7 @@ public:
    const char    *GetCountClass()   const {return fCountClass.Data();}
    const char    *GetCountName()    const {return fCountName.Data();}
    Int_t          GetCountVersion() const {return fCountVersion;}
-   ULong_t        GetMethod() const;
+   ULongptr_t     GetMethod() const;
    Int_t          GetSize() const;
    virtual void   Init(TVirtualStreamerInfo *obj=0);
    virtual Bool_t HasCounter() const                {return fCounter!=0;   }
@@ -254,7 +254,7 @@ public:
    const char    *GetCountName()    const {return fCountName.Data();}
    Int_t          GetCountVersion() const {return fCountVersion;}
    const char    *GetInclude() const;
-   ULong_t        GetMethod() const;
+   ULongptr_t     GetMethod() const;
    Int_t          GetSize() const;
    virtual void   Init(TVirtualStreamerInfo *obj = nullptr);
    virtual Bool_t IsaPointer() const                {return kTRUE;         }
@@ -283,7 +283,7 @@ public:
    virtual       ~TStreamerBasicType();
    TClass        *GetClassPointer() const { return nullptr; }
    Int_t          GetCounter() const {return fCounter;}
-   ULong_t        GetMethod() const;
+   ULongptr_t     GetMethod() const;
    Int_t          GetSize() const;
    virtual void   Update(const TClass * /* oldClass */, TClass * /* newClass */) {}
 

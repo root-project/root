@@ -119,25 +119,25 @@ public:
    const clang::FunctionTemplateDecl *GetFunctionTemplate(const char *fname) const;
    TClingMethodInfo     GetMethod(const char *fname) const;
    TClingMethodInfo     GetMethod(const char *fname, const char *proto,
-                                  long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
+                                  Longptr_t *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   EInheritanceMode imode = kWithInheritance) const;
    TClingMethodInfo     GetMethodWithArgs(const char *fname, const char *arglist,
-                                  long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
+                                  Longptr_t *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   EInheritanceMode imode = kWithInheritance) const;
    TClingMethodInfo     GetMethod(const char *fname, const char *proto, bool objectIsConst,
-                                  long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
+                                  Longptr_t *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   EInheritanceMode imode = kWithInheritance) const;
    TClingMethodInfo     GetMethodWithArgs(const char *fname, const char *arglist, bool objectIsConst,
-                                  long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
+                                  Longptr_t *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   EInheritanceMode imode = kWithInheritance) const;
    TClingMethodInfo     GetMethod(const char *fname, const llvm::SmallVectorImpl<clang::QualType> &proto,
-                                  long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
+                                  Longptr_t *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   EInheritanceMode imode = kWithInheritance) const;
    TClingMethodInfo     GetMethod(const char *fname, const llvm::SmallVectorImpl<clang::QualType> &proto, bool objectIsConst,
-                                  long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
+                                  Longptr_t *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   EInheritanceMode imode = kWithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
-   long                 GetOffset(const clang::CXXMethodDecl* md) const;
+   Longptr_t            GetOffset(const clang::CXXMethodDecl* md) const;
    ptrdiff_t            GetBaseOffset(TClingClassInfo* toBase, void* address, bool isDerivedObject);
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    std::vector<std::string> GetUsingNamespaces();
@@ -152,7 +152,7 @@ public:
    bool                 IsScopedEnum() const;
    EDataType            GetUnderlyingType() const;
    bool                 IsLoaded() const;
-   bool                 IsValidMethod(const char *method, const char *proto, Bool_t objectIsConst, long *offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
+   bool                 IsValidMethod(const char *method, const char *proto, Bool_t objectIsConst, Longptr_t *offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    int                  InternalNext();
    int                  Next();
    void                *New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
@@ -162,7 +162,7 @@ public:
    long                 Property() const;
    int                  RootFlag() const;
    int                  Size() const;
-   long                 Tagnum() const;
+   Longptr_t            Tagnum() const;
    const char          *FileName();
    void                 FullName(std::string &output, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char          *Title();

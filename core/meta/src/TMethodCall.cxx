@@ -43,7 +43,7 @@ fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 /// Create a method invocation environment for a specific class, method
 /// described by the callfunc.
 
-TMethodCall::TMethodCall(TClass *cl, CallFunc_t *callfunc, Long_t offset):
+TMethodCall::TMethodCall(TClass *cl, CallFunc_t *callfunc, Longptr_t offset):
 fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 {
    Init(cl, callfunc, offset);
@@ -179,7 +179,7 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinf
 /// Initialize the method invocation environment based on
 /// the CallFunc object and the TClass describing the function context.
 
-void TMethodCall::Init(TClass *cl, CallFunc_t *function, Long_t offset)
+void TMethodCall::Init(TClass *cl, CallFunc_t *function, Longptr_t offset)
 {
    if (!function) {
       fOffset = 0;
@@ -420,7 +420,7 @@ void TMethodCall::Execute(void *object)
    if (!fFunc) return;
 
    void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    if (!fDtorOnly && fMethod[0]=='~') {
       Error("Execute","TMethodCall can no longer be use to call the operator delete and the destructor at the same time");
    }
@@ -438,7 +438,7 @@ void TMethodCall::Execute(void *object, const char *params)
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    gCling->CallFunc_Exec(fFunc,address);
    gCling->SetTempLevel(-1);
@@ -447,12 +447,12 @@ void TMethodCall::Execute(void *object, const char *params)
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the method (with preset arguments) for the specified object.
 
-void TMethodCall::Execute(void *object, Long_t &retLong)
+void TMethodCall::Execute(void *object, Longptr_t &retLong)
 {
    if (!fFunc) return;
 
    void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    retLong = gCling->CallFunc_ExecInt(fFunc,address);
    gCling->SetTempLevel(-1);
@@ -461,7 +461,7 @@ void TMethodCall::Execute(void *object, Long_t &retLong)
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the method for the specified object and argument values.
 
-void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
+void TMethodCall::Execute(void *object, const char *params, Longptr_t &retLong)
 {
    if (!fFunc) return;
 
@@ -469,7 +469,7 @@ void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    retLong = gCling->CallFunc_ExecInt(fFunc,address);
    gCling->SetTempLevel(-1);
@@ -483,7 +483,7 @@ void TMethodCall::Execute(void *object, Double_t &retDouble)
    if (!fFunc) return;
 
    void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    retDouble = gCling->CallFunc_ExecDouble(fFunc,address);
    gCling->SetTempLevel(-1);
@@ -499,7 +499,7 @@ void TMethodCall::Execute(void *object, const char *params, Double_t &retDouble)
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    retDouble = gCling->CallFunc_ExecDouble(fFunc,address);
    gCling->SetTempLevel(-1);
@@ -513,7 +513,7 @@ void TMethodCall::Execute(void *object, char **retText)
    if (!fFunc) return;
 
    void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    *retText =(char*) (gCling->CallFunc_ExecInt(fFunc,address));
    gCling->SetTempLevel(-1);
@@ -530,7 +530,7 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    *retText =(char*)(gCling->CallFunc_ExecInt(fFunc,address));
    gCling->SetTempLevel(-1);
@@ -585,7 +585,7 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
 void TMethodCall::SetParamPtrs(void *paramArr, Int_t nparam)
 {
    if (!fFunc) return;
-   gCling->CallFunc_SetArgArray(fFunc,(Long_t *)paramArr, nparam);
+   gCling->CallFunc_SetArgArray(fFunc,(Longptr_t *)paramArr, nparam);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

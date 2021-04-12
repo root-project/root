@@ -50,7 +50,7 @@ private:
    Bool_t       fState;        //Object's state - "a local copy"
    Long_t       fOnValue;      //Value recognized as switched ON (Def=1)
    Long_t       fOffValue;     //Value recognized as switched OFF(Def=0)
-   Long_t       fValue;        //Local copy of a value returned by called function
+   Longptr_t    fValue;        //Local copy of a value returned by called function
 
 protected:
    Bool_t       fInitialized;  //True if either SetToggledObject or SetToggledVariable called - enables Toggle() method.
