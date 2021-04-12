@@ -377,11 +377,11 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(true)
 
 #ifdef _MSC_VER
    fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless $geometry $url");
-   fHeadlessExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $geometry $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.ChromeHeadless", "$prog --headless --disable-gpu $geometry $url &");
    fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --app=$url &"); // & in windows mean usage of spawn
 #else
    fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless --incognito $geometry $url");
-   fHeadlessExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --incognito $geometry $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.ChromeHeadless", "fork: --headless --incognito $geometry $url");
    fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --incognito --app=\'$url\' &");
 #endif
 }
@@ -429,7 +429,15 @@ std::string RWebDisplayHandle::ChromeCreator::MakeProfile(std::string &exec, boo
       profile_arg = chrome_profile;
    } else {
       gRandom->SetSeed(0);
-      rmdir = profile_arg = std::string(gSystem->TempDirectory()) + "/root_chrome_profile_"s + std::to_string(gRandom->Integer(0x100000));
+      std::string rnd_profile = "root_chrome_profile_"s + std::to_string(gRandom->Integer(0x100000));
+      profile_arg = gSystem->TempDirectory();
+
+#ifdef _MSC_VER
+      profile_arg += "\\"s + rnd_profile;
+#else
+      profile_arg += "/"s + rnd_profile;
+#endif
+      rmdir = profile_arg;
    }
 
    exec = std::regex_replace(exec, std::regex("\\$profile"), profile_arg);
@@ -458,10 +466,10 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
 #ifdef _MSC_VER
    // there is a problem when specifying the window size with wmic on windows:
    // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
-   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $profile $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "$prog -headless -no-remote $profile $url &");
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $url &");
 #else
-   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:--headless --private-window --no-remote $profile $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "fork:--headless --private-window --no-remote $profile $url");
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog --private-window \'$url\' &");
 #endif
 }
@@ -487,7 +495,13 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
 
       gRandom->SetSeed(0);
       std::string rnd_profile = "root_ff_profile_"s + std::to_string(gRandom->Integer(0x100000));
-      std::string profile_dir = std::string(gSystem->TempDirectory()) + "/"s + rnd_profile;
+      std::string profile_dir = gSystem->TempDirectory();
+
+#ifdef _MSC_VER
+      profile_dir += "\\"s + rnd_profile;
+#else
+      profile_dir += "/"s + rnd_profile;
+#endif
 
       profile_arg = "-profile "s + profile_dir;
 
