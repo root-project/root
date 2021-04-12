@@ -3,24 +3,17 @@
 
 /** \class TFeynman
     \ingroup feynman
-
 TFeynman is a class that makes it easier to make
 good-looking Feynman Diagrams using ROOT components
 like TArc and TArrow.
-
 ### Decleration / Access to the components
-
 TFeynman is initialized with the width and the height 
 of the Canvas that you would like.
-
 ~~~
   TFeynman *f = new TFeynman(300, 600);
 ~~~
-
 You can access the particle classes using an arrow pointer.
-
 This example plots the feynman.C diagram in the tutorials:
-
 ~~~
   f->Lepton(10, 10, 30, 30, 7, 6, "e", true);
   f->Lepton(10, 50, 30, 30, 5, 55, "e", false);
@@ -33,10 +26,8 @@ This example plots the feynman.C diagram in the tutorials:
   f->Quark(110, 30, 130, 10, 135, 6, "q", false);
   f->CurvedGluon(110, 30, 12.5*sqrt(2), 315, 45, 135, 30);
 ~~~
-
 No drawing is needed, as this is all done in the method itself. 
 One can simply use the methods like Legos.
-
 */
 
 #include "../inc/TFeynman.h"
@@ -50,7 +41,7 @@ One can simply use the methods like Legos.
 
 void TFeynman::Quark(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, const char * quarkName, bool isMatter) {
     TArrow * q;
-    
+
     q = new TArrow(x1, y1, x2, y2, 0.02, "->-");
 
     const char * usedQuarkName;
@@ -132,7 +123,7 @@ void TFeynman::QuarkAntiQuark(Double_t x1, Double_t y1, Double_t rad, Double_t l
 
 void TFeynman::Lepton(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelPositionX, Double_t labelPositionY, const char * whichLepton, bool isMatter) {
     TArrow * e;
-    
+
     e = new TArrow(x1, y1, x2, y2, 0.02, "->-");
 
     const char * usedLeptonName;
@@ -273,6 +264,3 @@ void TFeynman::CurvedHiggs(Double_t x1, Double_t y1, Double_t rad, Double_t phim
     t.SetTextSize(0.1);
     t.DrawLatex(labelPositionX, labelPositionY, "H");
 }
-
-
-
