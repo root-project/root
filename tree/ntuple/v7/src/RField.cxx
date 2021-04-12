@@ -544,6 +544,10 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
    if (fClass == nullptr) {
       throw std::runtime_error("RField: no I/O support for type " + std::string(className));
    }
+   // avoid accidentally supporting std types through TClass
+   if (fClass->Property() & kIsDefinedInStd) {
+      throw RException(R__FAIL(std::string(className) + " is not supported"));
+   }
    TIter next(fClass->GetListOfDataMembers());
    while (auto dataMember = static_cast<TDataMember *>(next())) {
       //printf("Now looking at %s %s\n", dataMember->GetName(), dataMember->GetFullTypeName());
