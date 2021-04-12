@@ -109,7 +109,7 @@ public:
    /// Construct an anonymous channel.
    RLogChannel() = default;
 
-   /// Construct an anonymous channel with a default vebosity.
+   /// Construct an anonymous channel with a default verbosity.
    explicit RLogChannel(ELogLevel verbosity) : fVerbosity(verbosity) {}
 
    /// Construct a log channel given its name, which is part of the diagnostics.
@@ -202,11 +202,11 @@ namespace Detail {
 
  This builder can be used through the utility preprocessor macros R__LOG_ERROR,
  R__LOG_WARNING etc like this:
- ```c++
+~~~ {.cpp}
      R__LOG_INFO(ROOT::Experimental::HistLog()) << "all we know is " << 42;
      const int decreasedInfoLevel = 5;
      R__LOG_XDEBUG(ROOT::Experimental::WebGUILog(), decreasedInfoLevel) << "nitty-gritty details";
- ```
+~~~
  This will automatically capture the current class and function name, the file and line number.
  */
 
@@ -235,10 +235,10 @@ public:
  Change the verbosity level (global or specific to the RLogChannel passed to the
  constructor) for the lifetime of this object.
  Example:
- ```c++
+~~~ {.cpp}
  RLogScopedVerbosity debugThis(gFooLog, ELogLevel::kDebug);
  Foo::SomethingToDebug();
- ```
+~~~
  */
 class RLogScopedVerbosity {
    RLogChannel *fChannel;
@@ -331,10 +331,10 @@ inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) cons
 
  - The conditional `RLogBuilder` use prevents stream operators from being called if
  verbosity is too low, i.e.:
- ````
+ ~~~
  RLogScopedVerbosity silence(RLogLevel::kFatal);
  R__LOG_DEBUG(7) << WillNotBeCalled();
- ```
+ ~~~
  - To update counts of warnings / errors / fatal errors, those RLogEntries must
  always be created, even if in the end their emission will be silenced. This
  should be fine, performance-wise, as they should not happen frequently.
@@ -350,13 +350,13 @@ inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) cons
 
 /// \name LogMacros
 /// Macros to log diagnostics.
-/// ```c++
+/// ~~~ {.cpp}
 ///     R__LOG_INFO(ROOT::Experimental::HistLog()) << "all we know is " << 42;
 ///
 ///     RLogScopedVerbosity verbose(kDebug + 5);
 ///     const int decreasedInfoLevel = 5;
-///     R__LOG_DEBUG(decreasedInfoLevel, ROOT::Experimental::WebGUILog()) << "nitty-gritty details";
-/// ```
+///     R__LOG_DEBUG(ROOT::Experimental::WebGUILog(), decreasedInfoLevel) << "nitty-gritty details";
+/// ~~~
 ///\{
 #define R__LOG_FATAL(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kFatal, __VA_ARGS__)
 #define R__LOG_ERROR(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kError, __VA_ARGS__)
