@@ -167,19 +167,6 @@ int setPath(const char *proto)
    return -1;
 }
 
-Bool_t running_as_sftnight_with_kerberos() {
-   UserGroup_t *ug = gSystem->GetUserInfo((const char*)0);
-   if (!ug) {
-     return kFALSE;
-   }
-   if (ug->fUser != "sftnight") {
-     delete ug;
-     return kFALSE;
-   }
-   delete ug;
-   return (gSystem->Exec("(klist | grep sftnight@CERN.CH) > /dev/null 2>&1") == 0);
-}
-
 void stressIOPluginsForProto(const char *protoName /*=0*/, int multithread /*=0*/)
 {
    //Main control function invoking all test programs
