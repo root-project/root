@@ -467,7 +467,7 @@ inline UInt_t host2net(UInt_t x)
 
 inline ULong_t host2net(ULong_t x)
 {
-#ifdef R__B64
+#if defined(R__B64) && !defined(_WIN64)
 # if defined(R__USEASMSWAP)
    return Rbswap_64(x);
 # else

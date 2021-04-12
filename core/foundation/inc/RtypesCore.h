@@ -69,8 +69,13 @@ typedef float          Real_t;      //TVector and TMatrix element type (float)
 #if defined(R__WIN32) && !defined(__CINT__)
 typedef __int64          Long64_t;  //Portable signed long integer 8 bytes
 typedef unsigned __int64 ULong64_t; //Portable unsigned long integer 8 bytes
-typedef intptr_t       Longptr_t;   //Integer large enough to hold a pointer
-typedef uintptr_t      ULongptr_t;  //Unsigned integer large enough to hold a pointer
+#ifdef _WIN64
+typedef long long      Longptr_t;   //Integer large enough to hold a pointer
+typedef unsigned long long ULongptr_t;  //Unsigned integer large enough to hold a pointer
+#else
+typedef long           Longptr_t;   //Integer large enough to hold a pointer
+typedef unsigned long  ULongptr_t;  //Unsigned integer large enough to hold a pointer
+#endif
 #else
 typedef long long          Long64_t; //Portable signed long integer 8 bytes
 typedef unsigned long long ULong64_t;//Portable unsigned long integer 8 bytes

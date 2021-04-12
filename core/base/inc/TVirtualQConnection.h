@@ -31,18 +31,18 @@ protected:
    virtual void SetArg(ULong64_t) = 0;
 
    // Note: sets argument list (for potentially more than one arg).
-   virtual void SetArg(const Long_t *, Int_t = -1) = 0;
+   virtual void SetArg(const Longptr_t *, Int_t = -1) = 0;
    virtual void SetArg(const char *) = 0;
-   void SetArg(const void *ptr) { SetArg((Long_t)ptr); };
+   void SetArg(const void *ptr) { SetArg((Longptr_t)ptr); };
 
    // We should 'widen' all types to one of the SetArg overloads.
    template <class T, class = typename std::enable_if<std::is_integral<T>::value>::type>
    void SetArg(const T& val)
    {
       if (std::is_signed<T>::value)
-         SetArg((Long_t)val);
+         SetArg((Longptr_t)val);
       else
-         SetArg((ULong_t)val);
+         SetArg((ULongptr_t)val);
    }
 
    // We pass arrays as Lont_t*. In the template instance we can deduce their
@@ -52,7 +52,7 @@ protected:
    {
       constexpr size_t size = sizeof(val)/sizeof(val[0]);
       static_assert(size > 0, "The array must have at least one element!");
-      SetArg((Long_t*)val, size);
+      SetArg((Longptr_t*)val, size);
    }
 
    void SetArgsImpl() {} // SetArgsImpl terminator
@@ -81,7 +81,7 @@ public:
    /// Sets an array of arguments passed as a pointer type and size. If nargs is not specified
    /// the number of arguments expected by the slot is used.
    ///
-   void SetArgs(const Long_t* argArray, Int_t nargs = -1)
+   void SetArgs(const Longptr_t* argArray, Int_t nargs = -1)
    {
       SetArg(argArray, nargs);
    }

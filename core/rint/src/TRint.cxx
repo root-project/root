@@ -350,7 +350,7 @@ void TRint::Run(Bool_t retrn)
       Getlinem(kInit, GetPrompt());
    }
 
-   Long_t retval = 0;
+   Longptr_t retval = 0;
    Int_t  error = 0;
    volatile Bool_t needGetlinemInit = kFALSE;
 
@@ -719,9 +719,9 @@ void TRint::SetEchoMode(Bool_t mode)
 /// The last argument 'script' allows to specify an alternative script to
 /// be executed remotely to startup the session.
 
-Long_t TRint::ProcessRemote(const char *line, Int_t *)
+Longptr_t TRint::ProcessRemote(const char *line, Int_t *)
 {
-   Long_t ret = TApplication::ProcessRemote(line);
+   Longptr_t ret = TApplication::ProcessRemote(line);
 
    if (ret == 1) {
       if (fAppRemote) {
@@ -741,7 +741,7 @@ Long_t TRint::ProcessRemote(const char *line, Int_t *)
 /// better diagnostics. Must be called after fNcmd has been increased for
 /// the next line.
 
-Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *error /*= 0*/)
+Longptr_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *error /*= 0*/)
 {
    Int_t err;
    if (!error)
