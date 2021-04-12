@@ -575,6 +575,34 @@ DllSuf        = so
 LibSuf        = so
 endif
 
+
+ifeq ($(ARCH),macosxarm64)
+
+# MacOSX 64 bit with cc/g++
+export DYLD_LIBRARY_PATH:=$(ROOTTEST_HOME)/scripts:$(DYLD_LIBRARY_PATH)
+CXX          ?= g++
+ifeq ($(ROOTBUILD),debug)
+CXXFLAGS      += -m64 -g -pipe -Wall -fPIC -Woverloaded-virtual
+else
+CXXFLAGS      += -m64 -O -pipe -Wall -fPIC -Woverloaded-virtual
+endif
+ifeq ($(MACOSX_MAJOR),)
+  export MACOSX_MAJOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1))
+endif
+ifeq ($(MACOSX_MINOR),)
+  export MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
+endif
+UNDEFOPT      = dynamic_lookup
+LD           ?= c++
+LD           := MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) $(LD)
+LDFLAGS       = -m64 -Wl,-rpath,@loader_path/. -Wl,-rpath,$(ROOTSYS)/lib
+SOFLAGS       = -m64 -dynamiclib -single_module -undefined $(UNDEFOPT)
+DllSuf        = so
+LibSuf        = so
+endif
+
+
+
 ifeq ($(ARCH),macosxicc)
 
 # MacOSX 32/64 bit with Intel icc
