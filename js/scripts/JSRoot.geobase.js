@@ -3752,7 +3752,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let toplevel = new THREE.Object3D();
 
-      for (let n=0; n < draw_nodes.length;++n) {
+      for (let n = 0; n < draw_nodes.length; ++n) {
          let entry = draw_nodes[n];
          if (entry.done) continue;
 
@@ -3788,6 +3788,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          } else {
             mesh = createFlippedMesh(shape, prop.material);
          }
+
+         mesh.name = clones.getNodeName(entry.nodeid);
 
          obj3d.add(mesh);
 
