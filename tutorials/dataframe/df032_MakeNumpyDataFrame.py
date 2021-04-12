@@ -22,7 +22,7 @@ y = np.array([4, 5, 6], dtype=np.float64)
 # the arrays must have the same length.
 df = ROOT.RDF.MakeNumpyDataFrame({'x': x, 'y': y})
 
-# You can now use the RDataFrame as usualy, e.g. add a column ...
+# You can now use the RDataFrame as usually, e.g. add a column ...
 df = df.Define('z', 'x + y')
 
 # ... or print the content
