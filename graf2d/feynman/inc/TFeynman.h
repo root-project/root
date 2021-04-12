@@ -34,7 +34,7 @@ class TFeynman {
             Double_t x2, // x-coordinate of second point
             Double_t y2, // y-coordinate of second point
             Double_t labelPositionX, // x-coordinate of the particle-label
-            Double_t labelPositionY, y-coordinate of the particle label 
+            Double_t labelPositionY, //y-coordinate of the particle label 
             const char * quarkName, // name of the quark (either u, d, c, s, t, b or q)
             bool isMatter // is the particle matter (if false then antimatter)
         );
@@ -80,17 +80,19 @@ class TFeynman {
             Double_t labelPositionY // label coordinates
         );
 		// plots a Photon in a curved Arc
-		void CurvedPhoton( // for when a Photon is emitted and reabsorbed
+		void CurvedPhoton( 
             Double_t x1, 
             Double_t y1, // coordinates of center of arc
             Double_t rad, // radius of arc
             Double_t phimin, // minimum angle (see TArc)
             Double_t phimax, // maximum angle (See TAcr)
             Double_t labelPositionX, 
-            Double_t labelPositionY // position of label);
+            Double_t labelPositionY // position of label
+        );
 		
         // plots a Gluon
-		void Gluon(Double_t x1, 
+		void Gluon(
+            Double_t x1, 
             Double_t y1, // starting position
             Double_t x2, 
             Double_t y2, // stopping position
@@ -98,7 +100,8 @@ class TFeynman {
             Double_t labelPositionY // label position
         );
 		// plots a Gluon in a curved path
-		void CurvedGluon(Double_t x1, 
+		void CurvedGluon(
+            Double_t x1, 
             Double_t y1, // position of center of Arc
             Double_t rad, // radius of arc
             Double_t phimin, // maximum angle (see TArc)
@@ -108,15 +111,18 @@ class TFeynman {
         );
 		
         // plots a Weak Boson
-		void WeakBoson( Double_t x1, 
+		void WeakBoson( 
+            Double_t x1, 
             Double_t y1, // starting position
             Double_t x2, 
             Double_t y2, // stopping position
             Double_t labelPositionX, 
             Double_t labelPositionY, // label position
-            const char *whichWeakBoson // name of weak force boson in Latex (Z_{0}, W^{+}, W^{-}));
+            const char *whichWeakBoson // name of weak force boson in Latex (Z_{0}, W^{+}, W^{-})
+        );
 		// plots a weak Boson in a curved path
-		void CurvedWeakBoson(Double_t x1, 
+		void CurvedWeakBoson(
+            Double_t x1, 
             Double_t y1, // position of center of arc
             Double_t rad, // radius of arc
             Double_t phimin, // maximum angle (See TArc)
@@ -127,7 +133,8 @@ class TFeynman {
         );
 		// Scalar Bosons:
         // plots a Higgs Boson
-		void Higgs(Double_t x1, 
+		void Higgs(
+            Double_t x1, 
             Double_t y1, // starting position
             Double_t x2, 
             Double_t y2, // stopping position
@@ -136,7 +143,8 @@ class TFeynman {
         );
 		
         // plots a Higgs Boson in a curved path
-		void CurvedHiggs(Double_t x1, 
+		void CurvedHiggs(
+            Double_t x1, 
             Double_t y1, // position of center of Arc
             Double_t rad, // radius of arc
             Double_t phimin, //maximum angle (see TArc)
