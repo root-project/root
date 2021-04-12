@@ -204,7 +204,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	GetDrawOption	 : 0
       Option_t* TObject::GetDrawOption() const
  OBJ: TMethod	GetDtorOnly	 : 0
-      Long_t TObject::GetDtorOnly()
+      Longptr_t TObject::GetDtorOnly()
  OBJ: TMethod	GetFillColor	Return the fill area color : 0
       Color_t TAttFill::GetFillColor() const
  OBJ: TMethod	GetFillStyle	Return the fill area style : 0
