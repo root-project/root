@@ -150,16 +150,15 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   // Add the parameters (with checking)
   addVarSet( vars );
   addParamSet( paramSet );
- 
 }
 
 
 Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
-  
+
   // A helper method to get the number of bins
-  
+
   if( vars.getSize() == 0 ) return 0;
-    
+
   Int_t numBins = 1;
 
   for (auto comp : vars) {
@@ -174,7 +173,7 @@ Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
     Int_t varNumBins = var->numBins();
     numBins *= varNumBins;
   }
-    
+
   return numBins;
 
 }
@@ -187,7 +186,6 @@ ParamHistFunc::ParamHistFunc(const ParamHistFunc& other, const char* name) :
   _dataVars("!dataVars", this, other._dataVars ),
   _paramSet("!paramSet", this, other._paramSet),
   _numBins( other._numBins ),
-  _binMapVector( other._binMapVector ),
   _dataSet( other._dataSet )
 {
   _dataSet.removeSelfFromDir(); // files must not delete _dataSet.
@@ -227,7 +225,19 @@ Int_t ParamHistFunc::getCurrentBin() const {
 /// into the TH1 style index (which is how they are stored
 /// internally in the '_paramSet' vector
 RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
-  return static_cast<RooRealVar&>(_paramSet[getParamSetBinMap()[index]]);
+
+  auto const& n = _numBinsPerDim;
+
+  // check if _numBins needs to be filled
+  if(n.x == 0) {
+    _numBinsPerDim = getNumBinsPerDim(_dataVars);
+  }
+
+  int i = index / n.yz ;
+  int j = (index % n.y) / n.z;
+  int k = index % (n.yz);
+
+  return static_cast<RooRealVar&>(_paramSet[i + j * n.x + k * n.xy]);
 }
 
 
@@ -508,40 +518,19 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
 }
 
 
-/// Fill the mapping between RooDataHist bins and TH1 Bins.
-std::vector<int> const& ParamHistFunc::getParamSetBinMap() const {
-
-  if(!_binMapVector.empty()) {
-    return _binMapVector;
-  }
-
-  int numVars = _dataVars.size();
+ParamHistFunc::NumBins ParamHistFunc::getNumBinsPerDim(RooArgSet const& vars) {
+  int numVars = vars.size();
 
   if (numVars > 3 || numVars < 1) {
     std::cout << "ParamHistFunc() - Only works for 1-3 variables (1d-3d)" << std::endl;
     throw -1;  
   }
 
-  int numBinsX = numVars >= 1 ? static_cast<RooRealVar const&>(_dataVars[0]).numBins() : 1;
-  int numBinsY = numVars >= 2 ? static_cast<RooRealVar const&>(_dataVars[1]).numBins() : 1;
-  int numBinsZ = numVars >= 3 ? static_cast<RooRealVar const&>(_dataVars[2]).numBins() : 1;
+  int numBinsX = numVars >= 1 ? static_cast<RooRealVar const&>(*vars[0]).numBins() : 1;
+  int numBinsY = numVars >= 2 ? static_cast<RooRealVar const&>(*vars[1]).numBins() : 1;
+  int numBinsZ = numVars >= 3 ? static_cast<RooRealVar const&>(*vars[2]).numBins() : 1;
 
-  // Fill the map
-  _binMapVector.resize(numBinsX * numBinsY * numBinsZ);
-  for( int i = 0; i < numBinsX; ++i ) {
-    for( int j = 0; j < numBinsY; ++j ) {
-      for( int k = 0; k < numBinsZ; ++k ) {
-
-        int rooDataSetBin = k + j*numBinsZ + i*numBinsY*numBinsZ; 
-        int histBin    = i + j*numBinsX + k*numBinsX*numBinsY; 
-
-        _binMapVector[rooDataSetBin] = histBin;
-        
-      }
-    }
-  }
-  
-  return _binMapVector;
+  return {numBinsX, numBinsY, numBinsZ};
 }
 
 
@@ -575,7 +564,7 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // Check that the supplied list has
   // the right number of arguments:
 
-  Int_t numVarBins  = _numBins;
+  Int_t numVarBins  = GetNumBins(_dataVars);
   Int_t numElements = params.getSize();
 
   if( numVarBins != numElements ) {
