@@ -205,8 +205,10 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
       return nullptr;
 
    std::string exec;
-   if (args.IsHeadless())
+   if (args.IsBatchMode())
       exec = fBatchExec;
+   else if (args.IsHeadless())
+      exec = fHeadlessExec;
    else if (args.IsStandalone())
       exec = fExec;
    else
@@ -374,12 +376,12 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(true)
 #endif
 
 #ifdef _MSC_VER
-   // fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $geometry $url");
-
    fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless $geometry $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $geometry $url");
    fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --app=$url &"); // & in windows mean usage of spawn
 #else
    fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless --incognito $geometry $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --incognito $geometry $url");
    fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --incognito --app=\'$url\' &");
 #endif
 }
@@ -456,10 +458,10 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
 #ifdef _MSC_VER
    // there is a problem when specifying the window size with wmic on windows:
    // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
-   // fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $profile $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $profile $url");
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $url &");
 #else
-   // fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:--headless --private-window --no-remote $profile $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:--headless --private-window --no-remote $profile $url");
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog --private-window \'$url\' &");
 #endif
 }
@@ -737,6 +739,7 @@ try_again:
 
    args.SetStandalone(true);
    args.SetHeadless(true);
+   args.SetBatchMode(true);
    args.SetSize(width, height);
 
    if (draw_kind == "draw") {
