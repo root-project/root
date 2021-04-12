@@ -355,7 +355,7 @@ inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) cons
 ///
 ///     RLogScopedVerbosity verbose(kDebug + 5);
 ///     const int decreasedInfoLevel = 5;
-///     R__LOG_DEBUG(decreasedInfoLevel, ROOT::Experimental::WebGUILog()) << "nitty-gritty details";
+///     R__LOG_DEBUG(ROOT::Experimental::WebGUILog(), decreasedInfoLevel) << "nitty-gritty details";
 /// ~~~
 ///\{
 #define R__LOG_FATAL(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kFatal, __VA_ARGS__)
