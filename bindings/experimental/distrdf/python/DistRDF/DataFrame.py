@@ -24,6 +24,8 @@ class RDataFrame(object):
     Interface to an RDataFrame that can run its computation graph distributedly.
     """
 
+    MIN_NPARTITIONS = 2
+
     def __init__(self, headnode, backend, **kwargs):
         """Initialization of """
 
@@ -31,7 +33,12 @@ class RDataFrame(object):
 
         self._headnode.backend = backend
 
-        self._headnode.npartitions = kwargs.get("npartitions", 2)
+        # Set the number of partitions for this dataset, one of the following:
+        # 1. User-supplied `npartitions` optional argument
+        # 2. An educated guess according to the backend, using the backend's
+        #    `optimize_npartitions` function
+        # 3. Set `npartitions` to 2
+        self._headnode.npartitions = kwargs.get("npartitions", backend.optimize_npartitions(RDataFrame.MIN_NPARTITIONS))
 
         self._headproxy = Proxy.TransformationProxy(self._headnode)
 

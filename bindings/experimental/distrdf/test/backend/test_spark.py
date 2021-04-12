@@ -294,6 +294,37 @@ class ChangeAttributeTest(unittest.TestCase):
         self.assertEqual(nentries, 10)
         self.assertEqual(df._headnode.npartitions, 1)
 
+    def test_optimize_npartitions_with_spark_config_options(self):
+        """
+        Check that relevant spark configuration options optimize the number of
+        partitions.
+        """
+
+        conf = {"spark.executor.cores": 4, "spark.executor.instances": 4}
+        sconf = pyspark.SparkConf().setAll(conf.items())
+        scontext = pyspark.SparkContext(conf=sconf)
+
+        df = Spark.RDataFrame(100, sparkcontext=scontext)
+
+        # The number of partitions was optimized to be equal to
+        # spark.executor.cores * spark.executor.instances
+        self.assertEqual(df._headnode.npartitions, 16)
+
+    def test_user_supplied_npartitions_have_precedence(self):
+        """
+        Check that even if spark configuration options could optimize the number
+        of partitions, a user supplied value for npartitions takes precedence.
+        """
+
+        conf = {"spark.executor.cores": 4, "spark.executor.instances": 4}
+        sconf = pyspark.SparkConf().setAll(conf.items())
+        scontext = pyspark.SparkContext(conf=sconf)
+
+        df = Spark.RDataFrame(100, sparkcontext=scontext, npartitions=4)
+
+        # The number of partitions was supplied by the user.
+        self.assertEqual(df._headnode.npartitions, 4)
+
 
 if __name__ == "__main__":
     unittest.main()

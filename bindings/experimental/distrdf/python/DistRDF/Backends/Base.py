@@ -122,7 +122,6 @@ class BaseBackend(ABC):
         initialization = self.initialization
 
         # Build the ranges for the current dataset
-        headnode.npartitions = self.optimize_npartitions(headnode.npartitions)
         ranges = headnode.build_ranges()
 
         def mapper(current_range):
