@@ -96,10 +96,10 @@ public:
       return (GetBrowserKind() == kLocal) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
    }
 
-   /// returns true if browser supports headless (batch) mode, used for image production
+   /// returns true if browser supports headless mode
    bool IsSupportHeadless() const
    {
-      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
+      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
    }
 
    /// set window url
