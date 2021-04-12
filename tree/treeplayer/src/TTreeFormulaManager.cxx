@@ -136,13 +136,13 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
       fUsedSizes[k] = TMath::Abs(fVirtUsedSizes[k]);
       if (fVarDims[k]) {
          for (Int_t i0 = 0; i0 < fVarDims[k]->GetSize(); i0++) {
-            fVarDims[k]->AddAt(0, i0);
+            fVarDims[k]->SetAt(0, i0);
          }
       }
    }
    if (fCumulUsedVarDims) {
       for (Int_t i0 = 0; i0 < fCumulUsedVarDims->GetSize(); ++i0) {
-         fCumulUsedVarDims->AddAt(0, i0);
+         fCumulUsedVarDims->SetAt(0, i0);
       }
    }
 
@@ -202,9 +202,9 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
          // a negative value indicates that this value of the primary index
          // will lead to an invalid index; So we skip it.
          if (fCumulUsedVarDims->At(i) < 0)
-            fCumulUsedVarDims->AddAt(0, i);
+            fCumulUsedVarDims->SetAt(0, i);
          else {
-            fCumulUsedVarDims->AddAt(local_overall, i);
+            fCumulUsedVarDims->SetAt(local_overall, i);
             overall += local_overall;
          }
       }

@@ -2464,7 +2464,7 @@ TArrayL *TASImage::GetPixels(Int_t x, Int_t y, UInt_t width, UInt_t height)
             b = (Int_t)imdec->buffer.blue[i];
             p = (Long_t)TColor::RGB2Pixel(r, g, b);
          }
-         ret->AddAt(p, k*width + i);
+         ret->SetAt(p, k*width + i);
       }
    }
 
@@ -2551,7 +2551,7 @@ TArrayD *TASImage::GetArray(UInt_t w, UInt_t h, TImagePalette *palette)
             if (palette) p = palette->FindColor(r, g, b);
          }
          v = palette ? palette->fPoints[p] : Double_t((r << 16) + (g << 8) + b)/0xFFFFFF;
-         ret->AddAt(v, (h-k-1)*w + i);
+         ret->SetAt(v, (h-k-1)*w + i);
       }
    }
 

@@ -307,7 +307,7 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
          fSizes = new TArrayI(param_ndims);
          fSizes = new TArrayI(param_ndims);
          for (int i = 0; i < param_ndims; i++) { //Use for loop to copy values instead of passing array to constructor, since 'Int_t' size may differ from 'long' size
-            fSizes->SetAt(param_dimsizes[i], i);
+            fSizes->SetAt((Int_t)param_dimsizes[i], i);
          }
 
          delete [] param_dimsizes;

@@ -88,15 +88,6 @@ void TArrayL64::Adopt(Int_t n, Long64_t *arr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add long64 c at position i. Check for out of bounds.
-
-void TArrayL64::AddAt(Long64_t c, Int_t i)
-{
-   if (!BoundsOk("TArrayL64::AddAt", i)) return;
-   fArray[i] = c;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set size of this array to n long64s.
 /// A new array is created, the old contents copied to the new array,
 /// then the old array is deleted.

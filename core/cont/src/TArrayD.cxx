@@ -88,16 +88,6 @@ void TArrayD::Adopt(Int_t n, Double_t *arr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the double c value at position i in the array. Check for out of bounds.
-/// Warning: the name of the method is misleading, it actually overwrites the position i.
-
-void TArrayD::AddAt(Double_t c, Int_t i)
-{
-   if (!BoundsOk("TArrayD::AddAt", i)) return;
-   fArray[i] = c;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set size of this array to n doubles.
 /// A new array is created, the old contents copied to the new array,
 /// then the old array is deleted.

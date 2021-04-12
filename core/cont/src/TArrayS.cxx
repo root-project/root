@@ -88,15 +88,6 @@ void TArrayS::Adopt(Int_t n, Short_t *arr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add short c at position i. Check for out of bounds.
-
-void TArrayS::AddAt(Short_t c, Int_t i)
-{
-   if (!BoundsOk("TArrayS::AddAt", i)) return;
-   fArray[i] = c;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set size of this array to n shorts.
 /// A new array is created, the old contents copied to the new array,
 /// then the old array is deleted.

@@ -88,15 +88,6 @@ void TArrayC::Adopt(Int_t n, Char_t *arr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add char c at position i. Check for out of bounds.
-
-void TArrayC::AddAt(Char_t c, Int_t i)
-{
-   if (!BoundsOk("TArrayC::AddAt", i)) return;
-   fArray[i] = c;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set size of this array to n chars.
 /// A new array is created, the old contents copied to the new array,
 /// then the old array is deleted.

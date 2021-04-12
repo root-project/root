@@ -37,7 +37,6 @@ public:
    virtual    ~TArrayC();
 
    void          Adopt(Int_t n, Char_t *array);
-   void          AddAt(Char_t c, Int_t i);
    Char_t        At(Int_t i) const ;
    void          Copy(TArrayC &array) const {array.Set(fN,fArray);}
    const Char_t *GetArray() const { return fArray; }
@@ -47,7 +46,8 @@ public:
    void          Reset(Char_t val=0)  {memset(fArray,val,fN*sizeof(Char_t));}
    void          Set(Int_t n);
    void          Set(Int_t n, const Char_t *array);
-   void          SetAt(Double_t v, Int_t i) { AddAt((Char_t)v, i); }
+   void          SetAt(Double_t v, Int_t i) { fArray[i] = (Char_t)v; }
+   void          SetAt(Char_t v, Int_t i) { fArray[i] = v; }
    Char_t       &operator[](Int_t i);
    Char_t        operator[](Int_t i) const;
 

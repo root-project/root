@@ -88,15 +88,6 @@ void TArrayI::Adopt(Int_t n, Int_t *arr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add Int_t c at position i. Check for out of bounds.
-
-void TArrayI::AddAt(Int_t c, Int_t i)
-{
-   if (!BoundsOk("TArrayI::AddAt", i)) return;
-   fArray[i] = c;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set size of this array to n ints.
 /// A new array is created, the old contents copied to the new array,
 /// then the old array is deleted.

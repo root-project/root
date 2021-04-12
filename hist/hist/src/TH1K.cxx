@@ -105,7 +105,7 @@ Int_t TH1K::Fill(Double_t x)
    fTsumwx2 += x*x;
    fReady = 0;
    if (fNIn == fN) Set(fN*2);
-   AddAt(x,fNIn++);
+   SetAt(x,fNIn++);
    return bin;
 }
 

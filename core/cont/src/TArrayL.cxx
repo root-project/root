@@ -88,15 +88,6 @@ void TArrayL::Adopt(Int_t n, Long_t *arr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add long c at position i. Check for out of bounds.
-
-void TArrayL::AddAt(Long_t c, Int_t i)
-{
-   if (!BoundsOk("TArrayL::AddAt", i)) return;
-   fArray[i] = c;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set size of this array to n longs.
 /// A new array is created, the old contents copied to the new array,
 /// then the old array is deleted.

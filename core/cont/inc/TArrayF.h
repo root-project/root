@@ -37,7 +37,6 @@ public:
    virtual    ~TArrayF();
 
    void           Adopt(Int_t n, Float_t *array);
-   void           AddAt(Float_t c, Int_t i);
    Float_t        At(Int_t i) const ;
    void           Copy(TArrayF &array) const {array.Set(fN,fArray);}
    const Float_t *GetArray() const { return fArray; }
@@ -48,7 +47,8 @@ public:
    void           Reset(Float_t val)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
    void           Set(Int_t n);
    void           Set(Int_t n, const Float_t *array);
-   void           SetAt(Double_t v, Int_t i) { AddAt((Float_t)v, i); }
+   void           SetAt(Double_t v, Int_t i) { fArray[i] = (Float_t)v; }
+   void           SetAt(Float_t v, Int_t i) { fArray[i] = v; }
    Float_t       &operator[](Int_t i);
    Float_t        operator[](Int_t i) const;
 

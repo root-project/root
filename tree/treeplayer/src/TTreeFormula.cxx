@@ -5481,12 +5481,12 @@ Bool_t TTreeFormula::LoadCurrentDim() {
                   if (fIndexes[i][info->GetVarDim()] >= info->GetSize(j)) {
                      info->SetSize(j,0);
                      if (size>fManager->fCumulUsedVarDims->GetSize()) fManager->fCumulUsedVarDims->Set(size);
-                     fManager->fCumulUsedVarDims->AddAt(-1,j);
+                     fManager->fCumulUsedVarDims->SetAt(-1,j);
                   } else if (fIndexes[i][info->GetVarDim()]>=0) {
                      // There is an index and it is not too large
                      info->SetSize(j,1);
                      if (size>fManager->fCumulUsedVarDims->GetSize()) fManager->fCumulUsedVarDims->Set(size);
-                     fManager->fCumulUsedVarDims->AddAt(1,j);
+                     fManager->fCumulUsedVarDims->SetAt(1,j);
                   }
                }
             }

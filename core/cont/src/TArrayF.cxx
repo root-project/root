@@ -88,15 +88,6 @@ void TArrayF::Adopt(Int_t n, Float_t *arr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add float c at position i. Check for out of bounds.
-
-void TArrayF::AddAt(Float_t c, Int_t i)
-{
-   if (!BoundsOk("TArrayF::AddAt", i)) return;
-   fArray[i] = c;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set size of this array to n floats.
 /// A new array is created, the old contents copied to the new array,
 /// then the old array is deleted.

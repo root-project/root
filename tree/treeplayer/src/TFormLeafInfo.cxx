@@ -2480,7 +2480,7 @@ void TFormLeafInfoMultiVarDim::LoadSizes(TBranch* branch)
       for (Int_t i=0; i<fNsize; i++) {
          Int_t size = (Int_t)fCounter2->GetValue(leaf,i);
          fSumOfSizes += size;
-         fSizes.AddAt( size, i );
+         fSizes.SetAt( size, i );
       }
       return;
    }
@@ -2493,7 +2493,7 @@ void TFormLeafInfoMultiVarDim::LoadSizes(TBranch* branch)
    for (Int_t i=0; i<fNsize; i++) {
       Int_t size = (Int_t)fCounter2->GetValue((TLeaf*)br->GetBranchCount2()->GetListOfLeaves()->At(0),i);
       fSumOfSizes += size;
-      fSizes.AddAt( size, i );
+      fSizes.SetAt( size, i );
    }
 }
 
@@ -2539,7 +2539,7 @@ void TFormLeafInfoMultiVarDim::SetSecondaryIndex(Int_t index)
 void TFormLeafInfoMultiVarDim::SetSize(Int_t index, Int_t val)
 {
    fSumOfSizes += (val - fSizes.At(index));
-   fSizes.AddAt(val,index);
+   fSizes.SetAt(val,index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2602,7 +2602,7 @@ void TFormLeafInfoMultiVarDim::UpdateSizes(TArrayI *garr)
       Int_t local = fSizes.At(i);
       Int_t global = garr->At(i);
       if (global==0 || local<global) global = local;
-      garr->AddAt(global,i);
+      garr->SetAt(global,i);
    }
 }
 
@@ -2725,7 +2725,7 @@ void TFormLeafInfoMultiVarDimCollection::LoadSizes(TBranch* branch)
    for (Int_t i=0; i<fNsize; i++) {
       Int_t size = (Int_t)fCounter2->GetValue(leaf,i);
       fSumOfSizes += size;
-      fSizes.AddAt( size, i );
+      fSizes.SetAt( size, i );
    }
    return;
 }
@@ -2837,7 +2837,7 @@ void TFormLeafInfoMultiVarDimClones::LoadSizes(TBranch* branch)
       if (clones) {
          Int_t size = clones->GetEntries();
          fSumOfSizes += size;
-         fSizes.AddAt( size, i );
+         fSizes.SetAt( size, i );
       }
    }
    return;

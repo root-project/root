@@ -37,7 +37,6 @@ public:
    virtual    ~TArrayL64();
 
    void            Adopt(Int_t n, Long64_t *array);
-   void            AddAt(Long64_t c, Int_t i);
    Long64_t        At(Int_t i) const;
    void            Copy(TArrayL64 &array) const {array.Set(fN,fArray);}
    const Long64_t *GetArray() const { return fArray; }
@@ -48,7 +47,8 @@ public:
    void            Reset(Long64_t val) {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
    void            Set(Int_t n);
    void            Set(Int_t n, const Long64_t *array);
-   void            SetAt(Double_t v, Int_t i) { AddAt((Long64_t)v, i); }
+   void            SetAt(Double_t v, Int_t i) { fArray[i] = (Long64_t)v; }
+   void            SetAt(Long64_t v, Int_t i) { fArray[i] = v; }
    Long64_t       &operator[](Int_t i);
    Long64_t        operator[](Int_t i) const;
 

@@ -145,9 +145,9 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
          // background-free bins are set to have a maximum t.s. value
          // for protection (corresponding to s/b of about 5E8)
          if ((s > 0) && (b > 0))
-            fgTable->AddAt(LogLikelihood(s, b, b, 1), (channel * maxbins) + bin);
+            fgTable->SetAt(LogLikelihood(s, b, b, 1), (channel * maxbins) + bin);
          else if ((s > 0) && (b == 0))
-            fgTable->AddAt(20, (channel * maxbins) + bin);
+            fgTable->SetAt(20, (channel * maxbins) + bin);
       }
    result->SetTSD(buffer);
    // accumulate MC experiments.  Hold the test statistic function fixed, but
