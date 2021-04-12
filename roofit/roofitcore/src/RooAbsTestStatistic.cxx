@@ -59,19 +59,6 @@ using namespace std;
 
 ClassImp(RooAbsTestStatistic);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooAbsTestStatistic::RooAbsTestStatistic() :
-  _func(0), _data(0), _projDeps(0), _splitRange(0), _simCount(0),
-  _verbose(kFALSE), _init(kFALSE), _gofOpMode(Slave), _nEvents(0), _setNum(0),
-  _numSets(0), _extSet(0), _nGof(0), _gofArray(0), _nCPU(1), _mpfeArray(0),
-  _mpinterl(RooFit::BulkPartition), _doOffset(kFALSE),
-  _evalCarry(0)
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a test statistic from the given function and the data.
@@ -108,46 +95,15 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _rangeName(cfg.rangeName),
   _addCoefRangeName(cfg.addCoefRangeName),
   _splitRange(cfg.splitCutRange),
-  _simCount(1),
   _verbose(cfg.verbose),
-  _nGof(0),
-  _gofArray(0),
-  _nCPU(cfg.nCPU),
-  _mpfeArray(0),
-  _mpinterl(cfg.interleave),
-  _doOffset(kFALSE),
-  _evalCarry(0)
+  // Determine if RooAbsReal is a RooSimultaneous
+  _gofOpMode{(cfg.nCPU>1 || cfg.nCPU==-1) ? MPMaster : (dynamic_cast<RooSimultaneous*>(_func) ? SimMaster : Slave)},
+  _nEvents{data.numEntries()},
+  _nCPU(cfg.nCPU != -1 ? cfg.nCPU : 1),
+  _mpinterl(cfg.interleave)
 {
   // Register all parameters as servers
-  RooArgSet* params = real.getParameters(&data) ;
-  _paramSet.add(*params) ;
-  delete params ;
-
-  if (_nCPU>1 || _nCPU==-1) {
-
-    if (_nCPU==-1) {
-      _nCPU=1 ;
-    }
-
-    _gofOpMode = MPMaster ;
-
-  } else {
-
-    // Determine if RooAbsReal is a RooSimultaneous
-    Bool_t simMode = dynamic_cast<RooSimultaneous*>(&real)?kTRUE:kFALSE ;
-
-    if (simMode) {
-      _gofOpMode = SimMaster ;
-    } else {
-      _gofOpMode = Slave ;
-    }
-  }
-
-  _setNum = 0 ;
-  _extSet = 0 ;
-  _numSets = 1 ;
-  _init = kFALSE ;
-  _nEvents = data.numEntries() ;
+  _paramSet.add(*std::unique_ptr<RooArgSet>{real.getParameters(&data)});
 }
 
 
@@ -164,13 +120,12 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _rangeName(other._rangeName),
   _addCoefRangeName(other._addCoefRangeName),
   _splitRange(other._splitRange),
-  _simCount(1),
   _verbose(other._verbose),
-  _nGof(0),
-  _gofArray(0),
+  // Determine if RooAbsReal is a RooSimultaneous
+  _gofOpMode{(other._nCPU>1 || other._nCPU==-1) ? MPMaster : (dynamic_cast<RooSimultaneous*>(_func) ? SimMaster : Slave)},
+  _nEvents{_data->numEntries()},
   _gofSplitMode(other._gofSplitMode),
-  _nCPU(other._nCPU),
-  _mpfeArray(0),
+  _nCPU(other._nCPU != -1 ? other._nCPU : 1),
   _mpinterl(other._mpinterl),
   _doOffset(other._doOffset),
   _offset(other._offset),
@@ -178,34 +133,6 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
 {
   // Our parameters are those of original
   _paramSet.add(other._paramSet) ;
-
-  if (_nCPU>1 || _nCPU==-1) {
-
-    if (_nCPU==-1) {
-      _nCPU=1 ;
-    }
-      
-    _gofOpMode = MPMaster ;
-
-  } else {
-
-    // Determine if RooAbsReal is a RooSimultaneous
-    Bool_t simMode = dynamic_cast<RooSimultaneous*>(_func)?kTRUE:kFALSE ;
-
-    if (simMode) {
-      _gofOpMode = SimMaster ;
-    } else {
-      _gofOpMode = Slave ;
-    }
-  }
-
-  _setNum = 0 ;
-  _extSet = 0 ;
-  _numSets = 1 ;
-  _init = kFALSE ;
-  _nEvents = _data->numEntries() ;
-
-
 }
 
 
