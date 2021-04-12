@@ -93,7 +93,7 @@ void TArrayC::Adopt(Int_t n, Char_t *arr)
 void TArrayC::AddAt(Char_t c, Int_t i)
 {
    if (!BoundsOk("TArrayC::AddAt", i)) return;
-   fArray[i] = c;
+   fArray[i] += c;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

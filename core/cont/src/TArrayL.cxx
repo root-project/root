@@ -93,7 +93,7 @@ void TArrayL::Adopt(Int_t n, Long_t *arr)
 void TArrayL::AddAt(Long_t c, Int_t i)
 {
    if (!BoundsOk("TArrayL::AddAt", i)) return;
-   fArray[i] = c;
+   fArray[i] += c;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

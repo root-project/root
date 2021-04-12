@@ -93,7 +93,7 @@ void TArrayL64::Adopt(Int_t n, Long64_t *arr)
 void TArrayL64::AddAt(Long64_t c, Int_t i)
 {
    if (!BoundsOk("TArrayL64::AddAt", i)) return;
-   fArray[i] = c;
+   fArray[i] += c;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

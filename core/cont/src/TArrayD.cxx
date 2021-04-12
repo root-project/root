@@ -94,7 +94,7 @@ void TArrayD::Adopt(Int_t n, Double_t *arr)
 void TArrayD::AddAt(Double_t c, Int_t i)
 {
    if (!BoundsOk("TArrayD::AddAt", i)) return;
-   fArray[i] = c;
+   fArray[i] += c;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
