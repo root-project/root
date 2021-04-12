@@ -16,3 +16,31 @@ TEST(RNTuple, CreateField)
    auto value = field->GenerateValue();
    field->DestroyValue(value);
 }
+
+TEST(RNTuple, UnsupportedStdTypes)
+{
+   try {
+      auto field = RFieldBase::Create("pair_field", "std::pair<int, float>").Unwrap();
+      FAIL() << "should not be able to make a std::pair field";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("std::pair<int, float> is not supported"));
+   }
+   try {
+      auto field = RField<std::pair<int, float>>("pair_field");
+      FAIL() << "should not be able to make a std::pair field";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("pair<int,float> is not supported"));
+   }
+   try {
+      auto field = RField<std::weak_ptr<int>>("weak_ptr");
+      FAIL() << "should not be able to make a std::weak_ptr field";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<int> is not supported"));
+   }
+   try {
+      auto field = RField<std::vector<std::weak_ptr<int>>>("weak_ptr_vec");
+      FAIL() << "should not be able to make a std::vector<std::weak_ptr> field";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<int> is not supported"));
+   }
+}
