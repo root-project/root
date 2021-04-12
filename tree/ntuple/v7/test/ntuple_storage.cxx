@@ -113,7 +113,7 @@ TEST(RPageSinkBuf, Basics)
          ntupleBuf->Fill();
          ntuple->Fill();
 
-         if (i % 15000 == 0) {
+         if (i && i % 15000 == 0) {
             ntupleBuf->CommitCluster();
             ntuple->CommitCluster();
          }
@@ -134,5 +134,31 @@ TEST(RPageSinkBuf, Basics)
       EXPECT_EQ(viewKlassVec(i).at(0).v1, viewKlassVecBuf(i).at(0).v1);
       EXPECT_EQ(viewKlassVec(i).at(0).v2, viewKlassVecBuf(i).at(0).v2);
       EXPECT_EQ(viewKlassVec(i).at(0).s, viewKlassVecBuf(i).at(0).s);
+   }
+
+   std::vector<std::pair<DescriptorId_t, std::int64_t>> pagePositions;
+   auto num_columns = 10;
+   const auto &cluster0 = ntupleBuf->GetDescriptor().GetClusterDescriptor(0);
+   for (auto i = 0; i < num_columns; i++) {
+      const auto &columnPages = cluster0.GetPageRange(i);
+      for (const auto &page: columnPages.fPageInfos) {
+         pagePositions.push_back(std::make_pair(i, page.fLocator.fPosition));
+      }
+   }
+   auto sortedPages = pagePositions;
+   std::sort(begin(sortedPages), end(sortedPages),
+      [](const auto &a, const auto &b) { return a.second < b.second; });
+
+   // Buffered sink cluster column pages are written out together
+   for (std::size_t i = 0; i < pagePositions.size() - 1; i++) {
+      // if the next page belongs to another column, skip the check
+      if (pagePositions.at(i+1).first != pagePositions.at(i).first) {
+         continue;
+      }
+      auto page = std::find(begin(sortedPages), end(sortedPages), pagePositions[i]);
+      ASSERT_TRUE(page != sortedPages.end());
+      auto next_page = page + 1;
+      auto column = pagePositions[i].first;
+      ASSERT_EQ(column, next_page->first);
    }
 }
