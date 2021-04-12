@@ -62,6 +62,7 @@ private:
    /// Byte offset of the end of the last page of the current cluster
    std::uint64_t fClusterMaxOffset = 0;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
+   int UpdateCompression();
 
    RClusterDescriptor::RLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage,
                                                 std::size_t bytesPacked);

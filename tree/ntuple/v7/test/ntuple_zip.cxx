@@ -96,7 +96,6 @@ TEST(RNTupleZip, CompressionOverride)
 
 // Test commented out because unclear how to adjust TFile compression and make sure
 // the RNTuple uses the new compression value.
-/*
 TEST(RNTupleZip, TFilePtrCompressionSettings)
 {
    // RNTuple added to a TFile using the std::unique_ptr<TFile>& method uses the
@@ -108,7 +107,9 @@ TEST(RNTupleZip, TFilePtrCompressionSettings)
       auto model = RNTupleModel::Create();
       auto field = model->MakeField<float>("field");
       auto ntuple0 = std::make_unique<RNTupleWriter>(std::move(model),
-         std::make_unique<RPageSinkFile>("ntuple0", fileGuard.GetPath(), RNTupleWriteOptions(), file));
+         std::make_unique<RPageSinkFile>("ntuple0", fileGuard.GetPath(), RNTupleWriteOptions(),
+            file));
+      file->SetCompressionSettings(404);
       ntuple0->Fill();
    }
    {
@@ -116,10 +117,9 @@ TEST(RNTupleZip, TFilePtrCompressionSettings)
       // ... ntuple0 uses the TFile's compression level
       auto ntuple0 = RNTupleReader::Open("ntuple0", fileGuard.GetPath());
       ntuple0->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
-      EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 101"));
+      EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 404"));
    }
 }
-*/
 
 TEST(RNTupleZip, TFileCompressionSettings)
 {
@@ -180,9 +180,9 @@ TEST(RNTupleZip, TFileCompressionSettings)
    oss.str("");
 }
 
-TEST(RNTupleZip, TFileCompressionNotUpdated)
+TEST(RNTupleZip, TFileCompressionUpdated)
 {
-   FileRaii fileGuard("test_ntuple_zip_tfile_comp_not_updated.root");
+   FileRaii fileGuard("test_ntuple_zip_tfile_comp_updated.root");
    auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "RECREATE", "", 101);
    {
       auto model = RNTupleModel::Create();
@@ -190,12 +190,12 @@ TEST(RNTupleZip, TFileCompressionNotUpdated)
       // ntuple is created when TFile has compression setting 101
       auto ntuple = std::make_unique<RNTupleWriter>(std::move(model),
          std::make_unique<RPageSinkFile>("ntuple", *file, RNTupleWriteOptions()));
-      // if the TFile compression is later adjusted, this won't be picked up by the ntuple
+      // if the TFile compression is later adjusted, this will be picked up by the ntuple
       file->SetCompressionSettings(404);
       ntuple->Fill();
    }
    std::ostringstream oss;
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
-   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 101"));
+   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 404"));
 }
