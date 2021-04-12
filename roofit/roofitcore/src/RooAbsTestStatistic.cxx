@@ -104,6 +104,16 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
 {
   // Register all parameters as servers
   _paramSet.add(*std::unique_ptr<RooArgSet>{real.getParameters(&data)});
+
+  if (cfg.rangeName.find(',') != std::string::npos) {
+    auto errorMsg = std::string("Ranges ") + cfg.rangeName
+            + " were passed to the RooAbsTestStatistic with name \"" + name + "\", "
+            + "but it doesn't support multiple comma-separated fit ranges!\n" +
+            + "Instead, one should combine multiple RooAbsTestStatistic objects "
+            + "(see RooAbsPdf::createNLL for an example with RooNLLVar).";
+    coutE(InputArguments) <<  errorMsg << std::endl;
+    throw std::invalid_argument(errorMsg);
+  }
 }
 
 
