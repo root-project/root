@@ -157,7 +157,7 @@ int setPath(const char *proto)
    TString p(proto);
    gCurProtoName = p;
    if (p == "root" || p == "xroot") {
-      gPfx = p + "://eospublic.cern.ch//eos/opstest/dhsmith/StressIOPluginsTestFiles/";
+      gPfx = p + "://eospublic.cern.ch//eos/root-eos/StressIOPluginsTestFiles/";
       return 0;
    }
    if (p == "http" || p == "https") {
