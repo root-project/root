@@ -33,7 +33,8 @@ templateClassImp(TStatistic);
 ///
 /// Recursively calls the TStatistic::Fill() function to fill the object.
 TStatistic::TStatistic(const char *name, Int_t n, const Double_t *val, const Double_t *w)
-         : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.), fMin(TMath::Limits<Double_t>::Max()), fMax(TMath::Limits<Double_t>::Min())
+         : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.), 
+         fMin(TMath::Limits<Double_t>::Max()), fMax(-TMath::Limits<Double_t>::Max())
 {
    if (n > 0) {
       for (Int_t i = 0; i < n; i++) {
