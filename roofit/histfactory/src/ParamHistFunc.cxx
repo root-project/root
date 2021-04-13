@@ -212,7 +212,7 @@ ParamHistFunc::~ParamHistFunc()
 ///
 /// RooRealVar currentParam = getParameter( getCurrentBin() );
 Int_t ParamHistFunc::getCurrentBin() const {
-  Int_t dataSetIndex = _dataSet.getIndex( _dataVars ); // calcTreeIndex();
+  Int_t dataSetIndex = _dataSet.getIndex( _dataVars, true ); // calcTreeIndex();
   return dataSetIndex;
 
 }
