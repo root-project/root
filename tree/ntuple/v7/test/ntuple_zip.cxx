@@ -94,30 +94,45 @@ TEST(RNTupleZip, CompressionOverride)
    EXPECT_TRUE(options.IsCompressionOverride());
 }
 
-// Test commented out because unclear how to adjust TFile compression and make sure
-// the RNTuple uses the new compression value.
 TEST(RNTupleZip, TFilePtrCompressionSettings)
 {
-   // RNTuple added to a TFile using the std::unique_ptr<TFile>& method uses the
-   // TFile's compression
+   // RNTuple added to a newly created TFile using the std::unique_ptr<TFile>&
+   // method will pick up changes to the TFile's compression settings
    FileRaii fileGuard("test_ntuple_zip_tfileptr_comp.root");
-   // test using RPageSinkFile constructor taking std::unique_ptr<TFile>&
    {
       std::unique_ptr<TFile> file = nullptr;
       auto model = RNTupleModel::Create();
       auto field = model->MakeField<float>("field");
-      auto ntuple0 = std::make_unique<RNTupleWriter>(std::move(model),
-         std::make_unique<RPageSinkFile>("ntuple0", fileGuard.GetPath(), RNTupleWriteOptions(),
-            file));
+      auto klassVec = model->MakeField<std::vector<CustomStruct>>("klassVec");
+      auto ntuple = std::make_unique<RNTupleWriter>(std::move(model),
+         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions(), file
+      ));
       file->SetCompressionSettings(404);
-      ntuple0->Fill();
+      for (int i = 0; i < 20000; i++) {
+         *field = static_cast<float>(i);
+         CustomStruct klass;
+         klass.s = std::to_string(i);
+         *klassVec = {klass};
+         ntuple->Fill();
+         if (i == 15000) {
+            ntuple->CommitCluster();
+         }
+      }
    }
-   {
-      std::ostringstream oss;
-      // ... ntuple0 uses the TFile's compression level
-      auto ntuple0 = RNTupleReader::Open("ntuple0", fileGuard.GetPath());
-      ntuple0->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
-      EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 404"));
+   std::ostringstream oss;
+   // ... ntuple0 uses the TFile's compression level
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
+   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 404"));
+
+   auto rdField = ntuple->GetView<float>("field");
+   auto klassVecField = ntuple->GetView<std::vector<CustomStruct>>("klassVec");
+
+   EXPECT_EQ(20000, ntuple->GetNEntries());
+
+   for (auto i : ntuple->GetEntryRange()) {
+      ASSERT_EQ(static_cast<float>(i), rdField(i));
+      ASSERT_EQ(std::to_string(i), klassVecField(i).at(0).s);
    }
 }
 
