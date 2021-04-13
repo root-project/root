@@ -47,10 +47,18 @@ The following people have contributed to this new version:
  Stefan Wunsch, CERN/SFT,\
  Anirudh Dagar, CERN-HSF/GSoC
 
-## Deprecation and Removal
+## General
+
+### Deprecation and Removal
 
 - [`RooAbsReal::evaluateBatch()`](https://root.cern/doc/v624/classRooAbsReal.html#a261580dfe94f2b107f9b9a77cad78a62) has been removed in favour of the faster evaluateSpan(). See section "RooFit Libraries" for instructions on how to use [`RooAbsReal::evaluateSpan()`](https://root.cern/doc/v624/classRooAbsReal.html#a1e5129ffbc63bfd04c01511fd354b1b8).
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been deprecated in favour of `TTreeProcessorMT::SetTasksPerWorkerHint`.
+
+### Header Dependency Reduction
+
+As always, ROOT tries to reduce the amount of code exposed through its headers.
+To that end, `#include`s were replaced by forward declarations in several headers.
+This might cause compilation errors ("missing definition of type...") in your code, if that code was relying on indirect includes, instead of including the required headers itself. Please correct that simply by including the required header directly.
 
 ## Core Libraries
 
@@ -407,6 +415,10 @@ Bearer tokens are part of WLCG capability-based infrastructure with capability-b
    3. If the `XDG_RUNTIME_DIR` environment variable is set, then take the token from the contents of `$XDG_RUNTIME_DIR/bt_u$ID`(this additional location is intended to provide improved security for shared login environments as `$XDG_RUNTIME_DIR` is defined to be user-specific as opposed to a system-wide directory.).
    4. Otherwise, take the token from `/tmp/bt_u$ID`.
 
+### Xrootd client support
+
+ROOT can now be built with Xrootd 5 client libraries.
+
 ## GUI Libraries
 
 ### RBrowser improvements
@@ -438,7 +450,7 @@ Bearer tokens are part of WLCG capability-based infrastructure with capability-b
 - change scripts names, core scripts name now `JSRoot.core.js`
 - unify function/methods naming conventions, many changes in method names
 - provide central code loader via `JSROOT.require`, supporting 4 different loading engines
-- many nice features and many bug fixes; see JSROOT v6 release notes
+- many nice features and many bug fixes; see [JSROOT v6 release notes](https://github.com/root-project/jsroot/blob/master/changes.md#changes-in-600)
 
 
 ## Tutorials
@@ -446,6 +458,9 @@ Bearer tokens are part of WLCG capability-based infrastructure with capability-b
 
 ## Class Reference Guide
 
+One can now select a class's documentation for a specific version.
+If a class does not exist in a given version, that version is grayed out,
+see for instance the documentation for [`ROOT::Experimental::RNTupleReader`](https://root.cern/doc/master/classROOT_1_1Experimental_1_1RNTupleReader.html).
 
 ## Build, Configuration and Testing Infrastructure
 
