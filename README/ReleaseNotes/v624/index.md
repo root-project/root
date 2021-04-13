@@ -317,7 +317,7 @@ or better `get_wgt(i)`, which were also supported in ROOT \<v6.24. More details 
   To modernise old code, one should replace patterns like `h.get(i); h.func()` by `h.func(i);`. One may `#define R__SUGGEST_NEW_INTERFACE` to switch on
   deprecation warnings for the functions in question.
   Similarly, the bin content can now be set using an index, making prior loading of a certain coordinate unnecessary:
-```
+```diff
    for (int i=0 ; i<hist->numEntries() ; i++) {
 -    hist->get(i) ;
 -    hist->set(hist->weight() / sum);
