@@ -489,8 +489,9 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             }
             if (nbranches == fBranches.GetEntriesFast()) {
                // -- We did not add any branches in the Unroll, finalize our name to be the base class name, because Unroll did not do it for us.
-               if (strlen(bname)) {
-                  name.Form("%s.%s", bname, clOfElement->GetName());
+               const auto bnamelen = strlen(bname);
+               if (bnamelen) {
+                  name.Form("%s%s%s", bname, bname[bnamelen-1]=='.' ? "" : ".", clOfElement->GetName());
                } else {
                   name.Form("%s", clOfElement->GetName());
                }
@@ -737,12 +738,9 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
    fDirectory     = fTree->GetDirectory();
    fFileName      = "";
 
-   TString name( bname );
-   if (name[name.Length()-1]=='.') {
-      name.Remove(name.Length()-1);
-   }
+   SetName(bname);
+   const char* name = GetName();
 
-   SetName(name);
    SetTitle(name);
    //fClassName = fInfo->GetName();
    fCompress = compress;
@@ -783,10 +781,14 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
       // ===> create sub branches for each data member of a TClonesArray
       fClonesName = clonesClass->GetName();
       fClonesClass = clonesClass;
-      std::string branchname = name.Data() + std::string("_");
-      SetTitle(branchname.c_str());
-      leaf->SetName(branchname.c_str());
-      leaf->SetTitle(branchname.c_str());
+      TString branchname( name );
+      if (branchname[branchname.Length()-1]=='.') {
+         branchname.Remove(branchname.Length()-1);
+      }
+      branchname += "_";
+      SetTitle(branchname);
+      leaf->SetName(branchname);
+      leaf->SetTitle(branchname);
       Unroll(name, clonesClass, clonesClass, 0, basketsize, splitlevel, 31);
       BuildTitle(name);
       SetReadLeavesPtr();
@@ -1145,6 +1147,12 @@ void TBranchElement::BuildTitle(const char* name)
 
    Int_t nbranches = fBranches.GetEntriesFast();
 
+   TString indexname(name);
+   if (indexname[indexname.Length()-1]=='.') {
+      indexname.Remove(indexname.Length()-1);
+   }
+   indexname += "_";
+
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranchElement* bre = (TBranchElement*) fBranches.At(i);
       if (!bre)
@@ -1172,7 +1180,7 @@ void TBranchElement::BuildTitle(const char* name)
       if (dim>=0) {
          branchname.Remove(dim);
       }
-      branchname += TString::Format("[%s_]",name);
+      branchname += TString::Format("[%s]", indexname.Data());
       bre->SetTitle(branchname);
       if (lf) {
          lf->SetTitle(branchname);
@@ -6155,6 +6163,9 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
       return 0;
    }
 
+   const auto namelen = strlen(name);
+   Bool_t dotlast = (namelen && (name[namelen-1] == '.'));
+
    Int_t ndata = sinfo->GetNelement();
 
    if ((ndata == 1) && cl->GetCollectionProxy() && !strcmp(sinfo->GetElement(0)->GetName(), "This")) {
@@ -6202,8 +6213,8 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
             }
             if (unroll < 0) {
                // FIXME: We could not split because we are abstract, should we be doing this?
-               if (strlen(name)) {
-                  branchname.Form("%s.%s", name, elem->GetFullName());
+               if (namelen) {
+                  branchname.Form("%s%s%s", name, dotlast ? "" : ".", elem->GetFullName());
                } else {
                   branchname.Form("%s", elem->GetFullName());
                }
@@ -6213,8 +6224,8 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
             }
          } else if (clOfBase->GetListOfRealData()->GetSize()) {
             // -- Create a branch for a non-empty base class.
-            if (strlen(name)) {
-               branchname.Form("%s.%s", name, elem->GetFullName());
+            if (namelen) {
+               branchname.Form("%s%s%s", name, dotlast ? "" : ".", elem->GetFullName());
                // Elide the base class name when creating the sub-branches.
                // Note: The branch names for sub-branches of a base class branch
                //       do not represent the full class heirarchy because we do
@@ -6235,8 +6246,8 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
          }
       } else {
          // -- This is a data member of cl.
-         if (strlen(name)) {
-            branchname.Form("%s.%s", name, elem->GetFullName());
+         if (namelen) {
+            branchname.Form("%s%s%s", name, dotlast ? "" : ".", elem->GetFullName());
          } else {
             branchname.Form("%s", elem->GetFullName());
          }
