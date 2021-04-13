@@ -96,6 +96,7 @@ public:
 
   /// Return weight of i-th bin. \see getIndex()
   double weight(std::size_t i) const { return _wgt[i]; }
+  double weightFast(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE, Bool_t cdfBoundaries=kFALSE);
   Double_t weight(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE, Bool_t cdfBoundaries=kFALSE, Bool_t oneSafe=kFALSE);
   /// Return squared weight sum of i-th bin. \see getIndex()
   double weightSquared(std::size_t i) const { return get_sumw2(i); }
@@ -250,7 +251,7 @@ protected:
   mutable double* _sumw2{nullptr}; //[_arrSize] Sum of weights^2
   double*         _binv {nullptr}; //[_arrSize] Bin volume array
 
-  RooArgSet  _realVars ; // Real dimensions of the dataset 
+  RooArgSet  _realVars ; // Real dimensions of the dataset
   mutable std::vector<double> _maskedWeights; //! Copy of _wgtVec, but masked events have a weight of zero.
  
   mutable std::size_t _curIndex{std::numeric_limits<std::size_t>::max()}; // Current index
