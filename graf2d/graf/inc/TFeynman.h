@@ -15,6 +15,7 @@
 #include <TLine.h>
 #include <TCurlyLine.h>
 #include "TFeynmanEntry.h"
+#include "TObject.h"
 
 class TFeynman {
 

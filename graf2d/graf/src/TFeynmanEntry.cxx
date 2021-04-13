@@ -21,6 +21,6 @@
 TFeynmanEntry::TFeynmanEntry(const TObject* particle) {
     SetObject((TObject*)particle);
 }
-TFeynmanEntry::SetObject(TObject *obj) {
+void TFeynmanEntry::SetObject(TObject *obj) {
   fObject = obj;
 }

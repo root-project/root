@@ -32,6 +32,9 @@ This example plots the feynman.C diagram in the tutorials:
 #include <cstdio>
 #include <iostream>
 
+#include <cstdio>
+#include <iostream>
+
 #include "TStyle.h"
 #include "TLatex.h"
 #include "TLine.h"
@@ -60,12 +63,11 @@ TFeynman::TFeynman(Double_t canvasWidth, Double_t canvasHeight){
 TFeynmanEntry* TFeynman::AddEntry(const TObject *particle) {
    TFeynmanEntry *newEntry = new TFeynmanEntry(particle);
    fPrimitives->Add((TObject*)newEntry);
-	 cout << fPrimitives << endl;
    return newEntry;
 }
 
-void TFeynman::Draw(Option_t* option="") {
-	AppendPad(option);
+void TFeynman::Draw() {
+	fPrimitives->First()->AppendPad();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,9 +262,9 @@ TFeynman::Photon(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t la
    TCurlyLine *gamma = new TCurlyLine(x1, y1, x2, y2);
    gamma->SetWavy();
 
-   TLatex t;
-   t.SetTextSize(0.1);
-   t.DrawLatex(labelPositionX, labelPositionY, "#gamma");
+   //TLatex t;
+   //t.SetTextSize(0.1);
+   //t.DrawLatex(labelPositionX, labelPositionY, "#gamma");
 
    return gamma;
 }
