@@ -48,7 +48,7 @@ The fullname for arr.fUniqueID is arr.fUniqueID in branch arr.fUniqueID of type 
 The fullname for arr.fBits is arr.fBits in branch arr.fBits of type TBranchElement
 The fullname for arr.fName is arr.fName in branch arr.fName of type TBranchElement
 The fullname for arr.fTitle is arr.fTitle in branch arr.fTitle of type TBranchElement
-The fullname for arrdot_ is arrdot_ in branch arrdot of type TBranchElement
+The fullname for arrdot_ is arrdot_ in branch arrdot. of type TBranchElement
 The fullname for arrdot.fUniqueID is arrdot.fUniqueID in branch arrdot.fUniqueID of type TBranchElement
 The fullname for arrdot.fBits is arrdot.fBits in branch arrdot.fBits of type TBranchElement
 The fullname for arrdot.fName is arrdot.fName in branch arrdot.fName of type TBranchElement
