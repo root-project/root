@@ -40,7 +40,7 @@ protected:
    EErrorType fErrorMode; ///< Option to compute errors
    Double_t fYmin;        ///< Lower limit in Y (if set)
    Double_t fYmax;        ///< Upper limit in Y (if set)
-   Bool_t fScaling;       //<! True when TProfile::Scale is called
+   Bool_t fScaling;       ///<! True when TProfile::Scale is called
    Double_t fTsumwy;      ///< Total Sum of weight*Y
    Double_t fTsumwy2;     ///< Total Sum of weight*Y*Y
    TArrayD fBinSumw2;     ///< Array of sum of squares of weights per bin
