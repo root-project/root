@@ -23,9 +23,9 @@ class TList;
 class TRootControlBar : public TGMainFrame, public TControlBarImp {
 
 private:
-   TList          *fWidgets; // list of TGTextButton or TGPictureButtons
-   TGLayoutHints  *fL1;      // button layout hints
-   UInt_t          fBwidth;  // button width in pixels
+   TList          *fWidgets; ///< list of TGTextButton or TGPictureButtons
+   TGLayoutHints  *fL1;      ///< button layout hints
+   UInt_t          fBwidth;  ///< button width in pixels
 
 public:
    TRootControlBar(TControlBar *c = nullptr, const char *title = "ROOT Control Bar",

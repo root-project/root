@@ -25,15 +25,15 @@ class TGSelectedPicture;
 class TGTreeLBEntry : public TGLBEntry {
 
 protected:
-   TGString           *fText;        // entry description
-   TGString           *fPath;        // entry path
-   const TGPicture    *fPic;         // entry picture
-   TGSelectedPicture  *fSelPic;      // selected picture
-   UInt_t              fTWidth;      // width of entry text
-   UInt_t              fTHeight;     // height of entry text
-   Bool_t              fActive;      // true if active
-   GContext_t          fNormGC;      // entry drawing context
-   FontStruct_t        fFontStruct;  // font
+   TGString           *fText;        ///< entry description
+   TGString           *fPath;        ///< entry path
+   const TGPicture    *fPic;         ///< entry picture
+   TGSelectedPicture  *fSelPic;      ///< selected picture
+   UInt_t              fTWidth;      ///< width of entry text
+   UInt_t              fTHeight;     ///< height of entry text
+   Bool_t              fActive;      ///< true if active
+   GContext_t          fNormGC;      ///< entry drawing context
+   FontStruct_t        fFontStruct;  ///< font
 
    virtual void DoRedraw();
 
@@ -66,12 +66,12 @@ public:
 
 class TGFSComboBox : public TGComboBox {
    struct Lbc_t {
-      std::string fName;        // root prefix name
-      std::string fPath;        // path
-      std::string fPixmap;      // picture file
-      Int_t       fId{0};       // widget id
-      Int_t       fIndent{0};   // identification level
-      Int_t       fFlags{0};    // flag
+      std::string fName;        ///< root prefix name
+      std::string fPath;        ///< path
+      std::string fPixmap;      ///< picture file
+      Int_t       fId{0};       ///< widget id
+      Int_t       fIndent{0};   ///< identification level
+      Int_t       fFlags{0};    ///< flag
       Lbc_t(const char *name, const char *path, const char *pixmap, Int_t indent) :
          fName(name), fPath(path), fPixmap(pixmap), fIndent(indent) { }
    };
