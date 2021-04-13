@@ -49,7 +49,7 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
-- [`RooAbsReal::evaluateBatch()`](https://root.cern.ch/doc/v624/classRooAbsReal.html#a261580dfe94f2b107f9b9a77cad78a62) has been removed in favour of the faster evaluateSpan(). See section "RooFit Libraries" for instructions on how to use [`RooAbsReal::evaluateSpan()`](https://root.cern.ch/doc/v624/classRooAbsReal.html#a1e5129ffbc63bfd04c01511fd354b1b8).
+- [`RooAbsReal::evaluateBatch()`](https://root.cern/doc/v624/classRooAbsReal.html#a261580dfe94f2b107f9b9a77cad78a62) has been removed in favour of the faster evaluateSpan(). See section "RooFit Libraries" for instructions on how to use [`RooAbsReal::evaluateSpan()`](https://root.cern/doc/v624/classRooAbsReal.html#a1e5129ffbc63bfd04c01511fd354b1b8).
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been deprecated in favour of `TTreeProcessorMT::SetTasksPerWorkerHint`.
 
 ## Core Libraries
@@ -111,7 +111,7 @@ The final "Dynamic Path" is now composed of these sources in order:
 
 ### New features
 
-- Introduce `ROOT::RDF::RunGraphs`, which allows to compute the results of multiple `RDataFrame`s (or better, multiple independent computation graphs) concurrently while sharing the same thread pool. The computation may be more efficient than running the `RDataFrame`s sequentially if an analysis consists of several computation graphs that individually do not fully utilize the available resources. See e.g. [this tutorial](https://root.cern.ch/doc/master/df104__HiggsToTwoPhotons_8py.html) for an example usage.
+- Introduce `ROOT::RDF::RunGraphs`, which allows to compute the results of multiple `RDataFrame`s (or better, multiple independent computation graphs) concurrently while sharing the same thread pool. The computation may be more efficient than running the `RDataFrame`s sequentially if an analysis consists of several computation graphs that individually do not fully utilize the available resources. See e.g. [this tutorial](https://root.cern/doc/master/df104__HiggsToTwoPhotons_8py.html) for an example usage.
 - `RDataFrame` now supports reading friend `TTree`s with a `TTreeIndex`, aka "indexed friends". More details at [ROOT-9559](https://sft.its.cern.ch/jira/browse/ROOT-9559).
 - Experimental logging capabilities have been added to `RDataFrame`. To activate logging, define the following variable before creating the `RDataFrame` object: `auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel.kInfo);`.
 - With [ROOT-10023](https://sft.its.cern.ch/jira/browse/ROOT-10023) fixed, `RDataFrame` can now read and write certain branches containing unsplit objects, i.e. `TBranchObjects`. More information is available at [ROOT-10022](https://sft.its.cern.ch/jira/browse/ROOT-10022).
