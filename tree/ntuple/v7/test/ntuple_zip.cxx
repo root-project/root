@@ -104,10 +104,11 @@ TEST(RNTupleZip, TFilePtrCompressionSettings)
       auto model = RNTupleModel::Create();
       auto field = model->MakeField<float>("field");
       auto klassVec = model->MakeField<std::vector<CustomStruct>>("klassVec");
+      RNTupleWriteOptions options;
+      options.SetCompression(404);
       auto ntuple = std::make_unique<RNTupleWriter>(std::move(model),
-         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions(), file
+         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), options, file
       ));
-      file->SetCompressionSettings(404);
       for (int i = 0; i < 20000; i++) {
          *field = static_cast<float>(i);
          CustomStruct klass;
