@@ -81,6 +81,7 @@ separated list of paths, on Windows a semicolon separated list. It is
 intended to be cross platform and to be specific to ROOT (and thus not
 interfere with the system's shared linker).
 The final "Dynamic Path" is now composed of these sources in order:
+
 1. `ROOT_LIBRARY_PATH` environment variable
 2. System specific shared linker environment variables like
    `LD_LIBRARY_PATH`, `LIBPATH`, or `PATH`.
@@ -455,6 +456,9 @@ Bearer tokens are part of WLCG capability-based infrastructure with capability-b
 The following builtins have been updated:
 
 - VecCore 0.7.0
+- LZ4 1.9.3
+- openui5
+
 
 ## PyROOT
 
