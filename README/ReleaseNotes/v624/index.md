@@ -106,6 +106,7 @@ The final "Dynamic Path" is now composed of these sources in order:
 - `TTree` now supports the inclusion of leaves of types `long` and `unsigned long` (and therefore also `std::size_t` on most systems) also for branches in "leaflist mode". The corresponding leaflist letters are 'G' and 'g'.
 - when looping over a `TTree` with a friend with a larger number of entries, `TTreeReader` now ends the event loop when the entries in the _main_ `TTree` are exhausted, consistently with other interfaces. See [#6518](https://github.com/root-project/root/issues/6518) for more details.
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` is now deprecated in favor of the more flexible and newly introduced `TTreeProcessorMT::SetTasksPerWorkerHint`. See the relevant entries in our reference guide for more information.
+- The name of the sub-branches of a split collection no longer have 2 consecutive dots if the top level branche name has a trailing dot.  The name of the collection's index leaf also no longer include the dot. For example for "t." the names where "t._" and "t..fValue" and are now "t_" and "t.fValue". 
 
 ## RDataFrame
 
