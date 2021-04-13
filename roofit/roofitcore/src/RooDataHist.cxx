@@ -1076,6 +1076,36 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
   return RooAbsData::plotOn(frame,o) ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// A faster version of RooDataHist::weight that assumes the passed arguments
+/// are aligned with the histogram variables.
+///
+/// For the interpolation case, the slow version is still used.
+
+double RooDataHist::weightFast(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries)
+{
+  checkInit() ;
+
+  // Handle illegal intOrder values
+  if (intOrder<0) {
+    coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") ERROR: interpolation order must be positive" << endl ;
+    return 0 ;
+  }
+
+  // Handle no-interpolation case
+  if (intOrder==0) {
+    const auto idx = calcTreeIndex(bin, true);
+    if (correctForBinSize) {
+      return get_wgt(idx) / _binv[idx];
+    } else {
+      return get_wgt(idx);
+    }
+  }
+
+  // Handle all interpolation cases with the slow version
+  return weight(bin, intOrder, correctForBinSize, cdfBoundaries);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the weight at given coordinates with optional interpolation.
