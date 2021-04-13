@@ -7,7 +7,7 @@ TFeynman is a class that makes it easier to make
 good-looking Feynman Diagrams using ROOT components
 like TArc and TArrow.
 ### Decleration / Access to the components
-TFeynman is initialized with the width and the height 
+TFeynman is initialized with the width and the height
 of the Canvas that you would like.
 ~~~
   TFeynman *f = new TFeynman(300, 600);
@@ -29,14 +29,44 @@ This example plots the feynman.C diagram in the tutorials:
 
 */
 
+#include <cstdio>
+#include <iostream>
+
+#include "TStyle.h"
+#include "TLatex.h"
+#include "TLine.h"
+#include "TPolyLine.h"
+#include "TMarker.h"
 #include "../inc/TFeynman.h"
-#include <TCanvas.h>
-#include <TLatex.h>
-#include <TCurlyArc.h>
-#include <TCurlyLine.h>
-#include <TArc.h>
-#include <TLine.h>
-#include <string.h>
+#include "TList.h"
+#include "TVirtualPad.h"
+#include "TMath.h"
+#include "TROOT.h"
+#include "TMultiGraph.h"
+#include "TGraph.h"
+#include "TH1.h"
+#include "THStack.h"
+
+ClassImp(TFeynman);
+
+
+TFeynman::TFeynman(Double_t canvasWidth, Double_t canvasHeight){
+				TCanvas *c1 = new TCanvas("c1", "c1", 10,10, canvasWidth, canvasHeight);
+   			c1->Range(0, 0, 140, 60);
+				gStyle->SetLineWidth(2);
+        fPrimitives = new TList();
+		}
+
+TFeynmanEntry* TFeynman::AddEntry(const TObject *particle) {
+   TFeynmanEntry *newEntry = new TFeynmanEntry(particle);
+   fPrimitives->Add((TObject*)newEntry);
+	 cout << fPrimitives << endl;
+   return newEntry;
+}
+
+void TFeynman::Draw(Option_t* option="") {
+	AppendPad(option);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Quark

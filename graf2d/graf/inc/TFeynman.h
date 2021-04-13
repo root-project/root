@@ -14,21 +14,24 @@
 #include "TVector3.h"
 #include <TLine.h>
 #include <TCurlyLine.h>
+#include "TFeynmanEntry.h"
 
 class TFeynman {
 
 	public:
 
 		// The constructor
-		TFeynman(Double_t canvasWidth, Double_t canvasHeight){
-			TCanvas *c1 = new TCanvas("c1", "c1", 10,10, canvasWidth, canvasHeight);
-   			c1->Range(0, 0, 140, 60);
-			gStyle->SetLineWidth(2);
-		}
+		TFeynman(Double_t canvasWidth, Double_t canvasHeight);
+
+    TFeynmanEntry* AddEntry(const TObject *particle);
+
+    virtual void Draw();
+
 
 		// Fermions:
 		// Quarks:
         // plots a Quark
+
       TArrow *Quark(Double_t x1,             ///<  x-Coordinate of starting point
                     Double_t y1,             ///<  y-coordinate of starting point
                     Double_t x2,             ///<  x-coordinate of second point
@@ -147,4 +150,6 @@ class TFeynman {
                              Double_t labelPositionX,
                              Double_t labelPositionY ///<  position of label
       );
+  protected:
+    TList *fPrimitives; ///< List of TFeynman entries
 };
