@@ -963,6 +963,7 @@ namespace TStreamerInfoActions
          TVirtualCollectionProxy *proxy = fNewClass->GetCollectionProxy();
          if (proxy) {
             fCreateIterators = proxy->GetFunctionCreateIterators();
+            fCreateWriteIterators = proxy->GetFunctionCreateIterators(kFALSE);
             fCopyIterator = proxy->GetFunctionCopyIterator();
             fDeleteIterator = proxy->GetFunctionDeleteIterator();
             fDeleteTwoIterators = proxy->GetFunctionDeleteTwoIterators();
@@ -977,6 +978,7 @@ namespace TStreamerInfoActions
       Bool_t          fIsSTLBase;  // aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()
 
       TVirtualCollectionProxy::CreateIterators_t    fCreateIterators;
+      TVirtualCollectionProxy::CreateIterators_t    fCreateWriteIterators;
       TVirtualCollectionProxy::CopyIterator_t       fCopyIterator;
       TVirtualCollectionProxy::DeleteIterator_t     fDeleteIterator;
       TVirtualCollectionProxy::DeleteTwoIterators_t fDeleteTwoIterators;
