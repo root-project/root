@@ -244,7 +244,7 @@ the booking option `tf.keras=True`.
   axis range of the original plot is transferred to the residual plot, so the pulls can be drawn below the main plot.
 - Improve plotting of `RooBinSamplingPdf`
 - Print a Warning message when the `RooAddPdf` is evaluated without passing a normalization set and the class has not a normalization set defined.
-Without a normalization set the `RooAddPdf` is not properly defined and its shape will be different depending on which normalization range is used.
+ Without a normalization set the `RooAddPdf` is not properly defined and its shape will be different depending on which normalization range is used.
 
 
 ### Massive speed up of RooFit's `BatchMode` on CPUs with vector extensions
