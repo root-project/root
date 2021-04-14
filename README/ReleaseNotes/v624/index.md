@@ -209,7 +209,7 @@ function with a user provided random number generator instead of using the defau
 - Fix a bug in applying a correction factor used for the computation of the fit confidence level in `ROOT::Fit::FitResult`.
 - TMatrix: optimize implementation of `TPrincipal::AddRow` that is heavily used by CMS.
 
-###Minuit2
+### Minuit2
 
 - Add a new improved message logging system. Debug message now can be enabled in Minuit2 when using maximum print level.
 - When using external provided gradient, compute in MnSeed still numerical gradients to obtain correct step sizes and  initial estimate of covariance matrix. This allows to start with a good first
