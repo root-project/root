@@ -682,6 +682,23 @@ TEST(RDFSnapshotMore, LazyNotTriggered)
    ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot", "A lazy Snapshot action was booked but never triggered.");
 }
 
+RResultPtr<RInterface<RLoopManager, void>> ReturnLazySnapshot(const char *fname)
+{
+   auto d = ROOT::RDataFrame(1);
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fLazy = true;
+   auto res = d.Snapshot<ULong64_t>("t", fname, {"rdfentry_"}, opts);
+   RResultPtr<RInterface<RLoopManager, void>> res2 = res;
+   return res;
+}
+
+TEST(RDFSnapshotMore, LazyTriggeredAfterCopy)
+{
+   const auto fname = "lazysnapshottriggeredaftercopy.root";
+   ROOT_EXPECT_NODIAG(*ReturnLazySnapshot(fname));
+   gSystem->Unlink(fname);
+}
+
 void CheckTClonesArrayOutput(const RVec<TH1D> &hvec)
 {
    ASSERT_EQ(hvec.size(), 3);
