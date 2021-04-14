@@ -200,6 +200,13 @@ public:
   ///@}
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  struct VarInfo {
+    size_t nRealVars = 0;
+    size_t realVarIdx1 = 0;
+    size_t realVarIdx2 = 0;
+    bool initialized = false;
+  };
+
 protected:
 
   friend class RooAbsCachedPdf ;
@@ -251,7 +258,6 @@ protected:
   mutable double* _sumw2{nullptr}; //[_arrSize] Sum of weights^2
   double*         _binv {nullptr}; //[_arrSize] Bin volume array
 
-  RooArgSet  _realVars ; // Real dimensions of the dataset
   mutable std::vector<double> _maskedWeights; //! Copy of _wgtVec, but masked events have a weight of zero.
  
   mutable std::size_t _curIndex{std::numeric_limits<std::size_t>::max()}; // Current index
@@ -269,7 +275,10 @@ private:
   void _adjustBinning(RooRealVar &theirVar, const TAxis &axis, RooRealVar *ourVar, Int_t *offset);
   void registerWeightArraysToDataStore() const;
 
-  ClassDefOverride(RooDataHist, 5) // Binned data set
+  VarInfo _varInfo; //!
+  VarInfo const& getVarInfo();
+
+  ClassDefOverride(RooDataHist, 6) // Binned data set
 };
 
 #endif

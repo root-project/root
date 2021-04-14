@@ -702,12 +702,6 @@ void initArray(double*& arr, std::size_t n, double val) {
 
 void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
 {
-
-  // Save real dimensions of dataset separately
-  for (const auto real : _vars) {
-    if (dynamic_cast<RooAbsReal*>(real)) _realVars.add(*real);
-  }
-
   _lvvars.clear();
   _lvbins.clear();
 
@@ -818,11 +812,6 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   cloneArray(_errHi, other._errHi, other._arrSize);
   cloneArray(_binv, other._binv, other._arrSize);
   cloneArray(_sumw2, other._sumw2, other._arrSize);
-
-  // Save real dimensions of dataset separately
-  for (const auto arg : _vars) {
-    if (dynamic_cast<RooAbsReal*>(arg) != nullptr) _realVars.add(*arg) ;
-  }
 
   // Fill array of LValue pointers to variables
   for (const auto rvarg : _vars) {
@@ -1139,19 +1128,21 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
   // Handle all interpolation cases
   _vars.assignValueOnly(bin) ;
 
+  auto varInfo = getVarInfo();
+
   Double_t wInt(0) ;
-  if (_realVars.getSize()==1) {
+  if (varInfo.nRealVars == 1) {
 
     // 1-dimensional interpolation
-    const auto real = static_cast<RooRealVar*>(_realVars[static_cast<std::size_t>(0)]);
+    const auto real = static_cast<RooRealVar*>(_vars[varInfo.realVarIdx1]);
     const RooAbsBinning* binning = real->getBinningPtr(0) ;
     wInt = interpolateDim(*real,binning,((RooAbsReal*)bin.find(*real))->getVal(), intOrder, correctForBinSize, cdfBoundaries) ;
     
-  } else if (_realVars.getSize()==2) {
+  } else if (varInfo.nRealVars == 2) {
 
     // 2-dimensional interpolation
-    const auto realX = static_cast<RooRealVar*>(_realVars[static_cast<std::size_t>(0)]);
-    const auto realY = static_cast<RooRealVar*>(_realVars[static_cast<std::size_t>(1)]);
+    const auto realX = static_cast<RooRealVar*>(_vars[varInfo.realVarIdx1]);
+    const auto realY = static_cast<RooRealVar*>(_vars[varInfo.realVarIdx2]);
     Double_t xval = ((RooAbsReal*)bin.find(*realX))->getVal() ;
     Double_t yval = ((RooAbsReal*)bin.find(*realY))->getVal() ;
     
@@ -1198,7 +1189,7 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
 
     // Higher dimensional scenarios not yet implemented
     coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") interpolation in " 
-	 << _realVars.getSize() << " dimensions not yet implemented" << endl ;
+                          << varInfo.nRealVars << " dimensions not yet implemented" << endl ;
     return weight(bin,0) ;
 
   }
@@ -2091,7 +2082,8 @@ void RooDataHist::Streamer(TBuffer &R__b) {
       R__b.ReadFastArray(_sumw2,_arrSize);
       delete [] _binv;
       _binv = new Double_t[_arrSize];
-      _realVars.Streamer(R__b);
+      RooArgSet tmpSet;
+      tmpSet.Streamer(R__b);
       double tmp;
       R__b >> tmp; //_curWeight;
       R__b >> tmp; //_curWgtErrLo;
@@ -2138,4 +2130,41 @@ void RooDataHist::getBatches(RooBatchCompute::RunContext& evalData, std::size_t 
 /// Hand over pointers to our weight arrays to the data store implementation.
 void RooDataHist::registerWeightArraysToDataStore() const {
   _dstore->setExternalWeightArray(_wgt, _errLo, _errHi, _sumw2);
+}
+
+
+RooDataHist::VarInfo const& RooDataHist::getVarInfo() {
+
+  if(_varInfo.initialized) return _varInfo;
+
+  auto& info = _varInfo;
+
+  {
+    // count the number of real vars and get their indices
+    info.nRealVars = 0;
+    size_t iVar = 0;
+    for (const auto real : _vars) {
+      if (dynamic_cast<RooRealVar*>(real)) {
+        if(info.nRealVars == 0) info.realVarIdx1 = iVar;
+        if(info.nRealVars == 1) info.realVarIdx2 = iVar;
+        ++info.nRealVars;
+      }
+      ++iVar;
+    }
+  }
+
+  {
+    // assert that the variables are either real values or categories
+    for (unsigned int i=0; i < _vars.size(); ++i) {
+      if (_lvbins[i].get()) {
+        assert(dynamic_cast<const RooAbsReal*>(_vars[i]));
+      } else {
+        assert(dynamic_cast<const RooAbsCategoryLValue*>(_vars[i]));
+      }
+    }
+  }
+
+  info.initialized = true;
+
+  return info;
 }
