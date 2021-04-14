@@ -58,7 +58,8 @@
 #pragma link C++ class TText-;
 #pragma link C++ class TTF;
 #pragma link C++ class TWbox+;
-#pragma link C++ class TFeynman-;
+#pragma link C++ class TFeynman+;
+#pragma link C++ class TFeynmanEntry+;
 
 #pragma link C++ enum TImage::EImageFileTypes;
 #pragma link C++ enum TImage::EText3DType;

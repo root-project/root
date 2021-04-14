@@ -9,37 +9,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
-#include "TMath.h"
-#include "TVector3.h"
-#include "TCurlyLine.h"
+ #ifndef ROOT_TFeynman
+ #define ROOT_TFeynman
+
+
+
 #include "TFeynmanEntry.h"
-#include "TObject.h"
-#include "TStyle.h"
-#include "TLatex.h"
-#include "TLine.h"
-#include "TPolyLine.h"
-#include "TMarker.h"
+#include "TAttLine.h"
 #include "TList.h"
-#include "TVirtualPad.h"
-#include "TMath.h"
-#include "TROOT.h"
-#include "TMultiGraph.h"
-#include "TGraph.h"
-#include "TH1.h"
-#include "THStack.h"
-#include "TCurlyLine.h"
 
-#include "../src/TFeynmanEntry.cxx"
-
-class TFeynman {
+class TFeynman : public TAttLine {
 
 	public:
 
 		// The constructor
 		TFeynman(Double_t canvasWidth, Double_t canvasHeight);
 
-    TFeynmanEntry* Add(const TObject *particle);
+    TFeynmanEntry* AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
 
 
     virtual void Draw();
@@ -48,29 +34,4 @@ class TFeynman {
   protected:
     TList *fPrimitives; ///< List of TFeynman entries
 };
-
-
-class Boson : public TFeynman {
-public:
-
-	Boson(const char* name, Double_t x1, Double_t y1, Double_t x2, Double_t y2) {
-			TCurlyLine *boson = new TCurlyLine(x1, y1, x2, y2);
-
-			Add((TObject*)boson);
-	}
-
-	TObject* ToObject(TCurlyLine* boson);
-
-
-	virtual void Paint();
-
-	virtual void SetX1(Double_t value) {fx1 = value;};
-	virtual void SetY1(Double_t value) {fy1 = value;};
-	virtual void SetX2(Double_t value) {fx2 = value;};
-	virtual void SetY2(Double_t value) {fy2 = value;};
-protected:
-	Double_t fx1;
-	Double_t fy1;
-	Double_t fx2;
-	Double_t fy2;
-}
+#endif

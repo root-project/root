@@ -10,17 +10,25 @@
  *************************************************************************/
 //--------------------------------------------------------------------------
 
-#include "TObject.h"
+#ifndef ROOT_TFeynmanEntry
+#define ROOT_TFeynmanEntry
+
+#include "TArrow.h"
 
 class TFeynmanEntry {
     public:
-        TFeynmanEntry(const TObject* particle, const char *label);
-        virtual void SetObject(TObject *obj) {fObject = obj;};
-        virtual const char   *GetLabel() const { return fParticle.Data(); }
-        virtual TObject      *GetObject() const { return fObject; }
+        TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
+        virtual const char   *GetParticleName() const { return fParticle.Data(); }
+        virtual Double_t GetX1()  {return fX1;}
+        virtual Double_t GetY1()  {return fY1;}
+        virtual Double_t GetX2()  {return fX2;}
+        virtual Double_t GetY2() const {return fY2;}
+        void Paint();
     protected:
-        TObject      *fObject;   ///< pointer to object being represented by this entry
         TString      fParticle; ///< Name of the particle (label)
-    private:
-      ClassDef(TFeynmanEntry, 1);
+        Double_t     fX1;
+        Double_t     fX2; ///< Starting Point
+        Double_t     fY1;
+        Double_t     fY2; ///<Stopping Point
 };
+#endif

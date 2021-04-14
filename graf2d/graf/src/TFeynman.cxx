@@ -1,3 +1,25 @@
+#include <cstdio>
+#include <iostream>
+#ifndef ROOT_TFeynman
+#include "../inc/TFeynman.h"
+
+#include "TMath.h"
+#include "TCurlyLine.h"
+
+#include "TObject.h"
+#include "TStyle.h"
+#include "TLatex.h"
+#include "TLine.h"
+#include "TVirtualPad.h"
+#include "TROOT.h"
+#include "TMultiGraph.h"
+#include "TGraph.h"
+#include "TH1.h"
+#include "THStack.h"
+#include "TArrow.h"
+
+ClassImp(TFeynman);
+
 // @(#)root/feynman:$Id$
 // Author: Advait Dhingra   12/04/2021
 
@@ -29,14 +51,6 @@ This example plots the feynman.C diagram in the tutorials:
 
 */
 
-#include <cstdio>
-#include <iostream>
-
-
-
-#include "../inc/TFeynman.h"
-
-ClassImp(TFeynman);
 
 
 TFeynman::TFeynman(Double_t canvasWidth, Double_t canvasHeight){
@@ -46,35 +60,24 @@ TFeynman::TFeynman(Double_t canvasWidth, Double_t canvasHeight){
         fPrimitives = new TList();
 		}
 
-TFeynmanEntry* TFeynman::Add(const TObject *particle) {
-   TFeynmanEntry *newEntry = new TFeynmanEntry(particle);
-   fPrimitives->Add((TObject*)newEntry);
+TFeynmanEntry* TFeynman::AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2) {
+   TFeynmanEntry *newEntry = new TFeynmanEntry(particleName, x1, y1, x2, y2);
+   //fPrimitives->Add(newEntry);
    return newEntry;
 }
 
 void TFeynman::Draw() {
-	//AppendPad();
+	AppendPad();
 }
 void TFeynman::Paint() {
 
 	TIter next(fPrimitives);
 	TFeynmanEntry *entry;
 	Int_t iColumn = 0;
-	const char* particle = entry->GetLabel();
+	const char* particle = entry->GetParticleName();
 	while (( entry = (TFeynmanEntry*)next() )) {
-		if (particle.Contains("#gamma")) {
-			PaintGaugeBoson();
-		}
+		entry->Paint();
 	}
 
 }
-
-void Boson::Paint() {
-	if (!gPad) return;
-
-
-}
-
-Boson::ToObject(TCurlyLine* boson) {
-	return ((TObject*)boson);
-}
+#endif
