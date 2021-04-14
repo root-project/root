@@ -80,7 +80,7 @@ MinimumError MnCovarianceSqueeze::operator()(const MinimumError &err, unsigned i
       for (unsigned int i = 0; i < squeezed.Nrow(); i++) {
          tmp(i, i) = 1. / squeezed(i, i);
       }
-      return MinimumError(tmp, MinimumError::MnInvertFailed());
+      return MinimumError(tmp, MinimumError::MnInvertFailed);
    }
 
    return MinimumError(squeezed, err.Dcovar());

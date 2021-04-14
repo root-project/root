@@ -17,8 +17,6 @@
 
 // #include "TimingUtilities/PentiumTimer.h"
 
-// StackAllocator gStackAllocator;
-
 using namespace ROOT::Minuit2;
 
 int main()

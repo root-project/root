@@ -13,12 +13,6 @@ set(MINUIT2_HEADERS
     ABTypes.h
     AnalyticalGradientCalculator.h
     BFGSErrorUpdator.h
-    BasicFunctionGradient.h
-    BasicFunctionMinimum.h
-    BasicMinimumError.h
-    BasicMinimumParameters.h
-    BasicMinimumSeed.h
-    BasicMinimumState.h
     CombinedMinimizer.h
     CombinedMinimumBuilder.h
     ContoursError.h
@@ -121,7 +115,6 @@ set(MINUIT2_HEADERS
 set(MINUIT2_SOURCES
     AnalyticalGradientCalculator.cxx
     BFGSErrorUpdator.cxx
-    BasicMinimumError.cxx
     CombinedMinimumBuilder.cxx
     DavidonErrorUpdator.cxx
     FumiliBuilder.cxx

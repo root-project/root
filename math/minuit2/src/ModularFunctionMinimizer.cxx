@@ -184,7 +184,7 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const MnFcn &mfcn, const Grad
       print.Warn("Stop before iterating - call limit already exceeded");
 
       return FunctionMinimum(seed, std::vector<MinimumState>(1, seed.State()), mfcn.Up(),
-                             FunctionMinimum::MnReachedCallLimit());
+                             FunctionMinimum::MnReachedCallLimit);
    }
 
    return mb.Minimum(mfcn, gc, seed, strategy, maxfcn, effective_toler);

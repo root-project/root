@@ -80,8 +80,8 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
    }
 
    if (!seed.IsValid()) {
-     print.Error("Minimum seed invalid.");
-     return min;
+      print.Error("Minimum seed invalid.");
+      return min;
    }
 
    if (edm < 0.) {
@@ -148,8 +148,8 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
          AddResult(result, st);
 
          if (!st.IsValid()) {
-           print.Warn("Invalid Hessian - exit the minimization");
-           break;
+            print.Warn("Invalid Hessian - exit the minimization");
+            break;
          }
 
          // check new edm
@@ -187,14 +187,15 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
    // Add latest state (Hessian calculation)
    // and check edm (add a factor of 10 in tolerance )
    if (edm > 10 * edmval) {
-      min.Add(result.back(), FunctionMinimum::MnAboveMaxEdm());
+      min.Add(result.back(), FunctionMinimum::MnAboveMaxEdm);
       print.Warn("No convergence; Edm", edm, "is above tolerance", 10 * edmval);
    } else {
       // check if minimum has edm above max before
       if (min.IsAboveMaxEdm()) {
          print.Info("Edm has been re-computed after Hesse; Edm", edm, "is now within tolerance");
       }
-      if (hessianComputed) min.Add(result.back());
+      if (hessianComputed)
+         min.Add(result.back());
    }
 
    print.Debug("Minimum found", min);
@@ -350,7 +351,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
    if (fcn.NumOfCalls() >= maxfcn) {
       print.Warn("Call limit exceeded");
 
-      return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnReachedCallLimit());
+      return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnReachedCallLimit);
    }
 
    if (edm > edmval) {
@@ -363,7 +364,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
       } else {
          print.Warn("Iterations finish without convergence; Edm", edm, "Requested", edmval);
 
-         return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnAboveMaxEdm());
+         return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnAboveMaxEdm);
       }
    }
    //   std::cout<<"result.back().Error().Dcovar()= "<<result.back().Error().Dcovar()<<std::endl;

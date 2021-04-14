@@ -36,7 +36,7 @@ MinimumError MnPosDef::operator()(const MinimumError &e, const MnMachinePrecisio
    MnAlgebraicSymMatrix err(e.InvHessian());
    if (err.size() == 1 && err(0, 0) < prec.Eps()) {
       err(0, 0) = 1.;
-      return MinimumError(err, MinimumError::MnMadePosDef());
+      return MinimumError(err, MinimumError::MnMadePosDef);
    }
    if (err.size() == 1 && err(0, 0) > prec.Eps()) {
       return e;
@@ -100,7 +100,7 @@ MinimumError MnPosDef::operator()(const MinimumError &e, const MnMachinePrecisio
 
    print.Warn("Matrix forced pos-def by adding to diagonal", padd);
 
-   return MinimumError(err, MinimumError::MnMadePosDef());
+   return MinimumError(err, MinimumError::MnMadePosDef);
 }
 
 } // namespace Minuit2

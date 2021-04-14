@@ -212,12 +212,12 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
    if (mfcn.NumOfCalls() > maxfcn) {
       print.Warn("Simplex did not converge, #fcn calls exhausted");
 
-      return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up(), FunctionMinimum::MnReachedCallLimit());
+      return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up(), FunctionMinimum::MnReachedCallLimit);
    }
    if (simplex.Edm() > minedm) {
       print.Warn("Simplex did not converge, edm > minedm");
 
-      return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up(), FunctionMinimum::MnAboveMaxEdm());
+      return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up(), FunctionMinimum::MnAboveMaxEdm);
    }
 
    return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up());

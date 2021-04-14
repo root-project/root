@@ -10,45 +10,40 @@
 #ifndef ROOT_Minuit2_MinimumSeed
 #define ROOT_Minuit2_MinimumSeed
 
-#include "Minuit2/BasicMinimumSeed.h"
-
-#include <memory>
+#include "Minuit2/MinimumState.h"
+#include "Minuit2/MinimumParameters.h"
+#include "Minuit2/MinimumError.h"
+#include "Minuit2/FunctionGradient.h"
+#include "Minuit2/MnUserTransformation.h"
 
 namespace ROOT {
 
 namespace Minuit2 {
 
-class MinimumState;
-class MinimumParameters;
-class MinimumError;
-class FunctionGradient;
-class MnUserTransformation;
-
-/** MinimumSeed contains the starting values for the minimization produced
-    by the SeedGenerator.
- */
-
 class MinimumSeed {
 
 public:
-   MinimumSeed(const MinimumState &st, const MnUserTransformation &trafo)
-      : fData(std::make_shared<BasicMinimumSeed>(st, trafo))
-   {
-   }
+   MinimumSeed(const MinimumState &state, const MnUserTransformation &trafo) : fPtr{new Data{state, trafo, true}} {}
 
-   const MinimumState &State() const { return fData->State(); }
-   const MinimumParameters &Parameters() const { return fData->Parameters(); }
-   const MinimumError &Error() const { return fData->Error(); }
-   const FunctionGradient &Gradient() const { return fData->Gradient(); }
-   const MnUserTransformation &Trafo() const { return fData->Trafo(); }
-   const MnMachinePrecision &Precision() const { return fData->Precision(); }
-   double Fval() const { return fData->Fval(); }
-   double Edm() const { return fData->Edm(); }
-   unsigned int NFcn() const { return fData->NFcn(); }
-   bool IsValid() const { return fData->IsValid(); }
+   const MinimumState &State() const { return fPtr->fState; }
+   const MinimumParameters &Parameters() const { return State().Parameters(); }
+   const MinimumError &Error() const { return State().Error(); };
+   const FunctionGradient &Gradient() const { return State().Gradient(); }
+   const MnUserTransformation &Trafo() const { return fPtr->fTrafo; }
+   const MnMachinePrecision &Precision() const { return Trafo().Precision(); }
+   double Fval() const { return State().Fval(); }
+   double Edm() const { return State().Edm(); }
+   unsigned int NFcn() const { return State().NFcn(); }
+   bool IsValid() const { return fPtr->fValid; }
 
 private:
-   std::shared_ptr<BasicMinimumSeed> fData;
+   struct Data {
+      MinimumState fState;
+      MnUserTransformation fTrafo;
+      bool fValid;
+   };
+
+   std::shared_ptr<Data> fPtr;
 };
 
 } // namespace Minuit2
