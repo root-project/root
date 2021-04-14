@@ -218,8 +218,7 @@ function with a user provided random number generator instead of using the defau
 
 ## TMVA
 
-- Introducing TMVA PyTorch Interface, a method to use PyTorch internally with TMVA for deep learning. This can be used as an alternative to PyKeras Interface for complex models providing more
-flexibility and power.
+- Introducing TMVA PyTorch Interface, a method to use PyTorch internally with TMVA for deep learning. This can be used as an alternative to PyKeras Interface for complex models providing more flexibility and power.
 - Add support in the TMVA Keras interface for Tensorflow.Keras (the version embedded in Tensorflow) and for standalone Keras versions up to it latest 2.3. For using  Tensorflow.Keras one needs to use
 the booking option `tf.keras=True`.
 - Update the TMVA Keras tutorials to use now tensorflow.keras.
