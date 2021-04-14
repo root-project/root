@@ -45,7 +45,7 @@ ROOT_MATH_KEEP = ['CMakeLists.txt', 'mathcore']
 ROOT_ETC_KEEP = ['Makefile.arch', 'class.rules', 'cmake', 'dictpch',
                  'gdb-backtrace.sh', 'gitinfo.txt', 'helgrind-root.supp',
                  'hostcert.conf', 'plugins', 'system.plugins-ios',
-                 'valgrind-root-python.supp', 'valgrind-root.supp', 'vmc']
+                 'valgrind-root-python.supp', 'valgrind-root.supp']
 ROOT_PLUGINS_KEEP = ['TVirtualStreamerInfo']
 
 ROOT_EXPLICIT_REMOVE = [os.path.join('core', 'base', 'v7'),
