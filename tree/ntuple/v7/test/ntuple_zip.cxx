@@ -84,3 +84,25 @@ TEST(RNTupleZip, Large)
    decompressor.Unzip(zipBuffer.get(), szZip, N, unzipBuffer.get());
    EXPECT_EQ(data, std::string(unzipBuffer.get(), N));
 }
+
+TEST(RNTupleWriter, TFilePtr) {
+   FileRaii fileGuard("test_ntuple_zip_tfileptr_comp.root");
+   {
+      std::unique_ptr<TFile> file;
+      auto model = RNTupleModel::Create();
+      auto field = model->MakeField<float>("field");
+      auto ntuple = std::make_unique<RNTupleWriter>(std::move(model),
+         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions(), file
+      ));
+      for (int i = 0; i < 20000; i++) {
+         *field = static_cast<float>(i);
+         ntuple->Fill();
+      }
+   }
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   auto rdField = ntuple->GetView<float>("field");
+   EXPECT_EQ(20000, ntuple->GetNEntries());
+   for (auto i : ntuple->GetEntryRange()) {
+      ASSERT_EQ(static_cast<float>(i), rdField(i));
+   }
+}
