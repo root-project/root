@@ -526,7 +526,12 @@ public:
   RooAbsProxy* getProxy(Int_t index) const ;
   Int_t numProxies() const ;
 
-
+  /// De-duplicated pointer to this object's name.
+  /// This can be used for fast name comparisons.
+  /// like `if (namePtr() == other.namePtr())`.
+  /// \note TNamed::GetName() will return a pointer that's
+  /// different for each object, but namePtr() always points
+  /// to a unique instance.
   inline const TNamed* namePtr() const {
     return _namePtr ;
   }
@@ -674,7 +679,7 @@ private:
 
   mutable RooExpensiveObjectCache* _eocache{nullptr}; // Pointer to global cache manager for any expensive components created by this object
 
-  mutable TNamed* _namePtr ; //! Do not persist. Pointer to global instance of string that matches object named
+  mutable TNamed* _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
   Bool_t _isConstant ; //! Cached isConstant status
 
   mutable Bool_t _localNoInhibitDirty ; //! Prevent 'AlwaysDirty' mode for this node
