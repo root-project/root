@@ -410,7 +410,7 @@ The new `RooCrystalBall` class can substitute the `RooDSCBShape` and `RooSDSCBSh
 
 - Add the method `AddPoint`to `TGraph(x,y)` and `TGraph2D(x,y,z)`, equivalent to `SetPoint(g->GetN(),x,y)`and `SetPoint(g->GetN(),x,y,z)`
 - Option `E0` draws error bars and markers are drawn for bins with 0 contents. Now, combined
-with options E1 and E2, it avoids error bars clipping.
+  with options E1 and E2, it avoids error bars clipping.
 - Fix `TAxis::ChangeLabel` for vertical axes and 3D plots
 
 ## 3D Graphics Libraries
