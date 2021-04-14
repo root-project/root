@@ -19,6 +19,8 @@ The following people have contributed to this new version:
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
+ Anirudh Dagar, CERN-SFT/GSOC, \
+ Hans Dembinski, TU DOrtmund/LHCb,\
  Massimiliano Galli, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Hadrien Grasland, IJCLab/LAL,\
@@ -44,8 +46,7 @@ The following people have contributed to this new version:
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
- Stefan Wunsch, CERN/SFT,\
- Anirudh Dagar, CERN-HSF/GSoC
+ Stefan Wunsch, CERN/SFT
 
 ## General
 
@@ -115,7 +116,7 @@ The final "Dynamic Path" is now composed of these sources in order:
 - `TTree` now supports the inclusion of leaves of types `long` and `unsigned long` (and therefore also `std::size_t` on most systems) also for branches in "leaflist mode". The corresponding leaflist letters are 'G' and 'g'.
 - when looping over a `TTree` with a friend with a larger number of entries, `TTreeReader` now ends the event loop when the entries in the _main_ `TTree` are exhausted, consistently with other interfaces. See [#6518](https://github.com/root-project/root/issues/6518) for more details.
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` is now deprecated in favor of the more flexible and newly introduced `TTreeProcessorMT::SetTasksPerWorkerHint`. See the relevant entries in our reference guide for more information.
-- The name of the sub-branches of a split collection no longer have 2 consecutive dots if the top level branche name has a trailing dot.  The name of the collection's index leaf also no longer include the dot. For example for "t." the names where "t._" and "t..fValue" and are now "t_" and "t.fValue". 
+- The name of the sub-branches of a split collection no longer have 2 consecutive dots if the top level branche name has a trailing dot.  The name of the collection's index leaf also no longer include the dot. For example for "t." the names where "t._" and "t..fValue" and are now "t_" and "t.fValue".
 
 ## RDataFrame
 
@@ -186,6 +187,13 @@ Tests for the Spark backend can be turned ON/OFF with the new build option `test
 
 ## Histogram Libraries
 
+- Add a new `THistRange` class for defining a generic bin range and iteration in a 1d and multi-dimensional histogram
+
+- Fix a memory leak in `TF1::Copy` and `TFormula::Copy`
+
+- Enable using automatic differentiation when computing parameter gradient in formula based TF1
+
+- Add several fixes and improvements to the `TKDE` class using kernel estimation for estimating a density from data.
 
 ## Math Libraries
 
@@ -194,13 +202,33 @@ Tests for the Spark backend can be turned ON/OFF with the new build option `test
 - Due to some planned major improvements to `RVec`, the layout of `RVec` objects will change in a backward-incompatible way between v6.24 and v6.26.
   Because of this, we now print a warning if an application is reading or writing a `ROOT::RVec` object from/to a ROOT file. We assume this is an
   exceedingly rare case, as the ROOT interface typically used to manipulate `RVec`s is `RDataFrame`, and `RDataFrame` performs an on-the-fly
-  `RVec <-> std::vector` conversion rather than writing `RVec`s to disk. Note that, currently, `RVecs` written e.g. in a `TTree` cannot be read back
+  `RVec <-> std::vector` conversion rather than writing `RVec`s to disk. Note that, currently, `RVecs` written e. Enable autig. in a `TTree` cannot be read back
   using certain ROOT interfaces (e.g. `TTreeReaderArray`, `RDataFrame` and the experimental `RNTuple`). All these limitations will be lifted in v6.26.
 - Portable implementation of the RANLUX++ generator, see [RanluxppEngine](https://root.cern/doc/master/classROOT_1_1Math_1_1RanluxppEngine.html) and [our blog post](https://root.cern/blog/ranluxpp/).
+- Change `TRandom3::GetSeed` to return the current state element in the contained seed vector of TRandom3. The return value will now change after every call of `TRandom3::Rndm` (when generating a random number). Before the function was returning the first element of the state, which was changing only after 624 calls to `Rndm()`.
+- Fix a bug in `ROOT::Fit::BinData` copy constructor
+- Fix a bug in applying a correction factor used for the computation of the fit confidence level in `ROOT::Fit::FitResult`.
+- TMatrix: optimize implementation of `TPrincipal::AddRow` that is heavily used by CMS.
+
+###Minuit2
+
+- Add a new improved message logging system. Debug message now can be enabled in Minuit2 when using maximum print level.
+- When using external provided gradient, compute in MnSeed still numerical gradients to obtain correct step sizes and  initial estimate of covariance matrix. This allows to start with a good first
+	state estimation, reducing significantly the number of  subsequent iterations.
+
 
 ## TMVA
 
-- Introducing TMVA PyTorch Interface, a method to use PyTorch internally with TMVA for deep learning. This can be used as an alternative to PyKeras Interface for complex models providing more flexibility and power.
+- Introducing TMVA PyTorch Interface, a method to use PyTorch internally with TMVA for deep learning. This can be used as an alternative to PyKeras Interface for complex models providing more
+flexibility and power.
+- Add support in the TMVA Keras interface for Tensorflow.Keras (the version embedded in Tensorflow) and for standalone Keras versions up to it latest 2.3. For using  Tensorflow.Keras one needs to use
+the booking option `tf.keras=True`.
+- Update the TMVA Keras tutorials to use now tensorflow.keras.
+- Deprecate the MethodDNN in favour of MethodDL supporting both CNN and RNN
+- Add possibility to customize all relevant minimizer parameters used for training in MethodDL
+- Add support in MethodDL for the Cudnn version 8 when using the Cuda implementation for CNN and RNN Minuit2
+- Implement the missing support for MethodCategory for multiclass classifiers.
+- Add possibility to retrieve a ROC curve made with the training dataset instead of the default test dataset.
 
 
 ## RooFit Libraries
@@ -215,6 +243,9 @@ Tests for the Spark backend can be turned ON/OFF with the new build option `test
   These points will be skipped, and HypoTestInverter can continue.
 - Tweak pull / residual plots. ROOT automatically zoomed out a bit when a pull / residual plot is created. Now, the
   axis range of the original plot is transferred to the residual plot, so the pulls can be drawn below the main plot.
+- Improve plotting of `RooBinSamplingPdf`
+- Print a Warning message when the `RooAddPdf` is evaluated without passing a normalization set and the class has not a normalization set defined.
+Without a normalization set the `RooAddPdf` is not properly defined and its shape will be different depending on which normalization range is used.
 
 
 ### Massive speed up of RooFit's `BatchMode` on CPUs with vector extensions
@@ -380,7 +411,8 @@ The new `RooCrystalBall` class can substitute the `RooDSCBShape` and `RooSDSCBSh
 
 - Add the method `AddPoint`to `TGraph(x,y)` and `TGraph2D(x,y,z)`, equivalent to `SetPoint(g->GetN(),x,y)`and `SetPoint(g->GetN(),x,y,z)`
 - Option `E0` draws error bars and markers are drawn for bins with 0 contents. Now, combined
-  with options E1 and E2, it avoids error bars clipping.
+with options E1 and E2, it avoids error bars clipping.
+- Fix `TAxis::ChangeLabel` for vertical axes and 3D plots
 
 ## 3D Graphics Libraries
 
@@ -473,6 +505,8 @@ The following builtins have been updated:
 - VecCore 0.7.0
 - LZ4 1.9.3
 - openui5
+- Xrootd 4.12.8
+- Zstd   1.4.8
 
 
 ## PyROOT
