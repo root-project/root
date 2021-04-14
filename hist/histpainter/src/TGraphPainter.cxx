@@ -4386,7 +4386,10 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
    Int_t print_fchi2   = (dofit/100)%10;
    Int_t print_fprob   = (dofit/1000)%10;
    Int_t nlinesf = print_fval + print_fchi2 + print_fprob;
-   if (fit) nlinesf += fit->GetNpar();
+   if (fit) {
+      if (print_fval < 2) nlinesf += fit->GetNumberFreeParameters();
+      else                nlinesf += fit->GetNpar();
+   }
    Bool_t done = kFALSE;
    Double_t  statw  = 1.8*gStyle->GetStatW();
    Double_t  stath  = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
@@ -4431,7 +4434,10 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
       stats->AddText(t);
    }
    if (print_fval || print_ferrors) {
+      Double_t parmin,parmax;
       for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
+         fit->GetParLimits(ipar,parmin,parmax);
+         if (print_fval < 2 && parmin*parmax != 0 && parmin >= parmax) continue;
          if (print_ferrors) {
             snprintf(textstats,50,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
             snprintf(t,64,textstats,(Float_t)fit->GetParameter(ipar)
