@@ -180,7 +180,12 @@ public:
    RResultPtr &operator=(const RResultPtr &) = default;
    RResultPtr &operator=(RResultPtr &&) = default;
    explicit operator bool() const { return bool(fObjPtr); }
-   ~RResultPtr() { ROOT::Internal::RDF::WarnOnLazySnapshotNotTriggered(*this); }
+   ~RResultPtr()
+   {
+      if (fObjPtr.use_count() == 1) {
+         ROOT::Internal::RDF::WarnOnLazySnapshotNotTriggered(*this);
+      }
+   }
 
    /// Convert a RResultPtr<T2> to a RResultPtr<T>.
    ///
