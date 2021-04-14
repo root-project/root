@@ -14,10 +14,13 @@
 
 class TFeynmanEntry {
     public:
-        TFeynmanEntry(const TObject* particle);
-        virtual void SetObject(TObject *obj);
+        TFeynmanEntry(const TObject* particle, const char *label);
+        virtual void SetObject(TObject *obj) {fObject = obj;};
+        virtual const char   *GetLabel() const { return fParticle.Data(); }
+        virtual TObject      *GetObject() const { return fObject; }
     protected:
         TObject      *fObject;   ///< pointer to object being represented by this entry
+        TString      fParticle; ///< Name of the particle (label)
     private:
       ClassDef(TFeynmanEntry, 1);
 };
