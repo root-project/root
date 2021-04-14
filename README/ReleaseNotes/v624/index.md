@@ -188,12 +188,11 @@ Tests for the Spark backend can be turned ON/OFF with the new build option `test
 ## Histogram Libraries
 
 - Add a new `THistRange` class for defining a generic bin range and iteration in a 1d and multi-dimensional histogram
-
 - Fix a memory leak in `TF1::Copy` and `TFormula::Copy`
-
 - Enable using automatic differentiation when computing parameter gradient in formula based TF1
-
 - Add several fixes and improvements to the `TKDE` class using kernel estimation for estimating a density from data.
+- Improve `TF1::GetRandom`, `TH1::GetRandom` and `TH1::FillRandom`  (and same for TF2,TF3, TH2 and TH3 functions) to pass optionally a random number generator instance. This allows to use these
+function with a user provided random number generator instead of using the default `gRandom`.  
 
 ## Math Libraries
 
