@@ -1091,8 +1091,8 @@ double RooDataHist::weightFast(const RooArgSet& bin, Int_t intOrder, Bool_t corr
     }
   }
 
-  // Handle all interpolation cases with the slow version
-  return weight(bin, intOrder, correctForBinSize, cdfBoundaries);
+  // Handle all interpolation cases
+  return weightInterpolated(bin, intOrder, correctForBinSize, cdfBoundaries);
 }
 
 
@@ -1128,51 +1128,58 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
   // Handle all interpolation cases
   _vars.assignValueOnly(bin) ;
 
-  auto varInfo = getVarInfo();
+  return weightInterpolated(_vars, intOrder, correctForBinSize, cdfBoundaries);
+}
 
-  Double_t wInt(0) ;
+
+double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries) {
+  VarInfo const& varInfo = getVarInfo();
+
+  auto centralIdx = calcTreeIndex(bin, true);
+
+  double wInt{0} ;
   if (varInfo.nRealVars == 1) {
 
     // 1-dimensional interpolation
-    const auto real = static_cast<RooRealVar*>(_vars[varInfo.realVarIdx1]);
-    const RooAbsBinning* binning = real->getBinningPtr(0) ;
-    wInt = interpolateDim(*real,binning,((RooAbsReal*)bin.find(*real))->getVal(), intOrder, correctForBinSize, cdfBoundaries) ;
+    auto const& realX = static_cast<RooRealVar const&>(*bin[varInfo.realVarIdx1]);
+    wInt = interpolateDim(varInfo.realVarIdx1, realX.getVal(), centralIdx, intOrder, correctForBinSize, cdfBoundaries) ;
     
   } else if (varInfo.nRealVars == 2) {
 
     // 2-dimensional interpolation
-    const auto realX = static_cast<RooRealVar*>(_vars[varInfo.realVarIdx1]);
-    const auto realY = static_cast<RooRealVar*>(_vars[varInfo.realVarIdx2]);
-    Double_t xval = ((RooAbsReal*)bin.find(*realX))->getVal() ;
-    Double_t yval = ((RooAbsReal*)bin.find(*realY))->getVal() ;
+    auto const& realX = static_cast<RooRealVar const&>(*bin[varInfo.realVarIdx1]);
+    auto const& realY = static_cast<RooRealVar const&>(*bin[varInfo.realVarIdx2]);
+    double xval = realX.getVal() ;
+    double yval = realY.getVal() ;
+
+    RooAbsBinning const& binningY = realY.getBinning();
     
-    Int_t ybinC = realY->getBin() ;
-    Int_t ybinLo = ybinC-intOrder/2 - ((yval<realY->getBinning().binCenter(ybinC))?1:0) ;
-    Int_t ybinM = realY->numBins() ;
+    int ybinC = binningY.binNumber(yval) ;
+    int ybinLo = ybinC-intOrder/2 - ((yval<binningY.binCenter(ybinC))?1:0) ;
+    int ybinM = binningY.numBins() ;
+
+    auto idxMultY = _idxMult[varInfo.realVarIdx2];
+    auto offsetIdx = centralIdx - idxMultY * ybinC;
     
-    Int_t i ;
-    Double_t yarr[10] ;
-    Double_t xarr[10] ;
-    const RooAbsBinning* binning = realX->getBinningPtr(0) ;
-    for (i=ybinLo ; i<=intOrder+ybinLo ; i++) {
-      Int_t ibin ;
+    double yarr[10] = {} ;
+    double xarr[10] = {} ;
+    for (int i=ybinLo ; i<=intOrder+ybinLo ; i++) {
+      int ibin ;
       if (i>=0 && i<ybinM) {
-	// In range
-	ibin = i ;
-	realY->setBin(ibin) ;
-	xarr[i-ybinLo] = realY->getVal() ;
+        // In range
+        ibin = i ;
+        xarr[i-ybinLo] = binningY.binCenter(ibin) ;
       } else if (i>=ybinM) {
-	// Overflow: mirror
-	ibin = 2*ybinM-i-1 ;
-	realY->setBin(ibin) ;
-	xarr[i-ybinLo] = 2*realY->getMax()-realY->getVal() ;
+        // Overflow: mirror
+        ibin = 2*ybinM-i-1 ;
+        xarr[i-ybinLo] = 2*binningY.highBound()-binningY.binCenter(ibin) ;
       } else {
-	// Underflow: mirror
-	ibin = -i -1;
-	realY->setBin(ibin) ;
-	xarr[i-ybinLo] = 2*realY->getMin()-realY->getVal() ;
+        // Underflow: mirror
+        ibin = -i -1;
+        xarr[i-ybinLo] = 2*binningY.lowBound()-binningY.binCenter(ibin) ;
       }
-      yarr[i-ybinLo] = interpolateDim(*realX,binning,xval,intOrder,correctForBinSize,kFALSE) ;	
+      auto centralIdxX = offsetIdx + idxMultY * ibin;
+      yarr[i-ybinLo] = interpolateDim(varInfo.realVarIdx1,xval,centralIdxX,intOrder,correctForBinSize,kFALSE) ;
     }
 
     if (gDebug>7) {
@@ -1184,20 +1191,18 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
       cout << endl ;
     }
     wInt = RooMath::interpolate(xarr,yarr,intOrder+1,yval) ;
-    
+
   } else {
 
     // Higher dimensional scenarios not yet implemented
     coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") interpolation in " 
                           << varInfo.nRealVars << " dimensions not yet implemented" << endl ;
-    return weight(bin,0) ;
+    return weightFast(bin,0,correctForBinSize,cdfBoundaries) ;
 
   }
 
   return wInt ;
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1266,67 +1271,58 @@ void RooDataHist::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const
 /// Perform boundary safe 'intOrder'-th interpolation of weights in dimension 'dim'
 /// at current value 'xval'
 
-Double_t RooDataHist::interpolateDim(RooRealVar& dim, const RooAbsBinning* binning, Double_t xval, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) 
+Double_t RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int intOrder, bool correctForBinSize, bool cdfBoundaries) 
 {
+  auto const& binning = static_cast<RooRealVar&>(*_vars[iDim]).getBinning();
+
   // Fill workspace arrays spanning interpolation area
-  Int_t fbinC = dim.getBin(*binning) ;
-  Int_t fbinLo = fbinC-intOrder/2 - ((xval<binning->binCenter(fbinC))?1:0) ;
-  Int_t fbinM = dim.numBins(*binning) ;
+  int fbinC = binning.binNumber(xval) ;
+  int fbinLo = fbinC-intOrder/2 - ((xval<binning.binCenter(fbinC))?1:0) ;
+  int fbinM = binning.numBins() ;
 
+  auto idxMult = _idxMult[iDim];
+  auto offsetIdx = centralIdx - idxMult * fbinC;
 
-  Int_t i ;
-  Double_t yarr[10] ;
-  Double_t xarr[10] ;
-  for (i=fbinLo ; i<=intOrder+fbinLo ; i++) {
-    Int_t ibin ;
+  double yarr[10] ;
+  double xarr[10] ;
+  for (int i=fbinLo ; i<=intOrder+fbinLo ; i++) {
+    int ibin ;
     if (i>=0 && i<fbinM) {
       // In range
       ibin = i ;
-      dim.setBinFast(ibin,*binning) ;
-      //cout << "INRANGE: dim.getVal(ibin=" << ibin << ") = " << dim.getVal() << endl ;
-      xarr[i-fbinLo] = dim.getVal() ;
-      Int_t idx = calcTreeIndex(_vars, true);
+      xarr[i-fbinLo] = binning.binCenter(ibin) ;
+      auto idx = offsetIdx + idxMult * ibin;
       yarr[i - fbinLo] = get_wgt(idx);
       if (correctForBinSize) yarr[i-fbinLo] /=  _binv[idx] ;
     } else if (i>=fbinM) {
       // Overflow: mirror
       ibin = 2*fbinM-i-1 ;
-      dim.setBinFast(ibin,*binning) ;
-      //cout << "OVERFLOW: dim.getVal(ibin=" << ibin << ") = " << dim.getVal() << endl ;
-      if (cdfBoundaries) {	
-	xarr[i-fbinLo] = dim.getMax()+1e-10*(i-fbinM+1) ;
-	yarr[i-fbinLo] = 1.0 ;
+      if (cdfBoundaries) {
+        xarr[i-fbinLo] = binning.highBound()+1e-10*(i-fbinM+1) ;
+        yarr[i-fbinLo] = 1.0 ;
       } else {
-	Int_t idx = calcTreeIndex(_vars, true) ;
-	xarr[i-fbinLo] = 2*dim.getMax()-dim.getVal() ;
-   yarr[i - fbinLo] = get_wgt(idx);
-   if (correctForBinSize)
-      yarr[i - fbinLo] /= _binv[idx];
+        auto idx = offsetIdx + idxMult * ibin;
+        xarr[i-fbinLo] = 2*binning.highBound()-binning.binCenter(ibin) ;
+        yarr[i - fbinLo] = get_wgt(idx);
+        if (correctForBinSize)
+          yarr[i - fbinLo] /= _binv[idx];
       }
     } else {
       // Underflow: mirror
       ibin = -i - 1 ;
-      dim.setBinFast(ibin,*binning) ;
-      //cout << "UNDERFLOW: dim.getVal(ibin=" << ibin << ") = " << dim.getVal() << endl ;
       if (cdfBoundaries) {
-	xarr[i-fbinLo] = dim.getMin()-ibin*(1e-10) ; ;
-	yarr[i-fbinLo] = 0.0 ;
+        xarr[i-fbinLo] = binning.lowBound()-ibin*(1e-10) ; ;
+        yarr[i-fbinLo] = 0.0 ;
       } else {
-	Int_t idx = calcTreeIndex(_vars, true) ;
-	xarr[i-fbinLo] = 2*dim.getMin()-dim.getVal() ;
-   yarr[i - fbinLo] = get_wgt(idx);
-   if (correctForBinSize)
-      yarr[i - fbinLo] /= _binv[idx];
+        auto idx = offsetIdx + idxMult * ibin;
+        xarr[i-fbinLo] = 2*binning.lowBound()-binning.binCenter(ibin) ;
+        yarr[i - fbinLo] = get_wgt(idx);
+        if (correctForBinSize)
+          yarr[i - fbinLo] /= _binv[idx];
       }
     }
-    //cout << "ibin = " << ibin << endl ;
   }
-//   for (int k=0 ; k<=intOrder ; k++) {
-//     cout << "k=" << k << " x = " << xarr[k] << " y = " << yarr[k] << endl ;
-//   }
-  dim.setBinFast(fbinC,*binning) ;
-  Double_t ret = RooMath::interpolate(xarr,yarr,intOrder+1,xval) ;
-  return ret ;
+  return RooMath::interpolate(xarr,yarr,intOrder+1,xval) ;
 }
 
 
