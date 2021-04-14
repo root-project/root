@@ -37,14 +37,14 @@ private:
    TGColorPalette& operator=(const TGColorPalette&) = delete;
 
 protected:
-   Int_t    fCx;           // x coordinate of currently selected color cell
-   Int_t    fCy;           // y coordinate of currently selected color cell
-   UInt_t   fCw;           // color cell width
-   UInt_t   fCh;           // color cell height
-   Int_t    fRows;         // number of color cell rows
-   Int_t    fCols;         // number of color cell columns
-   Pixel_t *fPixels;       // pixel value of colors
-   TGGC     fDrawGC;       // graphics context used for drawing
+   Int_t    fCx;           ///< x coordinate of currently selected color cell
+   Int_t    fCy;           ///< y coordinate of currently selected color cell
+   UInt_t   fCw;           ///< color cell width
+   UInt_t   fCh;           ///< color cell height
+   Int_t    fRows;         ///< number of color cell rows
+   Int_t    fCols;         ///< number of color cell columns
+   Pixel_t *fPixels;       ///< pixel value of colors
+   TGGC     fDrawGC;       ///< graphics context used for drawing
 
    virtual void DoRedraw();
    virtual void GotFocus();
@@ -87,17 +87,17 @@ private:
    Pixel_t  fPixel[64];          // pixel values
 
 protected:
-   Pixmap_t     fHSimage;        // hue / saturation colormap pixmap
-   Pixmap_t     fLimage;         // color lightness slider pixmap
-   Int_t        fNColors;        // number of color samples
-   Int_t        fClick;          // mouse click location (kCLICK_NONE, kCLICK_HS, kCLICK_L)
-   Int_t        fCx;             // x position in hs colormap
-   Int_t        fCy;             // y position in hs colormap
-   Int_t        fCz;             // position in lightness slider
-   Pixel_t      fCurrentColor;   // currently selected color value
-   Rectangle_t  fColormapRect;   // hue / saturation colormap rectangle
-   Rectangle_t  fSliderRect;     // color lightness slider rectangle
-   TGGC         fCursorGC;       // color lightness slider cursor GC
+   Pixmap_t     fHSimage;        ///< hue / saturation colormap pixmap
+   Pixmap_t     fLimage;         ///< color lightness slider pixmap
+   Int_t        fNColors;        ///< number of color samples
+   Int_t        fClick;          ///< mouse click location (kCLICK_NONE, kCLICK_HS, kCLICK_L)
+   Int_t        fCx;             ///< x position in hs colormap
+   Int_t        fCy;             ///< y position in hs colormap
+   Int_t        fCz;             ///< position in lightness slider
+   Pixel_t      fCurrentColor;   ///< currently selected color value
+   Rectangle_t  fColormapRect;   ///< hue / saturation colormap rectangle
+   Rectangle_t  fSliderRect;     ///< color lightness slider rectangle
+   TGGC         fCursorGC;       ///< color lightness slider cursor GC
 
    virtual void DoRedraw();
 
@@ -141,26 +141,26 @@ private:
    TGColorDialog& operator=(const TGColorDialog&) = delete;
 
 protected:
-   Pixel_t         fCurrentColor;   // currently selected color
-   Pixel_t         fInitColor;      // initially set color
-   Int_t          *fRetc;           // return code (kMBOk, kMBCancel)
-   Pixel_t        *fRetColor;       // return color
-   TColor         *fRetTColor;      // return TColor, needed for changed alpha
+   Pixel_t         fCurrentColor;   ///< currently selected color
+   Pixel_t         fInitColor;      ///< initially set color
+   Int_t          *fRetc;           ///< return code (kMBOk, kMBCancel)
+   Pixel_t        *fRetColor;       ///< return color
+   TColor         *fRetTColor;      ///< return TColor, needed for changed alpha
 
-   TGColorPalette *fPalette;        // color palette
-   TGColorPalette *fCpalette;       // color palette
-   TGColorPick    *fColors;         // color pick widget
-   TGFrame        *fSample;         // color sample frame
-   TGFrame        *fSampleOld;      // color sample frame
-   TGTextEntry    *fRte, *fGte, *fBte, *fHte, *fLte, *fSte, *fAle; // RGB/HLS text entries
-   TGTextBuffer   *fRtb, *fGtb, *fBtb, *fHtb, *fLtb, *fStb, *fAlb; // RGB/HLS associated buffers
-   Bool_t          fWaitFor;         // call WaitFor method in constructor
+   TGColorPalette *fPalette;        ///< color palette
+   TGColorPalette *fCpalette;       ///< color palette
+   TGColorPick    *fColors;         ///< color pick widget
+   TGFrame        *fSample;         ///< color sample frame
+   TGFrame        *fSampleOld;      ///< color sample frame
+   TGTextEntry    *fRte, *fGte, *fBte, *fHte, *fLte, *fSte, *fAle; ///< RGB/HLS text entries
+   TGTextBuffer   *fRtb, *fGtb, *fBtb, *fHtb, *fLtb, *fStb, *fAlb; ///< RGB/HLS associated buffers
+   Bool_t          fWaitFor;         ///< call WaitFor method in constructor
 
-   TGTab               *fTab;        //tab widget holding the color selectors
-   TRootEmbeddedCanvas *fEcanvas;    //embedded canvas holding the color wheel
-   TColorWheel         *fColorWheel; //color wheel
-   TGLabel             *fColorInfo;  //color info
-   TGTextButton        *fPreview;    //preview button;
+   TGTab               *fTab;        ///< tab widget holding the color selectors
+   TRootEmbeddedCanvas *fEcanvas;    ///< embedded canvas holding the color wheel
+   TColorWheel         *fColorWheel; ///< color wheel
+   TGLabel             *fColorInfo;  ///< color info
+   TGTextButton        *fPreview;    ///< preview button;
 
    void           UpdateRGBentries(Pixel_t *c);
    void           UpdateHLSentries(Pixel_t *c);

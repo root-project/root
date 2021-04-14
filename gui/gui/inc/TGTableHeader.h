@@ -24,12 +24,12 @@ class TGWindow;
 class TGTableHeader : public TGTableCell {
 
 protected:
-   EHeaderType fType;        // Type of header
-   UInt_t      fWidth;       // Width for the column
-   UInt_t      fHeight;      // Height of the row
-   Bool_t      fReadOnly;    // Cell readonly state
-   Bool_t      fEnabled;     // Cell enabled state
-   Bool_t      fHasOwnLabel; // Flag on default or specific label usage
+   EHeaderType fType;        ///< Type of header
+   UInt_t      fWidth;       ///< Width for the column
+   UInt_t      fHeight;      ///< Height of the row
+   Bool_t      fReadOnly;    ///< Cell readonly state
+   Bool_t      fEnabled;     ///< Cell enabled state
+   Bool_t      fHasOwnLabel; ///< Flag on default or specific label usage
 
    void        Init();
 

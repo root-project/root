@@ -43,10 +43,10 @@ class TGWindow;
 class TGWidget {
 
 protected:
-   Int_t            fWidgetId;     // the widget id (used for event processing)
-   Int_t            fWidgetFlags;  // widget status flags (OR of EWidgetStatus)
-   const TGWindow  *fMsgWindow;    // window which handles widget events
-   TString          fCommand;      // command to be executed
+   Int_t            fWidgetId;     ///< the widget id (used for event processing)
+   Int_t            fWidgetFlags;  ///< widget status flags (OR of EWidgetStatus)
+   const TGWindow  *fMsgWindow;    ///< window which handles widget events
+   TString          fCommand;      ///< command to be executed
 
    TGWidget(const TGWidget& tgw):
      fWidgetId(tgw.fWidgetId), fWidgetFlags(tgw.fWidgetFlags),

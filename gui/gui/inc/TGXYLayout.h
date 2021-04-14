@@ -19,11 +19,11 @@
 class TGXYLayoutHints : public TGLayoutHints {
 
 protected:
-   Double_t   fX;    // x - position of widget
-   Double_t   fY;    // y - position of widget
-   Double_t   fW;    // width of widget
-   Double_t   fH;    // height of widget
-   UInt_t     fFlag; // rubber flag
+   Double_t   fX;    ///< x - position of widget
+   Double_t   fY;    ///< y - position of widget
+   Double_t   fW;    ///< width of widget
+   Double_t   fH;    ///< height of widget
+   UInt_t     fFlag; ///< rubber flag
 
 public:
 
@@ -58,15 +58,15 @@ public:
 class TGXYLayout : public TGLayoutManager {
 
 protected:
-   TList            *fList;           // list of frames to arrange
-   TGCompositeFrame *fMain;           // container frame
+   TList            *fList;           ///< list of frames to arrange
+   TGCompositeFrame *fMain;           ///< container frame
 
-   Bool_t            fFirst;          // flag to determine the first call of Layout()
-   UInt_t            fFirstWidth;     // original width of the frame fMain
-   UInt_t            fFirstHeight;    // original height of the fram fMain
+   Bool_t            fFirst;          ///< flag to determine the first call of Layout()
+   UInt_t            fFirstWidth;     ///< original width of the frame fMain
+   UInt_t            fFirstHeight;    ///< original height of the fram fMain
 
-   Int_t             fTWidth;         // text width of a default character "1234567890" / 10
-   Int_t             fTHeight;        // text height
+   Int_t             fTWidth;         ///< text width of a default character "1234567890" / 10
+   Int_t             fTHeight;        ///< text height
 
    TGXYLayout(const TGXYLayout&);
    TGXYLayout& operator=(const TGXYLayout&);

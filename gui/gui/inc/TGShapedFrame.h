@@ -25,8 +25,8 @@ private:
    TGShapedFrame& operator=(const TGShapedFrame&) = delete;
 
 protected:
-   const TGPicture      *fBgnd;     // picture used as background/shape
-   TImage               *fImage;    // image used as background/shape
+   const TGPicture      *fBgnd;     ///< picture used as background/shape
+   TImage               *fImage;    ///< image used as background/shape
    virtual void          DoRedraw() {}
 
 public:

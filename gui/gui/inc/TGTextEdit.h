@@ -34,18 +34,18 @@ public:
    };
 
 protected:
-   GContext_t       fCursor0GC;     // graphics context for erasing cursor
-   GContext_t       fCursor1GC;     // graphics context for drawing cursor
-   Int_t            fCursorState;   // cursor state (1=drawn, 2=erased)
-   TViewTimer      *fCurBlink;      // cursor blink timer
-   TGPopupMenu     *fMenu;          // popup menu with editor actions
-   TGSearchType    *fSearch;        // structure used by search dialog
-   TGLongPosition   fCurrent;       // current cursor position
-   EInsertMode      fInsertMode;    // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
-   Bool_t           fEnableMenu;    // enable context menu with editor actions
-   TGTextEditHist  *fHistory;       // undo manager
-   Bool_t           fEnableCursorWithoutFocus; // enable cursor visibility when focus went out from
-                                               // text editor window (default is kTRUE)
+   GContext_t       fCursor0GC;     ///< graphics context for erasing cursor
+   GContext_t       fCursor1GC;     ///< graphics context for drawing cursor
+   Int_t            fCursorState;   ///< cursor state (1=drawn, 2=erased)
+   TViewTimer      *fCurBlink;      ///< cursor blink timer
+   TGPopupMenu     *fMenu;          ///< popup menu with editor actions
+   TGSearchType    *fSearch;        ///< structure used by search dialog
+   TGLongPosition   fCurrent;       ///< current cursor position
+   EInsertMode      fInsertMode;    ///< *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
+   Bool_t           fEnableMenu;    ///< enable context menu with editor actions
+   TGTextEditHist  *fHistory;       ///< undo manager
+   Bool_t           fEnableCursorWithoutFocus; ///< enable cursor visibility when focus went out from
+                                               ///< text editor window (default is kTRUE)
 
    static TGGC     *fgCursor0GC;
    static TGGC     *fgCursor1GC;

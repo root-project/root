@@ -21,8 +21,8 @@ class TGClient;
 class TGApplication : public TApplication {
 
 private:
-   TString        fDisplay;           // display server to connect to
-   TGClient      *fClient{nullptr};   // pointer to the client environment
+   TString        fDisplay;           ///< display server to connect to
+   TGClient      *fClient{nullptr};   ///< pointer to the client environment
 
 protected:
    TGApplication() : TApplication() { }

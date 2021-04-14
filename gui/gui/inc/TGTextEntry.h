@@ -28,32 +28,32 @@ public:
    enum   EInsertMode { kInsert, kReplace };
 
 protected:
-   TGTextBuffer     *fText;              // text buffer
-   Int_t             fStartX;            // selection begin in pixels
-   Int_t             fEndX;              // selection end in pixels
-   Int_t             fStartIX;           // selection begin in characters
-   Int_t             fEndIX;             // selection end in characters
-   Bool_t            fSelectionOn;       // selection status (on/off)
-   Int_t             fOffset;            // start position of text (in pixels)
-   Int_t             fCursorX;           // cursor position in pixels
-   Int_t             fCursorIX;          // cursor position in characters
-   Bool_t            fCursorOn;          // cursor status (on/off)
-   FontStruct_t      fFontStruct;        // text font
-   TGGC              fNormGC;            // normal drawing context
-   TGGC              fSelGC;             // selected text drawing context
-   GContext_t        fSelbackGC;         // selected background drawing context
-   Atom_t            fClipboard;         // clipboard property
-   TBlinkTimer      *fCurBlink;          // cursor blink timer
-   TGToolTip        *fTip;               // associated tooltip
-   Int_t             fMaxLen;            // maximum length of text
-   Bool_t            fEdited;            // kFALSE, if the line edit's contents have not been changed since the construction
-   Bool_t            fFrameDrawn;        // kTRUE draw itself inside a two-pixel frame, kFALSE draw without any frame
-   EEchoMode         fEchoMode;          // *OPTION={GetMethod="GetEchoMode";SetMethod="SetEchoMode";Items=(kNormal="Normal",kNoEcho="No Echo",kPassword="Password")}*
-   EInsertMode       fInsertMode;        // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="Insert",kReplace="Replace")}*
-   ETextJustification fAlignment;        // *OPTION={GetMethod="GetAlignment";SetMethod="SetAlignment";Items=(kTextLeft="Left",kTextCenterX="Center",kTextRight="Right")}*
-   Bool_t            fHasOwnFont;        // kTRUE - font defined locally,  kFALSE - globally
-   UInt_t            fDefWidth;          // default width
-   UInt_t            fDefHeight;         // default height
+   TGTextBuffer     *fText;              ///< text buffer
+   Int_t             fStartX;            ///< selection begin in pixels
+   Int_t             fEndX;              ///< selection end in pixels
+   Int_t             fStartIX;           ///< selection begin in characters
+   Int_t             fEndIX;             ///< selection end in characters
+   Bool_t            fSelectionOn;       ///< selection status (on/off)
+   Int_t             fOffset;            ///< start position of text (in pixels)
+   Int_t             fCursorX;           ///< cursor position in pixels
+   Int_t             fCursorIX;          ///< cursor position in characters
+   Bool_t            fCursorOn;          ///< cursor status (on/off)
+   FontStruct_t      fFontStruct;        ///< text font
+   TGGC              fNormGC;            ///< normal drawing context
+   TGGC              fSelGC;             ///< selected text drawing context
+   GContext_t        fSelbackGC;         ///< selected background drawing context
+   Atom_t            fClipboard;         ///< clipboard property
+   TBlinkTimer      *fCurBlink;          ///< cursor blink timer
+   TGToolTip        *fTip;               ///< associated tooltip
+   Int_t             fMaxLen;            ///< maximum length of text
+   Bool_t            fEdited;            ///< kFALSE, if the line edit's contents have not been changed since the construction
+   Bool_t            fFrameDrawn;        ///< kTRUE draw itself inside a two-pixel frame, kFALSE draw without any frame
+   EEchoMode         fEchoMode;          ///< *OPTION={GetMethod="GetEchoMode";SetMethod="SetEchoMode";Items=(kNormal="Normal",kNoEcho="No Echo",kPassword="Password")}*
+   EInsertMode       fInsertMode;        ///< *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="Insert",kReplace="Replace")}*
+   ETextJustification fAlignment;        ///< *OPTION={GetMethod="GetAlignment";SetMethod="SetAlignment";Items=(kTextLeft="Left",kTextCenterX="Center",kTextRight="Right")}*
+   Bool_t            fHasOwnFont;        ///< kTRUE - font defined locally,  kFALSE - globally
+   UInt_t            fDefWidth;          ///< default width
+   UInt_t            fDefHeight;         ///< default height
 
             void        CopyText() const;
    virtual  void        DoRedraw();
@@ -65,7 +65,7 @@ protected:
    virtual  void        ScrollByChar();
    virtual  void        UpdateOffset();
 
-   static TString      *fgClipboardText; // application clipboard text
+   static TString      *fgClipboardText; ///< application clipboard text
    static const TGFont *fgDefaultFont;
    static const TGGC   *fgDefaultSelectedGC;
    static const TGGC   *fgDefaultSelectedBackgroundGC;

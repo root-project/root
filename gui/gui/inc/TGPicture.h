@@ -27,11 +27,11 @@ class TGPicture : public TObject, public TRefCnt {
 friend class TGPicturePool;
 
 protected:
-   TString             fName;       // name of picture
-   Bool_t              fScaled;     // kTRUE if picture is scaled
-   Pixmap_t            fPic;        // picture pixmap
-   Pixmap_t            fMask;       // picture mask pixmap
-   PictureAttributes_t fAttributes; // picture attributes
+   TString             fName;       ///< name of picture
+   Bool_t              fScaled;     ///< kTRUE if picture is scaled
+   Pixmap_t            fPic;        ///< picture pixmap
+   Pixmap_t            fMask;       ///< picture mask pixmap
+   PictureAttributes_t fAttributes; ///< picture attributes
 
    TGPicture(const char *name, Bool_t scaled = kFALSE):
       fName(name), fScaled(scaled), fPic(kNone), fMask(kNone), fAttributes()
@@ -89,9 +89,9 @@ public:
 class TGPicturePool : public TObject {
 
 protected:
-   const TGClient    *fClient;    // client for which we keep icon pool
-   TString            fPath;      // icon search path
-   THashTable        *fPicList;   // hash table containing the icons
+   const TGClient    *fClient;    ///< client for which we keep icon pool
+   TString            fPath;      ///< icon search path
+   THashTable        *fPicList;   ///< hash table containing the icons
 
    TGPicturePool(const TGPicturePool&);
    TGPicturePool& operator=(const TGPicturePool&);

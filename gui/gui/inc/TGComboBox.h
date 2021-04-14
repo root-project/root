@@ -51,15 +51,15 @@ private:
    TGComboBox& operator=(const TGComboBox&) = delete;
 
 protected:
-   TGLBEntry           *fSelEntry;      // selected item frame
-   TGTextEntry         *fTextEntry;     // text entry
-   TGScrollBarElement  *fDDButton;      // button controlling drop down of popup
-   TGComboBoxPopup     *fComboFrame;    // popup containing a listbox
-   TGListBox           *fListBox;       // the listbox with text items
-   const TGPicture     *fBpic;          // down arrow picture used in fDDButton
-   TGLayoutHints       *fLhs;           // layout hints for selected item frame
-   TGLayoutHints       *fLhb;           // layout hints for fDDButton
-   TGLayoutHints       *fLhdd;          // layout hints for fListBox
+   TGLBEntry           *fSelEntry;      ///< selected item frame
+   TGTextEntry         *fTextEntry;     ///< text entry
+   TGScrollBarElement  *fDDButton;      ///< button controlling drop down of popup
+   TGComboBoxPopup     *fComboFrame;    ///< popup containing a listbox
+   TGListBox           *fListBox;       ///< the listbox with text items
+   const TGPicture     *fBpic;          ///< down arrow picture used in fDDButton
+   TGLayoutHints       *fLhs;           ///< layout hints for selected item frame
+   TGLayoutHints       *fLhb;           ///< layout hints for fDDButton
+   TGLayoutHints       *fLhdd;          ///< layout hints for fListBox
 
    virtual void Init();
 
@@ -131,12 +131,10 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The TGLineStyleComboBox user callable and it creates                 //
-// a combobox for selecting the line style.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLineStyleComboBox
+The TGLineStyleComboBox user callable and it creates
+a combobox for selecting the line style.
+*/
 
 class TGLineStyleComboBox : public TGComboBox {
 
@@ -148,17 +146,13 @@ public:
    virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGLineStyleComboBox, 0)  // Line style combobox widget
-
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The TGLineWidthComboBox user callable and it creates                 //
-// a combobox for selecting the line width.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
+/** \class TGLineWidthComboBox
+The TGLineWidthComboBox user callable and it creates
+a combobox for selecting the line width.
+*/
 
 class TGLineWidthComboBox : public TGComboBox {
 
@@ -170,17 +164,13 @@ public:
    virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGLineWidthComboBox, 0)  // Line width combobox widget
-
-
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The TGFontTypeComboBox is user callable and it creates               //
-// a combobox for selecting the font.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGFontTypeComboBox
+The TGFontTypeComboBox is user callable and it creates
+a combobox for selecting the font.
+*/
 
 const Int_t kMaxFonts = 20;
 

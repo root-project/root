@@ -25,8 +25,8 @@ private:
    TGFrameElementPack& operator=(const TGFrameElementPack&) = delete;
 
 public:
-   Float_t fWeight;               // relative weight
-   TGFrameElementPack* fSplitFE; //! cached varaible for optimisation
+   Float_t fWeight;              ///< relative weight
+   TGFrameElementPack* fSplitFE; ///<! cached variable for optimisation
 
    TGFrameElementPack(TGFrame *frame, TGLayoutHints* lh = nullptr, Float_t weight = 1):
       TGFrameElement(frame, lh), fWeight(weight), fSplitFE(nullptr) { }
@@ -47,10 +47,10 @@ protected:
    Bool_t         fUseSplitters;
    Int_t          fSplitterLen;
 
-   Int_t          fDragOverflow;  //!
+   Int_t          fDragOverflow;  ///<!
 
-   Float_t        fWeightSum;     // total sum of sub  frame weights
-   Int_t          fNVisible;      //  number of visible frames
+   Float_t        fWeightSum;     ///< total sum of sub  frame weights
+   Int_t          fNVisible;      ///<  number of visible frames
 
    Int_t          GetFrameLength(const TGFrame* f) const { return fVertical ? f->GetHeight() : f->GetWidth(); }
    Int_t          GetLength()                      const { return GetFrameLength(this); }

@@ -22,10 +22,10 @@ class TGTextButton;
 class TRootHelpDialog : public TGTransientFrame {
 
 private:
-   TGTextView       *fView;   // text view
-   TGTextButton     *fOK;     // OK button
-   TGLayoutHints    *fL1;     // layout of TGTextView
-   TGLayoutHints    *fL2;     // layout of OK button
+   TGTextView       *fView;   ///< text view
+   TGTextButton     *fOK;     ///< OK button
+   TGLayoutHints    *fL1;     ///< layout of TGTextView
+   TGLayoutHints    *fL2;     ///< layout of OK button
 
 private:
    TRootHelpDialog(const TRootHelpDialog&) = delete;

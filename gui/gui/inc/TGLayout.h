@@ -273,14 +273,14 @@ private:
    TGMatrixLayout& operator=(const TGMatrixLayout&);
 
 protected:
-   TGCompositeFrame *fMain;      // container frame
-   TList            *fList;      // list of frames to arrange
+   TGCompositeFrame *fMain;           ///< container frame
+   TList            *fList;           ///< list of frames to arrange
 
 public:
-   Int_t   fSep;                      // interval between frames
-   Int_t   fHints;                    // layout hints (currently not used)
-   UInt_t  fRows;                     // number of rows
-   UInt_t  fColumns;                  // number of columns
+   Int_t   fSep;                      ///< interval between frames
+   Int_t   fHints;                    ///< layout hints (currently not used)
+   UInt_t  fRows;                     ///< number of rows
+   UInt_t  fColumns;                  ///< number of columns
 
    TGMatrixLayout(TGCompositeFrame *main, UInt_t r, UInt_t c, Int_t s=0, Int_t h=0);
 
@@ -307,10 +307,10 @@ private:
    TGTileLayout& operator=(const TGTileLayout&);
 
 protected:
-   Int_t             fSep;    // separation between tiles
-   TGCompositeFrame *fMain;   // container frame
-   TList            *fList;   // list of frames to arrange
-   Bool_t            fModified;// layout changed
+   Int_t             fSep;     ///< separation between tiles
+   TGCompositeFrame *fMain;    ///< container frame
+   TList            *fList;     ///< list of frames to arrange
+   Bool_t            fModified; ///< layout changed
 
 
 public:

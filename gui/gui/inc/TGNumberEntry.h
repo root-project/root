@@ -21,40 +21,40 @@
 
 class TGNumberFormat {
 public:
-   enum EStyle {             // Style of number entry field
-      kNESInteger = 0,       // Integer
-      kNESRealOne = 1,       // Fixed fraction real, one digit
-      kNESRealTwo = 2,       // Fixed fraction real, two digit
-      kNESRealThree = 3,     // Fixed fraction real, three digit
-      kNESRealFour = 4,      // Fixed fraction real, four digit
-      kNESReal = 5,          // Real number
-      kNESDegree = 6,        // Degree
-      kNESMinSec = 7,        // Minute:seconds
-      kNESHourMin = 8,       // Hour:minutes
-      kNESHourMinSec = 9,    // Hour:minute:seconds
-      kNESDayMYear = 10,     // Day/month/year
-      kNESMDayYear = 11,     // Month/day/year
-      kNESHex = 12           // Hex
+   enum EStyle {             ///< Style of number entry field
+      kNESInteger = 0,       ///< Integer
+      kNESRealOne = 1,       ///< Fixed fraction real, one digit
+      kNESRealTwo = 2,       ///< Fixed fraction real, two digit
+      kNESRealThree = 3,     ///< Fixed fraction real, three digit
+      kNESRealFour = 4,      ///< Fixed fraction real, four digit
+      kNESReal = 5,          ///< Real number
+      kNESDegree = 6,        ///< Degree
+      kNESMinSec = 7,        ///< Minute:seconds
+      kNESHourMin = 8,       ///< Hour:minutes
+      kNESHourMinSec = 9,    ///< Hour:minute:seconds
+      kNESDayMYear = 10,     ///< Day/month/year
+      kNESMDayYear = 11,     ///< Month/day/year
+      kNESHex = 12           ///< Hex
    };
 
-   enum EAttribute {         // Attributes of number entry field
-      kNEAAnyNumber = 0,     // Any number
-      kNEANonNegative = 1,   // Non-negative number
-      kNEAPositive = 2       // Positive number
+   enum EAttribute {         ///< Attributes of number entry field
+      kNEAAnyNumber = 0,     ///< Any number
+      kNEANonNegative = 1,   ///< Non-negative number
+      kNEAPositive = 2       ///< Positive number
    };
 
-   enum ELimit {             // Limit selection of number entry field
-      kNELNoLimits = 0,      // No limits
-      kNELLimitMin = 1,      // Lower limit only
-      kNELLimitMax = 2,      // Upper limit only
-      kNELLimitMinMax = 3    // Both lower and upper limits
+   enum ELimit {             ///< Limit selection of number entry field
+      kNELNoLimits = 0,      ///< No limits
+      kNELLimitMin = 1,      ///< Lower limit only
+      kNELLimitMax = 2,      ///< Upper limit only
+      kNELLimitMinMax = 3    ///< Both lower and upper limits
    };
 
-   enum EStepSize {          // Step for number entry field increase
-      kNSSSmall = 0,         // Small step
-      kNSSMedium = 1,        // Medium step
-      kNSSLarge = 2,         // Large step
-      kNSSHuge = 3           // Huge step
+   enum EStepSize {          ///< Step for number entry field increase
+      kNSSSmall = 0,         ///< Small step
+      kNSSMedium = 1,        ///< Medium step
+      kNSSLarge = 2,         ///< Large step
+      kNSSHuge = 3           ///< Huge step
    };
 
    virtual ~TGNumberFormat() { }
@@ -65,13 +65,13 @@ public:
 class TGNumberEntryField : public TGTextEntry, public TGNumberFormat {
 
 protected:
-   Bool_t        fNeedsVerification; // Needs verification of input
-   EStyle        fNumStyle;          // Number style
-   EAttribute    fNumAttr;           // Number attribute
-   ELimit        fNumLimits;         // Limit attributes
-   Double_t      fNumMin;            // Lower limit
-   Double_t      fNumMax;            // Upper limit
-   Bool_t        fStepLog;           // Logarithmic steps for increase?
+   Bool_t        fNeedsVerification; ///< Needs verification of input
+   EStyle        fNumStyle;          ///< Number style
+   EAttribute    fNumAttr;           ///< Number attribute
+   ELimit        fNumLimits;         ///< Limit attributes
+   Double_t      fNumMin;            ///< Lower limit
+   Double_t      fNumMax;            ///< Upper limit
+   Bool_t        fStepLog;           ///< Logarithmic steps for increase?
 
 public:
    TGNumberEntryField(const TGWindow *p, Int_t id,
@@ -118,7 +118,7 @@ public:
       // Get the numerical attribute
       return fNumAttr; }
    virtual ELimit GetNumLimits() const {
-      // Get the numerialc limit attribute
+      // Get the numerical limit attribute
       return fNumLimits; }
    virtual Double_t GetNumMin() const {
       // Get the lower limit
@@ -153,17 +153,17 @@ class TGNumberEntry : public TGCompositeFrame, public TGWidget,
    ELimit fNumLimits; // *OPTION={GetMethod="GetNumLimits";SetMethod="SetNumLimits";Items=(0="&No Limits",1="Limit M&in",2="Limit M&ax",2="Min &and Max")}*
 
 private:
-   const TGPicture  *fPicUp;      // Up arrow
-   const TGPicture  *fPicDown;    // Down arrow
+   const TGPicture  *fPicUp;      ///< Up arrow
+   const TGPicture  *fPicDown;    ///< Down arrow
 
    TGNumberEntry(const TGNumberEntry&) = delete;
    TGNumberEntry& operator=(const TGNumberEntry&) = delete;
 
 protected:
-   TGNumberEntryField *fNumericEntry;  // Number text entry field
-   TGButton           *fButtonUp;      // Button for increasing value
-   TGButton           *fButtonDown;    // Button for decreasing value
-   Bool_t              fButtonToNum;   // Send button messages to parent rather than number entry field
+   TGNumberEntryField *fNumericEntry;  ///< Number text entry field
+   TGButton           *fButtonUp;      ///< Button for increasing value
+   TGButton           *fButtonDown;    ///< Button for decreasing value
+   Bool_t              fButtonToNum;   ///< Send button messages to parent rather than number entry field
 
 public:
    TGNumberEntry(const TGWindow *parent = nullptr, Double_t val = 0,

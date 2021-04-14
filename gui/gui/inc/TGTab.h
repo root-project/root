@@ -46,13 +46,13 @@ public:
 class TGTab : public TGCompositeFrame, public TGWidget {
 
 protected:
-   Int_t               fCurrent;        // index of current tab
-   UInt_t              fTabh;           // tab height
-   TGCompositeFrame   *fContainer;      // main container
-   TList              *fRemoved;        // list of removed tabs
-   FontStruct_t        fFontStruct;     // font
-   GContext_t          fNormGC;         // drawing context
-   Bool_t              fScrolling;      // true if tab scrolling enabled
+   Int_t               fCurrent;        ///< index of current tab
+   UInt_t              fTabh;           ///< tab height
+   TGCompositeFrame   *fContainer;      ///< main container
+   TList              *fRemoved;        ///< list of removed tabs
+   FontStruct_t        fFontStruct;     ///< font
+   GContext_t          fNormGC;         ///< drawing context
+   Bool_t              fScrolling;      ///< true if tab scrolling enabled
 
    void ChangeTab(Int_t tabIndex, Bool_t emit=kTRUE);
 
@@ -117,16 +117,16 @@ public:
 class TGTabElement : public TGFrame {
 
 protected:
-   TGString        *fText;            // text on tab
-   const TGPicture *fClosePic;        // "close tab" icon
-   const TGPicture *fClosePicD;       // "close tab" icon (disabled)
-   GContext_t       fNormGC;          // graphics context for drawing tab
-   FontStruct_t     fFontStruct;      // font used for tab
-   UInt_t           fTWidth;          // width of tab text
-   UInt_t           fTHeight;         // height of tab text
-   Bool_t           fEnabled;         // enabled or disabled
-   Bool_t           fShowClose;       // show or hide close icon
-   Bool_t           fActive;          // true if active (in front)
+   TGString        *fText;            ///< text on tab
+   const TGPicture *fClosePic;        ///< "close tab" icon
+   const TGPicture *fClosePicD;       ///< "close tab" icon (disabled)
+   GContext_t       fNormGC;          ///< graphics context for drawing tab
+   FontStruct_t     fFontStruct;      ///< font used for tab
+   UInt_t           fTWidth;          ///< width of tab text
+   UInt_t           fTHeight;         ///< height of tab text
+   Bool_t           fEnabled;         ///< enabled or disabled
+   Bool_t           fShowClose;       ///< show or hide close icon
+   Bool_t           fActive;          ///< true if active (in front)
 
 private:
    TGTabElement(const TGTabElement&) = delete;

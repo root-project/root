@@ -37,29 +37,29 @@ friend class TGContainerScrollTimer;
 friend class TGListView;
 
 protected:
-   TGViewPort        *fViewPort;      // container viewport
-   TGCanvas          *fCanvas;        // pointer to canvas
-   const TGWindow    *fMsgWindow;     // window handling container messages
-   TGFrameElement    *fLastActiveEl;  // last active item
-   Int_t              fXp, fYp;       // previous pointer position
-   Int_t              fX0, fY0;       // corner of rubber band box
-   Int_t              fXf, fYf;       // other corner of rubber band box
-   Bool_t             fDragging;      // true if in dragging mode
-   Int_t              fTotal;         // total items
-   Int_t              fSelected;      // number of selected items
-   TTimer            *fScrollTimer;   // autoscroll timer
-   Bool_t             fOnMouseOver;   // kTRUE when mouse pointer is over entry
-   Bool_t             fLastDir;       // direction of last search
-   Bool_t             fLastCase;      // case sensetivity of last search
-   Bool_t             fLastSubstring; // substring search option of last search
-   TString            fLastName;      // the name of object of last search
-   TTimer            *fKeyTimer;      // keyboard timer
-   TString            fKeyInput;      // keyboard input (buffer)
-   Bool_t             fKeyTimerActive;// kTRUE - keyboard timer is active
-   Bool_t             fScrolling;     // kTRUE - when scrolling is ON
+   TGViewPort        *fViewPort;      ///< container viewport
+   TGCanvas          *fCanvas;        ///< pointer to canvas
+   const TGWindow    *fMsgWindow;     ///< window handling container messages
+   TGFrameElement    *fLastActiveEl;  ///< last active item
+   Int_t              fXp, fYp;       ///< previous pointer position
+   Int_t              fX0, fY0;       ///< corner of rubber band box
+   Int_t              fXf, fYf;       ///< other corner of rubber band box
+   Bool_t             fDragging;      ///< true if in dragging mode
+   Int_t              fTotal;         ///< total items
+   Int_t              fSelected;      ///< number of selected items
+   TTimer            *fScrollTimer;   ///< autoscroll timer
+   Bool_t             fOnMouseOver;   ///< kTRUE when mouse pointer is over entry
+   Bool_t             fLastDir;       ///< direction of last search
+   Bool_t             fLastCase;      ///< case sensitivity of last search
+   Bool_t             fLastSubstring; ///< substring search option of last search
+   TString            fLastName;      ///< the name of object of last search
+   TTimer            *fKeyTimer;      ///< keyboard timer
+   TString            fKeyInput;      ///< keyboard input (buffer)
+   Bool_t             fKeyTimerActive;///< kTRUE - keyboard timer is active
+   Bool_t             fScrolling;     ///< kTRUE - when scrolling is ON
    Int_t              fXDND, fYDND;
    Bool_t             fBdown;
-   TGRectangle        fExposedRegion; // exposed area
+   TGRectangle        fExposedRegion; ///< exposed area
 
    static TGGC       *fgLineGC;
    static const TGGC &GetLineGC();
@@ -192,10 +192,10 @@ public:
 class TGCanvas : public TGFrame {
 
 protected:
-   TGViewPort      *fVport;        // viewport through which we look at contents
-   TGHScrollBar    *fHScrollbar;   // horizontal scrollbar
-   TGVScrollBar    *fVScrollbar;   // vertical scrollbar
-   Int_t            fScrolling;    // flag which scrolling modes are allowed
+   TGViewPort      *fVport;        ///< viewport through which we look at contents
+   TGHScrollBar    *fHScrollbar;   ///< horizontal scrollbar
+   TGVScrollBar    *fVScrollbar;   ///< vertical scrollbar
+   Int_t            fScrolling;    ///< flag which scrolling modes are allowed
 
 private:
    TGCanvas(const TGCanvas&) = delete;

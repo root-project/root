@@ -26,23 +26,23 @@ class TGTableCell : public TGFrame {
 friend class TGTable;
 
 protected:
-   TGString      *fLabel;      // Text as shown in the cell
-   TGToolTip     *fTip;        // Possible Tooltip
-   Bool_t         fReadOnly;   // Cell readonly state
-   Bool_t         fEnabled;    // Cell enabled state
-   Int_t          fTMode;      // Text justify mode
-   TGPicture     *fImage;      // Image or icon
-   UInt_t         fTWidth;     // Label width
-   UInt_t         fTHeight;    // Label heigth
-   FontStruct_t   fFontStruct; // Font of the label
-   Bool_t         fHasOwnFont; // Does the cell have it's own font
-   GContext_t     fNormGC;     // graphics context used to draw the cell
-   UInt_t         fColumn;     // Column this cell belongs to
-   UInt_t         fRow;        // Row this cell belongs to
-   TGTable       *fTable;      // TGTable that a cell belongs to
+   TGString      *fLabel;      ///< Text as shown in the cell
+   TGToolTip     *fTip;        ///< Possible Tooltip
+   Bool_t         fReadOnly;   ///< Cell readonly state
+   Bool_t         fEnabled;    ///< Cell enabled state
+   Int_t          fTMode;      ///< Text justify mode
+   TGPicture     *fImage;      ///< Image or icon
+   UInt_t         fTWidth;     ///< Label width
+   UInt_t         fTHeight;    ///< Label height
+   FontStruct_t   fFontStruct; ///< Font of the label
+   Bool_t         fHasOwnFont; ///< Does the cell have it's own font
+   GContext_t     fNormGC;     ///< graphics context used to draw the cell
+   UInt_t         fColumn;     ///< Column this cell belongs to
+   UInt_t         fRow;        ///< Row this cell belongs to
+   TGTable       *fTable;      ///< TGTable that a cell belongs to
 
-   static const TGGC   *fgDefaultGC;   // Default graphics context
-   static const TGFont *fgDefaultFont; // Default font
+   static const TGGC   *fgDefaultGC;   ///< Default graphics context
+   static const TGFont *fgDefaultFont; ///< Default font
 
    virtual void DoRedraw();
    virtual void DrawBorder();

@@ -273,11 +273,11 @@ private:
    TGListBox operator=(const TGListBox&) = delete;
 
 protected:
-   UInt_t           fItemVsize;       // maximum height of single entry
-   Bool_t           fIntegralHeight;  // true if height should be multiple of fItemVsize
-   TGLBContainer   *fLbc;             // listbox container
-   TGViewPort      *fVport;           // listbox viewport (see TGCanvas.h)
-   TGVScrollBar    *fVScrollbar;      // vertical scrollbar
+   UInt_t           fItemVsize;       ///< maximum height of single entry
+   Bool_t           fIntegralHeight;  ///< true if height should be multiple of fItemVsize
+   TGLBContainer   *fLbc;             ///< listbox container
+   TGViewPort      *fVport;           ///< listbox viewport (see TGCanvas.h)
+   TGVScrollBar    *fVScrollbar;      ///< vertical scrollbar
 
    void SetContainer(TGFrame *f) { fVport->SetContainer(f); }
 

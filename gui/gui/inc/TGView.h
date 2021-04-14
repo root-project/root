@@ -29,22 +29,22 @@ public:
    enum { kHorizontal = 0, kVertical = 1 };
 
 protected:
-   TGLongPosition    fVisible;      // position of visible region
-   TGLongPosition    fMousePos;     // position of mouse
-   TGLongPosition    fScrollVal;    // scroll value
-   TGDimension       fVirtualSize;  // the current virtual window size
-   TGRectangle       fExposedRegion;// exposed area
+   TGLongPosition    fVisible;      ///< position of visible region
+   TGLongPosition    fMousePos;     ///< position of mouse
+   TGLongPosition    fScrollVal;    ///< scroll value
+   TGDimension       fVirtualSize;  ///< the current virtual window size
+   TGRectangle       fExposedRegion;///< exposed area
 
-   Int_t             fScrolling;    // scrolling direction
-   Atom_t            fClipboard;    // clipboard property
-   UInt_t            fXMargin;      // x margin
-   UInt_t            fYMargin;      // y margin
-   TGViewFrame      *fCanvas;       // frame containing the text
-   TGHScrollBar     *fHsb;          // horizontal scrollbar
-   TGVScrollBar     *fVsb;          // vertical scrollbar
+   Int_t             fScrolling;    ///< scrolling direction
+   Atom_t            fClipboard;    ///< clipboard property
+   UInt_t            fXMargin;      ///< x margin
+   UInt_t            fYMargin;      ///< y margin
+   TGViewFrame      *fCanvas;       ///< frame containing the text
+   TGHScrollBar     *fHsb;          ///< horizontal scrollbar
+   TGVScrollBar     *fVsb;          ///< vertical scrollbar
 
-   TGGC              fWhiteGC;      // graphics context used for scrolling
-                                    // generates GraphicsExposure events
+   TGGC              fWhiteGC;      ///< graphics context used for scrolling
+                                    ///< generates GraphicsExposure events
 
    virtual void DoRedraw();
    virtual void UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);

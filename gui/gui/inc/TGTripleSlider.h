@@ -20,11 +20,11 @@
 class TGTripleVSlider : public TGDoubleVSlider {
 
 protected:
-   Int_t            fCz;           // vertical pointer position in pixel coordinates
-   Double_t         fSCz;          // vertical pointer position
-   Bool_t           fConstrained;  // kTRUE if pointer is constrained to slider edges
-   Bool_t           fRelative;     // kTRUE if pointer position is relative to slider
-   const TGPicture *fPointerPic;   // picture to draw pointer
+   Int_t            fCz;           ///< vertical pointer position in pixel coordinates
+   Double_t         fSCz;          ///< vertical pointer position
+   Bool_t           fConstrained;  ///< kTRUE if pointer is constrained to slider edges
+   Bool_t           fRelative;     ///< kTRUE if pointer position is relative to slider
+   const TGPicture *fPointerPic;   ///< picture to draw pointer
 
    virtual void     DoRedraw();
    virtual void     SetPointerPos(Int_t z, Int_t opt = 0);
@@ -73,11 +73,11 @@ public:
 class TGTripleHSlider : public TGDoubleHSlider {
 
 protected:
-   Int_t            fCz;           // horizontal pointer position in pixel coordinates
-   Double_t         fSCz;          // vertical pointer position
-   Bool_t           fConstrained;  // kTRUE if pointer is constrained to slider edges
-   Bool_t           fRelative;     // kTRUE if pointer position is relative to slider
-   const TGPicture *fPointerPic;   // picture to draw pointer
+   Int_t            fCz;           ///< horizontal pointer position in pixel coordinates
+   Double_t         fSCz;          ///< vertical pointer position
+   Bool_t           fConstrained;  ///< kTRUE if pointer is constrained to slider edges
+   Bool_t           fRelative;     ///< kTRUE if pointer position is relative to slider
+   const TGPicture *fPointerPic;   ///< picture to draw pointer
 
    virtual void     DoRedraw();
    virtual void     SetPointerPos(Int_t z, Int_t opt = 0);

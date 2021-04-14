@@ -26,7 +26,7 @@ private:
    TGEventHandler(const TGEventHandler&) = delete;
    TGEventHandler& operator=(const TGEventHandler&) = delete;
 
-   Bool_t   fIsActive;    // kTRUE if handler is active, kFALSE if not active
+   Bool_t   fIsActive;    ///< kTRUE if handler is active, kFALSE if not active
    TGWindow *fWindow;
    TObject  *fObject;
 

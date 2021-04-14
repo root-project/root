@@ -27,11 +27,11 @@ private:
    TGButtonGroup& operator=(const TGButtonGroup&) = delete;
 
 protected:
-   Bool_t  fState;           // kTRUE if group is enabled
-   Bool_t  fExclGroup;       // kTRUE if group is exclusive
-   Bool_t  fRadioExcl;       // kTRUE if radio buttons are exclusive
-   Bool_t  fDrawBorder;      // kTRUE if border and title are drawn
-   TMap   *fMapOfButtons;    // map of button/id pairs in this group
+   Bool_t  fState;           ///< kTRUE if group is enabled
+   Bool_t  fExclGroup;       ///< kTRUE if group is exclusive
+   Bool_t  fRadioExcl;       ///< kTRUE if radio buttons are exclusive
+   Bool_t  fDrawBorder;      ///< kTRUE if border and title are drawn
+   TMap   *fMapOfButtons;    ///< map of button/id pairs in this group
 
    void Init();
    virtual void DoRedraw();

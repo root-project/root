@@ -39,14 +39,14 @@
 #include "TGFont.h"
 
 
-// MDI resizing modes
+/// MDI resizing modes
 enum EMdiResizingModes {
    kMdiOpaque            = 1,
    kMdiNonOpaque         = 2,
    kMdiDefaultResizeMode = kMdiOpaque
 };
 
-// MDI hints, also used to identify titlebar buttons
+/// MDI hints, also used to identify titlebar buttons
 enum EMdiHints {
    kMdiClose         = 4,
    kMdiRestore       = 8,
@@ -60,14 +60,14 @@ enum EMdiHints {
                        kMdiMaximize | kMdiSize | kMdiClose
 };
 
-// window arrangement modes
+/// window arrangement modes
 enum EMdiArrangementModes {
    kMdiTileHorizontal = 1,
    kMdiTileVertical   = 2,
    kMdiCascade        = 3
 };
 
-// geometry value masks for ConfigureWindow() call
+/// geometry value masks for ConfigureWindow() call
 enum EMdiGeometryMask {
    kMdiClientGeometry = BIT(0),
    kMdiDecorGeometry  = BIT(1),
@@ -88,10 +88,10 @@ class TGMdiFrameList {
 friend class TGMdiMainFrame;
 
 protected:
-   UInt_t            fFrameId;                  // TGMdiFrameList Id
-   TGMdiDecorFrame  *fDecor;                    // MDI decor frame
-   TGMdiFrameList   *fPrev, *fNext;             // pointers on previous and next TGMdiFrameList
-   TGMdiFrameList   *fCyclePrev, *fCycleNext;   // pointers on previous and next TGMdiFrameList
+   UInt_t            fFrameId;                  ///< TGMdiFrameList Id
+   TGMdiDecorFrame  *fDecor;                    ///< MDI decor frame
+   TGMdiFrameList   *fPrev, *fNext;             ///< pointers on previous and next TGMdiFrameList
+   TGMdiFrameList   *fCyclePrev, *fCycleNext;   ///< pointers on previous and next TGMdiFrameList
 
 public:
    virtual ~TGMdiFrameList() { }
@@ -117,8 +117,8 @@ public:
 class TGMdiGeometry {
 
 public:
-   Int_t            fValueMask;                    // MDI hints mask
-   TGRectangle      fClient, fDecoration, fIcon;   // client, decoration and icon rectangles
+   Int_t            fValueMask;                    ///< MDI hints mask
+   TGRectangle      fClient, fDecoration, fIcon;   ///< client, decoration and icon rectangles
 
    virtual ~TGMdiGeometry() { }
 
@@ -138,20 +138,20 @@ protected:
       kMinimizedWidth = 5
    };
 
-   Int_t            fCurrentX, fCurrentY, fResizeMode;   // current MDI child XY position and resize mode
-   Int_t            fArrangementMode;                    // MDI children arrangement mode
-   TGFont          *fFontCurrent, *fFontNotCurrent;      // fonts for active and inactive MDI children
-   Pixel_t          fBackCurrent, fForeCurrent;          // back and fore colors for active MDI children
-   Pixel_t          fBackNotCurrent, fForeNotCurrent;    // back and fore colors for inactive MDI children
+   Int_t            fCurrentX, fCurrentY, fResizeMode;   ///< current MDI child XY position and resize mode
+   Int_t            fArrangementMode;                    ///< MDI children arrangement mode
+   TGFont          *fFontCurrent, *fFontNotCurrent;      ///< fonts for active and inactive MDI children
+   Pixel_t          fBackCurrent, fForeCurrent;          ///< back and fore colors for active MDI children
+   Pixel_t          fBackNotCurrent, fForeNotCurrent;    ///< back and fore colors for inactive MDI children
 
-   TGGC            *fBoxGC;                              // GC used to draw resizing box (rectangle)
+   TGGC            *fBoxGC;                              ///< GC used to draw resizing box (rectangle)
 
-   Long_t           fNumberOfFrames;                     // number of MDI child windows
-   TGMdiMenuBar    *fMenuBar;                            // menu bar
-   TGFrame         *fContainer;                          // MDI container
-   TGPopupMenu     *fWinListMenu;                        // popup menu with list of MDI child windows
-   TGMdiFrameList  *fChildren;                           // list of MDI child windows
-   TGMdiFrameList  *fCurrent;                            // current list of MDI child windows
+   Long_t           fNumberOfFrames;                     ///< number of MDI child windows
+   TGMdiMenuBar    *fMenuBar;                            ///< menu bar
+   TGFrame         *fContainer;                          ///< MDI container
+   TGPopupMenu     *fWinListMenu;                        ///< popup menu with list of MDI child windows
+   TGMdiFrameList  *fChildren;                           ///< list of MDI child windows
+   TGMdiFrameList  *fCurrent;                            ///< current list of MDI child windows
 
    void             AddMdiFrame(TGMdiFrame *f);
    Bool_t           RemoveMdiFrame(TGMdiFrame *f);

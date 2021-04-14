@@ -24,12 +24,12 @@ class TGTextBuffer;
 class TGPasswdDialog {
 
 private:
-   char             *fPwdBuf;     // buffer where to store the passwd
-   Int_t             fPwdLenMax;  // passwd buffer length
-   TGTransientFrame *fDialog;     // main frame of this widget
-   TGTextButton     *fOk;         // Ok button
-   TGTextEntry      *fPasswd;     // Password TextEntry
-   TGTextBuffer     *fPasswdText; // Passwd Buffer
+   char             *fPwdBuf;     ///< buffer where to store the passwd
+   Int_t             fPwdLenMax;  ///< passwd buffer length
+   TGTransientFrame *fDialog;     ///< main frame of this widget
+   TGTextButton     *fOk;         ///< Ok button
+   TGTextEntry      *fPasswd;     ///< Password TextEntry
+   TGTextBuffer     *fPasswdText; ///< Passwd Buffer
 
 public:
    TGPasswdDialog(const char *prompt, char *pwdbuf, Int_t pwdlenmax,
