@@ -482,7 +482,7 @@ The following builtins have been updated:
 
 - Deprecate `TTree.AsMatrix` in this release and mark for removal in v6.26. Please use instead `RDataFrame.AsNumpy`.
 
-### Bugs and Issues fixed in this release
+## Bugs and Issues fixed in this release
 
 - [[ROOT-9790](https://sft.its.cern.ch/jira/browse/ROOT-9790)] - [DF] Lazy jitting of Cache and Snapshot
 - [[ROOT-3579](https://sft.its.cern.ch/jira/browse/ROOT-3579)] - `RooTreeDataStore` not Cloning the tree properly (and const correctness)
