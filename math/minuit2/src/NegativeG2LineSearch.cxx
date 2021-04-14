@@ -23,8 +23,8 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-MinimumState NegativeG2LineSearch::
-operator()(const MnFcn &fcn, const MinimumState &st, const GradientCalculator &gc, const MnMachinePrecision &prec) const
+MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumState &st, const GradientCalculator &gc,
+                                              const MnMachinePrecision &prec) const
 {
 
    //   when the second derivatives are negative perform a  line search  along Parameter which gives
@@ -100,7 +100,7 @@ operator()(const MnFcn &fcn, const MinimumState &st, const GradientCalculator &g
    double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
 
    if (edm < 0) {
-      err = MinimumError(mat, MinimumError::MnNotPosDef());
+      err = MinimumError(mat, MinimumError::MnNotPosDef);
    }
 
    return MinimumState(pa, err, dgrad, edm, fcn.NumOfCalls());

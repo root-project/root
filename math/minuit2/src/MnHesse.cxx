@@ -39,8 +39,8 @@ MnUserParameterState MnHesse::operator()(const FCNBase &fcn, const std::vector<d
    return (*this)(fcn, MnUserParameterState(par, cov, nrow), maxcalls);
 }
 
-MnUserParameterState MnHesse::
-operator()(const FCNBase &fcn, const std::vector<double> &par, const MnUserCovariance &cov, unsigned int maxcalls) const
+MnUserParameterState MnHesse::operator()(const FCNBase &fcn, const std::vector<double> &par,
+                                         const MnUserCovariance &cov, unsigned int maxcalls) const
 {
    // interface from vector of params and covariance
    return (*this)(fcn, MnUserParameterState(par, cov), maxcalls);
@@ -52,15 +52,15 @@ MnUserParameterState MnHesse::operator()(const FCNBase &fcn, const MnUserParamet
    return (*this)(fcn, MnUserParameterState(par), maxcalls);
 }
 
-MnUserParameterState MnHesse::
-operator()(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov, unsigned int maxcalls) const
+MnUserParameterState MnHesse::operator()(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov,
+                                         unsigned int maxcalls) const
 {
    // interface from MnUserParameters and MnUserCovariance
    return (*this)(fcn, MnUserParameterState(par, cov), maxcalls);
 }
 
-MnUserParameterState MnHesse::
-operator()(const FCNBase &fcn, const MnUserParameterState &state, unsigned int maxcalls) const
+MnUserParameterState
+MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsigned int maxcalls) const
 {
    // interface from MnUserParameterState
    // create a new Minimum state and use that interface
@@ -90,8 +90,8 @@ void MnHesse::operator()(const FCNBase &fcn, FunctionMinimum &min, unsigned int 
    min.Add(st);
 }
 
-MinimumState MnHesse::
-operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation &trafo, unsigned int maxcalls) const
+MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation &trafo,
+                                 unsigned int maxcalls) const
 {
    // internal interface from MinimumState and MnUserTransformation
    // Function who does the real Hessian calculations
@@ -179,8 +179,8 @@ operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation
             vhmat(j, j) = tmp < prec.Eps2() ? 1. : tmp;
          }
 
-         return MinimumState(st.Parameters(), MinimumError(vhmat, MinimumError::MnHesseFailed()), st.Gradient(),
-                             st.Edm(), mfcn.NumOfCalls());
+         return MinimumState(st.Parameters(), MinimumError(vhmat, MinimumError::MnHesseFailed), st.Gradient(), st.Edm(),
+                             mfcn.NumOfCalls());
 
       L30:
          double g2bfor = g2(i);
@@ -218,8 +218,8 @@ operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation
             vhmat(j, j) = tmp < prec.Eps2() ? 1. : tmp;
          }
 
-         return MinimumState(st.Parameters(), MinimumError(vhmat, MinimumError::MnHesseFailed()), st.Gradient(),
-                             st.Edm(), mfcn.NumOfCalls());
+         return MinimumState(st.Parameters(), MinimumError(vhmat, MinimumError::MnHesseFailed), st.Gradient(), st.Edm(),
+                             mfcn.NumOfCalls());
       }
    }
 
@@ -291,8 +291,8 @@ operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation
          tmpsym(j, j) = tmp < prec.Eps2() ? 1. : tmp;
       }
 
-      return MinimumState(st.Parameters(), MinimumError(tmpsym, MinimumError::MnInvertFailed()), st.Gradient(),
-                          st.Edm(), mfcn.NumOfCalls());
+      return MinimumState(st.Parameters(), MinimumError(tmpsym, MinimumError::MnInvertFailed), st.Gradient(), st.Edm(),
+                          mfcn.NumOfCalls());
    }
 
    FunctionGradient gr(grd, g2, gst);
@@ -300,7 +300,7 @@ operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation
 
    // if matrix is made pos def returns anyway edm
    if (tmpErr.IsMadePosDef()) {
-      MinimumError err(vhmat, MinimumError::MnMadePosDef());
+      MinimumError err(vhmat, MinimumError::MnMadePosDef);
       double edm = estim.Estimate(gr, err);
       return MinimumState(st.Parameters(), err, gr, edm, mfcn.NumOfCalls());
    }
