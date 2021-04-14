@@ -155,7 +155,7 @@ namespace cling {
         const CollectionType* obj,
         typename std::enable_if<
             std::is_reference<decltype(*std::begin(*obj))>::value>::type* = 0)
-        -> decltype(std::begin(*obj), std::end(*obj), std::string()) {
+        -> decltype(std::end(*obj), std::string()) {
       auto iter = obj->begin(), iterEnd = obj->end();
       if (iter == iterEnd) return valuePrinterInternal::kEmptyCollection;
 
