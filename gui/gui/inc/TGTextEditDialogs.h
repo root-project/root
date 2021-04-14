@@ -38,23 +38,23 @@ class TGComboBox;
 class TGSearchDialog : public TGTransientFrame {
 
 protected:
-   TGCompositeFrame   *fF1, *fF2, *fF3, *fF4;  // sub frames
-   TGLayoutHints      *fL1, *fL2, *fL3, *fL4;  // layout hints
-   TGLayoutHints      *fL5, *fL6, *fL21, *fL9; // layout hints
-   TGLayoutHints      *fL10;                   // layout hints
-   TGButton           *fSearchButton;          // search button
-   TGButton           *fCancelButton;          // cancel button
-   TGRadioButton      *fDirectionRadio[2];     // search direction radio buttons
-   TGCheckButton      *fCaseCheck;             // case check box
-   TGGroupFrame       *fG2;                    // group frame
-   TGTextEntry        *fSearch;                // search text entry widget
-   TGTextBuffer       *fBSearch;               // search text buffer
-   TGLabel            *fLSearch;               // label
-   TGSearchType       *fType;                  // search type structure
-   Int_t              *fRetCode;               // return code
-   TGComboBox         *fCombo;                 // text entry combobox
+   TGCompositeFrame   *fF1, *fF2, *fF3, *fF4;  ///< sub frames
+   TGLayoutHints      *fL1, *fL2, *fL3, *fL4;  ///< layout hints
+   TGLayoutHints      *fL5, *fL6, *fL21, *fL9; ///< layout hints
+   TGLayoutHints      *fL10;                   ///< layout hints
+   TGButton           *fSearchButton;          ///< search button
+   TGButton           *fCancelButton;          ///< cancel button
+   TGRadioButton      *fDirectionRadio[2];     ///< search direction radio buttons
+   TGCheckButton      *fCaseCheck;             ///< case check box
+   TGGroupFrame       *fG2;                    ///< group frame
+   TGTextEntry        *fSearch;                ///< search text entry widget
+   TGTextBuffer       *fBSearch;               ///< search text buffer
+   TGLabel            *fLSearch;               ///< label
+   TGSearchType       *fType;                  ///< search type structure
+   Int_t              *fRetCode;               ///< return code
+   TGComboBox         *fCombo;                 ///< text entry combobox
 
-   static TGSearchDialog *fgSearchDialog;      // global singleton
+   static TGSearchDialog *fgSearchDialog;      ///< global singleton
 
 public:
    TGSearchDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,
@@ -78,19 +78,19 @@ public:
 class TGPrintDialog : public TGTransientFrame {
 
 protected:
-   char             **fPrinter;                    // printer to be used
-   char             **fPrintCommand;               // printer command to be used
-   TGCompositeFrame  *fF1, *fF2, *fF3, *fF4, *fF5; // sub frames
-   TGLayoutHints     *fL1, *fL2, *fL3, *fL5, *fL6; // layout hints
-   TGLayoutHints     *fL7, *fL21;                  // layout hints
-   TGIcon            *fPrinterIcon;                // printer icon
-   TGButton          *fPrintButton;                // print button
-   TGButton          *fCancelButton;               // cancel button
-   TGComboBox        *fPrinterEntry;               // printer list combo widget
-   TGTextEntry       *fPrintCommandEntry;          // command text entry widget
-   TGTextBuffer      *fBPrinter, *fBPrintCommand;  // printer and command text buffers
-   TGLabel           *fLPrinter, *fLPrintCommand;  // printer and command labels
-   Int_t             *fRetCode;                    // return code
+   char             **fPrinter;                    ///< printer to be used
+   char             **fPrintCommand;               ///< printer command to be used
+   TGCompositeFrame  *fF1, *fF2, *fF3, *fF4, *fF5; ///< sub frames
+   TGLayoutHints     *fL1, *fL2, *fL3, *fL5, *fL6; ///< layout hints
+   TGLayoutHints     *fL7, *fL21;                  ///< layout hints
+   TGIcon            *fPrinterIcon;                ///< printer icon
+   TGButton          *fPrintButton;                ///< print button
+   TGButton          *fCancelButton;               ///< cancel button
+   TGComboBox        *fPrinterEntry;               ///< printer list combo widget
+   TGTextEntry       *fPrintCommandEntry;          ///< command text entry widget
+   TGTextBuffer      *fBPrinter, *fBPrintCommand;  ///< printer and command text buffers
+   TGLabel           *fLPrinter, *fLPrintCommand;  ///< printer and command labels
+   Int_t             *fRetCode;                    ///< return code
 
 public:
    TGPrintDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,
@@ -109,14 +109,14 @@ public:
 class TGGotoDialog : public TGTransientFrame {
 
 protected:
-   TGCompositeFrame *fF1, *fF2;                // sub frames
-   TGButton         *fGotoButton;              // goto button
-   TGButton         *fCancelButton;            // cancel button
-   TGLayoutHints    *fL1, *fL5, *fL6, *fL21;   // layout hints
-   TGTextEntry      *fGoTo;                    // goto line number entry widget
-   TGTextBuffer     *fBGoTo;                   // goto line number text buffer
-   TGLabel          *fLGoTo;                   // goto label
-   Long_t           *fRetCode;                 // return code
+   TGCompositeFrame *fF1, *fF2;                ///< sub frames
+   TGButton         *fGotoButton;              ///< goto button
+   TGButton         *fCancelButton;            ///< cancel button
+   TGLayoutHints    *fL1, *fL5, *fL6, *fL21;   ///< layout hints
+   TGTextEntry      *fGoTo;                    ///< goto line number entry widget
+   TGTextBuffer     *fBGoTo;                   ///< goto line number text buffer
+   TGLabel          *fLGoTo;                   ///< goto label
+   Long_t           *fRetCode;                 ///< return code
 
 public:
    TGGotoDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,

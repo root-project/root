@@ -25,29 +25,29 @@ public:
    enum EGlowColor { kNoglow, kGreen, kOrange, kRed };
 
 protected:
-   TImage          *fImage;               // image used as background
-   TImage          *fImage2;              // intermediate image used as background
-   const TGPicture *fBase;                // picture used as background
-   FontStruct_t     fTextFS, fCounterFS;  // font structures for text rendering
-   Int_t            fCounter;             // small odo meter (4 digits)
-   TString          fPicName;             // name of picture used as background
-   TString          fLabel1;              // main label (first line)
-   TString          fLabel2;              // main label (second line)
-   TString          fDisplay1;            // first line in the small display
-   TString          fDisplay2;            // second line in the small display
-   Float_t          fAngle, fValue;       // needle angle and corresponding value
-   Float_t          fPeakVal;             // maximum peak mark
-   Float_t          fMeanVal;             // mean value mark
-   Float_t          fAngleMin, fAngleMax; // needle min and max angle
-   Float_t          fScaleMin, fScaleMax; // needle min and max scale
-   Float_t          fThreshold[3];        // glowing thresholds
-   EGlowColor       fThresholdColor[3];   // glowing threshold colors
-   Bool_t           fThresholdActive;     // kTRUE if glowing threhsholds are active
-   Bool_t           fPeakMark;            // kTRUE if peak mark is active
-   Bool_t           fMeanMark;            // kTRUE if mean mark is active
-   Int_t            fBufferSize;          // circular buffer size
-   Int_t            fBufferCount;         // circular buffer count
-   std::vector<Float_t> fBuffer;          // circular buffer for mean calculation
+   TImage          *fImage;               ///< image used as background
+   TImage          *fImage2;              ///< intermediate image used as background
+   const TGPicture *fBase;                ///< picture used as background
+   FontStruct_t     fTextFS, fCounterFS;  ///< font structures for text rendering
+   Int_t            fCounter;             ///< small odo meter (4 digits)
+   TString          fPicName;             ///< name of picture used as background
+   TString          fLabel1;              ///< main label (first line)
+   TString          fLabel2;              ///< main label (second line)
+   TString          fDisplay1;            ///< first line in the small display
+   TString          fDisplay2;            ///< second line in the small display
+   Float_t          fAngle, fValue;       ///< needle angle and corresponding value
+   Float_t          fPeakVal;             ///< maximum peak mark
+   Float_t          fMeanVal;             ///< mean value mark
+   Float_t          fAngleMin, fAngleMax; ///< needle min and max angle
+   Float_t          fScaleMin, fScaleMax; ///< needle min and max scale
+   Float_t          fThreshold[3];        ///< glowing thresholds
+   EGlowColor       fThresholdColor[3];   ///< glowing threshold colors
+   Bool_t           fThresholdActive;     ///< kTRUE if glowing thresholds are active
+   Bool_t           fPeakMark;            ///< kTRUE if peak mark is active
+   Bool_t           fMeanMark;            ///< kTRUE if mean mark is active
+   Int_t            fBufferSize;          ///< circular buffer size
+   Int_t            fBufferCount;         ///< circular buffer count
+   std::vector<Float_t> fBuffer;          ///< circular buffer for mean calculation
 
    virtual void     DoRedraw();
            void     DrawNeedle();

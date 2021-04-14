@@ -24,8 +24,8 @@ class TGGC : public TObject, public TRefCnt {
 friend class TGGCPool;
 
 protected:
-   GCValues_t fValues = {}; // graphics context values + mask
-   GContext_t fContext;     // graphics context handle
+   GCValues_t fValues = {}; ///< graphics context values + mask
+   GContext_t fContext;     ///< graphics context handle
 
    TGGC(GCValues_t *values, Bool_t calledByGCPool);
    void UpdateValues(GCValues_t *v);

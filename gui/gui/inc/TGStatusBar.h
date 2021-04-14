@@ -27,12 +27,12 @@ private:
    TGStatusBar& operator=(const TGStatusBar&) = delete;
 
 protected:
-   TGStatusBarPart **fStatusPart; // frames containing statusbar text
-   Int_t            *fParts;      // size of parts (in percent of total width)
-   Int_t             fNpart;      // number of parts
-   Int_t             fYt;         // y drawing position (depending on font)
-   Int_t            *fXt;         // x position for each part
-   Bool_t            f3DCorner;   // draw 3D corner (drawn by default)
+   TGStatusBarPart **fStatusPart; ///< frames containing statusbar text
+   Int_t            *fParts;      ///< size of parts (in percent of total width)
+   Int_t             fNpart;      ///< number of parts
+   Int_t             fYt;         ///< y drawing position (depending on font)
+   Int_t            *fXt;         ///< x position for each part
+   Bool_t            f3DCorner;   ///< draw 3D corner (drawn by default)
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;

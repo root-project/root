@@ -25,17 +25,17 @@ class TTimer;
 class TGCommandPlugin : public TGMainFrame {
 
 protected:
-   Bool_t             fHistAdd;           // flag to add commands to history
-   Int_t              fPid;               // current process id
-   Int_t              fPos;               // current history position
-   TGHorizontalFrame *fHf;                // horizontal frame
-   TGLabel           *fLabel;             // "command :" label
-   TGComboBox        *fComboCmd;          // commands combobox
-   TGTextEntry       *fCommand;           // command text entry widget
-   TGTextBuffer      *fCommandBuf;        // command text buffer
-   TGTextView        *fStatus;            // output capture view
-   TTimer            *fTimer;             // for local/remote update
-   TString           fTempString;         // temporary command string
+   Bool_t             fHistAdd;           ///< flag to add commands to history
+   Int_t              fPid;               ///< current process id
+   Int_t              fPos;               ///< current history position
+   TGHorizontalFrame *fHf;                ///< horizontal frame
+   TGLabel           *fLabel;             ///< "command :" label
+   TGComboBox        *fComboCmd;          ///< commands combobox
+   TGTextEntry       *fCommand;           ///< command text entry widget
+   TGTextBuffer      *fCommandBuf;        ///< command text buffer
+   TGTextView        *fStatus;            ///< output capture view
+   TTimer            *fTimer;             ///< for local/remote update
+   TString           fTempString;         ///< temporary command string
 
 public:
 
