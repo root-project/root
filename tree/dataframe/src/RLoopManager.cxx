@@ -74,7 +74,6 @@ static bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
                        const std::string &friendName)
 {
-
    if (!friendName.empty()) {
       // In case of a friend tree, users might prepend its name/alias to the branch names
       const auto friendBName = friendName + "." + branchName;
@@ -87,7 +86,7 @@ static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// This overloads makes sure that the TLeaf has not been already inserted.
+/// This overload makes sure that the TLeaf has not been already inserted.
 static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
                        const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
 {
