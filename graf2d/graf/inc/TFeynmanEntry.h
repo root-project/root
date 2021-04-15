@@ -14,12 +14,10 @@
 #define ROOT_TFeynmanEntry
 
 #include "TArrow.h"
+#include "TVirtualPad.h"
+#include "TPad.h"
 
-<<<<<<< HEAD
 class TFeynmanEntry : public TObject {
-=======
-class TFeynmanEntry {
->>>>>>> 7aad3df60e43a80be989dd65e792c4e4b670adc7
     public:
         TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
         virtual const char   *GetParticleName() const { return fParticle.Data(); }
@@ -27,7 +25,7 @@ class TFeynmanEntry {
         virtual Double_t GetY1()  {return fY1;}
         virtual Double_t GetX2()  {return fX2;}
         virtual Double_t GetY2() const {return fY2;}
-        void Paint();
+        virtual void Paint();
     protected:
         TString      fParticle; ///< Name of the particle (label)
         Double_t     fX1;
