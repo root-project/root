@@ -98,12 +98,30 @@ void TSQLiteServer::Close(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// submit "START TRANSACTION" query to database
+/// submit "BEGIN TRANSACTION" query to database
 /// return kTRUE, if successful
 
 Bool_t TSQLiteServer::StartTransaction()
 {
    return Exec("BEGIN TRANSACTION");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// submit "COMMIT TRANSACTION" query to database
+/// return kTRUE, if successful
+
+Bool_t TSQLiteServer::Commit()
+{
+   return Exec("COMMIT TRANSACTION");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// submit "ROLLBACK TRANSACTION" query to database
+/// return kTRUE, if successful
+
+Bool_t TSQLiteServer::Rollback()
+{
+   return Exec("ROLLBACK TRANSACTION");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
