@@ -152,7 +152,7 @@ TEST(LikelihoodGradientJobDEBUGGING, DISABLED_Gaussian1DNominal)
    m0->cleanup(); // necessary in tests to clean up global _theFitter
 }
 
-TEST(LikelihoodGradientJobDEBUGGING, Gaussian1DMultiProcess)
+TEST(LikelihoodGradientJobDEBUGGING, DISABLED_Gaussian1DMultiProcess)
 {
    std::size_t NWorkers = 1;
    std::size_t seed = 1;
@@ -489,6 +489,7 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, Minimize)
    m1->setStrategy(0);
 //   m1->setVerbose(true);
    m1->setPrintLevel(1);
+   m1->optimizeConst(2);
 
    m1->migrad();
 
@@ -554,7 +555,7 @@ TEST_F(CarstenGGFWorkspaceTest, DISABLED_NoMultiProcess)
    m->optimizeConst(2);
    m->setMinimizerType("Minuit2");
 //    m->setVerbose(kTRUE);
-   m->setEps(10);
+   m->setEps(1000000);
 
    m->migrad();
 
@@ -574,7 +575,7 @@ TEST_F(CarstenGGFWorkspaceTest, DISABLED_MultiProcess)
    m->optimizeConst(2);
    m->setMinimizerType("Minuit2");
 //    m->setVerbose(kTRUE);
-   m->setEps(10);
+   m->setEps(1000000);
 
    m->migrad();
 

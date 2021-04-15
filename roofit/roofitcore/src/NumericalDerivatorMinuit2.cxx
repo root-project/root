@@ -444,4 +444,8 @@ void NumericalDerivatorMinuit2::set_error_level(double error_level)
    Up = error_level;
 }
 
+std::ostream& operator<<(std::ostream& out, const MinuitDerivatorElement value){
+   return out << "(derivative: " << value.derivative << ", second_derivative: " << value.second_derivative << ", step_size: " << value.step_size << ")";
+}
+
 } // namespace RooFit

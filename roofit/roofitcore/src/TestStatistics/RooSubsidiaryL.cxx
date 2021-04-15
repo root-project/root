@@ -75,5 +75,9 @@ std::size_t RooSubsidiaryL::numDataEntries() const
    return 0;
 }
 
+void RooSubsidiaryL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) {
+   // do nothing, there's no dataset here to cache
+}
+
 } // namespace TestStatistics
 } // namespace RooFit

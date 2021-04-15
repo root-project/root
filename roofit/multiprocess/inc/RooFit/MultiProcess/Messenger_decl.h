@@ -56,7 +56,7 @@ public:
    };
 
    std::pair<ZeroMQPoller, std::size_t> create_queue_poller();
-   ZeroMQPoller create_worker_poller();
+   std::pair<ZeroMQPoller, std::size_t> create_worker_poller();
 
    // -- WORKER - QUEUE COMMUNICATION --
 
@@ -86,6 +86,20 @@ public:
    template <typename value_t>
    value_t receive_from_master_on_queue();
 
+   // -- MASTER - WORKER COMMUNICATION --
+
+   void publish_from_master_to_workers();
+   template <typename T, typename... Ts>
+   void publish_from_master_to_workers(T item, Ts... items);
+   template <typename value_t>
+   value_t receive_from_master_on_worker();
+
+   void send_from_worker_to_master();
+   template <typename T, typename... Ts>
+   void send_from_worker_to_master(T item, Ts... items);
+   template <typename value_t>
+   value_t receive_from_worker_on_master();
+
    void test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id);
    void test_send(X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id);
 
@@ -111,6 +125,15 @@ private:
    // pollers for all pull sockets
    std::vector<ZeroMQPoller> qw_pull_poller;
    ZeroMQPoller mq_pull_poller;
+
+   // test to circumvent queue for parameter updating
+   ZmqLingeringSocketPtr<> mw_pub;
+   ZmqLingeringSocketPtr<> mw_sub;
+   ZeroMQPoller mw_sub_poller;
+   // test to circumvent queue for result retrieving
+   ZmqLingeringSocketPtr<> wm_push;
+   ZmqLingeringSocketPtr<> wm_pull;
+   ZeroMQPoller wm_pull_poller;
 
    // destruction flags to distinguish between different process-type setups:
    bool close_MQ_on_destruct_ = false;

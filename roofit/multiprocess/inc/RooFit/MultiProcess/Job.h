@@ -16,6 +16,7 @@
 #define ROOT_ROOFIT_MultiProcess_Job_decl
 
 #include <string>
+#include "zmq.hxx"
 
 namespace RooFit {
 namespace MultiProcess {
@@ -99,6 +100,7 @@ public:
    virtual void evaluate_task(std::size_t task) = 0;
    virtual void update_real(std::size_t ix, double val, bool is_constant) = 0;
    virtual void update_bool(std::size_t ix, bool value) = 0;
+   virtual void update_state();
 
    virtual void send_back_task_result_from_worker(std::size_t task) = 0;
    virtual void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) = 0;
@@ -108,6 +110,7 @@ public:
    // collect results; if not needed it can just be left empty
    virtual void clear_results() = 0;
    virtual void receive_results_on_master() = 0;
+   virtual bool receive_task_result_on_master(const zmq::message_t & message) = 0;
 
    void gather_worker_results();
 

@@ -12,6 +12,7 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 #include <TestStatistics/RooAbsL.h>
+#include <TestStatistics/optimization.h>
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
 
@@ -418,9 +419,13 @@ RooArgSet *RooAbsL::getParameters()
 //   return selTargetParams;
 }
 
-void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/)
+void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
 {
-   // yet to be implemented
+   // to be further implemented, this is just a first test implementation
+   if (opcode == RooAbsArg::Activate) {
+      printf("activating constant term optimization\n");
+      ConstantTermsOptimizer::enable_constant_terms_optimization(pdf_.get(), _normSet.get(), data_.get(), doAlsoTrackingOpt);
+   }
 }
 
 std::string RooAbsL::GetName() const

@@ -34,6 +34,8 @@ public:
    void fill_second_derivative(double *g2) override;
    void fill_step_size(double *gstep) override;
 
+   void update_state() override;
+
    // ----- BEGIN PASTE UIT RooGradientFunction.h -----
    // ----- BEGIN PASTE UIT RooGradientFunction.h -----
    // ----- BEGIN PASTE UIT RooGradientFunction.h -----
@@ -83,11 +85,19 @@ private:
    void clear_results() override;
    void receive_results_on_master() override;
 
+   struct task_result_t {
+      std::size_t job_id;
+      std::size_t task_id;
+      MinuitDerivatorElement grad;
+   };
+   bool receive_task_result_on_master(const zmq::message_t & message) override;
+
    void update_workers_state();
    void calculate_all();
 
    // members
    std::size_t N_tasks = 0;
+   std::size_t N_tasks_at_workers = 0;
    std::vector<std::size_t> completed_task_ids;
    std::vector<double> minuit_internal_x_;
 };

@@ -81,5 +81,11 @@ std::tuple<double, double> RooSumL::get_subsidiary_value()
    return {0, 0};
 }
 
+void RooSumL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) {
+   for (auto& component : components_) {
+      component->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
+   }
+}
+
 } // namespace TestStatistics
 } // namespace RooFit

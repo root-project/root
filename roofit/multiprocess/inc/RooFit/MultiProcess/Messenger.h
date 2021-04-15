@@ -141,6 +141,67 @@ value_t Messenger::receive_from_master_on_queue()
    return value;
 }
 
+
+// -- MASTER - WORKER COMMUNICATION --
+
+template <typename T, typename... Ts>
+void Messenger::publish_from_master_to_workers(T item, Ts... items)
+{
+#ifndef NDEBUG
+   std::stringstream ss;
+   ss << "PID " << getpid() << " sends M2W " << item;
+   debug_print(ss.str());
+#endif
+
+   zmqSvc().send(*mw_pub, item, send_flag);
+   //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
+   publish_from_master_to_workers(items...);
+}
+
+template <typename value_t>
+value_t Messenger::receive_from_master_on_worker()
+{
+   mw_sub_poller.ppoll(-1, &ppoll_sigmask);
+   auto value = zmqSvc().receive<value_t>(*mw_sub, ZMQ_DONTWAIT);
+
+#ifndef NDEBUG
+   std::stringstream ss;
+   ss << "PID " << getpid() << " receives M2W " << value;
+   debug_print(ss.str());
+#endif
+
+   return value;
+}
+
+template <typename T, typename... Ts>
+void Messenger::send_from_worker_to_master(T item, Ts... items)
+{
+#ifndef NDEBUG
+   std::stringstream ss;
+   ss << "PID " << getpid() << " sends M2W " << item;
+   debug_print(ss.str());
+#endif
+
+   zmqSvc().send(*wm_push, item, send_flag);
+   //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
+   send_from_worker_to_master(items...);
+}
+
+template <typename value_t>
+value_t Messenger::receive_from_worker_on_master()
+{
+   wm_pull_poller.ppoll(-1, &ppoll_sigmask);
+   auto value = zmqSvc().receive<value_t>(*wm_pull, ZMQ_DONTWAIT);
+
+#ifndef NDEBUG
+   std::stringstream ss;
+   ss << "PID " << getpid() << " receives M2W " << value;
+   debug_print(ss.str());
+#endif
+
+   return value;
+}
+
 } // namespace MultiProcess
 } // namespace RooFit
 

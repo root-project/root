@@ -117,6 +117,8 @@ private:
 #endif
 };
 
+std::ostream& operator<<(std::ostream& out, const MinuitDerivatorElement value);
+
 } // namespace RooFit
 
 #endif /* NumericalDerivatorMinuit2_H_ */

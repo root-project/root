@@ -153,6 +153,7 @@ void LikelihoodJob::evaluate() {
       for (std::size_t ix = 0; ix < get_manager()->process_manager().N_workers(); ++ix) {
          get_manager()->queue().add({id, ix});
       }
+      N_tasks_at_workers = get_manager()->process_manager().N_workers();
 
       // wait for task results back from workers to master
       gather_worker_results();
@@ -173,8 +174,12 @@ void LikelihoodJob::evaluate() {
 
 // --- RESULT LOGISTICS ---
 
-void LikelihoodJob::send_back_task_result_from_worker(std::size_t task) {
-   get_manager()->messenger().send_from_worker_to_queue(id, task, result, carry);
+//void LikelihoodJob::send_back_task_result_from_worker(std::size_t task) {
+//   get_manager()->messenger().send_from_worker_to_queue(id, task, result, carry);
+//}
+
+void LikelihoodJob::send_back_task_result_from_worker(std::size_t /*task*/) {
+   get_manager()->messenger().send_from_worker_to_master(result, carry);
 }
 
 void LikelihoodJob::receive_task_result_on_queue(std::size_t task, std::size_t worker_id) {
@@ -189,6 +194,15 @@ void LikelihoodJob::send_back_results_from_queue_to_master() {
    for (auto const &item : results) {
       get_manager()->messenger().send_from_queue_to_master(item.first, item.second, carrys[item.first]);
    }
+}
+
+bool LikelihoodJob::receive_task_result_on_master(const zmq::message_t & message) {
+   std::size_t task = get_manager()->messenger().receive_from_worker_on_master<std::size_t>();
+   results[task] = get_manager()->messenger().receive_from_worker_on_master<double>();
+   carrys[task] = get_manager()->messenger().receive_from_worker_on_master<double>();
+   --N_tasks_at_workers;
+   bool job_completed = (N_tasks_at_workers == 0);
+   return job_completed;
 }
 
 void LikelihoodJob::clear_results() {

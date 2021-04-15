@@ -86,7 +86,7 @@ public:
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
    virtual RooArgSet *getParameters();
-   void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt);
+   virtual void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt);
 
    virtual std::string GetName() const;
    virtual std::string GetTitle() const;

@@ -37,6 +37,9 @@ public:
    std::string GetName() const override;
    std::string GetTitle() const override;
    std::size_t numDataEntries() const override;
+
+   void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
+
 private:
    std::string parent_pdf_name_;
    RooArgList subsidiary_pdfs_{"subsidiary_pdfs"};    // Set of subsidiary PDF or "constraint" terms

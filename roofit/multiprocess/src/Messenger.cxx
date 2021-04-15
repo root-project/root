@@ -52,6 +52,17 @@ Messenger::Messenger(const ProcessManager &process_manager)
 
          mq_pull_poller.register_socket(*mq_pull, zmq::POLLIN);
 
+         mw_pub.reset(zmqSvc().socket_ptr(zmq::PUB));
+         rc = zmq_setsockopt (*mw_pub, ZMQ_SNDHWM, &hwm, sizeof hwm);
+         assert (rc == 0);
+         mw_pub->bind("ipc:///tmp/roofitMP_from_master_to_workers");
+
+         wm_pull.reset(zmqSvc().socket_ptr(zmq::PULL));
+         rc = zmq_setsockopt (*wm_pull, ZMQ_RCVHWM, &hwm, sizeof hwm);
+         assert (rc == 0);
+         wm_pull->bind("ipc:///tmp/roofitMP_from_workers_to_master");
+         wm_pull_poller.register_socket(*wm_pull, zmq::POLLIN);
+
          close_MQ_on_destruct_ = true;
       } else if (process_manager.is_queue()) {
          // first the queue-worker sockets
@@ -116,6 +127,19 @@ Messenger::Messenger(const ProcessManager &process_manager)
 
          qw_pull_poller[0].register_socket(*this_worker_qw_pull, zmq::POLLIN);
 
+         mw_sub.reset(zmqSvc().socket_ptr(zmq::SUB));
+         auto rc = zmq_setsockopt (*mw_sub, ZMQ_RCVHWM, &hwm, sizeof hwm);
+         assert (rc == 0);
+         rc = zmq_setsockopt(*mw_sub, ZMQ_SUBSCRIBE, "", 0);
+         assert (rc == 0);
+         mw_sub->connect("ipc:///tmp/roofitMP_from_master_to_workers");
+         mw_sub_poller.register_socket(*mw_sub, zmq::POLLIN);
+
+         wm_push.reset(zmqSvc().socket_ptr(zmq::PUSH));
+         rc = zmq_setsockopt (*wm_push, ZMQ_SNDHWM, &hwm, sizeof hwm);
+         assert (rc == 0);
+         wm_push->connect("ipc:///tmp/roofitMP_from_workers_to_master");
+
          close_this_QW_on_destruct_ = true;
       } else {
          // should never get here
@@ -133,6 +157,8 @@ Messenger::~Messenger() {
       try {
          mq_push.reset(nullptr);
          mq_pull.reset(nullptr);
+         mw_pub.reset(nullptr);
+         wm_pull.reset(nullptr);
       } catch (const std::exception& e) {
          std::cerr << "WARNING: something in Messenger dtor threw an exception! Original exception message:\n" << e.what() << std::endl;
       }
@@ -140,6 +166,8 @@ Messenger::~Messenger() {
    if (close_this_QW_on_destruct_) {
       this_worker_qw_push.reset(nullptr);
       this_worker_qw_pull.reset(nullptr);
+      mw_sub.reset(nullptr);
+      wm_push.reset(nullptr);
    }
    if (close_QW_container_on_destruct_) {
       for (auto& socket : qw_push) {
@@ -313,10 +341,11 @@ std::pair<ZeroMQPoller, std::size_t> Messenger::create_queue_poller() {
 }
 
 
-ZeroMQPoller Messenger::create_worker_poller() {
+std::pair<ZeroMQPoller, std::size_t> Messenger::create_worker_poller() {
    ZeroMQPoller poller;
    poller.register_socket(*this_worker_qw_pull, zmq::POLLIN);
-   return poller;
+   std::size_t mw_sub_index = poller.register_socket(*mw_sub, zmq::POLLIN);
+   return {std::move(poller), mw_sub_index};
 }
 
 
@@ -339,6 +368,12 @@ void Messenger::set_send_flag(int flag) {
       throw std::runtime_error("in Messenger::set_send_flag: trying to set illegal flag, see zmq_send API for allowed flags");
    }
 }
+
+// -- MASTER - WORKER COMMUNICATION --
+
+void Messenger::publish_from_master_to_workers() {}
+
+void Messenger::send_from_worker_to_master() {}
 
 
 // for debugging

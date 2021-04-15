@@ -51,6 +51,7 @@ public:
    void send_back_results_from_queue_to_master() override;
    void clear_results() override;
    void receive_results_on_master() override;
+   bool receive_task_result_on_master(const zmq::message_t & message) override;
 
    void enable_offsetting(bool flag) override;
 
@@ -64,6 +65,7 @@ private:
    RooArgList _saveVars;  // Copy of variables
 
    LikelihoodType likelihood_type;
+   std::size_t N_tasks_at_workers = 0;
 };
 
 }

@@ -63,7 +63,7 @@ public:
    Messenger & messenger() const;
    Queue & queue() const;
 
-   void retrieve();
+   void retrieve(std::size_t requesting_job_id);
    void results_from_queue_to_master();
 
    void activate();

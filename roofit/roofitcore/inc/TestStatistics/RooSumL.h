@@ -33,6 +33,8 @@ public:
    // necessary only for legacy offsetting mode in LikelihoodWrapper; TODO: remove this if legacy mode is ever removed
    std::tuple<double, double> get_subsidiary_value();
 
+   void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
+
 private:
    bool processEmptyDataSets() const;
 

@@ -36,6 +36,7 @@ class RooAbsDataStore ;
 namespace RooFit {
 namespace TestStatistics {
 class RooAbsL;
+struct ConstantTermsOptimizer;
 }
 }
 
@@ -247,6 +248,7 @@ protected:
   friend class RooAbsOptTestStatistic ;
   friend class RooAbsCachedPdf ;
    friend class RooFit::TestStatistics::RooAbsL;
+   friend struct RooFit::TestStatistics::ConstantTermsOptimizer;
 
   virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) ;
   virtual void resetCache() ;

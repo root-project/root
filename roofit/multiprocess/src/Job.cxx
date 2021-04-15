@@ -55,8 +55,11 @@ JobManager *Job::get_manager()
 
 void Job::gather_worker_results()
 {
-   get_manager()->retrieve();
+   get_manager()->retrieve(id);
 }
+
+void Job::update_state() {}
+
 
 } // namespace MultiProcess
 } // namespace RooFit
