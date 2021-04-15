@@ -150,7 +150,7 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
             // Leaf list
             auto listOfLeaves = branch->GetListOfLeaves();
             if (listOfLeaves->GetEntries() == 1) {
-               auto leaf = static_cast<TLeaf *>(listOfLeaves->At(0));
+               auto leaf = static_cast<TLeaf *>(listOfLeaves->UncheckedAt(0));
                const auto leafName = std::string(leaf->GetName());
                if (leafName == branchName) {
                   UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
