@@ -91,18 +91,25 @@ TEST(RNTupleWriter, TFilePtr) {
       std::unique_ptr<TFile> file;
       auto model = RNTupleModel::Create();
       auto field = model->MakeField<float>("field");
+      auto klassVec = model->MakeField<std::vector<CustomStruct>>("klassVec");
       auto ntuple = std::make_unique<RNTupleWriter>(std::move(model),
          std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions(), file
       ));
       for (int i = 0; i < 20000; i++) {
          *field = static_cast<float>(i);
+         CustomStruct klass;
+         klass.s = std::to_string(i);
+         *klassVec = {klass};
          ntuple->Fill();
       }
    }
+
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    auto rdField = ntuple->GetView<float>("field");
+   auto klassVecField = ntuple->GetView<std::vector<CustomStruct>>("klassVec");
    EXPECT_EQ(20000, ntuple->GetNEntries());
    for (auto i : ntuple->GetEntryRange()) {
       ASSERT_EQ(static_cast<float>(i), rdField(i));
+      ASSERT_EQ(std::to_string(i), klassVecField(i).at(0).s);
    }
 }
