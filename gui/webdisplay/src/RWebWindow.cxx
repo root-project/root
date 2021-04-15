@@ -659,7 +659,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
    Long_t processed_len = (str_end + 1 - buf);
 
-   if (processed_len > arg.GetPostDataLength()) {
+   if (processed_len > (Long_t) arg.GetPostDataLength()) {
       R__LOG_ERROR(WebGUILog()) << "corrupted buffer";
       return false;
    }
