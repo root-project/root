@@ -53,6 +53,7 @@ public:
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
    virtual void VisitIntField(const RField<int> &field) { VisitField(field); }
+   virtual void VisitInt64Field(const RField<std::int64_t> &field) { VisitField(field); }
    virtual void VisitStringField(const RField<std::string> &field) { VisitField(field); }
    virtual void VisitUInt32Field(const RField<std::uint32_t> &field) { VisitField(field); }
    virtual void VisitUInt64Field(const RField<std::uint64_t> &field) { VisitField(field); }
@@ -190,6 +191,7 @@ public:
    void VisitDoubleField(const RField<double> &field) final;
    void VisitFloatField(const RField<float> &field) final;
    void VisitIntField(const RField<int> &field) final;
+   void VisitInt64Field(const RField<std::int64_t> &field) final;
    void VisitStringField(const RField<std::string> &field) final;
    void VisitUInt8Field(const RField<std::uint8_t> &field) final;
    void VisitUInt32Field(const RField<std::uint32_t> &field) final;
