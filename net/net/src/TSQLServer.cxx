@@ -144,6 +144,16 @@ Bool_t TSQLServer::StartTransaction()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// returns kTRUE when transaction is running
+/// Must be implemented in derived classes
+
+Bool_t TSQLServer::IsTransaction()
+{
+   Warning("IsTransaction", "Not implemented");
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// submit "COMMIT" query to database
 /// return kTRUE, if successful
 
