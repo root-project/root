@@ -37,7 +37,6 @@ namespace ROOT {
          <A HREF="http://cran.r-project.org/web/packages/RInside/index.html">RInside</A>
          <h2>Users Guide </h2>
          <a href="http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide"> http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide</a><br>
-         <a href="https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface"> https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface</a>
 
          \ingroup R
        */
@@ -47,11 +46,11 @@ namespace ROOT {
        <center><h2>TRInterface class</h2></center>
 
       </p>
-      The TRInterface class lets you procces R code from ROOT.<br>
+      The TRInterface class lets you process R code from ROOT.<br>
       You can call R libraries and their functions, plot results in R or ROOT,<br>
       and use the power of ROOT and R at the same time.<br>
       It also lets you pass scalars, vectors and matrices from ROOT to R<br>
-      and from R to ROOT using TRObject; but you can to use overloaded opetarors [],<< and >> <br>
+      and from R to ROOT using TRObject; but you can to use overloaded operators [],<< and >> <br>
       to work with ROOTR like work with streams of data.<br>
 
       TRInterface class can not be instantiated directly, but you can create objects using the static methods
@@ -203,7 +202,7 @@ namespace ROOT {
          };
       private:
          /**
-         The command line arguments are by deafult argc=0 and argv=NULL,
+         The command line arguments are by default argc=0 and argv=NULL,
          The verbose mode is by default disabled but you can enable it to show procedures information in stdout/stderr         \note some time can produce so much noise in the output
          \param argc default 0
          \param argv default null
@@ -227,7 +226,7 @@ namespace ROOT {
          Method to eval R code and you get the result in a reference to TRObject
          \param code R code
          \param ans reference to TRObject
-         \return an true or false if the execution was sucessful or not.
+         \return an true or false if the execution was successful or not.
          */
          Int_t Eval(const TString &code, TRObject  &ans); // parse line, returns in ans; error code rc
          /**
@@ -248,32 +247,32 @@ namespace ROOT {
 
 
          /**
-         Template method to assign C++ variables into R enviroment
+         Template method to assign C++ variables into R environment
          \param var any R wrappable datatype
-         \param name  name of the variable in R's enviroment
+         \param name  name of the variable in R's environment
          */
          template<typename T >void Assign(const T &var, const TString &name)
          {
             // This method lets you pass variables from ROOT to R.
             // The template T should be a supported ROOT datatype and
-            // the TString's name is the name of the variable in the R enviroment.
+            // the TString's name is the name of the variable in the R environment.
             fR->assign<T>(var, name.Data());
          }
          /**
-         Method to assign TRFunctionExport in R's enviroment
+         Method to assign TRFunctionExport in R's environment
          \param fun TRFunctionExport
-         \param name  name of the variable in R's enviroment
+         \param name  name of the variable in R's environment
          */
          void Assign(const TRFunctionExport &fun, const TString &name);
          /**
-         Method to assign TRDataFrame in R's enviroment
+         Method to assign TRDataFrame in R's environment
          \param df TRDataFrame
-         \param name  name of the variable in R's enviroment
+         \param name  name of the variable in R's environment
          */
          void Assign(const TRDataFrame &df, const TString &name);
 
          /**
-         Method to get a R prompt to work interactively with tab completation support
+         Method to get a R prompt to work interactively with tab completion support
          */
          void Interactive();
 
