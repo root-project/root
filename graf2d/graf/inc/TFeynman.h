@@ -18,14 +18,15 @@
 #include "TAttLine.h"
 #include "TList.h"
 
-class TFeynman : public TAttLine {
+
+class TFeynman : public TAttLine, public TObject {
 
 	public:
 
 		// The constructor
 		TFeynman(Double_t canvasWidth, Double_t canvasHeight);
 
-    TFeynmanEntry* AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
+    TFeynmanEntry *AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
 
 
     virtual void Draw();

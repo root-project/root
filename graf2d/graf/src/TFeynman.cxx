@@ -17,6 +17,7 @@
 #include "TH1.h"
 #include "THStack.h"
 #include "TArrow.h"
+#include "TList.h"
 
 ClassImp(TFeynman);
 
@@ -53,24 +54,28 @@ This example plots the feynman.C diagram in the tutorials:
 
 
 
-TFeynman::TFeynman(Double_t canvasWidth, Double_t canvasHeight){
+TFeynman::TFeynman(Double_t canvasWidth, Double_t canvasHeight) : TAttLine(kBlack, 1, 1){
 				TCanvas *c1 = new TCanvas("c1", "c1", 10,10, canvasWidth, canvasHeight);
    			c1->Range(0, 0, 140, 60);
 				gStyle->SetLineWidth(2);
-        fPrimitives = new TList();
+        fPrimitives = new TList;
 		}
 
-TFeynmanEntry* TFeynman::AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2) {
+TFeynmanEntry *TFeynman::AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2) {
    TFeynmanEntry *newEntry = new TFeynmanEntry(particleName, x1, y1, x2, y2);
-   //fPrimitives->Add(newEntry);
+	 if ( !fPrimitives ) fPrimitives = new TList;
+	 cout << "Added " << particleName << " to the Feynman Diagram" << endl;
+   fPrimitives->Add(newEntry);
+
    return newEntry;
 }
 
 void TFeynman::Draw() {
+	cout << "Draw Method called. Grab your pencils." << endl;
 	AppendPad();
 }
 void TFeynman::Paint() {
-
+	cout << "Paint Method called. Grab your paintbrush" << endl;
 	TIter next(fPrimitives);
 	TFeynmanEntry *entry;
 	Int_t iColumn = 0;

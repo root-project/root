@@ -48,6 +48,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     TTF.h
     TText.h
     TWbox.h
+    TFeynman.h
+    TFeynmanEntry.h
   SOURCES
     src/TArc.cxx
     src/TArrow.cxx
@@ -85,6 +87,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     src/TTF.cxx
     src/TText.cxx
     src/TWbox.cxx
+    src/TFeynman.cxx
+    src/TFeynmanEntry.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   LIBRARIES
