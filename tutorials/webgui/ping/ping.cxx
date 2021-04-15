@@ -112,7 +112,12 @@ void ping(int nclients = 1, int test_mode = 0)
 
    // configure default html page
    // either HTML code can be specified or just name of file after 'file:' prefix
-   window->SetDefaultPage("file:ping.html");
+   // Detect file location to specify full path to the
+   std::string fname = __FILE__;
+   auto pos = fname.find("ping.cxx");
+   if (pos > 0) { fname.resize(pos); fname.append("ping.html"); }
+           else fname = "ping.html";
+   window->SetDefaultPage(std::string("file:") + fname);
 
    // configure window geometry
    window->SetGeometry(300, 500);
