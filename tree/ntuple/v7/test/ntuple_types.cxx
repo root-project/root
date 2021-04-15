@@ -17,6 +17,12 @@ TEST(RNTuple, CreateField)
    field->DestroyValue(value);
 }
 
+TEST(RNTuple, Int64_t)
+{
+   auto field = RField<std::int64_t>("int64");
+   auto otherField = RFieldBase::Create("test", "std::int64_t").Unwrap();
+}
+
 TEST(RNTuple, UnsupportedStdTypes)
 {
    try {
