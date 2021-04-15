@@ -1007,31 +1007,26 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             this.interactiveRedraw(true, "pave_moved")
          });
 
-         menu.add("SetStatFormat", function() {
-            let fmt = prompt("Enter StatFormat", pave.fStatFormat);
-            if (fmt) {
+         menu.add("SetStatFormat", () => {
+            menu.input("Enter StatFormat", pave.fStatFormat).then(fmt => {
+               if (!fmt) return;
                pave.fStatFormat = fmt;
-               this.interactiveRedraw(true, 'exec:SetStatFormat("'+fmt+'")');
-            }
+               this.interactiveRedraw(true, `exec:SetStatFormat("${fmt}")`);
+            });
          });
-         menu.add("SetFitFormat", function() {
-            let fmt = prompt("Enter FitFormat", pave.fFitFormat);
-            if (fmt) {
+         menu.add("SetFitFormat", () => {
+            menu.input("Enter FitFormat", pave.fFitFormat).then(fmt => {
+               if (!fmt) return;
                pave.fFitFormat = fmt;
-               this.interactiveRedraw(true, 'exec:SetFitFormat("'+fmt+'")');
-            }
+               this.interactiveRedraw(true, `exec:SetFitFormat("${fmt}")`);
+            });
          });
          menu.add("separator");
-         menu.add("sub:SetOptStat", function() {
-            // todo - use jqury dialog here
-            let fmt = prompt("Enter OptStat", pave.fOptStat);
-            if (fmt) {
-               fmt = parseInt(fmt);
-               if (Number.isInteger(fmt) && (fmt>=0)) {
-                  pave.fOptStat = fmt;
-                  this.interactiveRedraw(true, "exec:SetOptStat("+fmt+")");
-               }
-            }
+         menu.add("sub:SetOptStat", () => {
+            menu.input("Enter OptStat", pave.fOptStat, "int").then(fmt => {
+               pave.fOptStat = fmt;
+               this.interactiveRedraw(true, `exec:SetOptStat(${fmt}`);
+            });
          });
          function AddStatOpt(pos, name) {
             let opt = (pos<10) ? pave.fOptStat : pave.fOptFit;
@@ -1042,10 +1037,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                newopt -= (oldopt>0 ? oldopt : -1) * parseInt(Math.pow(10, arg % 10));
                if (arg % 100 < 10) {
                   pave.fOptStat = newopt;
-                  this.interactiveRedraw(true, "exec:SetOptStat("+newopt+")");
+                  this.interactiveRedraw(true, `exec:SetOptStat(${newopt})`);
                } else {
                   pave.fOptFit = newopt;
-                  this.interactiveRedraw(true, "exec:SetOptFit("+newopt+")");
+                  this.interactiveRedraw(true, `exec:SetOptFit(${newopt})`);
                }
             });
          }
@@ -1061,16 +1056,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          AddStatOpt(8, "Kurtosis");
          menu.add("endsub:");
 
-         menu.add("sub:SetOptFit", function() {
-            // todo - use jqury dialog here
-            let fmt = prompt("Enter OptStat", pave.fOptFit);
-            if (fmt) {
-               fmt = parseInt(fmt);
-               if (Number.isInteger(fmt) && (fmt>=0)) {
-                  pave.fOptFit = fmt;
-                  this.interactiveRedraw(true, "exec:SetOptFit("+fmt+")");
-               }
-            }
+         menu.add("sub:SetOptFit", () => {
+            menu.input("Enter OptStat", pave.fOptFit, "int").then(fmt => {
+               pave.fOptFit = fmt;
+               this.interactiveRedraw(true, `exec:SetOptFit(${fmt})`);
+            });
          });
          AddStatOpt(10, "Fit parameters");
          AddStatOpt(11, "Par errors");
@@ -2711,7 +2701,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
    /** @summary Invoke dialog to enter and modify user range
      * @private */
-   THistPainter.prototype.changeUserRange = function(arg) {
+   THistPainter.prototype.changeUserRange = function(menu, arg) {
       let histo = this.getHisto(),
           taxis = histo ? histo['f'+arg+"axis"] : null;
       if (!taxis) return;
@@ -2720,42 +2710,45 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (taxis.TestBit(JSROOT.EAxisBits.kAxisRange))
           curr = "[" +taxis.fFirst+"," + taxis.fLast+"]";
 
-      let res = prompt("Enter user range for axis " + arg + " like [1," + taxis.fNbins + "]", curr);
-      if (!res) return;
-      res = JSON.parse(res);
-      if (!res || (res.length != 2)) return;
-      let first = parseInt(res[0]), last = parseInt(res[1]);
-      if (!Number.isInteger(first) || !Number.isInteger(last)) return;
-      taxis.fFirst = first;
-      taxis.fLast = last;
+      menu.input(`Enter user range for axis ${arg} like [1,${taxis.fNbins}]`, curr).then(res => {
+         if (!res) return;
+         res = JSON.parse(res);
+         if (!res || (res.length != 2)) return;
+         let first = parseInt(res[0]), last = parseInt(res[1]);
+         if (!Number.isInteger(first) || !Number.isInteger(last)) return;
+         taxis.fFirst = first;
+         taxis.fLast = last;
 
-      let newflag = (taxis.fFirst < taxis.fLast) && (taxis.fFirst >= 1) && (taxis.fLast <= taxis.fNbins);
-      if (newflag != taxis.TestBit(JSROOT.EAxisBits.kAxisRange))
-         taxis.InvertBit(JSROOT.EAxisBits.kAxisRange);
+         let newflag = (taxis.fFirst < taxis.fLast) && (taxis.fFirst >= 1) && (taxis.fLast <= taxis.fNbins);
 
-      this.redraw();
+         if (newflag != taxis.TestBit(JSROOT.EAxisBits.kAxisRange))
+            taxis.InvertBit(JSROOT.EAxisBits.kAxisRange);
+
+         this.interactiveRedraw();
+      });
    }
 
    /** @summary Start dialog to modify range of axis where histogram values are displayed
      * @private */
-   THistPainter.prototype.changeValuesRange = function() {
+   THistPainter.prototype.changeValuesRange = function(menu) {
       let curr;
       if ((this.options.minimum != -1111) && (this.options.maximum != -1111))
          curr = "[" + this.options.minimum + "," + this.options.maximum + "]";
       else
          curr = "[" + this.gminbin + "," + this.gmaxbin + "]";
 
-      let res = prompt("Enter min/max hist values or empty string to reset", curr);
-      res = res ? JSON.parse(res) : [];
+      menu.input("Enter min/max hist values or empty string to reset", curr).then(res => {
+         res = res ? JSON.parse(res) : [];
 
-      if (!res || (typeof res != "object") || (res.length!=2) || !Number.isFinite(res[0]) || !Number.isFinite(res[1])) {
-         this.options.minimum = this.options.maximum = -1111;
-      } else {
-         this.options.minimum = res[0];
-         this.options.maximum = res[1];
-       }
+         if (!res || (typeof res != "object") || (res.length!=2) || !Number.isFinite(res[0]) || !Number.isFinite(res[1])) {
+            this.options.minimum = this.options.maximum = -1111;
+         } else {
+            this.options.minimum = res[0];
+            this.options.maximum = res[1];
+          }
 
-       this.redrawPad();
+         this.interactiveRedraw();
+       });
    }
 
    /** @summary Fill histogram context menu
@@ -2771,15 +2764,15 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (this.draw_content) {
          menu.addchk(this.toggleStat('only-check'), "Show statbox", () => this.toggleStat());
          if (this.getDimension() == 1) {
-            menu.add("User range X", () => this.changeUserRange("X"));
+            menu.add("User range X", () => this.changeUserRange(menu, "X"));
          } else {
             menu.add("sub:User ranges");
-            menu.add("X", () => this.changeUserRange("X"));
-            menu.add("Y", () => this.changeUserRange("Y"));
+            menu.add("X", () => this.changeUserRange(menu, "X"));
+            menu.add("Y", () => this.changeUserRange(menu, "Y"));
             if (this.getDimension() > 2)
-               menu.add("Z", () => this.changeUserRange("Z"));
+               menu.add("Z", () => this.changeUserRange(menu, "Z"));
             else
-               menu.add("Values", () => this.changeValuesRange());
+               menu.add("Values", () => this.changeValuesRange(menu));
             menu.add("endsub:");
          }
 

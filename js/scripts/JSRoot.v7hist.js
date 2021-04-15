@@ -600,18 +600,18 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    /** @summary Start dialog to modify range of axis where histogram values are displayed
      * @private */
-   RHistPainter.prototype.changeValuesRange = function(arg) {
+   RHistPainter.prototype.changeValuesRange = function(menu, arg) {
       let pmain = this.getFramePainter();
       if (!pmain) return;
       let prefix = pmain.isAxisZoomed(arg) ? "zoom_" + arg : arg;
       let curr = "[" + pmain[prefix+'min'] + "," + pmain[prefix+'max'] + "]";
-      let res = prompt("Enter values range for axis " + arg + " like [0,100] or empty string to unzoom", curr);
-      res = res ? JSON.parse(res) : [];
-
-      if (!res || (typeof res != "object") || (res.length!=2) || !Number.isFinite(res[0]) || !Number.isFinite(res[1]))
-         pmain.unzoom(arg);
-      else
-         pmain.zoom(arg, res[0], res[1]);
+      menu.input("Enter values range for axis " + arg + " like [0,100] or empty string to unzoom", curr).then(res => {
+         res = res ? JSON.parse(res) : [];
+         if (!res || (typeof res != "object") || (res.length!=2) || !Number.isFinite(res[0]) || !Number.isFinite(res[1]))
+            pmain.unzoom(arg);
+         else
+            pmain.zoom(arg, res[0], res[1]);
+      });
    }
 
    /** @summary Fill histogram context menu
@@ -624,7 +624,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          menu.addchk(this.toggleStat('only-check'), "Show statbox", () => this.toggleStat());
 
          if (this.getDimension() == 2)
-             menu.add("Values range", () => this.changeValuesRange("z"));
+             menu.add("Values range", () => this.changeValuesRange(menu, "z"));
 
          if (typeof this.fillHistContextMenu == 'function')
             this.fillHistContextMenu(menu);

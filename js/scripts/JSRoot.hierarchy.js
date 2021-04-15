@@ -1016,35 +1016,37 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let hitem = this.findItem(itemname),
           url = this.getOnlineItemUrl(hitem) + "/cmd.json",
-          d3node = d3.select(elem);
+          d3node = d3.select(elem),
+          promise = Promise.resolve("");
 
-      if ('_numargs' in hitem)
-         for (let n = 0; n < hitem._numargs; ++n) {
-            let argname = "arg" + (n+1), argvalue = undefined;
-            if (n+2 < arguments.length) argvalue = arguments[n+2];
-            if ((argvalue===undefined) && elem)
-               argvalue = prompt("Input argument " + argname + " for command " + hitem._name, "");
-            if (argvalue===null) return Promise.resolve(false);
-            url += ((n==0) ? "?" : "&") + argname + "=" + argvalue;
-         }
-
-      if (!d3node.empty()) {
-         d3node.style('background','yellow');
-         if (hitem && hitem._title) d3node.attr('title', "Executing " + hitem._title);
+      if ('_numargs' in hitem) {
+         let cmdargs = [];
+         for (let n = 0; n < hitem._numargs; ++n)
+            cmdargs.push((n+2 < arguments.length) ? arguments[n+2] : "");
+         promise = JSROOT.require("jq2d").then(() => this.commandArgsDialog(hitem._name, cmdargs));
       }
 
-      return JSROOT.httpRequest(url, 'text').then(res => {
-         if (!d3node.empty()) {
-            let col = ((res != null) && (res != 'false')) ? 'green' : 'red';
-            if (hitem && hitem._title) d3node.attr('title', hitem._title + " lastres=" + res);
-            d3node.style('background', col);
-            setTimeout(() => d3node.style('background', ''), 2000);
-            if ((col == 'green') && ('_hreload' in hitem))
-               this.reload();
-            if ((col == 'green') && ('_update_item' in hitem))
-               this.updateItems(hitem._update_item.split(";"));
+      return promise.then(urlargs => {
+         if (typeof urlargs != "string") return false;
+
+        if (!d3node.empty()) {
+            d3node.style('background','yellow');
+            if (hitem && hitem._title) d3node.attr('title', "Executing " + hitem._title);
          }
-         return res;
+
+         return JSROOT.httpRequest(url + urlargs, 'text').then(res => {
+            if (!d3node.empty()) {
+               let col = ((res != null) && (res != 'false')) ? 'green' : 'red';
+               if (hitem && hitem._title) d3node.attr('title', hitem._title + " lastres=" + res);
+               d3node.style('background', col);
+               setTimeout(() => d3node.style('background', ''), 2000);
+               if ((col == 'green') && ('_hreload' in hitem))
+                  this.reload();
+               if ((col == 'green') && ('_update_item' in hitem))
+                  this.updateItems(hitem._update_item.split(";"));
+            }
+            return res;
+         });
       });
    }
 
