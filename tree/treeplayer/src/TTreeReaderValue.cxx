@@ -745,6 +745,12 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
       if ((!dataTypeName || !dataTypeName[0])
           && branch->IsA() == TBranch::Class()) {
          TLeaf *myLeaf = branch->GetLeaf(branch->GetName());
+         if (!myLeaf) {
+            myLeaf = branch->FindLeaf(branch->GetName());
+         }
+         if (!myLeaf && branch->GetListOfLeaves()->GetEntries() == 1) {
+            myLeaf = static_cast<TLeaf *>(branch->GetListOfLeaves()->UncheckedAt(0));
+         }
          if (myLeaf){
             TDictionary *myDataType = TDictionary::GetDictionary(myLeaf->GetTypeName());
             if (myDataType && myDataType->IsA() == TDataType::Class()){
