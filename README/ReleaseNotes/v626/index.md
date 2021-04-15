@@ -46,6 +46,8 @@ The following people have contributed to this new version:
 
 ## TTree Libraries
 
+- Add `Describe` to the `RDataFrame` interface, which allows to get useful information, e.g. the columns and their types.
+
 
 ## Histogram Libraries
 
