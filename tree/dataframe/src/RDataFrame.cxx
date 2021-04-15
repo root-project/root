@@ -134,6 +134,7 @@ produce many different results in one event loop. Instant actions trigger the ev
 | SaveGraph() | Store the computation graph of an RDataFrame in graphviz format for easy inspection. |
 | GetNRuns() | Return the number of event loops run by this RDataFrame instance so far. |
 | GetNSlots() | Return the number of processing slots that RDataFrame will use during the event loop (i.e. the concurrency level). |
+| Describe() | Get useful information describing the dataframe, e.g. columns and their types. |
 
 
 
