@@ -1016,6 +1016,63 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       return false;
    }
 
+
+  /** @summary Method to enter extra arguments for cmd.json
+    * @returns {Promise} with url args or false */
+   HierarchyPainter.prototype.commandArgsDialog = function(cmdname, args) {
+      let dlg_id = "jsroot_cmdargs_dialog";
+      let old_dlg = document.getElementById(dlg_id);
+      if (old_dlg) old_dlg.parentNode.removeChild(old_dlg);
+
+      let inputs = "";
+
+      for (let n = 0; n < args.length; ++n) {
+         inputs += `<label for="${dlg_id}_inp${n}">arg${n+1}</label>
+                    <input type="text" tabindex="0" name="${dlg_id}_inp${n}" id="${dlg_id}_inp${n}" value="${args[n]}" style="width:100%;display:block" class="text ui-widget-content ui-corner-all"/>`;
+      }
+
+      $(document.body).append(
+         `<div id="${dlg_id}">
+           <form>
+             <fieldset style="padding:0; border:0">
+                ${inputs}
+                <input type="submit" tabindex="-1" style="position:absolute; top:-1000px; display:block"/>
+            </fieldset>
+           </form>
+         </div>`);
+
+      return new Promise(resolveFunc => {
+         let dialog, urlargs, pressEnter = () => {
+            urlargs = "";
+            for (let k = 0; k < args.length; ++k) {
+               let value = $("#" + dlg_id + "_inp" + k).val();
+               urlargs += k > 0 ?  "&" : "?";
+               urlargs += `arg${k+1}=${value}`;
+            }
+            dialog.dialog("close");
+            resolveFunc(urlargs);
+         }
+
+         dialog = $("#" + dlg_id).dialog({
+            height: 110 + args.length*60,
+            width: 400,
+            modal: true,
+            resizable: true,
+            title: "Arguments for command " + cmdname,
+            buttons: {
+               "Ok": pressEnter,
+               "Cancel": () => { dialog.dialog( "close" ); resolveFunc(false); }
+            },
+            close: () => { dialog.remove(); if (!urlargs) resolveFunc(false); }
+          });
+
+          dialog.find( "form" ).on( "submit", event => {
+             event.preventDefault();
+             pressEnter();
+          });
+       });
+   }
+
    /** @summary Creates configured JSROOT.MDIDisplay object
      * @returns {Promise} with created mdi object */
    HierarchyPainter.prototype.createDisplay = function() {

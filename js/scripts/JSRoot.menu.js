@@ -159,24 +159,169 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          if (!without_sub) this.add("endsub:");
       }
 
+      /** @summary Show modal info dialog
+        * @protected */
+      info(title, message) {
+         let dlg_id = this.menuname + "_dialog";
+         let old_dlg = document.getElementById(dlg_id);
+         if (old_dlg) old_dlg.parentNode.removeChild(old_dlg);
+         $(document.body).append(
+            `<div id="${dlg_id}">
+            <p tabindex="0">${message}</p>
+            </div>`);
+         let dialog = $("#" + dlg_id).dialog({
+            height: 120,
+            width: 400,
+            modal: true,
+            resizable: true,
+            title: title,
+            close: () => dialog.remove()
+          });
+      }
+
+      /** @summary Input value
+        * @returns {Promise} with input value
+        * @protected */
+      input(title, value, kind) {
+         let dlg_id = this.menuname + "_dialog";
+         let old_dlg = document.getElementById(dlg_id);
+         if (old_dlg) old_dlg.parentNode.removeChild(old_dlg);
+         if (!kind) kind = "text";
+         let inp_type = (kind == "int") ? "number" : "text";
+
+         $(document.body).append(
+            `<div id="${dlg_id}">
+              <form>
+                <fieldset style="padding:0; border:0">
+                   <input type="${inp_type}" tabindex="0" name="${dlg_id}_inp" id="${dlg_id}_inp" value="${value}" style="width:100%;display:block" class="text ui-widget-content ui-corner-all"/>
+                   <input type="submit" tabindex="-1" style="position:absolute; top:-1000px; display:block"/>
+               </fieldset>
+              </form>
+            </div>`);
+
+         return new Promise(resolveFunc => {
+            let dialog, pressEnter = () => {
+               let val = $("#" + dlg_id + "_inp").val();
+               dialog.dialog("close");
+               if (kind == "float") {
+                  val = parseFloat(val);
+                  if (Number.isFinite(val))
+                     resolveFunc(val);
+               } else if (kind == "int") {
+                  val = parseInt(val);
+                  if (Number.isInteger(val))
+                     resolveFunc(val);
+               } else {
+                  resolveFunc(val);
+              }
+            }
+
+            dialog = $("#" + dlg_id).dialog({
+               height: 150,
+               width: 400,
+               modal: true,
+               resizable: false,
+               title: title,
+               buttons: {
+                  "Ok": pressEnter,
+                  "Cancel": () => dialog.dialog( "close" )
+               },
+               close: () => dialog.remove()
+             });
+
+             dialog.find( "form" ).on( "submit", event => {
+                event.preventDefault();
+                pressEnter();
+             });
+          });
+      }
+
+      /** @summary Let input arguments from the command
+        * @returns {Promise} with command argument */
+      showMethodArgsDialog(method) {
+         let dlg_id = this.menuname + "_dialog";
+         let old_dlg = document.getElementById(dlg_id);
+         if (old_dlg) old_dlg.parentNode.removeChild(old_dlg);
+
+         let inputs = "";
+
+         for (let n = 0; n < method.fArgs.length; ++n) {
+            let arg = method.fArgs[n];
+            arg.fValue = arg.fDefault;
+            if (arg.fValue == '\"\"') arg.fValue = "";
+            inputs += `<label for="${dlg_id}_inp${n}">${arg.fName}</label>
+                       <input type="text" tabindex="0" name="${dlg_id}_inp${n}" id="${dlg_id}_inp${n}" value="${arg.fValue}" style="width:100%;display:block" class="text ui-widget-content ui-corner-all"/>`;
+         }
+
+         $(document.body).append(
+            `<div id="${dlg_id}">
+              <form>
+                <fieldset style="padding:0; border:0">
+                   ${inputs}
+                   <input type="submit" tabindex="-1" style="position:absolute; top:-1000px; display:block"/>
+               </fieldset>
+              </form>
+            </div>`);
+
+         return new Promise(resolveFunc => {
+            let dialog, pressEnter = () => {
+               let args = "";
+
+               for (let k = 0; k < method.fArgs.length; ++k) {
+                  let arg = method.fArgs[k];
+                  let value = $("#" + dlg_id + "_inp" + k).val();
+                  if (value==="") value = arg.fDefault;
+                  if ((arg.fTitle=="Option_t*") || (arg.fTitle=="const char*")) {
+                     // check quotes,
+                     // TODO: need to make more precise checking of escape characters
+                     if (!value) value = '""';
+                     if (value[0]!='"') value = '"' + value;
+                     if (value[value.length-1] != '"') value += '"';
+                  }
+
+                  args += (k>0 ? "," : "") + value;
+               }
+
+               dialog.dialog("close");
+               resolveFunc(args);
+            }
+
+            dialog = $("#" + dlg_id).dialog({
+               height: 100 + method.fArgs.length*60,
+               width: 400,
+               modal: true,
+               resizable: true,
+               title: method.fClassName + '::' + method.fName,
+               buttons: {
+                  "Ok": pressEnter,
+                  "Cancel": () => dialog.dialog( "close" )
+               },
+               close: () => dialog.remove()
+             });
+
+             dialog.find( "form" ).on( "submit", event => {
+                event.preventDefault();
+                pressEnter();
+             });
+          });
+      }
+
       /** @summary Add color selection menu entries
         * @protected */
       addColorMenu(name, value, set_func, fill_kind) {
          if (value === undefined) return;
-         this.add("sub:" + name, function() {
-            // todo - use jqury dialog here
-            let useid = (typeof value !== 'string');
-            let col = prompt("Enter color " + (useid ? "(only id number)" : "(name or id)"), value);
-            if (col === null) return;
-            let id = parseInt(col);
-            if (Number.isInteger(id) && jsrp.getColor(id)) {
-               col = jsrp.getColor(id);
-            } else {
-               if (useid) return;
-            }
-            set_func(useid ? id : col);
-         });
          let useid = (typeof value !== 'string');
+         this.add("sub:" + name, () => {
+            this.input("Enter color " + (useid ? "(only id number)" : "(name or id)"), value, useid ? "int" : "text").then(col => {
+               let id = parseInt(col);
+               if (Number.isInteger(id) && jsrp.getColor(id)) {
+                  col = jsrp.getColor(id);
+               } else {
+                  if (useid) return;
+               }
+               set_func(useid ? id : col);
+            });
+         });
          for (let n = -1; n < 11; ++n) {
             if ((n < 0) && useid) continue;
             if ((n == 10) && (fill_kind !== 1)) continue;
@@ -193,15 +338,11 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
       addSizeMenu(name, min, max, step, size_value, set_func) {
          if (size_value === undefined) return;
 
-         this.add("sub:" + name, function() {
-            // todo - use jqury dialog here
+         this.add("sub:" + name, () => {
             let entry = size_value.toFixed(4);
             if (step >= 0.1) entry = size_value.toFixed(2);
             if (step >= 1) entry = size_value.toFixed(0);
-            let sz = prompt("Enter value of " + name, entry);
-            if (!sz) return;
-            sz = parseFloat(sz);
-            if (Number.isFinite(sz)) set_func((step >= 1) ? Math.round(sz) : sz);
+            this.input("Enter value of " + name, entry, (step >= 1) ? "int" : "float").then(set_func);
          });
          for (let sz = min; sz <= max; sz += step) {
             let entry = sz.toFixed(2);
@@ -214,11 +355,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
       }
 
       addRebinMenu(rebin_func) {
-        this.add("sub:Rebin", function() {
-            let sz = prompt("Enter rebin value", 2);
-            if (!sz) return;
-            sz = parseInt(sz);
-            if (Number.isInteger(sz) && (sz > 1)) rebin_func(sz);
+        this.add("sub:Rebin", () => {
+            this.input("Enter rebin value", 2, "int").then(rebin_func);
          });
          for (let sz = 2; sz <= 7; sz++) {
             this.add(sz.toString(), sz, res => rebin_func(parseInt(res)));
@@ -242,9 +380,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          let colors = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
 
          this.add("sub:" + name, () => {
-            // todo - use jqury dialog here
-            let col = prompt("Enter color name - empty string will reset color", value);
-            set_func(col);
+            this.input("Enter color name - empty string will reset color", value).then(set_func);
          });
          let col = null, fillcol = 'black', coltxt = 'default', bkgr = '';
          for (let n = -1; n < colors.length; ++n) {
@@ -326,22 +462,21 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          if (painter.lineatt && painter.lineatt.used) {
             this.add("sub:" + preffix + "Line att");
             this.addSizeMenu("width", 1, 10, 1, painter.lineatt.width,
-               arg => { painter.lineatt.change(undefined, arg); painter.interactiveRedraw(true, "exec:SetLineWidth(" + arg + ")"); });
+               arg => { painter.lineatt.change(undefined, arg); painter.interactiveRedraw(true, `exec:SetLineWidth(${arg})`); });
             this.addColorMenu("color", painter.lineatt.color,
                arg => { painter.lineatt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetLineColor")); });
-            this.add("sub:style", function() {
-               let id = prompt("Enter line style id (1-solid)", 1);
-               if (id === null) return;
-               id = parseInt(id);
-               if (!Number.isInteger(id) || !jsrp.root_line_styles[id]) return;
-               this.lineatt.change(undefined, undefined, id);
-               this.interactiveRedraw(true, "exec:SetLineStyle(" + id + ")");
-            }.bind(painter));
+            this.add("sub:style", () => {
+               this.input("Enter line style id (1-solid)", painter.lineatt.style, "int").then(id => {
+                  if (!jsrp.root_line_styles[id]) return;
+                  painter.lineatt.change(undefined, undefined, id);
+                  painter.interactiveRedraw(true, `exec:SetLineStyle(${id})`);
+               });
+            });
             for (let n = 1; n < 11; ++n) {
                let dash = jsrp.root_line_styles[n],
                    svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + n + "</text><line x1='30' y1='8' x2='100' y2='8' stroke='black' stroke-width='3' stroke-dasharray='" + dash + "'></line></svg>";
 
-               this.addchk((painter.lineatt.style == n), svg, n, function(arg) { this.lineatt.change(undefined, undefined, parseInt(arg)); this.interactiveRedraw(true, "exec:SetLineStyle(" + arg + ")"); }.bind(painter));
+               this.addchk((painter.lineatt.style == n), svg, n, arg => { painter.lineatt.change(undefined, undefined, parseInt(arg)); painter.interactiveRedraw(true, `exec:SetLineStyle(${arg})`); });
             }
             this.add("endsub:");
             this.add("endsub:");
@@ -367,24 +502,23 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
             this.add("sub:" + preffix + "Fill att");
             this.addColorMenu("color", painter.fillatt.colorindx,
                arg => { painter.fillatt.change(arg, undefined, painter.getCanvSvg()); painter.interactiveRedraw(true, getColorExec(arg, "SetFillColor")); }, painter.fillatt.kind);
-            this.add("sub:style", function() {
-               let id = prompt("Enter fill style id (1001-solid, 3000..3010)", this.fillatt.pattern);
-               if (id === null) return;
-               id = parseInt(id);
-               if (!Number.isInteger(id)) return;
-               this.fillatt.change(undefined, id, this.getCanvSvg());
-               this.interactiveRedraw(true, "exec:SetFillStyle(" + id + ")");
-            }.bind(painter));
+            this.add("sub:style", () => {
+               this.input("Enter fill style id (1001-solid, 3000..3010)", painter.fillatt.pattern, "int").then(id => {
+                  if ((id < 0) || (id > 4000)) return;
+                  painter.fillatt.change(undefined, id, painter.getCanvSvg());
+                  painter.interactiveRedraw(true, "exec:SetFillStyle(" + id + ")");
+               });
+            });
 
             let supported = [1, 1001, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3010, 3021, 3022];
 
             for (let n = 0; n < supported.length; ++n) {
                let sample = painter.createAttFill({ std: false, pattern: supported[n], color: painter.fillatt.colorindx || 1 }),
                    svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><rect x='40' y='0' width='60' height='18' stroke='none' fill='" + sample.getFillColor() + "'></rect></svg>";
-               this.addchk(painter.fillatt.pattern == supported[n], svg, supported[n], function(arg) {
-                  this.fillatt.change(undefined, parseInt(arg), this.getCanvSvg());
-                  this.interactiveRedraw(true, "exec:SetFillStyle(" + arg + ")");
-               }.bind(painter));
+               this.addchk(painter.fillatt.pattern == supported[n], svg, supported[n], arg => {
+                  painter.fillatt.change(undefined, parseInt(arg), painter.getCanvSvg());
+                  painter.interactiveRedraw(true, `exec:SetFillStyle(${arg})`);
+               });
             }
             this.add("endsub:");
             this.add("endsub:");
@@ -395,7 +529,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
             this.addColorMenu("color", painter.markeratt.color,
                arg => { painter.markeratt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetMarkerColor"));});
             this.addSizeMenu("size", 0.5, 6, 0.5, painter.markeratt.size,
-               arg => { painter.markeratt.change(undefined, undefined, arg); painter.interactiveRedraw(true, "exec:SetMarkerSize(" + parseInt(arg) + ")"); });
+               arg => { painter.markeratt.change(undefined, undefined, arg); painter.interactiveRedraw(true, `exec:SetMarkerSize(${arg})`); });
 
             this.add("sub:style");
             let supported = [1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34];
@@ -430,8 +564,10 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.add("endsub:");
          this.add("sub:Title");
          this.add("SetTitle", () => {
-            let t = prompt("Enter axis title", faxis.fTitle);
-            if (t!==null) { faxis.fTitle = t; painter.interactiveRedraw("pad", `exec:SetTitle("${t}")`, kind); }
+            this.input("Enter axis title", faxis.fTitle).then(t => {
+               faxis.fTitle = t;
+               painter.interactiveRedraw("pad", `exec:SetTitle("${t}")`, kind);
+            });
          });
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kCenterTitle), "Center",
                arg => { faxis.InvertBit(JSROOT.EAxisBits.kCenterTitle); painter.interactiveRedraw("pad", `exec:CenterTitle(${arg})`, kind); });

@@ -1495,7 +1495,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       let levels = palette.getContour();
 
       this.buildContour(handle, levels, palette,
-         function(colindx,xp,yp,iminus,iplus,ilevel) {
+         (colindx,xp,yp,iminus,iplus,ilevel) => {
              // ignore less than three points
              if (iplus - iminus < 3) return;
 
@@ -1880,7 +1880,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
              lastcolindx = -1, layerz = 2*main.size_z3d;
 
          this.buildContour(handle, levels, palette,
-            function(colindx,xp,yp,iminus,iplus) {
+            (colindx,xp,yp,iminus,iplus) => {
                 // no need for duplicated point
                 if ((xp[iplus] === xp[iminus]) && (yp[iplus] === yp[iminus])) iplus--;
 

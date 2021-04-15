@@ -327,7 +327,7 @@ JSROOT.define([], () =>  {
    mth.igami = function(a, y0) {
       // check the domain
       if (a <= 0) {
-         alert("igami : Wrong domain for parameter a (must be > 0)");
+         console.error("igami : Wrong domain for parameter a (must be > 0)");
          return 0;
       }
       if (y0 <= 0) {

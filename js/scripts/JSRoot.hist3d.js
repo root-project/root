@@ -1542,7 +1542,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
           layerz = 2*main.size_z3d, pnts = [];
 
       this.buildContour(handle, levels, palette,
-         function(colindx,xp,yp,iminus,iplus,ilevel) {
+         (colindx,xp,yp,iminus,iplus,ilevel) => {
              // ignore less than three points
              if (iplus - iminus < 3) return;
 
@@ -1908,7 +1908,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
              lastcolindx = -1, layerz = 2*main.size_z3d;
 
          this.buildContour(handle, levels, palette,
-            function(colindx,xp,yp,iminus,iplus) {
+            (colindx,xp,yp,iminus,iplus) => {
                 // no need for duplicated point
                 if ((xp[iplus] === xp[iminus]) && (yp[iplus] === yp[iminus])) iplus--;
 
@@ -3100,6 +3100,52 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       return histo;
    }
 
+   /** @summary Function handles tooltips in the mesh
+     * @private */
+   TGraph2DPainter.prototype.graph2DTooltip = function(intersect) {
+      if (!Number.isInteger(intersect.index)) {
+         console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r121');
+         return null;
+      }
+
+      let indx = Math.floor(intersect.index / this.nvertex);
+      if ((indx<0) || (indx >= this.index.length)) return null;
+      let sqr = v => v*v;
+
+      indx = this.index[indx];
+
+      let p = this.painter, gr = this.graph,
+          grx = p.grx(gr.fX[indx]),
+          gry = p.gry(gr.fY[indx]),
+          grz = p.grz(gr.fZ[indx]);
+
+      if (this.check_next && indx+1<gr.fX.length) {
+         let d = intersect.point,
+             grx1 = p.grx(gr.fX[indx+1]),
+             gry1 = p.gry(gr.fY[indx+1]),
+             grz1 = p.grz(gr.fZ[indx+1]);
+         if (sqr(d.x-grx1)+sqr(d.y-gry1)+sqr(d.z-grz1) < sqr(d.x-grx)+sqr(d.y-gry)+sqr(d.z-grz)) {
+            grx = grx1; gry = gry1; grz = grz1; indx++;
+         }
+      }
+
+      return {
+         x1: grx - this.scale0,
+         x2: grx + this.scale0,
+         y1: gry - this.scale0,
+         y2: gry + this.scale0,
+         z1: grz - this.scale0,
+         z2: grz + this.scale0,
+         color: this.tip_color,
+         lines: [ this.tip_name,
+                  "pnt: " + indx,
+                  "x: " + p.axisAsText("x", gr.fX[indx]),
+                  "y: " + p.axisAsText("y", gr.fY[indx]),
+                  "z: " + p.axisAsText("z", gr.fZ[indx])
+                ]
+      };
+   }
+
    /** @summary Actual drawing of TGraph2D object
      * @private */
    TGraph2DPainter.prototype.redraw = function() {
@@ -3111,9 +3157,9 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
       if (!graph || !main || !fp || !fp.mode3d) return;
 
-      function countSelected(zmin, zmax) {
+      let countSelected = (zmin, zmax) => {
          let cnt = 0;
-         for (let i=0; i < graph.fNpoints; ++i) {
+         for (let i = 0; i < graph.fNpoints; ++i) {
             if ((graph.fX[i] < fp.scale_xmin) || (graph.fX[i] > fp.scale_xmax) ||
                 (graph.fY[i] < fp.scale_ymin) || (graph.fY[i] > fp.scale_ymax) ||
                 (graph.fZ[i] < zmin) || (graph.fZ[i] >= zmax)) continue;
@@ -3121,51 +3167,6 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             ++cnt;
          }
          return cnt;
-      }
-
-      function sqr(v) { return v*v; }
-
-      function graph2DTooltip(intersect) {
-         if (!Number.isInteger(intersect.index)) {
-            console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r121');
-            return null;
-         }
-
-         let indx = Math.floor(intersect.index / this.nvertex);
-         if ((indx<0) || (indx >= this.index.length)) return null;
-
-         indx = this.index[indx];
-
-         let p = this.painter,
-             grx = p.grx(this.graph.fX[indx]),
-             gry = p.gry(this.graph.fY[indx]),
-             grz = p.grz(this.graph.fZ[indx]);
-
-         if (this.check_next && indx+1<this.graph.fX.length) {
-            let d = intersect.point,
-                grx1 = p.grx(this.graph.fX[indx+1]),
-                gry1 = p.gry(this.graph.fY[indx+1]),
-                grz1 = p.grz(this.graph.fZ[indx+1]);
-            if (sqr(d.x-grx1)+sqr(d.y-gry1)+sqr(d.z-grz1) < sqr(d.x-grx)+sqr(d.y-gry)+sqr(d.z-grz)) {
-               grx = grx1; gry = gry1; grz = grz1; indx++;
-            }
-         }
-
-         return {
-            x1: grx - this.scale0,
-            x2: grx + this.scale0,
-            y1: gry - this.scale0,
-            y2: gry + this.scale0,
-            z1: grz - this.scale0,
-            z2: grz + this.scale0,
-            color: this.tip_color,
-            lines: [ this.tip_name,
-                     "pnt: " + indx,
-                     "x: " + p.axisAsText("x", this.graph.fX[indx]),
-                     "y: " + p.axisAsText("y", this.graph.fY[indx]),
-                     "z: " + p.axisAsText("z", this.graph.fZ[indx])
-                   ]
-         };
       }
 
       // try to define scale-down factor
@@ -3285,7 +3286,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             linemesh.nvertex = 2;
             linemesh.check_next = true;
 
-            linemesh.tooltip = graph2DTooltip;
+            linemesh.tooltip = this.graph2DTooltip;
          }
 
          if (err) {
@@ -3302,7 +3303,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             errmesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
             errmesh.nvertex = 6;
 
-            errmesh.tooltip = graph2DTooltip;
+            errmesh.tooltip = this.graph2DTooltip;
          }
 
          if (pnts) {
@@ -3321,7 +3322,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             mesh.index = index;
 
             mesh.tip_name = this.getObjectHint();
-            mesh.tooltip = graph2DTooltip;
+            mesh.tooltip = this.graph2DTooltip;
 
             fp.toplevel.add(mesh);
          }

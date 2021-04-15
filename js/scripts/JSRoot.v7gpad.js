@@ -1363,8 +1363,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       menu.add("sub:Title", () => {
-         let t = prompt("Enter axis title", this.fTitle);
-         if (t!==null) this.changeAxisAttr(1, "title", t);
+         menu.input("Enter axis title", this.fTitle).then(t => this.changeAxisAttr(1, "title", t));
       });
 
       if (this.fTitle) {
