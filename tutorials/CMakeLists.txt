@@ -575,7 +575,12 @@ if(ROOT_pyroot_FOUND)
     list(APPEND pyveto pyroot/pyroot004_NumbaDeclare.py)
   endif()
 
-  # Rules specific to distributed RDataFrame with Pyspark 
+  if((dataframe AND DEFINED ENV{ROOTTEST_IGNORE_PANDAS_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2) OR
+     (dataframe AND DEFINED ENV{ROOTTEST_IGNORE_PANDAS_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
+    list(APPEND pyveto dataframe/df026_AsNumpyArrays.py)
+  endif()
+
+  # Rules specific to distributed RDataFrame with Pyspark
   # Disable distributed RDF tutorials if we didn't check dependencies in the environment first
   if(NOT test_distrdf_pyspark)
     list(APPEND pyveto dataframe/distrdf*)
