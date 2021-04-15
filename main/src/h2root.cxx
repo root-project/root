@@ -16,7 +16,7 @@
 //  if tolower is missing (or = 1) ntuple column names are converted to lower case
 //                but the first character is converted to upper case.
 //  if tolower = 2 same as tolower=1 except that the first character is also
-//                convertex to lower case
+//                converted to lower case
 /////////////////////////////////////////////////////////////////////////
 
 #include <cstdlib>
@@ -627,7 +627,7 @@ void convert_rwn(Int_t id)
    for(i=0; i<nvar;i++) {
       name[kNchar-1] = 0;
       first = last = 0;
-      // suppress traling blanks
+      // suppress trailing blanks
       for (j=kNchar-2;j>0;j--) {
          if(golower) name[j] = tolower(name[j]);
          if (name[j] == ' ' && last == 0) name[j] = 0;
