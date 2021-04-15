@@ -102,6 +102,9 @@ std::string GetNormalizedType(const std::string &typeName) {
    if (normalizedType == "unsigned int") normalizedType = "std::uint32_t";
    if (normalizedType == "UInt_t") normalizedType = "std::uint32_t";
    if (normalizedType == "uint32_t") normalizedType = "std::uint32_t";
+   if (normalizedType == "Long64_t") normalizedType = "std::int64_t";
+   if (normalizedType == "Long_t") normalizedType = "std::int64_t";
+   if (normalizedType == "int64_t") normalizedType = "std::int64_t";
    if (normalizedType == "ULong64_t") normalizedType = "std::uint64_t";
    if (normalizedType == "uint64_t") normalizedType = "std::uint64_t";
    if (normalizedType == "string") normalizedType = "std::string";
@@ -148,6 +151,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       result = std::make_unique<RField<std::int32_t>>(fieldName);
    } else if (normalizedType == "std::uint32_t") {
       result = std::make_unique<RField<std::uint32_t>>(fieldName);
+   } else if (normalizedType == "std::int64_t") {
+      result = std::make_unique<RField<std::int64_t>>(fieldName);
    } else if (normalizedType == "std::uint64_t") {
       result = std::make_unique<RField<std::uint64_t>>(fieldName);
    } else if (normalizedType == "float") {
@@ -485,6 +490,20 @@ void ROOT::Experimental::RField<std::uint64_t>::AcceptVisitor(Detail::RFieldVisi
 
 //------------------------------------------------------------------------------
 
+void ROOT::Experimental::RField<std::int64_t>::GenerateColumnsImpl()
+{
+   RColumnModel model(EColumnType::kInt64, false /* isSorted*/);
+   fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
+      Detail::RColumn::Create<std::int64_t, EColumnType::kInt64>(model, 0)));
+   fPrincipalColumn = fColumns[0].get();
+}
+
+void ROOT::Experimental::RField<std::int64_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitInt64Field(*this);
+}
+
+//------------------------------------------------------------------------------
 
 void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl()
 {

@@ -837,6 +837,46 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+template <>
+class RField<std::int64_t> : public Detail::RFieldBase {
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
+      return std::make_unique<RField>(newName);
+   }
+
+public:
+   static std::string TypeName() { return "std::int64_t"; }
+   explicit RField(std::string_view name)
+     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+
+   void GenerateColumnsImpl() final;
+
+   std::int64_t *Map(NTupleSize_t globalIndex) {
+      return fPrincipalColumn->Map<std::int64_t, EColumnType::kInt64>(globalIndex);
+   }
+   std::int64_t *Map(const RClusterIndex &clusterIndex) {
+      return fPrincipalColumn->Map<std::int64_t, EColumnType::kInt64>(clusterIndex);
+   }
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
+   {
+      return Detail::RFieldValue(
+         Detail::RColumnElement<std::int64_t, EColumnType::kInt64>(static_cast<std::int64_t*>(where)),
+         this, static_cast<std::int64_t*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0); }
+   Detail::RFieldValue CaptureValue(void *where) final {
+      return Detail::RFieldValue(true /* captureFlag */,
+         Detail::RColumnElement<std::int64_t, EColumnType::kInt64>(static_cast<std::int64_t*>(where)), this, where);
+   }
+   size_t GetValueSize() const final { return sizeof(std::int64_t); }
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
 
 template <>
 class RField<std::string> : public Detail::RFieldBase {
