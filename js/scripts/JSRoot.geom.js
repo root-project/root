@@ -679,7 +679,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       menu.add("Reset camera position", () => this.focusCamera());
 
       if (!this._geom_viewer)
-         menu.add("Get camera position", () => alert("Position (as url): &opt=" + this.produceCameraUrl()));
+         menu.add("Get camera position", () => menu.info("Position (as url)", "&opt=" + this.produceCameraUrl()));
 
       if (!this.ctrl.project)
          menu.addchk(this.ctrl.rotate, "Autorotate", () => this.setAutoRotate(!this.ctrl.rotate));
