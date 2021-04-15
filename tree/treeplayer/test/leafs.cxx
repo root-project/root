@@ -218,10 +218,11 @@ struct Event {
    int truth_type = 1;
 };
 
-TEST(TTreeReaderLeafs, MultipleReaders) {
-   TTree t("t","t");
+TEST(TTreeReaderLeafs, MultipleReaders)
+{
+   TTree t("t", "t");
    Event event;
-   t.Branch ("event", &event, "bla/F:truth_type/I");
+   t.Branch("event", &event, "bla/F:truth_type/I");
    t.Fill();
 
    TTreeReader r(&t);
