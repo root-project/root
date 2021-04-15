@@ -50,6 +50,7 @@ protected:
    std::string fExtraArgs;        ///<! extra arguments which will be append to exec string
    std::string fPageContent;      ///<! HTML page content
    std::string fRedirectOutput;   ///<! filename where browser output should be redirected
+   bool fBatchMode{false};        ///<! is browser runs in batch mode
    bool fHeadless{false};         ///<! is browser runs in headless mode
    bool fStandalone{true};        ///<! indicates if browser should run isolated from other browser instances
    THttpServer *fServer{nullptr}; ///<! http server which handle all requests
@@ -95,10 +96,10 @@ public:
       return (GetBrowserKind() == kLocal) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
    }
 
-   /// returns true if browser supports headless (batch) mode, used for image production
+   /// returns true if browser supports headless mode
    bool IsSupportHeadless() const
    {
-      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
+      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
    }
 
    /// set window url
@@ -127,6 +128,11 @@ public:
 
    /// returns window url with append options
    std::string GetFullUrl() const;
+
+   /// set batch mode
+   void SetBatchMode(bool on = true) { fBatchMode = on; }
+   /// returns batch mode
+   bool IsBatchMode() const { return fBatchMode; }
 
    /// set headless mode
    void SetHeadless(bool on = true) { fHeadless = on; }

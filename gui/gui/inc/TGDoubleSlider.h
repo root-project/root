@@ -40,26 +40,26 @@ private:
    TGDoubleSlider& operator=(const TGDoubleSlider&) = delete;
 
 protected:
-   Double_t      fPos;           // logical position between fVmin and fVmax
-   Double_t      fSmin;          // logical position of min value of Slider
-   Double_t      fSmax;          // logical position of max value of Slider
-   Int_t         fRelPos;        // slider position in pixel coordinates
-   Double_t      fVmin;          // logical lower limit of slider
-   Double_t      fVmax;          // logical upper limit of slider
-   Int_t         fScale;         // tick mark scale
-   Int_t         fScaleType;     // tick mark scale type (no, downright, both)
-   Int_t         fPressPoint;    // mouse position at button press event
-   Double_t      fPressSmin;     // logical min position at button press event
-   Double_t      fPressSmax;     // logical max position at button press event
-   Int_t         fMove;          // 1: move min value
-                                 // 2: move max value
-                                 // 3: move min and max value
-                                 // 0: don't move any value
-   Bool_t        fReversedScale; // reverse which end is min and max
-   Bool_t        fMarkEnds;      // lines marking where stretch zones begin
-   const TGPicture *fSliderPic;  // picture to draw slider ends
+   Double_t      fPos;           ///< logical position between fVmin and fVmax
+   Double_t      fSmin;          ///< logical position of min value of Slider
+   Double_t      fSmax;          ///< logical position of max value of Slider
+   Int_t         fRelPos;        ///< slider position in pixel coordinates
+   Double_t      fVmin;          ///< logical lower limit of slider
+   Double_t      fVmax;          ///< logical upper limit of slider
+   Int_t         fScale;         ///< tick mark scale
+   Int_t         fScaleType;     ///< tick mark scale type (no, downright, both)
+   Int_t         fPressPoint;    ///< mouse position at button press event
+   Double_t      fPressSmin;     ///< logical min position at button press event
+   Double_t      fPressSmax;     ///< logical max position at button press event
+   Int_t         fMove;          ///< 1: move min value
+                                 ///< 2: move max value
+                                 ///< 3: move min and max value
+                                 ///< 0: don't move any value
+   Bool_t        fReversedScale; ///< reverse which end is min and max
+   Bool_t        fMarkEnds;      ///< lines marking where stretch zones begin
+   const TGPicture *fSliderPic;  ///< picture to draw slider ends
 
-   TString       GetSString() const; // returns scaling type as string
+   TString       GetSString() const; ///< returns scaling type as string
 
    static void   FixBounds(Double_t &min, Double_t &max);
    void          ChangeCursor(Event_t *event);
@@ -170,7 +170,7 @@ public:
 class TGDoubleVSlider : public TGDoubleSlider {
 
 protected:
-   Int_t   fYp;      // vertical slider y position in pixel coordinates
+   Int_t   fYp;      ///< vertical slider y position in pixel coordinates
 
    virtual void DoRedraw();
 
@@ -196,7 +196,7 @@ public:
 class TGDoubleHSlider : public TGDoubleSlider {
 
 protected:
-   Int_t       fXp;     // horizontal slider x position in pixel coordinates
+   Int_t       fXp;     ///< horizontal slider x position in pixel coordinates
 
    virtual void DoRedraw();
 

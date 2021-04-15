@@ -131,15 +131,16 @@ TEST(TFormulaGradientPar, BreitWignerCrossCheckAccuracyDemo)
 
 // FIXME: Add more: crystalball, cheb3, bigaus?
 
-// FIXME: Disable because of a known failure in -Druntime_cxxmodules=On.
-// This is identical to getFuncBody test failure in roottest.
-TEST(DISABLED_TFormulaGradientPar, GetGradFormula)
+TEST(TFormulaGradientPar, GetGradFormula)
 {
    TFormula f("f", "gaus");
    double p[] = {3, 1, 2};
    f.SetParameters(p);
    ASSERT_TRUE(f.GenerateGradientPar());
    std::string s = f.GetGradientFormula().Data();
+   // Windows does not support posix regex which are necessary here.
+#ifndef R__WIN32
    ASSERT_THAT(s, testing::ContainsRegex("void TFormula____id[0-9]*_grad"));
+#endif // R__WIN32
 }
 

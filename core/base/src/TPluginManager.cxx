@@ -412,7 +412,7 @@ void TPluginManager::LoadHandlerMacros(const char *path)
       while ((s = (TObjString*)next())) {
          if (gDebug > 1)
             Info("LoadHandlerMacros", "   plugin macro: %s", s->String().Data());
-         Long_t res;
+         Longptr_t res;
          if ((res = gROOT->Macro(s->String(), 0, kFALSE)) < 0) {
             Error("LoadHandlerMacros", "pluging macro %s returned %ld",
                   s->String().Data(), res);

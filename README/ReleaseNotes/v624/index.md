@@ -44,11 +44,12 @@ The following people have contributed to this new version:
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
- Stefan Wunsch, CERN/SFT
+ Stefan Wunsch, CERN/SFT,\
+ Anirudh Dagar, CERN-HSF/GSoC
 
 ## Deprecation and Removal
 
-- [`RooAbsReal::evaluateBatch()`](https://root.cern.ch/doc/v624/classRooAbsReal.html#a261580dfe94f2b107f9b9a77cad78a62) has been removed in favour of the faster evaluateSpan(). See section "RooFit Libraries" for instructions on how to use [`RooAbsReal::evaluateSpan()`](https://root.cern.ch/doc/v624/classRooAbsReal.html#a1e5129ffbc63bfd04c01511fd354b1b8).
+- [`RooAbsReal::evaluateBatch()`](https://root.cern/doc/v624/classRooAbsReal.html#a261580dfe94f2b107f9b9a77cad78a62) has been removed in favour of the faster evaluateSpan(). See section "RooFit Libraries" for instructions on how to use [`RooAbsReal::evaluateSpan()`](https://root.cern/doc/v624/classRooAbsReal.html#a1e5129ffbc63bfd04c01511fd354b1b8).
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been deprecated in favour of `TTreeProcessorMT::SetTasksPerWorkerHint`.
 
 ## Core Libraries
@@ -110,7 +111,7 @@ The final "Dynamic Path" is now composed of these sources in order:
 
 ### New features
 
-- Introduce `ROOT::RDF::RunGraphs`, which allows to compute the results of multiple `RDataFrame`s (or better, multiple independent computation graphs) concurrently while sharing the same thread pool. The computation may be more efficient than running the `RDataFrame`s sequentially if an analysis consists of several computation graphs that individually do not fully utilize the available resources. See e.g. [this tutorial](https://root.cern.ch/doc/master/df104__HiggsToTwoPhotons_8py.html) for an example usage.
+- Introduce `ROOT::RDF::RunGraphs`, which allows to compute the results of multiple `RDataFrame`s (or better, multiple independent computation graphs) concurrently while sharing the same thread pool. The computation may be more efficient than running the `RDataFrame`s sequentially if an analysis consists of several computation graphs that individually do not fully utilize the available resources. See e.g. [this tutorial](https://root.cern/doc/master/df104__HiggsToTwoPhotons_8py.html) for an example usage.
 - `RDataFrame` now supports reading friend `TTree`s with a `TTreeIndex`, aka "indexed friends". More details at [ROOT-9559](https://sft.its.cern.ch/jira/browse/ROOT-9559).
 - Experimental logging capabilities have been added to `RDataFrame`. To activate logging, define the following variable before creating the `RDataFrame` object: `auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel.kInfo);`.
 - With [ROOT-10023](https://sft.its.cern.ch/jira/browse/ROOT-10023) fixed, `RDataFrame` can now read and write certain branches containing unsplit objects, i.e. `TBranchObjects`. More information is available at [ROOT-10022](https://sft.its.cern.ch/jira/browse/ROOT-10022).
@@ -186,6 +187,10 @@ Tests for the Spark backend can be turned ON/OFF with the new build option `test
   `RVec <-> std::vector` conversion rather than writing `RVec`s to disk. Note that, currently, `RVecs` written e.g. in a `TTree` cannot be read back
   using certain ROOT interfaces (e.g. `TTreeReaderArray`, `RDataFrame` and the experimental `RNTuple`). All these limitations will be lifted in v6.26.
 - Portable implementation of the RANLUX++ generator, see [RanluxppEngine](https://root.cern/doc/master/classROOT_1_1Math_1_1RanluxppEngine.html) and [our blog post](https://root.cern/blog/ranluxpp/).
+
+## TMVA
+
+- Introducing TMVA PyTorch Interface, a method to use PyTorch internally with TMVA for deep learning. This can be used as an alternative to PyKeras Interface for complex models providing more flexibility and power.
 
 
 ## RooFit Libraries
@@ -394,6 +399,7 @@ this makes usage of webgui components in public networks more secure.
 ### Enabled WLCG Bearer Tokens support in RDavix
 
 Bearer tokens are part of WLCG capability-based infrastructure with capability-based scheme which uses an infrastructure that describes what the bearer is allowed to do as opposed to who that bearer is. Token discovery procedure are developed according WLCG Bearer Token Discovery specification document (https://github.com/WLCG-AuthZ-WG/bearer-token-discovery/blob/master/specification.md). Short overview:
+
    1. If the `BEARER_TOKEN` environment variable is set, then the value is taken to be the token contents.
    2. If the `BEARER_TOKEN_FILE` environment variable is set, then its value is interpreted as a filename. The contents of the specified file are taken to be the token contents.
    3. If the `XDG_RUNTIME_DIR` environment variable is set, then take the token from the contents of `$XDG_RUNTIME_DIR/bt_u$ID`(this additional location is intended to provide improved security for shared login environments as `$XDG_RUNTIME_DIR` is defined to be user-specific as opposed to a system-wide directory.).

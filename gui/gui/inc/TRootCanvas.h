@@ -36,48 +36,48 @@ class TRootCanvas : public TGMainFrame, public TCanvasImp {
 friend class TRootContainer;
 
 private:
-   TGCanvas            *fCanvasWindow;       // canvas widget
-   TRootContainer      *fCanvasContainer;    // container in canvas widget
-   TGMenuBar           *fMenuBar;            // menubar
-   TGPopupMenu         *fFileMenu;           // file menu
-   TGPopupMenu         *fFileSaveMenu;       // save cascade submenu
-   TGPopupMenu         *fEditMenu;           // edit menu
-   TGPopupMenu         *fEditClearMenu;      // clear cascade submenu
-   TGPopupMenu         *fViewMenu;           // view menu
-   TGPopupMenu         *fViewWithMenu;       // view with... cascade submenu
-   TGPopupMenu         *fOptionMenu;         // option menu
-   TGPopupMenu         *fToolsMenu;          // tools menu
-   TGPopupMenu         *fHelpMenu;           // help menu
-   TGLayoutHints       *fMenuBarLayout;      // menubar layout hints
-   TGLayoutHints       *fMenuBarItemLayout;  // layout hints for menu in menubar
-   TGLayoutHints       *fMenuBarHelpLayout;  // layout hint for help menu in menubar
-   TGLayoutHints       *fCanvasLayout;       // layout for canvas widget
-   TGStatusBar         *fStatusBar;          // statusbar widget
-   TGLayoutHints       *fStatusBarLayout;    // layout hints for statusbar
+   TGCanvas            *fCanvasWindow;       ///< canvas widget
+   TRootContainer      *fCanvasContainer;    ///< container in canvas widget
+   TGMenuBar           *fMenuBar;            ///< menubar
+   TGPopupMenu         *fFileMenu;           ///< file menu
+   TGPopupMenu         *fFileSaveMenu;       ///< save cascade submenu
+   TGPopupMenu         *fEditMenu;           ///< edit menu
+   TGPopupMenu         *fEditClearMenu;      ///< clear cascade submenu
+   TGPopupMenu         *fViewMenu;           ///< view menu
+   TGPopupMenu         *fViewWithMenu;       ///< view with... cascade submenu
+   TGPopupMenu         *fOptionMenu;         ///< option menu
+   TGPopupMenu         *fToolsMenu;          ///< tools menu
+   TGPopupMenu         *fHelpMenu;           ///< help menu
+   TGLayoutHints       *fMenuBarLayout;      ///< menubar layout hints
+   TGLayoutHints       *fMenuBarItemLayout;  ///< layout hints for menu in menubar
+   TGLayoutHints       *fMenuBarHelpLayout;  ///< layout hint for help menu in menubar
+   TGLayoutHints       *fCanvasLayout;       ///< layout for canvas widget
+   TGStatusBar         *fStatusBar;          ///< statusbar widget
+   TGLayoutHints       *fStatusBarLayout;    ///< layout hints for statusbar
 
-   TGCompositeFrame    *fEditorFrame;        // side frame for current pad editor
-   TGLayoutHints       *fEditorLayout;       // layout for editor frame
-   TGCompositeFrame    *fMainFrame;          // main frame containing canvas and side frame
-   TGLayoutHints       *fToolBarLayout;      // layout for toolbar widget
-   TGToolBar           *fToolBar;            // icon button toolbar
-   TGHorizontal3DLine  *fToolBarSep;         // toolbar separator
-   TGLayoutHints       *fMainFrameLayout;    // layout for main frame
-   TGVertical3DLine    *fVertical1;          // toolbar vertical separator
-   TGVertical3DLine    *fVertical2;          // toolbar vertical separator
-   TGHorizontal3DLine  *fHorizontal1;        // toolbar sepatator
-   TGLayoutHints       *fVertical1Layout;    // layout hints for separator
-   TGLayoutHints       *fVertical2Layout;    // layout hints for separator
-   TGLayoutHints       *fHorizontal1Layout;  // layout hints for separator
-   TGDockableFrame     *fToolDock;           // dockable frame holding the toolbar
-   TGLayoutHints       *fDockLayout;         // layout hints for dockable frame widget
-   const TGPicture     *fIconPic;            // icon picture
-   TGToolTip           *fToolTip;            // tooltip for object info
+   TGCompositeFrame    *fEditorFrame;        ///< side frame for current pad editor
+   TGLayoutHints       *fEditorLayout;       ///< layout for editor frame
+   TGCompositeFrame    *fMainFrame;          ///< main frame containing canvas and side frame
+   TGLayoutHints       *fToolBarLayout;      ///< layout for toolbar widget
+   TGToolBar           *fToolBar;            ///< icon button toolbar
+   TGHorizontal3DLine  *fToolBarSep;         ///< toolbar separator
+   TGLayoutHints       *fMainFrameLayout;    ///< layout for main frame
+   TGVertical3DLine    *fVertical1;          ///< toolbar vertical separator
+   TGVertical3DLine    *fVertical2;          ///< toolbar vertical separator
+   TGHorizontal3DLine  *fHorizontal1;        ///< toolbar separator
+   TGLayoutHints       *fVertical1Layout;    ///< layout hints for separator
+   TGLayoutHints       *fVertical2Layout;    ///< layout hints for separator
+   TGLayoutHints       *fHorizontal1Layout;  ///< layout hints for separator
+   TGDockableFrame     *fToolDock;           ///< dockable frame holding the toolbar
+   TGLayoutHints       *fDockLayout;         ///< layout hints for dockable frame widget
+   const TGPicture     *fIconPic;            ///< icon picture
+   TGToolTip           *fToolTip;            ///< tooltip for object info
 
-   TVirtualPadEditor   *fEditor;     // pointer to currently loaded pad editor
-   Bool_t               fEmbedded;   // true if embedded in any other frame (e.g. in the browser)
-   Int_t                fCanvasID;   // index in fWindows array of TGX11
-   Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas
-   Int_t                fButton;     // currently pressed button
+   TVirtualPadEditor   *fEditor;     ///< pointer to currently loaded pad editor
+   Bool_t               fEmbedded;   ///< true if embedded in any other frame (e.g. in the browser)
+   Int_t                fCanvasID;   ///< index in fWindows array of TGX11
+   Bool_t               fAutoFit;    ///< when true canvas container keeps same size as canvas
+   Int_t                fButton;     ///< currently pressed button
 
    TRootCanvas(const TRootCanvas&) = delete;
    TRootCanvas& operator=(const TRootCanvas&) = delete;

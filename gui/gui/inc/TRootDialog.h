@@ -21,14 +21,14 @@ class TRootContextMenu;
 class TRootDialog : public TGTransientFrame {
 
 private:
-   TRootContextMenu *fMenu;    // associated context menu
-   TGLayoutHints    *fL1;      // label layout
-   TGLayoutHints    *fL2;      // text entry layout
-   TList            *fWidgets; // label and text field widgets created in dialog
-   Bool_t            fOk;      // if true show OK button
-   Bool_t            fCancel;  // if true show Cancel button
-   Bool_t            fApply;   // if true show Apply button
-   Bool_t            fHelp;    // if true show Online Help button
+   TRootContextMenu *fMenu;    ///< associated context menu
+   TGLayoutHints    *fL1;      ///< label layout
+   TGLayoutHints    *fL2;      ///< text entry layout
+   TList            *fWidgets; ///< label and text field widgets created in dialog
+   Bool_t            fOk;      ///< if true show OK button
+   Bool_t            fCancel;  ///< if true show Cancel button
+   Bool_t            fApply;   ///< if true show Apply button
+   Bool_t            fHelp;    ///< if true show Online Help button
 
 public:
    TRootDialog(TRootContextMenu *cmenu = nullptr, const TGWindow *main = nullptr,

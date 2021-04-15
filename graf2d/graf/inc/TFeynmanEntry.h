@@ -15,7 +15,11 @@
 
 #include "TArrow.h"
 
+<<<<<<< HEAD
 class TFeynmanEntry : public TObject {
+=======
+class TFeynmanEntry {
+>>>>>>> 7aad3df60e43a80be989dd65e792c4e4b670adc7
     public:
         TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
         virtual const char   *GetParticleName() const { return fParticle.Data(); }

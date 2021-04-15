@@ -150,34 +150,30 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   // Add the parameters (with checking)
   addVarSet( vars );
   addParamSet( paramSet );
- 
 }
 
 
 Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
-  
+
   // A helper method to get the number of bins
-  
+
   if( vars.getSize() == 0 ) return 0;
-    
+
   Int_t numBins = 1;
 
-  RooFIter varIter = vars.fwdIterator() ;
-  RooAbsArg* comp ;
-  while((comp = (RooAbsArg*) varIter.next())) {
+  for (auto comp : vars) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
-      std::cout << "ParamHistFunc::GetNumBins" << vars.GetName() << ") ERROR: component " 
-	   << comp->GetName() 
-	   << " in vars list is not of type RooRealVar" << std::endl ;
-      RooErrorHandler::softAbort() ;
-      return -1;
+      auto errorMsg = std::string("ParamHistFunc::GetNumBins") + vars.GetName() + ") ERROR: component "
+                      + comp->GetName() + " in vars list is not of type RooRealVar";
+      oocoutE(static_cast<TObject*>(nullptr), InputArguments) <<  errorMsg << std::endl;
+      throw std::runtime_error(errorMsg);
     }
     RooRealVar* var = (RooRealVar*) comp;
 
     Int_t varNumBins = var->numBins();
     numBins *= varNumBins;
   }
-    
+
   return numBins;
 
 }
@@ -190,7 +186,6 @@ ParamHistFunc::ParamHistFunc(const ParamHistFunc& other, const char* name) :
   _dataVars("!dataVars", this, other._dataVars ),
   _paramSet("!paramSet", this, other._paramSet),
   _numBins( other._numBins ),
-  _binMap( other._binMap ),
   _dataSet( other._dataSet )
 {
   _dataSet.removeSelfFromDir(); // files must not delete _dataSet.
@@ -224,23 +219,25 @@ Int_t ParamHistFunc::getCurrentBin() const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the parameter associate with the the
+/// Get the parameter associate with the
 /// input RooDataHist style index
 /// It uses the binMap to convert the RooDataSet style index
 /// into the TH1 style index (which is how they are stored
 /// internally in the '_paramSet' vector
 RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
-  Int_t gammaIndex = -1;
-  if( _binMap.find( index ) != _binMap.end() ) {
-    gammaIndex = _binMap[ index ];
-  }
-  else {
-    std::cout << "Error: ParamHistFunc internal bin index map "
-	      << "not properly configured" << std::endl;
-    throw -1;
+
+  auto const& n = _numBinsPerDim;
+
+  // check if _numBins needs to be filled
+  if(n.x == 0) {
+    _numBinsPerDim = getNumBinsPerDim(_dataVars);
   }
 
-  return (RooRealVar&) _paramSet[gammaIndex];
+  int i = index / n.yz ;
+  int j = (index % n.y) / n.z;
+  int k = index % (n.yz);
+
+  return static_cast<RooRealVar&>(_paramSet[i + j * n.x + k * n.xy]);
 }
 
 
@@ -521,6 +518,22 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
 }
 
 
+ParamHistFunc::NumBins ParamHistFunc::getNumBinsPerDim(RooArgSet const& vars) {
+  int numVars = vars.size();
+
+  if (numVars > 3 || numVars < 1) {
+    std::cout << "ParamHistFunc() - Only works for 1-3 variables (1d-3d)" << std::endl;
+    throw -1;  
+  }
+
+  int numBinsX = numVars >= 1 ? static_cast<RooRealVar const&>(*vars[0]).numBins() : 1;
+  int numBinsY = numVars >= 2 ? static_cast<RooRealVar const&>(*vars[1]).numBins() : 1;
+  int numBinsZ = numVars >= 3 ? static_cast<RooRealVar const&>(*vars[2]).numBins() : 1;
+
+  return {numBinsX, numBinsY, numBinsZ};
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// return 0 for success
 /// return 1 for failure
@@ -529,75 +542,16 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
 /// If so, add them to the 
 /// list of vars
 Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
-
-
-  int numVars = 0;
-
-  RooFIter varIter = vars.fwdIterator() ;
-  RooAbsArg* comp ;
-  while((comp = (RooAbsArg*) varIter.next())) {
+  for(auto const& comp : vars) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
-      coutE(InputArguments) << "ParamHistFunc::(" << GetName() << ") ERROR: component " 
-			    << comp->GetName() << " in variables list is not of type RooRealVar" 
-			    << std::endl;
-      RooErrorHandler::softAbort() ;
-      return 1;
+      auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
+                      + comp->GetName() + " in variables list is not of type RooRealVar";
+      coutE(InputArguments) <<  errorMsg << std::endl;
+      throw std::runtime_error(errorMsg);
     }
-
     _dataVars.add( *comp );
-    numVars++;
-
   }
-
-  Int_t numBinsX = 1;
-  Int_t numBinsY = 1;
-  Int_t numBinsZ = 1;
-
-  if( numVars == 1 ) {
-    RooRealVar* varX = (RooRealVar*) _dataVars.at(0);
-    numBinsX = varX->numBins();
-    numBinsY = 1;
-    numBinsZ = 1;
-  } else  if( numVars == 2 ) {
-    RooRealVar* varX = (RooRealVar*) _dataVars.at(0);
-    RooRealVar* varY = (RooRealVar*) _dataVars.at(1);
-    numBinsX = varX->numBins();
-    numBinsY = varY->numBins();
-    numBinsZ = 1;
-  } else  if( numVars == 3 ) {
-    RooRealVar* varX = (RooRealVar*) _dataVars.at(0);
-    RooRealVar* varY = (RooRealVar*) _dataVars.at(1);
-    RooRealVar* varZ = (RooRealVar*) _dataVars.at(2);
-    numBinsX = varX->numBins();
-    numBinsY = varY->numBins();
-    numBinsZ = varZ->numBins();
-  } else {
-    std::cout << "ParamHistFunc() - Only works for 1-3 variables (1d-3d)" << std::endl;
-    throw -1;  
-  }
-
-  // Fill the mapping between
-  // RooDataHist bins and TH1 Bins:
-
-  // Clear the map
-  _binMap.clear();
-
-  // Fill the map
-  for( Int_t i = 0; i < numBinsX; ++i ) {
-    for( Int_t j = 0; j < numBinsY; ++j ) {
-      for( Int_t k = 0; k < numBinsZ; ++k ) {
-	
-	Int_t RooDataSetBin = k + j*numBinsZ + i*numBinsY*numBinsZ; 
-	Int_t TH1HistBin    = i + j*numBinsX + k*numBinsX*numBinsY; 
-	  
-	_binMap[RooDataSetBin] = TH1HistBin;
-	
-      }
-    }
-  }
-  
   return 0;
-
 }
 
 
@@ -610,7 +564,7 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // Check that the supplied list has
   // the right number of arguments:
 
-  Int_t numVarBins  = _numBins;
+  Int_t numVarBins  = GetNumBins(_dataVars);
   Int_t numElements = params.getSize();
 
   if( numVarBins != numElements ) {
@@ -632,11 +586,10 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*) paramIter.next())) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
-      coutE(InputArguments) << "ParamHistFunc::(" << GetName() << ") ERROR: component " 
-			    << comp->GetName() << " in paramater list is not of type RooRealVar" 
-			    << std::endl;
-      RooErrorHandler::softAbort() ;
-      return 1;
+      auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
+                      + comp->GetName() + " in paramater list is not of type RooRealVar";
+      coutE(InputArguments) <<  errorMsg << std::endl;
+      throw std::runtime_error(errorMsg);
     }
 
     _paramSet.add( *comp );

@@ -33,9 +33,9 @@ struct ToolBarData_t {
 class TGToolBar : public TGCompositeFrame {
 
 protected:
-   TList   *fPictures;      // list of pictures that should be freed
-   TList   *fTrash;         // list of buttons and layout hints to be deleted
-   TMap    *fMapOfButtons;  // map of button/id pairs in this group
+   TList   *fPictures;      ///< list of pictures that should be freed
+   TList   *fTrash;         ///< list of buttons and layout hints to be deleted
+   TMap    *fMapOfButtons;  ///< map of button/id pairs in this group
 
 private:
    TGToolBar(const TGToolBar&) = delete;

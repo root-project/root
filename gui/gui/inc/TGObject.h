@@ -23,8 +23,8 @@ class TGObject : public TObject {
 
 
 protected:
-   Handle_t    fId;                  // X11/Win32 Window identifier
-   TGClient   *fClient;              // Connection to display server
+   Handle_t    fId;                  ///< X11/Win32 Window identifier
+   TGClient   *fClient;              ///< Connection to display server
 
    TGObject& operator=(const TGObject& tgo)
      {if(this!=&tgo) { TObject::operator=(tgo); fId=tgo.fId;

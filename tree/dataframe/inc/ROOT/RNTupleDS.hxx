@@ -78,6 +78,7 @@ public:
    bool HasColumn(std::string_view colName) const final;
    std::string GetTypeName(std::string_view colName) const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
+   std::string GetLabel() final { return "RNTupleDS"; }
 
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
 
