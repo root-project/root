@@ -234,3 +234,18 @@ TEST(TTreeReaderLeafs, MultipleReaders) {
    EXPECT_EQ(*v2, 1) << "Wrong value read for rv2!";
    EXPECT_EQ(*v3, 1) << "Wrong value read for rv3!";
 }
+
+// Test for https://github.com/root-project/root/issues/6881
+TEST(TTreeReaderLeafs, BranchAndLeafWithDifferentNames)
+{
+   TTree t("t", "t");
+   int x = 42;
+   t.Branch("x", &x, "y/I");
+   t.Fill();
+
+   TTreeReader r(&t);
+   TTreeReaderValue<int> rv(r, "x");
+   ASSERT_TRUE(r.Next());
+   EXPECT_EQ(*rv, 42);
+   EXPECT_FALSE(r.Next());
+}
