@@ -32,30 +32,30 @@ namespace TestStatistics {
 
 double MinuitFcnGrad::DoEval(const double *x) const
 {
-   auto get_time = []() {
-      return std::chrono::duration_cast<std::chrono::nanoseconds>(
-         std::chrono::high_resolution_clock::now().time_since_epoch())
-         .count();
-   };
-   decltype(get_time()) t1 = get_time(), t2 = 0, t3 = 0, t4 = 0;
+//   auto get_time = []() {
+//      return std::chrono::duration_cast<std::chrono::nanoseconds>(
+//         std::chrono::high_resolution_clock::now().time_since_epoch())
+//         .count();
+//   };
+//   decltype(get_time()) t1 = get_time(), t2 = 0, t3 = 0, t4 = 0;
 
    Bool_t parameters_changed = sync_parameter_values_from_minuit_calls(x, false);
-   t2 = get_time();
+//   t2 = get_time();
 
 //   std::cout << "MinuitFcnGrad::DoEval @ PID" << getpid() << ": " DEBUG_STREAM(parameters_changed);
 
    // Calculate the function for these parameters
 //   RooAbsReal::setHideOffset(kFALSE);
    likelihood->evaluate();
-   t3 = get_time();
+//   t3 = get_time();
    double fvalue = likelihood->return_result();
-   t4 = get_time();
+//   t4 = get_time();
    calculation_is_clean->likelihood = true;
 //   RooAbsReal::setHideOffset(kTRUE);
 
 //   std::cout DEBUG_STREAM(fvalue) << std::endl;
 
-   printf("wallclock [worker] DoEval parts: 1. %f 2. %f 3. %f\n", (t2 - t1) / 1.e9, (t3 - t2) / 1.e9, (t4 - t3) / 1.e9);
+//   printf("wallclock [worker] DoEval parts: 1. %f 2. %f 3. %f\n", (t2 - t1) / 1.e9, (t3 - t2) / 1.e9, (t4 - t3) / 1.e9);
 
    if (!parameters_changed) {
       return fvalue;

@@ -423,7 +423,6 @@ void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doA
 {
    // to be further implemented, this is just a first test implementation
    if (opcode == RooAbsArg::Activate) {
-      printf("activating constant term optimization\n");
       ConstantTermsOptimizer::enable_constant_terms_optimization(pdf_.get(), _normSet.get(), data_.get(), doAlsoTrackingOpt);
    }
 }

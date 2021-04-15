@@ -167,25 +167,25 @@ Queue & JobManager::queue() const {
 
 void JobManager::retrieve(std::size_t requesting_job_id) {
    if (process_manager().is_master()) {
-      auto get_time = []() {
-         return std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::high_resolution_clock::now().time_since_epoch())
-            .count();
-      };
-      decltype(get_time()) t1, t2;
+//      auto get_time = []() {
+//         return std::chrono::duration_cast<std::chrono::nanoseconds>(
+//            std::chrono::high_resolution_clock::now().time_since_epoch())
+//            .count();
+//      };
+//      decltype(get_time()) t1, t2;
 
       bool job_fully_retrieved = false;
       while (not job_fully_retrieved) {
          try {
-            t1 = get_time();
+//            t1 = get_time();
             auto task_result_message = messenger().receive_from_worker_on_master<zmq::message_t>();
             auto job_object_id = *reinterpret_cast<std::size_t *>(task_result_message.data());  // job_id must always be the first element of the result message!
             bool this_job_fully_retrieved = JobManager::get_job_object(job_object_id)->receive_task_result_on_master(task_result_message);
             if (requesting_job_id == job_object_id) {
                job_fully_retrieved = this_job_fully_retrieved;
             }
-            t2 = get_time();
-            printf("wallclock [master] retrieve got task %lu: %f\n", *(reinterpret_cast<std::size_t *>(task_result_message.data()) + 1), (t2 - t1) / 1.e9);
+//            t2 = get_time();
+//            printf("wallclock [master] retrieve got task %lu: %f\n", *(reinterpret_cast<std::size_t *>(task_result_message.data()) + 1), (t2 - t1) / 1.e9);
          } catch (ZMQ::ppoll_error_t &e) {
             zmq_ppoll_error_response response;
             try {

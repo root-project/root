@@ -555,7 +555,7 @@ TEST_F(CarstenGGFWorkspaceTest, DISABLED_NoMultiProcess)
    m->optimizeConst(2);
    m->setMinimizerType("Minuit2");
 //    m->setVerbose(kTRUE);
-   m->setEps(1000000);
+   m->setEps(1);
 
    m->migrad();
 
@@ -564,7 +564,7 @@ TEST_F(CarstenGGFWorkspaceTest, DISABLED_NoMultiProcess)
 
 TEST_F(CarstenGGFWorkspaceTest, DISABLED_MultiProcess)
 {
-   RooFit::MultiProcess::JobManager::default_N_workers = 2;
+   RooFit::MultiProcess::JobManager::default_N_workers = 4;
    auto likelihood = RooFit::TestStatistics::build_simultaneous_likelihood(pdf, data, RooFit::TestStatistics::ConstrainedParameters(*nuisance_parameters), RooFit::TestStatistics::GlobalObservables(*global_observables));
    m = RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(likelihood);
    m->enable_likelihood_offsetting(true);
@@ -575,7 +575,7 @@ TEST_F(CarstenGGFWorkspaceTest, DISABLED_MultiProcess)
    m->optimizeConst(2);
    m->setMinimizerType("Minuit2");
 //    m->setVerbose(kTRUE);
-   m->setEps(1000000);
+   m->setEps(1);
 
    m->migrad();
 

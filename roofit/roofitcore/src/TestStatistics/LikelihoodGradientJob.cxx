@@ -97,14 +97,14 @@ void LikelihoodGradientJob::set_error_level(double error_level) const
 
 void LikelihoodGradientJob::evaluate_task(std::size_t task)
 {
-   RooWallTimer timer;
-   RooCPUTimer ctimer;
+//   RooWallTimer timer;
+//   RooCPUTimer ctimer;
    run_derivator(task);
-   ctimer.stop();
-   timer.stop();
-   oocxcoutD((TObject *)nullptr, Benchmarking1)
-      << "worker_id: " << get_manager()->process_manager().worker_id() << ", task: " << task
-      << ", partial derivative time: " << timer.timing_s() << "s -- cputime: " << ctimer.timing_s() << "s" << std::endl;
+//   ctimer.stop();
+//   timer.stop();
+//   oocxcoutD((TObject *)nullptr, Benchmarking1)
+//      << "worker_id: " << get_manager()->process_manager().worker_id() << ", task: " << task
+//      << ", partial derivative time: " << timer.timing_s() << "s -- cputime: " << ctimer.timing_s() << "s" << std::endl;
 }
 
 void LikelihoodGradientJob::update_real(std::size_t ix, double val, bool /*is_constant*/)
@@ -311,12 +311,12 @@ void LikelihoodGradientJob::update_workers_state()
 
 void LikelihoodGradientJob::calculate_all()
 {
-   auto get_time = []() {
-      return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                std::chrono::high_resolution_clock::now().time_since_epoch())
-         .count();
-   };
-   decltype(get_time()) t1, t2;
+//   auto get_time = []() {
+//      return std::chrono::duration_cast<std::chrono::nanoseconds>(
+//                std::chrono::high_resolution_clock::now().time_since_epoch())
+//         .count();
+//   };
+//   decltype(get_time()) t1, t2;
 
 //   std::cout << "BABBELBOX" << std::endl;
 
@@ -326,29 +326,29 @@ void LikelihoodGradientJob::calculate_all()
       // separate functions below
 
       // update parameters and object states that changed since last calculation (or creation if first time)
-      t1 = get_time();
+//      t1 = get_time();
       update_workers_state();
-      t2 = get_time();
+//      t2 = get_time();
 
-      printf("wallclock [master] update_workers_state: %f\n", (t2 - t1) / 1.e9);
+//      printf("wallclock [master] update_workers_state: %f\n", (t2 - t1) / 1.e9);
 
-      t1 = get_time();
+//      t1 = get_time();
       // master fills queue with tasks
       for (std::size_t ix = 0; ix < N_tasks; ++ix) {
          MultiProcess::JobTask job_task(id, ix);
          get_manager()->queue().add(job_task);
       }
       N_tasks_at_workers = N_tasks;
-      t2 = get_time();
+//      t2 = get_time();
 
-      printf("wallclock [master] put job tasks in queue: %f\n", (t2 - t1) / 1.e9);
+//      printf("wallclock [master] put job tasks in queue: %f\n", (t2 - t1) / 1.e9);
 
       // wait for task results back from workers to master (put into _grad)
-      t1 = get_time();
+//      t1 = get_time();
       gather_worker_results();
-      t2 = get_time();
+//      t2 = get_time();
 
-      printf("wallclock [master] gather_worker_results: %f\n", (t2 - t1) / 1.e9);
+//      printf("wallclock [master] gather_worker_results: %f\n", (t2 - t1) / 1.e9);
 
       calculation_is_clean->gradient = true;
       calculation_is_clean->g2 = true;
