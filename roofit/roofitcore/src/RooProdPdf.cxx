@@ -772,22 +772,20 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
   RooArgSet *norm, *integ, *xdeps, *imps;
 
   // Group irriducible terms that need to be (partially) integrated together
-  RooLinkedList groupedList;
+  std::list<RooLinkedList> groupedList;
   RooArgSet outerIntDeps;
 //   cout << "RooProdPdf::getPIL -- now calling groupProductTerms()" << endl;
   groupProductTerms(groupedList, outerIntDeps, terms, norms, imp, ints, cross);
-  RooFIter gIter = groupedList.fwdIterator();
-  RooLinkedList* group;
 
   // Loop over groups
 //   cout<<"FK: pdf("<<GetName()<<") Starting selecting F(x|y)!"<<endl;
   // Find groups of type F(x|y), i.e. termImpSet!=0, construct ratio object
   map<string, RooArgSet> ratioTerms;
-  while ((group = (RooLinkedList*) gIter.next())) {
-    if (1 == group->GetSize()) {
+  for (auto const& group : groupedList) {
+    if (1 == group.GetSize()) {
 //       cout<<"FK: Starting Single Term"<<endl;
 
-      RooArgSet* term = (RooArgSet*) group->At(0);
+      RooArgSet* term = (RooArgSet*) group.At(0);
 
       Int_t termIdx = terms.IndexOf(term);
       norm=(RooArgSet*) norms.At(termIdx);
@@ -833,7 +831,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 //       cout<<"FK: Starting Composite Term"<<endl;
 
       RooArgSet compTermSet, compTermNorm;
-      RooFIter tIter = group->fwdIterator();
+      RooFIter tIter = group.fwdIterator();
       RooArgSet* term;
       while ((term = (RooArgSet*) tIter.next())) {
 
@@ -875,10 +873,9 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 
   // Find groups with y as termNSet
   // Replace G(y) with (G(y),ratio)
-  gIter = groupedList.fwdIterator();
-  while ((group = (RooLinkedList*) gIter.next())) {
-    if (1 == group->GetSize()) {
-      RooArgSet* term = (RooArgSet*) group->At(0);
+  for (auto const& group : groupedList) {
+    if (1 == group.GetSize()) {
+      RooArgSet* term = (RooArgSet*) group.At(0);
 
       Int_t termIdx = terms.IndexOf(term);
       norm = (RooArgSet*) norms.At(termIdx);
@@ -893,7 +890,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
       }
     } else {
       RooArgSet compTermSet, compTermNorm;
-      RooFIter tIter = group->fwdIterator();
+      RooFIter tIter = group.fwdIterator();
       RooArgSet* term;
       while ((term = (RooArgSet*) tIter.next())) {
 	Int_t termIdx = terms.IndexOf(term);
@@ -911,14 +908,13 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
     }
   }
 
-  gIter = groupedList.fwdIterator();
-  while ((group = (RooLinkedList*) gIter.next())) {
+  for (auto const& group : groupedList) {
 //     cout << GetName() << ":now processing group" << endl;
 //      group->Print("1");
 
-    if (1 == group->GetSize()) {
+    if (1 == group.GetSize()) {
 //       cout << "processing atomic item" << endl;
-      RooArgSet* term = (RooArgSet*) group->At(0);
+      RooArgSet* term = (RooArgSet*) group.At(0);
 
         Int_t termIdx = terms.IndexOf(term);
         norm = (RooArgSet*) norms.At(termIdx);
@@ -959,7 +955,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
       } else {
 //        cout << "processing composite item" << endl;
       RooArgSet compTermSet, compTermNorm, compTermNum, compTermDen;
-      RooFIter tIter = group->fwdIterator();
+      RooFIter tIter = group.fwdIterator();
       RooArgSet* term;
       while ((term = (RooArgSet*) tIter.next())) {
 //   	cout << GetName() << ": processing term " << (*term) << " of composite item" << endl ;
@@ -1079,7 +1075,6 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
   }
 
   // We own contents of all lists filled by factorizeProduct()
-  groupedList.Delete();
   terms.Delete();
   ints.Delete();
   imp.Delete();
@@ -1428,7 +1423,7 @@ RooAbsReal* RooProdPdf::specializeIntegral(RooAbsReal& input, const char* target
 ////////////////////////////////////////////////////////////////////////////////
 /// Group product into terms that can be calculated independently
 
-void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outerIntDeps,
+void RooProdPdf::groupProductTerms(std::list<RooLinkedList>& groupedTerms, RooArgSet& outerIntDeps,
 				   const RooLinkedList& terms, const RooLinkedList& norms,
 				   const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& /*cross*/) const
 {
@@ -1436,9 +1431,8 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
   RooFIter tIter = terms.fwdIterator() ;
   RooArgSet* term ;
   while((term=(RooArgSet*)tIter.next())) {
-    RooLinkedList* group = new RooLinkedList ;
-    group->Add(term) ;
-    groupedTerms.Add(group) ;
+    groupedTerms.emplace_back();
+    groupedTerms.back().Add(term) ;
   }
 
   // Make list of imported dependents that occur in any term
@@ -1471,10 +1465,10 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
     RooLinkedList* newGroup = 0 ;
 
     // Loop over groups
-    RooLinkedList* group ;
-    RooFIter glIter = groupedTerms.fwdIterator() ;
     Bool_t needMerge = kFALSE ;
-    while((group=(RooLinkedList*)glIter.next())) {
+    auto group = groupedTerms.begin();
+    auto nGroups = groupedTerms.size();
+    for (size_t iGroup = 0; iGroup < nGroups; ++iGroup) {
 
       // See if any term in this group depends in any ay on outerDepInt
       RooArgSet* term2 ;
@@ -1496,8 +1490,8 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
 
       if (needMerge) {
 	// Create composite group if not yet existing
-	if (newGroup==0) {
-	  newGroup = new RooLinkedList ;
+	if (newGroup==nullptr) {
+	  newGroup = &groupedTerms.emplace_back() ;
 	}
 
 	// Add terms of this group to new term
@@ -1507,13 +1501,10 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
 	}
 
 	// Remove this group from list and delete it (but not its contents)
-	groupedTerms.Remove(group) ;
-	delete group ;
+	group = groupedTerms.erase(group);
+      } else {
+        ++group;
       }
-    }
-    // If a new group has been created to merge terms dependent on current outerIntDep, add it to group list
-    if (newGroup) {
-      groupedTerms.Add(newGroup) ;
     }
 
   }
