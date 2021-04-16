@@ -49,6 +49,7 @@ allows a simple partial implementation for new OS'es.
 #include <functional>
 #include <iostream>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
@@ -3658,7 +3659,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString librariesWithQuotes;
    TString singleLibrary;
    Bool_t collectingSingleLibraryNameTokens = kFALSE;
-   for (auto tokenObj : *linkLibrariesNoQuotes.Tokenize(" ")) {
+   std::unique_ptr<TObjArray> tokens( linkLibrariesNoQuotes.Tokenize(" ") );
+   for (auto tokenObj : *tokens) {
       singleLibrary = ((TObjString*)tokenObj)->GetString();
       if (singleLibrary[0]=='-' || !AccessPathName(singleLibrary)) {
          if (collectingSingleLibraryNameTokens) {
