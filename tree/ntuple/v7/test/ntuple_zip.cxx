@@ -92,8 +92,10 @@ TEST(RNTupleWriter, TFilePtr) {
       auto model = RNTupleModel::Create();
       auto field = model->MakeField<float>("field");
       auto klassVec = model->MakeField<std::vector<CustomStruct>>("klassVec");
+      RNTupleWriteOptions options;
+      options.SetCompression(404);
       auto ntuple = std::make_unique<RNTupleWriter>(std::move(model),
-         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions(), file
+         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), options, file
       ));
       for (int i = 0; i < 20000; i++) {
          *field = static_cast<float>(i);
@@ -105,6 +107,9 @@ TEST(RNTupleWriter, TFilePtr) {
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   std::ostringstream oss;
+   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
+   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 404"));
    auto rdField = ntuple->GetView<float>("field");
    auto klassVecField = ntuple->GetView<std::vector<CustomStruct>>("klassVec");
    EXPECT_EQ(20000, ntuple->GetNEntries());
