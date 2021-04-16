@@ -374,7 +374,10 @@ TEST(TClingMethodInfo, TemplateFun)
 {
    // PyROOT needs to know whether a ctor is a template, see clingwrapper.cxx:
    // > // don't give in just yet, but rather get the full name through the symbol name,
-   // > // as eg. constructors do not receive their proper/full name from GetName()
+   // > // as eg. constructors do not receive their proper/full name from GetName().
+
+   // Also test "can we instantiate this function without extra type info"
+   // (see `Templates::MyMethods`).
 
    gInterpreter->Declare(R"CODE(
 struct TemplateFun {
@@ -388,6 +391,27 @@ class InheritTemplateFun: TemplateFun {
 public:
     using TemplateFun::TemplateFun;
 };
+
+namespace Templates {
+  template <class T> class TTArg;
+  template <class OUTER>
+  struct MyMethods {
+    template <class X> int Na();
+    template <class X> int Nb(X); // can be deduced but not enough for MethodInfo.
+    template <class A, class B = int> int Nc();
+    template <class X = OUTER, class... ARGS, class Y> int Nd();
+
+    template <class X = int> int Ya();
+    template <class...> int Yb();
+    template <int X = 12> int Yc();
+    template <template <class T> class X = TTArg> int Yd();
+    template <class X = OUTER> int Ye();
+    template <class X = OUTER> int Yf();
+    template <class X = OUTER, class... ARGS> int Yg();
+    template <class X = OUTER, class... ARGS, class Y = int> int Yh();
+  };
+}
+
 )CODE");
 
    TClass *clTemplateFun = TClass::GetClass("TemplateFun");
@@ -416,6 +440,25 @@ public:
    // Doesn't work either, as GetListOfFunctionTemplates() ignores using decls.
    // Issue #6482
    // clInhTemplateFun->GetListOfFunctionTemplates(true)->ls(); // FindObject("InheritTemplateFun")-
+
+   TClass *clMyMethods = TClass::GetClass("Templates::MyMethods<int>");
+   ASSERT_NE(clMyMethods, nullptr);
+   TListOfFunctions *methods = (TListOfFunctions *)clMyMethods->GetListOfMethods();
+   ASSERT_NE(methods, nullptr);
+
+   EXPECT_EQ(methods->FindObject("Na"), nullptr);
+   EXPECT_EQ(methods->FindObject("Nb"), nullptr);
+   EXPECT_EQ(methods->FindObject("Nc"), nullptr);
+   EXPECT_EQ(methods->FindObject("Nd"), nullptr);
+
+   EXPECT_NE(methods->FindObject("Ya"), nullptr);
+   EXPECT_NE(methods->FindObject("Yb"), nullptr);
+   EXPECT_NE(methods->FindObject("Yc"), nullptr);
+   EXPECT_NE(methods->FindObject("Yd"), nullptr);
+   EXPECT_NE(methods->FindObject("Ye"), nullptr);
+   EXPECT_NE(methods->FindObject("Yf"), nullptr);
+   EXPECT_NE(methods->FindObject("Yg"), nullptr);
+   EXPECT_NE(methods->FindObject("Yh"), nullptr);
 }
 
 TEST(TClingMethodInfo, Ctors)
