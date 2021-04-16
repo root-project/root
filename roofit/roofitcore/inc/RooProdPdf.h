@@ -36,6 +36,7 @@ typedef RooLinkedList* pRooLinkedList ;
 
 class RooProdPdf : public RooAbsPdf {
 public:
+
   RooProdPdf() ;
   RooProdPdf(const char *name, const char *title, Double_t cutOff=0);
   RooProdPdf(const char *name, const char *title,
@@ -116,7 +117,7 @@ private:
                         RooLinkedList& impDepList, RooLinkedList& crossDepList,
                         RooLinkedList& intList) const;
   std::string makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset, const char* isetRangeName) const ;
-  void groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outerIntDeps,
+  void groupProductTerms(std::list<RooLinkedList>& groupedTerms, RooArgSet& outerIntDeps,
                          const RooLinkedList& terms, const RooLinkedList& norms, 
                          const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& cross) const ;
   
