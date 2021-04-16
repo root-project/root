@@ -582,18 +582,34 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
        pdf = (RooAbsPdf*) pdfIter.next()); ) {
     RooArgSet* pdfNSet, *pdfCSet;
 
+    // Make iterator over tree leaf node list to get the observables.
+    // This code is borrowed from RooAgsPdf::getObservables.
+    // RooAbsArg::treeNodeServer list is relatively expensive, so we only do it
+    // once and use it in a lambda function.
+    RooArgSet pdfLeafList("leafNodeServerList") ;
+    pdf->treeNodeServerList(&pdfLeafList,0,kFALSE,kTRUE,true) ;
+    auto getObservables = [&pdfLeafList](const RooArgSet& dataList) {
+      RooArgSet* out = new RooArgSet("dependents") ;
+      for (const auto arg : pdfLeafList) {
+        if (arg->dependsOnValue(dataList) && arg->isLValue()) {
+          out->add(*arg) ;
+        }
+      }
+      return out;
+    };
+
     // Reduce pdfNSet to actual dependents
     if (0 == strcmp("nset", pdfNSetOrig->GetName())) {
-      pdfNSet = pdf->getObservables(*pdfNSetOrig);
+      pdfNSet = getObservables(*pdfNSetOrig);
       pdfCSet = new RooArgSet;
     } else if (0 == strcmp("cset", pdfNSetOrig->GetName())) {
-      RooArgSet* tmp = pdf->getObservables(normSet);
+      RooArgSet* tmp = getObservables(normSet);
       tmp->remove(*pdfNSetOrig, kTRUE, kTRUE);
       pdfCSet = pdfNSetOrig;
       pdfNSet = tmp;
     } else {
       // Legacy mode. Interpret at NSet for backward compatibility
-      pdfNSet = pdf->getObservables(*pdfNSetOrig);
+      pdfNSet = getObservables(*pdfNSetOrig);
       pdfCSet = new RooArgSet;
     }
 
@@ -602,7 +618,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     RooArgSet pdfAllDeps; // All dependents of this PDF
 
     // Make list of all dependents of this PDF
-    RooArgSet* tmp = pdf->getObservables(normSet);
+    RooArgSet* tmp = getObservables(normSet);
     pdfAllDeps.add(*tmp);
     delete tmp;
 
@@ -622,7 +638,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
 //     cout << GetName() << ": pdfNormDeps for " << pdf->GetName() << " = " << pdfNormDeps << endl;
 
-    RooArgSet* pdfIntSet = pdf->getObservables(intSet) ;
+    RooArgSet* pdfIntSet = getObservables(intSet) ;
 
     // WVE if we have no norm deps, conditional observables should be taken out of pdfIntSet
     if (0 == pdfNormDeps.getSize() && pdfCSet->getSize() > 0) {
