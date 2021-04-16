@@ -10,9 +10,9 @@ JSROOT.define(['d3'], (d3) => {
    if ((typeof d3 !== 'object') || !d3.version)
       console.error('Fail to detect d3.js');
    else if (d3.version[0] !== "6")
-      console.error(`Unsupported d3.js version ${d3.version}, expected 6.1.1`);
-   else if (d3.version !== '6.1.1')
-      console.log(`Reuse existing d3.js version ${d3.version}, expected 6.1.1`);
+      console.error(`Unsupported d3.js version ${d3.version}, expected 6.7.0`);
+   else if (d3.version !== '6.7.0')
+      console.log(`Reuse existing d3.js version ${d3.version}, expected 6.7.0`);
 
 
    function isPromise(obj) {
@@ -3588,15 +3588,23 @@ JSROOT.define(['d3'], (d3) => {
       return getDrawSettings("ROOT." + classname).opts !== null;
    }
 
-   /** @summary Implementation of JSROOT.draw
-     * @private */
-   function jsroot_draw(divid, obj, opt) {
-
+   /** @summary Draw object in specified HTML element with given draw options.
+     * @param {string|object} dom - id of div element to draw or directly DOMElement
+     * @param {object} obj - object to draw, object type should be registered before in JSROOT
+     * @param {string} opt - draw options separated by space, comma or semicolon
+     * @returns {Promise} with painter object
+     * @requires painter
+     * @desc An extensive list of support draw options can be found on [JSROOT examples page]{@link https://root.cern/js/latest/examples.htm}
+     * @example
+     * JSROOT.openFile("https://root.cern/js/files/hsimple.root")
+     *       .then(file => file.readObject("hpxpy;1"))
+     *       .then(obj => JSROOT.draw("drawing", obj, "colz;logx;gridx;gridy")); */
+   JSROOT.draw = function(dom, obj, opt) {
       if (!obj || (typeof obj !== 'object'))
          return Promise.reject(Error('not an object in JSROOT.draw'));
 
       if (opt == 'inspect')
-         return JSROOT.require("hierarchy").then(() => jsrp.drawInspector(divid, obj));
+         return JSROOT.require("hierarchy").then(() => jsrp.drawInspector(dom, obj));
 
       let handle, type_info;
       if ('_typename' in obj) {
@@ -3606,7 +3614,7 @@ JSROOT.define(['d3'], (d3) => {
          type_info = "kind " + obj._kind;
          handle = getDrawHandle(obj._kind, opt);
       } else
-         return JSROOT.require("hierarchy").then(() => jsrp.drawInspector(divid, obj));
+         return JSROOT.require("hierarchy").then(() => jsrp.drawInspector(dom, obj));
 
       // this is case of unsupported class, close it normally
       if (!handle)
@@ -3616,12 +3624,12 @@ JSROOT.define(['d3'], (d3) => {
          return Promise.resolve(null);
 
       if (handle.draw_field && obj[handle.draw_field])
-         return JSROOT.draw(divid, obj[handle.draw_field], opt);
+         return JSROOT.draw(dom, obj[handle.draw_field], opt);
 
       if (!handle.func && !handle.direct) {
          if (opt && (opt.indexOf("same") >= 0)) {
 
-            let main_painter = jsrp.getElementMainPainter(divid);
+            let main_painter = jsrp.getElementMainPainter(dom);
 
             if (main_painter && (typeof main_painter.performDrop === 'function'))
                return main_painter.performDrop(obj, "", null, opt);
@@ -3633,7 +3641,7 @@ JSROOT.define(['d3'], (d3) => {
       function performDraw() {
          let promise;
          if (handle.direct == "v7") {
-            let painter = new ObjectPainter(divid, obj, opt);
+            let painter = new ObjectPainter(dom, obj, opt);
             painter.csstype = handle.csstype;
             promise = jsrp.ensureRCanvas(painter, handle.frame || false).then(() => {
                painter.redraw = handle.func;
@@ -3641,14 +3649,14 @@ JSROOT.define(['d3'], (d3) => {
                return painter;
             })
          } else if (handle.direct) {
-            let painter = new ObjectPainter(divid, obj, opt);
+            let painter = new ObjectPainter(dom, obj, opt);
             promise = jsrp.ensureTCanvas(painter, handle.frame || false).then(() => {
                painter.redraw = handle.func;
                painter.redraw();
                return painter;
             });
          } else {
-            promise = handle.func(divid, obj, opt);
+            promise = handle.func(dom, obj, opt);
 
             if (!isPromise(promise)) promise = Promise.resolve(promise);
          }
@@ -3693,39 +3701,18 @@ JSROOT.define(['d3'], (d3) => {
       });
    }
 
-   /** @summary Draw object in specified HTML element with given draw options.
-     * @param {string|object} dom - id of div element to draw or directly DOMElement
-     * @param {object} obj - object to draw, object type should be registered before in JSROOT
-     * @param {string} opt - draw options separated by space, comma or semicolon
-     * @param {function} [callback] - deprecated, will be removed in 6.2.0, called with painter object
-     * @returns {Promise} with painter object only if callback parameter is not specified
-     * @requires painter
-     * @desc An extensive list of support draw options can be found on [JSROOT examples page]{@link https://root.cern/js/latest/examples.htm}
-     * Parameter ```callback``` kept only for backward compatibility and will be removed in JSROOT v6.2
-     * @example
-     * JSROOT.openFile("https://root.cern/js/files/hsimple.root")
-     *       .then(file => file.readObject("hpxpy;1"))
-     *       .then(obj => JSROOT.draw("drawing", obj, "colz;logx;gridx;gridy")); */
-   JSROOT.draw = function(dom, obj, opt, callback) {
-      let res = jsroot_draw(dom, obj, opt);
-      if (!callback || (typeof callback != 'function')) return res;
-      res.then(callback).catch(() => callback(null));
-   }
-
    /** @summary Redraw object in specified HTML element with given draw options.
      * @param {string|object} dom - id of div element to draw or directly DOMElement
      * @param {object} obj - object to draw, object type should be registered before in JSROOT
      * @param {string} opt - draw options
-     * @param {function} [callback] - deprecated, will be removed in 6.2.0, called with painter object
-     * @returns {Promise} with painter used only when callback parameter is not specified
+     * @returns {Promise} with painter object
      * @requires painter
      * @desc If drawing was not done before, it will be performed with {@link JSROOT.draw}.
-     * Otherwise drawing content will be updated
-     * Parameter ```callback``` kept only for backward compatibility and will be removed in JSROOT v6.2 */
-   JSROOT.redraw = function(dom, obj, opt, callback) {
+     * Otherwise drawing content will be updated */
+   JSROOT.redraw = function(dom, obj, opt) {
 
       if (!obj || (typeof obj !== 'object'))
-         return callback ? callback(null) : Promise.reject(Error('not an object in JSROOT.redraw'));
+         return Promise.reject(Error('not an object in JSROOT.redraw'));
 
       let can_painter = jsrp.getElementCanvPainter(dom), handle, res_painter = null, redraw_res;
       if (obj._typename)
@@ -3763,12 +3750,12 @@ JSROOT.define(['d3'], (d3) => {
       if (res_painter) {
          if (!redraw_res || (typeof redraw_res != 'object') || !redraw_res.then)
             redraw_res = Promise.resolve(true);
-         return redraw_res.then(() => { if (callback) callback(res_painter); return res_painter; });
+         return redraw_res.then(() => res_painter);
       }
 
       JSROOT.cleanup(dom);
 
-      return JSROOT.draw(dom, obj, opt, callback);
+      return JSROOT.draw(dom, obj, opt);
    }
 
    /** @summary Save object, drawn in specified element, as JSON.
@@ -3844,6 +3831,8 @@ JSROOT.define(['d3'], (d3) => {
 
             svg = jsrp.compressSVG(svg);
 
+            JSROOT.cleanup(main.node());
+
             main.remove();
 
             return svg;
@@ -3865,19 +3854,19 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Check resize of drawn element
-     * @param {string|object} divid - id or DOM element
+     * @param {string|object} dom - id or DOM element
      * @param {boolean|object} arg - options on how to resize
-     * @desc As first argument divid one should use same argument as for the drawing
+     * @desc As first argument dom one should use same argument as for the drawing
      * As second argument, one could specify "true" value to force redrawing of
      * the element even after minimal resize
      * Or one just supply object with exact sizes like { width:300, height:200, force:true };
      * @example
      * JSROOT.resize("drawing", { width: 500, height: 200 } );
      * JSROOT.resize(document.querySelector("#drawing"), true); */
-   JSROOT.resize = function(divid, arg) {
+   JSROOT.resize = function(dom, arg) {
       if (arg === true) arg = { force: true }; else
          if (typeof arg !== 'object') arg = null;
-      let done = false, dummy = new ObjectPainter(divid);
+      let done = false, dummy = new ObjectPainter(dom);
       dummy.forEachPainter(painter => {
          if (!done && (typeof painter.checkResize == 'function'))
             done = painter.checkResize(arg);
@@ -3907,8 +3896,8 @@ JSROOT.define(['d3'], (d3) => {
      * @example
      * JSROOT.cleanup("drawing");
      * JSROOT.cleanup(document.querySelector("#drawing")); */
-   JSROOT.cleanup = function(divid) {
-      let dummy = new ObjectPainter(divid), lst = [];
+   JSROOT.cleanup = function(dom) {
+      let dummy = new ObjectPainter(dom), lst = [];
       dummy.forEachPainter(p => { if (lst.indexOf(p) < 0) lst.push(p); });
       lst.forEach(p => p.cleanup());
       dummy.selectDom().html("");
