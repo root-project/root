@@ -158,26 +158,22 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    // If the function argument type is dependent (a1 and a2) we need to
    // substitute the types first, using the template arguments derived from the
    // template parameters' defaults.
-   llvm::SmallVector<TemplateArgument, 8> defaultTemplateArgs(templateParms->size());
-   for (int iParam = 0, nParams = templateParms->size(); iParam < nParams; ++iParam) {
-      const NamedDecl *templateParm = templateParms->getParam(iParam);
+   llvm::SmallVector<TemplateArgument, 8> defaultTemplateArgs;
+   for (const NamedDecl *templateParm: *templateParms) {
       if (templateParm->isTemplateParameterPack()) {
-         // shouldn't end up here
-         assert(0 && "unexpected template parameter pack");
-         return nullptr;
-      }
-      if (auto TTP = dyn_cast<TemplateTypeParmDecl>(templateParm)) {
+         defaultTemplateArgs.emplace_back(ArrayRef<TemplateArgument>{}); // empty pack.
+      } else if (auto TTP = dyn_cast<TemplateTypeParmDecl>(templateParm)) {
          if (!TTP->hasDefaultArgument())
             return nullptr;
-         defaultTemplateArgs[iParam] = TemplateArgument(TTP->getDefaultArgument());
+         defaultTemplateArgs.emplace_back(TTP->getDefaultArgument());
       } else if (auto NTTP = dyn_cast<NonTypeTemplateParmDecl>(templateParm)) {
          if (!NTTP->hasDefaultArgument())
             return nullptr;
-         defaultTemplateArgs[iParam] = TemplateArgument(NTTP->getDefaultArgument());
+         defaultTemplateArgs.emplace_back(NTTP->getDefaultArgument());
       } else if (auto TTP = dyn_cast<TemplateTemplateParmDecl>(templateParm)) {
          if (!TTP->hasDefaultArgument())
             return nullptr;
-         defaultTemplateArgs[iParam] = TemplateArgument(TTP->getDefaultArgument().getArgument());
+         defaultTemplateArgs.emplace_back(TTP->getDefaultArgument().getArgument());
       } else {
          // shouldn't end up here
          assert(0 && "unexpected template parameter kind");
