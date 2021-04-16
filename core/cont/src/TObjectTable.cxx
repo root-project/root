@@ -131,7 +131,7 @@ void TObjectTable::Print(Option_t *option) const
          if (!fTable[i]) continue;
          num++;
          obj = fTable[i];
-         printf("%-8d 0x%-16lx %-24s %s\n", num, (Long_t)obj, obj->ClassName(),
+         printf("%-8d 0x%-16zx %-24s %s\n", num, (size_t)obj, obj->ClassName(),
                 obj->GetName());
       }
       Printf("================================================================================\n");
@@ -218,10 +218,10 @@ void TObjectTable::Remove(TObject *op)
 
    Int_t i = FindElement(op);
    if (fTable[i] == 0) {
-      Warning("Remove", "0x%lx not found at %d", (Long_t)op, i);
+      Warning("Remove", "0x%zx not found at %d", (size_t)op, i);
       for (int j = 0; j < fSize; j++) {
          if (fTable[j] == op) {
-            Error("Remove", "0x%lx found at %d !!!", (Long_t)op, j);
+            Error("Remove", "0x%zx found at %d !!!", (size_t)op, j);
             i = j;
          }
       }
@@ -385,7 +385,7 @@ void TObjectTable::UpdateInstCount() const
          if (op->TestBit(TObject::kNotDeleted))
             op->IsA()->AddInstance(op->IsOnHeap());
          else
-            Error("UpdateInstCount", "oops 0x%lx\n", (Long_t)op);
+            Error("UpdateInstCount", "oops 0x%zx\n", (size_t)op);
       }
 }
 
@@ -397,7 +397,7 @@ void *TObjectTable::CheckPtrAndWarn(const char *msg, void *vp)
 {
    if (fTable && vp && fTable[FindElement((TObject*)vp)]) {
       Remove((TObject*)vp);
-      Warning("CheckPtrAndWarn", "%s (0x%lx)\n", msg, (Long_t)vp);
+      Warning("CheckPtrAndWarn", "%s (0x%zx)\n", msg, (size_t)vp);
    }
    return vp;
 }

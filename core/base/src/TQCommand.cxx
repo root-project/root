@@ -1012,7 +1012,7 @@ void TQUndoManager::Add(TObject *obj, Option_t *opt)
 
 void TQUndoManager::CurrentChanged(TQCommand *c)
 {
-   Emit("CurrentChanged(TQCommand*)", (long)c);
+   Emit("CurrentChanged(TQCommand*)", (Longptr_t)c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

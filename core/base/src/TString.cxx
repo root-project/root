@@ -561,7 +561,7 @@ UInt_t Hash(const char *str)
    UInt_t hv  = len; // Mix in the string length.
    UInt_t i   = hv*sizeof(char)/sizeof(UInt_t);
 
-   if (((ULong_t)str)%sizeof(UInt_t) == 0) {
+   if (((ULongptr_t)str)%sizeof(UInt_t) == 0) {
       // str is word aligned
       const UInt_t *p = (const UInt_t*)str;
 

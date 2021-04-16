@@ -3504,7 +3504,7 @@ Longptr_t TCling::ProcessLineSynch(const char* line, EErrorCode* error)
 /// Directly execute an executable statement (e.g. "func()", "3+5", etc.
 /// however not declarations, like "Int_t x;").
 
-Long_t TCling::Calc(const char* line, EErrorCode* error)
+Longptr_t TCling::Calc(const char* line, EErrorCode* error)
 {
 #ifdef R__WIN32
    // Test on ApplicationImp not being 0 is needed because only at end of
@@ -3561,7 +3561,7 @@ Long_t TCling::Calc(const char* line, EErrorCode* error)
       gROOT->SetLineHasBeenProcessed();
    }
 #endif // R__WIN32
-   return valRef.simplisticCastAs<long>();
+   return valRef.simplisticCastAs<Longptr_t>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

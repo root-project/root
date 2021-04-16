@@ -277,7 +277,7 @@ public: // Public Interface
    ECheckClassInfo CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE);
 
    Bool_t  CheckClassTemplate(const char *name);
-   Long_t  Calc(const char* line, EErrorCode* error = 0);
+   Longptr_t Calc(const char* line, EErrorCode* error = 0);
    void    CreateListOfBaseClasses(TClass* cl) const;
    void    CreateListOfDataMembers(TClass* cl) const;
    void    CreateListOfMethods(TClass* cl) const;

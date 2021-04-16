@@ -272,7 +272,7 @@ TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, const void *obj)
       ULong_t hash = Void_Hash(obj);
 
       R__READ_LOCKGUARD(ROOT::gCoreMutex);
-      pid = fgObjPIDs->GetValue(hash,(Long_t)obj);
+      pid = fgObjPIDs->GetValue(hash,(Longptr_t)obj);
       return (TProcessID*)fgPIDs->At(pid);
    } else {
       auto current = gGetProcessWithUIDCache.load();
@@ -401,7 +401,7 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
       // if the address has already been registered, we want to
       // update it's uniqueID (this can easily happen when the
       // referenced object have been stored in a TClonesArray.
-      (*fgObjPIDs)(hash, (Long_t)obj) = GetUniqueID();
+      (*fgObjPIDs)(hash, (Longptr_t)obj) = GetUniqueID();
    }
 }
 

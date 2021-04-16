@@ -152,22 +152,22 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
                Execute(object, method, "");
 #else
                // It is a workaround of the "Dead lock under Windows
-               char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
-                                "(TMethod *)0x%lx,\"\");",
-                                (Long_t)this,(Long_t)object,(Long_t)method);
+               char *cmd = Form("((TContextMenu *)0x%zx)->Execute((TObject *)0x%zx,"
+                                "(TMethod *)0x%zx,\"\");",
+                                (size_t)this,(size_t)object,(size_t)method);
                //Printf("%s", cmd);
                gROOT->ProcessLine(cmd);
                //Execute( object, method, (TObjArray *)NULL );
 #endif
             } else {
 #ifndef WIN32
-               Execute(object, method, Form("(TObject*)0x%lx",(Long_t)fSelectedObject));
+               Execute(object, method, Form("(TObject*)0x%zx",(Long_t)fSelectedObject));
 #else
                // It is a workaround of the "Dead lock under Windows
-               char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
-                                "(TMethod *)0x%lx,(TObject*)0x%lx);",
-                                (Long_t)this,(Long_t)object,(Long_t)method,
-                                (Long_t)fSelectedObject);
+               char *cmd = Form("((TContextMenu *)0x%zx)->Execute((TObject *)0x%zx,"
+                                "(TMethod *)0x%zx,(TObject*)0x%zx);",
+                                (size_t)this,(size_t)object,(size_t)method,
+                                (size_t)fSelectedObject);
                //Printf("%s", cmd);
                gROOT->ProcessLine(cmd);
                //Execute( object, method, (TObjArray *)NULL );
@@ -192,8 +192,8 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
             if (menuitem->GetSelfObjectPos() < 0) {
                cmd = Form("%s();", menuitem->GetFunctionName());
             } else {
-              cmd = Form("%s((TObject*)0x%lx);",
-                     menuitem->GetFunctionName(), (Long_t)fSelectedObject);
+              cmd = Form("%s((TObject*)0x%zx);",
+                     menuitem->GetFunctionName(), (size_t)fSelectedObject);
             }
             gROOT->ProcessLine(cmd);
          }
