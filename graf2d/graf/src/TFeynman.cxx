@@ -63,11 +63,10 @@ TFeynman::TFeynman() : TAttLine(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-TFeynmanEntry *TFeynman::AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2)
+TFeynmanEntry *TFeynman::AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelX, Double_t labelY, const char* label)
 {
-   TFeynmanEntry *newEntry = new TFeynmanEntry(particleName, x1, y1, x2, y2);
+   TFeynmanEntry *newEntry = new TFeynmanEntry(particleName, x1, y1, x2, y2, labelX, labelY, label);
    if ( !fPrimitives ) fPrimitives = new TList;
-   std::cout << "Added " << newEntry->GetParticleName() << " to the Feynman Diagram" << std::endl;
    fPrimitives->Add(newEntry);
 
    return newEntry;
@@ -79,7 +78,6 @@ TFeynmanEntry *TFeynman::AddItem(const char* particleName, Double_t x1, Double_t
 
 void TFeynman::Draw( Option_t *option )
 {
-   std::cout << "Draw Method called. Grab your pencils." << std::endl;
    AppendPad(option);
 }
 
@@ -89,7 +87,6 @@ void TFeynman::Draw( Option_t *option )
 
 void TFeynman::Paint( Option_t* option )
 {
-   std::cout << "Paint Method called. Grab your paintbrush" << std::endl;
    TIter next(fPrimitives);
    TFeynmanEntry *entry;
    while (( entry = (TFeynmanEntry*)next() )) {

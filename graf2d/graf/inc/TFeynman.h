@@ -24,7 +24,7 @@ public:
    // The constructor
    TFeynman();
 
-   TFeynmanEntry *AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
+   TFeynmanEntry *AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelX, Double_t labelY, const char* label);
 
    virtual void   Draw( Option_t* option = "" );
    virtual void   Paint( Option_t* option = "" );
