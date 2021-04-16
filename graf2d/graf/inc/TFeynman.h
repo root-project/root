@@ -1,5 +1,5 @@
 // @(#)root/feynman:$Id$
-// Author: Advait Dhingra    12/04/2021
+// Author: Advait Dhingra and Oliver Couet    12/04/2021
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

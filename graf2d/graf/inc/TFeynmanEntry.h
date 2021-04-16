@@ -1,5 +1,5 @@
 // @(#)root/graf:$Id$
-// Author: Advait Dhingra 13/04/21
+// Author: Advait Dhingra and Oliver Couet 13/04/21
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
