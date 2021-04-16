@@ -155,7 +155,6 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 {
 
    fPdf = NULL;
-   fParametersForTestStat = NULL;
    fPriorNuisance = NULL;
    fNuisancePars = NULL;
    fObservables = NULL;
@@ -195,7 +194,6 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) : fSamplingDistName(ts.GetVarName().Data()), fNToys(ntoys)
 {
    fPdf = NULL;
-   fParametersForTestStat = NULL;
    fPriorNuisance = NULL;
    fNuisancePars = NULL;
    fObservables = NULL;
