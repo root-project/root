@@ -14,6 +14,7 @@
 
   The library collecting the ROOT classes dedicated to data input and output.
 
+  The detailed internal description of the \ref rootio is available.
 */
 
 /**

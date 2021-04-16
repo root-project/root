@@ -1,5 +1,10 @@
+\page ttree Streamer information for TTree related classes
+
+
 Here is the streamer information for TTree related classes in release 3.02.06:
-(For the explanation of the meaning of the type, see "fType" in "streamerinfo.txt".)
+(For the explanation of the meaning of the type, see "fType" in \ref streamerinfo.)
+
+<div style="background-color: lightgrey; font-size: small;"><pre>
 ----------------------------------------------------
 StreamerInfo for class: TTree, version=6
   BASE          TNamed          offset=  0 type=67 The basis for a named object (name, title)
@@ -84,3 +89,4 @@ StreamerInfo for class: TLeafElement, version=1
   BASE          TLeaf           offset=  0 type= 0 Leaf: description of a Branch data type
   Int_t         fID             offset=  0 type= 3 element serial number in fInfo
   Int_t         fType           offset=  0 type= 3 leaf type
+</pre></div>
