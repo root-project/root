@@ -1,4 +1,9 @@
-ROOTIO FILES
+\page rootio %ROOT files layout
+
+\tableofcontents
+
+
+## ROOTIO files
 
    A ROOTIO file consists of one "file header", one or more "data
 records," and zero or more "free segments".  The file header is always
@@ -6,7 +11,7 @@ at the beginning of the file, while the data records and free segments
 may in principle appear in any order.
 
    The file header is fixed length (64 bytes in the current
-release.)  It's detailed format is given in "header.txt".
+release.)  It's detailed format is given in \ref header.
 
    A free segment is of variable length.  One free segment is a set
 of contiguous bytes that are unused, and are available for ROOTIO to use
@@ -20,28 +25,28 @@ portion and a "data" portion.  The key portion precedes the data
 portion.  The format of the key portion is the same for all data.
 (The key portion corresponds to a class TKey object).  The object name
 and they key cycle are together sufficient to uniquely determine the
-record within the file.  The file "dobject.txt" describes the format
+record within the file.  The \ref dobject page describes the format
 of the data portion of a record for an object that uses the default
 streamer.
 
-DATA RECORD TYPES
+## Data record types
 
-"core" record types
+### "core" record types
 
    There are several types of data records used internally by
 ROOTIO to support the storage of byte sequences.  These record types
-are "TFile", "TDirectory", "KeysList", and "FreeSegments".  These types
+are TFile, TDirectory, "KeysList", and "FreeSegments".  These types
 can be considered to be in the "core" layer of ROOTIO.
 
-   A file always contains exactly one "TFile" data record, which
+   A file always contains exactly one TFile data record, which
 (nearly?) always immediately follows the file header.  The TFile record
 consists of either data pertaining to the file as a whole, or data
 pertaining to the root "directory" of records in the file.  Its detailed
-format is given in "tfile.txt".
+format is given in \ref tfile.
 
-   A file contains zero or more "TDirectory" data records, each
-representing a subdirectory in the directory tree that has the "TFile"
-record at its root.  The detailed format is given in "tdirectory.txt".
+   A file contains zero or more TDirectory data records, each
+representing a subdirectory in the directory tree that has the TFile
+record at its root.  The detailed format is given in \ref tdirectory.
 
    A file contains one or more "KeysList" data records.  There is
 one corresponding to the root directory (represented by the TFile
@@ -49,46 +54,46 @@ record), and one corresponding to each (non-empty) subdirectory in the
 tree (each represented by a TDirectory record).  The data portion of
 each KeysList record consists of the sequential keys of those data
 records in that directory.  The detailed format is given in
-"keyslist.txt".  Note that keys for "TFile", "KeysList", "FreeSegments",
+\ref keyslist.  Note that keys for TFile, "KeysList", "FreeSegments",
 and "StreamerInfo" data records never appear in the data portion of
 a KeysList data record.
 
    A file always contains exactly one "FreeSegments" data record,
 which keeps track of the free segments in the file.  Its detailed format
-is given in "freesegments.txt".  Note that the list of free segments
+is given in \ref freesegments.  Note that the list of free segments
 contains one additional free segment that is not in the file itself,
 because it represents the free space after the end of the file.
 
-"streamer" layer record types
+### "streamer" layer record types
 
 There is an additional data record type ("StreamerInfo") needed
 internally to support the storage of self-identifying objects.  Its
-detailed format is given in "streamerinfo.txt".  Note that the
+detailed format is given in \ref streamerinfo.  Note that the
 StreamerInfo data record itself and the "core" data records described
 above are not self-identifying objects.  A ROOTIO file contains
 exactly one StreamerInfo record.  The use of the "StreamerInfo" record
-is described under the "STREAMERINFO" heading below.
+is described under the \ref si "StreamerInfo" heading below.
 
-"pointer to persistent object" object types
+### "pointer to persistent object" object types
 
 There are three object types ("TProcessID", "TRef", and "TRefArray") used
 internally to support pointers to persistent objects.  Their formats are
-given in "tprocessid.txt", "tref.txt", and "trefarray.txt" respectively.
+given in \ref tprocessid, \ref tref, and \ref trefarray respectively.
 Of these three objects, only TProcessID objects necessarily comprise
 a complete data record (a "TProcessID" record).  TRef and TRefArray
 objects typically are data members of larger objects, and therefore are
 only a part of the data portion of a record.  In addition, objects that
 are referenced by such a pointer have an additional field in the base TObject.
-See "tobject.txt".  A description of how these pointers work is given under
-the "POINTERS TO PERSISTENT OBJECTS" heading below.
+See \ref tobject.  A description of how these pointers work is given under
+the \ref ptpo "Pointers to persistent objects" heading below.
 
-"application" layer record types
+### "application" layer record types
 
 These are either user defined record types, or record types supplied
 by ROOT that are not needed by ROOTIO. The format of such an object that
-uses the default streamer is shown in "dobject.txt".
+uses the default streamer is shown in \ref dobject.
 
-DATA COMPRESSION
+## Data compression
 
 The user can set the data compression level for new or modified data records
 when creating or opening a file.  When an existing file is opened for update,
@@ -105,12 +110,14 @@ If level 2 is selected, level 1 is used with no notification to the user.
 The chosen compression level is not applied to the entire file.  The following
 portions of the file are not compressed, regardless of the compression level
 selected:
-   1) the file header
-   2) the KeysList data record
-   3) the FreeSegments data record
-   4) any data record (outside of a TTree) where the uncompressed size of
+
+   1. the file header
+   2. the KeysList data record
+   3. the FreeSegments data record
+   4. any data record (outside of a TTree) where the uncompressed size of
       the data portion is 256 bytes or less.
-   5) the key portion of any data record
+   5. the key portion of any data record
+
 Furthermore, the data portion of the StreamerInfo data record is always
 compressed at level 1 (if over 256 bytes uncompressed), regardless of the
 compression level selected (even if no compression is selected).
@@ -119,10 +126,11 @@ The compression algorithm used is an in memory ZIP compression written for the
 DELPHI collaboration at CERN.  Its author is E. Chernyaev (IHEP/Protvino).
 The source code is internal to ROOTIO.
 
-STREAMERINFO
+\anchor si
+## StreamerInfo
 
 The "StreamerInfo" data record is used by ROOTIO to support the storage of
-self-identifying objects.  Its detailed format is given in "streamerinfo.txt".
+self-identifying objects.  Its detailed format is given in \ref streamerinfo.
 A ROOTIO file contains exactly one StreamerInfo record, which is written to disk
 automatically when a new or modified file is closed.
 
@@ -176,7 +184,7 @@ to explicitly code the decomposition and composition of the object to its member
 In this case, the StreamerInfo for that class might not be used.  In any case, if the
 composition/decomposition of the class is explicitly coded, the user should include
 the byte count, class information, and version number of the class before the data on
-disk as shown in "dobject.txt".
+disk as shown in \ref dobject.
 
 The special method used for streaming a TClonesArray is described in the TClonesArray
 section below.
@@ -190,7 +198,8 @@ StreamerInfo record to do the (de)composition.  In this case, the StreamerInfo f
 the class may still be present in the StreamerInfo record, but may not match what is
 actually written to disk for those objects.
 
-POINTERS TO PERSISTENT OBJECTS
+\anchor ptpo
+## Pointers to persistent objects
 
 Information on how these work in memory can be found at:
 http://root.cern.ch/root/htmldoc/examples/Version302.news.html
@@ -199,19 +208,19 @@ Root Users Guide, which is for a version release 3.1.  Here we discuss only the 
 on disk.
 
 A ROOT file contains zero or more TProcessID records.  Each such record contains a globally
-unique ID defining a given ROOT job that wrote a referenced object (see tprocessid.txt).
+unique ID defining a given ROOT job that wrote a referenced object (see \ref tprocessid).
 Each referenced object contains a "pidf" field referencing the corresponding TProcessID
 record and an "fUniqueID" field uniquely identifying the referenced object among those
-written by that process (see tobject.txt).  Similarly, every persistent reference to that
-object (a TRef Object, see tref.txt) also contains "pidf" and "fUniqueID" fields with the
+written by that process (see \ref tobject).  Similarly, every persistent reference to that
+object (a TRef Object, see \ref tref) also contains "pidf" and "fUniqueID" fields with the
 same value, thereby uniquely determining the referenced object (which need not even be in the
-same file).  In the case of an array of references (a TRefArray object, see "trefarray.txt"),
+same file).  In the case of an array of references (a TRefArray object, see \ref trefarray),
 there is one "pidf" value for the entire array, and a separate "fUniqueID" value for each
 reference.  For further information, see the above URL.
 
-SOME USEFUL CONTAINER CLASSES
+## Some useful container classes
 
-1) TObjArray and TClonesArray
+### TObjArray and TClonesArray
 
 The TObjArray class can be used to support an array of objects.  The objects need not be of the
 same type, but each object must be of a class type that inherits from TObject.  We have already
@@ -221,22 +230,23 @@ TStreamerElement, which in turn inherits from TObject.
 
 The TClonesArray class is a specialization of the TObjArray class for holding an array
 of objects that are all of the same type.  The format of a TClonesArray object
-is given in "tclonesarray.txt".
+is given in \ref tclonesarray.
 
 There are two great advantages in the use of TClonesArray over TObjArray when the objects
 all will be of the same class:
-  1) Memory for the objects will be allocated only once for the entire array, rather
-     than the per-object allocation for TObjArray.  This can be done because all the
-     objects are the same size.
-  2) In the case of TObjArray, the stored objects are written sequentially. However,
-     in a TClonesArray, by default, each object is split one level deep into its base
-     class(es) and data members, and each of these members is written sequentially for
-     all objects in the array before the next member is written.  This has two advantages:
-      a) Greater compression can be achieved when similar data is consecutive.
-      b) The object's data members can easily be split into different TTree branches
+
+   1. Memory for the objects will be allocated only once for the entire array, rather
+      than the per-object allocation for TObjArray.  This can be done because all the
+      objects are the same size.
+   2. In the case of TObjArray, the stored objects are written sequentially. However,
+      in a TClonesArray, by default, each object is split one level deep into its base
+      class(es) and data members, and each of these members is written sequentially for
+      all objects in the array before the next member is written.  This has two advantages:
+      1. Greater compression can be achieved when similar data is consecutive.
+      2. The object's data members can easily be split into different TTree branches
          (TTrees are discussed below).
 
-2) TTree
+### TTree
 
 A TTree is a highly specialized container class for efficient storage and retrieval of user data.
 The use of TTrees is discussed in detail in the Trees chapter of the Root Users Guide:
@@ -268,7 +278,7 @@ the additional TBasket records are written into the specified file, rather than 
 the TTree data record itself.  In this case, a TBranch data record for the specified branch is also
 written to the specified file, containing the TBranch object for the specified branch.
 
-The file "ttree.txt" shows the streamer information for the TTree, TBranch, TLeaf, and some related
+\ref ttree shows the streamer information for the TTree, TBranch, TLeaf, and some related
 classes, together with some additional commentary.  For writing to a ROOTIO file, the streamers
 for these three classes act exactly as those of default generated streamers, except that, if the
 user has specified a separate file for a branch, the TBranch streamer also writes the TBranch object
@@ -276,3 +286,22 @@ as a keyed data record to the specified file.
 
 There is no streamer information for the TBasket class.  The custom written TBasket streamer
 internally handles the packing of data into fixed size TBasket objects.
+
+## Related pages
+
+  - \ref dobject
+  - \ref gap
+  - \ref keyslist
+  - \ref tclonesarray
+  - \ref tfile
+  - \ref tprocessid
+  - \ref trefarray
+  - \ref datarecord
+  - \ref freesegments
+  - \ref header
+  - \ref streamerinfo
+  - \ref tdirectory
+  - \ref tobject
+  - \ref tref
+  - \ref ttree
+
