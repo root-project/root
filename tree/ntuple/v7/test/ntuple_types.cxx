@@ -23,6 +23,15 @@ TEST(RNTuple, Int64_t)
    auto otherField = RFieldBase::Create("test", "std::int64_t").Unwrap();
 }
 
+TEST(RNTuple, Int8_t)
+{
+   auto field = RField<std::int8_t>("int8");
+   auto otherField = RFieldBase::Create("test", "std::int8_t").Unwrap();
+   // does not compile
+   // -- RField.hxx:450:39: error: static assertion failed: no I/O support for this basic C++ type
+   // auto charField = RField<char>("char");
+}
+
 TEST(RNTuple, UnsupportedStdTypes)
 {
    try {
