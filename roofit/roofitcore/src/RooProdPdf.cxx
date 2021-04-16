@@ -564,7 +564,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 {
   // List of all term dependents: normalization and imported
   RooLinkedList depAllList;
-  RooLinkedList depIntNoNormList;
+  std::vector<RooArgSet> depIntNoNormList;
 
   // Setup lists for factorization terms and their dependents
   RooArgSet* term(0);
@@ -693,7 +693,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 	termNormDeps = new RooArgSet("termNormDeps");
 	termAllDeps = new RooArgSet("termAllDeps");
 	termIntDeps = new RooArgSet("termIntDeps");
-	termIntNoNormDeps = new RooArgSet("termIntNoNormDeps");
+	termIntNoNormDeps = &depIntNoNormList.emplace_back("termIntNoNormDeps");
 
 	term->add(*pdf);
 	termNormDeps->add(pdfNormDeps, kFALSE);
@@ -705,7 +705,6 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 	normList.Add(termNormDeps);
 	depAllList.Add(termAllDeps);
 	intList.Add(termIntDeps);
-	depIntNoNormList.Add(termIntNoNormDeps);
       }
     }
 
@@ -718,15 +717,14 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   }
 
   // Loop over list of terms again to determine 'imported' observables
-  RooArgSet *normDeps, *allDeps, *intNoNormDeps;
+  int i = 0;
+  RooArgSet *normDeps, *allDeps;
   for (RooFIter lIter = termList.fwdIterator(),
       ldIter = normList.fwdIterator(),
-      laIter = depAllList.fwdIterator(),
-      innIter = depIntNoNormList.fwdIterator();
+      laIter = depAllList.fwdIterator();
       (normDeps = (RooArgSet*) ldIter.next(),
        allDeps = (RooArgSet*) laIter.next(),
-       intNoNormDeps = (RooArgSet*) innIter.next(),
-       term=(RooArgSet*)lIter.next()); ) {
+       term=(RooArgSet*)lIter.next()); ++i) {
     // Make list of wholly imported dependents
     RooArgSet impDeps(*allDeps);
     impDeps.remove(*normDeps, kTRUE, kTRUE);
@@ -735,14 +733,13 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
     // Make list of cross dependents (term is self contained for these dependents,
     // but components import dependents from other components)
-    RooArgSet* crossDeps = (RooArgSet*) intNoNormDeps->selectCommon(*normDeps);
+    RooArgSet* crossDeps = (RooArgSet*) depIntNoNormList[i].selectCommon(*normDeps);
     crossDepList.Add(crossDeps->snapshot());
 //     cout << GetName() << ": list of cross dependents for term " << (*term) << " set to " << *crossDeps << endl ;
     delete crossDeps;
   }
 
   depAllList.Delete();
-  depIntNoNormList.Delete();
 
   return;
 }
