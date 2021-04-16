@@ -14,7 +14,7 @@ TFeynmanEntry::TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1,
 }
 void TFeynmanEntry::Paint() {
   // Get all the needed values:
-  cout << "Paint method of TFeynmanEntry called" << endl;
+  std::cout << "Paint method of TFeynmanEntry called" << std::endl;
   Double_t x1 = GetX1();
   Double_t y1 = GetY1();
   Double_t x2 = GetX2();
@@ -22,11 +22,11 @@ void TFeynmanEntry::Paint() {
   const char* particleName = GetParticleName();
 
   if (particleName == std::string("fermion")) {
-    cout << "Fermion" << endl;
+    std::cout << "Fermion" << std::endl;
     TArrow *fermion = new TArrow(x1, y1, x2, y2, 0.05, "->-");
     fermion->Paint();
   }
   else{
-    cout << "Nope" << endl;
+    std::cout << "Nope" << std::endl;
   }
 }

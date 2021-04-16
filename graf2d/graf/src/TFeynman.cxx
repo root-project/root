@@ -14,7 +14,7 @@
 #include "TROOT.h"
 #include "TArrow.h"
 #include "TList.h"
-#include "TPad.h"
+
 
 ClassImp(TFeynman);
 
@@ -51,9 +51,7 @@ This example plots the feynman.C diagram in the tutorials:
 
 
 
-TFeynman::TFeynman(Double_t canvasWidth, Double_t canvasHeight) : TAttLine(){
-				TCanvas *c1 = new TCanvas("c1", "c1", 10,10, canvasWidth, canvasHeight);
-   			c1->Range(0, 0, 140, 60);
+TFeynman::TFeynman() : TAttLine(){
 				gStyle->SetLineWidth(2);
         fPrimitives = new TList;
 		}
@@ -61,18 +59,18 @@ TFeynman::TFeynman(Double_t canvasWidth, Double_t canvasHeight) : TAttLine(){
 TFeynmanEntry *TFeynman::AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2) {
    TFeynmanEntry *newEntry = new TFeynmanEntry(particleName, x1, y1, x2, y2);
 	 if ( !fPrimitives ) fPrimitives = new TList;
-	 cout << "Added " << newEntry->GetParticleName() << " to the Feynman Diagram" << endl;
+	 std::cout << "Added " << newEntry->GetParticleName() << " to the Feynman Diagram" << std::endl;
    fPrimitives->Add(newEntry);
 
    return newEntry;
 }
 
 void TFeynman::Draw(){
-	cout << "Draw Method called. Grab your pencils." << endl;
+	std::cout << "Draw Method called. Grab your pencils." << std::endl;
 	AppendPad();
 }
 void TFeynman::Paint() {
-	cout << "Paint Method called. Grab your paintbrush" << endl;
+	std::cout << "Paint Method called. Grab your paintbrush" << std::endl;
 	TIter next(fPrimitives);
 	TFeynmanEntry *entry;
 	while (( entry = (TFeynmanEntry*)next() )) {

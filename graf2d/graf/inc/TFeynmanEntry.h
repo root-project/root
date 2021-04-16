@@ -15,7 +15,6 @@
 
 #include "TArrow.h"
 #include "TVirtualPad.h"
-#include "TPad.h"
 
 class TFeynmanEntry : public TObject {
     public:

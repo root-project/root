@@ -18,14 +18,13 @@
 #include "TAttLine.h"
 #include "TList.h"
 #include "TVirtualPad.h"
-#include "TPad.h"
 
 class TFeynman : public TAttLine, public TObject {
 
 	public:
 
 		// The constructor
-		TFeynman(Double_t canvasWidth, Double_t canvasHeight);
+		TFeynman();
 
     TFeynmanEntry *AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
 
