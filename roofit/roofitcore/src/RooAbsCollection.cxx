@@ -469,25 +469,6 @@ Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent)
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add a collection of arguments to this collection by calling add()
-/// for each element in the source collection
-
-Bool_t RooAbsCollection::add(const RooAbsCollection& list, Bool_t silent)
-{
-  Bool_t result(false) ;
-  _list.reserve(_list.size() + list._list.size());
-
-  for (auto item : list._list) {
-    result |= add(*item,silent);
-  }
-
-  return result;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a collection of arguments to this collection by calling addOwned()
 /// for each element in the source collection
@@ -806,21 +787,6 @@ Bool_t RooAbsCollection::equals(const RooAbsCollection& otherColl) const
       compareByNamePtr);
 }
 
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if this and other collection have common entries
-
-Bool_t RooAbsCollection::overlaps(const RooAbsCollection& otherColl) const
-{
-  for (auto arg : _list) {
-    if (otherColl.find(*arg)) {
-      return kTRUE ;
-    }
-  }
-  return kFALSE ;
-}
 
 namespace {
 ////////////////////////////////////////////////////////////////////////////////
