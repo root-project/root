@@ -12,13 +12,38 @@
  * \class MemPoolForRooSets
  * \ingroup roofitcore
  * RooArgSet and RooDataSet were using a mempool that guarantees that allocating,
- * de-allocating and re-allocating a set does not yield the same pointer. Since
- * both were using the same logic, the functionality has been put in this class.
- * This class solves RooFit's static destruction order problems by intentionally leaking
- * arenas of the mempool that still contain live objects at the end of the program.
+ * de-allocating and re-allocating a set does not yield the same pointer.
+ * RooFit relies on this, unfortunately, because it compares the pointers of RooArgSets
+ * to figure out caching, e.g. of integrals.
  *
- * When the set types are compared based on a unique ID instead of their pointer,
- * one can go back to normal memory management, and this class becomes obsolete.
+ * Since both RooArgSet and RooDataSet were using the same logic to manage their memory pools,
+ * the functionality has been put here in a single place.
+ * The introduction of this common mempool also solved RooFit's static destruction order
+ * problems by letting arenas of the mempool leak if RooArgSets are still alive.
+ * This is necessary if the tear down of the mempool happens before all RooArgSets of the entire
+ * process have been deleted. This might e.g. happen in static configs for integrators or when a
+ * plot of a PDF is alive when quitting the interpreter.
+ *
+ * ### If this memory pool seems to leak memory:
+ * - It is likely a leaking RooArgSet / RooDataSet
+ * - Disable the memory pool using the `#define` in RooArgSet.h / RooDataSet.h
+ * - Rerun the leak check to find the leaking RooXSet
+ * - Fix it
+ * - Re-enable the memory pool
+ *
+ * \warning Disabling the memory pools might seem to work at first sight, but can eventually
+ * lead to wrong computations. This would happen if the operating system decides
+ * to assign the same memory address when a RooArgSet is deleted and re-allocated, and both the deleted
+ * as well as the new set happen to be used in the same computation graph. RooFit will
+ * think that the cache doesn't have to be recalculated, and will return an outdated result.
+ * These errors are hard to track down, because they might only happen in a specific toy
+ * MC run on a specific OS / architecture.
+ *
+ * ### How to get rid of the memory pool
+ * If RooArgSet or RooDataSet were compared based on a unique ID instead of their pointer,
+ * this class would become obsolete.
+ * It should be tested, though, if handing memory management over to the OS has an impact on speed.
+ * This is less of a worry, though, because OSs got smarter over RooFit's life time.
  */
 
 #ifndef ROOFIT_ROOFITCORE_SRC_MEMPOOLFORROOSETS_H_
@@ -224,7 +249,9 @@ class MemPoolForRooSets {
   ////////////////////////////////////////////////////////////////////////////////
   /// Free memory in arenas that don't have space and no users.
   /// In fTeardownMode, it will also delete the arena that still has space.
-  ///
+  /// Arenas are never deleted, because the pointers of RooArgSets/RooDataSets need
+  /// to be unique for RooFit's caching to work. The arenas only give back the memory to
+  /// the OS.
   void prune()
   {
     for (auto & arena : fArenas) {
