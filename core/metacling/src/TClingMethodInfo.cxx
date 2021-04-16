@@ -147,22 +147,6 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    if (templateParms->getMinRequiredArguments() > 0)
       return nullptr;
 
-   if (templateParms->size() > 0) {
-      NamedDecl *arg0 = *templateParms->begin();
-      if (arg0->isTemplateParameterPack())
-         return nullptr;
-      if (auto TTP = dyn_cast<TemplateTypeParmDecl>(*templateParms->begin())) {
-         if (!TTP->hasDefaultArgument())
-            return nullptr;
-      } else if (auto NTTP = dyn_cast<NonTypeTemplateParmDecl>(*templateParms->begin())) {
-         if (!NTTP->hasDefaultArgument())
-            return nullptr;
-      } else {
-         // TemplateTemplateParmDecl, pack
-         return nullptr;
-      }
-   }
-
    const FunctionDecl *templatedDecl = llvm::dyn_cast<FunctionDecl>(TD->getTemplatedDecl());
    const Decl *declCtxDecl = dyn_cast<Decl>(TD->getDeclContext());
 
