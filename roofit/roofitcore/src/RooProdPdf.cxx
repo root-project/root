@@ -554,6 +554,44 @@ RooSpan<double> RooProdPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, 
   }
 }
 
+namespace {
+
+template<class T>
+void eraseNullptrs(std::vector<T*>& v) {
+  v.erase(std::remove_if(v.begin(), v.end(), [](T* x){ return x == nullptr; } ), v.end());
+}
+
+void removeCommon(std::vector<RooAbsArg*> &v, std::span<RooAbsArg * const> other) {
+
+  for (auto const& arg : other) {
+    auto namePtrMatch = [&arg](const RooAbsArg* elm) {
+      return elm->namePtr() == arg->namePtr();
+    };
+
+    auto found = std::find_if(v.begin(), v.end(), namePtrMatch);
+    if(found != v.end()) {
+      *found = nullptr;
+    }
+  }
+  eraseNullptrs(v);
+}
+
+void addCommon(std::vector<RooAbsArg*> &v, std::vector<RooAbsArg*> const& o1, std::vector<RooAbsArg*> const& o2) {
+
+  for (auto const& arg : o1) {
+    auto namePtrMatch = [&arg](const RooAbsArg* elm) {
+      return elm->namePtr() == arg->namePtr();
+    };
+
+    if(std::find_if(o2.begin(), o2.end(), namePtrMatch) != o2.end()) {
+      v.push_back(arg);
+    }
+  }
+}
+
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Factorize product in irreducible terms for given choice of integration/normalization
 
@@ -572,6 +610,13 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   RooArgSet* termIntDeps(0);
   RooArgSet* termIntNoNormDeps(0);
 
+  std::vector<RooAbsArg*> pdfIntNoNormDeps;
+  std::vector<RooAbsArg*> pdfIntSet;
+  std::vector<RooAbsArg*> pdfNSet;
+  std::vector<RooAbsArg*> pdfCSet;
+  std::vector<RooAbsArg*> pdfNormDeps; // Dependents to be normalized for the PDF
+  std::vector<RooAbsArg*> pdfAllDeps; // All dependents of this PDF
+
   // Loop over the PDFs
   RooAbsPdf* pdf;
   RooArgSet* pdfNSetOrig;
@@ -579,7 +624,8 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
       nIter = _pdfNSetList.fwdIterator();
       (pdfNSetOrig = (RooArgSet*) nIter.next(),
        pdf = (RooAbsPdf*) pdfIter.next()); ) {
-    RooArgSet* pdfNSet, *pdfCSet;
+    pdfNSet.clear();
+    pdfCSet.clear();
 
     // Make iterator over tree leaf node list to get the observables.
     // This code is borrowed from RooAgsPdf::getObservables.
@@ -587,62 +633,61 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     // once and use it in a lambda function.
     RooArgSet pdfLeafList("leafNodeServerList") ;
     pdf->treeNodeServerList(&pdfLeafList,0,kFALSE,kTRUE,true) ;
-    auto getObservables = [&pdfLeafList](const RooArgSet& dataList) {
-      RooArgSet* out = new RooArgSet("dependents") ;
+    auto getObservables = [&pdfLeafList](
+            std::vector<RooAbsArg*> & out,
+            const RooArgSet& dataList) {
       for (const auto arg : pdfLeafList) {
         if (arg->dependsOnValue(dataList) && arg->isLValue()) {
-          out->add(*arg) ;
+          out.push_back(arg) ;
         }
       }
-      return out;
     };
 
     // Reduce pdfNSet to actual dependents
     if (0 == strcmp("nset", pdfNSetOrig->GetName())) {
-      pdfNSet = getObservables(*pdfNSetOrig);
-      pdfCSet = new RooArgSet;
+      getObservables(pdfNSet, *pdfNSetOrig);
     } else if (0 == strcmp("cset", pdfNSetOrig->GetName())) {
-      RooArgSet* tmp = getObservables(normSet);
-      tmp->remove(*pdfNSetOrig, kTRUE, kTRUE);
-      pdfCSet = pdfNSetOrig;
-      pdfNSet = tmp;
+      getObservables(pdfNSet, normSet);
+      removeCommon(pdfNSet, pdfNSetOrig->get());
+      pdfCSet = pdfNSetOrig->get();
     } else {
       // Legacy mode. Interpret at NSet for backward compatibility
-      pdfNSet = getObservables(*pdfNSetOrig);
-      pdfCSet = new RooArgSet;
+      getObservables(pdfNSet, *pdfNSetOrig);
     }
 
 
-    RooArgSet pdfNormDeps; // Dependents to be normalized for the PDF
-    RooArgSet pdfAllDeps; // All dependents of this PDF
+    pdfNormDeps.clear();
+    pdfAllDeps.clear();
 
     // Make list of all dependents of this PDF
-    pdfAllDeps.add(*std::unique_ptr<RooArgSet>{getObservables(normSet)});
+    getObservables(pdfAllDeps, normSet);
 
 
 //     cout << GetName() << ": pdf = " << pdf->GetName() << " pdfAllDeps = " << pdfAllDeps << " pdfNSet = " << *pdfNSet << " pdfCSet = " << *pdfCSet << endl;
 
     // Make list of normalization dependents for this PDF;
-    if (pdfNSet->getSize() > 0) {
+    if (!pdfNSet.empty()) {
       // PDF is conditional
-      pdfNormDeps.add(*std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(pdfAllDeps.selectCommon(*pdfNSet))});
+      addCommon(pdfNormDeps, pdfAllDeps, pdfNSet);
     } else {
       // PDF is regular
-      pdfNormDeps.add(pdfAllDeps);
+      pdfNormDeps = pdfAllDeps;
     }
 
 //     cout << GetName() << ": pdfNormDeps for " << pdf->GetName() << " = " << pdfNormDeps << endl;
 
-    RooArgSet* pdfIntSet = getObservables(intSet) ;
+    pdfIntSet.clear();
+    getObservables(pdfIntSet, intSet) ;
 
     // WVE if we have no norm deps, conditional observables should be taken out of pdfIntSet
-    if (0 == pdfNormDeps.getSize() && pdfCSet->getSize() > 0) {
-      pdfIntSet->remove(*pdfCSet, kTRUE, kTRUE);
+    if (pdfNormDeps.empty() && !pdfCSet.empty()) {
+      removeCommon(pdfIntSet, pdfCSet);
 //       cout << GetName() << ": have no norm deps, removing conditional observables from intset" << endl;
     }
 
-    RooArgSet pdfIntNoNormDeps(*pdfIntSet);
-    pdfIntNoNormDeps.remove(pdfNormDeps, kTRUE, kTRUE);
+    pdfIntNoNormDeps.clear();
+    pdfIntNoNormDeps = pdfIntSet;
+    removeCommon(pdfIntNoNormDeps, pdfNormDeps);
 
 //     cout << GetName() << ": pdf = " << pdf->GetName() << " intset = " << *pdfIntSet << " pdfIntNoNormDeps = " << pdfIntNoNormDeps << endl;
 
@@ -659,20 +704,20 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
       // 3) If normalization happens over multiple ranges, and those ranges are both defined
       //    in either observable
 
-      Bool_t normOverlap = pdfNormDeps.overlaps(*termNormDeps);
+      bool normOverlap = termNormDeps->overlaps(pdfNormDeps.begin(), pdfNormDeps.end());
       //Bool_t intOverlap =  pdfIntSet->overlaps(*termAllDeps);
 
       if (normOverlap) {
 //  	cout << GetName() << ": this term overlaps with term " << (*term) << " in normalization observables" << endl;
 
 	term->add(*pdf);
-	termNormDeps->add(pdfNormDeps, kFALSE);
-	depAllList[j].add(pdfAllDeps, kFALSE);
+	termNormDeps->add(pdfNormDeps.begin(), pdfNormDeps.end(), false);
+	depAllList[j].add(pdfAllDeps.begin(), pdfAllDeps.end(), false);
 	if (termIntDeps) {
-	  termIntDeps->add(*pdfIntSet, kFALSE);
+	  termIntDeps->add(pdfIntSet.begin(), pdfIntSet.end(), false);
 	}
 	if (termIntNoNormDeps) {
-	  termIntNoNormDeps->add(pdfIntNoNormDeps, kFALSE);
+	  termIntNoNormDeps->add(pdfIntNoNormDeps.begin(), pdfIntNoNormDeps.end(), false);
 	}
 	done = kTRUE;
       }
@@ -680,19 +725,18 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
     // If not, create a new term
     if (!done) {
-      if (!(0 == pdfNormDeps.getSize() && 0 == pdfAllDeps.getSize() &&
-	    0 == pdfIntSet->getSize()) || 0 == normSet.getSize()) {
+      if (!(pdfNormDeps.empty() && pdfAllDeps.empty() &&
+	    pdfIntSet.empty()) || 0 == normSet.getSize()) {
 //   	cout << GetName() << ": creating new term" << endl;
 	term = new RooArgSet("term");
 	termNormDeps = new RooArgSet("termNormDeps");
-	termIntDeps = new RooArgSet("termIntDeps");
-	termIntNoNormDeps = &depIntNoNormList.emplace_back("termIntNoNormDeps");
+	depAllList.emplace_back(pdfAllDeps.begin(), pdfAllDeps.end(), "termAllDeps");
+	termIntDeps = new RooArgSet(pdfIntSet.begin(), pdfIntSet.end(), "termIntDeps");
+	depIntNoNormList.emplace_back(pdfIntNoNormDeps.begin(), pdfIntNoNormDeps.end(), "termIntNoNormDeps");
+	termIntNoNormDeps = &depIntNoNormList.back();
 
 	term->add(*pdf);
-	termNormDeps->add(pdfNormDeps, kFALSE);
-	depAllList.emplace_back("termAllDeps").add(pdfAllDeps, kFALSE);
-	termIntDeps->add(*pdfIntSet, kFALSE);
-	termIntNoNormDeps->add(pdfIntNoNormDeps, kFALSE);
+	termNormDeps->add(pdfNormDeps.begin(), pdfNormDeps.end(), false);
 
 	termList.Add(term);
 	normList.Add(termNormDeps);
@@ -700,12 +744,6 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
       }
     }
 
-    // We own the reduced version of pdfNSet
-    delete pdfNSet;
-    delete pdfIntSet;
-    if (pdfCSet != pdfNSetOrig) {
-      delete pdfCSet;
-    }
   }
 
   // Loop over list of terms again to determine 'imported' observables
@@ -723,10 +761,9 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
     // Make list of cross dependents (term is self contained for these dependents,
     // but components import dependents from other components)
-    RooArgSet* crossDeps = (RooArgSet*) depIntNoNormList[i].selectCommon(*normDeps);
+    auto crossDeps = std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(depIntNoNormList[i].selectCommon(*normDeps))};
     crossDepList.Add(crossDeps->snapshot());
 //     cout << GetName() << ": list of cross dependents for term " << (*term) << " set to " << *crossDeps << endl ;
-    delete crossDeps;
   }
 
   return;
@@ -1492,7 +1529,8 @@ void RooProdPdf::groupProductTerms(std::list<RooLinkedList>& groupedTerms, RooAr
       if (needMerge) {
 	// Create composite group if not yet existing
 	if (newGroup==nullptr) {
-	  newGroup = &groupedTerms.emplace_back() ;
+	  groupedTerms.emplace_back() ;
+	  newGroup = &groupedTerms.back() ;
 	}
 
 	// Add terms of this group to new term
