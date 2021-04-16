@@ -147,9 +147,9 @@ Bool_t TSQLServer::StartTransaction()
 /// returns kTRUE when transaction is running
 /// Must be implemented in derived classes
 
-Bool_t TSQLServer::IsTransaction()
+Bool_t TSQLServer::HasTransactionInFlight()
 {
-   Warning("IsTransaction", "Not implemented");
+   Warning("HasTransactionInFlight", "Not implemented");
    return kFALSE;
 }
 
