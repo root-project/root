@@ -55,6 +55,8 @@ This example plots the feynman.C diagram in the tutorials:
 
 TFeynman::TFeynman() : TAttLine(){
    gStyle->SetLineWidth(2);
+   if (gPad)
+      gPad->Range(0, 0, 140, 60);
    fPrimitives = new TList;
 }
 
