@@ -29,8 +29,9 @@
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"
 #include "RooRealVar.h"
-
 #include "RooDataSet.h"
+
+#include <memory>
 
 namespace RooStats {
 
@@ -153,8 +154,7 @@ class ToyMCSampler: public TestStatSampler {
 
       // Set the Pdf, add to the the workspace if not already there
       virtual void SetParametersForTestStat(const RooArgSet& nullpoi) {
-         if( fParametersForTestStat ) delete fParametersForTestStat;
-         fParametersForTestStat = (const RooArgSet*)nullpoi.snapshot();
+         fParametersForTestStat.reset( nullpoi.snapshot() );
       }
 
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; ClearCache(); }
@@ -247,7 +247,7 @@ class ToyMCSampler: public TestStatSampler {
 
       // densities, snapshots, and test statistics to reweight to
       RooAbsPdf *fPdf; // model (can be alt or null)
-      const RooArgSet* fParametersForTestStat;
+      std::unique_ptr<const RooArgSet> fParametersForTestStat;
       std::vector<TestStatistic*> fTestStatistics;
 
       std::string fSamplingDistName; // name of the model
@@ -294,7 +294,7 @@ class ToyMCSampler: public TestStatSampler {
       Bool_t fUseMultiGen ; // Use PrepareMultiGen?
 
    protected:
-   ClassDef(ToyMCSampler,3) // A simple implementation of the TestStatSampler interface
+   ClassDef(ToyMCSampler, 4) // A simple implementation of the TestStatSampler interface
 };
 }
 
