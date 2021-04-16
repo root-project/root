@@ -12,28 +12,28 @@
  #ifndef ROOT_TFeynman
  #define ROOT_TFeynman
 
-
-
 #include "TFeynmanEntry.h"
 #include "TAttLine.h"
 #include "TList.h"
 #include "TVirtualPad.h"
-#include "TPad.h"
 
 class TFeynman : public TAttLine, public TObject {
 
-	public:
+public:
 
-		// The constructor
-		TFeynman(Double_t canvasWidth, Double_t canvasHeight);
+   // The constructor
+   TFeynman();
 
-    TFeynmanEntry *AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
+   TFeynmanEntry *AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
 
+   virtual void   Draw( Option_t* option = "" );
+   virtual void   Paint( Option_t* option = "" );
 
-    virtual void Draw();
-		virtual void Paint();
+protected:
 
-  protected:
-    TList *fPrimitives; ///< List of TFeynman entries
+   TList *fPrimitives; ///< List of TFeynman entries
+
+   ClassDef(TFeynman,1) // Feynman diagram
+
 };
 #endif

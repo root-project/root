@@ -15,7 +15,6 @@
 
 #include "TArrow.h"
 #include "TVirtualPad.h"
-#include "TPad.h"
 
 class TFeynmanEntry : public TObject {
     public:
@@ -25,7 +24,7 @@ class TFeynmanEntry : public TObject {
         virtual Double_t GetY1()  {return fY1;}
         virtual Double_t GetX2()  {return fX2;}
         virtual Double_t GetY2() const {return fY2;}
-        virtual void Paint();
+        virtual void     Paint( Option_t* option = "" );
     protected:
         TString      fParticle; ///< Name of the particle (label)
         Double_t     fX1;
