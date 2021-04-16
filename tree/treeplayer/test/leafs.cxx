@@ -246,7 +246,9 @@ TEST(TTreeReaderLeafs, BranchAndLeafWithDifferentNames)
 
    TTreeReader r(&t);
    TTreeReaderValue<int> rv(r, "x");
+   TTreeReaderValue<int> rvwithdot(r, "x.y");
    ASSERT_TRUE(r.Next());
    EXPECT_EQ(*rv, 42);
+   EXPECT_EQ(*rvwithdot, 42);
    EXPECT_FALSE(r.Next());
 }
