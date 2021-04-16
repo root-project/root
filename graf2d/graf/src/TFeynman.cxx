@@ -19,7 +19,7 @@
 ClassImp(TFeynman);
 
 // @(#)root/feynman:$Id$
-// Author: Advait Dhingra and Oliver Couet   12/04/2021
+// Author: Advait Dhingra   12/04/2021
 
 /** \class TFeynman
     \ingroup feynman
