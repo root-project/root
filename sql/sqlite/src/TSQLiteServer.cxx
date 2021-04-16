@@ -109,7 +109,7 @@ Bool_t TSQLiteServer::StartTransaction()
 ////////////////////////////////////////////////////////////////////////////////
 /// returns kTRUE when transaction is running
 
-Bool_t  TSQLiteServer::IsTransaction()
+Bool_t  TSQLiteServer::HasTransactionInFlight()
 {
    if (!fSQLite)
       return kFALSE;
