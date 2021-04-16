@@ -303,30 +303,26 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          }
       } else if (JSROOT.nodejs) {
          // try to use WebGL inside node.js - need to create headless context
-         let gl = require('gl')(width, height, { preserveDrawingBuffer: true });
-
          const { createCanvas } = require('canvas');
-
          args.canvas = createCanvas(width, height);
          args.canvas.addEventListener = function() { }; // dummy
+         args.canvas.removeEventListener = function() { }; // dummy
          args.canvas.style = {};
 
-         args.context = gl;
+         let gl = require('gl')(width, height, { preserveDrawingBuffer: true });
 
-         // in node.js too many similar warnings makes it difficult to debug
-         let warn = console.warn;
-         console.warn = function(msg) {
-            if (msg && msg.indexOf("OES_texture_half_float") < 0 && msg.indexOf("EXT_texture_filter_anisotropic") < 0 &&
-                       msg.indexOf("WEBGL_depth_texture") < 0 && msg.indexOf("OES_vertex_array_object") < 0)
-              console.log("NEW: " + msg);
-         };
+         if (!gl) {
+            console.error("Fail to create headless-gl");
+         } else {
+            args.context = gl;
+            gl.canvas = args.canvas;
+         }
+
          renderer = new THREE.WebGLRenderer(args);
 
          renderer.jsroot_output = new THREE.WebGLRenderTarget(width, height);
 
          renderer.setRenderTarget(renderer.jsroot_output);
-
-         console.warn = warn;
 
          need_workaround = true;
       } else {
@@ -362,11 +358,28 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       return renderer;
    }
 
+   /** @summary Cleanup created renderer object
+     * @private */
+   jsrp.cleanupRender3D = function(renderer) {
+      if (!renderer) return;
+
+      if (JSROOT.nodejs) {
+         let ctxt = (typeof renderer.getContext == 'function') ? renderer.getContext() : null;
+         let ext = ctxt ? ctxt.getExtension('STACKGL_destroy_context') : null;
+         if (ext) ext.destroy();
+      } else {
+         //if (typeof renderer.forceContextLoss == "function")
+         //   renderer.forceContextLoss();
+
+         if (typeof renderer.dispose == "function")
+            renderer.dispose();
+      }
+   }
+
    /** @summary Cleanup previous renderings before doing next one
      * @desc used together with SVG
      * @private */
    jsrp.beforeRender3D = function(renderer) {
-      // cleanup previous rendering, from SVG renderer
       if (renderer.clearHTML) renderer.clearHTML();
    }
 
@@ -601,11 +614,11 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       function control_mouseup(evnt) {
          if (!control) return;
 
-         if (control.mouse_zoom_mesh && control.mouse_zoom_mesh.point2 && control.painter.Get3DZoomCoord) {
+         if (control.mouse_zoom_mesh && control.mouse_zoom_mesh.point2 && control.painter.get3dZoomCoord) {
 
             let kind = control.mouse_zoom_mesh.object.zoom,
-                pos1 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point, kind),
-                pos2 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point2, kind);
+                pos1 = control.painter.get3dZoomCoord(control.mouse_zoom_mesh.point, kind),
+                pos2 = control.painter.get3dZoomCoord(control.mouse_zoom_mesh.point2, kind);
 
             if (pos1>pos2) { let v = pos1; pos1 = pos2; pos2 = v; }
 
@@ -868,7 +881,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       }
 
       control.removeZoomMesh = function() {
-         if (this.mouse_zoom_mesh && this.mouse_zoom_mesh.object.ShowSelection())
+         if (this.mouse_zoom_mesh && this.mouse_zoom_mesh.object.showSelection())
             this.painter.render3D();
          this.mouse_zoom_mesh = null; // in any case clear mesh, enable orbit control again
       }
@@ -889,13 +902,13 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
             if (zoom2 && (zoom2.object === this.mouse_zoom_mesh.object)) {
                pnt2 = zoom2.point;
             } else {
-               pnt2 = this.mouse_zoom_mesh.object.GlobalIntersect(this.raycaster);
+               pnt2 = this.mouse_zoom_mesh.object.globalIntersect(this.raycaster);
             }
 
             if (pnt2) this.mouse_zoom_mesh.point2 = pnt2;
 
             if (pnt2 && this.painter.enable_highlight)
-               if (this.mouse_zoom_mesh.object.ShowSelection(this.mouse_zoom_mesh.point, pnt2))
+               if (this.mouse_zoom_mesh.object.showSelection(this.mouse_zoom_mesh.point, pnt2))
                   this.painter.render3D(0);
 
             this.tooltip.hide();

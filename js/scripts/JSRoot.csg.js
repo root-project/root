@@ -448,11 +448,9 @@ JSROOT.define(['three'], function(THREE) {
    }
 
    function Geometry(geometry, transfer_matrix, nodeid, flippedMesh ) {
-      // Convert THREE.Geometry to ThreeBSP
+      // Convert THREE.BufferGeometry to ThreeBSP
 
-      if ( geometry instanceof THREE.Geometry ) {
-         this.matrix = null; // new THREE.Matrix4; not create matrix when do not needed
-      } else if ( geometry instanceof THREE.Mesh ) {
+      if ( geometry instanceof THREE.Mesh ) {
          // #todo: add hierarchy support
          geometry.updateMatrix();
          transfer_matrix = this.matrix = geometry.matrix.clone();
@@ -714,73 +712,6 @@ JSROOT.define(['three'], function(THREE) {
       return this;
    }
 
-   Geometry.prototype.toGeometry = function() {
-      let i, j,
-         matrix = this.matrix ? new THREE.Matrix4().getInverse( this.matrix ) : null,
-         geometry = new THREE.Geometry(),
-         polygons = this.tree.collectPolygons([]),
-         polygon_count = polygons.length,
-         polygon, polygon_vertice_count,
-         vertice_dict = {},
-         vertex_idx_a, vertex_idx_b, vertex_idx_c,
-         vertex, face;
-
-      for ( i = 0; i < polygon_count; ++i ) {
-         polygon = polygons[i];
-         polygon_vertice_count = polygon.vertices.length;
-
-         for ( j = 2; j < polygon_vertice_count; ++j ) {
-            // verticeUvs = [];
-
-            vertex = polygon.vertices[0];
-            // verticeUvs.push( new THREE.Vector2( vertex.uv.x, vertex.uv.y ) );
-            vertex = new THREE.Vector3( vertex.x, vertex.y, vertex.z );
-            if (matrix) vertex.applyMatrix4(matrix);
-
-            if ( typeof vertice_dict[ vertex.x + ',' + vertex.y + ',' + vertex.z ] !== 'undefined' ) {
-               vertex_idx_a = vertice_dict[ vertex.x + ',' + vertex.y + ',' + vertex.z ];
-            } else {
-               geometry.vertices.push( vertex );
-               vertex_idx_a = vertice_dict[ vertex.x + ',' + vertex.y + ',' + vertex.z ] = geometry.vertices.length - 1;
-            }
-
-            vertex = polygon.vertices[j-1];
-            // verticeUvs.push( new THREE.Vector2( vertex.uv.x, vertex.uv.y ) );
-            vertex = new THREE.Vector3( vertex.x, vertex.y, vertex.z );
-            if (matrix) vertex.applyMatrix4(matrix);
-            if ( typeof vertice_dict[ vertex.x + ',' + vertex.y + ',' + vertex.z ] !== 'undefined' ) {
-               vertex_idx_b = vertice_dict[ vertex.x + ',' + vertex.y + ',' + vertex.z ];
-            } else {
-               geometry.vertices.push( vertex );
-               vertex_idx_b = vertice_dict[ vertex.x + ',' + vertex.y + ',' + vertex.z ] = geometry.vertices.length - 1;
-            }
-
-            vertex = polygon.vertices[j];
-            // verticeUvs.push( new THREE.Vector2( vertex.uv.x, vertex.uv.y ) );
-            vertex = new THREE.Vector3( vertex.x, vertex.y, vertex.z );
-            if (matrix) vertex.applyMatrix4(matrix);
-            if ( typeof vertice_dict[ vertex.x + ',' + vertex.y + ',' + vertex.z ] !== 'undefined' ) {
-               vertex_idx_c = vertice_dict[ vertex.x + ',' + vertex.y + ',' + vertex.z ];
-            } else {
-               geometry.vertices.push( vertex );
-               vertex_idx_c = vertice_dict[ vertex.x + ',' + vertex.y + ',' + vertex.z ] = geometry.vertices.length - 1;
-            }
-
-            face = new THREE.Face3(
-               vertex_idx_a,
-               vertex_idx_b,
-               vertex_idx_c,
-               new THREE.Vector3( polygon.normal.x, polygon.normal.y, polygon.normal.z )
-            );
-
-            geometry.faces.push( face );
-            // geometry.faceVertexUvs[0].push( verticeUvs );
-         }
-
-      }
-      return geometry;
-   }
-
    Geometry.prototype.scale = function(x,y,z) {
       // try to scale as THREE.BufferGeometry
       let polygons = this.tree.collectPolygons([]);
@@ -816,7 +747,7 @@ JSROOT.define(['three'], function(THREE) {
    }
 
    Geometry.prototype.toMesh = function( material ) {
-      let geometry = this.toGeometry(),
+      let geometry = this.toBufferGeometry(),
          mesh = new THREE.Mesh( geometry, material );
 
       if (this.matrix) {
