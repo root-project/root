@@ -563,13 +563,12 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 				  RooLinkedList& intList) const
 {
   // List of all term dependents: normalization and imported
-  RooLinkedList depAllList;
+  std::vector<RooArgSet> depAllList;
   std::vector<RooArgSet> depIntNoNormList;
 
   // Setup lists for factorization terms and their dependents
   RooArgSet* term(0);
   RooArgSet* termNormDeps(0);
-  RooArgSet* termAllDeps(0);
   RooArgSet* termIntDeps(0);
   RooArgSet* termIntNoNormDeps(0);
 
@@ -618,9 +617,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     RooArgSet pdfAllDeps; // All dependents of this PDF
 
     // Make list of all dependents of this PDF
-    RooArgSet* tmp = getObservables(normSet);
-    pdfAllDeps.add(*tmp);
-    delete tmp;
+    pdfAllDeps.add(*std::unique_ptr<RooArgSet>{getObservables(normSet)});
 
 
 //     cout << GetName() << ": pdf = " << pdf->GetName() << " pdfAllDeps = " << pdfAllDeps << " pdfNSet = " << *pdfNSet << " pdfCSet = " << *pdfCSet << endl;
@@ -628,9 +625,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     // Make list of normalization dependents for this PDF;
     if (pdfNSet->getSize() > 0) {
       // PDF is conditional
-      RooArgSet* tmp2 = (RooArgSet*) pdfAllDeps.selectCommon(*pdfNSet);
-      pdfNormDeps.add(*tmp2);
-      delete tmp2;
+      pdfNormDeps.add(*std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(pdfAllDeps.selectCommon(*pdfNSet))});
     } else {
       // PDF is regular
       pdfNormDeps.add(pdfAllDeps);
@@ -653,12 +648,11 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
     // Check if this PDF has dependents overlapping with one of the existing terms
     Bool_t done(kFALSE);
+    int j = 0;
     for (RooFIter lIter = termList.fwdIterator(),
-	ldIter = normList.fwdIterator(),
-	laIter = depAllList.fwdIterator();
+	ldIter = normList.fwdIterator();
       (termNormDeps = (RooArgSet*) ldIter.next(),
-       termAllDeps = (RooArgSet*) laIter.next(),
-       term = (RooArgSet*) lIter.next()); ) {
+       term = (RooArgSet*) lIter.next()); ++j) {
       // PDF should be added to existing term if
       // 1) It has overlapping normalization dependents with any other PDF in existing term
       // 2) It has overlapping dependents of any class for which integration is requested
@@ -673,7 +667,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
 	term->add(*pdf);
 	termNormDeps->add(pdfNormDeps, kFALSE);
-	termAllDeps->add(pdfAllDeps, kFALSE);
+	depAllList[j].add(pdfAllDeps, kFALSE);
 	if (termIntDeps) {
 	  termIntDeps->add(*pdfIntSet, kFALSE);
 	}
@@ -691,19 +685,17 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 //   	cout << GetName() << ": creating new term" << endl;
 	term = new RooArgSet("term");
 	termNormDeps = new RooArgSet("termNormDeps");
-	termAllDeps = new RooArgSet("termAllDeps");
 	termIntDeps = new RooArgSet("termIntDeps");
 	termIntNoNormDeps = &depIntNoNormList.emplace_back("termIntNoNormDeps");
 
 	term->add(*pdf);
 	termNormDeps->add(pdfNormDeps, kFALSE);
-	termAllDeps->add(pdfAllDeps, kFALSE);
+	depAllList.emplace_back("termAllDeps").add(pdfAllDeps, kFALSE);
 	termIntDeps->add(*pdfIntSet, kFALSE);
 	termIntNoNormDeps->add(pdfIntNoNormDeps, kFALSE);
 
 	termList.Add(term);
 	normList.Add(termNormDeps);
-	depAllList.Add(termAllDeps);
 	intList.Add(termIntDeps);
       }
     }
@@ -718,15 +710,13 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
   // Loop over list of terms again to determine 'imported' observables
   int i = 0;
-  RooArgSet *normDeps, *allDeps;
+  RooArgSet *normDeps;
   for (RooFIter lIter = termList.fwdIterator(),
-      ldIter = normList.fwdIterator(),
-      laIter = depAllList.fwdIterator();
+      ldIter = normList.fwdIterator();
       (normDeps = (RooArgSet*) ldIter.next(),
-       allDeps = (RooArgSet*) laIter.next(),
        term=(RooArgSet*)lIter.next()); ++i) {
     // Make list of wholly imported dependents
-    RooArgSet impDeps(*allDeps);
+    RooArgSet impDeps(depAllList[i]);
     impDeps.remove(*normDeps, kTRUE, kTRUE);
     impDepList.Add(impDeps.snapshot());
 //     cout << GetName() << ": list of imported dependents for term " << (*term) << " set to " << impDeps << endl ;
@@ -738,8 +728,6 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 //     cout << GetName() << ": list of cross dependents for term " << (*term) << " set to " << *crossDeps << endl ;
     delete crossDeps;
   }
-
-  depAllList.Delete();
 
   return;
 }
