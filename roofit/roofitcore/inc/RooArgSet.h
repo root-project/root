@@ -21,7 +21,11 @@
 
 class RooArgList ;
 
-
+// Use a memory pool for RooArgSet.
+// RooFit assumes (e.g. for caching results) that arg sets that have the same pointer have
+// the same contents. Trying to remove that memory pool lead to wrong results, because the
+// OS *occasionally* returns the same address, and the caching goes wrong.
+// It's hard to track down, so disable this only when e.g. looking for memory leaks!
 #define USEMEMPOOLFORARGSET
 template <class RooSet_t, size_t>
 class MemPoolForRooSets;
