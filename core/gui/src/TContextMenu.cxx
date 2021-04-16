@@ -161,7 +161,7 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
 #endif
             } else {
 #ifndef WIN32
-               Execute(object, method, Form("(TObject*)0x%zx",(Long_t)fSelectedObject));
+               Execute(object, method, Form("(TObject*)0x%zx",(size_t)fSelectedObject));
 #else
                // It is a workaround of the "Dead lock under Windows
                char *cmd = Form("((TContextMenu *)0x%zx)->Execute((TObject *)0x%zx,"
