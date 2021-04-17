@@ -122,7 +122,7 @@ void TToggle::Toggle()
          fValue=( (fValue==fOnValue) ? fOffValue:fOnValue);
          fState=(!(fValue!=fOnValue));
          char stringon[20];
-         snprintf(stringon,sizeof(stringon),"%li",fValue);
+         snprintf(stringon,sizeof(stringon),"%zi",(size_t)fValue);
          fSetter->Execute(fObject, stringon);
       }
    }

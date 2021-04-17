@@ -263,6 +263,6 @@ public:
    ClassDefOverride(TWinNTSystem, 0)
 };
 
-R__EXTERN ULong_t gConsoleWindow;   // console window handle
+R__EXTERN ULongptr_t gConsoleWindow;   // console window handle
 
 #endif

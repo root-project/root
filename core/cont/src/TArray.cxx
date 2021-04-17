@@ -29,7 +29,7 @@ ClassImp(TArray);
 
 Bool_t TArray::OutOfBoundsError(const char *where, Int_t i) const
 {
-   ::Error(where, "index %d out of bounds (size: %d, this: 0x%lx)", i, fN, (Long_t)this);
+   ::Error(where, "index %d out of bounds (size: %d, this: 0x%zx)", i, fN, (size_t)this);
    return kFALSE;
 }
 

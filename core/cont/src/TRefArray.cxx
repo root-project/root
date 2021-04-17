@@ -336,7 +336,7 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
 {
    if (!obj) return;
    if (idx < fLowerBound) {
-      Error("AddAt", "out of bounds at %d in %lx", idx, (Long_t)this);
+      Error("AddAt", "out of bounds at %d in %zx", idx, (size_t)this);
       return;
    }
    if (idx-fLowerBound >= fSize)
@@ -528,7 +528,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       R__b >> pidf;
       pidf += R__b.GetPidOffset();
       fPID = R__b.ReadProcessID(pidf);
-      if (gDebug > 1) printf("Reading TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
+      if (gDebug > 1) printf("Reading TRefArray, pidf=%d, fPID=%zx, nobjects=%d\n",pidf,(size_t)fPID,nobjects);
       for (Int_t i = 0; i < nobjects; i++) {
          R__b >> fUIDs[i];
          if (fUIDs[i] != 0) fLast = i;
@@ -549,7 +549,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       R__b << fLowerBound;
       pidf = R__b.WriteProcessID(fPID);
       R__b << pidf;
-      if (gDebug > 1) printf("Writing TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
+      if (gDebug > 1) printf("Writing TRefArray, pidf=%d, fPID=%zx, nobjects=%d\n",pidf,(size_t)fPID,nobjects);
 
       for (Int_t i = 0; i < nobjects; i++) {
          R__b << fUIDs[i];
@@ -713,7 +713,7 @@ TIterator *TRefArray::MakeIterator(Bool_t dir) const
 
 Bool_t TRefArray::OutOfBoundsError(const char *where, Int_t i) const
 {
-   Error(where, "index %d out of bounds (size: %d, this: 0x%lx)", i, fSize, (Long_t)this);
+   Error(where, "index %d out of bounds (size: %d, this: 0x%zx)", i, fSize, (size_t)this);
    return kFALSE;
 }
 

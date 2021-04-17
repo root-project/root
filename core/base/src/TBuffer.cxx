@@ -248,7 +248,7 @@ void TBuffer::Expand(Int_t newsize, Bool_t copy)
       } else if (fReAllocFunc == R__NoReAllocChar) {
          Fatal("Expand","Failed to expand the data buffer because TBuffer does not own it and no custom memory reallocator was provided.");
       } else {
-         Fatal("Expand","Failed to expand the data buffer using custom memory reallocator 0x%lx.", (Long_t)fReAllocFunc);
+         Fatal("Expand","Failed to expand the data buffer using custom memory reallocator 0x%zx.", (size_t)fReAllocFunc);
       }
    }
    fBufSize = newsize;

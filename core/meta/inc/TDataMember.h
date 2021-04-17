@@ -39,7 +39,7 @@ private:
    TClass             *fClass;        //!pointer to the class
    TDataType          *fDataType;     //!pointer to data basic type descriptor
 
-   Long_t              fOffset;       //offset
+   Longptr_t           fOffset;       //offset
    Int_t               fSTLCont;      //STL type
    Long_t              fProperty;     //Property
    Int_t               fArrayDim;     //Number of array dimensions
@@ -74,8 +74,8 @@ public:
    Int_t          GetMaxIndex(Int_t dim) const;
    TClass        *GetClass() const { return fClass; }
    TDataType     *GetDataType() const { return fDataType; } //only for basic type
-   Long_t         GetOffset() const;
-   Long_t         GetOffsetCint() const;
+   Longptr_t      GetOffset() const;
+   Longptr_t      GetOffsetCint() const;
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
    const char    *GetTrueTypeName() const;

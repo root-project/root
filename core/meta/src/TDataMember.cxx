@@ -431,7 +431,7 @@ const char *TDataMember::GetTrueTypeName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Get offset from "this".
 
-Long_t TDataMember::GetOffset() const
+Longptr_t TDataMember::GetOffset() const
 {
    if (fOffset>=0) return fOffset;
 
@@ -480,7 +480,7 @@ Long_t TDataMember::GetOffset() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Get offset from "this" using the information in CINT only.
 
-Long_t TDataMember::GetOffsetCint() const
+Longptr_t TDataMember::GetOffsetCint() const
 {
    if (fOffset>=0) return fOffset;
 

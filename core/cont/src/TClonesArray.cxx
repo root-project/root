@@ -908,7 +908,7 @@ void TClonesArray::Streamer(TBuffer &b)
 TObject *&TClonesArray::operator[](Int_t idx)
 {
    if (idx < 0) {
-      Error("operator[]", "out of bounds at %d in %lx", idx, (Long_t)this);
+      Error("operator[]", "out of bounds at %d in %zx", idx, (size_t)this);
       return fCont[0];
    }
    if (!fClass) {
@@ -942,7 +942,7 @@ TObject *&TClonesArray::operator[](Int_t idx)
 TObject *TClonesArray::operator[](Int_t idx) const
 {
    if (idx < 0 || idx >= fSize) {
-      Error("operator[]", "out of bounds at %d in %lx", idx, (Long_t)this);
+      Error("operator[]", "out of bounds at %d in %zx", idx, (size_t)this);
       return 0;
    }
 
@@ -956,7 +956,7 @@ TObject *TClonesArray::operator[](Int_t idx) const
 TObject *TClonesArray::New(Int_t idx)
 {
    if (idx < 0) {
-      Error("New", "out of bounds at %d in %lx", idx, (Long_t)this);
+      Error("New", "out of bounds at %d in %zx", idx, (size_t)this);
       return 0;
    }
    if (!fClass) {

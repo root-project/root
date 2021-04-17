@@ -496,7 +496,7 @@ void TRef::Streamer(TBuffer &R__b)
          fPID = pid;
          SetUniqueID(number);
          if (gDebug > 1) {
-            printf("Reading TRef (HasUUID) uid=%d, obj=%lx\n",GetUniqueID(),(Long_t)GetObject());
+            printf("Reading TRef (HasUUID) uid=%d, obj=%zx\n",GetUniqueID(),(size_t)GetObject());
          }
       } else {
          R__b >> pidf;
@@ -509,7 +509,7 @@ void TRef::Streamer(TBuffer &R__b)
          Int_t execid = R__b.GetTRefExecId();
          if (execid) SetBit(execid<<16);
          if (gDebug > 1) {
-            printf("Reading TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
+            printf("Reading TRef, pidf=%d, fPID=%zx, uid=%d, obj=%zx\n",pidf,(size_t)fPID,GetUniqueID(),(size_t)GetObject());
          }
       }
    } else {
@@ -519,13 +519,13 @@ void TRef::Streamer(TBuffer &R__b)
          TObjString *objs = gROOT->GetUUIDs()->FindUUID(GetUniqueID());
          objs->String().Streamer(R__b);
          if (gDebug > 1) {
-            printf("Writing TRef (HasUUID) uid=%d, obj=%lx\n",GetUniqueID(),(Long_t)GetObject());
+            printf("Writing TRef (HasUUID) uid=%d, obj=%zx\n",GetUniqueID(),(size_t)GetObject());
          }
       } else {
          pidf = R__b.WriteProcessID(fPID);
          R__b << pidf;
          if (gDebug > 1) {
-            printf("Writing TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
+            printf("Writing TRef, pidf=%d, fPID=%zx, uid=%d, obj=%zx\n",pidf,(size_t)fPID,GetUniqueID(),(size_t)GetObject());
          }
       }
    }
