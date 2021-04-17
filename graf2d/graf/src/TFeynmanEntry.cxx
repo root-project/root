@@ -4,9 +4,15 @@
 
 ClassImp(TFeynmanEntry);
 
+/** \class TFeynmanEntry
+\ingroup BasicGraphics
+
+  Storage Class for TFeynman
+*/
+
 
 ///////////////////////////////////////////////////////////////////////////////
-///
+/// Constructor
 
 TFeynmanEntry::TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelX, Double_t labelY, const char* label) {
    fX1 = x1;
@@ -21,7 +27,7 @@ TFeynmanEntry::TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1,
 
 
 ///////////////////////////////////////////////////////////////////////////////
-///
+/// Paint Method 
 
 void TFeynmanEntry::Paint( Option_t* option )
 {

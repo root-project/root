@@ -22,36 +22,39 @@ ClassImp(TFeynman);
 // Author: Advait Dhingra and Oliver Couet   12/04/2021
 
 /** \class TFeynman
-    \ingroup feynman
+    \ingroup BasicGraphics
 TFeynman is a class that makes it easier to make
 good-looking Feynman Diagrams using ROOT components
 like TArc and TArrow.
 ### Decleration / Access to the components
-TFeynman is initialized with the width and the height
-of the Canvas that you would like.
+To initialize TFeynman:
 ~~~
-  TFeynman *f = new TFeynman(300, 600);
+  TFeynman *f = new TFeynman();
 ~~~
-You can access the particle classes using an arrow pointer.
-This example plots the feynman.C diagram in the tutorials:
+Here is an example of how TFeynman can be used:
 ~~~
-  f->Lepton(10, 10, 30, 30, 7, 6, "e", true)->Draw();
-  f->Lepton(10, 50, 30, 30, 5, 55, "e", false)->Draw();
-  f->CurvedPhoton(30, 30, 12.5*sqrt(2), 135, 225, 7, 30)->Draw();
-  f->Photon(30, 30, 55, 30, 42.5, 37.7)->Draw();
-  f->QuarkAntiQuark(70, 30, 15, 55, 45, "q")->Draw();
-  f->Gluon(70, 45, 70, 15, 77.5, 30)->Draw();
-  f->WeakBoson(85, 30, 110, 30, 100, 37.5, "Z^{0}")->Draw();
-  f->Quark(110, 30, 130, 50, 135, 55, "q", true)->Draw();
-  f->Quark(110, 30, 130, 10, 135, 6, "q", false)->Draw();
-  f->CurvedGluon(110, 30, 12.5*sqrt(2), 315, 45, 135, 30)->Draw();
+TCanvas *c1 = new TCanvas();
+TFeynman *f = new TFeynman();
+
+// proton decay (beta minus)
+
+f->AddItem("fermion", 10, 10, 30, 30, 5, 6, "d");
+f->AddItem("fermion", 30, 30, 10, 50, 5, 50, "d");
+f->AddItem("fermion", 15, 10, 35, 30, 10, 6, "u");
+f->AddItem("fermion", 35, 30, 15, 50, 12, 50, "u");
+f->AddItem("fermion", 20, 10, 40, 30, 15, 6, "u");
+f->AddItem("fermion", 40, 30, 20, 50, 17, 50, "d");
+f->AddItem("boson", 40, 30, 70, 30, 55, 35, "W^{+}");
+f->AddItem("anti-fermion", 70, 30, 90, 50, 95, 55, "e^{+}");
+f->AddItem("fermion", 70, 30, 90, 10, 85, 5, "#bar{#nu}");
+f->Draw();
 ~~~
 
 */
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Constructor
 
 TFeynman::TFeynman() : TAttLine(){
    gStyle->SetLineWidth(2);
@@ -61,7 +64,7 @@ TFeynman::TFeynman() : TAttLine(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Add a particle to TFeynman
 
 TFeynmanEntry *TFeynman::AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelX, Double_t labelY, const char* label)
 {
@@ -83,7 +86,7 @@ void TFeynman::Draw( Option_t *option )
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Paint Method 
 
 void TFeynman::Paint( Option_t* option )
 {
