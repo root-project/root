@@ -23,7 +23,7 @@
 #include <climits>
 
 // Basic GUI types
-typedef ULong_t            Handle_t;     ///< Generic resource handle
+typedef ULongptr_t         Handle_t;     ///< Generic resource handle
 typedef Handle_t           Display_t;    ///< Display handle
 typedef Handle_t           Visual_t;     ///< Visual handle
 typedef Handle_t           Window_t;     ///< Window handle
@@ -184,7 +184,7 @@ struct Event_t {
    Bool_t      fSendEvent;         ///< true if event came from SendEvent
    Handle_t    fHandle;            ///< general resource handle (used for atoms or windows)
    Int_t       fFormat;            ///< Next fields only used by kClientMessageEvent
-   Long_t      fUser[5];           ///< 5 longs can be used by client message events
+   Longptr_t   fUser[5];           ///< 5 longs can be used by client message events
                                    ///< NOTE: only [0], [1] and [2] may be used.
                                    ///< [1] and [2] may contain >32 bit quantities
                                    ///< (i.e. pointers on 64 bit machines)
