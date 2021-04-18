@@ -124,7 +124,7 @@ Text attributes can be also changed individually on each legend entry:
    le->SetTextColor(kBlue);;
 ~~~
 
-Note that the `TPad` class has a method to automatically build a legend
+Note that the `TPad` class has a method to build automatically a legend
 for all objects in the pad. It is called `TPad::BuildLegend()`.
 
 Each item in the legend is added using the `AddEntry` method. This
