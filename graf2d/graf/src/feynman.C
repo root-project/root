@@ -1,4 +1,5 @@
-#include "TFeynman.h"
+#include "TFeynman.cxx"
+#include "TFeynmanEntry.cxx"
 
 void feynman()
 {
@@ -6,8 +7,6 @@ void feynman()
     TFeynman *f = new TFeynman();
 
     f->AddItem("fermion", 10, 10, 30, 30);
-
-    f->Paint();
 
     f->Draw();
 }
