@@ -1779,7 +1779,7 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname,
 
   if (mode && mode->InheritsFrom(RooHistFunc::Class())) {
     obs = (RooRealVar *)(dynamic_cast<RooHistFunc *>(inputExample)
-                             ->getObservables()
+                             ->getHistObsList()
                              .first());
     obsExists = true;
     this->_observables.add(*obs);
