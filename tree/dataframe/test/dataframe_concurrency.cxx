@@ -57,33 +57,35 @@ TEST(RDFConcurrency, NestedParallelismBetweenDefineCalls)
 // [DF] Warn on mismatch between slot pool size and effective number of slots
 TEST(RDFSimpleTests, ThrowOnPoolSizeMismatch)
 {
+   const unsigned int nslots = std::min(3u, std::thread::hardware_concurrency());
+
    // pool created after RDF
-   {
+   if (nslots > 1) {
       ROOT::RDataFrame df(1);
-      ROOT::EnableImplicitMT(3);
+      ROOT::EnableImplicitMT(nslots);
       try {
          df.Count().GetValue();
       } catch (const std::runtime_error &e) {
          const auto expected_msg = "RLoopManager::Run: when the RDataFrame was constructed the number of slots required "
-                                   "was 1, but when starting the event loop it was 3. Maybe EnableImplicitMT() was "
+                                   "was 1, but when starting the event loop it was " + std::to_string(nslots) + ". Maybe EnableImplicitMT() was "
                                    "called after the RDataFrame was constructed?";
-         EXPECT_STREQ(e.what(), expected_msg);
+         EXPECT_STREQ(e.what(), expected_msg.c_str());
       }
       ROOT::DisableImplicitMT();
    }
 
    // pool deleted after RDF creation
-   {
-      ROOT::EnableImplicitMT(3);
+   if (nslots > 1) {
+      ROOT::EnableImplicitMT(nslots);
       ROOT::RDataFrame df(1);
       ROOT::DisableImplicitMT();
       try {
          df.Count().GetValue();
       } catch (const std::runtime_error &e) {
          const auto expected_msg = "RLoopManager::Run: when the RDataFrame was constructed the number of slots required "
-                                   "was 3, but when starting the event loop it was 1. Maybe DisableImplicitMT() was "
+                                   "was " + std::to_string(nslots) + ", but when starting the event loop it was 1. Maybe DisableImplicitMT() was "
                                    "called after the RDataFrame was constructed?";
-         EXPECT_STREQ(e.what(), expected_msg);
+         EXPECT_STREQ(e.what(), expected_msg.c_str());
       }
    }
 }

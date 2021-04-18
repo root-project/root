@@ -7,6 +7,8 @@
 
 #include "gtest/gtest.h"
 
+#include <thread>
+
 using namespace ROOT;
 using namespace ROOT::RDF;
 
@@ -351,9 +353,10 @@ TEST(RDataFrameInterface, GetNSlots)
    ROOT::RDataFrame df0(1);
    EXPECT_EQ(1U, df0.GetNSlots());
 #ifdef R__USE_IMT
-   ROOT::EnableImplicitMT(3);
+   unsigned int nslots = std::min(3U, std::thread::hardware_concurrency());
+   ROOT::EnableImplicitMT(nslots);
    ROOT::RDataFrame df3(1);
-   EXPECT_EQ(3U, df3.GetNSlots());
+   EXPECT_EQ(nslots, df3.GetNSlots());
    ROOT::DisableImplicitMT();
    ROOT::RDataFrame df1(1);
    EXPECT_EQ(1U, df1.GetNSlots());
