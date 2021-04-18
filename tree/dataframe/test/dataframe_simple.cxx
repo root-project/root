@@ -28,7 +28,7 @@ using namespace ROOT::VecOps;
 // Fixture for all tests in this file. If parameter is true, run with implicit MT, else run sequentially
 class RDFSimpleTests : public ::testing::TestWithParam<bool> {
 protected:
-   RDFSimpleTests() : NSLOTS(GetParam() ? 4u : 1u)
+   RDFSimpleTests() : NSLOTS(GetParam() ? std::min(4u, std::thread::hardware_concurrency()) : 1u)
    {
       if (GetParam())
          ROOT::EnableImplicitMT(NSLOTS);
