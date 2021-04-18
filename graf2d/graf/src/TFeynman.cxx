@@ -60,6 +60,10 @@ TFeynman::TFeynman() : TAttLine(){
    gStyle->SetLineWidth(2);
    if (gPad)
       gPad->Range(0, 0, 140, 60);
+   else {
+      Error("TFeynman::TFeynman()", "Error. You need to create a canvas or gPad first.");
+      return;
+   };
    fPrimitives = new TList;
 }
 
@@ -86,7 +90,7 @@ void TFeynman::Draw( Option_t *option )
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint Method 
+/// Paint Method
 
 void TFeynman::Paint( Option_t* option )
 {
