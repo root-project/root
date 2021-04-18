@@ -1,3 +1,14 @@
+// @(#)root/graf:$Id$
+// Author: Advait Dhingra and Oliver Couet 18/04/21
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <cstdio>
 #include <iostream>
 #include "../inc/TFeynmanEntry.h"
@@ -27,7 +38,7 @@ TFeynmanEntry::TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1,
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Paint Method 
+/// Paint Method
 
 void TFeynmanEntry::Paint( Option_t* option )
 {
