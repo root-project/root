@@ -1,7 +1,15 @@
 # libAferImage CMakeLists.txt
 
 PROJECT(AFTERIMAGE)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0)
+if(MSVC)
+  # required for the following feature & bug fix:
+  # 3.15: Added $<REMOVE_DUPLICATES:list> generator expression
+  # 3.16: Bug fix with CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS: the auto-generated exports
+  #       are now updated only when the object files providing the symbols are updated
+  cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+else()
+  cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+endif()
 
 SET(LIB_NAME libAfterImage)
 
