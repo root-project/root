@@ -66,14 +66,14 @@ void TFeynmanEntry::Paint( Option_t* option )
    else if (particleName == std::string("boson")) {
      TCurlyLine *boson = new TCurlyLine(x1, y1, x2, y2);
      boson->SetWavy();
-     boson->Draw();
+     boson->Paint();
 
      TLatex *t = new TLatex(fLabelX, fLabelY, fLabel);
      t->Paint();
    }
    else if (particleName == std::string("gluon")) {
      TCurlyLine *gluon = new TCurlyLine(x1, y1, x2, y2);
-     gluon->Draw();
+     gluon->Paint();
 
      TLatex *t = new TLatex(fLabelX, fLabelY, fLabel);
      t->Paint();
