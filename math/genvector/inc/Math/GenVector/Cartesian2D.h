@@ -89,7 +89,7 @@ public :
    Scalar X()     const { return fX;}
    Scalar Y()     const { return fY;}
    Scalar Mag2()  const { return fX*fX + fY*fY; }
-   Scalar R() const { return sqrt(Mag2()); }
+   Scalar R() const { return std::sqrt(Mag2()); }
    Scalar Phi() const { return (fX == Scalar(0) && fY == Scalar(0)) ? Scalar(0) : atan2(fY, fX); }
 
    /**

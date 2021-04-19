@@ -181,11 +181,11 @@ public :
    Scalar M() const    {
       const Scalar mm = M2();
       if (mm >= 0) {
-         return sqrt(mm);
+         return std::sqrt(mm);
       } else {
          GenVector::Throw ("PtEtaPhiE4D::M() - Tachyonic:\n"
                            "    Pt and Eta give P such that P^2 > E^2, so the mass would be imaginary");
-         return -sqrt(-mm);
+         return -std::sqrt(-mm);
       }
    }
    Scalar Mag() const    { return M(); }
@@ -207,11 +207,11 @@ public :
    Scalar Mt() const {
       const Scalar mm = Mt2();
       if (mm >= 0) {
-         return sqrt(mm);
+         return std::sqrt(mm);
       } else {
          GenVector::Throw ("PtEtaPhiE4D::Mt() - Tachyonic:\n"
                            "    Pt and Eta give Pz such that Pz^2 > E^2, so the mass would be imaginary");
-         return -sqrt(-mm);
+         return -std::sqrt(-mm);
       }
    }
 
@@ -421,4 +421,3 @@ inline void PtEtaPhiE4D<ScalarType>::SetM(Scalar m) {
 
 
 #endif // ROOT_Math_GenVector_PtEtaPhiE4D
-

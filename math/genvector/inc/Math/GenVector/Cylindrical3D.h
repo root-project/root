@@ -123,7 +123,7 @@ public:
    Scalar Y() const { return fRho * sin(fPhi); }
 
    Scalar Mag2()  const { return fRho*fRho + fZ*fZ;   }
-   Scalar R() const { return sqrt(Mag2()); }
+   Scalar R() const { return std::sqrt(Mag2()); }
    Scalar Perp2() const { return fRho*fRho;           }
    Scalar Theta() const { return (fRho == Scalar(0) && fZ == Scalar(0)) ? Scalar(0) : atan2(fRho, fZ); }
 

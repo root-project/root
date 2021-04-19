@@ -109,8 +109,8 @@ public :
    Scalar Z()     const { return fZ;}
    Scalar Mag2()  const { return fX*fX + fY*fY + fZ*fZ;}
    Scalar Perp2() const { return fX*fX + fY*fY ;}
-   Scalar Rho() const { return sqrt(Perp2()); }
-   Scalar R() const { return sqrt(Mag2()); }
+   Scalar Rho() const { return std::sqrt(Perp2()); }
+   Scalar R() const { return std::sqrt(Mag2()); }
    Scalar Theta() const { return atan2(Rho(), Z()); }
    Scalar Phi() const { return atan2(fY, fX); }
 

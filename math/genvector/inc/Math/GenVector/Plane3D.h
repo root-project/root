@@ -216,7 +216,7 @@ protected:
    void Normalize()
    {
       // normalize the plane
-      const SCALAR s = sqrt(fA * fA + fB * fB + fC * fC);
+      const SCALAR s = std::sqrt(fA * fA + fB * fB + fC * fC);
       // what to do if s = 0 ?
       if (s == SCALAR(0)) {
          fD = SCALAR(0);
@@ -236,7 +236,7 @@ protected:
    void Normalize()
    {
       // normalize the plane
-      SCALAR s = sqrt(fA * fA + fB * fB + fC * fC);
+      SCALAR s = std::sqrt(fA * fA + fB * fB + fC * fC);
       // what to do if s = 0 ?
       const auto m = (s == SCALAR(0));
       // set zero entries to 1 in the vector to avoid /0 later on
@@ -308,7 +308,3 @@ private:
 
 
 #endif
-
-
-
-

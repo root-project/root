@@ -190,7 +190,7 @@ public :
    /**
        Energy (timelike component of momentum-energy 4-vector)
    */
-   Scalar E() const { return sqrt(E2()); }
+   Scalar E() const { return std::sqrt(E2()); }
 
    Scalar T()   const { return E();  }
 
@@ -220,11 +220,11 @@ public :
    Scalar Mt() const {
       const Scalar mm = Mt2();
       if (mm >= 0) {
-         return sqrt(mm);
+         return std::sqrt(mm);
       } else {
          GenVector::Throw  ("PtEtaPhiM4D::Mt() - Tachyonic:\n"
                             "    Pz^2 > E^2 so the transverse mass would be imaginary");
-         return -sqrt(-mm);
+         return -std::sqrt(-mm);
       }
    }
 
@@ -437,4 +437,3 @@ void PtEtaPhiM4D<ScalarType>::SetE(Scalar energy) {
 
 
 #endif // ROOT_Math_GenVector_PtEtaPhiM4D
-
