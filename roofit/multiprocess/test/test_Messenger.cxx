@@ -87,3 +87,30 @@ TEST(TestMPMessenger, SigStop)
       while (!pm.sigterm_received()) {}
    }
 }
+
+TEST(TestMPMessenger, StressPubSub)
+{
+   std::size_t N_workers = 64;
+   RooFit::MultiProcess::ProcessManager pm(N_workers);
+   RooFit::MultiProcess::Messenger messenger(pm);
+
+   if (pm.is_master()) {
+      messenger.publish_from_master_to_workers("bert");
+      std::size_t ernies = 0;
+      for (; ernies < N_workers; ++ernies) {
+         auto receipt = messenger.receive_from_worker_on_master<std::string>();
+         if (receipt != "ernie") {
+            printf("whoops, got %s instead of ernie!\n", receipt.c_str());
+            FAIL();
+         }
+      }
+      EXPECT_EQ(ernies, N_workers);
+   } else if (pm.is_worker()) {
+      auto receipt = messenger.receive_from_master_on_worker<std::string>();
+      if (receipt == "bert") {
+         messenger.send_from_worker_to_master("ernie");
+      } else {
+         printf("no bert on worker %lu\n", pm.worker_id());
+      }
+   }
+}
