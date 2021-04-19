@@ -2,7 +2,7 @@
 
 Here is the format of the DATA for a TObject object in Release 3.02.06.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
 --------
   0->1  Version   = Version of TObject Class
   2->5  fUniqueID = Unique ID of object.  Currently, unless this object is or was

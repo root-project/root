@@ -4,7 +4,7 @@
 Format of TProcessID record in release 3.02.06.
 Will be present if there are any referenced objects.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
  ----------TKey---------------
    byte 0->3  Nbytes   = Number of bytes in compressed record (Tkey+data)   TKey::fNbytes
         4->5  Version  = TKey class version identifier                      TKey::fVersion
@@ -64,7 +64,7 @@ ROOTIO process that created it.  It is derived from the following quantities.
      no larger than 255.
 
 We the define the following quantities (class TUUID):
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
         UInt_t    fTimeLow;               // 60 bit time, lowest 32 bits
         UShort_t  fTimeMid;               // 60 bit time, middle 16 bits
         UShort_t  fTimeHiAndVersion;      // 60 bit time, highest 12 time bits (low 12 bits)
@@ -78,7 +78,7 @@ We the define the following quantities (class TUUID):
 </pre></div>
 
 Then the following sprintf() call defines the format of the title string:
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
    sprintf(Title, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
            fTimeLow, fTimeMid, fTimeHiAndVersion, fClockSeqHiAndReserved,
            fClockSeqLow, fNode[0], fNode[1], fNode[2], fNode[3], fNode[4],
