@@ -7419,13 +7419,6 @@ void TH1::UseCurrentStyle()
 /// See TH1::GetStats.
 ///
 /// Return mean value of this histogram along the X axis.
-///
-/// Note that the mean value/StdDev is computed using the bins in the currently
-/// defined range (see TAxis::SetRange). By default the range includes
-/// all bins from 1 to nbins included, excluding underflows and overflows.
-/// To force the underflows and overflows in the computation, one must
-/// call the static function TH1::StatOverflows(kTRUE) before filling
-/// the histogram.
 
 Double_t TH1::GetMean(Int_t axis) const
 {
