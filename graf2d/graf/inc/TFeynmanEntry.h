@@ -16,6 +16,7 @@
 #include "TArrow.h"
 #include "TVirtualPad.h"
 #include "TLatex.h"
+#include "TCurlyLine.h"
 
 class TFeynmanEntry : public TObject {
     public:
