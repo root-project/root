@@ -617,3 +617,15 @@ TEST(RDataFrameInterface, Describe)
                      "myFloat                 Float_t                         Dataset";
    EXPECT_EQ(df3.Describe(), ref2);
 }
+
+// https://sft.its.cern.ch/jira/browse/ROOT-9558
+TEST(RDFSimpleTests, LeafWithDifferentNameThanBranch)
+{
+   TTree t("t", "t");
+   int x = 42;
+   t.Branch("x", &x, "y/I");
+   t.Fill();
+
+   auto m = ROOT::RDataFrame(t).Max<int>("x");
+   EXPECT_EQ(*m, 42);
+}
