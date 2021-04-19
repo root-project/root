@@ -17,5 +17,6 @@ void feynman()
   f->AddItem("boson", 40, 30, 70, 30, 55, 35, "W^{+}");
   f->AddItem("anti-fermion", 70, 30, 90, 50, 95, 55, "e^{+}");
   f->AddItem("fermion", 70, 30, 90, 10, 85, 5, "#bar{#nu}");
+  f->AddPair("q", 50, 50, 12);
   f->Draw();
 }

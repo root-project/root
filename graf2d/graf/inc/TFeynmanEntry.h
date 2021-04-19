@@ -21,6 +21,7 @@
 class TFeynmanEntry : public TObject {
     public:
         TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelX, Double_t labelY, const char* label);
+        TFeynmanEntry(const char *particleLabel, Double_t x, Double_t y, Double_t radius);
         virtual const char   *GetParticleName() const { return fParticle.Data(); }
         virtual Double_t GetX1()  {return fX1;}
         virtual Double_t GetY1()  {return fY1;}
@@ -36,5 +37,6 @@ class TFeynmanEntry : public TObject {
         Double_t     fLabelX;
         Double_t     fLabelY; ///< Position of the label
         TString      fLabel; ///< Label to be displayed
+        Double_t     fRadius; ///< Radius for particle pairs
 };
 #endif

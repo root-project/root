@@ -23,7 +23,7 @@ ClassImp(TFeynmanEntry);
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Constructor
+/// Constructors
 
 TFeynmanEntry::TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelX, Double_t labelY, const char* label) {
    fX1 = x1;
@@ -34,6 +34,15 @@ TFeynmanEntry::TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1,
    fLabelY = labelY;
    fParticle = particleName;
    fLabel = label;
+}
+
+TFeynmanEntry::TFeynmanEntry(const char *particleLabel, Double_t x, Double_t y, Double_t radius) {
+  fX1 = x;
+  fY1 = y;
+  fRadius = radius;
+  fParticle = "pair";
+
+
 }
 
 
@@ -77,6 +86,10 @@ void TFeynmanEntry::Paint( Option_t* option )
 
      TLatex *t = new TLatex(fLabelX, fLabelY, fLabel);
      t->Paint();
+   }
+   else if (particleName == std::string("pair")) {
+     TArc *particlePair = new TArc(fX1, fY1, fRadius);
+     particlePair->Paint();
    }
    else{
      Error("TFeynmanEntry::Paint()", "Invalid Particle!");

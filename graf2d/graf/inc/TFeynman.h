@@ -26,6 +26,7 @@ public:
    TFeynman();
 
    TFeynmanEntry *AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelX, Double_t labelY, const char* label);
+   TFeynmanEntry *AddPair(const char *particleLabel, Double_t x, Double_t y, Double_t radius);
 
    virtual void   Draw( Option_t* option = "" );
    virtual void   Paint( Option_t* option = "" );

@@ -90,6 +90,16 @@ TFeynmanEntry *TFeynman::AddItem(const char* particleName, Double_t x1, Double_t
    return newEntry;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a particle pair to TFeynman
+TFeynmanEntry *TFeynman::AddPair(const char *particleLabel, Double_t x, Double_t y, Double_t radius) {
+  TFeynmanEntry *newPairEntry = new TFeynmanEntry(particleLabel, x, y, radius);
+  if (!fPrimitives) fPrimitives = new TList;
+  fPrimitives->Add(newPairEntry);
+
+  return newPairEntry;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this Feynman's diagram with its current attributes.
