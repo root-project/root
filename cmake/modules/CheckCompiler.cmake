@@ -201,6 +201,19 @@ endif()
 
 
 #---Setup details depending on the major platform type----------------------------------------------
+
+function(ROOT_SET_CMAKE_COMPILER_FLAGS VARNAME FLAGS DOCSTRING)
+    # Don't set ROOT's defaults if it's overwritten, e.g. via setting CMAKE_CXX_FLAGS_DEBUG
+    # The *_INIT versions may have additional whitespaces.
+    STRING(STRIP ${${VARNAME}} COMPARE_VAR)
+    STRING(STRIP ${${VARNAME}_INIT} COMPARE_VAR_INIT)
+    if (COMPARE_VAR STREQUAL COMPARE_VAR_INIT)
+        set(${VARNAME} "${FLAGS}" CACHE STRING "${DOCSTRING}" FORCE)
+    else()
+        message(STATUS "Compiler flags for ${VARNAME} are not set to ROOT's default values because ${VARNAME} was explicitely set.")
+    endif()
+endfunction()
+
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
   include(SetUpLinux)
 elseif(APPLE)
