@@ -237,7 +237,7 @@ public :
 private:
    inline static Scalar pi() { return M_PI; }
    inline void Restrict() {
-      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - std::floor(fPhi / (2 * pi()) + .5) * 2 * pi();
    }
 public:
 
