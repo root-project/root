@@ -46,6 +46,10 @@ public:
          return AddHist(subpad, DrawBranchElement(obj), opt);
       });
 
+      RegisterDraw7(TBranch::Class(), [this](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
+         return AddHist(subpad, DrawBranch(obj), opt);
+      });
+
       RegisterDraw7(TVirtualBranchBrowsable::Class(), [this](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
          return AddHist(subpad, DrawBranchBrowsable(obj), opt);
       });

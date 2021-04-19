@@ -44,6 +44,8 @@ public:
       htemp->SetDirectory(nullptr);
       htemp->SetName(hname.c_str());
 
+      htemp->BufferEmpty();
+
       return htemp;
    }
 
@@ -54,6 +56,23 @@ public:
          return nullptr;
 
       return DrawTree(tleaf->GetBranch()->GetTree(), tleaf->GetName(), tleaf->GetName());
+   }
+
+   TH1 *DrawBranch(std::unique_ptr<RHolder> &obj)
+   {
+      auto tbranch = obj->get_object<TBranch>();
+      if (!tbranch)
+         return nullptr;
+
+      // there are many leaves, plain TTree::Draw does not work
+      if (tbranch->GetNleaves() > 1)
+         return nullptr;
+
+      TString name = tbranch->GetName();
+      Int_t pos = name.First('[');
+      if (pos!=kNPOS) name.Remove(pos);
+
+      return DrawTree(tbranch->GetTree(), name.Data(), name.Data());
    }
 
    TH1 *DrawBranchElement(std::unique_ptr<RHolder> &obj)
