@@ -428,6 +428,7 @@ public:
       RegisterTObject("TNtuple", "sap-icon://tree", true, 0);
       RegisterClass("TBranchElement", "sap-icon://e-care", "libROOTBranchBrowseProvider", "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
       RegisterClass("TLeaf", "sap-icon://e-care", ""s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
+      RegisterClass("TBranch", "sap-icon://e-care", ""s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
       RegisterClass("TVirtualBranchBrowsable", "sap-icon://e-care", ""s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
 
       RegisterTObject("TDirectory", "sap-icon://folder-blank", true, 0);

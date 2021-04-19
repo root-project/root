@@ -37,6 +37,10 @@ public:
          return AddHist(pad, DrawBranchElement(obj), opt);
       });
 
+      RegisterDraw6(TBranch::Class(), [this](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
+         return AddHist(pad, DrawBranch(obj), opt);
+      });
+
       RegisterDraw6(TVirtualBranchBrowsable::Class(), [this](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
          return AddHist(pad, DrawBranchBrowsable(obj), opt);
       });
