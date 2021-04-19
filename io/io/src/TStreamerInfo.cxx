@@ -1581,10 +1581,15 @@ namespace {
          TStreamerElement *f = (TStreamerElement*) info->GetElements()->At(0);
          TStreamerElement *s = (TStreamerElement*) info->GetElements()->At(1);
 
-         info = old->GetValueClass()->GetStreamerInfo();
-         assert(info->GetElements()->GetEntriesFast() == 2);
-         TStreamerElement *of = (TStreamerElement*) info->GetElements()->At(0);
-         TStreamerElement *os = (TStreamerElement*) info->GetElements()->At(1);
+         // Since we do not create TClass for pair of unknow types, old->GetValueClass can
+         // be nullptr even-though the type used be known.  An example of such change
+         // is `RooExpensiveObjectCache::ExpensiveObject` which used to be recorded
+         // as `ExpensiveObject` in the name of the map ... making it unknown
+         // (and this is precisely the type of change we are trying to handle here/below!)
+         info = old->GetValueClass() ? old->GetValueClass()->GetStreamerInfo() : nullptr;
+         assert(!info || info->GetElements()->GetEntriesFast() == 2);
+         TStreamerElement *of = info ? (TStreamerElement*) info->GetElements()->At(0) : nullptr;
+         TStreamerElement *os = info ? (TStreamerElement*) info->GetElements()->At(1) : nullptr;
 
          TClass *firstNewCl  = f ? f->GetClass() : 0;
          TClass *secondNewCl = s ? s->GetClass() : 0;
@@ -1602,6 +1607,12 @@ namespace {
             TClass *secondAltCl = secondOldCl;
             std::string firstNewName;
             std::string secondNewName;
+            if (!info && !firstOldCl) {
+               firstOldCl = TClass::GetClass(inside[1].c_str(), kTRUE, kTRUE);
+            }
+            if (!info && !secondOldCl) {
+               secondOldCl = TClass::GetClass(inside[2].c_str(), kTRUE, kTRUE);
+            }
             if (firstNewCl && !firstOldCl) {
                firstAltCl = FindAlternate(context, inside[1], firstNewName);
             } else if (firstAltCl) {
