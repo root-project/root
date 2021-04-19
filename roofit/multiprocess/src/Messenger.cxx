@@ -64,6 +64,25 @@ Messenger::Messenger(const ProcessManager &process_manager)
          wm_pull_poller.register_socket(*wm_pull, zmq::POLLIN);
 
          close_MQ_on_destruct_ = true;
+
+         // make sure all subscribers are connected
+         ZmqLingeringSocketPtr<> subscriber_ping_socket {zmqSvc().socket_ptr(zmq::REP)};
+         subscriber_ping_socket->bind("ipc:///tmp/roofitMP_subscriber_ping_socket");
+         ZeroMQPoller subscriber_ping_poller;
+         subscriber_ping_poller.register_socket(*subscriber_ping_socket, zmq::POLLIN);
+         std::size_t N_subscribers_confirmed = 0;
+         while (N_subscribers_confirmed < process_manager.N_workers()) {
+            zmqSvc().send(*mw_pub, false);
+            auto poll_results = subscriber_ping_poller.poll(0);
+            for (auto& poll_result : poll_results) {
+               auto request = zmqSvc().receive<std::string>(*subscriber_ping_socket, zmq::DONTWAIT);
+               assert(request == "present");
+               zmqSvc().send(*subscriber_ping_socket, "roger");
+               ++N_subscribers_confirmed;
+            }
+         }
+         zmqSvc().send(*mw_pub, true);
+
       } else if (process_manager.is_queue()) {
          // first the queue-worker sockets
          // do resize instead of reserve so that the unique_ptrs are initialized
@@ -139,6 +158,18 @@ Messenger::Messenger(const ProcessManager &process_manager)
          rc = zmq_setsockopt (*wm_push, ZMQ_SNDHWM, &hwm, sizeof hwm);
          assert (rc == 0);
          wm_push->connect("ipc:///tmp/roofitMP_from_workers_to_master");
+
+         // check publisher connection and then wait until all subscribers are connected
+         ZmqLingeringSocketPtr<> subscriber_ping_socket {zmqSvc().socket_ptr(zmq::REQ)};
+         subscriber_ping_socket->connect("ipc:///tmp/roofitMP_subscriber_ping_socket");
+         auto all_connected = zmqSvc().receive<bool>(*mw_sub);
+         zmqSvc().send(*subscriber_ping_socket, "present");
+         auto reply = zmqSvc().receive<std::string>(*subscriber_ping_socket);
+         assert(reply == "roger");
+
+         while (!all_connected) {
+            all_connected = zmqSvc().receive<bool>(*mw_sub);
+         }
 
          close_this_QW_on_destruct_ = true;
       } else {
