@@ -5,7 +5,7 @@ It is probably not accessed by its key, but from its offset given in the file he
 The StreamerInfo record DATA consists of a TList (list) object containing elements
 of class TStreamerInfo.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
  ----------TKey-(never compressed)----------------------
   byte 0->3  Nbytes    = Number of bytes in compressed record (TKey+data)         TKey::fNbytes
        4->5  Version   = TKey class version identifier                            TKey::fVersion
@@ -25,7 +25,7 @@ of class TStreamerInfo.
                        | ("Doubly linked list")
 </pre></div>
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
  ----------TList-(always compressed at level 1 (even if compression level 0))----
 </pre></div>
  The DATA is a TList collection object containing TStreamerInfo objects.
@@ -34,7 +34,7 @@ of class TStreamerInfo.
  Here is the format of a TList object in Release 3.02.06.
  Comments and offsets refer specifically to its use in the StreamerInfo record.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
 --------
       0->3  ByteCount = Number of remaining bytes in TList object (uncompressed)
                       |   OR'd with kByteCountMask (0x40000000)
@@ -58,7 +58,7 @@ of class TStreamerInfo.
  Note: Although TStreamerInfo does not use the default streamer, it has the same
  format as if it did.  (compare with \ref dobject)
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
       0->3  ByteCount = Number of remaining bytes in TStreamerInfo object (uncompressed)
                       |   OR'd with kByteCountMask (0x40000000)
       4->.. ClassInfo = Information about TStreamerInfo class
@@ -127,7 +127,7 @@ of class TStreamerInfo.
      which inherits directly from the TStreamerElement class.  The possible classes (which
      we refer to collectively as TStreamer<XXX>) are:
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
   TStreamerBase:          Used for a base class.  All others below used for data members.
   TStreamerBasicType:     For a basic type
   TStreamerString:        For type TString
@@ -144,7 +144,7 @@ of class TStreamerInfo.
  Here is the format of a TStreamer<XXX> object in Release 3.02.06.
  In description below,
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
      0->3  ByteCount = Number of remaining bytes in TStreamer<XXX> object (uncompressed)
                      |   OR'd with kByteCountMask (0x40000000)
      4->.. ClassInfo = Information about the specific TStreamer<XXX> class

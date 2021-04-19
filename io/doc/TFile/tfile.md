@@ -11,7 +11,7 @@ then these fields will be 8 instead of 4 bytes and 1000 is added to the TKey Ver
 If the SeekDir, SeekParent, or SeekKeys in the TDirectory header are past the 32 bit file limit,
 then these fields will be 8 instead of 4 bytes and 1000 is added to the TDirectory Version.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
  ----------TKey---------------
   byte 0->3           Nbytes    = Number of bytes compressed record (TKey+data)          TKey::fNbytes
        4->5           Version   = TKey class version identifier                          TKey::fVersion

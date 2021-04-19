@@ -4,7 +4,7 @@
   A ROOT file is mostly a suite of consecutive data records with the following format
  <Name>;<Cycle> uniquely identifies the record in a directory
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
  ----------TKey-(never compressed)--------------
   byte 0->3  Nbytes    = Number of bytes in compressed record (Tkey+data)   TKey::fNbytes
        4->5  Version   = TKey class version identifier                      TKey::fVersion
