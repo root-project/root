@@ -165,6 +165,21 @@ class PickleReadingComplicationsTestCase( MyTestCase ):
       f1 = TBufferFile( TBuffer.kWrite )
       f2 = pickle.loads( pickle.dumps( f1 ) )
 
+   def test3PickleFacadeCheck(self):
+      """Test serialization of the ROOT Python module.
+
+      This needs a custom __reduce__ method defined in the ROOTFacade class.
+      """
+
+      def get_root_facade():
+         return ROOT
+
+      facade = pickle.loads(pickle.dumps(get_root_facade()))
+
+      # Check attributes of the unserialized facade
+      self.assertEqual(facade.__name__, ROOT.__name__)
+      self.assertEqual(facade.__file__, ROOT.__file__)
+
 
 ## actual test run
 if __name__ == '__main__':
