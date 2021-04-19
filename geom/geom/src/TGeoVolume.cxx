@@ -1677,7 +1677,7 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
 char *TGeoVolume::GetPointerName() const
 {
    static TString name;
-   name = TString::Format("p%s_%lx", GetName(), (ULong_t)this);
+   name = TString::Format("p%s_%zx", GetName(), (size_t)this);
    return (char*)name.Data();
 }
 
