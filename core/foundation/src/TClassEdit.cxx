@@ -560,8 +560,9 @@ int   TClassEdit::STLArgs(int kind)
    static const char  stln[] =// min number of container arguments
       //     vector, list, deque, map, multimap, set, multiset, bitset,
       {    1,     1,    1,     1,   3,        3,   2,        2,      1,
-      // forward_list, unordered_set, unordered_multiset, unordered_map, unordered_multimap
-                    1,             3,                  3,             4,                  4};
+      // forward_list, unordered_set, unordered_multiset, unordered_map, unordered_multimap, ROOT::RVec
+                    1,             3,                  3,             4,                  4,          1};
+   assert(std::size_t(kind) < sizeof(stln) && "index is out of bounds");
 
    return stln[kind];
 }
