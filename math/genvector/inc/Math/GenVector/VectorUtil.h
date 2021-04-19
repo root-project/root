@@ -277,8 +277,8 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateX(const Vector & v, double alpha) {
-            double sina = sin(alpha);
-            double cosa = cos(alpha);
+            double sina = std::sin(alpha);
+            double cosa = std::cos(alpha);
             double y2 = v.Y() * cosa - v.Z()*sina;
             double z2 = v.Z() * cosa + v.Y() * sina;
             Vector vrot;
@@ -294,8 +294,8 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateY(const Vector & v, double alpha) {
-            double sina = sin(alpha);
-            double cosa = cos(alpha);
+            double sina = std::sin(alpha);
+            double cosa = std::cos(alpha);
             double x2 = v.X() * cosa + v.Z() * sina;
             double z2 = v.Z() * cosa - v.X() * sina;
             Vector vrot;
@@ -311,8 +311,8 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateZ(const Vector & v, double alpha) {
-            double sina = sin(alpha);
-            double cosa = cos(alpha);
+            double sina = std::sin(alpha);
+            double cosa = std::cos(alpha);
             double x2 = v.X() * cosa - v.Y() * sina;
             double y2 = v.Y() * cosa + v.X() * sina;
             Vector vrot;

@@ -119,8 +119,8 @@ public:
    Scalar Z()     const { return fZ;   }
    Scalar Phi()   const { return fPhi; }
 
-   Scalar X() const { return fRho * cos(fPhi); }
-   Scalar Y() const { return fRho * sin(fPhi); }
+   Scalar X() const { return fRho * std::cos(fPhi); }
+   Scalar Y() const { return fRho * std::sin(fPhi); }
 
    Scalar Mag2()  const { return fRho*fRho + fZ*fZ;   }
    Scalar R() const { return std::sqrt(Mag2()); }

@@ -207,8 +207,8 @@ public :
    Cartesian3D & operator = (const Polar3D<T2> & v)
    {
       const T rho = v.Rho();
-      fX          = rho * cos(v.Phi());
-      fY          = rho * sin(v.Phi());
+      fX          = rho * std::cos(v.Phi());
+      fY          = rho * std::sin(v.Phi());
       fZ = v.Z();
       return *this;
    }

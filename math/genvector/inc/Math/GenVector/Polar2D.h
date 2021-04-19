@@ -97,8 +97,8 @@ public :
 
    Scalar R()     const { return fR;}
    Scalar Phi()   const { return fPhi; }
-   Scalar X() const { return fR * cos(fPhi); }
-   Scalar Y() const { return fR * sin(fPhi); }
+   Scalar X() const { return fR * std::cos(fPhi); }
+   Scalar Y() const { return fR * std::sin(fPhi); }
    Scalar Mag2()  const { return fR*fR;}
 
 

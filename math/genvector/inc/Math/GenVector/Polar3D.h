@@ -110,10 +110,10 @@ public :
    Scalar R()     const { return fR;}
    Scalar Phi()   const { return fPhi; }
    Scalar Theta() const { return fTheta; }
-   Scalar Rho() const { return fR * sin(fTheta); }
-   Scalar X() const { return Rho() * cos(fPhi); }
-   Scalar Y() const { return Rho() * sin(fPhi); }
-   Scalar Z() const { return fR * cos(fTheta); }
+   Scalar Rho() const { return fR * std::sin(fTheta); }
+   Scalar X() const { return Rho() * std::cos(fPhi); }
+   Scalar Y() const { return Rho() * std::sin(fPhi); }
+   Scalar Z() const { return fR * std::cos(fTheta); }
    Scalar Mag2()  const { return fR*fR;}
    Scalar Perp2() const { return Rho() * Rho(); }
 

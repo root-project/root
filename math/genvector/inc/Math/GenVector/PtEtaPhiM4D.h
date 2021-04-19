@@ -150,12 +150,12 @@ public :
 
    // other coordinate representation
 
-   Scalar Px() const { return fPt * cos(fPhi); }
+   Scalar Px() const { return fPt * std::cos(fPhi); }
    Scalar X () const { return Px();         }
-   Scalar Py() const { return fPt * sin(fPhi); }
+   Scalar Py() const { return fPt * std::sin(fPhi); }
    Scalar Y () const { return Py();         }
    Scalar Pz() const {
-      return fPt > 0 ? fPt * sinh(fEta) : fEta == 0 ? 0 : fEta > 0 ? fEta - etaMax<Scalar>() : fEta + etaMax<Scalar>();
+      return fPt > 0 ? fPt * std::sinh(fEta) : fEta == 0 ? 0 : fEta > 0 ? fEta - etaMax<Scalar>() : fEta + etaMax<Scalar>();
    }
    Scalar Z () const { return Pz(); }
 
@@ -163,7 +163,7 @@ public :
        magnitude of momentum
    */
    Scalar P() const {
-      return fPt > 0 ? fPt * cosh(fEta)
+      return fPt > 0 ? fPt * std::cosh(fEta)
                      : fEta > etaMax<Scalar>() ? fEta - etaMax<Scalar>()
                                                : fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>() : 0;
    }
@@ -233,18 +233,18 @@ public :
    */
    Scalar Et2() const {
       // a bit faster than et * et
-      return 2. * E2() / (cosh(2 * fEta) + 1);
+      return 2. * E2() / (std::cosh(2 * fEta) + 1);
    }
 
    /**
       transverse energy
    */
-   Scalar Et() const { return E() / cosh(fEta); }
+   Scalar Et() const { return E() / std::cosh(fEta); }
 
 private:
    inline static Scalar pi() { return M_PI; }
    inline void RestrictPhi() {
-      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - std::floor(fPhi / (2 * pi()) + .5) * 2 * pi();
    }
    // restrict the value of negative mass to avoid unphysical negative E2 values
    // M2 must be less than P2 for the tachionic particles - otherwise use positive values
@@ -262,7 +262,7 @@ public:
    /**
       polar angle
    */
-   Scalar Theta() const { return (fPt > 0 ? Scalar(2) * atan(exp(-fEta)) : fEta >= 0 ? 0 : pi()); }
+   Scalar Theta() const { return (fPt > 0 ? Scalar(2) * std::atan(exp(-fEta)) : fEta >= 0 ? 0 : pi()); }
 
    // --------- Set Coordinates of this system  ---------------
 

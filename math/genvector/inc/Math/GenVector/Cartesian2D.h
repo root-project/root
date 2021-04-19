@@ -124,8 +124,8 @@ public :
        rotate by an angle
     */
    void Rotate(Scalar angle) {
-      const Scalar s = sin(angle);
-      const Scalar c = cos(angle);
+      const Scalar s = std::sin(angle);
+      const Scalar c = std::cos(angle);
       SetCoordinates(c * fX - s * fY, s * fX + c * fY);
    }
 
@@ -175,8 +175,8 @@ public :
    Cartesian2D & operator = (const Polar2D<T2> & v)
    {
       const Scalar r = v.R();
-      fX             = r * cos(v.Phi());
-      fY             = r * sin(v.Phi());
+      fX             = r * std::cos(v.Phi());
+      fY             = r * std::sin(v.Phi());
       return *this;
    }
 
