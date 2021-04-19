@@ -2,7 +2,7 @@
 
 Here is the format of the DATA for a TRefArray object in Release 3.02.06.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
 --------
        0->3  ByteCount = Number of remaining bytes in TRefArray object (uncompressed)
                        |   OR'd with kByteCountMask (0x40000000)

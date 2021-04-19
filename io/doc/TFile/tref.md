@@ -2,7 +2,7 @@
 
 Here is the format of the DATA for a TRef object in Release 3.02.06.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
 --------
   0->1  Version   = Version of TObject Class (base class of TRef)
   2->5  fUniqueID = Unique ID of referenced object.  Typically, every referenced

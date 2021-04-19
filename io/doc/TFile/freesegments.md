@@ -8,7 +8,7 @@ their fFirst/fLast have 8 bytes, not 4 and 1000 is added to the TFree Version.
 
 Some free segment records may be 32 bit while others are 64 bit.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
  ----------TKey---------------
   byte 0->3           Nbytes    = Number of bytes in compressed record (TKey+data)       TKey::fNbytes
        4->5           Version   = TKey class version identifier                          TKey::fVersion

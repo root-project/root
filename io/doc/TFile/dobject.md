@@ -5,7 +5,7 @@
 Here is the format of a class object in DATA that uses the default streamer.
 Objects of many classes with custom streamers can have very similar formats.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
 ----------------
   0->3  ByteCount = Number of remaining bytes in object (uncompressed)
         | OR'd with kByteCountMask (0x40000000)
@@ -24,7 +24,7 @@ Objects of many classes with custom streamers can have very similar formats.
  The rest consists of objects of base classes and persistent non-static data members.
  Data members marked as transient are not stored.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
   6->.. Sequentially, Objects of each base class from which this class is derived
     (rarely more than one)
   0->.. Sequentially, Objects of all non-static persistent data members.
@@ -32,7 +32,7 @@ Objects of many classes with custom streamers can have very similar formats.
 
  Class objects are broken down recursively as above.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
       Built in types are stored as follows:
  1 Byte: char, unsigned char
       2 Bytes: short, unsigned short

@@ -5,7 +5,7 @@ Format of KeysList record in release 3.02.06.  It is never compressed.
 There is one KeysList record for the main (TFile) directory and one per non-empty subdirectory.
 It is probably not accessed by its key, but from its offset given in the directory data.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
  ----------TKey---------------
   byte 0->3  Nbytes    = Number of bytes in compressed record (TKey+data)   TKey::fNbytes
        4->5  Version   = TKey class version identifier                      TKey::fVersion

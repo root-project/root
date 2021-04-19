@@ -2,7 +2,7 @@
 
 Here is the format (release 3.02.06)  of the DATA for a TClonesArray object in a ROOTIO file.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
       0->3  ByteCount = Number of remaining bytes in TClonesArray object (uncompressed)
                       |   OR'd with kByteCountMask (0x40000000)
       4->.. ClassInfo = Information about TClonesArray class

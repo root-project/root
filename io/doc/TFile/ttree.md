@@ -4,7 +4,7 @@
 Here is the streamer information for TTree related classes in release 3.02.06:
 (For the explanation of the meaning of the type, see "fType" in \ref streamerinfo.)
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
 ----------------------------------------------------
 StreamerInfo for class: TTree, version=6
   BASE          TNamed          offset=  0 type=67 The basis for a named object (name, title)

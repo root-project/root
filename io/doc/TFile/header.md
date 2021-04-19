@@ -5,7 +5,7 @@
  If END, SeekFree, or SeekInfo are located past the 32 bit file limit (> 2000000000)
  then these fields will be 8 instead of 4 bytes and 1000000 is added to the file format version.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
  -----------------------------------
  byte  0->3  "root"               = Identifies this file as a ROOT file.
        4->7  Version              = File format version                         TFile::fVersion
@@ -28,7 +28,7 @@
 
  Here is the file header format as of release 3.02.06.  It is never compressed.
 
-<div style="background-color: lightgrey; font-size: small;"><pre>
+<div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
  -----------------------------------
  byte  0->3  "root"      = Identifies this file as a ROOT file.
        4->7  Version     = File format version                        TFile::fVersion
