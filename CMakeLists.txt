@@ -136,8 +136,8 @@ include(CheckIntrinsics)
 #---Enable asserts------------------------------------------------------------------------------
 if(asserts)
   string(TOUPPER BUILD_TYPE ${CMAKE_BUILD_TYPE})
-  string(REGEX REPLACE "-.NDEBUG" "" CMAKE_CXX_FLAGS_${BUILD_TYPE} "${CMAKE_CXX_FLAGS_${BUILD_TYPE}}")
-  string(REGEX REPLACE "-.NDEBUG" "" CMAKE_C_FLAGS_${BUILD_TYPE} "${CMAKE_C_FLAGS_${BUILD_TYPE}}")
+  string(REGEX REPLACE "-[UD]NDEBUG(=.*)?" "" CMAKE_CXX_FLAGS_${BUILD_TYPE} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})
+  string(REGEX REPLACE "-[UD]NDEBUG(=.*)?" "" CMAKE_C_FLAGS_${BUILD_TYPE} ${CMAKE_C_FLAGS_${BUILD_TYPE}})
 endif()
 
 #---Enable CCache ------------------------------------------------------------------------------
