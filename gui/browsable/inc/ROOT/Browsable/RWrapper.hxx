@@ -27,6 +27,7 @@ namespace Browsable {
 class RWrapper : public RElement {
    std::string fName;
    std::shared_ptr<RElement> fElem;
+   bool fExapndByDefault{false};
 
 public:
    RWrapper() = default;
@@ -55,6 +56,10 @@ public:
 
    /** Check if want to perform action */
    bool IsCapable(EActionKind action) const override { return fElem->IsCapable(action); }
+
+   bool IsExpandByDefault() const override { return fExapndByDefault || fElem->IsExpandByDefault(); }
+   void SetExpandByDefault(bool on = true) { fExapndByDefault = on; }
+
 
 };
 

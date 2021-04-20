@@ -9,6 +9,7 @@
 #include <ROOT/Browsable/RGroup.hxx>
 
 #include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/Browsable/RItem.hxx>
 
 #include <ROOT/RLogger.hxx>
 
@@ -50,6 +51,23 @@ public:
       }
 
       return false;
+   }
+
+   /////////////////////////////////////////////////////////////////////
+   /// Create generic description item for RBrowser
+
+   std::unique_ptr<RItem> CreateItem() override
+   {
+      auto elem = fComp.GetChilds()[fIndx];
+
+      std::string item_name = elem->GetName();
+
+      auto item = std::make_unique<RItem>(GetItemName(), -1, "sap-icon://folder-blank");
+
+      if (elem->IsExpandByDefault())
+         item->SetExpanded(true);
+
+      return item;
    }
 
 };

@@ -26,8 +26,8 @@ protected:
    int nchilds{0};       ///< number of childs
    std::string icon;     ///< icon associated with item
    std::string title;    ///< item title
-   bool checked{false};  ///< is checked, not used yet
-   bool expanded{false}; ///< is expanded, not used yet
+   bool checked{false};  ///< is checked, not yet used
+   bool expanded{false}; ///< is expanded
 public:
 
    RItem() = default;
