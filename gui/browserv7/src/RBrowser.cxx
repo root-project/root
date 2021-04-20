@@ -146,9 +146,12 @@ RBrowser::RBrowser(bool use_rcanvas)
    std::unique_ptr<Browsable::RHolder> rootfiles = std::make_unique<Browsable::TObjectHolder>(gROOT->GetListOfFiles(), kFALSE);
    auto elem_files = Browsable::RProvider::Browse(rootfiles);
    if (elem_files) {
-      comp->Add(std::make_shared<Browsable::RWrapper>("ROOT Files", elem_files));
+      auto files = std::make_shared<Browsable::RWrapper>("ROOT Files", elem_files);
+      files->SetExpandByDefault(true);
+      comp->Add(files);
+      // if there are any open files, make them visible by default
       if (elem_files->GetNumChilds() > 0)
-         seldir = { "ROOT Files" };
+         seldir = {};
    }
 
    fBrowsable.SetTopElement(comp);
@@ -601,14 +604,11 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
          fWebWindow->Send(connid, NewWidgetMsg(widget));
    } else if (kind == "CDWORKDIR") {
       auto wrkdir = Browsable::RSysFile::GetWorkingPath();
-      Browsable::RElementPath_t filesdir = { "ROOT Files" };
-
       if (fBrowsable.GetWorkingPath() != wrkdir) {
          fBrowsable.SetWorkingPath(wrkdir);
-         fWebWindow->Send(connid, GetCurrentWorkingDirectory());
-      } else if ((gROOT->GetListOfFiles()->GetSize() > 0) && (fBrowsable.GetWorkingPath() != filesdir)) {
-         fBrowsable.SetWorkingPath(filesdir);
-         fWebWindow->Send(connid, GetCurrentWorkingDirectory());
+      } else {
+         fBrowsable.SetWorkingPath({});
       }
+      fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    }
 }
