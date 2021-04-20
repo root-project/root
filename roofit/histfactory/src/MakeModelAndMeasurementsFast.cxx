@@ -130,7 +130,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
 
     std::string rowTitle = measurement.GetName();
     
-    std::vector<RooWorkspace*> channel_workspaces;
+    std::vector<std::unique_ptr<RooWorkspace>> channel_workspaces;
     std::vector<std::string>        channel_names;
 
     // Create the outFile - first check if the outputfile exists
@@ -192,7 +192,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
       cxcoutPHF << "Starting to process channel: " << ch_name << std::endl;
       channel_names.push_back(ch_name);
       RooWorkspace* ws_single = factory.MakeSingleChannelModel( measurement, channel );
-      channel_workspaces.push_back(ws_single);
+      channel_workspaces.emplace_back(ws_single);
 
       // Make the output
       std::string ChannelFileName = measurement.GetOutputFilePrefix() + "_" 
