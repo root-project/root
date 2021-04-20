@@ -178,7 +178,7 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
       }
    }
    if (leaf)
-      return GetLeafTypeName(leaf, colName);
+      return GetLeafTypeName(leaf, std::string(leaf->GetFullName()));
 
    // we could not find a leaf named colName, so we look for a branch called like this
    auto branch = t.GetBranch(colName.c_str());
@@ -206,7 +206,7 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
          // normal branch (not a TBranchElement): if it has only one leaf, we pick the type of the leaf:
          // RDF and TTreeReader allow referring to branch.leaf as just branch if branch has only one leaf
          leaf = static_cast<TLeaf *>(branch->GetListOfLeaves()->UncheckedAt(0));
-         return GetLeafTypeName(leaf, colName + '.' + leaf->GetName());
+         return GetLeafTypeName(leaf, std::string(leaf->GetFullName()));
       }
    }
 
