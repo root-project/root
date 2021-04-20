@@ -810,7 +810,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
   RooArgSet *norm, *integ, *xdeps, *imps;
 
   // Group irriducible terms that need to be (partially) integrated together
-  std::list<RooLinkedList> groupedList;
+  std::list<std::vector<RooArgSet*>> groupedList;
   RooArgSet outerIntDeps;
 //   cout << "RooProdPdf::getPIL -- now calling groupProductTerms()" << endl;
   groupProductTerms(groupedList, outerIntDeps, terms, norms, imp, ints, cross);
@@ -820,10 +820,10 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
   // Find groups of type F(x|y), i.e. termImpSet!=0, construct ratio object
   map<string, RooArgSet> ratioTerms;
   for (auto const& group : groupedList) {
-    if (1 == group.GetSize()) {
+    if (1 == group.size()) {
 //       cout<<"FK: Starting Single Term"<<endl;
 
-      RooArgSet* term = (RooArgSet*) group.At(0);
+      RooArgSet* term = group[0];
 
       Int_t termIdx = terms.IndexOf(term);
       norm=(RooArgSet*) norms.At(termIdx);
@@ -869,9 +869,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 //       cout<<"FK: Starting Composite Term"<<endl;
 
       RooArgSet compTermSet, compTermNorm;
-      RooFIter tIter = group.fwdIterator();
-      RooArgSet* term;
-      while ((term = (RooArgSet*) tIter.next())) {
+      for (auto const& term : group) {
 
 	Int_t termIdx = terms.IndexOf(term);
 	norm=(RooArgSet*) norms.At(termIdx);
@@ -912,8 +910,8 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
   // Find groups with y as termNSet
   // Replace G(y) with (G(y),ratio)
   for (auto const& group : groupedList) {
-    if (1 == group.GetSize()) {
-      RooArgSet* term = (RooArgSet*) group.At(0);
+    if (1 == group.size()) {
+      RooArgSet* term = group[0];
 
       Int_t termIdx = terms.IndexOf(term);
       norm = (RooArgSet*) norms.At(termIdx);
@@ -928,9 +926,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
       }
     } else {
       RooArgSet compTermSet, compTermNorm;
-      RooFIter tIter = group.fwdIterator();
-      RooArgSet* term;
-      while ((term = (RooArgSet*) tIter.next())) {
+      for (auto const& term : group) {
 	Int_t termIdx = terms.IndexOf(term);
 	norm = (RooArgSet*) norms.At(termIdx);
 	imps = (RooArgSet*) imp.At(termIdx);
@@ -950,9 +946,9 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 //     cout << GetName() << ":now processing group" << endl;
 //      group->Print("1");
 
-    if (1 == group.GetSize()) {
+    if (1 == group.size()) {
 //       cout << "processing atomic item" << endl;
-      RooArgSet* term = (RooArgSet*) group.At(0);
+      RooArgSet* term = group[0];
 
         Int_t termIdx = terms.IndexOf(term);
         norm = (RooArgSet*) norms.At(termIdx);
@@ -993,9 +989,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
       } else {
 //        cout << "processing composite item" << endl;
       RooArgSet compTermSet, compTermNorm, compTermNum, compTermDen;
-      RooFIter tIter = group.fwdIterator();
-      RooArgSet* term;
-      while ((term = (RooArgSet*) tIter.next())) {
+      for (auto const& term : group) {
 //   	cout << GetName() << ": processing term " << (*term) << " of composite item" << endl ;
 	Int_t termIdx = terms.IndexOf(term);
 	norm = (RooArgSet*) norms.At(termIdx);
@@ -1461,7 +1455,7 @@ RooAbsReal* RooProdPdf::specializeIntegral(RooAbsReal& input, const char* target
 ////////////////////////////////////////////////////////////////////////////////
 /// Group product into terms that can be calculated independently
 
-void RooProdPdf::groupProductTerms(std::list<RooLinkedList>& groupedTerms, RooArgSet& outerIntDeps,
+void RooProdPdf::groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTerms, RooArgSet& outerIntDeps,
 				   const RooLinkedList& terms, const RooLinkedList& norms,
 				   const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& /*cross*/) const
 {
@@ -1470,7 +1464,7 @@ void RooProdPdf::groupProductTerms(std::list<RooLinkedList>& groupedTerms, RooAr
   RooArgSet* term ;
   while((term=(RooArgSet*)tIter.next())) {
     groupedTerms.emplace_back();
-    groupedTerms.back().Add(term) ;
+    groupedTerms.back().emplace_back(term) ;
   }
 
   // Make list of imported dependents that occur in any term
@@ -1500,7 +1494,7 @@ void RooProdPdf::groupProductTerms(std::list<RooLinkedList>& groupedTerms, RooAr
   while ((outerIntDep =(RooAbsArg*)oidIter.next())) {
 
     // Collect groups that feature this dependent
-    RooLinkedList* newGroup = 0 ;
+    std::vector<RooArgSet*>* newGroup = nullptr ;
 
     // Loop over groups
     Bool_t needMerge = kFALSE ;
@@ -1509,9 +1503,7 @@ void RooProdPdf::groupProductTerms(std::list<RooLinkedList>& groupedTerms, RooAr
     for (size_t iGroup = 0; iGroup < nGroups; ++iGroup) {
 
       // See if any term in this group depends in any ay on outerDepInt
-      RooArgSet* term2 ;
-      RooFIter tIter2 = group->fwdIterator() ;
-      while((term2=(RooArgSet*)tIter2.next())) {
+      for (auto const& term2 : *group) {
 
 	Int_t termIdx = terms.IndexOf(term2) ;
 	RooArgSet* termNormDeps = (RooArgSet*) norms.At(termIdx) ;
@@ -1534,9 +1526,8 @@ void RooProdPdf::groupProductTerms(std::list<RooLinkedList>& groupedTerms, RooAr
 	}
 
 	// Add terms of this group to new term
-	tIter2 = group->fwdIterator() ;
-	while((term2=(RooArgSet*)tIter2.next())) {
-	  newGroup->Add(term2) ;
+	for (auto& term2 : *group) {
+	  newGroup->emplace_back(term2) ;
 	}
 
 	// Remove this group from list and delete it (but not its contents)
