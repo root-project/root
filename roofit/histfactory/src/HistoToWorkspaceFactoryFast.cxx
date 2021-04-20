@@ -281,7 +281,7 @@ namespace HistFactory{
     HistoToWorkspaceFactoryFast factory( measurement );
 
     // Loop over the channels and create the individual workspaces
-    vector<RooWorkspace*> channel_workspaces;
+    vector<std::unique_ptr<RooWorkspace>> channel_workspaces;
     vector<string>        channel_names;
     
     for( unsigned int chanItr = 0; chanItr < measurement.GetChannels().size(); ++chanItr ) {
@@ -300,7 +300,7 @@ namespace HistFactory{
       // GHL: Renaming to 'MakeSingleChannelWorkspace'
       RooWorkspace* ws_single = factory.MakeSingleChannelModel( measurement, channel );
       
-      channel_workspaces.push_back(ws_single);
+      channel_workspaces.emplace_back(ws_single);
 
     }
 
@@ -312,11 +312,6 @@ namespace HistFactory{
 
     // Configure the workspace
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement( "simPdf", ws, measurement );
-
-    // Delete channel workspaces
-    for (vector<RooWorkspace*>::iterator iter = channel_workspaces.begin() ; iter != channel_workspaces.end() ; ++iter) {
-      delete *iter ;
-    }
 
     // Done.  Return the pointer
     return ws;
@@ -2111,7 +2106,7 @@ namespace HistFactory{
   }
 
 
-  RooWorkspace* HistoToWorkspaceFactoryFast::MakeCombinedModel(vector<string> ch_names, vector<RooWorkspace*> chs)
+  RooWorkspace* HistoToWorkspaceFactoryFast::MakeCombinedModel(vector<string> ch_names, vector<std::unique_ptr<RooWorkspace>>& chs)
   {
     RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::INFO, 0, RooFit::ObjectHandling, false);
 
@@ -2154,7 +2149,7 @@ namespace HistFactory{
 
       if (i == 0) channelString << channel_name ;
       else channelString << ',' << channel_name ;
-      RooWorkspace * ch=chs[i];
+      RooWorkspace * ch=chs[i].get();
       
       RooAbsPdf* model = ch->pdf(("model_"+channel_name).c_str());
       if(!model) cout <<"failed to find model for channel"<<endl;
@@ -2339,7 +2334,7 @@ namespace HistFactory{
 
 
   RooDataSet* HistoToWorkspaceFactoryFast::MergeDataSets(RooWorkspace* combined,
-							 std::vector<RooWorkspace*> wspace_vec, 
+							 std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
 							 std::vector<std::string> channel_names, 
 							 std::string dataSetName,
 							 RooArgList obsList,

@@ -16,6 +16,7 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 #include <RooPlot.h>
 #include <RooArgSet.h>
@@ -53,7 +54,7 @@ namespace RooStats{
 						    Measurement& measurement );
     
       RooWorkspace* MakeSingleChannelModel( Measurement& measurement, Channel& channel );
-      RooWorkspace*  MakeCombinedModel(std::vector<std::string>, std::vector<RooWorkspace*>);
+      RooWorkspace*  MakeCombinedModel(std::vector<std::string>, std::vector<std::unique_ptr<RooWorkspace>>&);
     
       static RooWorkspace* MakeCombinedModel( Measurement& measurement );
       static void PrintCovarianceMatrix(RooFitResult* result, RooArgSet* params, 
@@ -97,7 +98,7 @@ namespace RooStats{
 			     std::vector<std::string>& normByNames);
     
       RooDataSet* MergeDataSets(RooWorkspace* combined,
-				std::vector<RooWorkspace*> wspace_vec, 
+				std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
 				std::vector<std::string> channel_names, 
 				std::string dataSetName,
 				RooArgList obsList,
