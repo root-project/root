@@ -572,3 +572,26 @@ RElementPath_t RSysFile::ProvideTopEntries(std::shared_ptr<RGroup> &comp, const 
 
    return RElement::ParsePath(seldir);
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Return working path in browser hierarchy
+
+RElementPath_t RSysFile::GetWorkingPath(const std::string &workdir)
+{
+   std::string seldir = workdir;
+
+   if (seldir.empty())
+      seldir = gSystem->WorkingDirectory();
+
+   seldir = gSystem->UnixPathName(seldir.c_str());
+
+   auto volumes = gSystem->GetVolumes("all");
+   if (volumes) {
+      delete volumes;
+   } else {
+      seldir = "/Files system"s + seldir;
+   }
+
+   return RElement::ParsePath(seldir);
+}
+
