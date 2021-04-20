@@ -26,6 +26,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TClingClassInfo.h"
 #include "TClingDeclInfo.h"
 #include "TClingMemberIter.h"
 #include "TDictionary.h"
@@ -44,8 +45,6 @@ namespace ROOT {
       class TNormalizedCtxt;
    }
 }
-
-class TClingClassInfo;
 
 /// Iterate over VarDecl, FieldDecl, EnumConstantDecl, IndirectFieldDecl, and 
 /// UsingShadowDecls thereof, within a scope, recursing through "transparent"
@@ -74,7 +73,7 @@ class TClingDataMemberInfo final : public TClingDeclInfo {
 private:
 
    cling::Interpreter    *fInterp;    // Cling interpreter, we do *not* own.
-   TClingClassInfo       *fClassInfo = nullptr; // ClassInfo for the decl context, for X<Float16_t> vs X<float>.
+   TClingClassInfo        fClassInfo; // ClassInfo for the decl context, for X<Float16_t> vs X<float>.
    TClingDataMemberIter   fIter; // Current decl.
    std::string            fTitle; // The meta info for the member.
    bool                   fFirstTime = true; // We need to skip the first increment to support the cint Next() semantics.
