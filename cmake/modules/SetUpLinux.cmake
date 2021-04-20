@@ -145,7 +145,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
   endif()
 
   # Augment optimisation flags:
-  foreach(CXX_FLAGS CMAKE_CXX_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELEASE CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_RELEASE)
-    set(${${CXX_FLAGS}} "${${CXX_FLAGS}} -fp-model precise")
-  endforeach()
+  string(TOUPPER BUILD_TYPE ${CMAKE_BUILD_TYPE})
+  set(CMAKE_CXX_FLAGS_${BUILD_TYPE} "${CMAKE_CXX_FLAGS_${BUILD_TYPE}} -fp-model precise")
+  set(CMAKE_C_FLAGS_${BUILD_TYPE}   "${CMAKE_C_FLAGS_${BUILD_TYPE}} -fp-model precise")
 endif()
