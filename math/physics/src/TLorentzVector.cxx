@@ -20,7 +20,7 @@ offer superior runtime performance, i.e.:
   - ROOT::Math::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision (same as PxPyPzEVector)
   - ROOT::Math::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision (same as PxPyPzEVector but float)
 
-More details about the GenVector package can be found [here](Vector.html).
+More details can be found in the documentation of the @ref GenVector package.
 \endparblock
 
 
