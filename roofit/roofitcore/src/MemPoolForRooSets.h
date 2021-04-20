@@ -125,6 +125,7 @@ class MemPoolForRooSets {
     {
       if (inPool(ptr)) {
         --refCount;
+        tryFree(false);
 #ifndef NDEBUG
         const std::size_t index = static_cast<RooSet_t *>(ptr) - memBegin;
         if (deletedElements.count(index) != 0) {
