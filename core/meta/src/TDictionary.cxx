@@ -81,14 +81,24 @@ void TDictionary::CreateAttributeMap()
       fAttributeMap = new TDictAttributeMap;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the type (class, fundamental type, typedef etc)
+/// named "name". Returned object is either a TClass or TDataType.
+/// Returns `nullptr` if the type is unknown.
+
 TDictionary* TDictionary::GetDictionary(const char* name)
 {
-   // Retrieve the type (class, fundamental type, typedef etc)
-   // named "name". Returned object is either a TClass or TDataType.
-   // Returns 0 if the type is unknown.
-
-   TDictionary* ret = (TDictionary*)gROOT->GetListOfTypes()->FindObject(name);
-   if (ret) return ret;
+   // Start with typedef, the query is way faster than TClass::GetClass().
+   if (auto* ret = (TDictionary*)gROOT->GetListOfTypes()->FindObject(name)) {
+      if (auto *dtRet = dynamic_cast<TDataType*>(ret)) {
+         if (dtRet->GetType() <= 0) {
+            // Not a numeric type. Is it a known class?
+            if (auto *clRet = TClass::GetClass(name, true))
+               return clRet;
+         }
+      }
+      return ret;
+   }
 
    return TClass::GetClass(name, true);
 }
