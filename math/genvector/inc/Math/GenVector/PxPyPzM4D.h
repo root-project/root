@@ -154,7 +154,7 @@ public :
    /**
       Energy
     */
-   Scalar E() const { return std::sqrt(E2()); }
+   Scalar E() const { using std::sqrt; return sqrt(E2()); }
 
    Scalar T() const { return E();}
 
@@ -166,7 +166,7 @@ public :
    /**
       magnitude of spatial components (magnitude of 3-momentum)
    */
-   Scalar P() const { return std::sqrt(P2()); }
+   Scalar P() const { using std::sqrt; return sqrt(P2()); }
    Scalar R() const { return P(); }
 
    /**
@@ -198,7 +198,7 @@ public :
    /**
       Transverse spatial component (P_perp or rho)
    */
-   Scalar Pt() const { return std::sqrt(Perp2()); }
+   Scalar Pt() const { using std::sqrt; return sqrt(Perp2()); }
    Scalar Perp() const { return Pt();}
    Scalar Rho()  const { return Pt();}
 
@@ -213,11 +213,13 @@ public :
    Scalar Mt() const {
       const Scalar mm = Mt2();
       if (mm >= 0) {
-         return std::sqrt(mm);
+         using std::sqrt;
+         return sqrt(mm);
       } else {
          GenVector::Throw ("PxPyPzM4D::Mt() - Tachyonic:\n"
                            "    Pz^2 > E^2 so the transverse mass would be imaginary");
-         return -std::sqrt(-mm);
+         using std::sqrt;
+         return -sqrt(-mm);
       }
    }
 
@@ -235,7 +237,8 @@ public :
    */
    Scalar Et() const {
       const Scalar etet = Et2();
-      return std::sqrt(etet);
+      using std::sqrt;
+      return sqrt(etet);
    }
 
    /**

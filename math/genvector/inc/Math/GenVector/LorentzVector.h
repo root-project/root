@@ -614,7 +614,8 @@ More details about the GenVector package can be found \ref GenVector "here".
           else if ( t2 == v2 ) {
              GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
           }
-          return Scalar(1) / std::sqrt(Scalar(1) - v2 / t2);
+          using std::sqrt;
+          return Scalar(1) / sqrt(Scalar(1) - v2 / t2);
        } /* gamma */
 
 

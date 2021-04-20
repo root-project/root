@@ -89,7 +89,7 @@ public :
    Scalar X()     const { return fX;}
    Scalar Y()     const { return fY;}
    Scalar Mag2()  const { return fX*fX + fY*fY; }
-   Scalar R() const { return std::sqrt(Mag2()); }
+   Scalar R() const { using std::sqrt; return sqrt(Mag2()); }
    Scalar Phi() const { return (fX == Scalar(0) && fY == Scalar(0)) ? Scalar(0) : atan2(fY, fX); }
 
    /**
@@ -163,8 +163,10 @@ public :
    {
       const Scalar r = v.R(); // re-using this instead of calling v.X() and v.Y()
       // is the speed improvement
-      fX = r * std::cos(v.Phi());
-      fY = r * std::sin(v.Phi());
+      using std::cos;
+      fX = r * cos(v.Phi());
+      using std::sin;
+      fY = r * sin(v.Phi());
    }
    // Technical note:  This works even though only Polar2Dfwd.h is
    // included (and in fact, including Polar2D.h would cause circularity
@@ -175,8 +177,10 @@ public :
    Cartesian2D & operator = (const Polar2D<T2> & v)
    {
       const Scalar r = v.R();
-      fX             = r * std::cos(v.Phi());
-      fY             = r * std::sin(v.Phi());
+      using std::cos;
+      fX             = r * cos(v.Phi());
+      using std::sin;
+      fY             = r * sin(v.Phi());
       return *this;
    }
 

@@ -52,7 +52,9 @@ namespace ROOT {
               static const Scalar big_z_scaled = pow(std::numeric_limits<Scalar>::epsilon(), static_cast<Scalar>(-.25));
 
               Scalar z_scaled = z/rho;
+              using std::fabs;
               if (std::fabs(z_scaled) < big_z_scaled) {
+                 using std::sqrt;
                  return log(z_scaled + std::sqrt(z_scaled * z_scaled + 1.0));
               } else {
                  // apply correction using first order Taylor expansion of sqrt

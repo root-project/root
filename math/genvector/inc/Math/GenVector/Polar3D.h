@@ -110,10 +110,10 @@ public :
    Scalar R()     const { return fR;}
    Scalar Phi()   const { return fPhi; }
    Scalar Theta() const { return fTheta; }
-   Scalar Rho() const { return fR * std::sin(fTheta); }
-   Scalar X() const { return Rho() * std::cos(fPhi); }
-   Scalar Y() const { return Rho() * std::sin(fPhi); }
-   Scalar Z() const { return fR * std::cos(fTheta); }
+   Scalar Rho() const { using std::sin; return fR * sin(fTheta); }
+   Scalar X() const { using std::cos; return Rho() * cos(fPhi); }
+   Scalar Y() const { using std::sin; return Rho() * sin(fPhi); }
+   Scalar Z() const { using std::cos; return fR * cos(fTheta); }
    Scalar Mag2()  const { return fR*fR;}
    Scalar Perp2() const { return Rho() * Rho(); }
 
@@ -157,7 +157,8 @@ public :
 private:
    inline static Scalar pi()  { return M_PI; }
    inline void Restrict() {
-      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - std::floor(fPhi / (2 * pi()) + .5) * 2 * pi();
+      using std::floor;
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
    }
 
 public:
