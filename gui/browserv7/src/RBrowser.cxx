@@ -306,6 +306,9 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
    }
 
    if (elem->IsCapable(Browsable::RElement::kActBrowse) && (elem->GetNumChilds() > 0)) {
+      // remove extra index in subitems name
+      for (auto &pathelem : path)
+         Browsable::RElement::ExtractItemIndex(pathelem);
       fBrowsable.SetWorkingPath(path);
       return GetCurrentWorkingDirectory();
    }
