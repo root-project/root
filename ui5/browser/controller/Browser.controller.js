@@ -898,6 +898,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.doReload(true); // force also update of items on server
       },
 
+      onWorkingDirPress: function() {
+         this.websocket.send("CDWORKDIR");
+      },
+
       doReload: function(force_reload) {
          if (this.standalone) {
             this.showTextInBrowser();
