@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 project(roottest)
 
-# Use ${ROOTSYS} environment variable to search for ROOT.
-# This may be set by sourcing thisroot.sh from an installation.
-if(DEFINED ENV{ROOTSYS})
+# If no explicit ROOTSYS is set, use ${ROOTSYS} environment variable to search
+# for ROOT. This may be set by sourcing thisroot.sh from an installation.
+if(NOT DEFINED ROOTSYS AND DEFINED ENV{ROOTSYS})
   file(TO_CMAKE_PATH $ENV{ROOTSYS} ROOTSYS)
   list(INSERT CMAKE_PREFIX_PATH 0 ${ROOTSYS})
 endif()
