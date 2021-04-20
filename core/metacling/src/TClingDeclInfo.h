@@ -31,6 +31,7 @@ protected:
    mutable std::string fNameCache;
    long Property(long property, clang::QualType &qt) const;
 public:
+   TClingDeclInfo() = default;
    TClingDeclInfo(const clang::Decl* D) : fDecl(D) {}
    virtual ~TClingDeclInfo();
 
