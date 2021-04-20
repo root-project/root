@@ -49,6 +49,13 @@ public:
 
    /** Access object */
    std::unique_ptr<RHolder> GetObject() override { return fElem->GetObject(); }
+
+   /** Get default action */
+   EActionKind GetDefaultAction() const override { return fElem->GetDefaultAction(); }
+
+   /** Check if want to perform action */
+   bool IsCapable(EActionKind action) const override { return fElem->IsCapable(action); }
+
 };
 
 
