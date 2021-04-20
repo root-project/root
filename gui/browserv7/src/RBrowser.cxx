@@ -533,8 +533,10 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       if (arr && (arr->size() > 2))
          reply = ProcessDblClick(*arr);
 
-      if (!reply.empty())
-         fWebWindow->Send(connid, reply);
+      if (reply.empty())
+         reply = "NOPE";
+
+      fWebWindow->Send(connid, reply);
 
    } else if (kind == "WIDGET_SELECTED") {
       fActiveWidgetName = msg;
