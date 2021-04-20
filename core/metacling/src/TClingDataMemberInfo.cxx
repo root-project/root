@@ -95,10 +95,16 @@ bool TClingDataMemberIter::ShouldSkip(const clang::UsingShadowDecl *USD) const
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            TClingClassInfo *ci,
                                            TDictionary::EMemberSelection selection)
-: TClingDeclInfo(nullptr), fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp))
+: TClingDeclInfo(nullptr), fInterp(interp)
 {
 
    R__LOCKGUARD(gInterpreterMutex);
+
+   if (ci) {
+      fClassInfo = *ci;
+   } else {
+      fClassInfo = TClingClassInfo(interp);
+   }
 
    if (!ci || !ci->IsValid()) {
       return;
@@ -113,8 +119,14 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            const clang::ValueDecl *ValD,
                                            TClingClassInfo *ci)
-: TClingDeclInfo(ValD), fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp))
+: TClingDeclInfo(ValD), fInterp(interp)
 {
+
+   if (ci) {
+      fClassInfo = *ci;
+   } else {
+      fClassInfo = TClingClassInfo(interp);
+   }
 
    using namespace llvm;
    const auto DC = ValD->getDeclContext();
@@ -176,7 +188,7 @@ const clang::ValueDecl *TClingDataMemberInfo::GetTargetValueDecl() const
 }
 
 const clang::Type *TClingDataMemberInfo::GetClassAsType() const {
-   return fClassInfo ? fClassInfo->GetType() : nullptr;
+   return fClassInfo.GetType();
 }
 
 int TClingDataMemberInfo::ArrayDim() const

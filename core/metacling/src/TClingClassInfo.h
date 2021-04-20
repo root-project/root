@@ -60,13 +60,13 @@ class TClingClassInfo final : public TClingDeclInfo {
 
 private:
 
-   cling::Interpreter   *fInterp; // Cling interpreter, we do *not* own.
+   cling::Interpreter   *fInterp = nullptr; // Cling interpreter, we do *not* own.
    bool                  fFirstTime: 1; // We need to skip the first increment to support the cint Next() semantics.
    bool                  fDescend : 1;  // Flag for signaling the need to descend on this advancement.
    bool                  fIterAll : 1;  // Flag whether iteration should be as complete as possible.
    bool                  fIsIter : 1;   // Flag whether this object was setup for iteration.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
-   const clang::Type    *fType; // Type representing the decl (conserves typedefs like Double32_t). (we do *not* own)
+   const clang::Type    *fType = nullptr; // Type representing the decl (conserves typedefs like Double32_t). (we do *not* own)
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
    std::string           fTitle; // The meta info for the class.
    std::string           fDeclFileName; // Name of the file where the underlying entity is declared.
@@ -74,8 +74,6 @@ private:
    std::mutex fOffsetCacheMutex;
    llvm::DenseMap<const clang::Decl*, std::pair<ptrdiff_t, OffsetPtrFunc_t> > fOffsetCache; // Functions already generated for offsets.
 
-   explicit TClingClassInfo() = delete;
-   TClingClassInfo &operator=(const TClingClassInfo &) = delete;
 public: // Types
 
    enum EInheritanceMode {
@@ -84,7 +82,10 @@ public: // Types
    };
 
 public:
-
+   explicit TClingClassInfo():
+      fFirstTime(true), fDescend(false),
+      fIterAll(false), fIsIter(false)
+   {}
    TClingClassInfo(const TClingClassInfo &rhs) : // Copy all but the mutex
       TClingDeclInfo(rhs),
       fInterp(rhs.fInterp), fFirstTime(rhs.fFirstTime), fDescend(rhs.fDescend),
@@ -96,6 +97,24 @@ public:
    explicit TClingClassInfo(cling::Interpreter *, const char *classname, bool intantiateTemplate = kTRUE);
    explicit TClingClassInfo(cling::Interpreter *, const clang::Type &);
    explicit TClingClassInfo(cling::Interpreter *, const clang::Decl *);
+   TClingClassInfo &operator=(const TClingClassInfo &rhs)
+   {
+      // Copy all but the mutex
+      *((TClingDeclInfo*)this) = rhs;
+      fInterp = rhs.fInterp;
+      fFirstTime = rhs.fFirstTime;
+      fDescend = rhs.fDescend;
+      fIterAll = rhs.fIterAll;
+      fIsIter = rhs.fIsIter;
+      fIter = rhs.fIter;
+      fType = rhs.fType;
+      fIterStack = rhs.fIterStack;
+      fTitle = rhs.fTitle;
+      fDeclFileName = rhs.fDeclFileName;
+      fOffsetCache = rhs.fOffsetCache;
+      return *this;
+   }
+
    void                 AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFunc_t func) {
       std::unique_lock<std::mutex> lock(fOffsetCacheMutex);
       fOffsetCache[decl] = std::make_pair(0L, func);
