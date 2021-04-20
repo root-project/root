@@ -124,8 +124,10 @@ public :
        rotate by an angle
     */
    void Rotate(Scalar angle) {
-      const Scalar s = std::sin(angle);
-      const Scalar c = std::cos(angle);
+      using std::sin;
+      const Scalar s = sin(angle);
+      using std::cos;
+      const Scalar c = cos(angle);
       SetCoordinates(c * fX - s * fY, s * fX + c * fY);
    }
 
