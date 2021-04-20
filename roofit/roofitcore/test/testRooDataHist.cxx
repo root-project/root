@@ -19,6 +19,8 @@
 
 #include "gtest/gtest.h"
 
+#include <algorithm>
+
 /// ROOT-8163
 /// The RooDataHist warns that it has to adjust the binning of x to the next bin boundary
 /// although the boundaries match perfectly.
@@ -628,4 +630,61 @@ TEST(RooDataHist, AnalyticalIntegration)
    EXPECT_FLOAT_EQ(integrate(hpdf2, y, bothXandY), 1 * normYoverXY);
    EXPECT_FLOAT_EQ(integrate(hpdf2, y, bothXandY, "R1"), 3.0 / 4. * normYoverXY);
    EXPECT_FLOAT_EQ(integrate(hpdf2, y, bothXandY, "R2"), 3.8 / 4. * normYoverXY);
+}
+
+
+TEST(RooDataHist, Interpolation2DSimple)
+{
+   TH2D hist{"hist", "hist", 2, 0, 2, 2, 0, 2};
+
+   double a0 = 1;
+   double b0 = 2;
+   double a1 = 3;
+   double b1 = 4;
+
+   for(int i = 0; i < a0; ++i) {
+      hist.Fill(0.5, 0.5);
+   }
+   for(int i = 0; i < b0; ++i) {
+      hist.Fill(1.5, 0.5);
+   }
+   for(int i = 0; i < a1; ++i) {
+      hist.Fill(0.5, 1.5);
+   }
+   for(int i = 0; i < b1; ++i) {
+      hist.Fill(1.5, 1.5);
+   }
+
+   RooRealVar x("x", "x", 0, 2);
+   RooRealVar y("y", "y", 0, 2);
+
+   RooDataHist dataHist("data", "dataset with (x,y)", RooArgList(x, y), &hist);
+
+   std::vector<double> values;
+   int n = 5;
+   for (int i = 0; i <= n; ++i) {
+      values.push_back((i * 2.0) / n);
+   }
+
+   auto clamp = [](double v, double a, double b) {
+      return std::min(std::max(v, a), b);
+   };
+
+   auto getTrueWeight = [&]() {
+      double xVal = x.getVal();
+      double yVal = y.getVal();
+
+      double mix0 = (clamp(xVal, 0.5, 1.5) - 0.5) * (b0 - a0) + a0;
+      double mix1 = (clamp(xVal, 0.5, 1.5) - 0.5) * (b1 - a1) + a1;
+      return (clamp(yVal, 0.5, 1.5) - 0.5) * (mix1 - mix0) + mix0;
+   };
+
+   for (auto xVal : values) {
+      for (auto yVal : values) {
+         x.setVal(xVal);
+         y.setVal(yVal);
+
+         EXPECT_FLOAT_EQ(dataHist.weight({x, y}, 1), getTrueWeight());
+      }
+   }
 }
