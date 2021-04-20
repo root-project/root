@@ -19,6 +19,7 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
+ Enrico Guiraud, CERN/SFT,\
  Jonas Hahnfeld, CERN/SFT,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
@@ -31,7 +32,8 @@ The following people have contributed to this new version:
  Oksana Shadura, UNL/CMS,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas,
+ Wouter Verkerke, NIKHEF/Atlas,\
+ Stefan Wunsch, CERN/SFT
 
 ## Deprecation and Removal
 
@@ -46,8 +48,12 @@ The following people have contributed to this new version:
 
 ## TTree Libraries
 
-- Add `Describe` to the `RDataFrame` interface, which allows to get useful information, e.g. the columns and their types.
+## RDataFrame
 
+### New features
+
+- Add `Redefine` to the `RDataFrame` interface, which allows to overwrite the value of an existing column.
+- Add `Describe` to the `RDataFrame` interface, which allows to get useful information, e.g. the columns and their types.
 
 ## Histogram Libraries
 
