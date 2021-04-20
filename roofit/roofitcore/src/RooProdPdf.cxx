@@ -620,10 +620,10 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   // Loop over the PDFs
   RooAbsPdf* pdf;
   RooArgSet* pdfNSetOrig;
-  for (RooFIter pdfIter = _pdfList.fwdIterator(),
-      nIter = _pdfNSetList.fwdIterator();
-      (pdfNSetOrig = (RooArgSet*) nIter.next(),
-       pdf = (RooAbsPdf*) pdfIter.next()); ) {
+  for (RooLinkedListIter pdfIter = _pdfList.iterator(),
+      nIter = _pdfNSetList.iterator();
+      (pdfNSetOrig = static_cast<RooArgSet*>(nIter.Next()),
+       pdf = static_cast<RooAbsPdf*>(pdfIter.Next())); ) {
     pdfNSet.clear();
     pdfCSet.clear();
 
@@ -692,12 +692,12 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 //     cout << GetName() << ": pdf = " << pdf->GetName() << " intset = " << *pdfIntSet << " pdfIntNoNormDeps = " << pdfIntNoNormDeps << endl;
 
     // Check if this PDF has dependents overlapping with one of the existing terms
-    Bool_t done(kFALSE);
+    bool done = false;
     int j = 0;
-    for (RooFIter lIter = termList.fwdIterator(),
-	ldIter = normList.fwdIterator();
-      (termNormDeps = (RooArgSet*) ldIter.next(),
-       term = (RooArgSet*) lIter.next()); ++j) {
+    for (RooLinkedListIter lIter = termList.iterator(),
+	ldIter = normList.iterator();
+      (termNormDeps = static_cast<RooArgSet*>(ldIter.Next()),
+       term = static_cast<RooArgSet*>(lIter.Next())); ++j) {
       // PDF should be added to existing term if
       // 1) It has overlapping normalization dependents with any other PDF in existing term
       // 2) It has overlapping dependents of any class for which integration is requested
@@ -719,7 +719,8 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 	if (termIntNoNormDeps) {
 	  termIntNoNormDeps->add(pdfIntNoNormDeps.begin(), pdfIntNoNormDeps.end(), false);
 	}
-	done = kTRUE;
+	termIntNoNormDeps->add(pdfIntNoNormDeps.begin(), pdfIntNoNormDeps.end(), false);
+	done = true;
       }
     }
 
@@ -749,10 +750,10 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   // Loop over list of terms again to determine 'imported' observables
   int i = 0;
   RooArgSet *normDeps;
-  for (RooFIter lIter = termList.fwdIterator(),
-      ldIter = normList.fwdIterator();
-      (normDeps = (RooArgSet*) ldIter.next(),
-       term=(RooArgSet*)lIter.next()); ++i) {
+  for (RooLinkedListIter lIter = termList.iterator(),
+      ldIter = normList.iterator();
+      (normDeps = static_cast<RooArgSet*>(ldIter.Next()),
+       term= static_cast<RooArgSet*>(lIter.Next())); ++i) {
     // Make list of wholly imported dependents
     RooArgSet impDeps(depAllList[i]);
     impDeps.remove(*normDeps, kTRUE, kTRUE);
@@ -761,7 +762,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
     // Make list of cross dependents (term is self contained for these dependents,
     // but components import dependents from other components)
-    auto crossDeps = std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(depIntNoNormList[i].selectCommon(*normDeps))};
+    auto crossDeps = std::unique_ptr<RooAbsCollection>{depIntNoNormList[i].selectCommon(*normDeps)};
     crossDepList.Add(crossDeps->snapshot());
 //     cout << GetName() << ": list of cross dependents for term " << (*term) << " set to " << *crossDeps << endl ;
   }
