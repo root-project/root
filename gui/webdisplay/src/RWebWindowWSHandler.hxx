@@ -113,7 +113,13 @@ public:
 
    /// Process websocket request - called from THttpServer thread
    /// THttpWSHandler interface
-   Bool_t ProcessWS(THttpCallArg *arg) override { return arg && !IsDisabled() ? fWindow.ProcessWS(*arg) : kFALSE; }
+   Bool_t ProcessWS(THttpCallArg *arg) override
+   {
+      if (!arg || IsDisabled()) return kFALSE;
+      auto res = fWindow.ProcessWS(*arg);
+      fWindow.CheckThreadAssign();
+      return res;
+   }
 
    /// Allow processing of WS actions in arbitrary thread
    Bool_t AllowMTProcess() const override { return fWindow.fProcessMT; }
