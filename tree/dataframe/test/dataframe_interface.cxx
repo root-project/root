@@ -579,7 +579,9 @@ TEST(RDataFrameInterface, Describe)
 {
    // empty dataframe
    RDataFrame df1(1);
-   const auto ref1 = "Property                Value\n"
+   const auto ref1 = "Empty dataframe filling 1 row\n"
+                     "\n"
+                     "Property                Value\n"
                      "--------                -----\n"
                      "Columns in total            0\n"
                      "Columns from defines        0\n"
@@ -603,7 +605,9 @@ TEST(RDataFrameInterface, Describe)
    auto df3 = df2.Define("myVec", "ROOT::RVec<float>({1, 2, 3})")
                  .Define("myLongColumnName", "1u");
    df3.Sum("myInt").GetValue(); // trigger the event loop once
-   const auto ref2 = "Property                Value\n"
+   const auto ref2 = "Dataframe from TTree tree (in-memory)\n"
+                     "\n"
+                     "Property                Value\n"
                      "--------                -----\n"
                      "Columns in total            4\n"
                      "Columns from defines        2\n"
