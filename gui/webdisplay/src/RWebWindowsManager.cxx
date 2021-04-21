@@ -33,8 +33,6 @@
 
 using namespace ROOT::Experimental;
 
-
-
 ///////////////////////////////////////////////////////////////
 /// Parse boolean gEnv variable which should be "yes" or "no"
 /// Returns -1 if not defined
@@ -110,7 +108,6 @@ void RWebWindowsManager::AssignMainThrd()
 {
    gWebWinMainThrd = std::this_thread::get_id();
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager constructor
@@ -383,7 +380,7 @@ std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
       win->RecordData(fname, prefix);
    }
 
-   if (IsUseHttpThread())
+   if (IsUseHttpThread() || (RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1))
       win->UseServerThreads();
 
    const char *token = gEnv->GetValue("WebGui.ConnToken", "");
