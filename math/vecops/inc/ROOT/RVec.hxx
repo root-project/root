@@ -145,15 +145,16 @@ the manipulation and analysis of the data in the RVec.
 \endhtmlonly
 
 ## Table of Contents
-- [Example](#example)
-- [Owning and adopting memory](#owningandadoptingmemory)
-- [Sorting and manipulation of indices](#sorting)
-- [Usage in combination with RDataFrame](#usagetdataframe)
-- [Reference for the RVec class](#RVecdoxyref)
+- [Example](\ref example)
+- [Owning and adopting memory](\ref owningandadoptingmemory)
+- [Sorting and manipulation of indices](\ref sorting)
+- [Usage in combination with RDataFrame](\ref usagetdataframe)
+- [Reference for the RVec class](\ref RVecdoxyref)
 
 Also see the [reference for RVec helper functions](https://root.cern/doc/master/namespaceROOT_1_1VecOps.html).
 
-## <a name="example"></a>Example
+\anchor example
+## Example
 Suppose to have an event featuring a collection of muons with a certain pseudorapidity,
 momentum and charge, e.g.:
 ~~~{.cpp}
@@ -183,7 +184,8 @@ auto goodMuons_pt = mu_pt[ (mu_pt > 10.f && abs(mu_eta) <= 2.f && mu_charge == -
 Now the clean collection of transverse momenta can be used within the rest of the data analysis, for
 example to fill a histogram.
 
-## <a name="owningandadoptingmemory"></a>Owning and adopting memory
+\anchor owningandadoptingmemory
+## Owning and adopting memory
 RVec has contiguous memory associated to it. It can own it or simply adopt it. In the latter case,
 it can be constructed with the address of the memory associated to it and its length. For example:
 ~~~{.cpp}
@@ -195,7 +197,8 @@ If any method which implies a re-allocation is called, e.g. *emplace_back* or *r
 memory is released and new one is allocated. The previous content is copied in the new memory and
 preserved.
 
-## <a name="#sorting"></a>Sorting and manipulation of indices
+\anchor sorting
+## Sorting and manipulation of indices
 
 ### Sorting
 RVec complies to the STL interfaces when it comes to iterations. As a result, standard algorithms
@@ -239,7 +242,8 @@ auto vf_2 = Take(vf, 2); // The content is {1.f, 2.f}
 auto vf_3 = Take(vf, -3); // The content is {2.f, 3.f, 4.f}
 ~~~
 
-## <a name="usagetdataframe"></a>Usage in combination with RDataFrame
+\anchor usagetdataframe
+## Usage in combination with RDataFrame
 RDataFrame leverages internally RVecs. Suppose to have a dataset stored in a
 TTree which holds these columns (here we choose C arrays to represent the
 collections, they could be as well std::vector instances):
