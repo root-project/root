@@ -7,12 +7,6 @@ ROOTTEST_ADD_TEST(runoperatorLessThanTemplate
                   MACRO runoperatorLessThanTemplate.C
                   LABELS roottest regression cling)
 
-ROOTTEST_ADD_TEST(runtestTable
-                  MACRO runtestTable.C
-                  OUTREF testTable.ref
-                  WILLFAIL
-                  LABELS roottest regression cling)
-
 ROOTTEST_GENERATE_DICTIONARY(scopeDict  scopeProblem.C LINKDEF linkdef.h)
 ROOTTEST_GENERATE_DICTIONARY(scopeDict2 multiScope.C LINKDEF linkdef.h)
 
