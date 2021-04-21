@@ -57,7 +57,7 @@ public:
          // try again with a smaller queue for ENOMEM
          queueDepth /= 2;
          if (queueDepth == 0) {
-            throw std::runtime_error("Fatal Error: failed to allocate memory for the smallest possible "
+            throw std::runtime_error("Failed to allocate memory for the smallest possible "
                "io_uring instance. 'memlock' memory has been exhausted for this user");
          }
       }
