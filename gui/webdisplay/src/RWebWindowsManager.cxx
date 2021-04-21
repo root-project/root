@@ -27,6 +27,7 @@
 #include "TTimer.h"
 #include "TROOT.h"
 #include "TEnv.h"
+#include "TExec.h"
 
 #include <thread>
 #include <chrono>
@@ -84,6 +85,7 @@ std::shared_ptr<RWebWindowsManager> &RWebWindowsManager::Instance()
 /// Main thread can only make sense if special processing runs there and one can inject own functionality there
 
 static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
+static bool gWebWinMainThrdSet = true;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true when called from main process
@@ -94,7 +96,7 @@ static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
 
 bool RWebWindowsManager::IsMainThrd()
 {
-   return std::this_thread::get_id() == gWebWinMainThrd;
+   return gWebWinMainThrdSet && (std::this_thread::get_id() == gWebWinMainThrd);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -106,6 +108,7 @@ bool RWebWindowsManager::IsMainThrd()
 
 void RWebWindowsManager::AssignMainThrd()
 {
+   gWebWinMainThrdSet = true;
    gWebWinMainThrd = std::this_thread::get_id();
 }
 
@@ -113,7 +116,15 @@ void RWebWindowsManager::AssignMainThrd()
 /// window manager constructor
 /// Required here for correct usage of unique_ptr<THttpServer>
 
-RWebWindowsManager::RWebWindowsManager() = default;
+RWebWindowsManager::RWebWindowsManager()
+{
+   fExternalProcessEvents = RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1;
+   if (fExternalProcessEvents) {
+      gWebWinMainThrdSet = false;
+      fAssgnExec = std::make_unique<TExec>("init_threadid", "ROOT::Experimental::RWebWindowsManager::AssignMainThrd();");
+      TTimer::SingleShot(0, "TExec",  fAssgnExec.get(), "Exec()");
+   }
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager destructor
@@ -124,6 +135,20 @@ RWebWindowsManager::~RWebWindowsManager()
    if (gApplication && fServer && !fServer->IsTerminated()) {
       gApplication->Disconnect("Terminate(Int_t)", fServer.get(), "SetTerminate()");
       fServer->SetTerminate();
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Assign thread id for window
+/// Required in case of external process events
+
+void RWebWindowsManager::AssignWindowThreadId(RWebWindow &win)
+{
+   if (fExternalProcessEvents && gWebWinMainThrdSet) {
+      win.fUseServerThreads = false;
+      win.fProcessMT = false;
+      win.fCallbacksThrdIdSet = true;
+      win.fCallbacksThrdId = gWebWinMainThrd;
    }
 }
 
@@ -214,9 +239,13 @@ bool RWebWindowsManager::CreateServer(bool with_http)
 
       fServer = std::make_unique<THttpServer>("basic_sniffer");
 
-      auto serv_thrd = RWebWindowWSHandler::GetBoolEnv("WebGui.HttpThrd");
-      if (serv_thrd != -1)
-         fUseHttpThrd = serv_thrd != 0;
+      if (fExternalProcessEvents) {
+         fUseHttpThrd = false;
+      } else {
+         auto serv_thrd = RWebWindowWSHandler::GetBoolEnv("WebGui.HttpThrd");
+         if (serv_thrd != -1)
+            fUseHttpThrd = serv_thrd != 0;
+      }
 
       auto send_thrds = RWebWindowWSHandler::GetBoolEnv("WebGui.SenderThrds");
       if (send_thrds != -1)
@@ -380,7 +409,12 @@ std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
       win->RecordData(fname, prefix);
    }
 
-   if (IsUseHttpThread() || (RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1))
+   if (fExternalProcessEvents) {
+      if (gWebWinMainThrdSet)
+         AssignWindowThreadId(*win.get());
+      else
+         win->UseServerThreads(); // let run window until thread is obtained
+   } else if (IsUseHttpThread())
       win->UseServerThreads();
 
    const char *token = gEnv->GetValue("WebGui.ConnToken", "");
@@ -446,7 +480,7 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 ///   WebGui.Chrome:  full path to Google Chrome executable
 ///   WebGui.ChromeBatch: command to start chrome in batch
 ///   WebGui.ChromeInteractive: command to start chrome in interactive mode
-///   WebGui.Firefox: full path to Mozialla Firefox executable
+///   WebGui.Firefox: full path to Mozilla Firefox executable
 ///   WebGui.FirefoxBatch: command to start Firefox in batch mode
 ///   WebGui.FirefoxInteractive: command to start Firefox in interactive mode
 ///   WebGui.FirefoxProfile: name of Firefox profile to use
