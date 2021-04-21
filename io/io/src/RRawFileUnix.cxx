@@ -134,9 +134,9 @@ void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
       return;
    }
    catch(const std::runtime_error &e) {
-      Warning("RIoUring", "io_uring is not available\n%s", e.what());
+      Warning("RIoUring", "io_uring is unexpectedly not available because:\n%s", e.what());
       Warning("RRawFileUnix",
-           "io_uring setup failed, falling back to default ReadV implementation");
+           "io_uring setup failed, falling back to blocking I/O in ReadV");
    }
 #endif
    RRawFile::ReadVImpl(ioVec, nReq);
