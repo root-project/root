@@ -249,8 +249,9 @@ all will be of the same class:
 ### TTree
 
 A TTree is a highly specialized container class for efficient storage and retrieval of user data.
-The use of TTrees is discussed in detail in the Trees chapter of the Root Users Guide:
-http://root.cern.ch/root/RootDoc.html
+The use of TTrees is discussed in detail in the Trees chapter of the
+[Root Manual](https://root.cern/manual/trees/)
+
 Here we discuss in particular how a TTree is stored in a ROOTIO file.
 
 A TTree object is split into one or more branches (class TBranch), each of which may have its own

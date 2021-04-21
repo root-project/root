@@ -31,25 +31,26 @@ To draw Mathematical Formula.
 TLatex's purpose is to write mathematical equations. The syntax is very similar
 to the Latex's one. It provides several functionalities:
 
-- [Subscripts and Superscripts](#L1)
-- [Fractions](#L2)
-- [Splitting Lines](#L3)
-- [Roots](#L4)
-- [Mathematical Symbols](#L5)
-- [Delimiters](#L6)
-- [Greek Letters](#L7)
-- [Accents](#L8)
-- [Changing Style](#L9)
-- [Alignment Rules](#L10)
-- [Character Adjustment](#L11)
-- [Italic and Boldface](#L12)
-- [Examples](#L13)
-- [Interface to TMathText](#L14)
+- [Subscripts and Superscripts](\ref L1)
+- [Fractions](\ref L2)
+- [Splitting Lines](\ref L3)
+- [Roots](\ref L4)
+- [Mathematical Symbols](\ref L5)
+- [Delimiters](\ref L6)
+- [Greek Letters](\ref L7)
+- [Accents](\ref L8)
+- [Changing Style](\ref L9)
+- [Alignment Rules](\ref L10)
+- [Character Adjustment](\ref L11)
+- [Italic and Boldface](\ref L12)
+- [Examples](\ref L13)
+- [Interface to TMathText](\ref L14)
 
 When the font precision (see `TAttText`) is low (0 or 1), TLatex is
 painted as a normal TText, the control characters are not interpreted.
 
-## <a name="L1"></a> Subscripts and Superscripts
+\anchor L1
+## Subscripts and Superscripts
 Subscripts and superscripts are made with the `_` and `^`
 commands. These commands can be combined to make complicated subscript and
 superscript expressions. You may adjust the display of subscripts and
@@ -110,7 +111,8 @@ Begin_Macro
 }
 End_Macro
 
-## <a name="L2"></a> Fractions
+\anchor L2
+## Fractions
 Fractions denoted by the `/` symbol are made in the obvious way.
 The `#frac` command is used for large fractions in displayed formula;
 it has two arguments: the numerator and the denominator.
@@ -125,7 +127,8 @@ Begin_Macro
 }
 End_Macro
 
-## <a name="L3"></a> Splitting Lines
+\anchor L3
+## Splitting Lines
 Text can be split in two lines via the command `#splitline`.
 
 Examples:
@@ -138,7 +141,8 @@ Begin_Macro
 }
 End_Macro
 
-## <a name="L4"></a> Roots
+\anchor L4
+## Roots
 The `#sqrt` command produces the square root of its argument; it has
 an optional first argument for other roots.
 
@@ -152,7 +156,8 @@ Begin_Macro
 }
 End_Macro
 
-## <a name="L5"></a> Mathematical Symbols
+\anchor L5
+## Mathematical Symbols
 TLatex can display dozens of special mathematical symbols. A few of them, such
 as `+` and `>` , are produced by typing the corresponding
 keyboard character. Others are obtained with the commands in the following
@@ -163,7 +168,8 @@ mathsymbols.C
 End_Macro
 
 
-## <a name="L6"></a> Delimiters
+\anchor L6
+## Delimiters
 TLatex provides 4 kinds of proportional delimiters:
 
     #[]{....} or "a la" Latex #left[.....#right] : big square brackets
@@ -171,7 +177,8 @@ TLatex provides 4 kinds of proportional delimiters:
     #||{....} or              #left|.....#right| : big absolute value symbols
     #(){....} or              #left(.....#right) : big parentheses
 
-## <a name="L7"></a> Greek Letters
+\anchor L7
+## Greek Letters
 The command to produce a lowercase Greek letter is obtained by adding a
 `#` to the name of the letter. For an uppercase Greek letter, just
 capitalize the first letter of the command name. Some letters have two
@@ -183,7 +190,8 @@ greekletters.C
 End_Macro
 
 
-## <a name="L8"></a> Accents
+\anchor L8
+## Accents
 Several kind of accents are available:
 
 Begin_Macro
@@ -221,7 +229,8 @@ Begin_Macro
 }
 End_Macro
 
-## <a name="L9"></a> Changing Style
+\anchor L9
+## Changing Style
 One can change the font, the text color, or the text size at any time using :
 `#font[font-number]{...}`, `#color[color-number]{...}`
 and `#scale[scale-factor]{...}`
@@ -239,7 +248,8 @@ Begin_Macro
 }
 End_Macro
 
-## <a name="L10"></a> Alignment Rules
+\anchor L10
+## Alignment Rules
 The `TText` alignment rules apply to the `TLatex` objects with one exception
 concerning the vertical alignment:
 
@@ -289,7 +299,8 @@ Begin_Macro(source)
 End_Macro
 
 
-## <a name="L11"></a> Character Adjustment
+\anchor L11
+## Character Adjustment
 
 The two commands `#kern` and `#lower` enable a better control
 over character placement. The command `#kern[(Float_t)dx]{text}` moves
@@ -315,7 +326,8 @@ Begin_Macro
 }
 End_Macro
 
-## <a name="L12"></a> Italic and Boldface
+\anchor L12
+## Italic and Boldface
 Text can be turned italic or boldface using the commands
 `#it` and `#bf`.
 
@@ -331,7 +343,8 @@ Begin_Macro
 }
 End_Macro
 
-## <a name="L13"></a> Examples
+\anchor L13
+## Examples
 
 Begin_Macro(source)
 {
@@ -373,7 +386,8 @@ Begin_Macro(source)
 End_Macro
 
 
-## <a name="L14"></a> Interface to TMathText
+\anchor L14
+## Interface to TMathText
 
 The class `TMathText` is a TeX math formulae interpreter. It uses plain
 TeX syntax and uses "\" as control instead of "#". If a piece of text containing

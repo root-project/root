@@ -54,22 +54,23 @@ ClassImp(TGraphPainter);
     \ingroup Histpainter
     \brief The graph painter class. Implements all graphs' drawing's options.
 
-- [Introduction](#GP00)
-- [Graphs' plotting options](#GP01)
-- [Exclusion graphs](#GP02)
-- [Graphs with error bars](#GP03)
-   - [TGraphErrors](#GP03a)
-   - [TGraphAsymmErrors](#GP03b)
-   - [TGraphBentErrors](#GP03c)
-   - [TGraphMultiErrors](#GP03d)
-- [TGraphPolar options](#GP04)
-- [Colors automatically picked in palette](#GP05)
-- [Reverse graphs' axis](#GP06)
-- [Graphs in logarithmic scale](#GP07)
-- [Highlight mode for graph](#GP08)
+- [Introduction](\ref GP00)
+- [Graphs' plotting options](\ref GP01)
+- [Exclusion graphs](\ref GP02)
+- [Graphs with error bars](\ref GP03)
+   - [TGraphErrors](\ref GP03a)
+   - [TGraphAsymmErrors](\ref GP03b)
+   - [TGraphBentErrors](\ref GP03c)
+   - [TGraphMultiErrors](\ref GP03d)
+- [TGraphPolar options](\ref GP04)
+- [Colors automatically picked in palette](\ref GP05)
+- [Reverse graphs' axis](\ref GP06)
+- [Graphs in logarithmic scale](\ref GP07)
+- [Highlight mode for graph](\ref GP08)
 
 
-### <a name="GP00"></a> Introduction
+\anchor GP00
+### Introduction
 
 Graphs are drawn via the painter `TGraphPainter` class. This class
 implements techniques needed to display the various kind of
@@ -101,7 +102,8 @@ after one of these three actions:
 2.  a click inside the pad,
 3.  a call to `TPad::Update`.
 
-### <a name="GP01"></a> Graphs' plotting options
+\anchor GP01
+### Graphs' plotting options
 Graphs can be drawn with the following options:
 
 | Option   | Description                                                       |
@@ -179,7 +181,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-### <a name="GP02"></a> Exclusion graphs
+\anchor GP02
+### Exclusion graphs
 
 When a graph is painted with the option `C` or `L` it is
 possible to draw a filled area on one side of the line. This is useful to show
@@ -201,7 +204,8 @@ Begin_Macro(source)
 ../../../tutorials/graphs/exclusiongraph.C
 End_Macro
 
-### <a name="GP03"></a> Graphs with error bars
+\anchor GP03
+### Graphs with error bars
 Three classes are available to handle graphs with error bars:
 `TGraphErrors`, `TGraphAsymmErrors` and `TGraphBentErrors`.
 The following drawing options are specific to graphs with error bars:
@@ -228,7 +232,8 @@ The following drawing options are specific to graphs with error bars:
 at the end of the error bars (when option 1 is used).
 By default `np=1`. (np represents the number of pixels).
 
-#### <a name="GP03a"></a> TGraphErrors
+\anchor GP03a
+#### TGraphErrors
 
 A `TGraphErrors` is a `TGraph` with error bars. The errors are
 defined along X and Y and are symmetric: The left and right errors are the same
@@ -345,7 +350,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-#### <a name="GP03b"></a> TGraphAsymmErrors
+\anchor GP03b
+#### TGraphAsymmErrors
 A `TGraphAsymmErrors` is like a `TGraphErrors` but the errors
 defined along X and Y are not symmetric: The left and right errors are
 different along X and the bottom and up errors are different along Y.
@@ -368,7 +374,8 @@ Begin_Macro(source)
 End_Macro
 
 
-#### <a name="GP03c"></a> TGraphBentErrors
+\anchor GP03c
+#### TGraphBentErrors
 A `TGraphBentErrors` is like a `TGraphAsymmErrors`.
 An extra parameter allows to bend the error bars to better see them
 when several graphs are drawn on the same plot.
@@ -396,7 +403,8 @@ Begin_Macro(source)
 End_Macro
 
 
-#### <a name="GP03d"></a> TGraphMultiErrors
+\anchor GP03d
+#### TGraphMultiErrors
 A `TGraphMultiErrors` works basically the same way like a `TGraphAsymmErrors`.
 It has the possibility to define more than one type / dimension of y-Errors.
 This is useful if you want to plot statistic and systematic errors at once.
@@ -447,7 +455,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="GP04"></a> TGraphPolar options
+\anchor GP04
+### TGraphPolar options
 
 The drawing options for the polar graphs are the following:
 
@@ -488,7 +497,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-### <a name="GP05"></a> Colors automatically picked in palette
+\anchor GP05
+### Colors automatically picked in palette
 
 \since **ROOT version 6.09/01**
 
@@ -510,7 +520,8 @@ Begin_Macro(source)
 ../../../tutorials/graphs/multigraphpalettecolor.C
 End_Macro
 
-### <a name="GP06"></a> Reverse graphs' axis
+\anchor GP06
+### Reverse graphs' axis
 
 \since **ROOT version 6.09/03**
 
@@ -550,7 +561,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-### <a name="GP07"></a> Graphs in logarithmic scale
+\anchor GP07
+### Graphs in logarithmic scale
 
 Like histograms, graphs can be drawn in logarithmic scale along X and Y. When
 a pad is set to logarithmic scale with TPad::SetLogx() and/or with TPad::SetLogy()
@@ -591,7 +603,8 @@ Begin_Macro(source)
 
 End_Macro
 
-#### <a name="GP08"></a> Highlight mode for graph
+\anchor GP08
+#### Highlight mode for graph
 
 \since **ROOT version 6.15/01**
 

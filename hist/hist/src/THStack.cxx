@@ -42,7 +42,7 @@ to the drawing option.
 THStack::Add() allows to add a new histogram to the list.
 The THStack does not own the objects in the list.
 
-### <a name="HS00"></a> Stack painting
+### Stack painting
 
 By default, histograms are shown stacked.
   - the first histogram is paint
@@ -51,7 +51,7 @@ By default, histograms are shown stacked.
 The axis ranges are computed automatically along the X and Y axis in
 order to show the complete histogram collection.
 
-### <a name="HS01"></a> Stack's drawing options
+### Stack's drawing options
 
 The specific stack's drawing options are:
 

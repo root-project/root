@@ -236,7 +236,7 @@ less accurate.
 
 #### Using decomposition classes for inverting
 
-You can also use the following decomposition classes (see → [Matrix decompositions](#MD"))
+You can also use the following decomposition classes (see → [Matrix decompositions](\ref MD))
 for inverting a matrix:
 
 
@@ -357,7 +357,8 @@ The next table summarizes how to access the individual matrix elements in the ma
 | TMatrixDSub(A(i) TMatrixDSub(A,rl,rh,cl,ch)(i,j) | element A<sub>ij</sub><br>element A<sub>rl+i,cl+j</sub> |
 
 
-#### <a name="MD"></a> Matrix decompositions
+\anchor MD
+#### Matrix decompositions
 
 There are the following classes available for matrix decompositions:
 
