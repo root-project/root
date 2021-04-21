@@ -970,6 +970,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary Quit ROOT session */
       onQuitRootPress: function() {
          this.websocket.send("QUIT_ROOT");
+         setTimeout(() => { if (window) window.close(); }, 2000);
       },
 
       onSearch : function(oEvt) {
