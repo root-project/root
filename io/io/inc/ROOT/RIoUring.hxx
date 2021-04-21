@@ -27,17 +27,6 @@ private:
    struct io_uring fRing;
    std::uint32_t fDepth = 0;
 
-   static bool CheckIsAvailable() {
-      try {
-         RIoUring(1);
-         return true;
-      }
-      catch (const std::runtime_error& err) {
-         Warning("RIoUring", "io_uring is not available\n%s", err.what());
-      }
-      return false;
-   }
-
 public:
    // Create an io_uring instance. The ring selects an appropriate queue depth. which can be queried
    // afterwards using GetQueueDepth(). The depth is typically 1024 or lower. Throws an exception if
@@ -80,12 +69,6 @@ public:
    ~RIoUring() {
       // todo(max) try submitting any pending events before exiting
       io_uring_queue_exit(&fRing);
-   }
-
-   /// Check if io_uring is available on this system.
-   static bool IsAvailable() {
-      static const bool available = RIoUring::CheckIsAvailable();
-      return available;
    }
 
    std::uint32_t GetQueueDepth() {
