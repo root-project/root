@@ -2007,6 +2007,7 @@ public:
    /// \return information about the dataframe as string
    ///
    /// This convenience function describes the dataframe and combines the following information:
+   /// - Information about the dataset, see DescribeDataset()
    /// - Number of event loops run, see GetNRuns()
    /// - Number of total and defined columns, see GetColumnNames() and GetDefinedColumnNames()
    /// - Column names, see GetColumnNames()
@@ -2030,6 +2031,10 @@ public:
    ///
    std::string Describe()
    {
+      // Put the information from DescribeDataset on the top
+      std::stringstream ss;
+      ss << DescribeDataset() << "\n\n";
+
       // Build set of defined column names to find later in all column names
       // the defined columns more efficiently
       const auto columnNames = GetColumnNames();
@@ -2050,7 +2055,6 @@ public:
       // to the maximum of the string "Value" and all values to be put in this column.
       const auto columnWidthValues =
          std::max(std::max_element(metadataValues.begin(), metadataValues.end())->size(), static_cast<std::size_t>(5u));
-      std::stringstream ss;
       ss << std::left << std::setw(columnWidthProperties) << "Property" << std::setw(columnWidthValues) << "Value\n"
          << std::setw(columnWidthProperties) << "--------" << std::setw(columnWidthValues) << "-----\n";
 
