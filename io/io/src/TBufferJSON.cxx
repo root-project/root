@@ -531,7 +531,7 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
       if (!clActual)
          clActual = TObject::Class();
       else if (clActual != TObject::Class())
-         ptr = (void *)((Long_t)obj - clActual->GetBaseClassOffset(TObject::Class()));
+         ptr = (void *)((Longptr_t)obj - clActual->GetBaseClassOffset(TObject::Class()));
    }
 
    return ConvertToJSON(ptr, clActual, compact, member_name);

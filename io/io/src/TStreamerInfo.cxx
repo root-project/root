@@ -5101,7 +5101,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
                TString *st = (TString*)(pointer);
                printf("%s\n",st->Data());
             } else {
-               printf("(%s*)0x%lx\n",GetName(),(ULong_t)pointer);
+               printf("(%s*)0x%zx\n",GetName(),(size_t)pointer);
             }
          }
          return;
@@ -5417,7 +5417,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kObjectp: {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectPointer *el = (TStreamerObjectPointer*)aElement;
-         printf("(%s*)%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
+         printf("(%s*)%zx",el ? el->GetClass()->GetName() : "unknown_type",(size_t)(*obj));
          break;
       }
 
@@ -5425,7 +5425,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kObjectP: {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectPointer *el = (TStreamerObjectPointer*)aElement;
-         printf("(%s*)%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
+         printf("(%s*)%zx",el ? el->GetClass()->GetName() : "unknown_type",(size_t)(*obj));
          break;
       }
 
@@ -5457,7 +5457,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kAnyp:    {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectAnyPointer *el = (TStreamerObjectAnyPointer*)aElement;
-         printf("(%s*)0x%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
+         printf("(%s*)0x%zx",el ? el->GetClass()->GetName() : "unknown_type",(size_t)(*obj));
          break;
       }
 
@@ -5465,7 +5465,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kAnyP:    {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectAnyPointer *el = (TStreamerObjectAnyPointer*)aElement;
-         printf("(%s*)0x%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
+         printf("(%s*)0x%zx",el ? el->GetClass()->GetName() : "unknown_type",(size_t)(*obj));
          break;
       }
       // Any Class not derived from TObject
@@ -5532,10 +5532,10 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
                std::string *st = (std::string*)(ladd);
                printf("%s",st->c_str());
             } else {
-               printf("(%s*)0x%lx",aElement->GetClass()->GetName(),(Long_t)(ladd));
+               printf("(%s*)0x%zx",aElement->GetClass()->GetName(),(size_t)(ladd));
             }
          } else {
-            printf("(unknown_type*)0x%lx",(Long_t)(ladd));
+            printf("(unknown_type*)0x%zx",(size_t)(ladd));
          }
          break;
       }

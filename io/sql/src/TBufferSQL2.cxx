@@ -219,7 +219,7 @@ TSQLObjectData *TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo *sqlinf
             Info("SqlObjectData", "Before request to %s", sqlinfo->GetClassTableName());
          TSQLResult *alldata = fSQL->GetNormalClassDataAll(fFirstObjId, fLastObjId, sqlinfo);
          if (gDebug > 4)
-            Info("SqlObjectData", "After request res = 0x%lx", (Long_t)alldata);
+            Info("SqlObjectData", "After request res = 0x%zx", (size_t)alldata);
          if (!alldata) {
             Error("SqlObjectData", "Cannot get data from table %s", sqlinfo->GetClassTableName());
             return nullptr;
