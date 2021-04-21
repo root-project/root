@@ -1221,6 +1221,11 @@ if(builtin_tbb)
   endif()
   if(MSVC)
     set(vsdir "vs2013")
+    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+      set(tbb_arch x64)
+    else()
+      set(tbb_arch Win32)
+    endif()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
     ExternalProject_Add(
       TBB
@@ -1228,16 +1233,16 @@ if(builtin_tbb)
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
-      BUILD_COMMAND devenv.exe /useenv /build "Release|Win32" build/${vsdir}/makefile.sln
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
+      BUILD_COMMAND devenv.exe /useenv /build "Release|${tbb_arch}" build/${vsdir}/makefile.sln
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
       BUILD_IN_SOURCE 1
