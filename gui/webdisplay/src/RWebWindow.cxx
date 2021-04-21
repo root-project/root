@@ -567,6 +567,16 @@ std::string RWebWindow::GetConnToken() const
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Internal method to verify and thread id has to be assigned from manager again
+/// Special case when ProcessMT was enabled just until thread id will be assigned
+
+void RWebWindow::CheckThreadAssign()
+{
+   if (fProcessMT && fMgr->fExternalProcessEvents)
+      fMgr->AssignWindowThreadId(*this);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Processing of websockets call-backs, invoked from RWebWindowWSHandler
 /// Method invoked from http server thread, therefore appropriate mutex must be used on all relevant data
 

@@ -194,6 +194,8 @@ private:
 
    unsigned FindHeadlessConnection();
 
+   void CheckThreadAssign();
+
 public:
 
    RWebWindow();
