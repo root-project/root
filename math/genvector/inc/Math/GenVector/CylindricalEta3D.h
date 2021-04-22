@@ -68,6 +68,7 @@ public :
   explicit CylindricalEta3D( const CoordSystem & v ) :
      fRho(v.Rho() ),  fEta(v.Eta() ),  fPhi(v.Phi() )
   {
+     using std::log; 
      static Scalar bigEta = Scalar(-0.3) * log(std::numeric_limits<Scalar>::epsilon());
      if (std::fabs(fEta) > bigEta) {
         // This gives a small absolute adjustment in rho,

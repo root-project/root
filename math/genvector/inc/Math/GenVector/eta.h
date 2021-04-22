@@ -55,9 +55,11 @@ namespace ROOT {
               using std::fabs;
               if (std::fabs(z_scaled) < big_z_scaled) {
                  using std::sqrt;
+                 using std::log;
                  return log(z_scaled + std::sqrt(z_scaled * z_scaled + 1.0));
               } else {
                  // apply correction using first order Taylor expansion of sqrt
+                 using std::log;
                  return z > 0 ? log(2.0 * z_scaled + 0.5 / z_scaled) : -log(-2.0 * z_scaled);
               }
            }
@@ -89,6 +91,7 @@ namespace ROOT {
               return -r - etaMax<Scalar>();
            }
            else {
+              using std::log;
               return -log(tanThetaOver2);
            }
 

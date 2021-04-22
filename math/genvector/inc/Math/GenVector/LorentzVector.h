@@ -490,6 +490,7 @@ More details about the GenVector package can be found \ref GenVector "here".
           //        We should then move the code to a .cpp file.
           const Scalar ee  = E();
           const Scalar ppz = Pz();
+          using std::log;
           return Scalar(0.5) * log((ee + ppz) / (ee - ppz));
        }
 
@@ -501,6 +502,7 @@ More details about the GenVector package can be found \ref GenVector "here".
           //        mechanism or at least load a NAN if not.
           const Scalar ee = E();
           const Scalar pp = P();
+          using std::log;
           return Scalar(0.5) * log((ee + pp) / (ee - pp));
        }
 
