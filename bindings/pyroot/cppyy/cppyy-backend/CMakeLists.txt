@@ -21,6 +21,8 @@ file(COPY ${cppyy_backendPySrcDir}
      PATTERN "cmake" EXCLUDE
      PATTERN "pkg_templates" EXCLUDE)
 
+file(RELATIVE_PATH PYTHONDIR_TO_LIBDIR "${CMAKE_INSTALL_FULL_PYTHONDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
+
 foreach(val RANGE ${how_many_pythons})
   list(GET python_under_version_strings ${val} python_under_version_string)
   list(GET python_executables ${val} python_executable)
@@ -47,9 +49,9 @@ foreach(val RANGE ${how_many_pythons})
                              ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
   if (NOT MSVC AND NOT CMAKE_INSTALL_LIBDIR STREQUAL CMAKE_INSTALL_PYTHONDIR)
     # add a symlink to ${libname} in CMAKE_INSTALL_PYTHONDIR
-    install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink\
-            ${CMAKE_INSTALL_FULL_LIBDIR}/lib${libname}.so\
-            ${CMAKE_INSTALL_FULL_PYTHONDIR}/lib${libname}.so)")
+    set(LIB_FILE_NAME ${CMAKE_SHARED_LIBRARY_PREFIX}${libname}${CMAKE_SHARED_LIBRARY_SUFFIX})
+    install(CODE "file(CREATE_LINK ${PYTHONDIR_TO_LIBDIR}/${LIB_FILE_NAME}
+      \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_PYTHONDIR}/${LIB_FILE_NAME} SYMBOLIC)")
   endif()
 
   # Compile .py files
