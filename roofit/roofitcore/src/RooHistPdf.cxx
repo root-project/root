@@ -217,17 +217,9 @@ Double_t RooHistPdf::evaluate() const
     }
   }
 
-  Double_t ret = _dataHist->weightFast(_histObsList, _intOrder, !_unitNorm, _cdfBoundaries);
-//  cout << "RooHistPdf::evaluate(" << GetName() << ") ret = " << ret << " ";
-//  cout << _histObsList[0] << " ";
-//  _histObsList[0]->Print("");
-//  _dataHist->Print("V");
-//  _dataHist->dump2();
+  double ret = _dataHist->weightFast(_histObsList, _intOrder, !_unitNorm, _cdfBoundaries);
 
-  if (ret<0) {
-    ret=0 ;
-  }  
-  return ret ;
+  return std::max(ret, 0.0);
 }
 
 

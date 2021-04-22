@@ -1068,8 +1068,17 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
 ////////////////////////////////////////////////////////////////////////////////
 /// A faster version of RooDataHist::weight that assumes the passed arguments
 /// are aligned with the histogram variables.
-///
-/// For the interpolation case, the slow version is still used.
+/// \param[in] bin Coordinates for which the weight should be calculated.
+///                Has to be aligned with the internal histogram variables.
+/// \param[in] intOrder Interpolation order, i.e. how many neighbouring bins are
+///                     used for the interpolation. If zero, the bare weight for
+///                     the bin enclosing the coordinatesis returned.
+/// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
+/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+///                          underflow bins are assumed to have weight zero and 
+///                          overflow bins have weight one. Otherwise, the
+///                          histogram is mirrored at the boundaries for the
+///                          interpolation.
 
 double RooDataHist::weightFast(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries)
 {
@@ -1099,10 +1108,15 @@ double RooDataHist::weightFast(const RooArgSet& bin, Int_t intOrder, Bool_t corr
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the weight at given coordinates with optional interpolation.
 /// \param[in] bin Coordinates for which the weight should be calculated.
-/// \param[in] intOrder If zero, the bare weight for the bin enclosing the coordinatesis returned.
-/// For higher values, the result is interpolated in the real dimensions of the dataset.
-/// \param[in] correctForBinSize
-/// \param[in] cdfBoundaries
+/// \param[in] intOrder Interpolation order, i.e. how many neighbouring bins are
+///                     used for the interpolation. If zero, the bare weight for
+///                     the bin enclosing the coordinatesis returned.
+/// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
+/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+///                          underflow bins are assumed to have weight zero and 
+///                          overflow bins have weight one. Otherwise, the
+///                          histogram is mirrored at the boundaries for the
+///                          interpolation.
 /// \param[in] oneSafe Ignored.
 
 Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries, Bool_t /*oneSafe*/)
@@ -1132,10 +1146,23 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the weight at given coordinates with interpolation.
+/// \param[in] bin Coordinates for which the weight should be calculated.
+///                Has to be aligned with the internal histogram variables.
+/// \param[in] intOrder Interpolation order, i.e. how many neighbouring bins are
+///                     used for the interpolation.
+/// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
+/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+///                          underflow bins are assumed to have weight zero and 
+///                          overflow bins have weight one. Otherwise, the
+///                          histogram is mirrored at the boundaries for the
+///                          interpolation.
+
 double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries) {
   VarInfo const& varInfo = getVarInfo();
 
-  auto centralIdx = calcTreeIndex(bin, true);
+  const auto centralIdx = calcTreeIndex(bin, true);
 
   double wInt{0} ;
   if (varInfo.nRealVars == 1) {
@@ -1271,7 +1298,21 @@ void RooDataHist::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const
 /// Perform boundary safe 'intOrder'-th interpolation of weights in dimension 'dim'
 /// at current value 'xval'
 
-Double_t RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int intOrder, bool correctForBinSize, bool cdfBoundaries) 
+/// \param[in] iDim Index of the histogram dimension along which to interpolate.
+/// \param[in] xval Value of histogram variable at dimension `iDim` for which
+///                 we want to interpolate the histogram weight.
+/// \param[in] centralIdx Index of the bin that the point at which we
+///                       interpolate the histogram weight falls into
+///                       (can be obtained with `RooDataHist::calcTreeIndex`).
+/// \param[in] intOrder Interpolation order, i.e. how many neighbouring bins are
+///                     used for the interpolation.
+/// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
+/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+///                          underflow bins are assumed to have weight zero and 
+///                          overflow bins have weight one. Otherwise, the
+///                          histogram is mirrored at the boundaries for the
+///                          interpolation.
+double RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int intOrder, bool correctForBinSize, bool cdfBoundaries) 
 {
   auto const& binning = static_cast<RooRealVar&>(*_vars[iDim]).getBinning();
 
@@ -2129,6 +2170,12 @@ void RooDataHist::registerWeightArraysToDataStore() const {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return reference to VarInfo struct with cached histogram variable
+/// information that is frequently used for histogram weights retrieval.
+/// 
+/// If the `_varInfo` struct was not initialized yet, it will be initialized in
+/// this function.
 RooDataHist::VarInfo const& RooDataHist::getVarInfo() {
 
   if(_varInfo.initialized) return _varInfo;

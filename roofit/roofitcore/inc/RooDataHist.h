@@ -200,6 +200,8 @@ public:
   ///@}
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /// Structure to cache information on the histogram variable that is
+  /// frequently used for histogram weights retrieval.
   struct VarInfo {
     size_t nRealVars = 0;
     size_t realVarIdx1 = 0;
