@@ -23,6 +23,7 @@
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveElement.hxx>
+#include <ROOT/REveCompound.hxx>
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveUtil.hxx>
 #include <ROOT/REveGeoShape.hxx>
@@ -105,14 +106,14 @@ void addTracks()
    int N_Tracks = 10 + r.Integer(20);
    for (int i = 0; i < N_Tracks; i++)
    {
-      TParticle* p = new TParticle();
+      TParticle p;
 
       int pdg = 11 * (r.Integer(2) > 0 ? 1 : -1);
-      p->SetPdgCode(pdg);
+      p.SetPdgCode(pdg);
 
-      p->SetProductionVertex(r.Uniform(-v,v), r.Uniform(-v,v), r.Uniform(-v,v), 1);
-      p->SetMomentum(r.Uniform(-m,m), r.Uniform(-m,m), r.Uniform(-m,m)*r.Uniform(1, 3), 1);
-      auto track = new REX::REveTrack(p, 1, prop);
+      p.SetProductionVertex(r.Uniform(-v,v), r.Uniform(-v,v), r.Uniform(-v,v), 1);
+      p.SetMomentum(r.Uniform(-m,m), r.Uniform(-m,m), r.Uniform(-m,m)*r.Uniform(1, 3), 1);
+      auto track = new REX::REveTrack(&p, 1, prop);
       track->MakeTrack();
       if (i % 4 == 3) track->SetLineStyle(2); // enabled dashed style for some tracks
       track->SetMainColor(kBlue);
@@ -225,7 +226,8 @@ class EventManager : public REX::REveElement
 {
 private:
    bool fAutoplay{false};
-   int fPlayDelay{10};
+   int  fPlayDelay{10};
+   int  fCount{0};
 
    std::chrono::time_point<std::chrono::system_clock> fPrevTime;
    std::chrono::duration<double> fDeltaTime{1};
@@ -255,6 +257,7 @@ public:
          if (mngRhoZ)
             mngRhoZ->ImportElements(ie, rhoZEventScene);
       }
+      // if (++fCount % 10 == 0) printf("At event %d\n", fCount);
    }
 
    void autoplay_scheduler()

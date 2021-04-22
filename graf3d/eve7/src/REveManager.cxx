@@ -24,22 +24,23 @@
 #include "TGeoMatrix.h"
 #include "TObjString.h"
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TFile.h"
 #include "TMap.h"
 #include "TExMap.h"
-#include "TMacro.h"
-#include "TFolder.h"
-#include "TSystem.h"
 #include "TEnv.h"
 #include "TColor.h"
-#include "TPluginManager.h"
 #include "TPRegexp.h"
 #include "TClass.h"
+#include "TMethod.h"
+#include "TMethodCall.h"
 #include "THttpServer.h"
+
 
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <regex>
 
 #include <nlohmann/json.hpp>
 
@@ -68,9 +69,6 @@ REveManager::REveManager()
    : // (Bool_t map_window, Option_t* opt) :
      fExcHandler(nullptr), fVizDB(nullptr), fVizDBReplace(kTRUE), fVizDBUpdate(kTRUE), fGeometries(nullptr),
      fGeometryAliases(nullptr),
-
-     fMacroFolder(nullptr),
-
      fKeepEmptyCont(kFALSE), fTimerActive(kFALSE)
 {
    // Constructor.
@@ -92,10 +90,6 @@ REveManager::REveManager()
    fVizDB->SetOwnerKeyValue();
 
    fElementIdMap[0] = nullptr; // do not increase count for null element.
-
-   // fRedrawTimer.Connect("Timeout()", "ROOT::Experimental::REveManager", this, "DoRedraw3D()");
-   fMacroFolder = new TFolder("EVE", "Visualization macros");
-   gROOT->GetListOfBrowsables()->Add(fMacroFolder);
 
    fWorld = new REveScene("EveWorld", "Top-level Eve Scene");
    fWorld->IncDenyDestroy();
@@ -189,8 +183,7 @@ REveManager::~REveManager()
    fHighlight->DecDenyDestroy();
    fSelection->DecDenyDestroy();
 
-   gROOT->GetListOfBrowsables()->Remove(fMacroFolder);
-   delete fMacroFolder;
+   for (auto i = fMethCallMap.begin(); i != fMethCallMap.end(); ++i) delete i->second;
 
    delete fGeometryAliases;
    delete fGeometries;
@@ -217,17 +210,6 @@ REveScene *REveManager::SpawnNewScene(const char *name, const char *title)
    AddElement(s, fScenes);
    return s;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Find macro in fMacroFolder by name.
-
-TMacro *REveManager::GetMacro(const char *name) const
-{
-   return dynamic_cast<TMacro *>(fMacroFolder->FindObject(name));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Register a request for 3D redraw.
 
 void REveManager::RegisterRedraw3D()
 {
@@ -303,8 +285,6 @@ void REveManager::RemoveElement(REveElement *element, REveElement *parent)
 
 REveElement *REveManager::FindElementById(ElementId_t id) const
 {
-   static const REveException eh("REveManager::FindElementById ");
-
    auto it = fElementIdMap.find(id);
    return (it != fElementIdMap.end()) ? it->second : nullptr;
 }
@@ -838,6 +818,8 @@ void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std:
 //____________________________________________________________________
 void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
 {
+   static const REveException eh("REveManager::ExecuteMIR ");
+
    class ChangeSentry {
    public:
       ChangeSentry()
@@ -857,22 +839,52 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
       ::Info("REveManager::ExecuteCommand", "MIR cmd %s", mir->fCmd.c_str());
 
    try {
-      std::stringstream cmd;
-      if (mir->fId == 0) {
-         cmd << "((ROOT::Experimental::REveManager *)" << std::hex << std::showbase << (size_t)this << ")->"
-             << mir->fCmd << ";";
-      } else {
-         auto el = FindElementById(mir->fId);
-         if (!el) {
-            R__LOG_ERROR(EveLog()) << "Element with id " << mir->fId << " not found";
-            return;
-         }
-         std::string ctype = mir->fCtype;
-         cmd << "((" << ctype << "*)" << std::hex << std::showbase << (size_t)el << ")->" << mir->fCmd << ";";
-         // std::cout << cmd.str() << std::endl;
+      REveElement *el = FindElementById(mir->fId);
+      if ( ! el) throw eh + "Element with id " + mir->fId + " not found";
+
+      static const std::regex cmd_re("^(\\w[\\w\\d]*)\\(\\s*(.*)\\s*\\)\\s*;?\\s*$", std::regex::optimize);
+      std::smatch m;
+      std::regex_search(mir->fCmd, m, cmd_re);
+      if (m.size() != 3)
+         throw eh + "Command string parse error: '" + mir->fCmd + "'.";
+
+      static const TClass *elem_cls = TClass::GetClass<REX::REveElement>();
+
+      TClass  *call_cls = TClass::GetClass(mir->fCtype.c_str());
+      if ( ! call_cls)
+         throw eh + "Class '" + mir->fCtype + "' not found.";
+
+      void *el_casted = call_cls->DynamicCast(elem_cls, el, false);
+      if ( ! el_casted)
+         throw eh + "Dynamic cast from REveElement to '" + mir->fCtype + "' failed.";
+
+      std::string tag(mir->fCtype + "::" + m.str(1));
+      TMethodCall *mc;
+
+      auto mmi = fMethCallMap.find(tag);
+      if (mmi != fMethCallMap.end())
+      {
+         mc = mmi->second;
+      }
+      else
+      {
+         const TMethod *meth = call_cls->GetMethodAllAny(m.str(1).c_str());
+         if ( ! meth)
+            throw eh + "Can not find TMethod matching '" + m.str(1) + "'.";
+         mc = new TMethodCall(meth);
+         fMethCallMap.insert(std::make_pair(tag, mc));
       }
 
-      gROOT->ProcessLine(cmd.str().c_str());
+      R__LOCKGUARD_CLING(gInterpreterMutex);
+      mc->Execute(el_casted, m.str(2).c_str());
+
+      // Alternative implementation through Cling. "Leaks" 200 kB per call.
+      // This might be needed for function calls that involve data-types TMethodCall
+      // can not handle.
+      // std::stringstream cmd;
+      // cmd << "((" << mir->fCtype << "*)" << std::hex << std::showbase << (size_t)el << ")->" << mir->fCmd << ";";
+      // std::cout << cmd.str() << std::endl;
+      // gROOT->ProcessLine(cmd.str().c_str());
    } catch (std::exception &e) {
       std::cout << "REveManager::ExecuteCommand " << e.what() << std::endl;
    } catch (...) {

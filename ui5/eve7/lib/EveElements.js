@@ -777,7 +777,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
         // get sign for the case of RhoZ projection
         if (calo.render_data.vtxBuff[idx*12 + 1] < 0) bin = -bin ;
 
-        let fcall = "NewBinPicked((Int_t)" +  bin + ", " +  slice + ", " + selectionId + ", " + multi + ")"
+        let fcall = "NewBinPicked(" +  bin + ", " +  slice + ", " + selectionId + ", " + multi + ")"
         scene.mgr.SendMIR(fcall, calo.fElementId, "ROOT::Experimental::REveCalo2D");
         return true;
     }
@@ -975,7 +975,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
         let selectionId = scene.mgr.global_selection_id;
         let multi = event && event.ctrlKey ? true : false;
         let fcall = "NewTowerPicked(" +  idxBuff[idx*2 + 1] + ", " +  idxBuff[idx*2] + ", "
-            + selectionId + ", " + multi + ");"
+            + selectionId + ", " + multi + ")";
         scene.mgr.SendMIR(fcall, calo.fElementId, "ROOT::Experimental::REveCalo3D");
         return true;
     }
@@ -987,7 +987,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
         let idxBuff = calo.render_data.idxBuff;
         let scene = this.obj3d.scene;
         let selectionId = scene.mgr.global_highlight_id;
-        let fcall = "NewTowerPicked(" +  idxBuff[idx*2 + 1] + ", " +  idxBuff[idx*2] + ", " + selectionId + ", false);"
+        let fcall = "NewTowerPicked(" +  idxBuff[idx*2 + 1] + ", " +  idxBuff[idx*2] + ", " + selectionId + ", false)";
         scene.mgr.SendMIR(fcall, calo.fElementId, "ROOT::Experimental::REveCalo3D");
     }
 

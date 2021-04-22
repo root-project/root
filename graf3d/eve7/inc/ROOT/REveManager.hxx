@@ -28,9 +28,8 @@
 
 class TMap;
 class TExMap;
-class TMacro;
-class TFolder;
 class TGeoManager;
+class TMethodCall;
 
 namespace ROOT {
 namespace Experimental {
@@ -109,8 +108,6 @@ protected:
    TMap                     *fGeometries{nullptr};      //  TODO: use std::map<std::string, std::unique_ptr<TGeoManager>>
    TMap                     *fGeometryAliases{nullptr}; //  TODO: use std::map<std::string, std::string>
 
-   TFolder                  *fMacroFolder{nullptr};
-
    REveScene                *fWorld{nullptr};
 
    REveViewerList           *fViewers{nullptr};
@@ -136,11 +133,12 @@ protected:
 
    std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
    std::vector<Conn>                                fConnList;
-   std::queue<std::shared_ptr<MIR> >                                 fMIRqueue;
+   std::queue<std::shared_ptr<MIR> >                fMIRqueue;
 
-   std::thread                                      fMIRExecThread;
-
+   // MIR execution
+   std::thread       fMIRExecThread;
    ServerState       fServerState;
+   std::unordered_map<std::string, TMethodCall*> fMethCallMap;
 
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
@@ -159,16 +157,16 @@ public:
    REveSelection *GetSelection() const { return fSelection; }
    REveSelection *GetHighlight() const { return fHighlight; }
 
-   REveSceneList *GetScenes() const { return fScenes; }
+   REveSceneList  *GetScenes()  const { return fScenes;  }
    REveViewerList *GetViewers() const { return fViewers; }
 
    REveScene *GetGlobalScene() const { return fGlobalScene; }
-   REveScene *GetEventScene() const { return fEventScene; }
+   REveScene *GetEventScene()  const { return fEventScene;  }
 
    REveScene *GetWorld() const { return fWorld; }
 
    REveViewer *SpawnNewViewer(const char *name, const char *title = "");
-   REveScene *SpawnNewScene(const char *name, const char *title = "");
+   REveScene  *SpawnNewScene (const char *name, const char *title = "");
 
    void BeginChangeGuard();
    void EndChangeGuard();
@@ -178,11 +176,8 @@ public:
 
    bool ClientConnectionsFree() const;
 
-   TFolder *GetMacroFolder() const { return fMacroFolder; }
-   TMacro *GetMacro(const char *name) const;
-
-   void DisableRedraw() { printf("REveManager::DisableRedraw obsolete \n");}
-   void EnableRedraw()  {  printf("REveManager::EnableRedraw obsolete \n");}
+   void DisableRedraw() { printf("REveManager::DisableRedraw obsolete \n"); }
+   void EnableRedraw()  { printf("REveManager::EnableRedraw obsolete \n");  }
 
    void Redraw3D(Bool_t resetCameras = kFALSE, Bool_t dropLogicals = kFALSE)
    {

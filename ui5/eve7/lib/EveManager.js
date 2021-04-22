@@ -784,8 +784,8 @@ sap.ui.define([], function() {
       return res;
    }
 
-   /** used to intercept NewElementPicked for hightlight and selection @private */
-   EveManager.prototype._intercept_NewElementPicked = function(elementId) {
+   /** used to intercept NewElementPickedStr for hightlight and selection @private */
+   EveManager.prototype._intercept_NewElementPickedStr = function(elementId) {
 
       let mirElem = this.GetElement(this._intercept_id);
 
@@ -868,7 +868,7 @@ sap.ui.define([], function() {
       // just do not intercept
       let do_intercept = false;
 
-      if (((mir_call.indexOf("NewElementPicked(") == 0) && ((element_id == this.global_highlight_id) || (element_id == this.global_selection_id))) ||
+      if (((mir_call.indexOf("NewElementPickedStr(") == 0) && ((element_id == this.global_highlight_id) || (element_id == this.global_selection_id))) ||
           ((mir_call.indexOf("BrowseElement(") == 0) && (element_id == 0)) ||
           (mir_call.indexOf("SetRnrSelf(") == 0) || (mir_call.indexOf("SetMainColorRGB(") == 0))
          do_intercept = true;
