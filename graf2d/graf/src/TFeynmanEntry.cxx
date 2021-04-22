@@ -41,7 +41,7 @@ TFeynmanEntry::TFeynmanEntry(const char *particleLabel, Double_t x, Double_t y, 
   fY1 = y;
   fRadius = radius;
   fParticle = "pair";
-
+  fLabel = particleLabel;
 
 }
 
@@ -87,9 +87,16 @@ void TFeynmanEntry::Paint( Option_t* option )
      TLatex *t = new TLatex(fLabelX, fLabelY, fLabel);
      t->Paint();
    }
-   else if (particleName == std::string("pair")) {
+   else if (fParticle == std::string("pair")) {
      TArc *particlePair = new TArc(fX1, fY1, fRadius);
      particlePair->Paint();
+
+     const char* antiparticle = "#bar{" + fLabel + "}";
+     TLatex *t = new TLatex(fX1 - 0.85 * fRadius, fY1 + 0.85*fRadius, fLabel);
+     TLatex *u = new TLatex(fX1 + 0.85 * fRadius, fY1 - 0.85*fRadius, antiparticle);
+
+     t->Paint();
+     u->Paint();
    }
    else{
      Error("TFeynmanEntry::Paint()", "Invalid Particle!");
