@@ -1232,7 +1232,7 @@ Bool_t TRootSniffer::ExecuteCmd(const std::string &path, const std::string &opti
 
    if (item_obj) {
       method =
-         TString::Format("((%s*)%lu)->%s", item_obj->ClassName(), (long unsigned)item_obj, method.Data() + separ + 3);
+         TString::Format("((%s*)%zu)->%s", item_obj->ClassName(), (size_t)item_obj, method.Data() + separ + 3);
       if (gDebug > 2)
          Info("ExecuteCmd", "Executing %s", method.Data());
    }

@@ -2097,7 +2097,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
    char cinc[20], fileinc[kMAXPATHLEN];
 
    if (gDebug > 2)
-      ::Info("TAuthenticate::FileExpand", "enter ... '%s' ... 0x%lx", fexp, (Long_t)ftmp);
+      ::Info("TAuthenticate::FileExpand", "enter ... '%s' ... 0x%zx", fexp, (size_t)ftmp);
 
    fin = fopen(fexp, "r");
    if (fin == 0)
@@ -3265,8 +3265,8 @@ Int_t TAuthenticate::ReadRootAuthrc()
    TString filetmp = "rootauthrc";
    FILE *ftmp = gSystem->TempFileName(filetmp);
    if (gDebug > 2)
-      ::Info("TAuthenticate::ReadRootAuthrc", "got tmp file: %s open at 0x%lx",
-             filetmp.Data(), (Long_t)ftmp);
+      ::Info("TAuthenticate::ReadRootAuthrc", "got tmp file: %s open at 0x%zx",
+             filetmp.Data(), (size_t)ftmp);
    if (ftmp == 0)
       expand = 0;  // Problems opening temporary file: ignore 'include's ...
 
