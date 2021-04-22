@@ -54,6 +54,7 @@ The following people have contributed to this new version:
 
 - Add `Redefine` to the `RDataFrame` interface, which allows to overwrite the value of an existing column.
 - Add `Describe` to the `RDataFrame` interface, which allows to get useful information, e.g. the columns and their types.
+- Add `DescribeDataset` to the `RDataFrame` interface, which allows to get information about the dataset (subset of the output of Describe()).
 
 ## Histogram Libraries
 
