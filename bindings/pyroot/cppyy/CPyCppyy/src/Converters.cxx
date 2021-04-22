@@ -172,8 +172,8 @@ static bool IsPyCArgObject(PyObject* pyobject)
              Py_DECREF(byref); Py_DECREF(cobj); Py_DECREF(ct_t);
              pycarg_type = Py_TYPE(pyptr);  // static, no ref-count needed
              Py_DECREF(pyptr);
+             Py_DECREF(ctmod);
         }
-        Py_DECREF(ctmod);
     }
     return Py_TYPE(pyobject) == pycarg_type;
 }
@@ -2764,7 +2764,8 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, dims
 
                 return new StdFunctionConverter(cnv,
                     resolvedType.substr(pos+9, sz1), resolvedType.substr(pos1, pos2-pos1+1));
-            }
+            } else if (cnv->HasState())
+                delete cnv;
         }
     }
 

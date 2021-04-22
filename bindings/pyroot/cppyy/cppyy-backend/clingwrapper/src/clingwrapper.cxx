@@ -886,6 +886,7 @@ Cppyy::TCppObject_t Cppyy::CallO(TCppMethod_t method,
     void* obj = ::operator new(gInterpreter->ClassInfo_Size(cr->GetClassInfo()));
     if (WrapperCall(method, nargs, args, self, obj))
         return (TCppObject_t)obj;
+    ::operator delete(obj);
     return (TCppObject_t)0;
 }
 
@@ -1135,7 +1136,7 @@ std::vector<Cppyy::TCppScope_t> Cppyy::GetUsingNamespaces(TCppScope_t scope)
 
     const std::vector<std::string>& v = gInterpreter->GetUsingNamespaces(cr->GetClassInfo());
     res.reserve(v.size());
-    for (auto uid : v) {
+    for (const auto& uid : v) {
         Cppyy::TCppScope_t uscope = GetScope(uid);
         if (uscope) res.push_back(uscope);
     }
