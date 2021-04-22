@@ -20,6 +20,7 @@
 #include "TAttFill.h"
 #include "TAttMarker.h"
 #include "TString.h"
+#include "TArc.h"
 
 class TLegendEntry : public TObject, public TAttText, public TAttLine,
                      public TAttFill, public TAttMarker {
