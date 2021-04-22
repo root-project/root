@@ -5,6 +5,10 @@ endif()
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_APPEND_VC_REV OFF CACHE BOOL "")
+set(LLVM_ENABLE_BINDINGS OFF CACHE BOOL "")
+set(LLVM_ENABLE_FFI OFF CACHE BOOL "")
+set(LLVM_ENABLE_OCAMLDOC OFF CACHE BOOL "")
+set(LLVM_ENABLE_Z3_SOLVER OFF CACHE BOOL "")
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_BENCHMARKS OFF CACHE BOOL "")
