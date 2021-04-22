@@ -90,7 +90,7 @@ public :
    Scalar Y()     const { return fY;}
    Scalar Mag2()  const { return fX*fX + fY*fY; }
    Scalar R() const { using std::sqrt; return sqrt(Mag2()); }
-   Scalar Phi() const { return (fX == Scalar(0) && fY == Scalar(0)) ? Scalar(0) : atan2(fY, fX); }
+   Scalar Phi() const { using std::atan2; return (fX == Scalar(0) && fY == Scalar(0)) ? Scalar(0) : atan2(fY, fX); }
 
    /**
        set the x coordinate value keeping y constant
