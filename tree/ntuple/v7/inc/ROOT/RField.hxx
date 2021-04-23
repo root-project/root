@@ -797,6 +797,47 @@ public:
 };
 
 template <>
+class RField<std::uint16_t> : public Detail::RFieldBase {
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
+      return std::make_unique<RField>(newName);
+   }
+
+public:
+   static std::string TypeName() { return "std::uint16_t"; }
+   explicit RField(std::string_view name)
+     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+
+   void GenerateColumnsImpl() final;
+
+   std::uint16_t *Map(NTupleSize_t globalIndex) {
+      return fPrincipalColumn->Map<std::uint16_t, EColumnType::kInt16>(globalIndex);
+   }
+   std::uint16_t *Map(const RClusterIndex &clusterIndex) {
+      return fPrincipalColumn->Map<std::uint16_t, EColumnType::kInt16>(clusterIndex);
+   }
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
+   {
+      return Detail::RFieldValue(
+         Detail::RColumnElement<std::uint16_t, EColumnType::kInt16>(static_cast<std::uint16_t*>(where)),
+         this, static_cast<std::uint16_t*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0); }
+   Detail::RFieldValue CaptureValue(void *where) final {
+      return Detail::RFieldValue(true /* captureFlag */,
+         Detail::RColumnElement<std::uint16_t, EColumnType::kInt16>(static_cast<std::uint16_t*>(where)), this, where);
+   }
+   size_t GetValueSize() const final { return sizeof(std::uint16_t); }
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
+template <>
 class RField<std::int32_t> : public Detail::RFieldBase {
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
