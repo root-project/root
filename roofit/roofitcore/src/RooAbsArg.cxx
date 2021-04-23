@@ -951,11 +951,12 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
 /// \param[in] newSetOrig Set of new servers that should be used instead of the current servers.
 /// \param[in] mustReplaceAll A warning is printed and error status is returned if not all servers could be
 /// substituted successfully.
-/// \param[in] nameChange If false, an object named "x" is replaced with an object named "x" in `newSetOrig`.
-/// If the object in `newSet` is called differently, set `nameChange` to true and use setStringAttribute on the x object:
+/// \param[in] nameChange If false, an object named "x" is only replaced with an object also named "x" in `newSetOrig`.
+/// If the object in `newSet` is called differently, set `nameChange` to true and use setAttribute() on the x object:
 /// ```
-/// objectToReplaceX.setStringAttribute("ORIGNAME", "x")
+/// objectToReplaceX.setAttribute("ORIGNAME:x")
 /// ```
+/// Now, the renamed object will be selected based on the attribute "ORIGNAME:<name>".
 /// \param[in] isRecursionStep Internal switch used when called from recursiveRedirectServers().
 Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursionStep)
 {
@@ -1071,10 +1072,11 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the new server in the specified set that matches the old server.
-/// Allow a name change if nameChange is kTRUE, in which case the new
-/// server is selected by searching for a new server with an attribute
-/// of "ORIGNAME:<oldName>". Return zero if there is not a unique match.
-
+///
+/// \param[in] newSet Search this set by name for a new server.
+/// \param[in] If true, search for an item with the bool attribute "ORIGNAME:<oldName>" set.
+/// Use `<object>.setAttribute("ORIGNAME:<oldName>")` to set this attribute.
+/// \return Pointer to the new server or `nullptr` if there's no unique match.
 RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const
 {
   RooAbsArg *newServer = 0;
