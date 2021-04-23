@@ -1155,6 +1155,8 @@ RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool no
 
   auto residhist = hist->makeResidHist(*curve,normalize,useAverage);
   residhist->GetHistogram()->GetXaxis()->SetRangeUser(_hist->GetXaxis()->GetXmin(), _hist->GetXaxis()->GetXmax());
+  residhist->GetHistogram()->GetXaxis()->SetTitle(_hist->GetXaxis()->GetTitle());
+  residhist->GetHistogram()->GetYaxis()->SetTitle(normalize ? "(Data - curve) / #sigma_{data}" : "Data - curve");
 
   return residhist;
 }
