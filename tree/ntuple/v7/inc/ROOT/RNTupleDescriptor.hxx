@@ -444,6 +444,7 @@ public:
 
    Enumerate all cluster IDs from the cluster descriptor.  No specific order can be assumed, use
    FindNextClusterId and FindPrevClusterId to travers clusters by entry number.
+   TODO(jblomer): review naming of *Range classes and possibly rename consistently to *Iterable
    */
    // clang-format on
    class RClusterDescriptorRange {
