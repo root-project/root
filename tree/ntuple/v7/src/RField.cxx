@@ -99,6 +99,8 @@ std::string GetNormalizedType(const std::string &typeName) {
    if (normalizedType == "uint8_t") normalizedType = "std::uint8_t";
    if (normalizedType == "Short_t") normalizedType = "std::int16_t";
    if (normalizedType == "int16_t") normalizedType = "std::int16_t";
+   if (normalizedType == "UShort_t") normalizedType = "std::uint16_t";
+   if (normalizedType == "uint16_t") normalizedType = "std::uint16_t";
    if (normalizedType == "Int_t") normalizedType = "std::int32_t";
    if (normalizedType == "int") normalizedType = "std::int32_t";
    if (normalizedType == "int32_t") normalizedType = "std::int32_t";
@@ -155,6 +157,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       result = std::make_unique<RField<std::uint8_t>>(fieldName);
    } else if (normalizedType == "std::int16_t") {
       result = std::make_unique<RField<std::int16_t>>(fieldName);
+   } else if (normalizedType == "std::uint16_t") {
+      result = std::make_unique<RField<std::uint16_t>>(fieldName);
    } else if (normalizedType == "std::int32_t") {
       result = std::make_unique<RField<std::int32_t>>(fieldName);
    } else if (normalizedType == "std::uint32_t") {
@@ -479,6 +483,21 @@ void ROOT::Experimental::RField<std::int16_t>::GenerateColumnsImpl()
 void ROOT::Experimental::RField<std::int16_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitInt16Field(*this);
+}
+
+//------------------------------------------------------------------------------
+
+void ROOT::Experimental::RField<std::uint16_t>::GenerateColumnsImpl()
+{
+   RColumnModel model(EColumnType::kInt16, false /* isSorted*/);
+   fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<
+      std::uint16_t, EColumnType::kInt16>(model, 0)));
+   fPrincipalColumn = fColumns[0].get();
+}
+
+void ROOT::Experimental::RField<std::uint16_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitUInt16Field(*this);
 }
 
 //------------------------------------------------------------------------------
