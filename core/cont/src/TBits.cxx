@@ -147,7 +147,7 @@ UInt_t TBits::CountBits(UInt_t startBit) const
    UInt_t ibit = startBit%8;
    if (ibit) {
       for (i=ibit;i<8;i++) {
-         if (fAllBits[startByte] & (1<<ibit)) count++;
+         if (fAllBits[startByte] & (1<<i)) count++;
       }
       startByte++;
    }
