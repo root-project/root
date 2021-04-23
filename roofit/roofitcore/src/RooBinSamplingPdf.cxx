@@ -29,6 +29,7 @@
  * using integrator(). This can be used to change the integration rules, so less/more function evaluations are
  * performed. The target precision of the integrator can be set in the constructor.
  *
+ *
  * ### How to use it
  * There are two ways to use this class:
  * - Manually wrap a PDF:
@@ -37,7 +38,9 @@
  *   binSampler.fitTo(data);
  * ```
  *   When a PDF is wrapped with a RooBinSamplingPDF, just use the bin sampling PDF instead of the original one for fits
- *   or plotting etc. Note that the binning will be taken from the observable.
+ *   or plotting etc.
+ *   \note The binning will be taken from the observable. Make sure that this binning is the same as the one of the dataset that should be fit.
+ *   Use RooRealVar::setBinning() to adapt it.
  * - Instruct test statistics to carry out this wrapping automatically:
  * ```
  *   pdf.fitTo(data, IntegrateBins(<precision>));
