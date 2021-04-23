@@ -3455,8 +3455,8 @@ void THistPainter::DrawPanel()
    }
    TVirtualPadEditor *editor = TVirtualPadEditor::GetPadEditor();
    editor->Show();
-   gROOT->ProcessLine(Form("((TCanvas*)0x%lx)->Selected((TVirtualPad*)0x%lx,(TObject*)0x%lx,1)",
-                           (ULong_t)gPad->GetCanvas(), (ULong_t)gPad, (ULong_t)fH));
+   gROOT->ProcessLine(Form("((TCanvas*)0x%zx)->Selected((TVirtualPad*)0x%zx,(TObject*)0x%zx,1)",
+                           (size_t)gPad->GetCanvas(), (size_t)gPad, (size_t)fH));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4485,8 +4485,8 @@ void THistPainter::Paint(Option_t *option)
    if (Hoption.Spec) {
       if (!TableInit()) return;
       if (!TClass::GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
-      gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%lx,\"%s\",%d)",
-                                  (ULong_t)fH, option, Hoption.Spec));
+      gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%zx,\"%s\",%d)",
+                                  (size_t)fH, option, Hoption.Spec));
       return;
    }
 
@@ -6998,7 +6998,7 @@ void THistPainter::PaintH3(Option_t *option)
       PaintTF3();
       return;
    } else {
-      cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
+      cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%zx,\"%s\");",(size_t)fH,option);
    }
 
    if (strstr(opt,"fb")) Hoption.FrontBox = 0;
@@ -10709,7 +10709,7 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    else                fShowOption = option+2;
    fShowProjection = projection+100*nbins;
    gROOT->MakeDefCanvas();
-   gPad->SetName(Form("c_%lx_projection_%d", (ULong_t)fH, fShowProjection));
+   gPad->SetName(Form("c_%zx_projection_%d", (size_t)fH, fShowProjection));
    gPad->SetGrid();
 }
 
@@ -10744,8 +10744,8 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
    // Create or set the new canvas proj x
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%lx_projection_%d",
-                                                                              (ULong_t)fH, fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%zx_projection_%d",
+                                                                              (size_t)fH, fShowProjection));
    if (c) {
       c->Clear();
    } else {
@@ -10827,8 +10827,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 
    // Create or set the new canvas proj y
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%lx_projection_%d",
-                                                                              (ULong_t)fH, fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%zx_projection_%d",
+                                                                              (size_t)fH, fShowProjection));
    if (c) {
       c->Clear();
    } else {
@@ -10931,8 +10931,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    Double_t cx    = (pxmax-pxmin)/(uxmax-uxmin);
    Double_t cy    = (pymax-pymin)/(uymax-uymin);
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%lx_projection_%d",
-                                                                              (ULong_t)fH, fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%zx_projection_%d",
+                                                                              (size_t)fH, fShowProjection));
    if (!c) {
       fShowProjection = 0;
       return;
