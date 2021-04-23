@@ -56,7 +56,7 @@ private:
 
 private:
    /// The inner sink, responsible for actually performing I/O.
-   std::unique_ptr<RPageSink> fInner;
+   std::unique_ptr<RPageSink> fInnerSink;
    /// The buffered page sink maintains a copy of the RNTupleModel for the inner sink.
    /// For the unbuffered case, the RNTupleModel is instead managed by a RNTupleWriter.
    std::unique_ptr<RNTupleModel> fInnerModel;
