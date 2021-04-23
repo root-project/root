@@ -6,7 +6,7 @@ configure_file(multipleNameCycles.root . COPYONLY)
 configure_file(MakeNameCyclesRootmvInput.C . COPYONLY)
 
 ############################## PATTERN TESTS ############################
-set (TESTPATTERN_EXE ${PYTHON_EXECUTABLE_Development_Main} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
+set (TESTPATTERN_EXE ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
 ROOTTEST_ADD_TEST(SimplePattern1
                   COMMAND ${TESTPATTERN_EXE} test.root
                   OUTREF SimplePattern.ref)
@@ -23,7 +23,7 @@ ROOTTEST_ADD_TEST(SimplePattern3
 if(MSVC)
     # the command line tools works fine in the Windows command prompt but
     # not from CTest, so let's add Python.exe and the .py file extension
-    set(TOOLS_PREFIX ${PYTHON_EXECUTABLE_Development_Main} ${ROOTSYS}/bin)
+    set(TOOLS_PREFIX ${PYTHON_EXECUTABLE} ${ROOTSYS}/bin)
     set(pyext .py)
 else()
     set(TOOLS_PREFIX ${ROOTSYS}/bin)

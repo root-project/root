@@ -22,6 +22,10 @@ endif()
 
 find_package(ROOT REQUIRED CONFIG)
 
+if(NOT DEFINED PYTHON_EXECUTABLE)
+  find_package(PythonInterp ${ROOT_PYTHON_VERSION} REQUIRED QUIET)
+endif()
+
 if(MSVC)
 
   set(libsuffix .dll)
@@ -178,10 +182,6 @@ endif()
 # Setup environment.
 set(ROOTTEST_ENV_PATH ${ROOT_BINDIR})
 if(MSVC)
-  if(NOT PYTHON_EXECUTABLE_Development_Main) # Should not happen!
-    # FIXME: Temporary workaround until standalone roottest is properly fixed
-    set(PYTHON_EXECUTABLE_Development_Main ${PYTHON_EXECUTABLE})
-  endif()
   set(ROOTTEST_ENV_PYTHONPATH ${ROOT_BINDIR})
 else()
   set(ROOTTEST_ENV_PYTHONPATH ${ROOT_LIBRARY_DIR})
