@@ -32,6 +32,13 @@ TEST(RNTuple, Int8_t)
    // auto charField = RField<char>("char");
 }
 
+TEST(RNTuple, Int16_t)
+{
+   auto field = RField<std::int16_t>("int16");
+   auto otherField = RFieldBase::Create("test", "std::int16_t").Unwrap();
+   ASSERT_EQ("std::int16_t", RFieldBase::Create("myShort", "Short_t").Unwrap()->GetType());
+}
+
 TEST(RNTuple, UnsupportedStdTypes)
 {
    try {
