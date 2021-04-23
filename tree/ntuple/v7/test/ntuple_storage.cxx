@@ -145,10 +145,13 @@ TEST(RPageSinkBuf, Basics)
          pagePositions.push_back(std::make_pair(i, page.fLocator.fPosition));
       }
    }
+
    auto sortedPages = pagePositions;
    std::sort(begin(sortedPages), end(sortedPages),
       [](const auto &a, const auto &b) { return a.second < b.second; });
 
+   // For this test, ensure at least some columns have multiple pages
+   ASSERT_TRUE(sortedPages.size() > num_columns);
    // Buffered sink cluster column pages are written out together
    for (std::size_t i = 0; i < pagePositions.size() - 1; i++) {
       // if the next page belongs to another column, skip the check
