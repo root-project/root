@@ -188,6 +188,13 @@ void ROOT::Experimental::RPrintValueVisitor::VisitInt8Field(const RField<std::in
    fOutput << *fValue.Get<std::int8_t>();
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitInt16Field(const RField<std::int16_t> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<std::int16_t>();
+}
+
 void ROOT::Experimental::RPrintValueVisitor::VisitIntField(const RField<int> &field)
 {
    PrintIndent();
