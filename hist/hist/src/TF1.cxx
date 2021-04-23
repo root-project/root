@@ -2473,10 +2473,10 @@ void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
 void TF1::InitArgs(const Double_t *x, const Double_t *params)
 {
    if (fMethodCall) {
-      Long_t args[2];
-      args[0] = (Long_t)x;
-      if (params) args[1] = (Long_t)params;
-      else        args[1] = (Long_t)GetParameters();
+      Longptr_t args[2];
+      args[0] = (Longptr_t)x;
+      if (params) args[1] = (Longptr_t)params;
+      else        args[1] = (Longptr_t)GetParameters();
       fMethodCall->SetParamPtrs(args);
    }
 }
