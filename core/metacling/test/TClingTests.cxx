@@ -97,13 +97,13 @@ TEST_F(TClingTests, MakeInterpreterValue)
 
 static std::string MakeLibNamePlatformIndependent(const std::string &libName)
 {
-   if (libName.empty())
+   // Return an empty string if input is not a library name.
+   // Sometimes, libName can be the binary name (i.e. TClingTest, for this test)
+   if (libName.empty() || libName.compare(0, 3, "lib") != 0)
       return {};
-   EXPECT_EQ(libName.compare(0, 3, "lib"), 0);
-   EXPECT_NE(libName.find('.'), std::string::npos);
-   // Remove the extension.
-   std::string ret = libName.substr(3, libName.find('.') - 3);
-   return ret;
+
+   // Return library name without lib prefix and extension.
+   return libName.substr(3, libName.find('.') - 3);
 }
 
 // Check if the heavily used interface in TCling::AutoLoad returns consistent
@@ -172,12 +172,14 @@ static std::string MakeDepLibsPlatformIndependent(const std::string &libs) {
 
    std::vector<std::string> splitLibs = split(trim(libs));
    assert(!splitLibs.empty());
-   std::string result = MakeLibNamePlatformIndependent(splitLibs[0]) + ' ';
-   splitLibs.erase(splitLibs.begin());
 
-   std::sort(splitLibs.begin(), splitLibs.end());
+   std::sort(splitLibs.begin() + 1, splitLibs.end());
+   std::transform(splitLibs.begin(), splitLibs.end(), splitLibs.begin(), MakeLibNamePlatformIndependent);
+
+   std::string result;
    for (std::string lib : splitLibs)
-      result += MakeLibNamePlatformIndependent(trim(lib)) + ' ';
+      if (!lib.empty())
+         result += lib + ' ';
 
    return trim(result);
 }
