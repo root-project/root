@@ -225,6 +225,12 @@ void ROOT::Experimental::RPrintValueVisitor::VisitUInt8Field(const RField<std::u
    fOutput << static_cast<int>(*fValue.Get<std::uint8_t>());
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitUInt16Field(const RField<std::uint16_t> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<std::uint16_t>();
+}
 
 void ROOT::Experimental::RPrintValueVisitor::VisitUInt32Field(const RField<std::uint32_t> &field)
 {
