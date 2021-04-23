@@ -127,11 +127,6 @@ std::uint32_t DeserializeFrame(std::uint16_t protocolVersion, const void *buffer
    std::uint16_t protocolVersionMinRequired;
    bytes += DeserializeUInt16(bytes, &protocolVersionAtWrite);
    bytes += DeserializeUInt16(bytes, &protocolVersionMinRequired);
-   if (protocolVersionAtWrite < protocolVersionMinRequired) {
-      throw ROOT::Experimental::RException(R__FAIL("RNTuple version too old (version "
-         + std::to_string(protocolVersionAtWrite)
-         + "), version >= " + std::to_string(protocolVersionMinRequired) + " required"));
-   }
    if (protocolVersion < protocolVersionMinRequired) {
       throw ROOT::Experimental::RException(R__FAIL("RNTuple version too new (version "
          + std::to_string(protocolVersionMinRequired)
