@@ -231,6 +231,11 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     Double_t ret = sum ;
     _evalCarry = carry;
+
+    const Double_t norm = globalNormalization();
+    ret /= norm;
+    _evalCarry /= norm;
+
     return ret ;
 
   } else {
