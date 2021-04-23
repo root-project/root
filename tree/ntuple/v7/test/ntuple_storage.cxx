@@ -137,9 +137,9 @@ TEST(RPageSinkBuf, Basics)
    }
 
    std::vector<std::pair<DescriptorId_t, std::int64_t>> pagePositions;
-   auto num_columns = 10;
+   std::size_t num_columns = 10;
    const auto &cluster0 = ntupleBuf->GetDescriptor().GetClusterDescriptor(0);
-   for (auto i = 0; i < num_columns; i++) {
+   for (std::size_t i = 0; i < num_columns; i++) {
       const auto &columnPages = cluster0.GetPageRange(i);
       for (const auto &page: columnPages.fPageInfos) {
          pagePositions.push_back(std::make_pair(i, page.fLocator.fPosition));
