@@ -9270,7 +9270,7 @@ void TProof::Feedback(TList *objs)
       objs->ls();
    }
 
-   Emit("Feedback(TList *objs)", (Long_t) objs);
+   Emit("Feedback(TList *objs)", (Longptr_t) objs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
