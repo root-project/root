@@ -54,6 +54,7 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 #include "TAxis.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
+#include "Math/Util.h"
 #include <iomanip>
 #include <deque>
 #include <algorithm>
@@ -567,7 +568,7 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
 
   Int_t nbin(0) ;
 
-  Double_t chisq(0) ;
+  ROOT::Math::KahanSum<double> chisq;
   for (i=0 ; i<np ; i++) {   
 
     // Retrieve histogram contents
