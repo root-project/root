@@ -19,13 +19,13 @@
 #include <ROOT/RPageSinkBuf.hxx>
 
 ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
-   : RPageSink(inner->GetNTupleName(), inner->GetWriteOptions()), fInner(std::move(inner)) {}
+   : RPageSink(inner->GetNTupleName(), inner->GetWriteOptions()), fInnerSink(std::move(inner)) {}
 
 void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model)
 {
    fBufferedColumns.resize(fLastColumnId);
    fInnerModel = model.Clone();
-   fInner->Create(*fInnerModel);
+   fInnerSink->Create(*fInnerModel);
 }
 
 ROOT::Experimental::RClusterDescriptor::RLocator
@@ -47,11 +47,11 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
 {
    for (auto &bufColumn : fBufferedColumns) {
       for (auto &bufPage : bufColumn.DrainBufferedPages()) {
-         fInner->CommitPage(bufColumn.GetHandle(), bufPage);
+         fInnerSink->CommitPage(bufColumn.GetHandle(), bufPage);
          ReleasePage(bufPage);
       }
    }
-   fInner->CommitCluster(nEntries);
+   fInnerSink->CommitCluster(nEntries);
    // we're feeding bad locators to fOpenPageRanges but it should not matter
    // because they never get written out
    return RClusterDescriptor::RLocator{};
@@ -59,16 +59,16 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
 
 void ROOT::Experimental::Detail::RPageSinkBuf::CommitDatasetImpl()
 {
-   fInner->CommitDataset();
+   fInnerSink->CommitDataset();
 }
 
 ROOT::Experimental::Detail::RPage
 ROOT::Experimental::Detail::RPageSinkBuf::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
-   return fInner->ReservePage(columnHandle, nElements);
+   return fInnerSink->ReservePage(columnHandle, nElements);
 }
 
 void ROOT::Experimental::Detail::RPageSinkBuf::ReleasePage(RPage &page)
 {
-   fInner->ReleasePage(page);
+   fInnerSink->ReleasePage(page);
 }
