@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RDefineBase.hxx"
+#include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h" // Long64_t
 
@@ -28,7 +29,8 @@ unsigned int RDefineBase::GetNextID()
 RDefineBase::RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
                          const RDFInternal::RBookedDefines &defines,
                          const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds)
-   : fName(name), fType(type), fNSlots(nSlots), fLastCheckedEntry(fNSlots, -1), fDefines(defines),
+   : fName(name), fType(type), fNSlots(nSlots),
+     fLastCheckedEntry(fNSlots * RDFInternal::CacheLineStep<Long64_t>(), -1), fDefines(defines),
      fIsInitialized(nSlots, false), fDSValuePtrs(DSValuePtrs), fDataSource(ds)
 {
 }
