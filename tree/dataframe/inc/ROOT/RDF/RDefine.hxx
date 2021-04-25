@@ -72,7 +72,8 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    template <typename... ColTypes, std::size_t... S>
    void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, NoneTag)
    {
-      fLastResults[slot] = fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
+      fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
+         fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
@@ -81,7 +82,8 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    template <typename... ColTypes, std::size_t... S>
    void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, SlotTag)
    {
-      fLastResults[slot] = fExpression(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
+      fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
+         fExpression(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
@@ -91,7 +93,8 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    void
    UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, SlotAndEntryTag)
    {
-      fLastResults[slot] = fExpression(slot, entry, fValues[slot][S]->template Get<ColTypes>(entry)...);
+      fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
+         fExpression(slot, entry, fValues[slot][S]->template Get<ColTypes>(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
@@ -99,10 +102,11 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
 
 public:
    RDefine(std::string_view name, std::string_view type, F expression, const ColumnNames_t &columns,
-                 unsigned int nSlots, const RDFInternal::RBookedDefines &defines,
-                 const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds)
+           unsigned int nSlots, const RDFInternal::RBookedDefines &defines,
+           const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds)
       : RDefineBase(name, type, nSlots, defines, DSValuePtrs, ds), fExpression(std::move(expression)),
-        fColumnNames(columns), fLastResults(fNSlots), fValues(fNSlots), fIsDefine()
+        fColumnNames(columns), fLastResults(fNSlots * RDFInternal::CacheLineStep<ret_type>()), fValues(fNSlots),
+        fIsDefine()
    {
       const auto nColumns = fColumnNames.size();
       for (auto i = 0u; i < nColumns; ++i)
@@ -118,20 +122,23 @@ public:
          fIsInitialized[slot] = true;
          RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fDSValuePtrs, fDataSource};
          fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
-         fLastCheckedEntry[slot] = -1;
+         fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
       }
    }
 
    /// Return the (type-erased) address of the Define'd value for the given processing slot.
-   void *GetValuePtr(unsigned int slot) final { return static_cast<void *>(&fLastResults[slot]); }
+   void *GetValuePtr(unsigned int slot) final
+   {
+      return static_cast<void *>(&fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()]);
+   }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
    void Update(unsigned int slot, Long64_t entry) final
    {
-      if (entry != fLastCheckedEntry[slot]) {
+      if (entry != fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()]) {
          // evaluate this filter, cache the result
          UpdateHelper(slot, entry, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
-         fLastCheckedEntry[slot] = entry;
+         fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = entry;
       }
    }
 
