@@ -21,6 +21,7 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <new> // std::hardware_destructive_interference_size
 #include <string>
 #include <type_traits> // std::decay
 #include <vector>
@@ -202,6 +203,21 @@ bool IsInternalColumn(std::string_view colName);
 
 /// Get optimal column width for printing a table given the names and the desired minimal space between columns
 unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigned int minColumnSpace = 8u);
+
+#ifdef __cpp_lib_hardware_interference_size
+   // C++17 feature (so we can use inline variables), but very few implementations support it as of 2021
+   inline constexpr std::size_t kCacheLineSize = std::hardware_destructive_interference_size;
+#else
+   // safe bet: assume the typical 64 bytes
+   static constexpr std::size_t kCacheLineSize = 64;
+#endif
+
+/// Stepping through CacheLineStep<T> values in a vector<T> brings you to a new cache line.
+/// Useful to avoid false sharing.
+template <typename T>
+constexpr std::size_t CacheLineStep() {
+   return (kCacheLineSize + sizeof(T) - 1) / sizeof(T);
+}
 
 } // end NS RDF
 } // end NS Internal
