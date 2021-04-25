@@ -83,19 +83,20 @@ public:
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
-      if (entry != fLastCheckedEntry[slot]) {
+      if (entry != fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()]) {
          if (!fPrevData.CheckFilters(slot, entry)) {
             // a filter upstream returned false, cache the result
-            fLastResult[slot] = false;
+            fLastResult[slot * RDFInternal::CacheLineStep<int>()] = false;
          } else {
             // evaluate this filter, cache the result
             auto passed = CheckFilterHelper(slot, entry, ColumnTypes_t{}, TypeInd_t{});
-            passed ? ++fAccepted[slot] : ++fRejected[slot];
-            fLastResult[slot] = passed;
+            passed ? ++fAccepted[slot * RDFInternal::CacheLineStep<ULong64_t>()]
+                   : ++fRejected[slot * RDFInternal::CacheLineStep<ULong64_t>()];
+            fLastResult[slot * RDFInternal::CacheLineStep<int>()] = passed;
          }
-         fLastCheckedEntry[slot] = entry;
+         fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = entry;
       }
-      return fLastResult[slot];
+      return fLastResult[slot * RDFInternal::CacheLineStep<int>()];
    }
 
    template <typename... ColTypes, std::size_t... S>

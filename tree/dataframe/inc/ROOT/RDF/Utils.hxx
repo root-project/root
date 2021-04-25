@@ -21,6 +21,7 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <new> // std::hardware_destructive_interference_size
 #include <string>
 #include <type_traits> // std::decay
 #include <vector>
@@ -199,6 +200,21 @@ Long64_t InterpreterCalc(const std::string &code, const std::string &context = "
 
 /// Whether custom column with name colName is an "internal" column such as rdfentry_ or rdfslot_
 bool IsInternalColumn(std::string_view colName);
+
+#ifdef __cpp_lib_hardware_interference_size
+   // C++17 feature (so we can use inline variables), but very few implementations support it as of 2021
+   inline constexpr std::size_t kCacheLineSize = std::hardware_destructive_interference_size;
+#else
+   // safe bet: assume the typical 64 bytes
+   static constexpr std::size_t kCacheLineSize = 64;
+#endif
+
+/// Stepping through CacheLineStep<T> values in a vector<T> brings you to a new cache line.
+/// Useful to avoid false sharing.
+template <typename T>
+constexpr std::size_t CacheLineStep() {
+   return (kCacheLineSize + sizeof(T) - 1) / sizeof(T);
+}
 
 } // end NS RDF
 } // end NS Internal
