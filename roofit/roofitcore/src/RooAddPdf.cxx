@@ -80,6 +80,7 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 
 #include <algorithm>
 #include <sstream>
+#include <set>
 
 using namespace std;
 
@@ -101,6 +102,31 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
 }
 
 
+void RooAddPdf::finalizeConstruction() {
+
+  // Two pdfs with the same name are only allowed in the input list if they are
+  // actually the same object.
+  using PdfInfo = std::pair<std::string,RooAbsArg*>;
+  std::set<PdfInfo> seen;
+  for(auto const& pdf : _pdfList) {
+    PdfInfo elem{pdf->GetName(), pdf};
+    auto comp = [&](PdfInfo const& p){ return p.first == elem.first && p.second != elem.second; };
+    auto found = std::find_if(seen.begin(), seen.end(), comp);
+    if(found != seen.end()) {
+      std::stringstream errorMsg;
+      errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
+               << ") pdf list contains pdfs with duplicate name \"" << pdf->GetName() << "\"."
+               << std::endl;
+      coutE(InputArguments) << errorMsg.str();
+      throw std::invalid_argument(errorMsg.str().c_str());
+    }
+    seen.insert(elem);
+  }
+
+  _coefCache.resize(_pdfList.size());
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with two PDFs and one coefficient
 
@@ -112,7 +138,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
   _pdfList.add(pdf2) ;
   _coefList.add(coef1) ;
 
-  _coefCache.resize(_pdfList.size());
+  finalizeConstruction();
 }
 
 
@@ -226,7 +252,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     _haveLastCoef=true ;
   }
 
-  _coefCache.resize(_pdfList.size());
+  finalizeConstruction();
 }
 
 
@@ -256,7 +282,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     _pdfList.add(*pdf) ;
   }
 
-  _coefCache.resize(_pdfList.size());
+  finalizeConstruction();
 }
 
 
@@ -276,8 +302,8 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   _allExtendable(other._allExtendable),
   _recursive(other._recursive)
 {
-  _coefCache.resize(_pdfList.size());
   _coefErrCount = _errorCount ;
+  finalizeConstruction();
   TRACE_CREATE
 }
 
