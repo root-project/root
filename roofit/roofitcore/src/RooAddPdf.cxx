@@ -87,45 +87,18 @@ ClassImp(RooAddPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor used for persistence
-
-RooAddPdf::RooAddPdf() :
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
-  _refCoefRangeName(0),
-  _projectCoefs(false),
-  _codeReg(10),
-  _snormList(0),
-  _haveLastCoef(false),
-  _allExtendable(false),
-  _recursive(false)
-{
-  _coefErrCount = _errorCount ;
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Dummy constructor
 
 RooAddPdf::RooAddPdf(const char *name, const char *title) :
   RooAbsPdf(name,title),
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
-  _refCoefRangeName(0),
-  _projectCoefs(false),
   _projCacheMgr(this,10),
-  _codeReg(10),
   _pdfList("!pdfs","List of PDFs",this),
   _coefList("!coefficients","List of coefficients",this),
-  _snormList(0),
-  _haveLastCoef(false),
-  _allExtendable(false),
-  _recursive(false)
+  _coefErrCount{_errorCount}
 {
-  _coefErrCount = _errorCount ;
   TRACE_CREATE
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,27 +106,14 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
 
 RooAddPdf::RooAddPdf(const char *name, const char *title,
 		     RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) :
-  RooAbsPdf(name,title),
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
-  _refCoefRangeName(0),
-  _projectCoefs(false),
-  _projCacheMgr(this,10),
-  _codeReg(10),
-  _pdfList("!pdfs","List of PDFs",this),
-  _coefList("!coefficients","List of coefficients",this),
-  _haveLastCoef(false),
-  _allExtendable(false),
-  _recursive(false)
+  RooAddPdf(name, title)
 {
   _pdfList.add(pdf1) ;
   _pdfList.add(pdf2) ;
   _coefList.add(coef1) ;
 
   _coefCache.resize(_pdfList.size());
-  _coefErrCount = _errorCount ;
-  TRACE_CREATE
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,18 +128,10 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
 /// coefficients as explained in the class description.
 
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPdfList, const RooArgList& inCoefList, Bool_t recursiveFractions) :
-  RooAbsPdf(name,title),
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
-  _refCoefRangeName(0),
-  _projectCoefs(false),
-  _projCacheMgr(this,10),
-  _codeReg(10),
-  _pdfList("!pdfs","List of PDFs",this),
-  _coefList("!coefficients","List of coefficients",this),
-  _haveLastCoef(false),
-  _allExtendable(false),
-  _recursive(recursiveFractions)
+  RooAddPdf(name,title)
 {
+  _recursive = recursiveFractions;
+
   if (inPdfList.getSize()>inCoefList.getSize()+1 || inPdfList.getSize()<inCoefList.getSize()) {
     std::stringstream errorMsg;
     errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
@@ -274,13 +226,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     _haveLastCoef=true ;
   }
 
-
   _coefCache.resize(_pdfList.size());
-  _coefErrCount = _errorCount ;
-
-  TRACE_CREATE
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -290,17 +237,10 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
 /// All PDFs must inherit from RooAbsPdf.
 
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPdfList) :
-  RooAbsPdf(name,title),
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
-  _refCoefRangeName(0),
-  _projectCoefs(false),
-  _projCacheMgr(this,10),
-  _pdfList("!pdfs","List of PDFs",this),
-  _coefList("!coefficients","List of coefficients",this),
-  _haveLastCoef(false),
-  _allExtendable(true),
-  _recursive(false)
+  RooAddPdf(name,title)
 {
+  _allExtendable = true;
+
   // Constructor with N PDFs
   for (const auto pdfArg : inPdfList) {
     auto pdf = dynamic_cast<const RooAbsPdf*>(pdfArg);
@@ -317,11 +257,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   }
 
   _coefCache.resize(_pdfList.size());
-  _coefErrCount = _errorCount ;
-  TRACE_CREATE
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -344,17 +280,6 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   _coefErrCount = _errorCount ;
   TRACE_CREATE
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAddPdf::~RooAddPdf()
-{
-  TRACE_DESTROY
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
