@@ -75,9 +75,12 @@
 // REveTrans
 #pragma link C++ class ROOT::Experimental::REveTrans-;
 
+// REveTypes
+#pragma link C++ class ROOT::Experimental::REveException+;
+#pragma link C++ class ROOT::Experimental::REveLog+;
+
 // REveUtil
 #pragma link C++ class ROOT::Experimental::REveUtil+;
-#pragma link C++ class ROOT::Experimental::REveException+;
 #pragma link C++ class ROOT::Experimental::REveGeoManagerHolder+;
 #pragma link C++ class ROOT::Experimental::REveRefCnt+;
 #pragma link C++ class ROOT::Experimental::REveRefBackPtr+;

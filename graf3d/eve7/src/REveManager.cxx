@@ -904,6 +904,12 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
    } catch (...) {
       std::cout << "REveManager::ExecuteCommand unknown exception.\n";
    }
+
+   if (gEveLog.has_contents())
+   {
+      std::cout << "Culokafoor: " << gEveLog.fLog << "\n";
+      gEveLog.clear();
+   }
 }
 
 //

@@ -627,6 +627,8 @@ void REveSelection::NewElementPickedStr(ElementId_t id, bool multi, bool seconda
 {
    static const REveException eh("REveSelection::NewElementPickedStr ");
 
+   gEveLog.add("Loitse WOZ hereh!");
+
    if (secondary_idcs == 0 || secondary_idcs[0] == 0)
    {
       NewElementPicked(id, multi, secondary);
