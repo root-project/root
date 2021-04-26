@@ -90,7 +90,7 @@ ClassImp(RooAddPdf);
 /// Default constructor used for persistence
 
 RooAddPdf::RooAddPdf() :
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
   _refCoefRangeName(0),
   _projectCoefs(false),
   _codeReg(10),
@@ -110,17 +110,17 @@ RooAddPdf::RooAddPdf() :
 
 RooAddPdf::RooAddPdf(const char *name, const char *title) :
   RooAbsPdf(name,title),
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
   _refCoefRangeName(0),
-  _projectCoefs(kFALSE),
+  _projectCoefs(false),
   _projCacheMgr(this,10),
   _codeReg(10),
   _pdfList("!pdfs","List of PDFs",this),
   _coefList("!coefficients","List of coefficients",this),
   _snormList(0),
-  _haveLastCoef(kFALSE),
-  _allExtendable(kFALSE),
-  _recursive(kFALSE)
+  _haveLastCoef(false),
+  _allExtendable(false),
+  _recursive(false)
 {
   _coefErrCount = _errorCount ;
   TRACE_CREATE
@@ -134,16 +134,16 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
 RooAddPdf::RooAddPdf(const char *name, const char *title,
 		     RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) :
   RooAbsPdf(name,title),
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
   _refCoefRangeName(0),
-  _projectCoefs(kFALSE),
+  _projectCoefs(false),
   _projCacheMgr(this,10),
   _codeReg(10),
   _pdfList("!pdfs","List of PDFs",this),
   _coefList("!coefficients","List of coefficients",this),
-  _haveLastCoef(kFALSE),
-  _allExtendable(kFALSE),
-  _recursive(kFALSE)
+  _haveLastCoef(false),
+  _allExtendable(false),
+  _recursive(false)
 {
   _pdfList.add(pdf1) ;
   _pdfList.add(pdf2) ;
@@ -169,15 +169,15 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
 
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPdfList, const RooArgList& inCoefList, Bool_t recursiveFractions) :
   RooAbsPdf(name,title),
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
   _refCoefRangeName(0),
-  _projectCoefs(kFALSE),
+  _projectCoefs(false),
   _projCacheMgr(this,10),
   _codeReg(10),
   _pdfList("!pdfs","List of PDFs",this),
   _coefList("!coefficients","List of coefficients",this),
-  _haveLastCoef(kFALSE),
-  _allExtendable(kFALSE),
+  _haveLastCoef(false),
+  _allExtendable(false),
   _recursive(recursiveFractions)
 {
   if (inPdfList.getSize()>inCoefList.getSize()+1 || inPdfList.getSize()<inCoefList.getSize()) {
@@ -199,7 +199,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   // Constructor with N PDFs and N or N-1 coefs
   RooArgList partinCoefList ;
 
-  Bool_t first(kTRUE) ;
+  Bool_t first(true) ;
 
   for (auto i = 0u; i < inCoefList.size(); ++i) {
     auto coef = dynamic_cast<RooAbsReal*>(inCoefList.at(i));
@@ -231,7 +231,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
       if (first) {
 
         // The first fraction is the first plain fraction
-        first = kFALSE ;
+        first = false ;
         _coefList.add(*coef) ;
 
       } else {
@@ -267,11 +267,11 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
       _coefList.add(*rfrac) ;
 
       // In recursive mode we always have Ncoef=Npdf, since we added it just above
-      _haveLastCoef=kTRUE ;
+      _haveLastCoef=true ;
     }
 
   } else {
-    _haveLastCoef=kTRUE ;
+    _haveLastCoef=true ;
   }
 
 
@@ -291,15 +291,15 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
 
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPdfList) :
   RooAbsPdf(name,title),
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
   _refCoefRangeName(0),
-  _projectCoefs(kFALSE),
+  _projectCoefs(false),
   _projCacheMgr(this,10),
   _pdfList("!pdfs","List of PDFs",this),
   _coefList("!coefficients","List of coefficients",this),
-  _haveLastCoef(kFALSE),
-  _allExtendable(kTRUE),
-  _recursive(kFALSE)
+  _haveLastCoef(false),
+  _allExtendable(true),
+  _recursive(false)
 {
   // Constructor with N PDFs
   for (const auto pdfArg : inPdfList) {
@@ -370,10 +370,10 @@ RooAddPdf::~RooAddPdf()
 void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm)
 {
   if (refCoefNorm.getSize()==0) {
-    _projectCoefs = kFALSE ;
+    _projectCoefs = false ;
     return ;
   }
-  _projectCoefs = kTRUE ;
+  _projectCoefs = true ;
 
   _refCoefNorm.removeAll() ;
   _refCoefNorm.add(refCoefNorm) ;
@@ -397,7 +397,7 @@ void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm)
 void RooAddPdf::fixCoefRange(const char* rangeName)
 {
   _refCoefRangeName = (TNamed*)RooNameReg::ptr(rangeName) ;
-  if (_refCoefRangeName) _projectCoefs = kTRUE ;
+  if (_refCoefRangeName) _projectCoefs = true ;
 }
 
 
@@ -430,7 +430,7 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
   // Retrieve the combined set of dependents of this PDF ;
   RooArgSet *fullDepList = getObservables(nset) ;
   if (iset) {
-    fullDepList->remove(*iset,kTRUE,kTRUE) ;
+    fullDepList->remove(*iset,true,true) ;
   }
 
   // Fill with dummy unit RRVs for now
@@ -444,14 +444,14 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
     // Remove PDF dependents
     RooArgSet* pdfDeps = pdf->getObservables(nset) ;
     if (pdfDeps) {
-      supNSet.remove(*pdfDeps,kTRUE,kTRUE) ;
+      supNSet.remove(*pdfDeps,true,true) ;
       delete pdfDeps ;
     }
 
     // Remove coef dependents
     RooArgSet* coefDeps = coef ? coef->getObservables(nset) : 0 ;
     if (coefDeps) {
-      supNSet.remove(*coefDeps,kTRUE,kTRUE) ;
+      supNSet.remove(*coefDeps,true,true) ;
       delete coefDeps ;
     }
 
@@ -460,11 +460,11 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
     name.Append("_") ;
     name.Append(pdf->GetName()) ;
     name.Append("_SupNorm") ;
-    cache->_needSupNorm = kFALSE ;
+    cache->_needSupNorm = false ;
     if (supNSet.getSize()>0) {
       snorm = new RooRealIntegral(name,"Supplemental normalization integral",RooRealConstant::value(1.0),supNSet) ;
       cxcoutD(Caching) << "RooAddPdf " << GetName() << " making supplemental normalization set " << supNSet << " for pdf component " << pdf->GetName() << endl ;
-      cache->_needSupNorm = kTRUE ;
+      cache->_needSupNorm = true ;
     } else {
       snorm = new RooRealVar(name,"Unit Supplemental normalization integral",1.0) ;
     }
@@ -543,7 +543,7 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
       // Calculation optional supplemental normalization term
       RooArgSet supNormSet(_refCoefNorm) ;
       RooArgSet* deps = thePdf->getParameters(RooArgSet()) ;
-      supNormSet.remove(*deps,kTRUE,kTRUE) ;
+      supNormSet.remove(*deps,true,true) ;
       delete deps ;
 
       RooAbsReal* snorm ;
@@ -575,13 +575,13 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
       RooArgSet* tmpObs = thePdf->getObservables(_refCoefNorm) ;
       RooAbsArg* obsArg ;
       TIterator* iter = tmpObs->createIterator() ;
-      Bool_t allIdent = kTRUE ;
+      Bool_t allIdent = true ;
       while((obsArg=(RooAbsArg*)iter->Next())) {
 	RooRealVar* rvarg = dynamic_cast<RooRealVar*>(obsArg) ;
 	if (rvarg) {
 	  if (rvarg->getMin(RooNameReg::str(_refCoefRangeName))!=rvarg->getMin() ||
 	      rvarg->getMax(RooNameReg::str(_refCoefRangeName))!=rvarg->getMax()) {
-	    allIdent=kFALSE ;
+	    allIdent=false ;
 	  }
 	}
       }
@@ -915,7 +915,7 @@ void RooAddPdf::resetErrorCounters(Int_t resetValue)
 
 Bool_t RooAddPdf::checkObservables(const RooArgSet* nset) const
 {
-  Bool_t ret(kFALSE) ;
+  Bool_t ret(false) ;
 
   for (int i = 0; i < _pdfList.getSize(); ++i) {
     auto pdf  = static_cast<const RooAbsPdf *>(_pdfList.at(i));
@@ -923,7 +923,7 @@ Bool_t RooAddPdf::checkObservables(const RooArgSet* nset) const
     if (pdf->observableOverlaps(nset,*coef)) {
       coutE(InputArguments) << "RooAddPdf::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName()
 			    << " and PDF " << pdf->GetName() << " have one or more dependents in common" << endl ;
-      ret = kTRUE ;
+      ret = true ;
     }
   }
 
@@ -960,7 +960,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
     // Observables that cannot be integrated analytically by this component are dropped from the common list
     for (const auto arg : allVars) {
       if (!subAnalVars.find(arg->GetName()) && pdf->dependsOn(*arg)) {
-        allAnalVars.remove(*arg,kTRUE,kTRUE) ;
+        allAnalVars.remove(*arg,true,true) ;
       }
     }
     n++ ;
@@ -975,7 +975,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
   // Now retrieve codes for integration over common set of analytically integrable observables for each component
   n=0 ;
   std::vector<Int_t> subCode(_pdfList.getSize());
-  Bool_t allOK(kTRUE) ;
+  Bool_t allOK(true) ;
   for (const auto arg : _pdfList) {
     auto pdf = static_cast<const RooAbsPdf *>(arg);
     RooArgSet subAnalVars ;
@@ -985,7 +985,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
       coutE(InputArguments) << "RooAddPdf::getAnalyticalIntegral(" << GetName() << ") WARNING: component PDF " << pdf->GetName()
 			    << "   advertises inconsistent set of integrals (e.g. (X,Y) but not X or Y individually."
 			    << "   Distributed analytical integration disabled. Please fix PDF" << endl ;
-      allOK = kFALSE ;
+      allOK = false ;
     }
     delete allAnalVars2 ;
     n++ ;
@@ -1175,7 +1175,7 @@ RooArgList RooAddPdf::CacheElem::containedArgs(Action)
 std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   list<Double_t>* sumHint = 0 ;
-  Bool_t needClean(kFALSE) ;
+  Bool_t needClean(false) ;
 
   // Loop over components pdf
   for (const auto arg : _pdfList) {
@@ -1200,7 +1200,7 @@ std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t
 	// Copy merged array without duplicates to new sumHintArrau
 	delete sumHint ;
 	sumHint = newSumHint ;
-	needClean = kTRUE ;
+	needClean = true ;
 
       }
     }
@@ -1220,7 +1220,7 @@ std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t
 std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   list<Double_t>* sumBinB = 0 ;
-  Bool_t needClean(kFALSE) ;
+  Bool_t needClean(false) ;
 
   // Loop over components pdf
   for (auto arg : _pdfList) {
@@ -1245,7 +1245,7 @@ std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xl
 	delete sumBinB ;
 	delete pdfBinB ;
 	sumBinB = newSumBinB ;
-	needClean = kTRUE ;
+	needClean = true ;
       }
     }
   }
@@ -1267,11 +1267,11 @@ Bool_t RooAddPdf::isBinnedDistribution(const RooArgSet& obs) const
   for (const auto arg : _pdfList) {
     auto pdf = static_cast<const RooAbsPdf*>(arg);
     if (pdf->dependsOn(obs) && !pdf->isBinnedDistribution(obs)) {
-      return kFALSE ;
+      return false ;
     }
   }
 
-  return kTRUE  ;
+  return true  ;
 }
 
 
@@ -1298,7 +1298,7 @@ void RooAddPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
 
 void RooAddPdf::printMetaArgs(ostream& os) const
 {
-  Bool_t first(kTRUE) ;
+  Bool_t first(true) ;
 
   if (_coefList.getSize() != 0) {
     for (int i = 0; i < _pdfList.getSize(); ++i ) {
@@ -1307,7 +1307,7 @@ void RooAddPdf::printMetaArgs(ostream& os) const
       if (!first) {
         os << " + " ;
       } else {
-        first = kFALSE ;
+        first = false ;
       }
 
       if (i < _coefList.getSize()) {
@@ -1322,7 +1322,7 @@ void RooAddPdf::printMetaArgs(ostream& os) const
       if (!first) {
         os << " + " ;
       } else {
-        first = kFALSE ;
+        first = false ;
       }
       os << pdf->GetName() ;
     }
