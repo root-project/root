@@ -23,6 +23,7 @@
 #include "RooNormSetCache.h"
 #include "RooObjCacheManager.h"
 #include "RooNameReg.h"
+#include "RooTrace.h"
 
 #include <vector>
 #include <list>
@@ -31,7 +32,7 @@
 class RooAddPdf : public RooAbsPdf {
 public:
 
-  RooAddPdf() ;
+  RooAddPdf() { TRACE_CREATE }
   RooAddPdf(const char *name, const char *title=0);
   RooAddPdf(const char *name, const char *title,
 	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
@@ -40,7 +41,7 @@ public:
   
   RooAddPdf(const RooAddPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooAddPdf(*this,newname) ; }
-  virtual ~RooAddPdf() ;
+  virtual ~RooAddPdf() { TRACE_DESTROY }
 
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
 
@@ -95,9 +96,9 @@ protected:
   virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=false) ;
 
   mutable RooSetProxy _refCoefNorm ;   // Reference observable set for coefficient interpretation
-  mutable TNamed* _refCoefRangeName ;  // Reference range name for coefficient interpreation
+  mutable TNamed* _refCoefRangeName = nullptr ;  // Reference range name for coefficient interpreation
 
-  Bool_t _projectCoefs ;         // If true coefficients need to be projected for use in evaluate()
+  Bool_t _projectCoefs = false;   // If true coefficients need to be projected for use in evaluate()
   std::vector<double> _coefCache; //! Transient cache with transformed values of coefficients
 
 
@@ -130,15 +131,15 @@ protected:
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
 
-  mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
+  mutable RooAICRegistry _codeReg; //! Registry of component analytical integration codes
 
   RooListProxy _pdfList ;   //  List of component PDFs
   RooListProxy _coefList ;  //  List of coefficients
   mutable RooArgList* _snormList{nullptr};  //!  List of supplemental normalization factors
   
-  Bool_t _haveLastCoef ;    //  Flag indicating if last PDFs coefficient was supplied in the ctor
-  Bool_t _allExtendable ;   //  Flag indicating if all PDF components are extendable
-  Bool_t _recursive ;       //  Flag indicating is fractions are treated recursively
+  Bool_t _haveLastCoef = false;  //  Flag indicating if last PDFs coefficient was supplied in the ctor
+  Bool_t _allExtendable = false; //  Flag indicating if all PDF components are extendable
+  Bool_t _recursive = false;     //  Flag indicating is fractions are treated recursively
 
   mutable Int_t _coefErrCount ; //! Coefficient error counter
 
