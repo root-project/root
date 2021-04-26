@@ -36,7 +36,7 @@ public:
   RooAddPdf(const char *name, const char *title,
 	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
   RooAddPdf(const char *name, const char *title, const RooArgList& pdfList) ;
-  RooAddPdf(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList, Bool_t recursiveFraction=kFALSE) ;
+  RooAddPdf(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList, Bool_t recursiveFraction=false) ;
   
   RooAddPdf(const RooAddPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooAddPdf(*this,newname) ; }
@@ -46,13 +46,13 @@ public:
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { 
     // Force RooRealIntegral to offer all observables for internal integration
-    return kTRUE ; 
+    return true ; 
   }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   virtual Bool_t selfNormalized() const { 
     // P.d.f is self normalized
-    return kTRUE ; 
+    return true ; 
   }
 
   virtual ExtendMode extendMode() const { 
@@ -91,8 +91,8 @@ public:
 
 protected:
 
-  virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
-  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
+  virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=false) ;
+  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=false) ;
 
   mutable RooSetProxy _refCoefNorm ;   // Reference observable set for coefficient interpretation
   mutable TNamed* _refCoefRangeName ;  // Reference range name for coefficient interpreation
@@ -123,7 +123,7 @@ protected:
   
   friend class RooAddGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
-                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
+                                       const RooArgSet* auxProto=0, Bool_t verbose= false) const ;
 
 
   Double_t evaluate() const;
