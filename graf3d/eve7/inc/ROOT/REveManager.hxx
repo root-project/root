@@ -17,7 +17,6 @@
 #include <ROOT/RWebDisplayArgs.hxx>
 
 #include "TSysEvtHandler.h"
-#include "TTimer.h"
 
 #include <thread>
 #include <mutex>
@@ -55,9 +54,7 @@ public:
       RExceptionHandler() : TStdExceptionHandler() { Add(); }
       virtual ~RExceptionHandler()                 { Remove(); }
 
-      virtual EStatus  Handle(std::exception& exc);
-
-      ClassDef(RExceptionHandler, 0);
+      virtual EStatus Handle(std::exception& exc);
    };
 
    class ChangeGuard {
@@ -118,7 +115,6 @@ protected:
    Bool_t                    fResetCameras{kFALSE};
    Bool_t                    fDropLogicals{kFALSE};
    Bool_t                    fKeepEmptyCont{kFALSE};
-   Bool_t                    fTimerActive{kFALSE};
 
    // ElementId management
    std::unordered_map<ElementId_t, REveElement*> fElementIdMap;
@@ -234,12 +230,12 @@ public:
 
    static REveManager* Create();
    static void         Terminate();
+   static void         ExecuteInMainThread(std::function<void()> func);
+   static void         QuitRoot();
 
 
    // Access to internals, needed for low-level control in advanced
    // applications.
-
-   void EnforceTimerActive (Bool_t ta) { fTimerActive = ta; }
 
    std::shared_ptr<RWebWindow> GetWebWindow() const { return fWebWindow; }
 

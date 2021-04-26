@@ -85,8 +85,6 @@
 // REveManager
 #pragma link C++ class ROOT::Experimental::REveManager+;
 #pragma link C++ global ROOT::Experimental::gEve;
-#pragma link C++ class ROOT::Experimental::REveManager::RRedrawDisabler+;
-#pragma link C++ class ROOT::Experimental::REveManager::RExceptionHandler+;
 
 // REveVSD
 #pragma link C++ class ROOT::Experimental::REveMCTrack+;

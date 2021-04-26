@@ -35,7 +35,8 @@
 #include "TMethod.h"
 #include "TMethodCall.h"
 #include "THttpServer.h"
-
+#include "TTimer.h"
+#include "TApplication.h"
 
 #include <fstream>
 #include <sstream>
@@ -69,7 +70,7 @@ REveManager::REveManager()
    : // (Bool_t map_window, Option_t* opt) :
      fExcHandler(nullptr), fVizDB(nullptr), fVizDBReplace(kTRUE), fVizDBUpdate(kTRUE), fGeometries(nullptr),
      fGeometryAliases(nullptr),
-     fKeepEmptyCont(kFALSE), fTimerActive(kFALSE)
+     fKeepEmptyCont(kFALSE)
 {
    // Constructor.
 
@@ -159,9 +160,9 @@ REveManager::REveManager()
 
 REveManager::~REveManager()
 {
-   // Stop timer and deny further redraw requests.
-   fTimerActive = kTRUE;
    fMIRExecThread.join();
+
+   // QQQQ How do we stop THttpServer / fWebWindow?
 
    fGlobalScene->DecDenyDestroy();
    fEventScene->DecDenyDestroy();
@@ -652,24 +653,37 @@ void REveManager::Terminate()
    REX::gEve = nullptr;
 }
 
-/** \class REveManager::RExceptionHandler
-\ingroup REve
-Exception handler for Eve exceptions.
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-/// Handle exceptions deriving from REveException.
-
-TStdExceptionHandler::EStatus REveManager::RExceptionHandler::Handle(std::exception &exc)
+void REveManager::ExecuteInMainThread(std::function<void()> func)
 {
-   REveException *ex = dynamic_cast<REveException *>(&exc);
-   if (ex) {
-      Info("Handle", "Exception %s", ex->what());
-      // REX::gEve->SetStatusLine(ex->Data());
-      gSystem->Beep();
-      return kSEHandled;
-   }
-   return kSEProceed;
+   class XThreadTimer : public TTimer {
+      std::function<void()> foo_;
+   public:
+      XThreadTimer(std::function<void()> f) : foo_(f)
+      {
+         SetTime(0);
+         R__LOCKGUARD2(gSystemMutex);
+         gSystem->AddTimer(this);
+      }
+      Bool_t Notify() override
+      {
+         foo_();
+         gSystem->RemoveTimer(this);
+         delete this;
+         return kTRUE;
+      }
+   };
+
+   new XThreadTimer(func);
+}
+
+void REveManager::QuitRoot()
+{
+   ExecuteInMainThread([](){
+      // QQQQ Should call Terminate() but it needs to:
+      // - properly stop MIRExecThread;
+      // - shutdown civet/THttp/RWebWindow
+      gApplication->Terminate();
+   });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -850,7 +864,7 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
 
       static const TClass *elem_cls = TClass::GetClass<REX::REveElement>();
 
-      TClass  *call_cls = TClass::GetClass(mir->fCtype.c_str());
+      TClass *call_cls = TClass::GetClass(mir->fCtype.c_str());
       if ( ! call_cls)
          throw eh + "Class '" + mir->fCtype + "' not found.";
 
@@ -1044,6 +1058,12 @@ void REveManager::EndChangeGuard()
    fServerState.fVal = fConnList.empty() ? ServerState::Waiting : ServerState::UpdatingClients;
    fServerState.fCV.notify_all();
 }
+
+/** \class REveManager::ChangeGuard
+\ingroup REve
+RAII guard for locking Eve manager (ctor) and processing changes (dtor).
+*/
+
 //////////////////////////////////////////////////////////////////////
 //
 // Helper struct to guard update mechanism
@@ -1056,4 +1076,24 @@ REveManager::ChangeGuard::ChangeGuard()
 REveManager::ChangeGuard::~ChangeGuard()
 {
    gEve->EndChangeGuard();
+}
+
+/** \class REveManager::RExceptionHandler
+\ingroup REve
+Exception handler for Eve exceptions.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Handle exceptions deriving from REveException.
+
+TStdExceptionHandler::EStatus REveManager::RExceptionHandler::Handle(std::exception &exc)
+{
+   REveException *ex = dynamic_cast<REveException *>(&exc);
+   if (ex) {
+      Info("Handle", "Exception %s", ex->what());
+      // REX::gEve->SetStatusLine(ex->Data());
+      gSystem->Beep();
+      return kSEHandled;
+   }
+   return kSEProceed;
 }

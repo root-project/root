@@ -314,8 +314,7 @@ public:
    virtual void QuitRoot()
    {
       printf("Quit ROOT\n");
-      if (gApplication)
-         gApplication->Terminate();
+      REX::REveManager::QuitRoot();
    }
 };
 
