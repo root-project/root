@@ -27,7 +27,7 @@ NamespaceImp(RooStats)
 #include "RooSimultaneous.h"
 #include "RooStats/ModelConfig.h"
 #include "RooStats/RooStatsUtils.h"
-#include <typeinfo>
+
 using namespace std;
 
 
@@ -93,23 +93,19 @@ namespace RooStats {
    void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) {
    // utility function to factorize constraint terms from a pdf
    // (from G. Petrucciani)
-      const std::type_info & id = typeid(pdf);
-      if (id == typeid(RooProdPdf)) {
-         RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
+      if (auto prod = dynamic_cast<RooProdPdf *>(&pdf)) {
          RooArgList list(prod->pdfList());
          for (int i = 0, n = list.getSize(); i < n; ++i) {
             RooAbsPdf *pdfi = (RooAbsPdf *) list.at(i);
             FactorizePdf(observables, *pdfi, obsTerms, constraints);
          }
-      } else if (id == typeid(RooExtendPdf)) {
-         TIterator *iter = pdf.serverIterator();
+      } else if (dynamic_cast<RooExtendPdf *>(&pdf)) {
          // extract underlying pdf which is extended; first server is the pdf; second server is the number of events variable
-         RooAbsPdf *updf = dynamic_cast<RooAbsPdf *>(iter->Next());
-         assert(updf != 0);
-         delete iter;
-         FactorizePdf(observables, *updf, obsTerms, constraints);
-      } else if (id == typeid(RooSimultaneous)) {    //|| id == typeid(RooSimultaneousOpt)) {
-         RooSimultaneous *sim  = dynamic_cast<RooSimultaneous *>(&pdf);
+         auto iter = pdf.servers().begin();
+         assert(iter != pdf.servers().end());
+         assert(dynamic_cast<RooAbsPdf*>(*iter));
+         FactorizePdf(observables, static_cast<RooAbsPdf&>(**iter), obsTerms, constraints);
+      } else if (auto sim = dynamic_cast<RooSimultaneous *>(&pdf)) {  //|| dynamic_cast<RooSimultaneousOpt>(&pdf)) {
          assert(sim != 0);
          RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().clone(sim->indexCat().GetName());
          for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
@@ -159,11 +155,9 @@ namespace RooStats {
    }
 
    RooAbsPdf * StripConstraints(RooAbsPdf &pdf, const RooArgSet &observables) {
-      const std::type_info & id = typeid(pdf);
 
-      if (id == typeid(RooProdPdf)) {
+      if (auto prod = dynamic_cast<RooProdPdf *>(&pdf)) {
 
-         RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
          RooArgList list(prod->pdfList()); RooArgList newList;
 
          for (int i = 0, n = list.getSize(); i < n; ++i) {
@@ -179,23 +173,24 @@ namespace RooStats {
          else return new RooProdPdf(TString::Format("%s_unconstrained", prod->GetName()).Data(),
             TString::Format("%s without constraints", prod->GetTitle()).Data(), newList);
 
-      } else if (id == typeid(RooExtendPdf)) {
+      } else if (dynamic_cast<RooExtendPdf*>(&pdf)) {
 
-         TIterator *iter = pdf.serverIterator();
+         auto iter = pdf.servers().begin();
          // extract underlying pdf which is extended; first server is the pdf; second server is the number of events variable
-         RooAbsPdf *uPdf = dynamic_cast<RooAbsPdf *>(iter->Next());
-         RooAbsReal *extended_term = dynamic_cast<RooAbsReal *>(iter->Next());
-         assert(uPdf != NULL); assert(extended_term != NULL); assert(iter->Next() == NULL);
-         delete iter;
+         auto uPdf = dynamic_cast<RooAbsPdf *>(*(iter++));
+         auto extended_term = dynamic_cast<RooAbsReal *>(*(iter++));
+         assert(uPdf != nullptr);
+         assert(extended_term != nullptr);
+         assert(iter == pdf.servers().end());
 
          RooAbsPdf *newUPdf = StripConstraints(*uPdf, observables);
          if(newUPdf == NULL) return NULL; // only constraints in underlying pdf
          else return new RooExtendPdf(TString::Format("%s_unconstrained", pdf.GetName()).Data(),
             TString::Format("%s without constraints", pdf.GetTitle()).Data(), *newUPdf, *extended_term);
 
-      } else if (id == typeid(RooSimultaneous)) {    //|| id == typeid(RooSimultaneousOpt)) {
+      } else if (auto sim = dynamic_cast<RooSimultaneous *>(&pdf)) {  //|| dynamic_cast<RooSimultaneousOpt *>(&pdf)) {
 
-         RooSimultaneous *sim  = dynamic_cast<RooSimultaneous *>(&pdf); assert(sim != NULL);
+         assert(sim != nullptr);
          RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone(); assert(cat != NULL);
          RooArgList pdfList;
 
