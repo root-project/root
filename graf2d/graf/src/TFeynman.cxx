@@ -100,6 +100,15 @@ TFeynmanEntry *TFeynman::AddPair(const char *particleLabel, Double_t x, Double_t
   return newPairEntry;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a particle pair to TFeynman
+TFeynmanEntry *TFeynman::AddCurved(const char *particleLabel, Double_t x, Double_t y, Double_t radius, Double_t phimin, Double_t phimax, bool wavy) {
+  TFeynmanEntry *newCurvedEntry = new TFeynmanEntry(particleLabel, x, y, radius, phimin, phimax, wavy);
+  if (!fPrimitives) fPrimitives = new TList;
+  fPrimitives->Add(newCurvedEntry);
+
+  return newCurvedEntry;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this Feynman's diagram with its current attributes.
@@ -113,7 +122,7 @@ void TFeynman::Draw( Option_t *option )
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint Method
 
-void TFeynman::Paint( Option_t* option )
+void TFeynman::Paint( Option_t*)
 {
    TIter next(fPrimitives);
    TFeynmanEntry *entry;

@@ -11,7 +11,7 @@
 
 #include <cstdio>
 #include <iostream>
-#include "../inc/TFeynmanEntry.h"
+#include "TFeynmanEntry.h"
 
 ClassImp(TFeynmanEntry);
 
@@ -45,11 +45,22 @@ TFeynmanEntry::TFeynmanEntry(const char *particleLabel, Double_t x, Double_t y, 
 
 }
 
+TFeynmanEntry::TFeynmanEntry(const char *particleLabel, Double_t x, Double_t y, Double_t radius, Double_t phimin, Double_t phimax, bool wavy) {
+  fParticle = "curved";
+  fX1 = x;
+  fY1 = y;
+  fRadius = radius;
+  fLabel = particleLabel;
+  fPhimin = phimin;
+  fPhimax = phimax;
+  fWavy = wavy;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Paint Method
 
-void TFeynmanEntry::Paint( Option_t* option )
+void TFeynmanEntry::Paint( Option_t* )
 {
    // Get all the needed values:
    Double_t x1 = GetX1();
@@ -97,6 +108,16 @@ void TFeynmanEntry::Paint( Option_t* option )
 
      t->Paint();
      u->Paint();
+   }
+   else if (fParticle == std::string("curved")) {
+      TCurlyArc *curved = new TCurlyArc(fX1, fY1, fRadius, fPhimin, fPhimax);
+      if (fWavy == true) {
+        curved->SetWavy();
+      }
+      curved->Paint();
+
+      TLatex *t = new TLatex(fX1, fY1, fLabel);
+      t->Paint();
    }
    else{
      Error("TFeynmanEntry::Paint()", "Invalid Particle!");
