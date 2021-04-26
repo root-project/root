@@ -52,6 +52,7 @@ public:
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
+   virtual void VisitCharField(const RField<char> &field) { VisitField(field); }
    virtual void VisitInt8Field(const RField<std::int8_t> &field) { VisitField(field); }
    virtual void VisitInt16Field(const RField<std::int16_t> &field) { VisitField(field); }
    virtual void VisitIntField(const RField<int> &field) { VisitField(field); }
@@ -193,6 +194,7 @@ public:
    void VisitBoolField(const RField<bool> &field) final;
    void VisitDoubleField(const RField<double> &field) final;
    void VisitFloatField(const RField<float> &field) final;
+   void VisitCharField(const RField<char> &field) final;
    void VisitInt8Field(const RField<std::int8_t> &field) final;
    void VisitInt16Field(const RField<std::int16_t> &field) final;
    void VisitIntField(const RField<int> &field) final;
