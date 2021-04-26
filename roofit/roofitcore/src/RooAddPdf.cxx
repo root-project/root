@@ -428,7 +428,7 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
   // *** PART 1 : Create supplemental normalization list ***
 
   // Retrieve the combined set of dependents of this PDF ;
-  RooArgSet *fullDepList = getObservables(nset) ;
+  auto fullDepList = std::unique_ptr<RooArgSet>{getObservables(nset)} ;
   if (iset) {
     fullDepList->remove(*iset,true,true) ;
   }
@@ -442,17 +442,13 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
     RooArgSet supNSet(*fullDepList) ;
 
     // Remove PDF dependents
-    RooArgSet* pdfDeps = pdf->getObservables(nset) ;
-    if (pdfDeps) {
+    if (auto pdfDeps = std::unique_ptr<RooArgSet>{pdf->getObservables(nset)}) {
       supNSet.remove(*pdfDeps,true,true) ;
-      delete pdfDeps ;
     }
 
     // Remove coef dependents
-    RooArgSet* coefDeps = coef ? coef->getObservables(nset) : 0 ;
-    if (coefDeps) {
+    if (auto coefDeps = std::unique_ptr<RooArgSet>{coef ? coef->getObservables(nset) : nullptr}) {
       supNSet.remove(*coefDeps,true,true) ;
-      delete coefDeps ;
     }
 
     RooAbsReal* snorm ;
@@ -470,8 +466,6 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
     }
     cache->_suppNormList.addOwned(*snorm) ;
   }
-
-  delete fullDepList ;
 
   if (_verboseEval>1) {
     cxcoutD(Caching) << "RooAddPdf::syncSuppNormList(" << GetName() << ") synching supplemental normalization list for norm" << (nset?*nset:RooArgSet()) << endl ;
@@ -498,7 +492,7 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
 //   cout << "calculating projection" << endl ;
 
   // Reduce iset/nset to actual dependents of this PDF
-  RooArgSet* nset2 = nset ? getObservables(nset) : new RooArgSet() ;
+  auto nset2 = std::unique_ptr<RooArgSet>{nset ? getObservables(nset) : new RooArgSet()} ;
   cxcoutD(Caching) << "RooAddPdf(" << GetName() << ")::getPC nset = " << (nset?*nset:RooArgSet()) << " nset2 = " << *nset2 << endl ;
 
   if (nset2->getSize()==0 && _refCoefNorm.getSize()!=0) {
@@ -542,9 +536,8 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
 
       // Calculation optional supplemental normalization term
       RooArgSet supNormSet(_refCoefNorm) ;
-      RooArgSet* deps = thePdf->getParameters(RooArgSet()) ;
+      auto deps = std::unique_ptr<RooArgSet>{thePdf->getParameters(RooArgSet())} ;
       supNormSet.remove(*deps,true,true) ;
-      delete deps ;
 
       RooAbsReal* snorm ;
       TString name(GetName()) ;
@@ -572,11 +565,9 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
       // If so, substitute by unit integral
 
       // ----------
-      RooArgSet* tmpObs = thePdf->getObservables(_refCoefNorm) ;
-      RooAbsArg* obsArg ;
-      TIterator* iter = tmpObs->createIterator() ;
+      auto tmpObs = std::unique_ptr<RooArgSet>{thePdf->getObservables(_refCoefNorm)} ;
       Bool_t allIdent = true ;
-      while((obsArg=(RooAbsArg*)iter->Next())) {
+      for (auto const& obsArg : *tmpObs) {
 	RooRealVar* rvarg = dynamic_cast<RooRealVar*>(obsArg) ;
 	if (rvarg) {
 	  if (rvarg->getMin(RooNameReg::str(_refCoefRangeName))!=rvarg->getMin() ||
@@ -585,26 +576,20 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
 	  }
 	}
       }
-      delete iter ;
-      delete tmpObs ;
       // -------------
 
       if (_refCoefRangeName && _refCoefNorm.getSize()>0 && !allIdent) {
 
 
-	RooArgSet* tmp = thePdf->getObservables(_refCoefNorm) ;
+	auto tmp = std::unique_ptr<RooArgSet>{thePdf->getObservables(_refCoefNorm)} ;
 	rangeProj1 = thePdf->createIntegral(*tmp,*tmp,RooNameReg::str(_refCoefRangeName)) ;
 
 	//rangeProj1->setOperMode(operMode()) ;
 
-	delete tmp ;
       } else {
 
-	TString theName(GetName()) ;
-	theName.Append("_") ;
-	theName.Append(thePdf->GetName()) ;
-	theName.Append("_RangeNorm1") ;
-	rangeProj1 = new RooRealVar(theName,"Unit range normalization integral",1.0) ;
+	auto theName = std::string(GetName()) + "_" + thePdf->GetName() + "_RangeNorm1";
+	rangeProj1 = new RooRealVar(theName.c_str(),"Unit range normalization integral",1.0) ;
 
       }
       cxcoutD(Caching) << " RooAddPdf::syncCoefProjList(" << GetName() << ") R1 = " << rangeProj1->GetName() << endl ;
@@ -622,17 +607,13 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
 
       } else if (_normRange.Length()>0) {
 
-	RooArgSet* tmp = thePdf->getObservables(_refCoefNorm) ;
+	auto tmp = std::unique_ptr<RooArgSet>{thePdf->getObservables(_refCoefNorm)} ;
 	rangeProj2 = thePdf->createIntegral(*tmp,*tmp,_normRange.Data()) ;
-	delete tmp ;
 
       } else {
 
-	TString theName(GetName()) ;
-	theName.Append("_") ;
-	theName.Append(thePdf->GetName()) ;
-	theName.Append("_RangeNorm2") ;
-	rangeProj2 = new RooRealVar(theName,"Unit range normalization integral",1.0) ;
+	auto theName = std::string(GetName()) + "_" + thePdf->GetName() + "_RangeNorm2";
+	rangeProj2 = new RooRealVar(theName.c_str(),"Unit range normalization integral",1.0) ;
 
       }
       cxcoutD(Caching) << " RooAddPdf::syncCoefProjList(" << GetName() << ") R2 = " << rangeProj2->GetName() << endl ;
@@ -641,8 +622,6 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
     }
 
   }
-
-  delete nset2 ;
 
   _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
 
@@ -945,9 +924,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 					 const RooArgSet* normSet, const char* rangeName) const
 {
 
-  RooArgSet* allDepVars = getObservables(allVars) ;
-  RooArgSet allAnalVars(*allDepVars) ;
-  delete allDepVars ;
+  RooArgSet allAnalVars(*std::unique_ptr<RooArgSet>{getObservables(allVars)}) ;
 
   Int_t n(0) ;
 
@@ -979,7 +956,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
   for (const auto arg : _pdfList) {
     auto pdf = static_cast<const RooAbsPdf *>(arg);
     RooArgSet subAnalVars ;
-    RooArgSet* allAnalVars2 = pdf->getObservables(allAnalVars) ;
+    auto allAnalVars2 = std::unique_ptr<RooArgSet>{pdf->getObservables(allAnalVars)} ;
     subCode[n] = pdf->getAnalyticalIntegralWN(*allAnalVars2,subAnalVars,normSet,rangeName) ;
     if (subCode[n]==0 && allAnalVars2->getSize()>0) {
       coutE(InputArguments) << "RooAddPdf::getAnalyticalIntegral(" << GetName() << ") WARNING: component PDF " << pdf->GetName()
@@ -987,7 +964,6 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 			    << "   Distributed analytical integration disabled. Please fix PDF" << endl ;
       allOK = false ;
     }
-    delete allAnalVars2 ;
     n++ ;
   }
   if (!allOK) {
@@ -1119,9 +1095,7 @@ void RooAddPdf::selectNormalization(const RooArgSet* depSet, Bool_t force)
     return ;
   }
 
-  RooArgSet* myDepSet = getObservables(depSet) ;
-  fixCoefNormalization(*myDepSet) ;
-  delete myDepSet ;
+  fixCoefNormalization(*std::unique_ptr<RooArgSet>{getObservables(depSet)}) ;
 }
 
 
@@ -1174,43 +1148,41 @@ RooArgList RooAddPdf::CacheElem::containedArgs(Action)
 
 std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  list<Double_t>* sumHint = 0 ;
-  Bool_t needClean(false) ;
+  std::unique_ptr<std::list<Double_t>> sumHint = nullptr ;
+  bool needClean = false;
 
   // Loop over components pdf
   for (const auto arg : _pdfList) {
     auto pdf = static_cast<const RooAbsPdf*>(arg);
 
-    list<Double_t>* pdfHint = pdf->plotSamplingHint(obs,xlo,xhi) ;
+    std::unique_ptr<std::list<Double_t>> pdfHint{pdf->plotSamplingHint(obs,xlo,xhi)} ;
 
     // Process hint
     if (pdfHint) {
       if (!sumHint) {
 
 	// If this is the first hint, then just save it
-	sumHint = pdfHint ;
+	sumHint = std::move(pdfHint) ;
 
       } else {
 
-	list<Double_t>* newSumHint = new list<Double_t>(sumHint->size()+pdfHint->size()) ;
+	auto newSumHint = std::make_unique<std::list<Double_t>>(sumHint->size()+pdfHint->size());
 
 	// Merge hints into temporary array
 	merge(pdfHint->begin(),pdfHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
 
 	// Copy merged array without duplicates to new sumHintArrau
-	delete sumHint ;
-	sumHint = newSumHint ;
+	sumHint = std::move(newSumHint) ;
 	needClean = true ;
 
       }
     }
   }
   if (needClean) {
-    list<Double_t>::iterator new_end = unique(sumHint->begin(),sumHint->end()) ;
-    sumHint->erase(new_end,sumHint->end()) ;
+    sumHint->erase(std::unique(sumHint->begin(),sumHint->end()), sumHint->end()) ;
   }
 
-  return sumHint ;
+  return sumHint.release() ;
 }
 
 
@@ -1219,32 +1191,30 @@ std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t
 
 std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  list<Double_t>* sumBinB = 0 ;
-  Bool_t needClean(false) ;
+  std::unique_ptr<list<Double_t>> sumBinB = nullptr ;
+  bool needClean = false;
 
   // Loop over components pdf
   for (auto arg : _pdfList) {
     auto pdf = static_cast<const RooAbsPdf *>(arg);
-    list<Double_t>* pdfBinB = pdf->binBoundaries(obs,xlo,xhi) ;
+    std::unique_ptr<list<Double_t>> pdfBinB{pdf->binBoundaries(obs,xlo,xhi)};
 
     // Process hint
     if (pdfBinB) {
       if (!sumBinB) {
 
 	// If this is the first hint, then just save it
-	sumBinB = pdfBinB ;
+	sumBinB = std::move(pdfBinB) ;
 
       } else {
 
-	list<Double_t>* newSumBinB = new list<Double_t>(sumBinB->size()+pdfBinB->size()) ;
+	auto newSumBinB = std::make_unique<list<Double_t>>(sumBinB->size()+pdfBinB->size()) ;
 
 	// Merge hints into temporary array
 	merge(pdfBinB->begin(),pdfBinB->end(),sumBinB->begin(),sumBinB->end(),newSumBinB->begin()) ;
 
 	// Copy merged array without duplicates to new sumBinBArrau
-	delete sumBinB ;
-	delete pdfBinB ;
-	sumBinB = newSumBinB ;
+	sumBinB = std::move(newSumBinB) ;
 	needClean = true ;
       }
     }
@@ -1252,11 +1222,10 @@ std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xl
 
   // Remove consecutive duplicates
   if (needClean) {
-    list<Double_t>::iterator new_end = unique(sumBinB->begin(),sumBinB->end()) ;
-    sumBinB->erase(new_end,sumBinB->end()) ;
+    sumBinB->erase(std::unique(sumBinB->begin(),sumBinB->end()), sumBinB->end()) ;
   }
 
-  return sumBinB ;
+  return sumBinB.release() ;
 }
 
 
