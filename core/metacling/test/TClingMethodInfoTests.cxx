@@ -446,6 +446,28 @@ namespace Templates {
    TListOfFunctions *methods = (TListOfFunctions *)clMyMethods->GetListOfMethods();
    ASSERT_NE(methods, nullptr);
 
+   std::set<std::string> names;
+   for (auto *obj: *methods)
+      names.insert(obj->GetName());
+   EXPECT_EQ(names.count("Na"), 0);
+   EXPECT_EQ(names.count("Nb"), 0);
+   EXPECT_EQ(names.count("Nc"), 0);
+   EXPECT_EQ(names.count("Nd"), 0);
+
+   //[1]: See comment in TClingCXXRecMethIter::InstantiateTemplateWithDefaults()
+   // handling parameter packs.
+   EXPECT_EQ(names.count("Ya<int>"), 1);
+   //EXPECT_EQ(names.count("Yb"), 1); //[1]
+   EXPECT_EQ(names.count("Yc<12>"), 1);
+   EXPECT_EQ(names.count("Yd<TTArg>"), 1);
+   EXPECT_EQ(names.count("Ye<int>"), 1);
+   EXPECT_EQ(names.count("Yf<int>"), 1);
+   //EXPECT_EQ(names.count("Yg<int>"), 1); //[1]
+   //EXPECT_EQ(names.count("Yh<int, int>"), 1); //[1]
+
+   // These do a lookup / overload set, and can materialize functions (like Yb)
+   // that the enumeration above failed to catch; see overriding
+   // `TListOfFunctions::FindObject()`.
    EXPECT_EQ(methods->FindObject("Na"), nullptr);
    EXPECT_EQ(methods->FindObject("Nb"), nullptr);
    EXPECT_EQ(methods->FindObject("Nc"), nullptr);

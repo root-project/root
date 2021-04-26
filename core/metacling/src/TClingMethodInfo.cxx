@@ -161,7 +161,14 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    llvm::SmallVector<TemplateArgument, 8> defaultTemplateArgs;
    for (const NamedDecl *templateParm: *templateParms) {
       if (templateParm->isTemplateParameterPack()) {
-         defaultTemplateArgs.emplace_back(ArrayRef<TemplateArgument>{}); // empty pack.
+         // This would inject an emprt parameter pack, which is a good default.
+         // But for cases where instantiation fails, this hits bug in unloading
+         // of the failed instantiation, causing a missing symbol in subsequent
+         // transactions where a Decl instantiated by the failed instatiation
+         // is not re-emitted. So for now just give up default-instantiating
+         // templates with parameter packs, even if this is simply a work-around.
+         //defaultTemplateArgs.emplace_back(ArrayRef<TemplateArgument>{}); // empty pack.
+         return nullptr;
       } else if (auto TTP = dyn_cast<TemplateTypeParmDecl>(templateParm)) {
          if (!TTP->hasDefaultArgument())
             return nullptr;
