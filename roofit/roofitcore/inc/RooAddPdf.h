@@ -148,6 +148,8 @@ private:
   mutable UniqueId<RooArgSet>::Value_t _idOfLastUsedNormSet = UniqueId<RooArgSet>::nullval; //!
   mutable std::unique_ptr<const RooArgSet> _copyOfLastNormSet = nullptr; //!
 
+  void finalizeConstruction();
+
   ClassDef(RooAddPdf,3) // PDF representing a sum of PDFs
 };
 
