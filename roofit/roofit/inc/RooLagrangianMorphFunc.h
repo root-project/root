@@ -86,11 +86,10 @@ public:
 
   class Config {
   public:
-    Config();
+    Config() {}
     Config(const RooAbsCollection &couplings);
     Config(const RooAbsCollection &prodCouplings,
            const RooAbsCollection &decCouplings);
-    Config(const Config &other) = default;
     void setFileName(const char *filename);
     void setFolders(const RooArgList &folderlist);
     void setObservableName(const char *obsname);
@@ -105,14 +104,15 @@ public:
     void setNonInterfering(const std::vector<T *> &nonInterfering);
     template <class T> void addDiagrams(const std::vector<T> &diagrams);
 
-    std::string getFileName() const;
-    std::string getObservableName() const;
-    std::vector<std::vector<RooArgList *>> const& getDiagrams() const;
-    RooArgList getCouplings() const;
-    RooArgList getProdCouplings() const;
-    RooArgList getDecCouplings() const;
-    RooArgList getFolders() const;
-    Bool_t IsAllowNegativeYields() const;
+    std::string const& getFileName() const { return this->_fileName; }
+    std::string const& getObservableName() const { return this->_obsName; }
+    std::vector<std::vector<RooArgList *>> const& getDiagrams() const { return this->_configDiagrams; }
+    RooArgList const& getCouplings() const { return this->_couplings; }
+    RooArgList const& getProdCouplings() const { return this->_prodCouplings; }
+    RooArgList const& getDecCouplings() const { return this->_decCouplings; }
+    RooArgList const& getFolders() const { return this->_folderlist; }
+    bool IsAllowNegativeYields() const { return this->_allowNegativeYields; }
+
 
     void append(ParamSet &set, const char *str, double val);
     //void append(ParamMap &map, const char *str, ParamSet &set);
@@ -134,11 +134,10 @@ public:
     std::vector<std::string> const& getFolderNames() const { return _folderNames; };
     void printSamples() const;
     void printPhysics() const;
-    int nSamples() const;
+    /// Return the number of samples in this morphing function.
+    int nSamples() const { return this->_folderNames.size(); }
 
     void readParameters(TDirectory *f);
-
-    ~Config();
 
   private:
     std::string _obsName;
@@ -324,7 +323,7 @@ public:
   void setScale(double val);
   double getScale();
 
-  int nSamples() const;
+  int nSamples() const {return this->_config.getFolderNames().size(); }
 
   RooRealSumFunc *getFunc() const;
   std::unique_ptr<RooWrapperPdf> createPdf() const;
@@ -333,7 +332,7 @@ public:
   Double_t expectedEvents(const RooArgSet *nset) const;
   Double_t expectedEvents(const RooArgSet &nset) const;
   Double_t expectedEvents() const;
-  Bool_t selfNormalized() const;
+  Bool_t selfNormalized() const { return true; }
 
   void readParameters(TDirectory *f) { _config.readParameters(f); }
   void collectInputs(TDirectory *f);
