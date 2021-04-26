@@ -92,7 +92,7 @@ std::string GetNormalizedType(const std::string &typeName) {
    if (normalizedType == "Bool_t") normalizedType = "bool";
    if (normalizedType == "Float_t") normalizedType = "float";
    if (normalizedType == "Double_t") normalizedType = "double";
-   if (normalizedType == "Char_t") normalizedType = "std::int8_t";
+   if (normalizedType == "Char_t") normalizedType = "char";
    if (normalizedType == "int8_t") normalizedType = "std::int8_t";
    if (normalizedType == "UChar_t") normalizedType = "std::uint8_t";
    if (normalizedType == "unsigned char") normalizedType = "std::uint8_t";
@@ -151,6 +151,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
    } else if (normalizedType == "bool") {
       result = std::make_unique<RField<bool>>(fieldName);
+   } else if (normalizedType == "char") {
+      result = std::make_unique<RField<char>>(fieldName);
    } else if (normalizedType == "std::int8_t") {
       result = std::make_unique<RField<std::int8_t>>(fieldName);
    } else if (normalizedType == "std::uint8_t") {
@@ -390,6 +392,21 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GenerateColu
 void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClusterSizeField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+void ROOT::Experimental::RField<char>::GenerateColumnsImpl()
+{
+   RColumnModel model(EColumnType::kByte, false /* isSorted*/);
+   fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<
+      char, EColumnType::kByte>(model, 0)));
+   fPrincipalColumn = fColumns[0].get();
+}
+
+void ROOT::Experimental::RField<char>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitCharField(*this);
 }
 
 //------------------------------------------------------------------------------

@@ -181,6 +181,13 @@ void ROOT::Experimental::RPrintValueVisitor::VisitFloatField(const RField<float>
    fOutput << *fValue.Get<float>();
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitCharField(const RField<char> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<char>();
+}
+
 void ROOT::Experimental::RPrintValueVisitor::VisitInt8Field(const RField<std::int8_t> &field)
 {
    PrintIndent();
