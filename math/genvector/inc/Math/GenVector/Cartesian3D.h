@@ -109,10 +109,10 @@ public :
    Scalar Z()     const { return fZ;}
    Scalar Mag2()  const { return fX*fX + fY*fY + fZ*fZ;}
    Scalar Perp2() const { return fX*fX + fY*fY ;}
-   Scalar Rho() const { return sqrt(Perp2()); }
-   Scalar R() const { return sqrt(Mag2()); }
-   Scalar Theta() const { return atan2(Rho(), Z()); }
-   Scalar Phi() const { return atan2(fY, fX); }
+   Scalar Rho() const { using std::sqrt; return sqrt(Perp2()); }
+   Scalar R() const { using std::sqrt; return sqrt(Mag2()); }
+   Scalar Theta() const { using std::atan2; return atan2(Rho(), Z()); }
+   Scalar Phi() const { using std::atan2; return atan2(fY, fX); }
 
    // pseudorapidity
    Scalar Eta() const {
@@ -207,7 +207,9 @@ public :
    Cartesian3D & operator = (const Polar3D<T2> & v)
    {
       const T rho = v.Rho();
+      using std::cos;
       fX          = rho * cos(v.Phi());
+      using std::sin;
       fY          = rho * sin(v.Phi());
       fZ = v.Z();
       return *this;

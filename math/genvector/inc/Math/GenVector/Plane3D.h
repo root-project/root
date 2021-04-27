@@ -216,6 +216,7 @@ protected:
    void Normalize()
    {
       // normalize the plane
+      using std::sqrt;
       const SCALAR s = sqrt(fA * fA + fB * fB + fC * fC);
       // what to do if s = 0 ?
       if (s == SCALAR(0)) {
@@ -236,6 +237,7 @@ protected:
    void Normalize()
    {
       // normalize the plane
+      using std::sqrt;
       SCALAR s = sqrt(fA * fA + fB * fB + fC * fC);
       // what to do if s = 0 ?
       const auto m = (s == SCALAR(0));
@@ -308,7 +310,3 @@ private:
 
 
 #endif
-
-
-
-
