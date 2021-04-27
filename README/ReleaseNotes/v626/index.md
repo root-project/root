@@ -13,6 +13,7 @@ For more information, see:
 The following people have contributed to this new version:
 
  Bertrand Bellenot, CERN/SFT,\
+ Josh Bendavid, CERN/CMS,\
  Jakob Blomer, CERN/SFT,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
@@ -57,6 +58,7 @@ The following people have contributed to this new version:
 - Add `Redefine` to the `RDataFrame` interface, which allows to overwrite the value of an existing column.
 - Add `Describe` to the `RDataFrame` interface, which allows to get useful information, e.g. the columns and their types.
 - Add `DescribeDataset` to the `RDataFrame` interface, which allows to get information about the dataset (subset of the output of Describe()).
+- `Book` now suports just-in-time compilation, i.e. it can be called without passing the column types as template parameters (with some performance penalty, as usual).
 
 ## Histogram Libraries
 
