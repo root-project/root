@@ -237,6 +237,7 @@ ROOT::Experimental::Detail::RFieldBase::Clone(std::string_view newName) const
 {
    auto clone = CloneImpl(newName);
    clone->fOnDiskId = fOnDiskId;
+   clone->fDescription = fDescription;
    return clone;
 }
 
