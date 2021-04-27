@@ -80,6 +80,14 @@ TFeynman::TFeynman() : TAttLine(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a particle to TFeynman
+/// \param[in] particleName name of the particle (boson, fermion, gluon, anti-fermion)
+/// \param[in] x1
+/// \param[in] y1 starting coordinates of the particle
+/// \param[in] x2
+/// \param[in] y2 stopping coordinates of the particle
+/// \param[in] labelX
+/// \param[in] labelY coordinates of label
+/// \param[in] label to be displayed in Latex form
 
 TFeynmanEntry *TFeynman::AddItem(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelX, Double_t labelY, const char* label)
 {
@@ -92,6 +100,10 @@ TFeynmanEntry *TFeynman::AddItem(const char* particleName, Double_t x1, Double_t
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a particle pair to TFeynman
+/// \param[in] particleLabel label to be displayed (kust the particle, not the antiparticle)
+/// \param[in] x
+/// \param[in] y coordinates of the centre of the pair
+/// \param[in] radius radius of the arc
 TFeynmanEntry *TFeynman::AddPair(const char *particleLabel, Double_t x, Double_t y, Double_t radius) {
   TFeynmanEntry *newPairEntry = new TFeynmanEntry(particleLabel, x, y, radius);
   if (!fPrimitives) fPrimitives = new TList;
@@ -101,7 +113,13 @@ TFeynmanEntry *TFeynman::AddPair(const char *particleLabel, Double_t x, Double_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a particle pair to TFeynman
+/// Add a curved particle to TFeynman
+/// \param[in] particleLabel label to be displayed
+/// \param[in] x
+/// \param[in] y coordinates of the centre of the curve
+/// \param[in] radius radius of the arc
+/// \param[in] phimin minimum angle (see TArc)
+/// \param[in] phimax maximum angle (see TArc)
 TFeynmanEntry *TFeynman::AddCurved(const char *particleLabel, Double_t x, Double_t y, Double_t radius, Double_t phimin, Double_t phimax, bool wavy) {
   TFeynmanEntry *newCurvedEntry = new TFeynmanEntry(particleLabel, x, y, radius, phimin, phimax, wavy);
   if (!fPrimitives) fPrimitives = new TList;
@@ -112,7 +130,7 @@ TFeynmanEntry *TFeynman::AddCurved(const char *particleLabel, Double_t x, Double
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this Feynman's diagram with its current attributes.
-
+/// \param[in] option drawing options
 void TFeynman::Draw( Option_t *option )
 {
    AppendPad(option);

@@ -25,6 +25,17 @@ ClassImp(TFeynmanEntry);
 ///////////////////////////////////////////////////////////////////////////////
 /// Constructors
 
+///////////////////////////////////////////////////////////////////////////////
+/// Normal particle constuctor
+/// \param[in] particleName name of the particle (boson, fermion, gluon, anti-fermion)
+/// \param[in] x1
+/// \param[in] y1 starting coordinates of the particle
+/// \param[in] x2
+/// \param[in] y2 stopping coordinates of the particle
+/// \param[in] labelX
+/// \param[in] labelY coordinates of label
+/// \param[in] label to be displayed in Latex form
+
 TFeynmanEntry::TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t labelX, Double_t labelY, const char* label) {
    fX1 = x1;
    fY1 = y1;
@@ -36,6 +47,13 @@ TFeynmanEntry::TFeynmanEntry(const char* particleName, Double_t x1, Double_t y1,
    fLabel = label;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Particle pair constuctor
+/// \param[in] particleLabel label to be displayed (kust the particle, not the antiparticle)
+/// \param[in] x
+/// \param[in] y coordinates of the centre of the pair
+/// \param[in] radius radius of the arc
+
 TFeynmanEntry::TFeynmanEntry(const char *particleLabel, Double_t x, Double_t y, Double_t radius) {
   fX1 = x;
   fY1 = y;
@@ -44,6 +62,15 @@ TFeynmanEntry::TFeynmanEntry(const char *particleLabel, Double_t x, Double_t y, 
   fLabel = particleLabel;
 
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/// Curved particle constuctor
+/// \param[in] particleLabel label to be displayed
+/// \param[in] x
+/// \param[in] y coordinates of the centre of the curve
+/// \param[in] radius radius of the arc
+/// \param[in] phimin minimum angle (see TArc)
+/// \param[in] phimax maximum angle (see TArc)
 
 TFeynmanEntry::TFeynmanEntry(const char *particleLabel, Double_t x, Double_t y, Double_t radius, Double_t phimin, Double_t phimax, bool wavy) {
   fParticle = "curved";
