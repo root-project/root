@@ -46,6 +46,8 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    auto cloneFieldZero = fFieldZero->Clone("");
    cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(cloneFieldZero.release()));
    cloneModel->fDefaultEntry = cloneModel->fFieldZero->GenerateEntry();
+   cloneModel->fFieldNames = fFieldNames;
+   cloneModel->fDescription = fDescription;
    return cloneModel;
 }
 
