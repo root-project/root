@@ -268,7 +268,7 @@ void REveDataCollection::SetFilterExpr(const TString& filter)
    }
    catch (const std::exception &exc)
    {
-      std::cerr << "EveDataCollection::SetFilterExpr" << exc.what();
+      gEveLog.add(Form("EveDataCollection::SetFilterExpr %s\n", exc.what()));
    }
 }
 

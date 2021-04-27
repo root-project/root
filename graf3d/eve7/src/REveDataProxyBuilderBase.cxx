@@ -158,8 +158,7 @@ void REveDataProxyBuilderBase::Build()
       }
       catch (const std::runtime_error& iException)
       {
-         std::cout << "Caught exception in build function for item " << m_collection->GetName() << ":\n"
-                              << iException.what() << std::endl;
+         gEveLog.add(Form("Caught exception in build function for item %s: %s\n", m_collection->GetCName(), iException.what()));
          exit(1);
       }
    }

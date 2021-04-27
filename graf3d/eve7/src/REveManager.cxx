@@ -900,15 +900,9 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
       // std::cout << cmd.str() << std::endl;
       // gROOT->ProcessLine(cmd.str().c_str());
    } catch (std::exception &e) {
-      std::cout << "REveManager::ExecuteCommand " << e.what() << std::endl;
+      gEveLog.add(Form("REveManager::ExecuteCommand %s\n", e.what()));
    } catch (...) {
-      std::cout << "REveManager::ExecuteCommand unknown exception.\n";
-   }
-
-   if (gEveLog.has_contents())
-   {
-      std::cout << "Culokafoor: " << gEveLog.fLog << "\n";
-      gEveLog.clear();
+      gEveLog.add(Form("REveManager::ExecuteCommand unknow execption \n"));
    }
 }
 
@@ -925,6 +919,12 @@ void REveManager::PublishChanges()
    fScenes->ProcessSceneChanges();
 
    jobj["content"] = "EndChanges";
+
+   if (gEveLog.has_contents())
+   {
+      jobj["log"] = gEveLog.fLog;
+      gEveLog.clear();
+   }
    fWebWindow->Send(0, jobj.dump());
 }
 

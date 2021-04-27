@@ -121,7 +121,7 @@ void REveDataColumn::SetExpressionAndType(const std::string& expr, FieldType_e t
    }
    catch (const std::exception &exc)
    {
-      std::cerr << "REveDataColumn::SetExpressionAndType" << exc.what();
+      gEveLog.add(Form("REveDataColumn::SetExpressionAndType %s\n", exc.what()));
    }
 }
 //______________________________________________________________________________
