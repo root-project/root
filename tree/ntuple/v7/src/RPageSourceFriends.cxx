@@ -176,6 +176,19 @@ ROOT::Experimental::Detail::RPageSourceFriends::PopulatePage(
    return page;
 }
 
+
+void ROOT::Experimental::Detail::RPageSourceFriends::LoadSealedPage(
+   DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage)
+{
+   auto originColumnId = fIdBiMap.GetOriginId(columnId);
+   RClusterIndex originClusterIndex(
+      fIdBiMap.GetOriginId(clusterIndex.GetClusterId()).fId,
+      clusterIndex.GetIndex());
+
+   fSources[originColumnId.fSourceIdx]->LoadSealedPage(columnId, originClusterIndex, sealedPage);
+}
+
+
 void ROOT::Experimental::Detail::RPageSourceFriends::ReleasePage(RPage &page)
 {
    if (page.IsNull())
