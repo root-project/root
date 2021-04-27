@@ -1129,10 +1129,8 @@ Double_t RooNDKeysPdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooNDKeysPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
+Int_t RooNDKeysPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
-  if (rangeName) return 0 ;
-
   Int_t code=0;
   if (matchArgs(allVars,analVars,RooArgSet(_varList))) { code=1; }
 
@@ -1152,6 +1150,92 @@ Double_t RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) con
   // determine which observables need to be integrated over ...
   Int_t nComb = 1 << (_nDim);
   R__ASSERT(code>=1 && code<nComb) ;
+
+  // If the range name is defined, we loop over all data points for the kernel
+  // estimation to keep the code simple. Further optimization is possible if really necessary,
+  // but this is already much faster than numerical integration.
+  if(rangeName) {
+    // the block of code is borrowed from RooNDKeysPdf::evaluate()
+    if ( (_tracker && _tracker->hasChanged(kTRUE)) || (_weights != &_weights0 && _weights != &_weights1) ) {
+      updateRho(); // update internal rho parameters
+      // redetermine static and/or adaptive bandwidth
+      const_cast<RooNDKeysPdf*>(this)->calculateBandWidth();
+    }
+
+    std::vector<double> xLowerBound;
+    xLowerBound.resize(_nDim);
+    std::vector<double> xHigherBound;
+    xHigherBound.resize(_nDim);
+
+    std::vector<double> xLowerBoundMinShell;
+    std::vector<double> xHigherBoundMinShell;
+    std::vector<double> xLowerBoundMaxShell;
+    std::vector<double> xHigherBoundMaxShell;
+    xLowerBoundMinShell.resize(_nDim);
+    xHigherBoundMinShell.resize(_nDim);
+    xLowerBoundMaxShell.resize(_nDim);
+    xHigherBoundMaxShell.resize(_nDim);
+
+    TVectorD dxLowerBound(_nDim);
+    TVectorD dxHigherBound(_nDim);
+
+    for (unsigned int j=0; j < _varList.size(); ++j) {
+      auto var = static_cast<const RooAbsRealLValue*>(_varList.at(j));
+      xLowerBound[j] = var->getMin(rangeName);
+      xHigherBound[j] = var->getMax(rangeName);
+
+      xLowerBoundMinShell[j] = xLowerBound[j] - _nSigma * (_n * _sigma[j]);
+      xLowerBoundMaxShell[j] = xLowerBound[j] + _nSigma * (_n * _sigma[j]);
+      xHigherBoundMinShell[j] = xHigherBound[j] - _nSigma * (_n * _sigma[j]);
+      xHigherBoundMaxShell[j] = xHigherBound[j] + _nSigma * (_n * _sigma[j]);
+    }
+
+    double val = 0.;
+    for (size_t i = 0; i < _dataPts.size(); ++i) {
+       double g = 1.;
+       const vector<Double_t> &point = _dataPts[i];
+       const vector<Double_t> &weight = (*_weights)[_idx[i]];
+
+       // skip if the data point is not in the shell of the lower bound or higher bound
+       bool inShell = false;
+       bool inRange = true;
+       for (int j = 0; j < _nDim; j++) {
+         inShell |= point[j] - xLowerBoundMinShell[j] > 0 && point[j] - xLowerBoundMaxShell[j] < 0;
+         inShell |= point[j] - xHigherBoundMinShell[j] > 0 && point[j] - xHigherBoundMaxShell[j] < 0;
+         inRange &= point[j] - xLowerBound[j] > 0 && point[j] - xHigherBound[j] < 0;
+       }
+       if( !__builtin_expect(inShell, false)) {
+         if (inRange) {
+           val += _wMap.at(_idx[i]);
+         }
+         continue;
+       }
+
+       for (int j = 0; j < _nDim; j++) {
+          dxLowerBound[j] = xLowerBound[j] - point[j];
+          dxHigherBound[j] = xHigherBound[j] - point[j];
+       }
+
+       if (_nDim > 1 && _rotate) {
+          // rotate to decorrelated frame!
+          dxLowerBound *= *_rotMat;
+          dxHigherBound *= *_rotMat;
+       }
+
+       for (int j = 0; j < _nDim; j++) {
+          const double min = dxLowerBound[j]/(weight[j] * std::sqrt(2));
+          const double max = dxHigherBound[j]/(weight[j] * std::sqrt(2));
+
+          const double ecmin = std::erfc(std::abs(min));
+          const double ecmax = std::erfc(std::abs(max));
+
+          g *= 0.5 * (min*max < 0.0 ? 2.0 - (ecmin + ecmax)
+                                    : max <= 0. ? ecmax - ecmin : ecmin - ecmax);
+       }
+       val += (g * _wMap.at(_idx[i]));
+    }
+    return val;
+  }
 
   vector<Bool_t> doInt(_nDim,kTRUE);
 
