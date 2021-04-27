@@ -1,5 +1,5 @@
-#include "TFeynman.cxx"
-#include "TFeynmanEntry.cxx"
+#include "TFeynman.h"
+#include "TFeynmanEntry.h"
 
 void feynman()
 {

@@ -13,7 +13,7 @@
 #include <iostream>
 #ifndef ROOT_TFeynman
 
-#include "../inc/TFeynman.h"
+#include "TFeynman.h"
 #include "TMath.h"
 #include "TCurlyLine.h"
 

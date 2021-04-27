@@ -11,7 +11,7 @@
 
 #include <cstdio>
 #include <iostream>
-#include "../inc/TFeynmanEntry.h"
+#include "TFeynmanEntry.h"
 
 ClassImp(TFeynmanEntry);
 
