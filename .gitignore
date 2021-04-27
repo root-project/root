@@ -32,6 +32,9 @@ CMakeLists.txt.user
 # Vim
 *.swp
 
+# Directory name reserved for build directory
+_build
+
 # Other Stuff
 tags
 *.d
