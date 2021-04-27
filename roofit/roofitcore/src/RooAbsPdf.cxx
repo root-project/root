@@ -792,7 +792,8 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
   if(expected < 0) {
     coutE(InputArguments) << fName << ": calculated negative expected events: " << expected
          << endl;
-    return 0;
+    logEvalError("extendedTerm #expected events is <0 return a  NaN");
+    return TMath::QuietNaN();
   }
 
 
@@ -802,9 +803,9 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
   }
 
   // Check for errors in Nexpected
-  if (expected<0 || TMath::IsNaN(expected)) {
-    logEvalError("extendedTerm #expected events is <0 or NaN") ;
-    return 0 ;
+  if (TMath::IsNaN(expected)) {
+    logEvalError("extendedTerm #expected events is a NaN") ;
+    return TMath::QuietNaN() ;
   }
 
   // calculate and return the negative log-likelihood of the Poisson
