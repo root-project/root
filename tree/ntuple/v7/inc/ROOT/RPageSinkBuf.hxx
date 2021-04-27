@@ -80,6 +80,8 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
    void ReleasePage(RPage &page) final;
+
+   RNTupleMetrics &GetMetrics() final { return fInnerSink->GetMetrics(); }
 };
 
 } // namespace Detail
