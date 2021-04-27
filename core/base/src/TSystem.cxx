@@ -22,6 +22,7 @@ allows a simple partial implementation for new OS'es.
 */
 
 #include <ROOT/FoundationUtils.hxx>
+#include <ROOT/StringUtils.hxx>
 #include "strlcpy.h"
 #include "TSystem.h"
 #include "TApplication.h"
@@ -3346,16 +3347,19 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if (!f(I->c_str()))
             break;
    };
-   auto LoadLibrary = [useCxxModules, produceRootmap, ForeachSharedLibDep](const TString &lib) {
+
+   auto LoadLibrary = [linkDepLibraries, useCxxModules, produceRootmap, ForeachSharedLibDep](const TString &lib) {
       // We have no rootmap files or modules to construct `-l` flags enabling
       // explicit linking. We have to resolve the dependencies by ourselves
       // taking the job of the dyld.
+      // If !linkDepLibraries then the library might not know its dependencies
+      // and "just load the library" might fail.
       // FIXME: This is a rare case where we have rootcling running with
       // modules disabled. Remove this code once we fully switch to modules,
       // or implement a special flag in rootcling which selective enables
       // modules for dependent libraries and does not produce a module for
       // the ACLiC library.
-      if (useCxxModules && !produceRootmap) {
+      if (!linkDepLibraries && useCxxModules && !produceRootmap) {
          std::function<bool(const char *)> LoadLibF = [](const char *dep) {
             return gInterpreter->Load(dep, /*skipReload*/ true) >= 0;
          };
@@ -3373,8 +3377,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          k->SetUniqueID(lib_time);
          if (!keep) k->SetBit(kMustCleanup);
          fCompiled->Add(k);
-
-         gInterpreter->GetSharedLibDeps(library);
 
          return LoadLibrary(library);
       }
