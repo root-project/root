@@ -19,6 +19,7 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageSourceFriends.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #ifdef R__USE_IMT
 #include <ROOT/TTaskGroup.hxx>
@@ -307,6 +308,10 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWr
    const RNTupleWriteOptions &options)
 {
    auto sink = std::make_unique<Detail::RPageSinkFile>(ntupleName, file, options);
+   if (options.GetUseBufferedWrite()) {
+      auto bufferedSink = std::make_unique<Detail::RPageSinkBuf>(std::move(sink));
+      return std::make_unique<RNTupleWriter>(std::move(model), std::move(bufferedSink));
+   }
    return std::make_unique<RNTupleWriter>(std::move(model), std::move(sink));
 }
 
