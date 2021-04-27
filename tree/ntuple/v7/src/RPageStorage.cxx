@@ -21,6 +21,7 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPagePool.hxx>
+#include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RStringView.hxx>
 
@@ -144,7 +145,10 @@ ROOT::Experimental::Detail::RPageSink::~RPageSink()
 std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detail::RPageSink::Create(
    std::string_view ntupleName, std::string_view location, const RNTupleWriteOptions &options)
 {
-   return std::make_unique<RPageSinkFile>(ntupleName, location, options);
+   auto realSink = std::make_unique<RPageSinkFile>(ntupleName, location, options);
+   if (options.GetUseBufferedWrite())
+      return std::make_unique<RPageSinkBuf>(std::move(realSink));
+   return realSink;
 }
 
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
