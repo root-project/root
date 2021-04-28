@@ -19,6 +19,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
@@ -67,6 +68,38 @@ static constexpr daos_obj_id_t kOidAnchor{std::uint64_t(-1), 0};
 static constexpr daos_obj_id_t kOidHeader{std::uint64_t(-2), 0};
 static constexpr daos_obj_id_t kOidFooter{std::uint64_t(-3), 0};
 } // namespace
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+std::uint32_t
+ROOT::Experimental::Detail::RDaosNTupleAnchor::Serialize(void *buffer) const
+{
+   using namespace ROOT::Experimental::Internal::RNTupleSerialization;
+   if (buffer != nullptr) {
+      auto bytes = reinterpret_cast<unsigned char *>(buffer);
+      bytes += SerializeUInt32(fVersion, bytes);
+      bytes += SerializeUInt32(fNBytesHeader, bytes);
+      bytes += SerializeUInt32(fLenHeader, bytes);
+      bytes += SerializeUInt32(fNBytesFooter, bytes);
+      bytes += SerializeUInt32(fLenFooter, bytes);
+   }
+   return 20;
+}
+
+std::uint32_t
+ROOT::Experimental::Detail::RDaosNTupleAnchor::Deserialize(const void *buffer)
+{
+   using namespace ROOT::Experimental::Internal::RNTupleSerialization;
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   bytes += DeserializeUInt32(bytes, &fVersion);
+   bytes += DeserializeUInt32(bytes, &fNBytesHeader);
+   bytes += DeserializeUInt32(bytes, &fLenHeader);
+   bytes += DeserializeUInt32(bytes, &fNBytesFooter);
+   bytes += DeserializeUInt32(bytes, &fLenFooter);
+   return 20;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,8 +210,10 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleFooter(
 }
 
 void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleAnchor() {
-   fDaosContainer->WriteObject(kOidAnchor, &fNTupleAnchor, sizeof(fNTupleAnchor),
-                           kDistributionKey, kAttributeKey);
+   const auto ntplSize = RDaosNTupleAnchor::GetSize();
+   auto buffer = std::make_unique<unsigned char[]>(ntplSize);
+   fNTupleAnchor.Serialize(buffer.get());
+   fDaosContainer->WriteObject(kOidAnchor, buffer.get(), ntplSize, kDistributionKey, kAttributeKey);
 }
 
 ROOT::Experimental::Detail::RPage
@@ -257,9 +292,12 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
 {
    RNTupleDescriptorBuilder descBuilder;
    RDaosNTupleAnchor ntpl;
-   fDaosContainer->ReadObject(kOidAnchor, &ntpl, sizeof(ntpl), kDistributionKey, kAttributeKey);
+   const auto ntplSize = RDaosNTupleAnchor::GetSize();
+   auto buffer = std::make_unique<unsigned char[]>(ntplSize);
+   fDaosContainer->ReadObject(kOidAnchor, buffer.get(), ntplSize, kDistributionKey, kAttributeKey);
+   ntpl.Deserialize(buffer.get());
 
-   auto buffer = std::make_unique<unsigned char[]>(ntpl.fLenHeader);
+   buffer = std::make_unique<unsigned char[]>(ntpl.fLenHeader);
    auto zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesHeader);
    fDaosContainer->ReadObject(kOidHeader, zipBuffer.get(), ntpl.fNBytesHeader, kDistributionKey, kAttributeKey);
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fLenHeader, buffer.get());
