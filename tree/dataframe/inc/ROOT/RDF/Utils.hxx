@@ -204,8 +204,11 @@ bool IsInternalColumn(std::string_view colName);
 /// Get optimal column width for printing a table given the names and the desired minimal space between columns
 unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigned int minColumnSpace = 8u);
 
-#ifdef __cpp_lib_hardware_interference_size
-   // C++17 feature (so we can use inline variables), but very few implementations support it as of 2021
+// We could just check `#ifdef __cpp_lib_hardware_interference_size`, but at least on Mac 11
+// libc++ defines that macro but is missing the actual feature, so we use an ad-hoc ROOT macro instead.
+// See the relevant entry in cmake/modules/RootConfiguration.cmake for more info.
+#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
+   // C++17 feature (so we can use inline variables)
    inline constexpr std::size_t kCacheLineSize = std::hardware_destructive_interference_size;
 #else
    // safe bet: assume the typical 64 bytes

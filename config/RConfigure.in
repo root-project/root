@@ -42,6 +42,7 @@
 #@hasstdindexsequence@ R__HAS_STD_INDEX_SEQUENCE /**/
 #@has_found_attribute_always_inline@ R__HAS_ATTRIBUTE_ALWAYS_INLINE /**/
 #@has_found_attribute_noinline@ R__HAS_ATTRIBUTE_NOINLINE /**/
+#@hashardwareinterferencesize@ R__HAS_HARDWARE_INTERFERENCE_SIZE /**/
 #@useimt@ R__USE_IMT   /**/
 #@memory_term@ R__COMPLETE_MEM_TERMINATION /**/
 #@hascefweb@ R__HAS_CEFWEB  /**/
