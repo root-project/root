@@ -44,19 +44,18 @@ void makerootfile(const char *MacroName, const char *IN, const char *OutDir, boo
       canvas = (TCanvas*)next();
       cw = canvas->GetWindowWidth();
       ch = canvas->GetWindowHeight();
-      fprintf(fh,"<div id=\"draw_pict%d_%s\" style=\"width:%dpx; height:%dpx\"></div>\n",
+      fprintf(fh,"<div id=\"draw_pict%d_%s\" style=\"width:%dpx; height:%dpx\">\n</div>\n",
               i,IN,cw,ch);
    }
    fprintf(fh,"</center>\n");
-   fprintf(fh,"<script src=\"https://root.cern/js/dev/scripts/JSRoot.core.js\" type=\"text/javascript\"></script>\n");
-   fprintf(fh,"<script type='text/javascript'>\n");
-   fprintf(fh,"JSROOT.OpenFile(\"./%s.root\", function(file) {\n",IN);
+
+   fprintf(fh,"<script src=\"https://root.cern/js/dev/scripts/JSRoot.core.min.js\" type=\"text/javascript\"></script>\n");
+   fprintf(fh,"<script type='text/javascript'>JSROOT.openFile(\"./%s.root\")",IN);
    for (i=1; i<=ImageNum; i++) {
-      fprintf(fh,"   file.ReadObject(\"pict%d_%s\", function(obj) {JSROOT.draw(\"draw_pict%d_%s\", obj, \"\");});\n",
+      fprintf(fh,".then(file => file.readObject(\"pict%d_%s\")).then(obj => JSROOT.draw(\"draw_pict%d_%s\", obj, \"\"))",
                  i,IN,i,IN);
    }
-   fprintf(fh,"});\n");
-   fprintf(fh,"</script>\n");
+   fprintf(fh,";</script>\n");
 
    fclose(fh);
 }
