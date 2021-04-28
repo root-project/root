@@ -63,9 +63,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     src/TThreadImp.cxx
   STAGE1
   DICTIONARY_OPTIONS
-    -writeEmptyRootPCM 
+    -writeEmptyRootPCM
   DEPENDENCIES
     Core
+  BUILTINS
+    TBB
   INSTALL_OPTIONS ${installoptions}
 )
 
@@ -86,7 +88,7 @@ if((tbb OR builtin_tbb) AND NOT MSVC)
   target_link_libraries(Thread PRIVATE ${TBB_LIBRARIES})
   set_target_properties(Thread PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
 endif()
-  
+
 if(WIN32)
   target_sources(Thread PRIVATE
     src/TWin32Condition.cxx
