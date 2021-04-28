@@ -168,9 +168,9 @@ class RSysDirLevelIter : public RLevelIter {
       if (pathinfores) {
 
          if (fCurrentStat.fIsLink) {
-            R__LOG_ERROR(BrowsableLog()) << "Broken symlink of " << path;
+            R__LOG_DEBUG(0, BrowsableLog()) << "Broken symlink of " << path;
          } else {
-            R__LOG_ERROR(BrowsableLog()) << "Can't read file attributes of \"" <<  path << "\" err:" << gSystem->GetError();
+            R__LOG_DEBUG(0, BrowsableLog()) << "Can't read file attributes of \"" <<  path << "\" err:" << gSystem->GetError();
          }
          return false;
       }
@@ -420,9 +420,9 @@ RSysFile::RSysFile(const std::string &filename) : fFileName(filename)
 {
    if (gSystem->GetPathInfo(fFileName.c_str(), fStat)) {
       if (fStat.fIsLink) {
-         R__LOG_ERROR(BrowsableLog()) << "Broken symlink of " << fFileName;
+         R__LOG_DEBUG(0, BrowsableLog()) << "Broken symlink of " << fFileName;
       } else {
-         R__LOG_ERROR(BrowsableLog()) << "Can't read file attributes of \"" << fFileName
+         R__LOG_DEBUG(0, BrowsableLog()) << "Can't read file attributes of \"" << fFileName
                                     << "\" err:" << gSystem->GetError();
       }
    }
