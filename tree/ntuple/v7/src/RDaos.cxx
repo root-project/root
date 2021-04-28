@@ -40,23 +40,21 @@ ROOT::Experimental::Detail::RDaosPool::~RDaosPool() {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-template <typename DKeyT, typename AKeyT>
-ROOT::Experimental::Detail::RDaosObject<DKeyT, AKeyT>::FetchUpdateArgs::FetchUpdateArgs(FetchUpdateArgs&& fua)
+ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(FetchUpdateArgs&& fua)
   : fDkey(fua.fDkey), fAkey(fua.fAkey),
     fIods{fua.fIods[0]}, fSgls{fua.fSgls[0]}, fIovs(std::move(fua.fIovs)), fEv(fua.fEv)
 {
-   d_iov_set(&fDistributionKey, key_data(fDkey), key_size(fDkey));
-   d_iov_set(&fIods[0].iod_name, key_data(fAkey), key_size(fAkey));
+   d_iov_set(&fDistributionKey, &fDkey, sizeof(fDkey));
+   d_iov_set(&fIods[0].iod_name, &fAkey, sizeof(fAkey));
 }
 
-template <typename DKeyT, typename AKeyT>
-ROOT::Experimental::Detail::RDaosObject<DKeyT, AKeyT>::FetchUpdateArgs::FetchUpdateArgs
+ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs
 (DistributionKey_t &d, AttributeKey_t &a, std::vector<d_iov_t> &v, daos_event_t *p)
   : fDkey(d), fAkey(a), fIovs(v), fEv(p)
 {
-   d_iov_set(&fDistributionKey, key_data(fDkey), key_size(fDkey));
+   d_iov_set(&fDistributionKey, &fDkey, sizeof(fDkey));
 
-   d_iov_set(&fIods[0].iod_name, key_data(fAkey), key_size(fAkey));
+   d_iov_set(&fIods[0].iod_name, &fAkey, sizeof(fAkey));
    fIods[0].iod_nr = 1;
    fIods[0].iod_size = std::accumulate(v.begin(), v.end(), 0,
                                        [](daos_size_t _a, d_iov_t _b) { return _a + _b.iov_len; });
@@ -68,36 +66,27 @@ ROOT::Experimental::Detail::RDaosObject<DKeyT, AKeyT>::FetchUpdateArgs::FetchUpd
    fSgls[0].sg_iovs = fIovs.data();
 }
 
-template <typename DKeyT, typename AKeyT>
-ROOT::Experimental::Detail::RDaosObject<DKeyT, AKeyT>::RDaosObject(RDaosContainer &container, daos_obj_id_t oid,
-                                                                   daos_oclass_id_t cid)
+ROOT::Experimental::Detail::RDaosObject::RDaosObject(RDaosContainer &container, daos_obj_id_t oid,
+                                                     daos_oclass_id_t cid)
 {
-   daos_ofeat_t ofeats{};
-   if (std::is_same<std::uint64_t, DKeyT>::value)
-      ofeats |= DAOS_OF_DKEY_UINT64;
-   if (std::is_same<std::uint64_t, AKeyT>::value)
-      ofeats |= DAOS_OF_AKEY_UINT64;
-   daos_obj_generate_id(&oid, ofeats /*| DAOS_OF_ARRAY_BYTE*/, cid, 0);
+   daos_obj_generate_id(&oid, DAOS_OF_DKEY_UINT64 | DAOS_OF_AKEY_UINT64 /*| DAOS_OF_ARRAY_BYTE*/, cid, 0);
    if (int err = daos_obj_open(container.fContainerHandle, oid, DAOS_OO_RW, &fObjectHandle, nullptr))
       throw RException(R__FAIL("daos_obj_open: error: " + std::string(d_errstr(err))));
 }
 
-template <typename DKeyT, typename AKeyT>
-ROOT::Experimental::Detail::RDaosObject<DKeyT, AKeyT>::~RDaosObject()
+ROOT::Experimental::Detail::RDaosObject::~RDaosObject()
 {
    daos_obj_close(fObjectHandle, nullptr);
 }
 
-template <typename DKeyT, typename AKeyT>
-int ROOT::Experimental::Detail::RDaosObject<DKeyT, AKeyT>::Fetch(FetchUpdateArgs &args)
+int ROOT::Experimental::Detail::RDaosObject::Fetch(FetchUpdateArgs &args)
 {
    args.fIods[0].iod_size = (daos_size_t)DAOS_REC_ANY;
    return daos_obj_fetch(fObjectHandle, DAOS_TX_NONE, 0, &args.fDistributionKey, 1,
                          args.fIods, args.fSgls, nullptr, args.fEv);
 }
 
-template <typename DKeyT, typename AKeyT>
-int ROOT::Experimental::Detail::RDaosObject<DKeyT, AKeyT>::Update(FetchUpdateArgs &args)
+int ROOT::Experimental::Detail::RDaosObject::Update(FetchUpdateArgs &args)
 {
    return daos_obj_update(fObjectHandle, DAOS_TX_NONE, DAOS_COND_DKEY_INSERT, &args.fDistributionKey, 1,
                           args.fIods, args.fSgls, args.fEv);
@@ -157,6 +146,34 @@ ROOT::Experimental::Detail::RDaosContainer::~RDaosContainer() {
    daos_cont_close(fContainerHandle, nullptr);
 }
 
+int ROOT::Experimental::Detail::RDaosContainer::ReadObject(daos_obj_id_t oid, void *buffer, std::size_t length,
+                                                           DistributionKey_t dkey, AttributeKey_t akey)
+{
+   std::vector<d_iov_t> iovs(1);
+   d_iov_set(&iovs[0], buffer, length);
+   RDaosObject::FetchUpdateArgs args(dkey, akey, iovs);
+   return RDaosObject(*this, oid).Fetch(args);
+}
+
+int ROOT::Experimental::Detail::RDaosContainer::WriteObject(daos_obj_id_t oid, const void *buffer, std::size_t length,
+                                                            DistributionKey_t dkey, AttributeKey_t akey)
+{
+   std::vector<d_iov_t> iovs(1);
+   d_iov_set(&iovs[0], const_cast<void *>(buffer), length);
+   RDaosObject::FetchUpdateArgs args(dkey, akey, iovs);
+   return RDaosObject(*this, oid).Update(args);
+}
+
+std::tuple<daos_obj_id_t, int>
+ROOT::Experimental::Detail::RDaosContainer::WriteObject(const void *buffer, std::size_t length,
+                                                        DistributionKey_t dkey, AttributeKey_t akey)
+{
+   auto ret = std::make_tuple(fSequentialWrOid,
+                              WriteObject(fSequentialWrOid, buffer, length, dkey, akey));
+   fSequentialWrOid.lo++;
+   return ret;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -167,6 +184,3 @@ static struct RDaosRAII {
    ~RDaosRAII() { daos_fini(); }
 } RAII{};
 } // anonymous namespace
-
-// Explicit instantiations of `RDaosObject` for specific dkey/akey types
-template class ROOT::Experimental::Detail::RDaosObject<uint64_t, uint64_t>;

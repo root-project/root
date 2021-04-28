@@ -472,7 +472,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadCluster(DescriptorId_t clusterI
    }
 
    // Prepare the input vector for the RDaosContainer::ReadV() call
-   std::vector<RDaosContainer::RWOperation<std::uint64_t, std::uint64_t>> readRequests;
+   std::vector<RDaosContainer::RWOperation> readRequests;
    auto buffer = new unsigned char[szPayload];
    for (auto &s : onDiskPages) {
       std::vector<d_iov_t> iovs(1);

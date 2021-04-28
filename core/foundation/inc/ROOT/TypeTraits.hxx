@@ -193,16 +193,6 @@ struct HasBeginAndEnd {
    static constexpr bool const value = Check<T>(0);
 };
 
-template <typename... Ts> struct __HasMembers {};
-template <typename T, typename _ = void>
-struct HasDataAndSize : std::false_type {};
-template <typename T>
-struct HasDataAndSize<T, typename std::conditional<false,
-                                         __HasMembers<typename T::pointer,
-                                                      decltype(std::declval<T>().size()),
-                                                      decltype(std::declval<T>().data())>, void>::type
-                    > : std::true_type {};
-
 } // ns TypeTraits
 } // ns ROOT
 #endif // ROOT_TTypeTraits
