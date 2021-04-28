@@ -65,7 +65,7 @@ void draw_frame()
    frame1->AttrX().AttrLine().SetColor(RColor::kGreen);
    frame1->AttrY().AttrLine().SetColor(RColor::kBlue);
 
-   frame1->AttrX().SetLog(true);
+   frame1->AttrX().SetLog(2.);
    frame1->AttrX().SetZoom(2.,80.);
    frame1->AttrY().SetZoom(2,8);
 
