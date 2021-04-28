@@ -428,9 +428,9 @@ sap.ui.define([
          this.raycaster.setFromCamera(mouse, this.camera);
 
          let intersects = this.raycaster.intersectObjects(this.scene.children, true);
-
          for (let i = 0; i < intersects.length; ++i) {
-            if (intersects[i].object.get_ctrl && intersects[i].object.visible) {
+            if (intersects[i].object.get_ctrl &&
+               intersects[i].object.eve_el.fPickable && intersects[i].object.visible) {
                intersects[i].mouse = mouse;
                intersects[i].w = w;
                intersects[i].h = h;
@@ -443,7 +443,6 @@ sap.ui.define([
          delete this.mousemove_timeout;
 
          var intersect = this.getIntersectAt(x, y);
-
          if (!intersect)
             return this.clearHighlight();
 
