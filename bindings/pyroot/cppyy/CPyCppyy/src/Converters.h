@@ -17,7 +17,7 @@ public:
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) = 0;
     virtual PyObject* FromMemory(void* address);
-    virtual bool ToMemory(PyObject* value, void* address);
+    virtual bool ToMemory(PyObject* value, void* address, PyObject* ctxt = nullptr);
     virtual bool HasState() { return false; }
 };
 
@@ -37,7 +37,7 @@ public:
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
     virtual PyObject* FromMemory(void* address);
-    virtual bool ToMemory(PyObject* value, void* address);
+    virtual bool ToMemory(PyObject* value, void* address, PyObject* ctxt = nullptr);
     virtual bool HasState() { return true; }
 
 protected:
@@ -56,7 +56,7 @@ public:
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
     virtual PyObject* FromMemory(void* address);
-    virtual bool ToMemory(PyObject* value, void* address);
+    virtual bool ToMemory(PyObject* value, void* address, PyObject* ctxt = nullptr);
 
 protected:
     Cppyy::TCppType_t fClass;
