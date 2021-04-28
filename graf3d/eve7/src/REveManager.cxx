@@ -917,7 +917,6 @@ void REveManager::PublishChanges()
    // Process changes in scenes.
    fWorld->ProcessChanges();
    fScenes->ProcessSceneChanges();
-
    jobj["content"] = "EndChanges";
 
    if (gEveLog.has_contents())

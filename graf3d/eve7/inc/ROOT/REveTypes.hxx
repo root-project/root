@@ -70,17 +70,9 @@ public:
    bool has_contents();
    void clear();
 
-   REveLog& operator << (const std::string& txt)
-   {
-      add(txt);
-      return *this;
-   }
+   REveLog& operator << (const std::string& txt);
 
-   REveLog &operator<<(std::ostream &(*os)(std::ostream &))
-   {
-      fLog << os;
-      return *this;
-   }
+   REveLog &operator<<(std::ostream &(*os)(std::ostream &));
 };
 
 extern thread_local REveLog gEveLog;
