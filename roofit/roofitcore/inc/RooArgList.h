@@ -61,6 +61,8 @@ public:
   // to a copied list. The variables in the copied list are independent
   // of the original variables.
   RooArgList(const RooArgList& other, const char *name="");
+  /// Move constructor.
+  RooArgList(RooArgList && other) : RooAbsCollection(std::move(other)) {}
   virtual TObject* clone(const char* newname) const { return new RooArgList(*this,newname); }
   virtual TObject* create(const char* newname) const { return new RooArgList(newname); }
   RooArgList& operator=(const RooArgList& other) { RooAbsCollection::operator=(other) ; return *this ; }
