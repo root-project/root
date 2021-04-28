@@ -89,6 +89,7 @@ public:
       item->SetClassName(fKey->GetClassName());
       item->SetIcon(RProvider::GetClassIcon(fKey->GetClassName()));
       item->SetTitle(fKey->GetTitle());
+      item->SetSize(std::to_string(fKey->GetNbytes()));
       return item;
    }
 
