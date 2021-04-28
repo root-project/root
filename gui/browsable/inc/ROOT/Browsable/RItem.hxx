@@ -46,8 +46,10 @@ public:
 
    void SetChecked(bool on = true) { checked = on; }
    void SetExpanded(bool on = true) { expanded = on; }
-   void SetIcon(const std::string &_icon) { icon = _icon; }
+
+   void SetName(const std::string &_name) { name = _name; }
    void SetTitle(const std::string &_title) { title = _title; }
+   void SetIcon(const std::string &_icon) { icon = _icon; }
    void SetSize(const std::string &_size) { fsize = _size; }
 
    void SetSize(Long64_t _size)
