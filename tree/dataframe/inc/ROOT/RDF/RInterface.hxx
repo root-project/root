@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <initializer_list>
+#include <iterator> // std::back_insterter
 #include <limits>
 #include <memory>
 #include <sstream>
@@ -1940,8 +1941,10 @@ public:
       }
 
       if (fDataSource) {
-         auto &dsColNames = fDataSource->GetColumnNames();
-         allColumns.insert(allColumns.end(), dsColNames.begin(), dsColNames.end());
+         const auto &dsColNames = fDataSource->GetColumnNames();
+         // ignore columns starting with __rdf_sizeof_
+         std::copy_if(dsColNames.begin(), dsColNames.end(), std::back_inserter(allColumns),
+                                 [](const std::string &s) { return s.rfind("__rdf_sizeof", 0) != 0; });
       }
 
       return allColumns;
