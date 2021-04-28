@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -84,6 +84,7 @@ int RDaosFakeObject::Fetch(daos_key_t *dkey, unsigned int nr, daos_iod_t *iods, 
       || sgls[0].sg_nr != 1)
       return -DER_INVAL;
 
+   std::lock_guard<std::mutex> lock(fMutexStorage);
    auto it = fStorage.find(GetKey(dkey, &iods[0].iod_name));
    if (it == fStorage.end())
       return -DER_INVAL;
@@ -99,6 +100,7 @@ int RDaosFakeObject::Update(daos_key_t *dkey, unsigned int nr, daos_iod_t *iods,
       || sgls[0].sg_nr != 1)
       return -DER_INVAL;
 
+   std::lock_guard<std::mutex> lock(fMutexStorage);
    auto &data = fStorage[GetKey(dkey, &iods[0].iod_name)];
    d_iov_t &iov = sgls[0].sg_iovs[0];
    data.assign(reinterpret_cast<char *>(iov.iov_buf), iov.iov_buf_len);
@@ -186,18 +188,12 @@ indirection layer is added in order to detect the use of invalidated handles.
 // clang-format on
 class RDaosHandle {
 private:
-   static constexpr uint32_t kCookieMagic = 0xfee1dead;
-   static constexpr uint32_t kCookiePoison = 0x00001000;
-
-   /// \brief Wrapper over a `void *` that helps to detect the use of invalid handles.
-   /// A pointer is considered valid only if the magic number matches; this magic
-   /// number is clobbered on destruction.
+   /// \brief Wrapper over a `void *` that may help to detect the use of invalid handles.
    struct Cookie {
-      Cookie(void *p) : fMagic(kCookieMagic), fPointer(p) {}
-      ~Cookie() { fMagic = kCookiePoison; }
-      void *GetPointer() { return (fMagic == kCookieMagic) ? fPointer : nullptr; }
+      Cookie(void *p) : fPointer(p) {}
+      ~Cookie() { fPointer = nullptr; }
+      void *GetPointer() { return fPointer; }
 
-      uint32_t fMagic;
       void *fPointer;
    };
 
@@ -251,7 +247,7 @@ const char *d_errstr(int rc)
 
 
 int daos_cont_create(daos_handle_t poh, const uuid_t uuid, daos_prop_t *cont_prop,
-		 daos_event_t *ev)
+                     daos_event_t *ev)
 {
    (void)cont_prop;
    (void)ev;
@@ -266,7 +262,7 @@ int daos_cont_create(daos_handle_t poh, const uuid_t uuid, daos_prop_t *cont_pro
 }
 
 int daos_cont_open(daos_handle_t poh, const uuid_t uuid, unsigned int flags,
-	       daos_handle_t *coh, daos_cont_info_t *info, daos_event_t *ev)
+                   daos_handle_t *coh, daos_cont_info_t *info, daos_event_t *ev)
 {
    (void)flags;
    (void)info;
@@ -310,7 +306,7 @@ int daos_eq_destroy(daos_handle_t eqh, int flags)
 }
 
 int daos_eq_poll(daos_handle_t eqh, int wait_running,
-	     int64_t timeout, unsigned int nevents, daos_event_t **events)
+                 int64_t timeout, unsigned int nevents, daos_event_t **events)
 {
    (void)eqh;
    (void)wait_running;
@@ -338,7 +334,7 @@ int daos_event_fini(daos_event_t *ev)
 
 
 int daos_obj_open(daos_handle_t coh, daos_obj_id_t oid, unsigned int mode,
-	      daos_handle_t *oh, daos_event_t *ev)
+                  daos_handle_t *oh, daos_event_t *ev)
 {
    (void)ev;
 
@@ -358,8 +354,8 @@ int daos_obj_close(daos_handle_t oh, daos_event_t *ev)
 }
 
 int daos_obj_fetch(daos_handle_t oh, daos_handle_t th, uint64_t flags,
-	       daos_key_t *dkey, unsigned int nr, daos_iod_t *iods,
-	       d_sg_list_t *sgls, daos_iom_t *ioms, daos_event_t *ev)
+                   daos_key_t *dkey, unsigned int nr, daos_iod_t *iods,
+                   d_sg_list_t *sgls, daos_iom_t *ioms, daos_event_t *ev)
 {
    (void)th;
    (void)flags;
@@ -373,8 +369,8 @@ int daos_obj_fetch(daos_handle_t oh, daos_handle_t th, uint64_t flags,
 }
 
 int daos_obj_update(daos_handle_t oh, daos_handle_t th, uint64_t flags,
-		daos_key_t *dkey, unsigned int nr, daos_iod_t *iods,
-		d_sg_list_t *sgls, daos_event_t *ev)
+                    daos_key_t *dkey, unsigned int nr, daos_iod_t *iods,
+                    d_sg_list_t *sgls, daos_event_t *ev)
 {
    (void)th;
    (void)flags;
@@ -391,8 +387,8 @@ int daos_obj_update(daos_handle_t oh, daos_handle_t th, uint64_t flags,
 
 
 int daos_pool_connect(const uuid_t uuid, const char *grp,
-		  const d_rank_list_t *svc, unsigned int flags,
-		  daos_handle_t *poh, daos_pool_info_t *info, daos_event_t *ev)
+                      const d_rank_list_t *svc, unsigned int flags,
+                      daos_handle_t *poh, daos_pool_info_t *info, daos_event_t *ev)
 {
    (void)grp;
    (void)svc;

@@ -9,8 +9,7 @@ TEST(RNTuple, Basics)
 
    {
       RNTupleWriteOptions options;
-      options.SetContainerFormat(ENTupleContainerFormat::kBare);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", daosUri, options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", daosUri, options);
       ntuple->Fill();
       ntuple->CommitCluster();
       *wrPt = 24.0;
@@ -42,8 +41,7 @@ TEST(RNTuple, Extended)
    double chksumWrite = 0.0;
    {
       RNTupleWriteOptions options;
-      options.SetContainerFormat(ENTupleContainerFormat::kBare);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", daosUri, options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", daosUri, options);
       constexpr unsigned int nEvents = 32000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          auto nVec = 1 + floor(rnd.Rndm() * 1000.);
