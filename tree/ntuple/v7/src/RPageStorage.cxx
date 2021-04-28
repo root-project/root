@@ -68,7 +68,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
 #ifdef R__ENABLE_DAOS
       return std::make_unique<RPageSourceDaos>(ntupleName, location, options);
 #else
-      throw std::runtime_error("This RNTuple build does not support DAOS.");
+      throw RException(R__FAIL("This RNTuple build does not support DAOS."));
 #endif
 
    return std::make_unique<RPageSourceFile>(ntupleName, location, options);
@@ -160,7 +160,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detai
 #ifdef R__ENABLE_DAOS
       realSink = std::make_unique<RPageSinkDaos>(ntupleName, location, options);
 #else
-      throw std::runtime_error("This RNTuple build does not support DAOS.");
+      throw RException(R__FAIL("This RNTuple build does not support DAOS."));
 #endif
    } else {
       realSink = std::make_unique<RPageSinkFile>(ntupleName, location, options);

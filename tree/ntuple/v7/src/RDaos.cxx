@@ -14,6 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RDaos.hxx>
+#include <ROOT/RError.hxx>
 
 #include <numeric>
 #include <stdexcept>
@@ -24,10 +25,11 @@ ROOT::Experimental::Detail::RDaosPool::RDaosPool(std::string_view poolUuid, std:
       SvcRAII(std::string_view ranks) { rankList = daos_rank_list_parse(ranks.data(), "_"); }
       ~SvcRAII() { d_rank_list_free(rankList); }
    } Svc(serviceReplicas);
+   daos_pool_info_t poolInfo{};
 
    uuid_parse(poolUuid.data(), fPoolUuid);
-   if (int err = daos_pool_connect(fPoolUuid, nullptr, Svc.rankList, DAOS_PC_RW, &fPoolHandle, &fPoolInfo, nullptr))
-      throw std::runtime_error("daos_pool_connect: error: " + std::string(d_errstr(err)));
+   if (int err = daos_pool_connect(fPoolUuid, nullptr, Svc.rankList, DAOS_PC_RW, &fPoolHandle, &poolInfo, nullptr))
+      throw RException(R__FAIL("daos_pool_connect: error: " + std::string(d_errstr(err))));
 }
 
 ROOT::Experimental::Detail::RDaosPool::~RDaosPool() {
@@ -77,7 +79,7 @@ ROOT::Experimental::Detail::RDaosObject<DKeyT, AKeyT>::RDaosObject(RDaosContaine
       ofeats |= DAOS_OF_AKEY_UINT64;
    daos_obj_generate_id(&oid, ofeats /*| DAOS_OF_ARRAY_BYTE*/, cid, 0);
    if (int err = daos_obj_open(container.fContainerHandle, oid, DAOS_OO_RW, &fObjectHandle, nullptr))
-      throw std::runtime_error("daos_obj_open: error: " + std::string(d_errstr(err)));
+      throw RException(R__FAIL("daos_obj_open: error: " + std::string(d_errstr(err))));
 }
 
 template <typename DKeyT, typename AKeyT>
@@ -139,14 +141,16 @@ ROOT::Experimental::Detail::RDaosContainer::RDaosContainer(std::shared_ptr<RDaos
                                                            std::string_view containerUuid, bool create)
   : fPool(pool)
 {
+   daos_cont_info_t containerInfo{};
+
    uuid_parse(containerUuid.data(), fContainerUuid);
    if (create) {
       if (int err = daos_cont_create(fPool->fPoolHandle, fContainerUuid, nullptr, nullptr))
-         throw std::runtime_error("daos_cont_create: error: " + std::string(d_errstr(err)));
+         throw RException(R__FAIL("daos_cont_create: error: " + std::string(d_errstr(err))));
    }
    if (int err = daos_cont_open(fPool->fPoolHandle, fContainerUuid, DAOS_COO_RW,
-         &fContainerHandle, &fContainerInfo, nullptr))
-      throw std::runtime_error("daos_cont_open: error: " + std::string(d_errstr(err)));
+         &fContainerHandle, &containerInfo, nullptr))
+      throw RException(R__FAIL("daos_cont_open: error: " + std::string(d_errstr(err))));
 }
 
 ROOT::Experimental::Detail::RDaosContainer::~RDaosContainer() {

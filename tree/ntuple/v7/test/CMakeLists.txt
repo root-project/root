@@ -52,7 +52,7 @@ if(daos OR daos_mock)
     set(daos_test_pool 1b245c52-765e-449d-80b1-8dce93bafc4b)
   endif()
   set_property(SOURCE ntuple_storage_daos.cxx
-              APPEND PROPERTY COMPILE_OPTIONS -DR__DAOS_TEST_POOL="${daos_test_pool}")
+               APPEND PROPERTY COMPILE_OPTIONS -DR__DAOS_TEST_POOL="${daos_test_pool}")
 
   ROOT_ADD_GTEST(ntuple_storage_daos ntuple_storage_daos.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 endif()
