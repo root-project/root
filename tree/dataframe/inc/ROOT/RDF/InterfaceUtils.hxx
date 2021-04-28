@@ -66,7 +66,6 @@ namespace RDF {
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
 namespace TTraits = ROOT::TypeTraits;
-namespace RDFInternal = ROOT::Internal::RDF;
 
 ColumnNames_t GetTopLevelBranchNames(TTree &t);
 
@@ -128,7 +127,7 @@ struct HistoUtils<T, false> {
 template <typename... ColTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
-            std::shared_ptr<PrevNodeType> prevNode, ActionTag, const RDFInternal::RBookedDefines &defines)
+            std::shared_ptr<PrevNodeType> prevNode, ActionTag, const RBookedDefines &defines)
 {
    using Helper_t = FillParHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
@@ -139,7 +138,7 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
 template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Histo1D, const RDFInternal::RBookedDefines &defines)
+                                         ActionTags::Histo1D, const RBookedDefines &defines)
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
 
@@ -157,7 +156,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<TGraph> &g,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Graph, const RDFInternal::RBookedDefines &defines)
+                                         ActionTags::Graph, const RBookedDefines &defines)
 {
    using Helper_t = FillTGraphHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
@@ -168,7 +167,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename ColType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &minV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Min, const RDFInternal::RBookedDefines &defines)
+                                         ActionTags::Min, const RBookedDefines &defines)
 {
    using Helper_t = MinHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
@@ -179,7 +178,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename ColType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &maxV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Max, const RDFInternal::RBookedDefines &defines)
+                                         ActionTags::Max, const RBookedDefines &defines)
 {
    using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
@@ -190,7 +189,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename ColType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &sumV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Sum, const RDFInternal::RBookedDefines &defines)
+                                         ActionTags::Sum, const RBookedDefines &defines)
 {
    using Helper_t = SumHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
@@ -201,7 +200,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename ColType, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Mean, const RDFInternal::RBookedDefines &defines)
+                                         ActionTags::Mean, const RBookedDefines &defines)
 {
    using Helper_t = MeanHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
@@ -212,7 +211,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename ColType, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviationV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::StdDev, const RDFInternal::RBookedDefines &defines)
+                                         ActionTags::StdDev, const RBookedDefines &defines)
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
@@ -243,7 +242,7 @@ template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperArgs> &snapHelperArgs,
             const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Snapshot,
-            const RDFInternal::RBookedDefines &defines)
+            const RBookedDefines &defines)
 {
    const auto &filename = snapHelperArgs->fFileName;
    const auto &dirname = snapHelperArgs->fDirName;
@@ -272,7 +271,7 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
 template <typename... ColTypes, typename PrevNodeType, typename Helper_t>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<Helper_t> &h,
                                          const unsigned int /*nSlots*/, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Book, const RDFInternal::RBookedDefines &defines)
+                                         ActionTags::Book, const RBookedDefines &defines)
 {
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
    return std::make_unique<Action_t>(Helper_t(std::move(*h)), bl, std::move(prevNode), defines);
@@ -303,16 +302,16 @@ std::string PrettyPrintAddr(const void *const addr);
 void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, std::shared_ptr<RNodeBase> *prevNodeOnHeap,
                    std::string_view name, std::string_view expression,
                    const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                   const RDFInternal::RBookedDefines &customCols, TTree *tree, RDataSource *ds);
+                   const RBookedDefines &customCols, TTree *tree, RDataSource *ds);
 
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                                   RDataSource *ds, const RDFInternal::RBookedDefines &customCols,
+                                                   RDataSource *ds, const RBookedDefines &customCols,
                                                    const ColumnNames_t &branches,
                                                    std::shared_ptr<RNodeBase> *prevNodeOnHeap);
 
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
-                           const unsigned int nSlots, const RDFInternal::RBookedDefines &defines,
+                           const unsigned int nSlots, const RBookedDefines &defines,
                            RDataSource *ds, std::weak_ptr<RJittedAction> *jittedActionOnHeap);
 
 // Allocate a weak_ptr on the heap, return a pointer to it. The user is responsible for deleting this weak_ptr.
@@ -369,7 +368,7 @@ void AddDSColumnsHelper(const std::string &colName, RLoopManager &lm, RDataSourc
 /// and return a new map of custom columns (with the new datasource columns added to it)
 template <typename... ColumnTypes>
 void AddDSColumns(const std::vector<std::string> &requiredCols, RLoopManager &lm, RDataSource &ds,
-                  TTraits::TypeList<ColumnTypes...>, RDFInternal::RBookedDefines &defines)
+                  TTraits::TypeList<ColumnTypes...>, RBookedDefines &defines)
 {
    // hack to expand a template parameter pack without c++17 fold expressions.
    using expander = int[];
@@ -381,7 +380,7 @@ void AddDSColumns(const std::vector<std::string> &requiredCols, RLoopManager &lm
 template <typename F, typename PrevNode>
 void JitFilterHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::string_view name,
                      std::weak_ptr<RJittedFilter> *wkJittedFilter, std::shared_ptr<PrevNode> *prevNodeOnHeap,
-                     RDFInternal::RBookedDefines *defines) noexcept
+                     RBookedDefines *defines) noexcept
 {
    if (wkJittedFilter->expired()) {
       // The branch of the computation graph that needed this jitted code went out of scope between the type
@@ -404,13 +403,13 @@ void JitFilterHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
    using F_t = RFilter<Callable_t, PrevNode>;
    using ColTypes_t = typename TTraits::CallableTraits<Callable_t>::arg_types;
    constexpr auto nColumns = ColTypes_t::list_size;
-   RDFInternal::CheckFilter(f);
+   CheckFilter(f);
 
    auto &lm = *jittedFilter->GetLoopManagerUnchecked(); // RLoopManager must exist at this time
    auto ds = lm.GetDataSource();
 
    if (ds != nullptr)
-      RDFInternal::AddDSColumns(cols, lm, *ds, ColTypes_t(), *defines);
+      AddDSColumns(cols, lm, *ds, ColTypes_t(), *defines);
 
    jittedFilter->SetFilter(
       std::unique_ptr<RFilterBase>(new F_t(std::forward<F>(f), cols, *prevNodeOnHeap, *defines, name)));
@@ -424,7 +423,7 @@ void JitFilterHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
 template <typename F>
 void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::string_view name, RLoopManager *lm,
                      std::weak_ptr<RJittedDefine> *wkJittedDefine,
-                     RDFInternal::RBookedDefines *defines, std::shared_ptr<RNodeBase> *prevNodeOnHeap) noexcept
+                     RBookedDefines *defines, std::shared_ptr<RNodeBase> *prevNodeOnHeap) noexcept
 {
    if (wkJittedDefine->expired()) {
       // The branch of the computation graph that needed this jitted code went out of scope between the type
@@ -449,7 +448,7 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
 
    auto ds = lm->GetDataSource();
    if (ds != nullptr)
-      RDFInternal::AddDSColumns(cols, *lm, *ds, ColTypes_t(), *defines);
+      AddDSColumns(cols, *lm, *ds, ColTypes_t(), *defines);
 
    // will never actually be used (trumped by jittedDefine->GetTypeName()), but we set it to something meaningful
    // to help devs debugging
@@ -471,7 +470,7 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
 template <typename ActionTag, typename... ColTypes, typename PrevNodeType, typename HelperArgType>
 void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const char **colsPtr, std::size_t colsSize,
                      const unsigned int nSlots, std::shared_ptr<HelperArgType> *helperArgOnHeap,
-                     std::weak_ptr<RJittedAction> *wkJittedActionOnHeap, RDFInternal::RBookedDefines *defines) noexcept
+                     std::weak_ptr<RJittedAction> *wkJittedActionOnHeap, RBookedDefines *defines) noexcept
 {
    if (wkJittedActionOnHeap->expired()) {
       delete helperArgOnHeap;
@@ -495,7 +494,7 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const char *
    constexpr auto nColumns = ColTypes_t::list_size;
    auto ds = loopManager.GetDataSource();
    if (ds != nullptr)
-      RDFInternal::AddDSColumns(cols, loopManager, *ds, ColTypes_t(), *defines);
+      AddDSColumns(cols, loopManager, *ds, ColTypes_t(), *defines);
 
    auto actionPtr =
       BuildAction<ColTypes...>(cols, std::move(*helperArgOnHeap), nSlots, std::move(prevNodePtr), ActionTag{}, *defines);
@@ -511,7 +510,7 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const char *
 }
 
 /// The contained `type` alias is `double` if `T == RInferredType`, `U` if `T == std::container<U>`, `T` otherwise.
-template <typename T, bool Container = RDFInternal::IsDataContainer<T>::value && !std::is_same<T, std::string>::value>
+template <typename T, bool Container = IsDataContainer<T>::value && !std::is_same<T, std::string>::value>
 struct RMinReturnType {
    using type = T;
 };
