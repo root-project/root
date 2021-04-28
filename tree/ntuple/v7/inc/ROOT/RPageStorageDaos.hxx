@@ -67,6 +67,12 @@ struct RDaosNTupleAnchor {
          fNBytesFooter == other.fNBytesFooter &&
          fLenFooter == other.fLenFooter;
    }
+
+   std::uint32_t Serialize(void *buffer) const;
+   std::uint32_t Deserialize(const void *buffer);
+
+   static std::uint32_t GetSize()
+   { return RDaosNTupleAnchor().Serialize(nullptr); }
 };
 
 // clang-format off
