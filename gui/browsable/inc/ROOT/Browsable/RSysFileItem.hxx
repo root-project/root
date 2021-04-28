@@ -32,7 +32,6 @@ public:
    int64_t size{0};         ///<! file size
 
    // this is part for browser, visible for I/O
-   std::string fsize;    ///< file size
    std::string mtime;    ///< modification time
    std::string ftype;    ///< file attributes
    std::string fuid;     ///< user id
