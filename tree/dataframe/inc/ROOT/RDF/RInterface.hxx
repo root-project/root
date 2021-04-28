@@ -1962,13 +1962,7 @@ public:
    ///
    std::string GetColumnType(std::string_view column)
    {
-      auto col = std::string(column);
-
-      // if "col" is an alias, resolve it before doing anything else
-      const auto aliasMap = fLoopManager->GetAliasMap();
-      const auto it = aliasMap.find(col);
-      if (it != aliasMap.end())
-         col = it->second;
+      const auto col = RDFInternal::ResolveAlias(std::string(column), fLoopManager->GetAliasMap());
 
       RDFDetail::RDefineBase *define = fDefines.HasName(col) ? fDefines.GetColumns().at(col).get() : nullptr;
 

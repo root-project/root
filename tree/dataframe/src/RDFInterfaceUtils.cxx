@@ -78,14 +78,6 @@ static bool IsStrInVec(const std::string &str, const std::vector<std::string> &v
    return std::find(vec.cbegin(), vec.cend(), str) != vec.cend();
 }
 
-static const std::string &ResolveAlias(const std::string &col, const std::map<std::string, std::string> &aliasMap)
-{
-   const auto it = aliasMap.find(col);
-   if (it != aliasMap.end())
-      return it->second;
-   return col;
-}
-
 // look at expression `expr` and return a list of column names used, including aliases
 static ColumnNames_t FindUsedColumns(const std::string &expr, const ColumnNames_t &treeBranchNames,
                                      const ColumnNames_t &customColNames, const ColumnNames_t &dataSourceColNames,
@@ -126,7 +118,7 @@ static ColumnNames_t FindUsedColumns(const std::string &expr, const ColumnNames_
       // if it's a new match, also add it to usedCols and update varNames
       // potential columns are sorted by length, so we search from the end
       auto isRDFColumn = [&](const std::string &columnOrAlias) {
-         const auto &col = ResolveAlias(columnOrAlias, aliasMap);
+         const auto &col = ROOT::Internal::RDF::ResolveAlias(columnOrAlias, aliasMap);
          if (IsStrInVec(col, customColNames) || IsStrInVec(col, treeBranchNames) || IsStrInVec(col, dataSourceColNames))
             return true;
          return false;
@@ -169,7 +161,7 @@ static ParsedExpression ParseRDFExpression(std::string_view expr, const ColumnNa
    // the dummy variable names in varNames
    TString exprWithVars(preProcessedExpr);
    for (const auto &colOrAlias : usedColsAndAliases) {
-      const auto col = ResolveAlias(colOrAlias, aliasMap);
+      const auto col = ROOT::Internal::RDF::ResolveAlias(colOrAlias, aliasMap);
       unsigned int varIdx; // index of the variable in varName corresponding to col
       if (!IsStrInVec(col, usedCols)) {
          usedCols.emplace_back(col);
@@ -349,6 +341,19 @@ static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesRe
 namespace ROOT {
 namespace Internal {
 namespace RDF {
+
+std::string ResolveAlias(const std::string &col, const std::map<std::string, std::string> &aliasMap)
+{
+   const auto it = aliasMap.find(col);
+   if (it != aliasMap.end())
+      return it->second;
+
+   // #var is an alias for __rdf_sizeof_var
+   if (col.size() > 1 && col[0] == '#')
+      return "__rdf_sizeof_" + col.substr(1);
+
+   return col;
+}
 
 void CheckValidCppVarName(std::string_view var, const std::string &where)
 {
@@ -759,15 +764,9 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
 
    // Resolve aliases and expand `#var` to `__rdf_sizeof_var`
    const auto &aliasMap = lm.GetAliasMap();
-   const auto aliasMapEnd = aliasMap.end();
 
-   for (auto idx : ROOT::TSeqU(selectedColumns.size())) {
-      auto &colName = selectedColumns[idx];
-      const auto aliasColumnNameIt = aliasMap.find(colName);
-      if (aliasMapEnd != aliasColumnNameIt)
-         colName = aliasColumnNameIt->second;
-      if (colName[0] == '#' && colName.length() > 1) // otherwise the column name is "#" and we'll error out later
-         colName = "__rdf_sizeof_" + colName.substr(1);
+   for (auto &col : selectedColumns) {
+      col = ResolveAlias(col, aliasMap);
    }
 
    // Complain if there are still unknown columns at this point
