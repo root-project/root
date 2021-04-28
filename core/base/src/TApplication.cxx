@@ -697,6 +697,7 @@ static TString UrlGenerator(TString scopeName, EUrl scopeType)
       version = "master";
    }
    delete objarr;
+   url.Append("v");
    url.Append(version);
    url.Append("/");
    // We will replace all "::" with "_1_1" and all "_" with "__" in the
