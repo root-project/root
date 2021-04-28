@@ -52,6 +52,9 @@ public:
   RooAbsCollection& assignValueOnly(const RooAbsCollection& other, Bool_t oneSafe=kFALSE) ;
   void assignFast(const RooAbsCollection& other, Bool_t setValDirty=kTRUE) ;
 
+  // Move constructor
+  RooAbsCollection(RooAbsCollection && other);
+
   // Copy list and contents (and optionally 'deep' servers)
   RooAbsCollection *snapshot(Bool_t deepCopy=kTRUE) const ;
   Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const ;

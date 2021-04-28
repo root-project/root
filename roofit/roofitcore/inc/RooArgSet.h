@@ -74,6 +74,8 @@ public:
   }
 
   RooArgSet(const RooArgSet& other, const char *name="");
+  /// Move constructor.
+  RooArgSet(RooArgSet && other) : RooAbsCollection(std::move(other)) {}
 
   RooArgSet(const RooArgSet& set1, const RooArgSet& set2,
             const char *name="");
