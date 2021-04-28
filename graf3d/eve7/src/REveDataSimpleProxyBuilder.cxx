@@ -276,7 +276,8 @@ REveElement *REveCollectionCompound::GetSelectionMaster()
       // printf("REveCollectionCompound::GetSelectionMaster %d\n", idx);
       fCollection->GetItemList()->RefSelectedSet().insert(idx);
    } catch (std::exception& e) {
-      gEveLog.add(Form("REveCollectionCompound::GetSelectionMaster %s \n", e.what()));
+       gEveLog << "REveCollectionCompound::GetSelectionMaster " << e.what() << std::endl;
+       fCollection->GetItemList()->RefSelectedSet().insert(0);
    }
    return fCollection->GetItemList();
 }

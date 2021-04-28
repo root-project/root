@@ -45,7 +45,7 @@ REveException REX::operator+(const REveException &s1, ElementId_t x)
 
 thread_local REX::REveLog REX::gEveLog;
 
-void REveLog::add(const char* txt) { fLog += txt; std::cout << txt << std::endl;}
-void REveLog::add(const std::string& txt) { fLog += txt; std::cout << txt << std::endl;}
-bool REveLog::has_contents() { return ! fLog.empty(); }
+void REveLog::add(const char* txt) { fLog << txt; std::cout << txt << std::endl;}
+void REveLog::add(const std::string& txt) { fLog << txt; std::cout << txt << std::endl;}
+bool REveLog::has_contents() { return ! fLog.str().empty(); }
 void REveLog::clear() { fLog.clear(); }

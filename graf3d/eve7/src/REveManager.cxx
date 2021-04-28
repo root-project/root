@@ -900,9 +900,9 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
       // std::cout << cmd.str() << std::endl;
       // gROOT->ProcessLine(cmd.str().c_str());
    } catch (std::exception &e) {
-      gEveLog.add(Form("REveManager::ExecuteCommand %s\n", e.what()));
+      gEveLog << "REveManager::ExecuteCommand " << e.what() << std::endl;
    } catch (...) {
-      gEveLog.add(Form("REveManager::ExecuteCommand unknow execption \n"));
+      gEveLog << "REveManager::ExecuteCommand unknow execption \n";
    }
 }
 
@@ -922,7 +922,7 @@ void REveManager::PublishChanges()
 
    if (gEveLog.has_contents())
    {
-      jobj["log"] = gEveLog.fLog;
+      jobj["log"] = gEveLog.fLog.str();
       gEveLog.clear();
    }
    fWebWindow->Send(0, jobj.dump());

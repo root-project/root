@@ -17,6 +17,7 @@
 
 #include "TString.h"
 
+#include <sstream>
 class TGeoManager;
 
 namespace ROOT {
@@ -61,13 +62,25 @@ REveException operator+(const REveException &s1, ElementId_t x);
 
 class REveLog
 {
-   friend class REveManager; // ?
-   std::string fLog;
+   friend class REveManager;
+   std::stringstream fLog;
 public:
    void add(const char* txt);
    void add(const std::string& txt);
    bool has_contents();
    void clear();
+
+   REveLog& operator << (const std::string& txt)
+   {
+      add(txt);
+      return *this;
+   }
+
+   REveLog &operator<<(std::ostream &(*os)(std::ostream &))
+   {
+      fLog << os;
+      return *this;
+   }
 };
 
 extern thread_local REveLog gEveLog;
