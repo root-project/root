@@ -40,7 +40,7 @@ void lineRStyle()
 
    style->AddBlock(".user_class_1").AddInt("line_style", 4); // all lines with user_class_1 should get style 1
    style->AddBlock(".user_class_2").AddDouble("line_width", 5.); // all lines with user_class_2 should get line width 5
-   style->AddBlock("#obj7").AddString("line_color_rgb", "0000FF"); // line with id obj7 should be red
+   style->AddBlock("#obj7").AddString("line_color_rgb", "0000FF"); // line with id obj7 should be blue
 
    style->AddBlock("line").AddString("line_color_rgb", "FF0000"); // all lines should get red color
 
