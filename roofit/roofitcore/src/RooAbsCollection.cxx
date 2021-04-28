@@ -119,6 +119,20 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Move constructor.
+
+RooAbsCollection::RooAbsCollection(RooAbsCollection&& other) :
+  TObject(other),
+  RooPrintable(other),
+  _list(std::move(other._list)),
+  _ownCont(other._ownCont),
+  _name(std::move(other._name)),
+  _allRRV(other._allRRV),
+  _sizeThresholdForMapSearch(other._sizeThresholdForMapSearch)
+{
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
