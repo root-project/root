@@ -25,7 +25,6 @@ namespace Browsable {
 
 class TObjectItem : public RItem {
    std::string className; ///< class name
-   std::string fsize;     ///< size
 public:
 
    TObjectItem() = default;
@@ -36,7 +35,6 @@ public:
    virtual ~TObjectItem() = default;
 
    void SetClassName(const std::string &_className) { className = _className; }
-   void SetSize(const std::string &_size) { fsize = _size; }
 };
 
 } // namespace Browsable

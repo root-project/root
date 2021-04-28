@@ -24,7 +24,6 @@ Representation of single item in the file browser for object from TKey
 
 class TKeyItem : public RItem {
    std::string className; ///< class name
-   std::string fsize;     ///< size of object
 
 public:
 
@@ -36,7 +35,6 @@ public:
    virtual ~TKeyItem() = default;
 
    void SetClassName(const std::string &_className) { className = _className; }
-   void SetSize(const std::string &_size) { fsize = _size; }
 };
 
 } // namespace Browsable

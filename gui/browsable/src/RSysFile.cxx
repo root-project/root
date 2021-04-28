@@ -274,20 +274,8 @@ public:
       else
          item->SetIcon(RSysFile::GetFileIcon(GetItemName()));
 
-      // file size
-      Long64_t _fsize = item->size, bsize = item->size;
-      if (_fsize > 1024) {
-         _fsize /= 1024;
-         if (_fsize > 1024) {
-            // 3.7MB is more informative than just 3MB
-            snprintf(tmp, sizeof(tmp), "%lld.%lldM", _fsize/1024, (_fsize%1024)/103);
-         } else {
-            snprintf(tmp, sizeof(tmp), "%lld.%lldK", bsize/1024, (bsize%1024)/103);
-         }
-      } else {
-         snprintf(tmp, sizeof(tmp), "%lld", bsize);
-      }
-      item->fsize = tmp;
+      // set file size as string
+      item->SetSize(item->size);
 
       // modification time
       time_t loctime = (time_t) item->modtime;
