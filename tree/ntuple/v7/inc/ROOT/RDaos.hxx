@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -43,13 +43,14 @@ class RDaosPool {
    friend class RDaosContainer;
 private:
    daos_handle_t fPoolHandle{};
-   daos_pool_info_t fPoolInfo{};
    uuid_t fPoolUuid{};
 
 public:
-   RDaosPool() = delete;
+   RDaosPool(const RDaosPool&) = delete;
    RDaosPool(std::string_view poolUuid, std::string_view serviceReplicas);
    ~RDaosPool();
+
+   RDaosPool& operator=(const RDaosPool&) = delete;
 };
 
 /**
@@ -85,9 +86,15 @@ public:
       FetchUpdateArgs(const FetchUpdateArgs&) = delete;
       FetchUpdateArgs(FetchUpdateArgs&& fua);
       FetchUpdateArgs(DistributionKey_t &d, AttributeKey_t &a, std::vector<d_iov_t> &v, daos_event_t *p = nullptr);
+      FetchUpdateArgs& operator=(const FetchUpdateArgs&) = delete;
 
+      /// \brief A `daos_key_t` is a type alias of `d_iov_t`. This type stores a pointer and a length.
+      /// In order for `fDistributionKey` and `fIods` to point to memory that we own, `fDkey` and
+      /// `fAkey` store a copy of the distribution and attribute key, respectively.
       DistributionKey_t fDkey{};
       AttributeKey_t fAkey{};
+
+      /// \brief The distribution key, as used by the `daos_obj_{fetch,update}` functions.
       daos_key_t fDistributionKey{};
       daos_iod_t fIods[1] = {};
       d_sg_list_t fSgls[1] = {};
@@ -130,19 +137,24 @@ private:
       daos_handle_t fQueue;
       DaosEventQueue(std::size_t size);
       ~DaosEventQueue();
+      /**
+        \brief Wait for all events in this event queue to complete.
+        \return Number of events still in the queue. This should be 0 on success.
+       */
       int Poll();
    };
 
    daos_handle_t fContainerHandle{};
-   daos_cont_info_t fContainerInfo{};
    uuid_t fContainerUuid{};
    std::shared_ptr<RDaosPool> fPool;
    /// OID that will be used by the next call to `WriteObject(const void *, std::size_t, DKeyT, AKeyT)`.
    daos_obj_id_t fSequentialWrOid{};
 
-   /** \brief Perform a vector read/write operation on different objects.
+   /**
+     \brief Perform a vector read/write operation on different objects.
      \param vec A `std::vector<RWOperation>` that describes read/write operations to perform.
      \param fn Either `std::mem_fn<&RDaosObject::Fetch>` (read) or `std::mem_fn<&RDaosObject::Update>` (write).
+     \return Number of requests that did not complete; this should be 0 after a successful call.
      */
    template <typename Fn, typename DKeyT, typename AKeyT>
    int VectorReadWrite(std::vector<RWOperation<DKeyT, AKeyT>> &vec, Fn fn) {
@@ -168,7 +180,15 @@ public:
    RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerUuid, bool create = false);
    ~RDaosContainer();
 
-   /** \brief Read data from an object in this container to the given buffer. */
+   /**
+     \brief Read data from an object in this container to the given buffer.
+     \param oid A 128-bit DAOS object identifier.
+     \param buffer The address of a buffer that has capacity for at least `length` bytes.
+     \param length Length of the buffer.
+     \param dkey The distribution key used for this operation.
+     \param akey The attribute key used for this operation.
+     \return 0 if the operation succeeded; a negative DAOS error number otherwise.
+     */
    template <typename DKeyT, typename AKeyT>
    int ReadObject(daos_obj_id_t oid, void *buffer, std::size_t length, DKeyT dkey, AKeyT akey)
    {
@@ -178,7 +198,15 @@ public:
       return RDaosObject<DKeyT, AKeyT>(*this, oid).Fetch(args);
    }
 
-   /** \brief Write the given buffer to an object in this container. */
+   /**
+     \brief Write the given buffer to an object in this container.
+     \param oid A 128-bit DAOS object identifier.
+     \param buffer The address of the source buffer.
+     \param length Length of the buffer.
+     \param dkey The distribution key used for this operation.
+     \param akey The attribute key used for this operation.
+     \return 0 if the operation succeeded; a negative DAOS error number otherwise.
+     */
    template <typename DKeyT, typename AKeyT>
    int WriteObject(daos_obj_id_t oid, const void *buffer, std::size_t length, DKeyT dkey, AKeyT akey)
    {
@@ -188,7 +216,14 @@ public:
       return RDaosObject<DKeyT, AKeyT>(*this, oid).Update(args);
    }
 
-   /** \brief Write the given buffer to an object in this container and return a generated OID. */
+   /**
+     \brief Write the given buffer to an object in this container and return a generated OID.
+     \param buffer The address of the source buffer.
+     \param length Length of the buffer.
+     \param dkey The distribution key used for this operation.
+     \param akey The attribute key used for this operation.
+     \return A `std::tuple<>` that contains the generated OID and a DAOS error number (0 if the operation succeeded).
+     */
    template <typename DKeyT, typename AKeyT>
    std::tuple<daos_obj_id_t, int> WriteObject(const void *buffer, std::size_t length, DKeyT dkey, AKeyT akey)
    {
@@ -198,14 +233,20 @@ public:
       return ret;
    }
 
-   /** \brief Perform a vector read operation on (possibly) multiple objects.
-     \param vec A `std::vector<RWOperation>` that describes read operations to perform. */
+   /**
+     \brief Perform a vector read operation on (possibly) multiple objects.
+     \param vec A `std::vector<RWOperation>` that describes read operations to perform.
+     \return Number of operations that could not complete.
+     */
    template <typename DKeyT, typename AKeyT>
    int ReadV(std::vector<RWOperation<DKeyT, AKeyT>> &vec)
    { return VectorReadWrite(vec, std::mem_fn(&RDaosObject<DKeyT, AKeyT>::Fetch)); }
 
-   /** \brief Perform a vector write operation on (possibly) multiple objects.
-     \param vec A `std::vector<RWOperation>` that describes write operations to perform. */
+   /**
+     \brief Perform a vector write operation on (possibly) multiple objects.
+     \param vec A `std::vector<RWOperation>` that describes write operations to perform.
+     \return Number of operations that could not complete.
+     */
    template <typename DKeyT, typename AKeyT>
    int WriteV(std::vector<RWOperation<DKeyT, AKeyT>> &vec)
    { return VectorReadWrite(vec, std::mem_fn(&RDaosObject<DKeyT, AKeyT>::Update)); }
