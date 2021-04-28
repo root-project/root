@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -9,7 +9,7 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTWebDisplay
-    HEADERS 
+    HEADERS
        ROOT/RWebDisplayArgs.hxx
        ROOT/RWebDisplayHandle.hxx
        ROOT/RWebWindow.hxx
@@ -20,7 +20,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTWebDisplay
        RWebWindow.cxx
        RWebWindowsManager.cxx
     DEPENDENCIES
-       Core 
-       RHTTP 
+       Core
+       RHTTP
        MathCore
 )
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
