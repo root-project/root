@@ -429,7 +429,7 @@ sap.ui.define([
 
          let intersects = this.raycaster.intersectObjects(this.scene.children, true);
          for (let i = 0; i < intersects.length; ++i) {
-            if (intersects[i].object.get_ctrl &&
+            if (intersects[i].object.get_ctrl && intersects[i].object.eve_el &&
                intersects[i].object.eve_el.fPickable && intersects[i].object.visible) {
                intersects[i].mouse = mouse;
                intersects[i].w = w;
