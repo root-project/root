@@ -4,8 +4,15 @@ set(LLVM_LINK_COMPONENTS
   Support
   )
 
-find_first_existing_vc_file("${LLVM_MAIN_SRC_DIR}" llvm_vc)
-find_first_existing_vc_file("${CLANG_SOURCE_DIR}" clang_vc)
+# Cut dependency on git to prevent rebuild of large parts of ROOT.
+# This will be solved "properly" in llvm upstream, resurrecting
+# https://reviews.llvm.org/rGd452126cb333cbd6b289b01d9bc9a48b111ffe9a
+# which got lost in (mono-repo) 23fdd5a37ff4e0512af0b40f6ff3e6db4694e937
+# 2019-02-06 03:51 +0000 Petr Hosek
+# o [CMake] Unify scripts for generating VCS headers
+#
+#find_first_existing_vc_file("${LLVM_MAIN_SRC_DIR}" llvm_vc)
+#find_first_existing_vc_file("${CLANG_SOURCE_DIR}" clang_vc)
 
 # The VC revision include that we want to generate.
 set(version_inc "${CMAKE_CURRENT_BINARY_DIR}/VCSVersion.inc")
