@@ -125,6 +125,8 @@ if(roofit)
 
   # RooWorkspace pythonizations
   ROOT_ADD_PYUNITTEST(pyroot_pyz_rooworkspace rooworkspace.py)
+
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooarglist roofit/rooarglist.py)
 endif()
 
 if (dataframe)
