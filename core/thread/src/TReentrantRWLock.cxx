@@ -31,7 +31,7 @@ possibility to claim the lock and wait for only the remaining readers,
 thus preventing starvation.
 */
 
-#include "ROOT/TReentrantRWLock.hxx"
+#include "TReentrantRWLock.hxx"
 #include "ROOT/TSpinMutex.hxx"
 #include "TMutex.h"
 #include "TError.h"
