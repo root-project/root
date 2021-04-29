@@ -288,7 +288,7 @@ ROOT::Experimental::Detail::RPageSink::SealPage(
    auto zippedBytes = packedBytes;
 
    if ((compressionSetting != 0) || !element.IsMappable()) {
-      zippedBytes = fCompressor->Zip(buffer, packedBytes, fOptions.GetCompression());
+      zippedBytes = fCompressor->Zip(buffer, packedBytes, compressionSetting);
       if (!isAdoptedBuffer)
          delete[] buffer;
       buffer = const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(fCompressor->GetZipBuffer()));
