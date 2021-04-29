@@ -61,7 +61,7 @@ ClassImp(TMacro);
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an empty macro, use AddLine() or ReadFile() to fill this macro.
 
-TMacro::TMacro(): TNamed(), fLines(0)
+TMacro::TMacro(): TNamed(), fLines(nullptr)
 {
 }
 
@@ -196,7 +196,7 @@ void TMacro::Browse(TBrowser * /*b*/)
 TMD5 *TMacro::Checksum()
 {
    if (!fLines || fLines->GetSize() <= 0)
-      return (TMD5 *)0;
+      return (TMD5 *)nullptr;
 
    TMD5 *md5 = new TMD5;
 
@@ -267,7 +267,7 @@ Bool_t TMacro::Load() const
 
 Longptr_t TMacro::Exec(const char *params, Int_t* error)
 {
-   if ( !gROOT->GetGlobalFunction(GetName(), 0, kTRUE) ) {
+   if ( !gROOT->GetGlobalFunction(GetName(), nullptr, kTRUE) ) {
       if (!Load()) {
          if (error) *error = 1;
          return 0;
@@ -277,7 +277,7 @@ Longptr_t TMacro::Exec(const char *params, Int_t* error)
    // if macro has been executed, look for global function with name
    // of macro and re-execute this global function, if not found then
    // macro is unnamed macro, which we re-execute from file
-   if ( gROOT->GetGlobalFunction(GetName(), 0, kTRUE) ) {
+   if ( gROOT->GetGlobalFunction(GetName(), nullptr, kTRUE) ) {
       gROOT->SetExecutingMacro(kTRUE);
       TString exec = GetName();
       TString p = params;
@@ -302,13 +302,13 @@ Longptr_t TMacro::Exec(const char *params, Int_t* error)
 
 TObjString *TMacro::GetLineWith(const char *text) const
 {
-   if (!fLines) return 0;
+   if (!fLines) return nullptr;
    TIter next(fLines);
    TObjString *obj;
    while ((obj = (TObjString*) next())) {
       if (strstr(obj->GetName(),text)) return obj;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

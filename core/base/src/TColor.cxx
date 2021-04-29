@@ -1099,7 +1099,7 @@ void TColor::InitializeColors()
    if (initDone) return;
    initDone = kTRUE;
 
-   if (gROOT->GetListOfColors()->First() == 0) {
+   if (gROOT->GetListOfColors()->First() == nullptr) {
 
       new TColor(kWhite,1,1,1,"background");
       new TColor(kBlack,0,0,0,"black");
@@ -1210,7 +1210,7 @@ void TColor::InitializeColors()
    // If fgPalette.fN !=0 SetPalette has been called already
    // (from rootlogon.C for instance)
 
-   if (!fgPalette.fN) SetPalette(1,0);
+   if (!fgPalette.fN) SetPalette(1,nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1872,7 +1872,7 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
    // Get list of all defined colors
    TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
 
-   TColor *color = 0;
+   TColor *color = nullptr;
 
    // Look for color by name
    if ((color = (TColor*) colors->FindObject(Form("#%02x%02x%02x", r, g, b))))
@@ -1927,7 +1927,7 @@ Int_t TColor::GetColorBright(Int_t n)
    TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
    // Get existing color at index n
-   TColor *color = 0;
+   TColor *color = nullptr;
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
@@ -1937,7 +1937,7 @@ Int_t TColor::GetColorBright(Int_t n)
 
    //Build the bright color (unless the slot nb is already used)
    Int_t nb = n+150;
-   TColor *colorb = 0;
+   TColor *colorb = nullptr;
    if (nb < ncolors) colorb = (TColor*)colors->At(nb);
    if (colorb) return nb;
    colorb = new TColor(nb,r,g,b);
@@ -1959,7 +1959,7 @@ Int_t TColor::GetColorDark(Int_t n)
    TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
    // Get existing color at index n
-   TColor *color = 0;
+   TColor *color = nullptr;
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
@@ -1969,7 +1969,7 @@ Int_t TColor::GetColorDark(Int_t n)
 
    //Build the dark color (unless the slot nd is already used)
    Int_t nd = n+100;
-   TColor *colord = 0;
+   TColor *colord = nullptr;
    if (nd < ncolors) colord = (TColor*)colors->At(nd);
    if (colord) return nd;
    colord = new TColor(nd,r,g,b);
@@ -2180,7 +2180,7 @@ void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
 
    TColor::InitializeColors();
    TIter iColor(gROOT->GetListOfColors());
-   TColor* color = 0;
+   TColor* color = nullptr;
    while ((color = (TColor*) iColor()))
       color->Allocate();
 }
@@ -2442,7 +2442,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    }
 
    // set Rainbow Color map. Kept for backward compatibility.
-   if (ncolors == 1 && colors == 0) {
+   if (ncolors == 1 && colors == nullptr) {
       ncolors = 50;
       fgPalette.Set(ncolors);
       for (i=0;i<ncolors-1;i++) fgPalette.fArray[i] = 51+i;
@@ -2452,7 +2452,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    }
 
    // High quality palettes (255 levels)
-   if (colors == 0 && ncolors>50) {
+   if (colors == nullptr && ncolors>50) {
 
       if (!fgPalettesList.fN) fgPalettesList.Set(63);        // Right now 63 high quality palettes
       Int_t Idx = (Int_t)fgPalettesList.fArray[ncolors-51];  // High quality palettes indices start at 51

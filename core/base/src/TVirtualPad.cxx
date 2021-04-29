@@ -19,14 +19,14 @@
 TVirtualPad is an abstract base class for the Pad and Canvas classes.
 */
 
-Int_t (*gThreadXAR)(const char *xact, Int_t nb, void **ar, Int_t *iret) = 0;
+Int_t (*gThreadXAR)(const char *xact, Int_t nb, void **ar, Int_t *iret) = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the current pad for the current thread.
 
 TVirtualPad *&TVirtualPad::Pad()
 {
-   static TVirtualPad *currentPad = 0;
+   static TVirtualPad *currentPad = nullptr;
    if (!gThreadTsd)
       return currentPad;
    else
