@@ -28,33 +28,33 @@ class TSelectorDraw;
 class TParallelCoord : public TNamed {
 public:
    enum EStatusBits {
-      kVertDisplay     = BIT(14),      // If the axes are drawn vertically, false if horizontally.
-      kCurveDisplay    = BIT(15),      // If the polylines are replaced by interpolated curves.
-      kPaintEntries    = BIT(16),      // To prentry the TParallelCoord to paint all the entries.
-      kLiveUpdate      = BIT(17),      // To paint the entries when being modified.
-      kGlobalScale     = BIT(19),      // Every variable is on the same scale.
-      kCandleChart     = BIT(20),      // To produce a candle chart.
-      kGlobalLogScale  = BIT(21)       // Every variable in log scale.
+      kVertDisplay     = BIT(14),      ///< If the axes are drawn vertically, false if horizontally.
+      kCurveDisplay    = BIT(15),      ///< If the polylines are replaced by interpolated curves.
+      kPaintEntries    = BIT(16),      ///< To paint all TParallelCoord entries.
+      kLiveUpdate      = BIT(17),      ///< To paint the entries when being modified.
+      kGlobalScale     = BIT(19),      ///< Every variable is on the same scale.
+      kCandleChart     = BIT(20),      ///< To produce a candle chart.
+      kGlobalLogScale  = BIT(21)       ///< Every variable in log scale.
    };
 
 private:
-   UInt_t          fNvar;              // Number of variables.
-   Long64_t        fCurrentFirst;      // First entry to display.
-   Long64_t        fCurrentN;          // Number of entries to display.
-   Long64_t        fNentries;          // Number of entries;
-   Int_t           fDotsSpacing;       // Spacing between dots to draw the entries.
-   Color_t         fLineColor;         // entries line color.
-   Width_t         fLineWidth;         // entries line width.
-   Int_t           fWeightCut;         // Specify a cut on the entries from their weight (see TParallelCoordVar::GetEvtWeight(Long64_t))
-   TEntryList     *fCurrentEntries;    //-> Current selected entries in the tree.
-   TEntryList     *fInitEntries;       //-> Selected entries when TParallelCoord first initialized.
-   TTree          *fTree;              //! Pointer to the TTree.
-   TString         fTreeName;          // Name of the tree.
-   TString         fTreeFileName;      // Name of the file containing the tree.
-   TList          *fVarList;           // List of the variables.
-   TList          *fSelectList;        // List of selections over the variables.
-   TParallelCoordSelect* fCurrentSelection; //! Current Selection being edited.
-   TGaxis         *fCandleAxis;        //! An axis used when displaying a candle chart.
+   UInt_t          fNvar;                   ///< Number of variables.
+   Long64_t        fCurrentFirst;           ///< First entry to display.
+   Long64_t        fCurrentN;               ///< Number of entries to display.
+   Long64_t        fNentries;               ///< Number of entries;
+   Int_t           fDotsSpacing;            ///< Spacing between dots to draw the entries.
+   Color_t         fLineColor;              ///< entries line color.
+   Width_t         fLineWidth;              ///< entries line width.
+   Int_t           fWeightCut;              ///< Specify a cut on the entries from their weight (see TParallelCoordVar::GetEvtWeight(Long64_t))
+   TEntryList     *fCurrentEntries;         ///<-> Current selected entries in the tree.
+   TEntryList     *fInitEntries;            ///<-> Selected entries when TParallelCoord first initialized.
+   TTree          *fTree;                   ///<! Pointer to the TTree.
+   TString         fTreeName;               ///< Name of the tree.
+   TString         fTreeFileName;           ///< Name of the file containing the tree.
+   TList          *fVarList;                ///< List of the variables.
+   TList          *fSelectList;             ///< List of selections over the variables.
+   TParallelCoordSelect* fCurrentSelection; ///<! Current Selection being edited.
+   TGaxis         *fCandleAxis;             ///<! An axis used when displaying a candle chart.
 
    void            Init();
    void            PaintEntries(TParallelCoordSelect* sel=NULL);

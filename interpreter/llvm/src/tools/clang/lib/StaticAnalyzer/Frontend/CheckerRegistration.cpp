@@ -1,9 +1,8 @@
 //===--- CheckerRegistration.cpp - Registration for the Analyzer Checkers -===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,141 +13,108 @@
 #include "clang/StaticAnalyzer/Frontend/CheckerRegistration.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
-#include "clang/StaticAnalyzer/Checkers/ClangCheckers.h"
 #include "clang/StaticAnalyzer/Core/AnalyzerOptions.h"
 #include "clang/StaticAnalyzer/Core/CheckerManager.h"
-#include "clang/StaticAnalyzer/Core/CheckerOptInfo.h"
-#include "clang/StaticAnalyzer/Core/CheckerRegistry.h"
+#include "clang/StaticAnalyzer/Frontend/CheckerRegistry.h"
 #include "clang/StaticAnalyzer/Frontend/FrontendActions.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/Support/DynamicLibrary.h"
-#include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 #include <memory>
 
 using namespace clang;
 using namespace ento;
-using llvm::sys::DynamicLibrary;
 
-namespace {
-class ClangCheckerRegistry : public CheckerRegistry {
-  typedef void (*RegisterCheckersFn)(CheckerRegistry &);
+std::unique_ptr<CheckerManager> ento::createCheckerManager(
+    ASTContext &context,
+    AnalyzerOptions &opts,
+    ArrayRef<std::string> plugins,
+    ArrayRef<std::function<void(CheckerRegistry &)>> checkerRegistrationFns,
+    DiagnosticsEngine &diags) {
+  auto checkerMgr = llvm::make_unique<CheckerManager>(context, opts);
 
-  static bool isCompatibleAPIVersion(const char *versionString);
-  static void warnIncompatible(DiagnosticsEngine *diags, StringRef pluginPath,
-                               const char *pluginAPIVersion);
+  CheckerRegistry allCheckers(plugins, diags, opts, context.getLangOpts(),
+                              checkerRegistrationFns);
 
-public:
-  ClangCheckerRegistry(ArrayRef<std::string> plugins,
-                       DiagnosticsEngine *diags = nullptr);
-};
-
-} // end anonymous namespace
-
-ClangCheckerRegistry::ClangCheckerRegistry(ArrayRef<std::string> plugins,
-                                           DiagnosticsEngine *diags) {
-  registerBuiltinCheckers(*this);
-
-  for (ArrayRef<std::string>::iterator i = plugins.begin(), e = plugins.end();
-       i != e; ++i) {
-    // Get access to the plugin.
-    std::string err;
-    DynamicLibrary lib = DynamicLibrary::getPermanentLibrary(i->c_str(), &err);
-    if (!lib.isValid()) {
-      diags->Report(diag::err_fe_unable_to_load_plugin) << *i << err;
-      continue;
-    }
-
-    // See if it's compatible with this build of clang.
-    const char *pluginAPIVersion =
-      (const char *) lib.getAddressOfSymbol("clang_analyzerAPIVersionString");
-    if (!isCompatibleAPIVersion(pluginAPIVersion)) {
-      warnIncompatible(diags, *i, pluginAPIVersion);
-      continue;
-    }
-
-    // Register its checkers.
-    RegisterCheckersFn registerPluginCheckers =
-      (RegisterCheckersFn) (intptr_t) lib.getAddressOfSymbol(
-                                                      "clang_registerCheckers");
-    if (registerPluginCheckers)
-      registerPluginCheckers(*this);
-  }
-}
-
-bool ClangCheckerRegistry::isCompatibleAPIVersion(const char *versionString) {
-  // If the version string is null, it's not an analyzer plugin.
-  if (!versionString)
-    return false;
-
-  // For now, none of the static analyzer API is considered stable.
-  // Versions must match exactly.
-  return strcmp(versionString, CLANG_ANALYZER_API_VERSION_STRING) == 0;
-}
-
-void ClangCheckerRegistry::warnIncompatible(DiagnosticsEngine *diags,
-                                            StringRef pluginPath,
-                                            const char *pluginAPIVersion) {
-  if (!diags)
-    return;
-  if (!pluginAPIVersion)
-    return;
-
-  diags->Report(diag::warn_incompatible_analyzer_plugin_api)
-      << llvm::sys::path::filename(pluginPath);
-  diags->Report(diag::note_incompatible_analyzer_plugin_api)
-      << CLANG_ANALYZER_API_VERSION_STRING
-      << pluginAPIVersion;
-}
-
-static SmallVector<CheckerOptInfo, 8>
-getCheckerOptList(const AnalyzerOptions &opts) {
-  SmallVector<CheckerOptInfo, 8> checkerOpts;
-  for (unsigned i = 0, e = opts.CheckersControlList.size(); i != e; ++i) {
-    const std::pair<std::string, bool> &opt = opts.CheckersControlList[i];
-    checkerOpts.push_back(CheckerOptInfo(opt.first, opt.second));
-  }
-  return checkerOpts;
-}
-
-std::unique_ptr<CheckerManager>
-ento::createCheckerManager(AnalyzerOptions &opts, const LangOptions &langOpts,
-                           ArrayRef<std::string> plugins,
-                           DiagnosticsEngine &diags) {
-  std::unique_ptr<CheckerManager> checkerMgr(
-      new CheckerManager(langOpts, opts));
-
-  SmallVector<CheckerOptInfo, 8> checkerOpts = getCheckerOptList(opts);
-
-  ClangCheckerRegistry allCheckers(plugins, &diags);
-  allCheckers.initializeManager(*checkerMgr, checkerOpts);
-  allCheckers.validateCheckerOptions(opts, diags);
+  allCheckers.initializeManager(*checkerMgr);
+  allCheckers.validateCheckerOptions();
   checkerMgr->finishedCheckerRegistration();
-
-  for (unsigned i = 0, e = checkerOpts.size(); i != e; ++i) {
-    if (checkerOpts[i].isUnclaimed()) {
-      diags.Report(diag::err_unknown_analyzer_checker)
-          << checkerOpts[i].getName();
-      diags.Report(diag::note_suggest_disabling_all_checkers);
-    }
-
-  }
 
   return checkerMgr;
 }
 
-void ento::printCheckerHelp(raw_ostream &out, ArrayRef<std::string> plugins) {
+void ento::printCheckerHelp(raw_ostream &out, ArrayRef<std::string> plugins,
+                            AnalyzerOptions &anopts,
+                            DiagnosticsEngine &diags,
+                            const LangOptions &langOpts) {
   out << "OVERVIEW: Clang Static Analyzer Checkers List\n\n";
   out << "USAGE: -analyzer-checker <CHECKER or PACKAGE,...>\n\n";
 
-  ClangCheckerRegistry(plugins).printHelp(out);
+  CheckerRegistry(plugins, diags, anopts, langOpts)
+      .printCheckerWithDescList(out);
 }
 
 void ento::printEnabledCheckerList(raw_ostream &out,
                                    ArrayRef<std::string> plugins,
-                                   const AnalyzerOptions &opts) {
+                                   AnalyzerOptions &anopts,
+                                   DiagnosticsEngine &diags,
+                                   const LangOptions &langOpts) {
   out << "OVERVIEW: Clang Static Analyzer Enabled Checkers List\n\n";
 
-  SmallVector<CheckerOptInfo, 8> checkerOpts = getCheckerOptList(opts);
-  ClangCheckerRegistry(plugins).printList(out, checkerOpts);
+  CheckerRegistry(plugins, diags, anopts, langOpts)
+      .printEnabledCheckerList(out);
+}
+
+void ento::printCheckerConfigList(raw_ostream &OS,
+                                  ArrayRef<std::string> plugins,
+                                  AnalyzerOptions &opts,
+                                  DiagnosticsEngine &diags,
+                                  const LangOptions &LangOpts) {
+  CheckerRegistry(plugins, diags, opts, LangOpts)
+      .printCheckerOptionList(OS);
+}
+
+void ento::printAnalyzerConfigList(raw_ostream &out) {
+  out << "OVERVIEW: Clang Static Analyzer -analyzer-config Option List\n\n";
+  out << "USAGE: -analyzer-config <OPTION1=VALUE,OPTION2=VALUE,...>\n\n";
+  out << "       -analyzer-config OPTION1=VALUE, -analyzer-config "
+         "OPTION2=VALUE, ...\n\n";
+  out << "OPTIONS:\n\n";
+
+  using OptionAndDescriptionTy = std::pair<StringRef, std::string>;
+  OptionAndDescriptionTy PrintableOptions[] = {
+#define ANALYZER_OPTION(TYPE, NAME, CMDFLAG, DESC, DEFAULT_VAL)                \
+    {                                                                          \
+      CMDFLAG,                                                                 \
+      llvm::Twine(llvm::Twine() + "(" +                                        \
+                  (StringRef(#TYPE) == "StringRef" ? "string" : #TYPE ) +      \
+                  ") " DESC                                                    \
+                  " (default: " #DEFAULT_VAL ")").str()                        \
+    },
+
+#define ANALYZER_OPTION_DEPENDS_ON_USER_MODE(TYPE, NAME, CMDFLAG, DESC,        \
+                                             SHALLOW_VAL, DEEP_VAL)            \
+    {                                                                          \
+      CMDFLAG,                                                                 \
+      llvm::Twine(llvm::Twine() + "(" +                                        \
+                  (StringRef(#TYPE) == "StringRef" ? "string" : #TYPE ) +      \
+                  ") " DESC                                                    \
+                  " (default: " #SHALLOW_VAL " in shallow mode, " #DEEP_VAL    \
+                  " in deep mode)").str()                                      \
+    },
+#include "clang/StaticAnalyzer/Core/AnalyzerOptions.def"
+#undef ANALYZER_OPTION
+#undef ANALYZER_OPTION_DEPENDS_ON_USER_MODE
+  };
+
+  llvm::sort(PrintableOptions, [](const OptionAndDescriptionTy &LHS,
+                                  const OptionAndDescriptionTy &RHS) {
+    return LHS.first < RHS.first;
+  });
+
+  for (const auto &Pair : PrintableOptions) {
+    AnalyzerOptions::printFormattedEntry(out, Pair, /*InitialPad*/ 2,
+                                         /*EntryWidth*/ 30,
+                                         /*MinLineWidth*/ 70);
+    out << "\n\n";
+  }
 }

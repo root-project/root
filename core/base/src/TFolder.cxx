@@ -311,41 +311,36 @@ TObject *TFolder::FindObject(const TObject *) const
 
 TObject *TFolder::FindObject(const char *name) const
 {
-   if (!fFolders) return 0;
-   if (name == 0) return 0;
+   if (!fFolders || !name) return nullptr;
    if (name[0] == '/') {
       if (name[1] == '/') {
-         if (!strstr(name,"//root/")) return 0;
+         if (!strstr(name,"//root/")) return nullptr;
          return gROOT->GetRootFolder()->FindObject(name+7);
       } else {
          return gROOT->GetRootFolder()->FindObject(name+1);
       }
    }
    Int_t nch = strlen(name);
-   char *cname;
    char csname[128];
-   if (nch < (int)sizeof(csname))
-      cname = csname;
-   else
-      cname = new char[nch+1];
-   strcpy(cname, name);
-   TObject *obj;
+   char *cname = csname;
+   Int_t len = sizeof(csname);
+   if (nch >= len) {
+      len = nch+1;
+      cname = new char[len];
+   }
+   strlcpy(cname, name, len);
+   TObject *ret = nullptr;
    char *slash = strchr(cname,'/');
    if (slash) {
       *slash = 0;
-      obj = fFolders->FindObject(cname);
-      if (!obj) {
-         if (nch >= (int)sizeof(csname)) delete [] cname;
-         return 0;
-      }
-      TObject *ret = obj->FindObject(slash+1);
-      if (nch >= (int)sizeof(csname)) delete [] cname;
-      return ret;
+      if (TObject *obj = fFolders->FindObject(cname))
+         ret = obj->FindObject(slash+1);
    } else {
-      TObject *ret = fFolders->FindObject(cname);
-      if (nch >= (int)sizeof(csname)) delete [] cname;
-      return ret;
+      ret = fFolders->FindObject(cname);
    }
+   if (cname != csname)
+      delete [] cname;
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -197,8 +197,11 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
                     qual_return.find("const", 0, 5) == std::string::npos) {
                 if (isCall && !potGetItem) potGetItem = method;
                 setupSetItem = true;     // will add methods as overloads
-            } else if (isCall) {
-            // not a non-const by-ref return, thus better __getitem__ candidate
+            } else if (isCall && 1 < Cppyy::GetMethodNumArgs(method)) {
+            // not a non-const by-ref return, thus better __getitem__ candidate; the
+            // requirement for multiple arguments is that there is otherwise no benefit
+            // over the use of normal __getitem__ (this allows multi-indexing argumenst,
+            // which is clean in Python, but not allowed in C++)
                 potGetItem = method;
             }
         }

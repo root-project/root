@@ -42,6 +42,7 @@ as a TString, construct a TString from it, eg:
 #include <algorithm>
 
 #include "Varargs.h"
+#include "strlcpy.h"
 #include "TString.h"
 #include "TBuffer.h"
 #include "TError.h"
@@ -127,6 +128,7 @@ TString::TString(const char *cs, Ssiz_t n)
 {
    if (n < 0) {
       Error("TString::TString", "Negative length!");
+      Zero();
       return;
    }
    char *data = Init(n, n);
@@ -155,6 +157,11 @@ TString::TString(char c)
 
 TString::TString(char c, Ssiz_t n)
 {
+   if (n < 0) {
+      Error("TString::TString", "Negative length!");
+      Zero();
+      return;
+   }
    char *data = Init(n, n);
    while (n--) data[n] = c;
 }
@@ -210,18 +217,20 @@ TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
 {
    if (n1 < 0) {
       Error("TString::TString", "Negative first length!");
+      Zero();
       return;
    }
    if (n2 < 0) {
       Error("TString::TString", "Negative second length!");
+      Zero();
       return;
    }
-   if (!a1) n1=0;
-   if (!a2) n2=0;
+   if (!a1) n1 = 0;
+   if (!a2) n2 = 0;
    Ssiz_t tot = n1+n2;
    char *data = Init(tot, tot);
-   memcpy(data,    a1, n1);
-   memcpy(data+n1, a2, n2);
+   if (a1) memcpy(data,    a1, n1);
+   if (a2) memcpy(data+n1, a2, n2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,6 +247,14 @@ TString::~TString()
 
 char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
 {
+   if (capacity < 0) {
+      Error("TString::Init", "Negative length!");
+      capacity = 0;
+   }
+   if (nchar < 0) {
+      Error("*TString::Init", "Negative length!");
+      nchar = 0;
+   }
    if (capacity > MaxSize()) {
       Error("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
       capacity = MaxSize();
@@ -363,6 +380,10 @@ TString& TString::Append(char c, Ssiz_t rep)
 {
    if (!rep) return *this;
 
+   if (rep < 0) {
+      Error("TString::Append", "Negative length!");
+      return *this;
+   }
    Ssiz_t len = Length();
    Ssiz_t tot = len + rep;  // Final string length
 
@@ -540,7 +561,7 @@ UInt_t Hash(const char *str)
    UInt_t hv  = len; // Mix in the string length.
    UInt_t i   = hv*sizeof(char)/sizeof(UInt_t);
 
-   if (((ULong_t)str)%sizeof(UInt_t) == 0) {
+   if (((ULongptr_t)str)%sizeof(UInt_t) == 0) {
       // str is word aligned
       const UInt_t *p = (const UInt_t*)str;
 
@@ -1008,7 +1029,9 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
             if (n1 > n2) {
                if (n2) memmove(p + pos, cs, n2);
                memmove(p + pos + n2, p + pos + n1, rem);
-               goto finish;
+               SetSize(tot);
+               p[tot] = 0;
+               return *this;
             }
             if (p + pos < cs && cs < p + len) {
                if (p + pos + n1 <= cs)
@@ -1025,7 +1048,6 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
          }
       }
       if (n2) memmove(p + pos, cs, n2);
-finish:
       SetSize(tot);
       p[tot] = 0;
    } else {
@@ -2489,10 +2511,11 @@ char *Strip(const char *s, char c)
 
 char *StrDup(const char *str)
 {
-   if (!str) return 0;
+   if (!str) return nullptr;
 
-   char *s = new char[strlen(str)+1];
-   if (s) strcpy(s, str);
+   auto len = strlen(str)+1;
+   char *s = new char[len];
+   if (s) strlcpy(s, str, len);
 
    return s;
 }

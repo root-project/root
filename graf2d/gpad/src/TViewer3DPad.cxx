@@ -2,7 +2,7 @@
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -171,9 +171,11 @@ Bool_t TViewer3DPad::OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * /*addC
 ////////////////////////////////////////////////////////////////////////////////
 
 void TViewer3DPad::CloseComposite()
-{}
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void TViewer3DPad::AddCompositeOp(UInt_t /*operation*/)
-{}
+{
+}

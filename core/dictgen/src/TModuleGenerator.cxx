@@ -75,11 +75,17 @@ TModuleGenerator::TModuleGenerator(CompilerInstance *CI,
    // .pcm -> .pch
    if (IsPCH()) fModuleFileName[fModuleFileName.length() - 1] = 'h';
 
-   // Add a random string to the filename to avoid races
-   llvm::SmallString<10> resultPath("%%%%%%%%%%");
-   llvm::sys::fs::createUniqueFile(resultPath.str(), resultPath);
-   fUmbrellaName = fModuleDirName + fDictionaryName + resultPath.c_str() + "_dictUmbrella.h";
-   fContentName = fModuleDirName + fDictionaryName + resultPath.c_str() + "_dictContent.h";
+   // Add a random string to the filename to avoid races.
+   auto makeTempFile = [&](const char *suffix) {
+      llvm::SmallString<64> resultPath;
+      std::string pattern = fModuleDirName + fDictionaryName + "%%%%%%%%%%" + suffix;
+      llvm::sys::fs::createUniqueFile(pattern, resultPath); // NOTE: this creates the (empty) file
+      // Return the full buffer, so caller can use `.c_str()` on the temporary.
+      return resultPath;
+   };
+
+   fUmbrellaName = makeTempFile("_dictUmbrella.h").c_str();
+   fContentName = makeTempFile("_dictContent.h").c_str();
 }
 
 TModuleGenerator::~TModuleGenerator()
@@ -115,8 +121,9 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
                                  true /*isAngled*/, 0 /*FromDir*/, CurDir,
                                  clang::ArrayRef<std::pair<const clang::FileEntry*,
                                                            const clang::DirectoryEntry*>>(),
-                                 0 /*IsMapped*/, 0 /*SearchPath*/, 0 /*RelativePath*/,
-                                 0 /*RequestingModule*/, 0/*SuggestedModule*/);
+                                 nullptr /*SearchPath*/,/*RelativePath*/ nullptr,
+                                 nullptr /*RequestingModule*/, nullptr /*SuggestedModule*/,
+                                 nullptr /*IsMapped*/, nullptr /*IsFrameworkFound*/);
       if (hdrFileEntry) {
          return kSFKHeader;
       }
@@ -576,8 +583,9 @@ bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFu
                                  true /*isAngled*/, 0 /*FromDir*/, CurDir,
                                  clang::ArrayRef<std::pair<const clang::FileEntry*,
                                                          const clang::DirectoryEntry*>>(),
-                                 0 /*IsMapped*/, 0 /*SearchPath*/, 0 /*RelativePath*/,
-                                 0 /*RequestingModule*/, 0/*SuggestedModule*/)) {
+                                 nullptr /*SearchPath*/, nullptr /*RelativePath*/,
+                                 nullptr /*RequestingModule*/, nullptr/*SuggestedModule*/,
+                                 nullptr /*IsMapped*/, nullptr /*IsFrameworkFound*/)) {
       hdrFullPath = hdrFileEntry->getName();
       return true;
    }

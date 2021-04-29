@@ -272,7 +272,7 @@ Long64_t TSeqCollection::Merge(TCollection *list)
       }
       // Merge current object with objects in the temporary list
       if (mergeable) {
-         callEnv.SetParam((Long_t) templist);
+         callEnv.SetParam((Longptr_t) templist);
          callEnv.Execute(object);
          SafeDelete(templist);
       }

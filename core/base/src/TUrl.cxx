@@ -631,14 +631,14 @@ void TUrl::ParseOptions() const
       return;
 
    TObjArray *objOptions = urloptions.Tokenize("&");
-   for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
+   for (Int_t n = 0; n < objOptions->GetEntriesFast(); n++) {
       TString loption = ((TObjString *) objOptions->At(n))->GetName();
       TObjArray *objTags = loption.Tokenize("=");
       if (!fOptionsMap) {
          fOptionsMap = new TMap;
          fOptionsMap->SetOwnerKeyValue();
       }
-      if (objTags->GetEntries() == 2) {
+      if (objTags->GetEntriesFast() == 2) {
          TString key = ((TObjString *) objTags->At(0))->GetName();
          TString value = ((TObjString *) objTags->At(1))->GetName();
          fOptionsMap->Add(new TObjString(key), new TObjString(value));

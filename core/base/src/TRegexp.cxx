@@ -268,7 +268,7 @@ Ssiz_t TString::Index(const TRegexp& r, Ssiz_t* extent, Ssiz_t start) const
 
 TSubString TString::operator()(const TRegexp& r, Ssiz_t start) const
 {
-   Ssiz_t len;
+   Ssiz_t len = 0;
    Ssiz_t begin = Index(r, &len, start);
    return TSubString(*this, begin, len);
 }

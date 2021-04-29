@@ -1,9 +1,8 @@
 //===- AssumptionCache.cpp - Cache finding @llvm.assume calls -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,14 +12,26 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Analysis/AssumptionCache.h"
-#include "llvm/IR/CallSite.h"
-#include "llvm/IR/Dominators.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
-#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/PatternMatch.h"
-#include "llvm/Support/Debug.h"
+#include "llvm/Pass.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/raw_ostream.h"
+#include <algorithm>
+#include <cassert>
+#include <utility>
+
 using namespace llvm;
 using namespace llvm::PatternMatch;
 
@@ -42,11 +53,11 @@ AssumptionCache::getOrInsertAffectedValues(Value *V) {
   return AVIP.first->second;
 }
 
-void AssumptionCache::updateAffectedValues(CallInst *CI) {
+static void findAffectedValues(CallInst *CI,
+                               SmallVectorImpl<Value *> &Affected) {
   // Note: This code must be kept in-sync with the code in
   // computeKnownBitsFromAssume in ValueTracking.
 
-  SmallVector<Value *, 16> Affected;
   auto AddAffected = [&Affected](Value *V) {
     if (isa<Argument>(V)) {
       Affected.push_back(V);
@@ -97,12 +108,29 @@ void AssumptionCache::updateAffectedValues(CallInst *CI) {
       AddAffectedFromEq(B);
     }
   }
+}
+
+void AssumptionCache::updateAffectedValues(CallInst *CI) {
+  SmallVector<Value *, 16> Affected;
+  findAffectedValues(CI, Affected);
 
   for (auto &AV : Affected) {
     auto &AVV = getOrInsertAffectedValues(AV);
     if (std::find(AVV.begin(), AVV.end(), CI) == AVV.end())
       AVV.push_back(CI);
   }
+}
+
+void AssumptionCache::unregisterAssumption(CallInst *CI) {
+  SmallVector<Value *, 16> Affected;
+  findAffectedValues(CI, Affected);
+
+  for (auto &AV : Affected) {
+    auto AVI = AffectedValues.find_as(AV);
+    if (AVI != AffectedValues.end())
+      AffectedValues.erase(AVI);
+  }
+  remove_if(AssumeHandles, [CI](WeakTrackingVH &VH) { return CI == VH; });
 }
 
 void AssumptionCache::AffectedValueCallbackVH::deleted() {
@@ -229,6 +257,13 @@ AssumptionCache &AssumptionCacheTracker::getAssumptionCache(Function &F) {
   return *IP.first->second;
 }
 
+AssumptionCache *AssumptionCacheTracker::lookupAssumptionCache(Function &F) {
+  auto I = AssumptionCaches.find_as(&F);
+  if (I != AssumptionCaches.end())
+    return I->second.get();
+  return nullptr;
+}
+
 void AssumptionCacheTracker::verifyAnalysis() const {
   // FIXME: In the long term the verifier should not be controllable with a
   // flag. We should either fix all passes to correctly update the assumption
@@ -255,8 +290,9 @@ AssumptionCacheTracker::AssumptionCacheTracker() : ImmutablePass(ID) {
   initializeAssumptionCacheTrackerPass(*PassRegistry::getPassRegistry());
 }
 
-AssumptionCacheTracker::~AssumptionCacheTracker() {}
+AssumptionCacheTracker::~AssumptionCacheTracker() = default;
+
+char AssumptionCacheTracker::ID = 0;
 
 INITIALIZE_PASS(AssumptionCacheTracker, "assumption-cache-tracker",
                 "Assumption Cache Tracker", false, true)
-char AssumptionCacheTracker::ID = 0;

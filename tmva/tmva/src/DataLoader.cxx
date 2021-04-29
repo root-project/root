@@ -179,6 +179,7 @@ TMVA::DataLoader* TMVA::DataLoader::VarTransform(TString trafoDefinition)
       return transformedLoader;
    }
    else {
+      delete handler;
       Log() << kFATAL << "Incorrect transformation string provided, please check" << Endl;
    }
    Log() << kINFO << "No transformation applied, returning original loader" << Endl;

@@ -1,5 +1,7 @@
 sap.ui.define([
    'sap/ui/core/mvc/Controller',
+   'sap/ui/core/Component',
+   'sap/ui/core/UIComponent',
    'sap/ui/model/json/JSONModel',
    'sap/ui/model/Sorter',
    'sap/m/Column',
@@ -12,7 +14,7 @@ sap.ui.define([
    "sap/ui/layout/HorizontalLayout",
    "sap/ui/table/Column",
    "sap/m/MessageBox"
-], function (Controller, JSONModel, Sorter,
+], function (Controller,Component, UIComponent, JSONModel, Sorter,
    mColumn, mColumnListItem, mInput, mLabel, mButton,
    FormattedText, VerticalLayout, HorizontalLayout, tableColumn, MessageBox) {
 
@@ -21,18 +23,29 @@ sap.ui.define([
    return Controller.extend("rootui5.eve7.controller.EveTable", {
 
       onInit: function () {
-         var data = this.getView().getViewData();
-         // console.log("VIEW DATA", data);
+         var viewData = this.getView().getViewData();
+         if (viewData) {
+            this.setupManagerAndViewType(viewData.eveViewerId, viewData.kind, viewData.mgr);
+         }
+         else {
+             UIComponent.getRouterFor(this).getRoute("Table").attachPatternMatched(this.onTableObjectMatched, this);
+         }
+      },
+      onTableObjectMatched: function (oEvent) {
+         let args = oEvent.getParameter("arguments");
+         this.setupManagerAndViewType(JSROOT.$eve7tmp.eveViewerId, JSROOT.$eve7tmp.view_kind, JSROOT.$eve7tmp.mgr );
+         delete JSROOT.$eve7tmp;
 
-         var id = this.getView().getId();
-         console.log("eve.GL.onInit id = ", id);
-
+         this.checkViewReady();
+      },
+      setupManagerAndViewType: function(eveViewerId, kind, mgr)
+      {
          this._load_scripts = true;
          this._render_html = false;
 
-         this.mgr = data.mgr;
-         this.eveViewerId = data.eveViewerId;
-         this.kind = data.kind;
+         this.mgr = mgr;
+         this.eveViewerId = eveViewerId;
+         this.kind = kind;
 
          var rh = this.mgr.handle.getUserArgs("TableRowHeight");
          if (rh && (rh > 0))
@@ -81,9 +94,7 @@ sap.ui.define([
       },
 
       sortTable: function (e) {
-         var col = e.mParameters.column;
-         var colId = col.getId();
-
+         // var colId = col.getId();
          var col = e.mParameters.column;
          var bDescending = (e.mParameters.sortOrder == sap.ui.core.SortOrder.Descending);
          var sv = bDescending;
@@ -194,7 +205,7 @@ sap.ui.define([
             var xr = rowData[r];
             for (var xri = 0; xri < xr.length; xri++) {
                var nv = parseFloat(xr[i]);
-               if (nv != NaN) {
+               if (!isNaN(nv)) {
                   rowData[r][ri] = nv;
                }
             }
@@ -330,7 +341,7 @@ sap.ui.define([
       },
 
       toggleTableEdit: function () {
-         var header = sap.ui.getCore().byId("EveViewer21--header");
+         var header = this.getView().byId("header");
          if (!this.editor) {
             this.editor = new VerticalLayout("tableEdit", { "width": "100%" });
 
@@ -509,6 +520,7 @@ sap.ui.define([
       endChanges: function (oEvent) {
          if (this.refreshTable) {
             this.locateEveTable();
+            this.buildTableHeader();
             this.buildTableBody();
             this.refreshTable = false;
          }

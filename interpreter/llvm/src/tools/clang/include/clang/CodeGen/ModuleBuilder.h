@@ -1,9 +1,8 @@
 //===--- CodeGen/ModuleBuilder.h - Build LLVM from ASTs ---------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -88,6 +87,11 @@ public:
   llvm::Constant *GetAddrOfGlobal(GlobalDecl decl, bool isForDefinition);
 
   void print(llvm::raw_ostream& out);
+
+  /// Create a new \c llvm::Module after calling HandleTranslationUnit. This
+  /// enable codegen in interactive processing environments.
+  llvm::Module* StartModule(llvm::StringRef ModuleName, llvm::LLVMContext &C);
+
   void forgetGlobal(llvm::GlobalValue* GV);
   void forgetDecl(const GlobalDecl& GD, llvm::StringRef MangledName);
   llvm::Module* StartModule(llvm::StringRef ModuleName,

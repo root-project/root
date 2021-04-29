@@ -119,6 +119,58 @@ Example:
   guard: 0x71bcdc 4 PC 0x4ecdc7 in main trace-pc-guard-example.cc:4:17
   guard: 0x71bcd0 1 PC 0x4ecd20 in foo() trace-pc-guard-example.cc:2:14
 
+Inline 8bit-counters
+====================
+
+**Experimental, may change or disappear in future**
+
+With ``-fsanitize-coverage=inline-8bit-counters`` the compiler will insert
+inline counter increments on every edge.
+This is similar to ``-fsanitize-coverage=trace-pc-guard`` but instead of a
+callback the instrumentation simply increments a counter.
+
+Users need to implement a single function to capture the counters at startup.
+
+.. code-block:: c++
+
+  extern "C"
+  void __sanitizer_cov_8bit_counters_init(char *start, char *end) {
+    // [start,end) is the array of 8-bit counters created for the current DSO.
+    // Capture this array in order to read/modify the counters.
+  }
+
+PC-Table
+========
+
+**Experimental, may change or disappear in future**
+
+**Note:** this instrumentation might be incompatible with dead code stripping
+(``-Wl,-gc-sections``) for linkers other than LLD, thus resulting in a
+significant binary size overhead. For more information, see
+`Bug 34636 <https://bugs.llvm.org/show_bug.cgi?id=34636>`_.
+
+With ``-fsanitize-coverage=pc-table`` the compiler will create a table of
+instrumented PCs. Requires either ``-fsanitize-coverage=inline-8bit-counters`` or
+``-fsanitize-coverage=trace-pc-guard``.
+
+Users need to implement a single function to capture the PC table at startup:
+
+.. code-block:: c++
+
+  extern "C"
+  void __sanitizer_cov_pcs_init(const uintptr_t *pcs_beg,
+                                const uintptr_t *pcs_end) {
+    // [pcs_beg,pcs_end) is the array of ptr-sized integers representing
+    // pairs [PC,PCFlags] for every instrumented block in the current DSO.
+    // Capture this array in order to read the PCs and their Flags.
+    // The number of PCs and PCFlags for a given DSO is the same as the number
+    // of 8-bit counters (-fsanitize-coverage=inline-8bit-counters) or
+    // trace_pc_guard callbacks (-fsanitize-coverage=trace-pc-guard)
+    // A PCFlags describes the basic block:
+    //  * bit0: 1 if the block is the function entry block, 0 otherwise.
+  }
+
+
 Tracing PCs
 ===========
 
@@ -130,7 +182,6 @@ These callbacks are not implemented in the Sanitizer run-time and should be defi
 by the user.
 This mechanism is used for fuzzing the Linux kernel
 (https://github.com/google/syzkaller).
-
 
 Instrumentation points
 ======================
@@ -176,9 +227,9 @@ It contains 3 basic blocks, let's name them A, B, C:
 If blocks A, B, and C are all covered we know for certain that the edges A=>B
 and B=>C were executed, but we still don't know if the edge A=>C was executed.
 Such edges of control flow graph are called
-`critical <http://en.wikipedia.org/wiki/Control_flow_graph#Special_edges>`_. The
-edge-level coverage simply splits all critical
-edges by introducing new dummy blocks and then instruments those blocks:
+`critical <https://en.wikipedia.org/wiki/Control_flow_graph#Special_edges>`_.
+The edge-level coverage simply splits all critical edges by introducing new
+dummy blocks and then instruments those blocks:
 
 .. code-block:: none
 
@@ -199,8 +250,11 @@ around comparison instructions and switch statements.
 Similarly, with ``-fsanitize-coverage=trace-div`` the compiler will instrument
 integer division instructions (to capture the right argument of division)
 and with  ``-fsanitize-coverage=trace-gep`` --
-the `LLVM GEP instructions <http://llvm.org/docs/GetElementPtr.html>`_
+the `LLVM GEP instructions <https://llvm.org/docs/GetElementPtr.html>`_
 (to capture array indices).
+
+Unless ``no-prune`` option is provided, some of the comparison instructions
+will not be instrumented.
 
 .. code-block:: c++
 
@@ -210,6 +264,14 @@ the `LLVM GEP instructions <http://llvm.org/docs/GetElementPtr.html>`_
   void __sanitizer_cov_trace_cmp2(uint16_t Arg1, uint16_t Arg2);
   void __sanitizer_cov_trace_cmp4(uint32_t Arg1, uint32_t Arg2);
   void __sanitizer_cov_trace_cmp8(uint64_t Arg1, uint64_t Arg2);
+
+  // Called before a comparison instruction if exactly one of the arguments is constant.
+  // Arg1 and Arg2 are arguments of the comparison, Arg1 is a compile-time constant. 
+  // These callbacks are emitted by -fsanitize-coverage=trace-cmp since 2017-08-11
+  void __sanitizer_cov_trace_const_cmp1(uint8_t Arg1, uint8_t Arg2);
+  void __sanitizer_cov_trace_const_cmp2(uint16_t Arg1, uint16_t Arg2);
+  void __sanitizer_cov_trace_const_cmp4(uint32_t Arg1, uint32_t Arg2);
+  void __sanitizer_cov_trace_const_cmp8(uint64_t Arg1, uint64_t Arg2);
 
   // Called before a switch statement.
   // Val is the switch operand.
@@ -226,9 +288,6 @@ the `LLVM GEP instructions <http://llvm.org/docs/GetElementPtr.html>`_
   // Called before a GetElemementPtr (GEP) instruction
   // for every non-constant array index.
   void __sanitizer_cov_trace_gep(uintptr_t Idx);
-
-
-This interface is a subject to change.
 
 Default implementation
 ======================

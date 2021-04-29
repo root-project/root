@@ -13,13 +13,6 @@
 #define ROOT_TGuiBuilder
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGuiBuilder                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #include "TNamed.h"
 
 enum EGuiBldAction { kGuiBldNone, kGuiBldCtor,  kGuiBldProj,

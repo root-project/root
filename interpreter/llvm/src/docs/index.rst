@@ -50,11 +50,10 @@ User Guides
 
 For those new to the LLVM system.
 
-NOTE: If you are a user who is only interested in using LLVM-based
-compilers, you should look into `Clang <http://clang.llvm.org>`_ or
-`DragonEgg <http://dragonegg.llvm.org>`_ instead. The documentation here is
-intended for users who have a need to work with the intermediate LLVM
-representation.
+NOTE: If you are a user who is only interested in using an LLVM-based compiler,
+you should look into `Clang <http://clang.llvm.org>`_ instead. The
+documentation here is intended for users who have a need to work with the
+intermediate LLVM representation.
 
 .. toctree::
    :hidden:
@@ -63,6 +62,8 @@ representation.
    CMakePrimer
    AdvancedBuilds
    HowToBuildOnARM
+   HowToBuildWithPGO
+   HowToCrossCompileBuiltinsOnArm
    HowToCrossCompileLLVM
    CommandGuide/index
    GettingStarted
@@ -73,6 +74,7 @@ representation.
    yaml2obj
    HowToSubmitABug
    SphinxQuickstartTemplate
+   MarkdownQuickstartTemplate
    Phabricator
    TestingGuide
    tutorial/index
@@ -82,11 +84,14 @@ representation.
    GetElementPtr
    Frontend/PerformanceTips
    MCJITDesignAndImplementation
+   ORCv2
    CodeOfConduct
    CompileCudaWithLLVM
    ReportingGuide
    Benchmarking
    Docker
+   BuildingADistribution
+   Remarks
 
 :doc:`GettingStarted`
    Discusses how to get up and running quickly with the LLVM infrastructure.
@@ -99,6 +104,12 @@ representation.
 
 :doc:`HowToBuildOnARM`
    Notes on building and testing LLVM/Clang on ARM.
+
+:doc:`HowToBuildWithPGO`
+    Notes on building LLVM/Clang with PGO.
+
+:doc:`HowToCrossCompileBuiltinsOnArm`
+   Notes on cross-building and testing the compiler-rt builtins for Arm.
 
 :doc:`HowToCrossCompileLLVM`
    Notes on cross-building and testing LLVM/Clang.
@@ -135,6 +146,9 @@ representation.
 :doc:`LLVM Testing Infrastructure Guide <TestingGuide>`
    A reference manual for using the LLVM testing infrastructure.
 
+:doc:`TestSuiteGuide`
+  Describes how to compile and run the test-suite benchmarks.
+
 `How to build the C, C++, ObjC, and ObjC++ front end`__
    Instructions for building the clang front-end from source.
 
@@ -154,12 +168,18 @@ representation.
   misunderstood instruction.
 
 :doc:`Frontend/PerformanceTips`
-   A collection of tips for frontend authors on how to generate IR 
+   A collection of tips for frontend authors on how to generate IR
    which LLVM is able to effectively optimize.
 
 :doc:`Docker`
    A reference for using Dockerfiles provided with LLVM.
 
+:doc:`BuildingADistribution`
+  A best-practices guide for using LLVM's CMake build system to package and
+  distribute LLVM-based tools.
+
+:doc:`Remarks`
+   A reference on the implementation of remarks in LLVM.
 
 Programming Documentation
 =========================
@@ -178,6 +198,7 @@ For developers of applications which use LLVM as a library.
    ProgrammersManual
    Extensions
    LibFuzzer
+   FuzzingLLVM
    ScudoHardenedAllocator
    OptBisect
 
@@ -211,11 +232,10 @@ For developers of applications which use LLVM as a library.
 
 `Doxygen generated documentation <http://llvm.org/doxygen/>`_
   (`classes <http://llvm.org/doxygen/inherits.html>`_)
-  (`tarball <http://llvm.org/doxygen/doxygen.tar.gz>`_)
 
 `Documentation for Go bindings <http://godoc.org/llvm.org/llvm/bindings/go/llvm>`_
 
-`ViewVC Repository Browser <http://llvm.org/viewvc/>`_
+`Github Source Repository Browser <http://github.com/llvm/llvm-project//>`_
    ..
 
 :doc:`CompilerWriterInfo`
@@ -224,11 +244,16 @@ For developers of applications which use LLVM as a library.
 :doc:`LibFuzzer`
   A library for writing in-process guided fuzzers.
 
+:doc:`FuzzingLLVM`
+  Information on writing and using Fuzzers to find bugs in LLVM.
+
 :doc:`ScudoHardenedAllocator`
   A library that implements a security-hardened `malloc()`.
 
 :doc:`OptBisect`
   A command line option for debugging optimization-induced failures.
+
+.. _index-subsystem-docs:
 
 Subsystem Documentation
 =======================
@@ -246,6 +271,7 @@ For API clients and LLVM developers.
    Bugpoint
    CodeGenerator
    ExceptionHandling
+   AddingConstrainedIntrinsics
    LinkTimeOptimization
    SegmentedStacks
    TableGenFundamentals
@@ -254,6 +280,7 @@ For API clients and LLVM developers.
    GoldPlugin
    MarkedUpDisassembly
    SystemLibrary
+   SupportLibrary
    SourceLevelDebugging
    Vectorizers
    WritingAnLLVMBackend
@@ -269,13 +296,18 @@ For API clients and LLVM developers.
    Statepoints
    MergeFunctions
    TypeMetadata
+   TransformMetadata
    FaultMaps
    MIRLangRef
    Coroutines
    GlobalISel
    XRay
    XRayExample
+   XRayFDRFormat
    PDB/index
+   CFIVerify
+   SpeculativeLoadHardening
+   StackSafetyAnalysis
 
 :doc:`WritingAnLLVMPass`
    Information on how to write LLVM transformations and analyses.
@@ -318,6 +350,10 @@ For API clients and LLVM developers.
    This document describes the design and implementation of exception handling
    in LLVM.
 
+:doc:`AddingConstrainedIntrinsics`
+   Gives the steps necessary when adding a new constrained math intrinsic
+   to LLVM.
+
 :doc:`Bugpoint`
    Automatic bug finder and test-case reducer description and usage
    information.
@@ -325,8 +361,8 @@ For API clients and LLVM developers.
 :doc:`BitCodeFormat`
    This describes the file format and encoding used for LLVM "bc" files.
 
-:doc:`System Library <SystemLibrary>`
-   This document describes the LLVM System Library (``lib/System``) and
+:doc:`Support Library <SupportLibrary>`
+   This document describes the LLVM Support Library (``lib/Support``) and
    how to keep LLVM source code portable
 
 :doc:`LinkTimeOptimization`
@@ -341,6 +377,10 @@ For API clients and LLVM developers.
 
 :doc:`MCJITDesignAndImplementation`
    Describes the inner workings of MCJIT execution engine.
+
+:doc:`ORCv2`
+   Describes the design and implementation of the ORC APIs, including some
+   usage examples, and a guide for users transitioning from ORCv1 to ORCv2.
 
 :doc:`BranchWeightMetadata`
    Provides information about Branch Prediction Information.
@@ -406,6 +446,16 @@ For API clients and LLVM developers.
 :doc:`The Microsoft PDB File Format <PDB/index>`
   A detailed description of the Microsoft PDB (Program Database) file format.
 
+:doc:`CFIVerify`
+  A description of the verification tool for Control Flow Integrity.
+
+:doc:`SpeculativeLoadHardening`
+  A description of the Speculative Load Hardening mitigation for Spectre v1.
+
+:doc:`StackSafetyAnalysis`
+  This document describes the design of the stack safety analysis of local
+  variables.
+
 Development Process Documentation
 =================================
 
@@ -414,6 +464,7 @@ Information about LLVM's development process.
 .. toctree::
    :hidden:
 
+   Contributing
    DeveloperPolicy
    Projects
    LLVMBuild
@@ -421,6 +472,10 @@ Information about LLVM's development process.
    Packaging
    ReleaseProcess
    Phabricator
+   BugLifeCycle
+
+:doc:`Contributing`
+   An overview on how to contribute to LLVM.
 
 :doc:`DeveloperPolicy`
    The LLVM project's policy towards developers and their contributions.
@@ -447,6 +502,9 @@ Information about LLVM's development process.
 :doc:`Phabricator`
    Describes how to use the Phabricator code review tool hosted on
    http://reviews.llvm.org/ and its command line interface, Arcanist.
+
+:doc:`BugLifeCycle`
+   Describes how bugs are reported, triaged and closed.
 
 Community
 =========
@@ -508,13 +566,27 @@ This channel has several bots.
 
   * llvmbb - Bot for the main LLVM buildbot master.
     http://lab.llvm.org:8011/console
-  * bb-chapuni - An individually run buildbot master. http://bb.pgr.jp/console
   * smooshlab - Apple's internal buildbot master.
 
 * robot - Bugzilla linker. %bug <number>
 
 * clang-bot - A `geordi <http://www.eelis.net/geordi/>`_ instance running
   near-trunk clang instead of gcc.
+
+Meetups and social events
+-------------------------
+
+.. toctree::
+   :hidden:
+
+   MeetupGuidelines
+
+Besides developer `meetings and conferences <https://llvm.org/devmtg/>`_,
+there are several user groups called
+`LLVM Socials <https://www.meetup.com/pro/llvm/>`_. We greatly encourage you to
+join one in your city. Or start a new one if there is none:
+
+:doc:`MeetupGuidelines`
 
 Community wide proposals
 ------------------------
@@ -527,6 +599,8 @@ can be better.
 
    CodeOfConduct
    Proposals/GitHubMove
+   Proposals/TestSuite
+   Proposals/VariableNames
    Proposals/VectorizationPlan
 
 :doc:`CodeOfConduct`
@@ -535,6 +609,12 @@ can be better.
 
 :doc:`Proposals/GitHubMove`
    Proposal to move from SVN/Git to GitHub.
+
+:doc:`Proposals/TestSuite`
+   Proposals for additional benchmarks/programs for llvm's test-suite.
+
+:doc:`Proposals/VariableNames`
+   Proposal to change the variable names coding standard.
 
 :doc:`Proposals/VectorizationPlan`
    Proposal to model the process and upgrade the infrastructure of LLVM's Loop Vectorizer.

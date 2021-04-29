@@ -44,7 +44,7 @@
               <menu>
                 <Menu itemSelected="onViewMenuAction" id="menuViewId">
                   <items>
-                    <MenuItem text="New Viewer" >
+                    <MenuItem text="New Viewer" enabled="false">
                       <items>
                         <MenuItem text="3D"  enabled="false"/>
                         <MenuItem text="RhoZ" enabled="false" />
@@ -56,7 +56,7 @@
                 </Menu>
               </menu>
             </MenuButton>
-            <MenuButton text="Tools" type="Transparent"  enabled="true">
+            <!--MenuButton text="Tools" type="Transparent"  enabled="true">
               <menu>
                 <Menu itemSelected="onToolsMenuAction">
                   <items>
@@ -65,7 +65,7 @@
                   </items>
                 </Menu>
               </menu>
-            </MenuButton>
+            </MenuButton-->
             <ToolbarSpacer />
             
               </contentLeft>
@@ -73,6 +73,7 @@
                 <FormattedText id="centerTitle" htmlText="ROOT Event Visalization Environment"/>
               </contentMiddle>
               <contentRight>
+              <Button id="logButton" icon="sap-icon://show" text="log" press="showLog"/>
             <MenuButton text="Help" type="Default"  enabled="true">
               <menu>
                 <Menu >

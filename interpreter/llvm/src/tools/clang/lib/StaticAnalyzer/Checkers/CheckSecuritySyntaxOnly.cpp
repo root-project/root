@@ -1,9 +1,8 @@
 //==- CheckSecuritySyntaxOnly.cpp - Basic security checks --------*- C++ -*-==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -11,9 +10,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/AST/StmtVisitor.h"
-#include "clang/Analysis/AnalysisContext.h"
+#include "clang/Analysis/AnalysisDeclContext.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugReporter.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
@@ -29,30 +28,37 @@ static bool isArc4RandomAvailable(const ASTContext &Ctx) {
   const llvm::Triple &T = Ctx.getTargetInfo().getTriple();
   return T.getVendor() == llvm::Triple::Apple ||
          T.getOS() == llvm::Triple::CloudABI ||
-         T.getOS() == llvm::Triple::FreeBSD ||
-         T.getOS() == llvm::Triple::NetBSD ||
-         T.getOS() == llvm::Triple::OpenBSD ||
-         T.getOS() == llvm::Triple::Bitrig ||
-         T.getOS() == llvm::Triple::DragonFly;
+         T.isOSFreeBSD() ||
+         T.isOSNetBSD() ||
+         T.isOSOpenBSD() ||
+         T.isOSDragonFly();
 }
 
 namespace {
 struct ChecksFilter {
+  DefaultBool check_bcmp;
+  DefaultBool check_bcopy;
+  DefaultBool check_bzero;
   DefaultBool check_gets;
   DefaultBool check_getpw;
   DefaultBool check_mktemp;
   DefaultBool check_mkstemp;
   DefaultBool check_strcpy;
+  DefaultBool check_DeprecatedOrUnsafeBufferHandling;
   DefaultBool check_rand;
   DefaultBool check_vfork;
   DefaultBool check_FloatLoopCounter;
   DefaultBool check_UncheckedReturn;
 
+  CheckName checkName_bcmp;
+  CheckName checkName_bcopy;
+  CheckName checkName_bzero;
   CheckName checkName_gets;
   CheckName checkName_getpw;
   CheckName checkName_mktemp;
   CheckName checkName_mkstemp;
   CheckName checkName_strcpy;
+  CheckName checkName_DeprecatedOrUnsafeBufferHandling;
   CheckName checkName_rand;
   CheckName checkName_vfork;
   CheckName checkName_FloatLoopCounter;
@@ -90,12 +96,17 @@ public:
 
   // Checker-specific methods.
   void checkLoopConditionForFloat(const ForStmt *FS);
+  void checkCall_bcmp(const CallExpr *CE, const FunctionDecl *FD);
+  void checkCall_bcopy(const CallExpr *CE, const FunctionDecl *FD);
+  void checkCall_bzero(const CallExpr *CE, const FunctionDecl *FD);
   void checkCall_gets(const CallExpr *CE, const FunctionDecl *FD);
   void checkCall_getpw(const CallExpr *CE, const FunctionDecl *FD);
   void checkCall_mktemp(const CallExpr *CE, const FunctionDecl *FD);
   void checkCall_mkstemp(const CallExpr *CE, const FunctionDecl *FD);
   void checkCall_strcpy(const CallExpr *CE, const FunctionDecl *FD);
   void checkCall_strcat(const CallExpr *CE, const FunctionDecl *FD);
+  void checkDeprecatedOrUnsafeBufferHandling(const CallExpr *CE,
+                                             const FunctionDecl *FD);
   void checkCall_rand(const CallExpr *CE, const FunctionDecl *FD);
   void checkCall_random(const CallExpr *CE, const FunctionDecl *FD);
   void checkCall_vfork(const CallExpr *CE, const FunctionDecl *FD);
@@ -130,6 +141,9 @@ void WalkAST::VisitCallExpr(CallExpr *CE) {
 
   // Set the evaluation function by switching on the callee name.
   FnCheck evalFunction = llvm::StringSwitch<FnCheck>(Name)
+    .Case("bcmp", &WalkAST::checkCall_bcmp)
+    .Case("bcopy", &WalkAST::checkCall_bcopy)
+    .Case("bzero", &WalkAST::checkCall_bzero)
     .Case("gets", &WalkAST::checkCall_gets)
     .Case("getpw", &WalkAST::checkCall_getpw)
     .Case("mktemp", &WalkAST::checkCall_mktemp)
@@ -138,6 +152,14 @@ void WalkAST::VisitCallExpr(CallExpr *CE) {
     .Case("mkstemps", &WalkAST::checkCall_mkstemp)
     .Cases("strcpy", "__strcpy_chk", &WalkAST::checkCall_strcpy)
     .Cases("strcat", "__strcat_chk", &WalkAST::checkCall_strcat)
+    .Cases("sprintf", "vsprintf", "scanf", "wscanf", "fscanf", "fwscanf",
+           "vscanf", "vwscanf", "vfscanf", "vfwscanf",
+           &WalkAST::checkDeprecatedOrUnsafeBufferHandling)
+    .Cases("sscanf", "swscanf", "vsscanf", "vswscanf", "swprintf",
+           "snprintf", "vswprintf", "vsnprintf", "memcpy", "memmove",
+           &WalkAST::checkDeprecatedOrUnsafeBufferHandling)
+    .Cases("strncpy", "strncat", "memset",
+           &WalkAST::checkDeprecatedOrUnsafeBufferHandling)
     .Case("drand48", &WalkAST::checkCall_rand)
     .Case("erand48", &WalkAST::checkCall_rand)
     .Case("jrand48", &WalkAST::checkCall_rand)
@@ -177,7 +199,7 @@ void WalkAST::VisitForStmt(ForStmt *FS) {
 }
 
 //===----------------------------------------------------------------------===//
-// Check: floating poing variable used as loop counter.
+// Check: floating point variable used as loop counter.
 // Originally: <rdar://problem/6336718>
 // Implements: CERT security coding advisory FLP-30.
 //===----------------------------------------------------------------------===//
@@ -295,6 +317,132 @@ void WalkAST::checkLoopConditionForFloat(const ForStmt *FS) {
                      bugType, "Security", os.str(),
                      FSLoc, ranges);
 }
+
+//===----------------------------------------------------------------------===//
+// Check: Any use of bcmp.
+// CWE-477: Use of Obsolete Functions
+// bcmp was deprecated in POSIX.1-2008
+//===----------------------------------------------------------------------===//
+
+void WalkAST::checkCall_bcmp(const CallExpr *CE, const FunctionDecl *FD) {
+  if (!filter.check_bcmp)
+    return;
+
+  const FunctionProtoType *FPT = FD->getType()->getAs<FunctionProtoType>();
+  if (!FPT)
+    return;
+
+  // Verify that the function takes three arguments.
+  if (FPT->getNumParams() != 3)
+    return;
+
+  for (int i = 0; i < 2; i++) {
+    // Verify the first and second argument type is void*.
+    const PointerType *PT = FPT->getParamType(i)->getAs<PointerType>();
+    if (!PT)
+      return;
+
+    if (PT->getPointeeType().getUnqualifiedType() != BR.getContext().VoidTy)
+      return;
+  }
+
+  // Verify the third argument type is integer.
+  if (!FPT->getParamType(2)->isIntegralOrUnscopedEnumerationType())
+    return;
+
+  // Issue a warning.
+  PathDiagnosticLocation CELoc =
+    PathDiagnosticLocation::createBegin(CE, BR.getSourceManager(), AC);
+  BR.EmitBasicReport(AC->getDecl(), filter.checkName_bcmp,
+                     "Use of deprecated function in call to 'bcmp()'",
+                     "Security",
+                     "The bcmp() function is obsoleted by memcmp().",
+                     CELoc, CE->getCallee()->getSourceRange());
+}
+
+//===----------------------------------------------------------------------===//
+// Check: Any use of bcopy.
+// CWE-477: Use of Obsolete Functions
+// bcopy was deprecated in POSIX.1-2008
+//===----------------------------------------------------------------------===//
+
+void WalkAST::checkCall_bcopy(const CallExpr *CE, const FunctionDecl *FD) {
+  if (!filter.check_bcopy)
+    return;
+
+  const FunctionProtoType *FPT = FD->getType()->getAs<FunctionProtoType>();
+  if (!FPT)
+    return;
+
+  // Verify that the function takes three arguments.
+  if (FPT->getNumParams() != 3)
+    return;
+
+  for (int i = 0; i < 2; i++) {
+    // Verify the first and second argument type is void*.
+    const PointerType *PT = FPT->getParamType(i)->getAs<PointerType>();
+    if (!PT)
+      return;
+
+    if (PT->getPointeeType().getUnqualifiedType() != BR.getContext().VoidTy)
+      return;
+  }
+
+  // Verify the third argument type is integer.
+  if (!FPT->getParamType(2)->isIntegralOrUnscopedEnumerationType())
+    return;
+
+  // Issue a warning.
+  PathDiagnosticLocation CELoc =
+    PathDiagnosticLocation::createBegin(CE, BR.getSourceManager(), AC);
+  BR.EmitBasicReport(AC->getDecl(), filter.checkName_bcopy,
+                     "Use of deprecated function in call to 'bcopy()'",
+                     "Security",
+                     "The bcopy() function is obsoleted by memcpy() "
+                     "or memmove().",
+                     CELoc, CE->getCallee()->getSourceRange());
+}
+
+//===----------------------------------------------------------------------===//
+// Check: Any use of bzero.
+// CWE-477: Use of Obsolete Functions
+// bzero was deprecated in POSIX.1-2008
+//===----------------------------------------------------------------------===//
+
+void WalkAST::checkCall_bzero(const CallExpr *CE, const FunctionDecl *FD) {
+  if (!filter.check_bzero)
+    return;
+
+  const FunctionProtoType *FPT = FD->getType()->getAs<FunctionProtoType>();
+  if (!FPT)
+    return;
+
+  // Verify that the function takes two arguments.
+  if (FPT->getNumParams() != 2)
+    return;
+
+  // Verify the first argument type is void*.
+  const PointerType *PT = FPT->getParamType(0)->getAs<PointerType>();
+  if (!PT)
+    return;
+
+  if (PT->getPointeeType().getUnqualifiedType() != BR.getContext().VoidTy)
+    return;
+
+  // Verify the second argument type is integer.
+  if (!FPT->getParamType(1)->isIntegralOrUnscopedEnumerationType())
+    return;
+
+  // Issue a warning.
+  PathDiagnosticLocation CELoc =
+    PathDiagnosticLocation::createBegin(CE, BR.getSourceManager(), AC);
+  BR.EmitBasicReport(AC->getDecl(), filter.checkName_bzero,
+                     "Use of deprecated function in call to 'bzero()'",
+                     "Security",
+                     "The bzero() function is obsoleted by memset().",
+                     CELoc, CE->getCallee()->getSourceRange());
+}
+
 
 //===----------------------------------------------------------------------===//
 // Check: Any use of 'gets' is insecure.
@@ -416,7 +564,6 @@ void WalkAST::checkCall_mktemp(const CallExpr *CE, const FunctionDecl *FD) {
                      CELoc, CE->getCallee()->getSourceRange());
 }
 
-
 //===----------------------------------------------------------------------===//
 // Check: Use of 'mkstemp', 'mktemp', 'mkdtemp' should contain at least 6 X's.
 //===----------------------------------------------------------------------===//
@@ -460,9 +607,10 @@ void WalkAST::checkCall_mkstemp(const CallExpr *CE, const FunctionDecl *FD) {
   unsigned suffix = 0;
   if (ArgSuffix.second >= 0) {
     const Expr *suffixEx = CE->getArg((unsigned)ArgSuffix.second);
-    llvm::APSInt Result;
-    if (!suffixEx->EvaluateAsInt(Result, BR.getContext()))
+    Expr::EvalResult EVResult;
+    if (!suffixEx->EvaluateAsInt(EVResult, BR.getContext()))
       return;
+    llvm::APSInt Result = EVResult.Val.getInt();
     // FIXME: Issue a warning.
     if (Result.isNegative())
       return;
@@ -504,12 +652,24 @@ void WalkAST::checkCall_mkstemp(const CallExpr *CE, const FunctionDecl *FD) {
 // CWE-119: Improper Restriction of Operations within
 // the Bounds of a Memory Buffer
 //===----------------------------------------------------------------------===//
+
 void WalkAST::checkCall_strcpy(const CallExpr *CE, const FunctionDecl *FD) {
   if (!filter.check_strcpy)
     return;
 
   if (!checkCall_strCommon(CE, FD))
     return;
+
+  const auto *Target = CE->getArg(0)->IgnoreImpCasts(),
+             *Source = CE->getArg(1)->IgnoreImpCasts();
+
+  if (const auto *Array = dyn_cast<ConstantArrayType>(Target->getType())) {
+    uint64_t ArraySize = BR.getContext().getTypeSize(Array) / 8;
+    if (const auto *String = dyn_cast<StringLiteral>(Source)) {
+      if (ArraySize >= String->getLength() + 1)
+        return;
+    }
+  }
 
   // Issue a warning.
   PathDiagnosticLocation CELoc =
@@ -531,6 +691,7 @@ void WalkAST::checkCall_strcpy(const CallExpr *CE, const FunctionDecl *FD) {
 // CWE-119: Improper Restriction of Operations within
 // the Bounds of a Memory Buffer
 //===----------------------------------------------------------------------===//
+
 void WalkAST::checkCall_strcat(const CallExpr *CE, const FunctionDecl *FD) {
   if (!filter.check_strcpy)
     return;
@@ -553,8 +714,92 @@ void WalkAST::checkCall_strcat(const CallExpr *CE, const FunctionDecl *FD) {
 }
 
 //===----------------------------------------------------------------------===//
+// Check: Any use of 'sprintf', 'vsprintf', 'scanf', 'wscanf', 'fscanf',
+//        'fwscanf', 'vscanf', 'vwscanf', 'vfscanf', 'vfwscanf', 'sscanf',
+//        'swscanf', 'vsscanf', 'vswscanf', 'swprintf', 'snprintf', 'vswprintf',
+//        'vsnprintf', 'memcpy', 'memmove', 'strncpy', 'strncat', 'memset'
+//        is deprecated since C11.
+//
+//        Use of 'sprintf', 'vsprintf', 'scanf', 'wscanf','fscanf',
+//        'fwscanf', 'vscanf', 'vwscanf', 'vfscanf', 'vfwscanf', 'sscanf',
+//        'swscanf', 'vsscanf', 'vswscanf' without buffer limitations
+//        is insecure.
+//
+// CWE-119: Improper Restriction of Operations within
+// the Bounds of a Memory Buffer
+//===----------------------------------------------------------------------===//
+
+void WalkAST::checkDeprecatedOrUnsafeBufferHandling(const CallExpr *CE,
+                                                    const FunctionDecl *FD) {
+  if (!filter.check_DeprecatedOrUnsafeBufferHandling)
+    return;
+
+  if (!BR.getContext().getLangOpts().C11)
+    return;
+
+  // Issue a warning. ArgIndex == -1: Deprecated but not unsafe (has size
+  // restrictions).
+  enum { DEPR_ONLY = -1, UNKNOWN_CALL = -2 };
+
+  StringRef Name = FD->getIdentifier()->getName();
+  if (Name.startswith("__builtin_"))
+    Name = Name.substr(10);
+
+  int ArgIndex =
+      llvm::StringSwitch<int>(Name)
+          .Cases("scanf", "wscanf", "vscanf", "vwscanf", 0)
+          .Cases("sprintf", "vsprintf", "fscanf", "fwscanf", "vfscanf",
+                 "vfwscanf", "sscanf", "swscanf", "vsscanf", "vswscanf", 1)
+          .Cases("swprintf", "snprintf", "vswprintf", "vsnprintf", "memcpy",
+                 "memmove", "memset", "strncpy", "strncat", DEPR_ONLY)
+          .Default(UNKNOWN_CALL);
+
+  assert(ArgIndex != UNKNOWN_CALL && "Unsupported function");
+  bool BoundsProvided = ArgIndex == DEPR_ONLY;
+
+  if (!BoundsProvided) {
+    // Currently we only handle (not wide) string literals. It is possible to do
+    // better, either by looking at references to const variables, or by doing
+    // real flow analysis.
+    auto FormatString =
+        dyn_cast<StringLiteral>(CE->getArg(ArgIndex)->IgnoreParenImpCasts());
+    if (FormatString &&
+        FormatString->getString().find("%s") == StringRef::npos &&
+        FormatString->getString().find("%[") == StringRef::npos)
+      BoundsProvided = true;
+  }
+
+  SmallString<128> Buf1;
+  SmallString<512> Buf2;
+  llvm::raw_svector_ostream Out1(Buf1);
+  llvm::raw_svector_ostream Out2(Buf2);
+
+  Out1 << "Potential insecure memory buffer bounds restriction in call '"
+       << Name << "'";
+  Out2 << "Call to function '" << Name
+       << "' is insecure as it does not provide ";
+
+  if (!BoundsProvided) {
+    Out2 << "bounding of the memory buffer or ";
+  }
+
+  Out2 << "security checks introduced "
+          "in the C11 standard. Replace with analogous functions that "
+          "support length arguments or provides boundary checks such as '"
+       << Name << "_s' in case of C11";
+
+  PathDiagnosticLocation CELoc =
+      PathDiagnosticLocation::createBegin(CE, BR.getSourceManager(), AC);
+  BR.EmitBasicReport(AC->getDecl(),
+                     filter.checkName_DeprecatedOrUnsafeBufferHandling,
+                     Out1.str(), "Security", Out2.str(), CELoc,
+                     CE->getCallee()->getSourceRange());
+}
+
+//===----------------------------------------------------------------------===//
 // Common check for str* functions with no bounds parameters.
 //===----------------------------------------------------------------------===//
+
 bool WalkAST::checkCall_strCommon(const CallExpr *CE, const FunctionDecl *FD) {
   const FunctionProtoType *FPT = FD->getType()->getAs<FunctionProtoType>();
   if (!FPT)
@@ -757,14 +1002,28 @@ public:
 };
 }
 
+void ento::registerSecuritySyntaxChecker(CheckerManager &mgr) {
+  mgr.registerChecker<SecuritySyntaxChecker>();
+}
+
+bool ento::shouldRegisterSecuritySyntaxChecker(const LangOptions &LO) {
+  return true;
+}
+
 #define REGISTER_CHECKER(name)                                                 \
   void ento::register##name(CheckerManager &mgr) {                             \
-    SecuritySyntaxChecker *checker =                                           \
-        mgr.registerChecker<SecuritySyntaxChecker>();                          \
+    SecuritySyntaxChecker *checker =  mgr.getChecker<SecuritySyntaxChecker>(); \
     checker->filter.check_##name = true;                                       \
     checker->filter.checkName_##name = mgr.getCurrentCheckName();              \
+  }                                                                            \
+                                                                               \
+  bool ento::shouldRegister##name(const LangOptions &LO) {                     \
+    return true;                                                               \
   }
 
+REGISTER_CHECKER(bcmp)
+REGISTER_CHECKER(bcopy)
+REGISTER_CHECKER(bzero)
 REGISTER_CHECKER(gets)
 REGISTER_CHECKER(getpw)
 REGISTER_CHECKER(mkstemp)
@@ -774,5 +1033,4 @@ REGISTER_CHECKER(rand)
 REGISTER_CHECKER(vfork)
 REGISTER_CHECKER(FloatLoopCounter)
 REGISTER_CHECKER(UncheckedReturn)
-
-
+REGISTER_CHECKER(DeprecatedOrUnsafeBufferHandling)

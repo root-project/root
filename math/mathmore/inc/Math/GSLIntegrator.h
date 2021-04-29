@@ -162,7 +162,7 @@ namespace Math {
          /**
          method to set the a generic integration function
 
-          @param f integration function. The function type must implement the assigment operator, <em>  double  operator() (  double  x ) </em>
+          @param f integration function. The function type must implement the assignment operator, <em>  double  operator() (  double  x ) </em>
 
           */
 

@@ -89,6 +89,7 @@ public:
       item->SetClassName(fKey->GetClassName());
       item->SetIcon(RProvider::GetClassIcon(fKey->GetClassName()));
       item->SetTitle(fKey->GetTitle());
+      item->SetSize(std::to_string(fKey->GetNbytes()));
       return item;
    }
 
@@ -199,7 +200,8 @@ public:
 
       std::string clname = fKey->GetClassName();
       if (clname.empty()) return kActNone;
-      if (clname == "TGeoManager") return kActGeom;
+      if ((clname == "TCanvas"s) || (clname == "ROOT::Experimental::RCanvas"s)) return kActCanvas;
+      if (clname == "TGeoManager"s) return kActGeom;
       if (RProvider::CanDraw6(clname)) return kActDraw6;
       if (RProvider::CanDraw7(clname)) return kActDraw7;
       if (RProvider::CanHaveChilds(clname)) return kActBrowse;
@@ -221,7 +223,8 @@ public:
          case kActImage:
          case kActDraw6: return RProvider::CanDraw6(clname); // if can draw in TCanvas, can produce image
          case kActDraw7: return RProvider::CanDraw7(clname);
-         case kActGeom: return (clname == "TGeoManager");
+         case kActCanvas: return (clname == "TCanvas"s) || (clname == "ROOT::Experimental::RCanvas"s);
+         case kActGeom: return (clname == "TGeoManager"s);
          default: return false;
       }
 
@@ -238,6 +241,9 @@ public:
 
 std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
 {
+   if ("ROOT::Experimental::RNTuple"s == fKey->GetClassName())
+      return RProvider::BrowseNTuple(fKey->GetName(), fDir->GetFile()->GetName());
+
    return std::make_shared<TKeyElement>(fDir, fKey);
 }
 

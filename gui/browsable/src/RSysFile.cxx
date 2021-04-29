@@ -168,9 +168,9 @@ class RSysDirLevelIter : public RLevelIter {
       if (pathinfores) {
 
          if (fCurrentStat.fIsLink) {
-            R__LOG_ERROR(BrowsableLog()) << "Broken symlink of " << path;
+            R__LOG_DEBUG(0, BrowsableLog()) << "Broken symlink of " << path;
          } else {
-            R__LOG_ERROR(BrowsableLog()) << "Can't read file attributes of \"" <<  path << "\" err:" << gSystem->GetError();
+            R__LOG_DEBUG(0, BrowsableLog()) << "Can't read file attributes of \"" <<  path << "\" err:" << gSystem->GetError();
          }
          return false;
       }
@@ -214,15 +214,6 @@ class RSysDirLevelIter : public RLevelIter {
       return true;
    }
 
-   /** Try to find file directly by name */
-   bool FindDirEntry(const std::string &name)
-   {
-      if (!fDir && !OpenDir())
-         return false;
-
-      return TestDirEntry(name);
-   }
-
    std::string GetFileExtension(const std::string &fname) const
    {
       auto pos = fname.rfind(".");
@@ -239,7 +230,15 @@ public:
 
    bool Next() override { return NextDirEntry(); }
 
-   bool Find(const std::string &name) override { return FindDirEntry(name); }
+   bool Find(const std::string &name, int = -1) override
+   {
+      // ignore index, it is not possible to have duplicated file names
+
+      if (!fDir && !OpenDir())
+         return false;
+
+      return TestDirEntry(name);
+   }
 
    std::string GetItemName() const override { return fItemName; }
 
@@ -275,20 +274,8 @@ public:
       else
          item->SetIcon(RSysFile::GetFileIcon(GetItemName()));
 
-      // file size
-      Long64_t _fsize = item->size, bsize = item->size;
-      if (_fsize > 1024) {
-         _fsize /= 1024;
-         if (_fsize > 1024) {
-            // 3.7MB is more informative than just 3MB
-            snprintf(tmp, sizeof(tmp), "%lld.%lldM", _fsize/1024, (_fsize%1024)/103);
-         } else {
-            snprintf(tmp, sizeof(tmp), "%lld.%lldK", bsize/1024, (bsize%1024)/103);
-         }
-      } else {
-         snprintf(tmp, sizeof(tmp), "%lld", bsize);
-      }
-      item->fsize = tmp;
+      // set file size as string
+      item->SetSize(item->size);
 
       // modification time
       time_t loctime = (time_t) item->modtime;
@@ -421,9 +408,9 @@ RSysFile::RSysFile(const std::string &filename) : fFileName(filename)
 {
    if (gSystem->GetPathInfo(fFileName.c_str(), fStat)) {
       if (fStat.fIsLink) {
-         R__LOG_ERROR(BrowsableLog()) << "Broken symlink of " << fFileName;
+         R__LOG_DEBUG(0, BrowsableLog()) << "Broken symlink of " << fFileName;
       } else {
-         R__LOG_ERROR(BrowsableLog()) << "Can't read file attributes of \"" << fFileName
+         R__LOG_DEBUG(0, BrowsableLog()) << "Can't read file attributes of \"" << fFileName
                                     << "\" err:" << gSystem->GetError();
       }
    }
@@ -573,3 +560,26 @@ RElementPath_t RSysFile::ProvideTopEntries(std::shared_ptr<RGroup> &comp, const 
 
    return RElement::ParsePath(seldir);
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Return working path in browser hierarchy
+
+RElementPath_t RSysFile::GetWorkingPath(const std::string &workdir)
+{
+   std::string seldir = workdir;
+
+   if (seldir.empty())
+      seldir = gSystem->WorkingDirectory();
+
+   seldir = gSystem->UnixPathName(seldir.c_str());
+
+   auto volumes = gSystem->GetVolumes("all");
+   if (volumes) {
+      delete volumes;
+   } else {
+      seldir = "/Files system"s + seldir;
+   }
+
+   return RElement::ParsePath(seldir);
+}
+

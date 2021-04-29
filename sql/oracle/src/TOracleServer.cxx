@@ -55,12 +55,17 @@
 #include "TList.h"
 #include "TObjString.h"
 
+#ifndef R__WIN32
+#include <sys/time.h>
+#endif
+
+#include <occi.h>
+
 ClassImp(TOracleServer);
 
-using namespace std;
 using namespace oracle::occi;
 
-const char* TOracleServer::fgDatimeFormat = "MM/DD/YYYY, HH24:MI:SS";
+const char *TOracleServer::fgDatimeFormat = "MM/DD/YYYY, HH24:MI:SS";
 
 
 // Reset error and check that server connected

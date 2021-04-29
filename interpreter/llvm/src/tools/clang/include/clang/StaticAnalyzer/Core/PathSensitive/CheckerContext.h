@@ -1,9 +1,8 @@
 //== CheckerContext.h - Context info for path-sensitive checkers--*- C++ -*--=//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -21,52 +20,6 @@
 namespace clang {
 namespace ento {
 
-  /// Declares an immutable map of type \p NameTy, suitable for placement into
-  /// the ProgramState. This is implementing using llvm::ImmutableMap.
-  ///
-  /// \code
-  /// State = State->set<Name>(K, V);
-  /// const Value *V = State->get<Name>(K); // Returns NULL if not in the map.
-  /// State = State->remove<Name>(K);
-  /// NameTy Map = State->get<Name>();
-  /// \endcode
-  ///
-  /// The macro should not be used inside namespaces, or for traits that must
-  /// be accessible from more than one translation unit.
-  #define REGISTER_MAP_WITH_PROGRAMSTATE(Name, Key, Value) \
-    REGISTER_TRAIT_WITH_PROGRAMSTATE(Name, \
-                                     CLANG_ENTO_PROGRAMSTATE_MAP(Key, Value))
-
-  /// Declares an immutable set of type \p NameTy, suitable for placement into
-  /// the ProgramState. This is implementing using llvm::ImmutableSet.
-  ///
-  /// \code
-  /// State = State->add<Name>(E);
-  /// State = State->remove<Name>(E);
-  /// bool Present = State->contains<Name>(E);
-  /// NameTy Set = State->get<Name>();
-  /// \endcode
-  ///
-  /// The macro should not be used inside namespaces, or for traits that must
-  /// be accessible from more than one translation unit.
-  #define REGISTER_SET_WITH_PROGRAMSTATE(Name, Elem) \
-    REGISTER_TRAIT_WITH_PROGRAMSTATE(Name, llvm::ImmutableSet<Elem>)
-  
-  /// Declares an immutable list of type \p NameTy, suitable for placement into
-  /// the ProgramState. This is implementing using llvm::ImmutableList.
-  ///
-  /// \code
-  /// State = State->add<Name>(E); // Adds to the /end/ of the list.
-  /// bool Present = State->contains<Name>(E);
-  /// NameTy List = State->get<Name>();
-  /// \endcode
-  ///
-  /// The macro should not be used inside namespaces, or for traits that must
-  /// be accessible from more than one translation unit.
-  #define REGISTER_LIST_WITH_PROGRAMSTATE(Name, Elem) \
-    REGISTER_TRAIT_WITH_PROGRAMSTATE(Name, llvm::ImmutableList<Elem>)
-
-
 class CheckerContext {
   ExprEngine &Eng;
   /// The current exploded(symbolic execution) graph node.
@@ -83,7 +36,7 @@ public:
   /// If we are post visiting a call, this flag will be set if the
   /// call was inlined.  In all other cases it will be false.
   const bool wasInlined;
-  
+
   CheckerContext(NodeBuilder &builder,
                  ExprEngine &eng,
                  ExplodedNode *pred,
@@ -110,18 +63,18 @@ public:
   StoreManager &getStoreManager() {
     return Eng.getStoreManager();
   }
-  
-  /// \brief Returns the previous node in the exploded graph, which includes
+
+  /// Returns the previous node in the exploded graph, which includes
   /// the state of the program before the checker ran. Note, checkers should
   /// not retain the node in their state since the nodes might get invalidated.
   ExplodedNode *getPredecessor() { return Pred; }
   const ProgramStateRef &getState() const { return Pred->getState(); }
 
-  /// \brief Check if the checker changed the state of the execution; ex: added
+  /// Check if the checker changed the state of the execution; ex: added
   /// a new transition or a bug report.
   bool isDifferent() { return Changed; }
 
-  /// \brief Returns the number of times the current block has been visited
+  /// Returns the number of times the current block has been visited
   /// along the analyzed path.
   unsigned blockCount() const {
     return NB.getContext().blockCount();
@@ -149,7 +102,7 @@ public:
   BugReporter &getBugReporter() {
     return Eng.getBugReporter();
   }
-  
+
   SourceManager &getSourceManager() {
     return getBugReporter().getSourceManager();
   }
@@ -162,10 +115,6 @@ public:
     return getSValBuilder().getSymbolManager();
   }
 
-  bool isObjCGCEnabled() const {
-    return Eng.isObjCGCEnabled();
-  }
-
   ProgramStateManager &getStateManager() {
     return Eng.getStateManager();
   }
@@ -174,12 +123,12 @@ public:
     return Pred->getLocationContext()->getAnalysisDeclContext();
   }
 
-  /// \brief Get the blockID.
+  /// Get the blockID.
   unsigned getBlockID() const {
     return NB.getContext().getBlock()->getBlockID();
   }
 
-  /// \brief If the given node corresponds to a PostStore program point,
+  /// If the given node corresponds to a PostStore program point,
   /// retrieve the location region as it was uttered in the code.
   ///
   /// This utility can be useful for generating extensive diagnostics, for
@@ -191,12 +140,19 @@ public:
     return nullptr;
   }
 
-  /// \brief Get the value of arbitrary expressions at this point in the path.
+  /// Get the value of arbitrary expressions at this point in the path.
   SVal getSVal(const Stmt *S) const {
-    return getState()->getSVal(S, getLocationContext());
+    return Pred->getSVal(S);
   }
 
-  /// \brief Generates a new transition in the program state graph
+  /// Returns true if the value of \p E is greater than or equal to \p
+  /// Val under unsigned comparison
+  bool isGreaterOrEqual(const Expr *E, unsigned long long Val);
+
+  /// Returns true if the value of \p E is negative.
+  bool isNegative(const Expr *E);
+
+  /// Generates a new transition in the program state graph
   /// (ExplodedGraph). Uses the default CheckerContext predecessor node.
   ///
   /// @param State The state of the generated node. If not specified, the state
@@ -210,7 +166,7 @@ public:
     return addTransitionImpl(State ? State : getState(), false, nullptr, Tag);
   }
 
-  /// \brief Generates a new transition with the given predecessor.
+  /// Generates a new transition with the given predecessor.
   /// Allows checkers to generate a chain of nodes.
   ///
   /// @param State The state of the generated node.
@@ -223,7 +179,7 @@ public:
     return addTransitionImpl(State, false, Pred, Tag);
   }
 
-  /// \brief Generate a sink node. Generating a sink stops exploration of the
+  /// Generate a sink node. Generating a sink stops exploration of the
   /// given path. To create a sink node for the purpose of reporting an error,
   /// checkers should use generateErrorNode() instead.
   ExplodedNode *generateSink(ProgramStateRef State, ExplodedNode *Pred,
@@ -231,7 +187,7 @@ public:
     return addTransitionImpl(State ? State : getState(), true, Pred, Tag);
   }
 
-  /// \brief Generate a transition to a node that will be used to report
+  /// Generate a transition to a node that will be used to report
   /// an error. This node will be a sink. That is, it will stop exploration of
   /// the given path.
   ///
@@ -244,7 +200,7 @@ public:
                        (Tag ? Tag : Location.getTag()));
   }
 
-  /// \brief Generate a transition to a node that will be used to report
+  /// Generate a transition to a node that will be used to report
   /// an error. This node will not be a sink. That is, exploration will
   /// continue along this path.
   ///
@@ -257,23 +213,62 @@ public:
     return addTransition(State, (Tag ? Tag : Location.getTag()));
   }
 
-  /// \brief Emit the diagnostics report.
+  /// Emit the diagnostics report.
   void emitReport(std::unique_ptr<BugReport> R) {
     Changed = true;
     Eng.getBugReporter().emitReport(std::move(R));
   }
 
-  /// \brief Returns the word that should be used to refer to the declaration
+  /// Produce a program point tag that displays an additional path note
+  /// to the user. This is a lightweight alternative to the
+  /// BugReporterVisitor mechanism: instead of visiting the bug report
+  /// node-by-node to restore the sequence of events that led to discovering
+  /// a bug, you can add notes as you add your transitions.
+  ///
+  /// @param Cb Callback with 'BugReporterContext &, BugReport &' parameters.
+  /// @param IsPrunable Whether the note is prunable. It allows BugReporter
+  ///        to omit the note from the report if it would make the displayed
+  ///        bug path significantly shorter.
+  const NoteTag *getNoteTag(NoteTag::Callback &&Cb, bool IsPrunable = false) {
+    return Eng.getNoteTags().makeNoteTag(std::move(Cb), IsPrunable);
+  }
+
+  /// A shorthand version of getNoteTag that doesn't require you to accept
+  /// the BugReporterContext arguments when you don't need it.
+  ///
+  /// @param Cb Callback only with 'BugReport &' parameter.
+  /// @param IsPrunable Whether the note is prunable. It allows BugReporter
+  ///        to omit the note from the report if it would make the displayed
+  ///        bug path significantly shorter.
+  const NoteTag *getNoteTag(std::function<std::string(BugReport &)> &&Cb,
+                            bool IsPrunable = false) {
+    return getNoteTag(
+        [Cb](BugReporterContext &, BugReport &BR) { return Cb(BR); },
+        IsPrunable);
+  }
+
+  /// A shorthand version of getNoteTag that accepts a plain note.
+  ///
+  /// @param Note The note.
+  /// @param IsPrunable Whether the note is prunable. It allows BugReporter
+  ///        to omit the note from the report if it would make the displayed
+  ///        bug path significantly shorter.
+  const NoteTag *getNoteTag(StringRef Note, bool IsPrunable = false) {
+    return getNoteTag(
+        [Note](BugReporterContext &, BugReport &) { return Note; }, IsPrunable);
+  }
+
+  /// Returns the word that should be used to refer to the declaration
   /// in the report.
   StringRef getDeclDescription(const Decl *D);
 
-  /// \brief Get the declaration of the called function (path-sensitive).
+  /// Get the declaration of the called function (path-sensitive).
   const FunctionDecl *getCalleeDecl(const CallExpr *CE) const;
 
-  /// \brief Get the name of the called function (path-sensitive).
+  /// Get the name of the called function (path-sensitive).
   StringRef getCalleeName(const FunctionDecl *FunDecl) const;
 
-  /// \brief Get the identifier of the called function (path-sensitive).
+  /// Get the identifier of the called function (path-sensitive).
   const IdentifierInfo *getCalleeIdentifier(const CallExpr *CE) const {
     const FunctionDecl *FunDecl = getCalleeDecl(CE);
     if (FunDecl)
@@ -282,13 +277,13 @@ public:
       return nullptr;
   }
 
-  /// \brief Get the name of the called function (path-sensitive).
+  /// Get the name of the called function (path-sensitive).
   StringRef getCalleeName(const CallExpr *CE) const {
     const FunctionDecl *FunDecl = getCalleeDecl(CE);
     return getCalleeName(FunDecl);
   }
 
-  /// \brief Returns true if the callee is an externally-visible function in the
+  /// Returns true if the callee is an externally-visible function in the
   /// top-level namespace, such as \c malloc.
   ///
   /// If a name is provided, the function must additionally match the given
@@ -301,7 +296,7 @@ public:
   static bool isCLibraryFunction(const FunctionDecl *FD,
                                  StringRef Name = StringRef());
 
-  /// \brief Depending on wither the location corresponds to a macro, return 
+  /// Depending on wither the location corresponds to a macro, return
   /// either the macro name or the token spelling.
   ///
   /// This could be useful when checkers' logic depends on whether a function

@@ -20,7 +20,7 @@
 
 #include "clang/Serialization/ModuleFileExtension.h"
 
-#include "llvm/Bitcode/BitstreamReader.h"
+#include "llvm/Bitstream/BitstreamReader.h"
 
 /// A module file extension used for testing purposes.
 class TClingRdictModuleFileExtension : public clang::ModuleFileExtension {

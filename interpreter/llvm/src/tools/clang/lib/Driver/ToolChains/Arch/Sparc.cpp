@@ -1,9 +1,8 @@
 //===--- Sparc.cpp - Tools Implementations ----------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -45,14 +44,29 @@ const char *sparc::getSparcAsmModeForCPU(StringRef Name,
         .Case("niagara2", "-Av8plusb")
         .Case("niagara3", "-Av8plusd")
         .Case("niagara4", "-Av8plusd")
+        .Case("ma2100", "-Aleon")
+        .Case("ma2150", "-Aleon")
+        .Case("ma2155", "-Aleon")
+        .Case("ma2450", "-Aleon")
+        .Case("ma2455", "-Aleon")
+        .Case("ma2x5x", "-Aleon")
+        .Case("ma2080", "-Aleon")
+        .Case("ma2085", "-Aleon")
+        .Case("ma2480", "-Aleon")
+        .Case("ma2485", "-Aleon")
+        .Case("ma2x8x", "-Aleon")
+        .Case("myriad2", "-Aleon")
+        .Case("myriad2.1", "-Aleon")
+        .Case("myriad2.2", "-Aleon")
+        .Case("myriad2.3", "-Aleon")
         .Case("leon2", "-Av8")
         .Case("at697e", "-Av8")
         .Case("at697f", "-Av8")
-        .Case("leon3", "-Av8")
+        .Case("leon3", "-Aleon")
         .Case("ut699", "-Av8")
-        .Case("gr712rc", "-Av8")
-        .Case("leon4", "-Av8")
-        .Case("gr740", "-Av8")
+        .Case("gr712rc", "-Aleon")
+        .Case("leon4", "-Aleon")
+        .Case("gr740", "-Aleon")
         .Default("-Av8");
   }
 }

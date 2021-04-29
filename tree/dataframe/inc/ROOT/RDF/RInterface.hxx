@@ -24,6 +24,7 @@
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"
+#include "ROOT/InternalTreeUtils.hxx" // for GetFileNamesFromTree and GetFriendInfo
 #include "RtypesCore.h" // for ULong64_t
 #include "TDirectory.h"
 #include "TH1.h"        // For Histo actions
@@ -32,6 +33,7 @@
 #include "TProfile.h"
 #include "TProfile2D.h"
 #include "TStatistic.h"
+#include "TChain.h"     // for checking fLoopManger->GetTree() return type
 
 #include <algorithm>
 #include <cstddef>
@@ -44,6 +46,7 @@
 #include <type_traits> // is_same, enable_if
 #include <typeinfo>
 #include <vector>
+#include <set>
 
 class TGraph;
 
@@ -78,7 +81,7 @@ using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 /**
  * \class ROOT::RDF::RInterface
  * \ingroup dataframe
- * \brief The public interface to the RDataFrame federation of classes
+ * \brief The public interface to the RDataFrame federation of classes.
  * \tparam Proxied One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
  * \tparam DataSource The type of the RDataSource which is providing the data to the data frame. There is no source by default.
  *
@@ -122,7 +125,7 @@ public:
    RInterface(RInterface &&) = default;
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Only enabled when building a RInterface<RLoopManager>
+   /// \brief Only enabled when building a RInterface<RLoopManager>.
    template <typename T = Proxied, typename std::enable_if<std::is_same<T, RLoopManager>::value, int>::type = 0>
    RInterface(const std::shared_ptr<Proxied> &proxied)
       : fProxiedPtr(proxied), fLoopManager(proxied.get()), fDataSource(proxied->GetDataSource())
@@ -257,15 +260,14 @@ public:
                                  fLoopManager->GetBranchNames(), fDefines, fLoopManager->GetTree(), fDataSource);
 
       fLoopManager->Book(jittedFilter.get());
-      return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fDefines,
-                                                        fDataSource);
+      return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fDefines, fDataSource);
    }
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column
+   /// \brief Creates a custom column.
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function.
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
@@ -293,7 +295,7 @@ public:
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    RInterface<Proxied, DS_t> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns);
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns, "Define");
    }
    // clang-format on
 
@@ -301,7 +303,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column with a value dependent on the processing slot.
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding the slot number).
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
@@ -322,7 +324,7 @@ public:
    template <typename F>
    RInterface<Proxied, DS_t> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::Slot>(name, std::move(expression), columns);
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::Slot>(name, std::move(expression), columns, "DefineSlot");
    }
    // clang-format on
 
@@ -330,7 +332,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column with a value dependent on the processing slot and the current entry.
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
@@ -352,14 +354,15 @@ public:
    template <typename F>
    RInterface<Proxied, DS_t> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::SlotAndEntry>(name, std::move(expression), columns);
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::SlotAndEntry>(name, std::move(expression), columns,
+                                                                        "DefineSlotEntry");
    }
    // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column
+   /// \brief Creates a custom column.
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression An expression in C++ which represents the temporary value
+   /// \param[in] expression An expression in C++ which represents the defined value
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
    /// The expression is just-in-time compiled and used to produce the column entries.
@@ -369,14 +372,16 @@ public:
    /// Refer to the first overload of this method for the full documentation.
    RInterface<Proxied, DS_t> Define(std::string_view name, std::string_view expression)
    {
-      // this check must be done before jitting lest we throw exceptions in jitted code
-      RDFInternal::CheckDefine(name, fLoopManager->GetTree(), fDefines.GetNames(),
-                                     fLoopManager->GetAliasMap(),
-                                     fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      constexpr auto where = "Define";
+      RDFInternal::CheckValidCppVarName(name, where);
+      // these checks must be done before jitting lest we throw exceptions in jitted code
+      RDFInternal::CheckForRedefinition(where, name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                                        fLoopManager->GetBranchNames(),
+                                        fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fDefines,
-                                                           fLoopManager->GetBranchNames(), upcastNodeOnHeap);
+                                                     fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RBookedDefines newCols(fDefines);
       newCols.AddColumn(jittedDefine, name);
@@ -387,7 +392,92 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Allow to refer to a column with a different name
+   /// \brief Creates a custom column
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function.
+   /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// An exception is thrown in case the column to re-define does not already exist.
+   /// See Define() for more information.
+   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
+   RInterface<Proxied, DS_t> Redefine(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   {
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns, "Redefine");
+   }
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column, possibly overriding an existing one with the same name.
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot).
+   /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// An exception is thrown in case the column to re-define does not already exist.
+   ///
+   /// See DefineSlot() for more information.
+   // clang-format on
+   template <typename F>
+   RInterface<Proxied, DS_t> RedefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   {
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::Slot>(name, std::move(expression), columns, "RedefineSlot");
+   }
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column, possibly overriding an existing one with the same name.
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
+   /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// An exception is thrown in case the column to re-define does not already exist.
+   ///
+   /// See DefineSlotEntry() for more information.
+   // clang-format on
+   template <typename F>
+   RInterface<Proxied, DS_t> RedefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   {
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::SlotAndEntry>(name, std::move(expression), columns,
+                                                                        "RedefineSlotEntry");
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column, overriding an existing one with the same name.
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression An expression in C++ which represents the defined value
+   /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// The expression is just-in-time compiled and used to produce the column entries.
+   /// It must be valid C++ syntax in which variable names are substituted with the names
+   /// of branches/columns.
+   ///
+   /// An exception is thrown in case the column to re-define does not already exist.
+   ///
+   /// Aliases cannot be overridden. See the corresponding Define() overload for more information.
+   RInterface<Proxied, DS_t> Redefine(std::string_view name, std::string_view expression)
+   {
+      constexpr auto where = "Redefine";
+      RDFInternal::CheckValidCppVarName(name, where);
+      RDFInternal::CheckForDefinition(where, name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                                      fLoopManager->GetBranchNames(),
+                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+
+      auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
+      auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fDefines,
+                                                     fLoopManager->GetBranchNames(), upcastNodeOnHeap);
+
+      RDFInternal::RBookedDefines newCols(fDefines);
+      newCols.AddColumn(jittedDefine, name);
+
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+
+      return newInterface;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Allow to refer to a column with a different name.
    /// \param[in] alias name of the column alias
    /// \param[in] columnName of the column to be aliased
    /// \return the first node of the computation graph for which the alias is available.
@@ -407,9 +497,11 @@ public:
       // Helper to find out if a name is a column
       auto &dsColumnNames = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
 
+      constexpr auto where = "Alias";
+      RDFInternal::CheckValidCppVarName(alias, where);
       // If the alias name is a column name, there is a problem
-      RDFInternal::CheckDefine(alias, fLoopManager->GetTree(), fDefines.GetNames(),
-                                     fLoopManager->GetAliasMap(), dsColumnNames);
+      RDFInternal::CheckForRedefinition(where, alias, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                                        fLoopManager->GetBranchNames(), dsColumnNames);
 
       const auto validColumnName = GetValidatedColumnNames(1, {std::string(columnName)})[0];
 
@@ -436,6 +528,23 @@ public:
    /// characters in input column names will be replaced by underscores ('_') in the branches produced by Snapshot.
    /// When writing a variable size array through Snapshot, it is required that the column indicating its size is also
    /// written out and it appears before the array in the columnList.
+   ///
+   /// By default, in case of TTree or TChain inputs, Snapshot will try to write out all top-level branches. For other
+   /// types of inputs, all columns returned by GetColumnNames() will be written out. If friend trees or chains are
+   /// present, by default all friend top-level branches that have names that do not collide with
+   /// names of branches in the main TTree/TChain will be written out. Since v6.24, Snapshot will also write out
+   /// friend branches with the same names of branches in the main TTree/TChain with names of the form
+   /// '<friendname>_<branchname>' in order to differentiate them from the branches in the main tree/chain.
+   ///
+   /// \attention In multi-thread runs (i.e. when EnableImplicitMT() has been called) threads will loop over clusters of
+   /// entries in an undefined order, so Snapshot will produce outputs in which (clusters of) entries will be shuffled with
+   /// respect to the input TTree. Using such "shuffled" TTrees as friends of the original trees would result in wrong
+   /// associations between entries in the main TTree and entries in the "shuffled" friend. Since v6.22, ROOT will
+   /// error out if such a "shuffled" TTree is used in a friendship.
+   ///
+   /// \note In case no events are written out (e.g. because no event passes all filters) the behavior of Snapshot in
+   /// single-thread and multi-thread runs is different: in single-thread runs, Snapshot will write out a TTree with
+   /// the specified name and zero entries; in multi-thread runs, no TTree object will be written out to disk.
    ///
    /// ### Example invocations:
    ///
@@ -553,7 +662,7 @@ public:
    // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory
+   /// \brief Save selected columns in memory.
    /// \tparam ColumnTypes variadic list of branch/column types.
    /// \param[in] columnList columns to be cached in memory.
    /// \return a `RDataFrame` that wraps the cached dataset.
@@ -589,7 +698,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory
+   /// \brief Save selected columns in memory.
    /// \param[in] columnList columns to be cached in memory
    /// \return a `RDataFrame` that wraps the cached dataset.
    ///
@@ -634,7 +743,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory
+   /// \brief Save selected columns in memory.
    /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. The dialect supported is PCRE via the TPRegexp class. An empty string signals the selection of all columns.
    /// \return a `RDataFrame` that wraps the cached dataset.
    ///
@@ -656,7 +765,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory
+   /// \brief Save selected columns in memory.
    /// \param[in] columnList columns to be cached in memory.
    /// \return a `RDataFrame` that wraps the cached dataset.
    ///
@@ -669,7 +778,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node that filters entries based on range: [begin, end)
+   /// \brief Creates a node that filters entries based on range: [begin, end).
    /// \param[in] begin Initial entry number considered for this range.
    /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
    /// \param[in] stride Process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
@@ -701,7 +810,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node that filters entries based on range
+   /// \brief Creates a node that filters entries based on range.
    /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
    /// \return a node of the computation graph for which the range is defined.
    ///
@@ -711,7 +820,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined function on each entry (*instant action*)
+   /// \brief Execute a user-defined function on each entry (*instant action*).
    /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
    /// \param[in] columns Names of the columns/branches in input to the user function.
    ///
@@ -736,7 +845,7 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined function requiring a processing slot index on each entry (*instant action*)
+   /// \brief Execute a user-defined function requiring a processing slot index on each entry (*instant action*).
    /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
    /// \param[in] columns Names of the columns/branches in input to the user function.
    ///
@@ -781,7 +890,7 @@ public:
    /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
    /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
-   /// \return the reduced quantity wrapped in a `RResultPtr`.
+   /// \return the reduced quantity wrapped in a ROOT::RDF:RResultPtr.
    ///
    /// A reduction takes two values of a column and merges them into one (e.g.
    /// by summing them, taking the maximum, etc). This action performs the
@@ -802,7 +911,7 @@ public:
    /// ~~~
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    // clang-format on
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
    RResultPtr<T> Reduce(F f, std::string_view columnName = "")
@@ -820,7 +929,7 @@ public:
    /// \param[in] f A callable with signature `T(T,T)`
    /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
    /// \param[in] redIdentity The reduced object of each thread is initialised to this value.
-   /// \return the reduced quantity wrapped in a `RResultPtr`.
+   /// \return the reduced quantity wrapped in a RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -834,12 +943,12 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the number of entries processed (*lazy action*)
-   /// \return the number of entries wrapped in a `RResultPtr`.
+   /// \brief Return the number of entries processed (*lazy action*).
+   /// \return the number of entries wrapped in a RResultPtr.
    ///
    /// Useful e.g. for counting the number of entries passing a certain filter (see also `Report`).
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -859,11 +968,11 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return a collection of values of a column (*lazy action*, returns a std::vector by default)
+   /// \brief Return a collection of values of a column (*lazy action*, returns a std::vector by default).
    /// \tparam T The type of the column.
    /// \tparam COLL The type of collection used to store the values.
    /// \param[in] column The name of the column to collect the values of.
-   /// \return the content of the selected column wrapped in a `RResultPtr`.
+   /// \return the content of the selected column wrapped in a RResultPtr.
    ///
    /// The collection type to be specified for C-style array columns is `RVec<T>`:
    /// in this case the returned collection is a `std::vector<RVec<T>>`.
@@ -877,7 +986,7 @@ public:
    /// auto cArrayIntCol = rdf.Take<RVec<int>>("cArrayInt");
    /// ~~~
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    template <typename T, typename COLL = std::vector<T>>
    RResultPtr<COLL> Take(std::string_view column = "")
    {
@@ -891,25 +1000,24 @@ public:
       auto valuesPtr = std::make_shared<COLL>();
       const auto nSlots = fLoopManager->GetNSlots();
 
-      auto action =
-         std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, fProxiedPtr, fDefines);
+      auto action = std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, fProxiedPtr, fDefines);
       fLoopManager->Book(action.get());
       return MakeResultPtr(valuesPtr, *fLoopManager, std::move(action));
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*)
+   /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*).
    /// \tparam V The type of the column used to fill the histogram.
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] vName The name of the column that will fill the histogram.
-   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
+   /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
    /// Columns can be of a container type (e.g. `std::vector<double>`), in which case the histogram
    /// is filled with each one of the elements of the container. In case multiple columns of container type
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -919,6 +1027,9 @@ public:
    /// auto myHist2 = myDf.Histo1D<float>({"histName", "histTitle", 64u, 0., 128.}, "myColumn");
    /// ~~~
    ///
+   /// \note Differently from other ROOT interfaces, the returned histogram is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
@@ -939,14 +1050,14 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*)
+   /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*).
    /// \tparam V The type of the column used to fill the histogram.
    /// \param[in] vName The name of the column that will fill the histogram.
-   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
+   /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
    /// This overload uses a default model histogram TH1D(name, title, 128u, 0., 0.).
    /// The "name" and "title" strings are built starting from the input column name.
-   /// See the description of the first Histo1D overload for more details.
+   /// See the description of the first Histo1D() overload for more details.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -955,7 +1066,6 @@ public:
    /// // Explicit column type
    /// auto myHist2 = myDf.Histo1D<float>("myColumn");
    /// ~~~
-   ///
    template <typename V = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(std::string_view vName)
    {
@@ -965,15 +1075,15 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*).
    /// \tparam V The type of the column used to fill the histogram.
    /// \tparam W The type of the column used as weights.
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] vName The name of the column that will fill the histogram.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
+   /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
-   /// See the description of the first Histo1D overload for more details.
+   /// See the description of the first Histo1D() overload for more details.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -982,7 +1092,6 @@ public:
    /// // Explicit column type
    /// auto myHist2 = myDf.Histo1D<float, int>({"histName", "histTitle", 64u, 0., 128.}, "myValue", "myweight");
    /// ~~~
-   ///
    template <typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model, std::string_view vName, std::string_view wName)
    {
@@ -999,16 +1108,16 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*).
    /// \tparam V The type of the column used to fill the histogram.
    /// \tparam W The type of the column used as weights.
    /// \param[in] vName The name of the column that will fill the histogram.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
+   /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
    /// This overload uses a default model histogram TH1D(name, title, 128u, 0., 0.).
    /// The "name" and "title" strings are built starting from the input column names.
-   /// See the description of the first Histo1D overload for more details.
+   /// See the description of the first Histo1D() overload for more details.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1017,7 +1126,6 @@ public:
    /// // Explicit column types
    /// auto myHist2 = myDf.Histo1D<float, int>("myValue", "myweight");
    /// ~~~
-   ///
    template <typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
    {
@@ -1030,14 +1138,14 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*).
    /// \tparam V The type of the column used to fill the histogram.
    /// \tparam W The type of the column used as weights.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
+   /// \return the monodimensional histogram wrapped in a RResultPtr.
    ///
    /// This overload will use the first two default columns as column names.
-   /// See the description of the first Histo1D overload for more details.
+   /// See the description of the first Histo1D() overload for more details.
    template <typename V, typename W>
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.})
    {
@@ -1045,20 +1153,20 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a two-dimensional histogram (*lazy action*)
+   /// \brief Fill and return a two-dimensional histogram (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram.
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
-   /// \return the bidimensional histogram wrapped in a `RResultPtr`.
+   /// \return the bidimensional histogram wrapped in a RResultPtr.
    ///
    /// Columns can be of a container type (e.g. std::vector<double>), in which case the histogram
    /// is filled with each one of the elements of the container. In case multiple columns of container type
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1068,6 +1176,10 @@ public:
    /// auto myHist2 = myDf.Histo2D<float, float>({"histName", "histTitle", 64u, 0., 128., 32u, -4., 4.}, "myValueX", "myValueY");
    /// ~~~
    ///
+   ///
+   /// \note Differently from other ROOT interfaces, the returned histogram is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TH2D> Histo2D(const TH2DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
@@ -1087,7 +1199,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a weighted two-dimensional histogram (*lazy action*)
+   /// \brief Fill and return a weighted two-dimensional histogram (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram.
    /// \tparam W The type of the column used for the weights of the histogram.
@@ -1095,11 +1207,10 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the bidimensional histogram wrapped in a `RResultPtr`.
+   /// \return the bidimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
-   /// The user gives up ownership of the model histogram.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1109,6 +1220,7 @@ public:
    /// auto myHist2 = myDf.Histo2D<float, float, double>({"histName", "histTitle", 64u, 0., 128., 32u, -4., 4.}, "myValueX", "myValueY", "myWeight");
    /// ~~~
    ///
+   /// See the documentation of the first Histo2D() overload for more details.
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename W = RDFDetail::RInferredType>
    RResultPtr<::TH2D>
@@ -1136,7 +1248,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a three-dimensional histogram (*lazy action*)
+   /// \brief Fill and return a three-dimensional histogram (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
    /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
@@ -1144,10 +1256,10 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
-   /// \return the tridimensional histogram wrapped in a `RResultPtr`.
+   /// \return the tridimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1159,6 +1271,9 @@ public:
    ///                                                    "myValueX", "myValueY", "myValueZ");
    /// ~~~
    ///
+   /// \note Differently from other ROOT interfaces, the returned histogram is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType>
    RResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name = "", std::string_view v2Name = "",
@@ -1180,7 +1295,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a three-dimensional histogram (*lazy action*)
+   /// \brief Fill and return a three-dimensional histogram (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
    /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
@@ -1190,10 +1305,10 @@ public:
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the tridimensional histogram wrapped in a `RResultPtr`.
+   /// \return the tridimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1206,6 +1321,8 @@ public:
    ///                                                    "myValueX", "myValueY", "myValueZ", "myWeight");
    /// ~~~
    ///
+   ///
+   /// See the documentation of the first Histo2D() overload for more details.
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name, std::string_view v2Name,
@@ -1233,12 +1350,12 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a graph (*lazy action*)
+   /// \brief Fill and return a graph (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the graph.
    /// \tparam V2 The type of the column used to fill the y axis of the graph.
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
-   /// \return the graph wrapped in a `RResultPtr`.
+   /// \return the graph wrapped in a RResultPtr.
    ///
    /// Columns can be of a container type (e.g. std::vector<double>), in which case the graph
    /// is filled with each one of the elements of the container.
@@ -1247,7 +1364,7 @@ public:
    /// A name and a title to the graph is given based on the input column names.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1257,6 +1374,9 @@ public:
    /// auto myGraph2 = myDf.Graph<int, float>("xValues", "yValues");
    /// ~~~
    ///
+   /// \note Differently from other ROOT interfaces, the returned graph is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TGraph> Graph(std::string_view v1Name = "", std::string_view v2Name = "")
    {
@@ -1281,16 +1401,16 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional profile (*lazy action*)
+   /// \brief Fill and return a one-dimensional profile (*lazy action*).
    /// \tparam V1 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \tparam V2 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \param[in] model The model to be considered to build the new return value.
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
-   /// \return the monodimensional profile wrapped in a `RResultPtr`.
+   /// \return the monodimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1300,6 +1420,9 @@ public:
    /// auto myProf2 = myDf.Graph<int, float>({"profName", "profTitle", 64u, -4., 4.}, "xValues", "yValues");
    /// ~~~
    ///
+   /// \note Differently from other ROOT interfaces, the returned profile is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TProfile>
    Profile1D(const TProfile1DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
@@ -1321,7 +1444,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional profile (*lazy action*)
+   /// \brief Fill and return a one-dimensional profile (*lazy action*).
    /// \tparam V1 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \tparam V2 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \tparam W The type of the column the weights of which are used to fill the profile. Inferred if not present.
@@ -1329,10 +1452,10 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the monodimensional profile wrapped in a `RResultPtr`.
+   /// \return the monodimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1343,6 +1466,7 @@ public:
    ///                                                   "xValues", "yValues", "weight");
    /// ~~~
    ///
+   /// See the first Profile1D() overload for more details.
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename W = RDFDetail::RInferredType>
    RResultPtr<::TProfile>
@@ -1364,6 +1488,9 @@ public:
       return CreateAction<RDFInternal::ActionTags::Profile1D, V1, V2, W>(userColumns, h, h);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional profile (*lazy action*).
+   /// See the first Profile1D() overload for more details.
    template <typename V1, typename V2, typename W>
    RResultPtr<::TProfile> Profile1D(const TProfile1DModel &model)
    {
@@ -1371,7 +1498,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a two-dimensional profile (*lazy action*)
+   /// \brief Fill and return a two-dimensional profile (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the z axis of the histogram. Inferred if not present.
@@ -1379,10 +1506,10 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
-   /// \return the bidimensional profile wrapped in a `RResultPtr`.
+   /// \return the bidimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1394,6 +1521,9 @@ public:
    ///                                                   "xValues", "yValues", "zValues");
    /// ~~~
    ///
+   /// \note Differently from other ROOT interfaces, the returned profile is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType>
    RResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name = "",
@@ -1416,7 +1546,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a two-dimensional profile (*lazy action*)
+   /// \brief Fill and return a two-dimensional profile (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
    /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
@@ -1426,10 +1556,10 @@ public:
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
    /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the bidimensional profile wrapped in a `RResultPtr`.
+   /// \return the bidimensional profile wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1441,6 +1571,7 @@ public:
    ///                                                        "xValues", "yValues", "zValues", "weight");
    /// ~~~
    ///
+   /// See the first Profile2D() overload for more details.
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name, std::string_view v2Name,
@@ -1462,6 +1593,8 @@ public:
       return CreateAction<RDFInternal::ActionTags::Profile2D, V1, V2, V3, W>(userColumns, h, h);
    }
 
+   /// \brief Fill and return a two-dimensional profile (*lazy action*).
+   /// See the first Profile2D() overload for more details.
    template <typename V1, typename V2, typename V3, typename W>
    RResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model)
    {
@@ -1469,74 +1602,49 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*)
+   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*).
    ///
    /// T must be a type that provides a copy- or move-constructor and a `T::Fill` method that takes as many arguments
    /// as the column names pass as columnList. The arguments of `T::Fill` must have type equal to the one of the
    /// specified columns (these types are passed as template parameters to this method).
-   /// \tparam FirstColumn The first type of the column the values of which are used to fill the object.
+   /// \tparam FirstColumn The first type of the column the values of which are used to fill the object. Inferred together with OtherColumns if not present.
    /// \tparam OtherColumns A list of the other types of the columns the values of which are used to fill the object.
    /// \tparam T The type of the object to fill. Automatically deduced.
    /// \param[in] model The model to be considered to build the new return value.
    /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
-   /// \return the filled object wrapped in a `RResultPtr`.
+   /// \return the filled object wrapped in a RResultPtr.
    ///
    /// The user gives up ownership of the model object.
    /// The list of column names to be used for filling must always be specified.
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed.
-   /// See RResultPtr documentation.
+   /// Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
    /// MyClass obj;
-   /// auto myFilledObj = myDf.Fill<float>(obj, {"col0", "col1"});
-   /// ~~~
-   ///
-   template <typename FirstColumn, typename... OtherColumns, typename T> // need FirstColumn to disambiguate overloads
-   RResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
-   {
-      auto h = std::make_shared<T>(std::forward<T>(model));
-      if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
-         throw std::runtime_error("The absence of axes limits is not supported yet.");
-      }
-      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h, h);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*)
-   ///
-   /// This overload infers the types of the columns specified in columnList at runtime and just-in-time compiles the
-   /// method with these types. See previous overload for more information.
-   /// \tparam T The type of the object to fill. Automatically deduced.
-   /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] columnList The name of the columns read to fill the object.
-   /// \return the filled object wrapped in a `RResultPtr`.
-   ///
-   /// This overload of `Fill` infers the type of the specified columns at runtime and just-in-time compiles the
-   /// previous overload. Check the previous overload for more details on `Fill`.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// MyClass obj;
+   /// // Deduce column types (this invocation needs jitting internally, and in this case
+   /// // MyClass needs to be known to the interpreter)
    /// auto myFilledObj = myDf.Fill(obj, {"col0", "col1"});
+   /// // explicit column types
+   /// auto myFilledObj = myDf.Fill<float, float>(obj, {"col0", "col1"});
    /// ~~~
    ///
-   template <typename T>
+   template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename T>
    RResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
    {
       auto h = std::make_shared<T>(std::forward<T>(model));
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<RDFInternal::ActionTags::Fill, RDFDetail::RInferredType>(columnList, h, h, columnList.size());
+      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h, h, columnList.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return a TStatistic object, filled once per event (*lazy action*)
+   /// \brief Return a TStatistic object, filled once per event (*lazy action*).
    ///
    /// \tparam V The type of the value column
    /// \param[in] value The name of the column with the values to fill the statistics with.
-   /// \return the filled TStatistic object wrapped in a `RResultPtr`.
+   /// \return the filled TStatistic object wrapped in a RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1562,13 +1670,13 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return a TStatistic object, filled once per event (*lazy action*)
+   /// \brief Return a TStatistic object, filled once per event (*lazy action*).
    ///
    /// \tparam V The type of the value column
    /// \tparam W The type of the weight column
    /// \param[in] value The name of the column with the values to fill the statistics with.
    /// \param[in] weight The name of the column with the weights to fill the statistics with.
-   /// \return the filled TStatistic object wrapped in a `RResultPtr`.
+   /// \return the filled TStatistic object wrapped in a RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1604,17 +1712,17 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the minimum of processed column values (*lazy action*)
+   /// \brief Return the minimum of processed column values (*lazy action*).
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
-   /// \return the minimum value of the selected column wrapped in a `RResultPtr`.
+   /// \return the minimum value of the selected column wrapped in a RResultPtr.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
    /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1634,17 +1742,17 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the maximum of processed column values (*lazy action*)
+   /// \brief Return the maximum of processed column values (*lazy action*).
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
-   /// \return the maximum value of the selected column wrapped in a `RResultPtr`.
+   /// \return the maximum value of the selected column wrapped in a RResultPtr.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
    /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1664,16 +1772,16 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the mean of processed column values (*lazy action*)
+   /// \brief Return the mean of processed column values (*lazy action*).
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
-   /// \return the mean value of the selected column wrapped in a `RResultPtr`.
+   /// \return the mean value of the selected column wrapped in a RResultPtr.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1692,16 +1800,16 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the unbiased standard deviation of processed column values (*lazy action*)
+   /// \brief Return the unbiased standard deviation of processed column values (*lazy action*).
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
-   /// \return the standard deviation value of the selected column wrapped in a `RResultPtr`.
+   /// \return the standard deviation value of the selected column wrapped in a RResultPtr.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1721,18 +1829,18 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the sum of processed column values (*lazy action*)
+   /// \brief Return the sum of processed column values (*lazy action*).
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column.
    /// \param[in] initValue Optional initial value for the sum. If not present, the column values must be default-constructible.
-   /// \return the sum of the selected column wrapped in a `RResultPtr`.
+   /// \return the sum of the selected column wrapped in a RResultPtr.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
    /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
+   /// booked but not executed. Also see RResultPtr.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
@@ -1754,8 +1862,8 @@ public:
    // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Gather filtering statistics
-   /// \return the resulting `RCutFlowReport` instance wrapped in a `RResultPtr`.
+   /// \brief Gather filtering statistics.
+   /// \return the resulting `RCutFlowReport` instance wrapped in a RResultPtr.
    ///
    /// Calling `Report` on the main `RDataFrame` object gathers stats for
    /// all named filters in the call graph. Calling this method on a
@@ -1800,7 +1908,7 @@ public:
    }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the names of the available columns
+   /// \brief Returns the names of the available columns.
    /// \return the container of column names.
    ///
    /// This is not an action nor a transformation, just a query to the RDataFrame object.
@@ -1869,6 +1977,94 @@ public:
                                                     convertVector2RVec);
    }
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Return information about the dataframe.
+   /// \return information about the dataframe as string
+   ///
+   /// This convenience function describes the dataframe and combines the following information:
+   /// - Information about the dataset, see DescribeDataset()
+   /// - Number of event loops run, see GetNRuns()
+   /// - Number of total and defined columns, see GetColumnNames() and GetDefinedColumnNames()
+   /// - Column names, see GetColumnNames()
+   /// - Column types, see GetColumnType()
+   /// - Number of processing slots, see GetNSlots()
+   ///
+   /// This is not an action nor a transformation, just a query to the RDataFrame object.
+   /// The result is dependent on the node from which this method is called, e.g. the list of
+   /// defined columns returned by GetDefinedColumnNames().
+   ///
+   /// Please note that this is a convenience feature and the layout of the output can be subject
+   /// to change and should not be automatically parsed.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// RDataFrame df(10);
+   /// auto df2 = df.Define("x", "1.f").Define("s", "\"myStr\"");
+   /// // Describe the dataframe
+   /// std::cout << df2.Describe() << std::endl;
+   /// ~~~
+   ///
+   std::string Describe()
+   {
+      // Put the information from DescribeDataset on the top
+      std::stringstream ss;
+      ss << DescribeDataset() << "\n\n";
+
+      // Build set of defined column names to find later in all column names
+      // the defined columns more efficiently
+      const auto columnNames = GetColumnNames();
+      std::set<std::string> definedColumnNamesSet;
+      for (const auto &name : GetDefinedColumnNames())
+         definedColumnNamesSet.insert(name);
+
+      // Get information for the metadata table
+      const std::vector<std::string> metadataProperties = {"Columns in total", "Columns from defines",
+                                                           "Event loops run", "Processing slots"};
+      const std::vector<std::string> metadataValues = {std::to_string(columnNames.size()),
+                                                       std::to_string(definedColumnNamesSet.size()),
+                                                       std::to_string(GetNRuns()), std::to_string(GetNSlots())};
+
+      // Set header for metadata table
+      const auto columnWidthProperties = RDFInternal::GetColumnWidth(metadataProperties);
+      // The column width of the values is required to make right-bound numbers and is equal
+      // to the maximum of the string "Value" and all values to be put in this column.
+      const auto columnWidthValues =
+         std::max(std::max_element(metadataValues.begin(), metadataValues.end())->size(), static_cast<std::size_t>(5u));
+      ss << std::left << std::setw(columnWidthProperties) << "Property" << std::setw(columnWidthValues) << "Value\n"
+         << std::setw(columnWidthProperties) << "--------" << std::setw(columnWidthValues) << "-----\n";
+
+      // Build metadata table
+      // All numbers should be bound to the right and strings bound to the left.
+      for (auto i = 0u; i < metadataProperties.size(); i++) {
+         ss << std::left << std::setw(columnWidthProperties) << metadataProperties[i] << std::right
+            << std::setw(columnWidthValues) << metadataValues[i] << '\n';
+      }
+      ss << '\n'; // put space between this and the next table
+
+      // Set header for columns table
+      const auto columnWidthNames = RDFInternal::GetColumnWidth(columnNames);
+      const auto columnTypes = GetColumnTypeNamesList(columnNames);
+      const auto columnWidthTypes = RDFInternal::GetColumnWidth(columnTypes);
+      ss << std::left << std::setw(columnWidthNames) << "Column" << std::setw(columnWidthTypes) << "Type"
+         << "Origin\n"
+         << std::setw(columnWidthNames) << "------" << std::setw(columnWidthTypes) << "----"
+         << "------\n";
+
+      // Build columns table
+      const auto nCols = columnNames.size();
+      for (auto i = 0u; i < nCols; i++) {
+         auto origin = "Dataset";
+         if (definedColumnNamesSet.find(columnNames[i]) != definedColumnNamesSet.end())
+            origin = "Define";
+         ss << std::left << std::setw(columnWidthNames) << columnNames[i] << std::setw(columnWidthTypes)
+            << columnTypes[i] << origin;
+         if (i < nCols - 1)
+            ss << '\n';
+      }
+
+      return ss.str();
+   }
+
    /// \brief Returns the names of the filters created.
    /// \return the container of filters names.
    ///
@@ -1885,7 +2081,7 @@ public:
    ///
    std::vector<std::string> GetFilterNames() { return RDFInternal::GetFilterNames(fProxiedPtr); }
 
-   /// \brief Returns the names of the defined columns
+   /// \brief Returns the names of the defined columns.
    /// \return the container of the defined column names.
    ///
    /// This is not an action nor a transformation, just a simple utility to
@@ -1914,7 +2110,7 @@ public:
       return definedColumns;
    }
 
-   /// \brief Checks if a column is present in the dataset
+   /// \brief Checks if a column is present in the dataset.
    /// \return true if the column is available, false otherwise
    ///
    /// This method checks if a column is part of the input ROOT dataset, has
@@ -1946,7 +2142,7 @@ public:
       return false;
    }
 
-   /// \brief Gets the number of data processing slots
+   /// \brief Gets the number of data processing slots.
    /// \return The number of data processing slots used by this RDataFrame instance
    ///
    /// This method returns the number of data processing slots used by this RDataFrame
@@ -1960,7 +2156,7 @@ public:
    /// ~~~
    unsigned int GetNSlots() const { return fLoopManager->GetNSlots(); }
 
-   /// \brief Gets the number of event loops run
+   /// \brief Gets the number of event loops run.
    /// \return The number of event loops run by this RDataFrame instance
    ///
    /// This method returns the number of events loops run so far by this RDataFrame instance.
@@ -1976,9 +2172,100 @@ public:
    /// ~~~
    unsigned int GetNRuns() const { return fLoopManager->GetNRuns(); }
 
+   /// \brief Get descriptive information about the dataset.
+   /// \return Info describing the dataset as a multi-line string
+   ///
+   /// The information returned by this convenience function is meant for interactive
+   /// use. The exact string format should not be parsed automatically and can be subject to change.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::RDataFrame df("Events", "sample.root");
+   /// std::cout << df.DescribeDataset() << std::endl;
+   /// // prints "Dataframe from TTree Events in file sample.root"
+   /// ~~~
+   std::string DescribeDataset() const
+   {
+      // TTree/TChain as input
+      const auto tree = fLoopManager->GetTree();
+      if (tree) {
+         const auto treeName = tree->GetName();
+         const auto isTChain = dynamic_cast<TChain *>(tree) ? true : false;
+         const auto treeType = isTChain ? "TChain" : "TTree";
+         const auto isInMemory = !isTChain && !tree->GetCurrentFile() ? true : false;
+         const auto friendInfo = ROOT::Internal::TreeUtils::GetFriendInfo(*tree);
+         const auto hasFriends = friendInfo.fFriendNames.empty() ? false : true;
+         std::stringstream ss;
+         ss << "Dataframe from " << treeType << " " << treeName;
+         if (isInMemory) {
+            ss << " (in-memory)";
+         } else {
+            const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
+            const auto numFiles = files.size();
+            if (numFiles == 1) {
+               ss << " in file " << files[0];
+            } else {
+               ss << " in files\n";
+               for (auto i = 0u; i < numFiles; i++) {
+                  ss << "  " << files[i];
+                  if (i < numFiles - 1)
+                     ss << '\n';
+               }
+            }
+         }
+         if (hasFriends) {
+            const auto numFriends = friendInfo.fFriendNames.size();
+            if (numFriends == 1) {
+               ss << "\nwith friend\n";
+            } else {
+               ss << "\nwith friends\n";
+            }
+            for (auto i = 0u; i < numFriends; i++) {
+               const auto nameAlias = friendInfo.fFriendNames[i];
+               const auto files = friendInfo.fFriendFileNames[i];
+               const auto numFiles = files.size();
+               const auto subnames = friendInfo.fFriendChainSubNames[i];
+               ss << "  " << nameAlias.first;
+               if (nameAlias.first != nameAlias.second)
+                  ss << " (" << nameAlias.second << ")";
+               // case: TTree as friend
+               if (numFiles == 1) {
+                   ss << " " << files[0];
+               }
+               // case: TChain as friend
+               else {
+                  ss << '\n';
+                  for (auto j = 0u; j < numFiles; j++) {
+                     ss << "    " << subnames[j] << " " << files[j];
+                     if (j < numFiles - 1)
+                        ss << '\n';
+                  }
+               }
+               if (i < numFriends - 1)
+                  ss << '\n';
+            }
+         }
+         return ss.str();
+      }
+      // Datasource as input
+      else if (fDataSource) {
+         const auto datasourceLabel = fDataSource->GetLabel();
+         return "Dataframe from datasource " + datasourceLabel;
+      }
+      // Trivial/empty datasource
+      else {
+         const auto n = fLoopManager->GetNEmptyEntries();
+         if (n == 1) {
+            return "Empty dataframe filling 1 row";
+         } else {
+            return "Empty dataframe filling " + std::to_string(n) + " rows";
+         }
+      }
+   }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
+   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot.
    /// \tparam F The type of the aggregator callable. Automatically deduced.
    /// \tparam U The type of the aggregator variable. Must be default-constructible, copy-constructible and copy-assignable. Automatically deduced.
    /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
@@ -1986,7 +2273,7 @@ public:
    /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
    /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
    /// \param[in] aggIdentity The aggregator variable of each thread is initialised to this value (or is default-constructed if the parameter is omitted)
-   /// \return the result of the aggregation wrapped in a `RResultPtr`.
+   /// \return the result of the aggregation wrapped in a RResultPtr.
    ///
    /// An aggregator callable takes two values, an aggregator variable and a column value. The aggregator variable is
    /// initialized to aggIdentity or default-constructed if aggIdentity is omitted.
@@ -1999,7 +2286,7 @@ public:
    /// If its signature is `U(U,U)` the aggregator variables of each thread are merged two by two.
    /// If its signature is `void(std::vector<U>& a)` it is assumed that it merges all aggregators in a[0].
    ///
-   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See RResultPtr documentation.
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see RResultPtr.
    ///
    /// Example usage:
    /// ~~~{.cpp}
@@ -2046,14 +2333,14 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
+   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot.
    /// \tparam F The type of the aggregator callable. Automatically deduced.
    /// \tparam U The type of the aggregator variable. Must be default-constructible, copy-constructible and copy-assignable. Automatically deduced.
    /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] aggregator A callable with signature `U(U,T)` or `void(U,T)`, where T is the type of the column, U is the type of the aggregator variable
    /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
    /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
-   /// \return the result of the aggregation wrapped in a `RResultPtr`.
+   /// \return the result of the aggregation wrapped in a RResultPtr.
    ///
    /// See previous Aggregate overload for more information.
    // clang-format on
@@ -2072,11 +2359,12 @@ public:
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Book execution of a custom action using a user-defined helper object.
-   /// \tparam ColumnTypes List of types of columns used by this action.
+   /// \tparam FirstColumn The type of the first column used by this action.  Inferred together with OtherColumns if not present.
+   /// \tparam OtherColumns A list of the types of the other columns used by this action
    /// \tparam Helper The type of the user-defined helper. See below for the required interface it should expose.
    /// \param[in] helper The Action Helper to be scheduled.
    /// \param[in] columns The names of the columns on which the helper acts.
-   /// \return the result of the helper wrapped in a `RResultPtr`.
+   /// \return the result of the helper wrapped in a RResultPtr.
    ///
    /// This method books a custom action for execution. The behavior of the action is completely dependent on the
    /// Helper object provided by the caller. The minimum required interface for the helper is the following (more
@@ -2100,45 +2388,39 @@ public:
    /// * std::shared_ptr<Result_t> GetResultPtr() const: return a shared_ptr to the result of this action (of type
    ///   Result_t). The RResultPtr returned by Book will point to this object.
    ///
+   /// In case this is called without specifying column types, jitting is used,
+   /// and the Helper class needs to be known to the interpreter.
+   ///
    /// See ActionHelpers.hxx for the helpers used by standard RDF actions.
-   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See RResultPtr documentation.
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see RResultPtr.
    // clang-format on
-   template <typename... ColumnTypes, typename Helper>
+
+   template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename Helper>
    RResultPtr<typename Helper::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
    {
-      constexpr auto nColumns = sizeof...(ColumnTypes);
-      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columns.size());
-
-      const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
-
       // TODO add more static sanity checks on Helper
       using AH = RDFDetail::RActionImpl<Helper>;
       static_assert(std::is_base_of<AH, Helper>::value && std::is_convertible<Helper *, AH *>::value,
                     "Action helper of type T must publicly inherit from ROOT::Detail::RDF::RActionImpl<T>");
 
-      using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
-      auto resPtr = helper.GetResultPtr();
+      auto hPtr = std::make_shared<Helper>(std::forward<Helper>(helper));
+      auto resPtr = hPtr->GetResultPtr();
 
-      CheckAndFillDSColumns(validColumnNames, RDFInternal::TypeList<ColumnTypes...>());
-
-      auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr,
-                                               fDefines);
-      fLoopManager->Book(action.get());
-      return MakeResultPtr(resPtr, *fLoopManager, std::move(action));
+      return CreateAction<RDFInternal::ActionTags::Book, FirstColumn, OtherColumns...>(columns, resPtr, hPtr, columns.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset
+   /// \brief Provides a representation of the columns in the dataset.
    /// \tparam ColumnTypes variadic list of branch/column types.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
-   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
-   /// This function returns a `RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
+   /// This function returns a RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
    /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
    /// complete version through `AsString()`.
    ///
-   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See RResultPtr documentation.
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see RResultPtr.
    ///
    /// Example usage:
    /// ~~~{.cpp}
@@ -2160,10 +2442,10 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset
+   /// \brief Provides a representation of the columns in the dataset.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
-   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// This overload automatically infers the column types.
    /// See the previous overloads for further details.
@@ -2176,10 +2458,10 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset
+   /// \brief Provides a representation of the columns in the dataset.
    /// \param[in] columnNameRegexp A regular expression to select the columns.
    /// \param[in] nRows Number of events for each column to be displayed.
-   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// The existing columns are matched against the regular expression. If the string provided
    /// is empty, all columns are selected.
@@ -2192,10 +2474,10 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset
+   /// \brief Provides a representation of the columns in the dataset.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
-   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// See the previous overloads for further details.
    RResultPtr<RDisplay> Display(std::initializer_list<std::string> columnList, const int &nRows = 5)
@@ -2213,8 +2495,7 @@ private:
       const std::string entryColName = "rdfentry_";
       const std::string entryColType = "ULong64_t";
       auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
-      using NewColEntry_t =
-         RDFDetail::RDefine<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
+      using NewColEntry_t = RDFDetail::RDefine<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
 
       auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
                                                          ColumnNames_t{}, fLoopManager->GetNSlots(), newCols,
@@ -2268,7 +2549,7 @@ private:
              typename HelperArgType = ActionResultType,
              typename std::enable_if<!RDFInternal::RNeedJitting<ColTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
-                                             const std::shared_ptr<HelperArgType> &helperArg)
+                                             const std::shared_ptr<HelperArgType> &helperArg, const int /*nColumns*/ = -1)
    {
       constexpr auto nColumns = sizeof...(ColTypes);
 
@@ -2298,8 +2579,8 @@ private:
       const auto validColumnNames = GetValidatedColumnNames(realNColumns, columns);
       const unsigned int nSlots = fLoopManager->GetNSlots();
 
-      auto tree = fLoopManager->GetTree();
-      auto helperArgOnHeap = RDFInternal::MakeWeakOnHeap(helperArg);
+      auto *tree = fLoopManager->GetTree();
+      auto *helperArgOnHeap = RDFInternal::MakeSharedOnHeap(helperArg);
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       using BaseNodeType_t = typename std::remove_pointer<decltype(upcastNodeOnHeap)>::type::element_type;
@@ -2308,9 +2589,9 @@ private:
       const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*fLoopManager);
       auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
 
-      auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(std::weak_ptr<HelperArgType>),
-                                               typeid(ActionTag), helperArgOnHeap, tree, nSlots, fDefines, fDataSource,
-                                               jittedActionOnHeap);
+      auto toJit = RDFInternal::JitBuildAction(
+         validColumnNames, upcastNodeOnHeap, typeid(std::shared_ptr<HelperArgType>), typeid(ActionTag), helperArgOnHeap,
+         tree, nSlots, fDefines, fDataSource, jittedActionOnHeap);
       fLoopManager->Book(jittedAction.get());
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
@@ -2318,11 +2599,18 @@ private:
 
    template <typename F, typename DefineType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
    typename std::enable_if<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>::type
-   DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns)
+   DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns, const std::string &where)
    {
-      RDFInternal::CheckDefine(name, fLoopManager->GetTree(), fDefines.GetNames(),
-                                     fLoopManager->GetAliasMap(),
-                                     fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      RDFInternal::CheckValidCppVarName(name, where);
+      if (where.compare(0, 8, "Redefine") != 0) { // not a Redefine
+         RDFInternal::CheckForRedefinition(where, name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                                           fLoopManager->GetBranchNames(),
+                                           fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      } else {
+         RDFInternal::CheckForDefinition(where, name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                                         fLoopManager->GetBranchNames(),
+                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      }
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
       using ColTypesTmp_t = typename RDFInternal::RemoveFirstParameterIf<
@@ -2398,7 +2686,7 @@ private:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Implementation of cache
+   /// \brief Implementation of cache.
    template <typename... ColTypes, std::size_t... S>
    RInterface<RLoopManager> CacheImpl(const ColumnNames_t &columnList, std::index_sequence<S...>)
    {
@@ -2418,8 +2706,8 @@ private:
    }
 
 protected:
-   RInterface(const std::shared_ptr<Proxied> &proxied, RLoopManager &lm,
-              const RDFInternal::RBookedDefines &columns, RDataSource *ds)
+   RInterface(const std::shared_ptr<Proxied> &proxied, RLoopManager &lm, const RDFInternal::RBookedDefines &columns,
+              RDataSource *ds)
       : fProxiedPtr(proxied), fLoopManager(&lm), fDataSource(ds), fDefines(columns)
    {
    }
@@ -2432,15 +2720,14 @@ protected:
    /// which is expensive in terms of runtime, is called at most once.
    ColumnNames_t GetValidatedColumnNames(const unsigned int nColumns, const ColumnNames_t &columns)
    {
-      return RDFInternal::GetValidatedColumnNames(*fLoopManager, nColumns, columns, fDefines.GetNames(),
-                                                  fDataSource);
+      return RDFInternal::GetValidatedColumnNames(*fLoopManager, nColumns, columns, fDefines.GetNames(), fDataSource);
    }
 
    template <typename... ColumnTypes>
    void CheckAndFillDSColumns(ColumnNames_t validCols, TTraits::TypeList<ColumnTypes...> typeList)
    {
       if (fDataSource != nullptr)
-         RDFInternal::AddDSColumns(validCols, *fLoopManager, *fDataSource, typeList);
+         RDFInternal::AddDSColumns(validCols, *fLoopManager, *fDataSource, typeList, fDefines);
    }
 };
 

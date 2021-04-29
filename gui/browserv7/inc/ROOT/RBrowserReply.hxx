@@ -27,7 +27,7 @@ namespace Experimental {
 
 class RBrowserReply {
 public:
-   std::string path;                  ///< reply path
+   std::vector<std::string> path;     ///< reply path
    int nchilds{0};                    ///< total number of childs in the node
    int first{0};                      ///< first node in returned list
    std::vector<const Browsable::RItem *> nodes; ///< list of pointers, no ownership!

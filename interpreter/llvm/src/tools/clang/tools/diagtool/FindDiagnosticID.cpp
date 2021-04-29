@@ -1,9 +1,8 @@
 //===- FindDiagnosticID.cpp - diagtool tool for finding diagnostic id -----===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -17,6 +16,15 @@ DEF_DIAGTOOL("find-diagnostic-id", "Print the id of the given diagnostic",
 
 using namespace clang;
 using namespace diagtool;
+
+static StringRef getNameFromID(StringRef Name) {
+  int DiagID;
+  if(!Name.getAsInteger(0, DiagID)) {
+    const DiagnosticRecord &Diag = getDiagnosticForID(DiagID);
+    return Diag.getName();
+  }
+  return StringRef();
+}
 
 static Optional<DiagnosticRecord>
 findDiagnostic(ArrayRef<DiagnosticRecord> Diagnostics, StringRef Name) {
@@ -38,7 +46,7 @@ int FindDiagnosticID::run(unsigned int argc, char **argv,
       llvm::cl::Required, llvm::cl::cat(FindDiagnosticIDOptions));
 
   std::vector<const char *> Args;
-  Args.push_back("find-diagnostic-id");
+  Args.push_back("diagtool find-diagnostic-id");
   for (const char *A : llvm::makeArrayRef(argv, argc))
     Args.push_back(A);
 
@@ -50,6 +58,13 @@ int FindDiagnosticID::run(unsigned int argc, char **argv,
   Optional<DiagnosticRecord> Diag =
       findDiagnostic(AllDiagnostics, DiagnosticName);
   if (!Diag) {
+    // Name to id failed, so try id to name.
+    auto Name = getNameFromID(DiagnosticName);
+    if (!Name.empty()) {
+      OS << Name << '\n';
+      return 0;
+    }
+
     llvm::errs() << "error: invalid diagnostic '" << DiagnosticName << "'\n";
     return 1;
   }

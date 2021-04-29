@@ -16,7 +16,17 @@ Base class for chemical elements
 
 /** \class TGeoElementRN
 \ingroup Geometry_classes
-Class representing a radionuclide
+Class representing a radionuclidevoid TGeoManager::SetDefaultRootUnits()
+{
+   if ( fgDefaultUnits == kRootUnits )   {
+      return;
+   }
+   else if ( gGeometryLocked )    {
+      TError::Fatal("TGeoManager","The system of units may only be changed once BEFORE any elements and materials are created!");
+   }
+   fgDefaultUnits = kRootUnits;
+}
+
 */
 
 /** \class TGeoElemIter
@@ -89,15 +99,15 @@ ClassImp(TGeoElement);
 
 TGeoElement::TGeoElement()
 {
-   TGeoUnit::setUnitType(TGeoUnit::unitType()); // Ensure nobody changes the units afterwards
+   TGeoManager::SetDefaultUnits(TGeoManager::GetDefaultUnits()); // Ensure nobody changes the units afterwards
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = 0;
    fN = 0;
    fNisotopes = 0;
    fA = 0.0;
-   fIsotopes = NULL;
-   fAbundances = NULL;
+   fIsotopes = nullptr;
+   fAbundances = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,15 +116,15 @@ TGeoElement::TGeoElement()
 TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Double_t a)
             :TNamed(name, title)
 {
-   TGeoUnit::setUnitType(TGeoUnit::unitType()); // Ensure nobody changes the units afterwards
+   TGeoManager::SetDefaultUnits(TGeoManager::GetDefaultUnits()); // Ensure nobody changes the units afterwards
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = z;
    fN = Int_t(a);
    fNisotopes = 0;
    fA = a;
-   fIsotopes = NULL;
-   fAbundances = NULL;
+   fIsotopes = nullptr;
+   fAbundances = nullptr;
    ComputeDerivedQuantities();
 }
 
@@ -124,7 +134,7 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Double_t 
 TGeoElement::TGeoElement(const char *name, const char *title, Int_t nisotopes)
             :TNamed(name, title)
 {
-   TGeoUnit::setUnitType(TGeoUnit::unitType()); // Ensure nobody changes the units afterwards
+   TGeoManager::SetDefaultUnits(TGeoManager::GetDefaultUnits()); // Ensure nobody changes the units afterwards
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = 0;
@@ -141,15 +151,15 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t nisotopes)
 TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Int_t n, Double_t a)
             :TNamed(name, title)
 {
-   TGeoUnit::setUnitType(TGeoUnit::unitType()); // Ensure nobody changes the units afterwards
+   TGeoManager::SetDefaultUnits(TGeoManager::GetDefaultUnits()); // Ensure nobody changes the units afterwards
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = z;
    fN = n;
    fNisotopes = 0;
    fA = a;
-   fIsotopes = NULL;
-   fAbundances = NULL;
+   fIsotopes = nullptr;
+   fAbundances = nullptr;
    ComputeDerivedQuantities();
 }
 
@@ -178,7 +188,7 @@ void TGeoElement::ComputeDerivedQuantities()
 void TGeoElement::ComputeCoulombFactor()
 {
    static constexpr Double_t k1 = 0.0083 , k2 = 0.20206 ,k3 = 0.0020 , k4 = 0.0369;
-   Double_t fsc = TGeoUnit::unitType() == TGeoUnit::kTGeoUnits
+   Double_t fsc = TGeoManager::kRootUnits == TGeoManager::GetDefaultUnits()
      ? TGeoUnit::fine_structure_const : TGeant4Unit::fine_structure_const;
    Double_t az2 = (fsc*fZ)*(fsc*fZ);
    Double_t az4 = az2 * az2;
@@ -198,7 +208,7 @@ void TGeoElement::ComputeLradTsaiFactor()
    const Double_t logZ3 = TMath::Log(fZ)/3.;
 
    Double_t Lrad, Lprad;
-   Double_t alpha_rcl2 = TGeoUnit::unitType() == TGeoUnit::kTGeoUnits
+   Double_t alpha_rcl2 = TGeoManager::kRootUnits == TGeoManager::GetDefaultUnits()
      ? TGeoUnit::alpha_rcl2 : TGeant4Unit::alpha_rcl2;
    Int_t iz = static_cast<Int_t>(fZ+0.5) - 1 ; // The static cast comes from G4lrint
    static const Double_t log184  = TMath::Log(184.15);
@@ -230,7 +240,7 @@ TGeoElementTable *TGeoElement::GetElementTable()
 {
    if (!gGeoManager) {
       ::Error("TGeoElementTable::GetElementTable", "Create a geometry manager first");
-      return NULL;
+      return nullptr;
    }
    return gGeoManager->GetElementTable();
 }
@@ -306,7 +316,7 @@ TGeoIsotope *TGeoElement::GetIsotope(Int_t i) const
    if (i>=0 && i<fNisotopes) {
       return (TGeoIsotope*)fIsotopes->At(i);
    }
-   return NULL;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -871,8 +881,8 @@ TGeoElementRN *TGeoElemIter::Up()
          if (Down(ind++)) return (TGeoElementRN*)fElem;
       }
    }
-   fElem = NULL;
-   return NULL;
+   fElem = nullptr;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -881,10 +891,11 @@ TGeoElementRN *TGeoElemIter::Up()
 
 TGeoElementRN *TGeoElemIter::Down(Int_t ibranch)
 {
+   if (!fElem) return nullptr;
    TGeoDecayChannel *dc = (TGeoDecayChannel*)fElem->Decays()->At(ibranch);
-   if (!dc->Daughter()) return NULL;
+   if (!dc->Daughter()) return nullptr;
    Double_t br = 0.01*fRatio*dc->BranchingRatio();
-   if (br < fLimitRatio) return NULL;
+   if (br < fLimitRatio) return nullptr;
    fLevel++;
    fRatio = br;
    fBranch->Add(dc);
@@ -897,7 +908,7 @@ TGeoElementRN *TGeoElemIter::Down(Int_t ibranch)
 
 TGeoElementRN *TGeoElemIter::Next()
 {
-   if (!fElem) return NULL;
+   if (!fElem) return nullptr;
    // Check if this is the first iteration.
    Int_t nd = fElem->GetNdecays();
    for (Int_t i=0; i<nd; i++) if (Down(i)) return (TGeoElementRN*)fElem;
@@ -1292,7 +1303,7 @@ TGeoElement *TGeoElementTable::FindElement(const char *name) const
 
 TGeoIsotope *TGeoElementTable::FindIsotope(const char *name) const
 {
-   if (!fIsotopes) return NULL;
+   if (!fIsotopes) return nullptr;
    return (TGeoIsotope*)fIsotopes->FindObject(name);
 }
 
@@ -1372,7 +1383,7 @@ TGeoBatemanSol::TGeoBatemanSol(TGeoElementRN *elem)
                 fFactor(1.),
                 fTmin(0.),
                 fTmax(0.),
-                fCoeff(NULL)
+                fCoeff(nullptr)
 {
    fCoeff = new BtCoef_t[fCsize];
    fNcoeff = 1;
@@ -1388,14 +1399,14 @@ TGeoBatemanSol::TGeoBatemanSol(TGeoElementRN *elem)
 
 TGeoBatemanSol::TGeoBatemanSol(const TObjArray *chain)
                :TObject(), TAttLine(), TAttFill(), TAttMarker(),
-                fElem(NULL),
-                fElemTop(NULL),
+                fElem(nullptr),
+                fElemTop(nullptr),
                 fCsize(0),
                 fNcoeff(0),
                 fFactor(1.),
                 fTmin(0.),
                 fTmax(0.),
-                fCoeff(NULL)
+                fCoeff(nullptr)
 {
    TGeoDecayChannel *dc = (TGeoDecayChannel*)chain->At(0);
    if (dc) fElemTop = dc->Parent();
@@ -1420,7 +1431,7 @@ TGeoBatemanSol::TGeoBatemanSol(const TGeoBatemanSol& other)
                 fFactor(other.fFactor),
                 fTmin(other.fTmin),
                 fTmax(other.fTmax),
-                fCoeff(NULL)
+                fCoeff(nullptr)
 {
    if (fCsize) {
       fCoeff = new BtCoef_t[fCsize];

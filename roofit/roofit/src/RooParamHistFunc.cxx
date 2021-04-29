@@ -24,8 +24,10 @@
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooRealVar.h"
+#include "RooHelpers.h"
 #include <math.h>
 #include "TMath.h"
+
 
 using namespace std ;
 
@@ -244,25 +246,24 @@ Int_t RooParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& a
 /// Implement analytical integrations by doing appropriate weighting from  component integrals
 /// functions to integrators of components
 
-Double_t RooParamHistFunc::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet2*/,const char* /*rangeName*/) const
+Double_t RooParamHistFunc::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet2*/,const char* rangeName) const
 {
+  // Supports only the scenario of integration over all dependents
   R__ASSERT(code==1) ;
 
-  Double_t ret(0) ;
-  Int_t i(0) ;
-  for (const auto param : _p) {
-    auto p = static_cast<const RooAbsReal*>(param);
-    Double_t bin = p->getVal() ;
-    if (_relParam) bin *= getNominal(i++) ;
-    ret += bin ;
-  }
-
-  // WVE fix this!!! Assume uniform binning for now!
-  Double_t binV(1) ;
+  // The logic for summing over the histogram is borrowed from RooHistPdf with some differences:
+  //
+  //  - a lambda function is used to inject the parameters for bin scaling into the RooDataHist::sum method
+  //
+  //  - for simplicity, there is no check for the possibility of full-range integration with another overload of
+  //    RooDataHist::sum
+  std::map<const RooAbsArg*, std::pair<double, double> > ranges;
   for (const auto obs : _x) {
-    auto xx = static_cast<const RooRealVar*>(obs);
-    binV *= (xx->getMax()-xx->getMin())/xx->numBins() ;
+    ranges[obs] = RooHelpers::getRangeOrBinningInterval(obs, rangeName);
   }
 
-  return ret*binV ;
+  auto getBinScale = [&](int iBin){ return static_cast<const RooAbsReal&>(_p[iBin]).getVal(); };
+
+  RooArgSet sliceSet{};
+  return const_cast<RooDataHist&>(_dh).sum(_x, sliceSet, true, false, ranges, getBinScale);
 }

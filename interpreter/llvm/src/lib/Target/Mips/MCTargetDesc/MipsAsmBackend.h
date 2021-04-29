@@ -1,9 +1,8 @@
 //===-- MipsAsmBackend.h - Mips Asm Backend  ------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -23,24 +22,28 @@ namespace llvm {
 
 class MCAssembler;
 struct MCFixupKindInfo;
-class Target;
 class MCObjectWriter;
+class MCRegisterInfo;
+class MCSymbolELF;
+class Target;
 
 class MipsAsmBackend : public MCAsmBackend {
-  Triple::OSType OSType;
-  bool IsLittle; // Big or little endian
-  bool Is64Bit;  // 32 or 64 bit words
+  Triple TheTriple;
+  bool IsN32;
 
 public:
-  MipsAsmBackend(const Target &T, Triple::OSType OSType, bool IsLittle,
-                 bool Is64Bit)
-      : MCAsmBackend(), OSType(OSType), IsLittle(IsLittle), Is64Bit(Is64Bit) {}
+  MipsAsmBackend(const Target &T, const MCRegisterInfo &MRI, const Triple &TT,
+                 StringRef CPU, bool N32)
+      : MCAsmBackend(TT.isLittleEndian() ? support::little : support::big),
+        TheTriple(TT), IsN32(N32) {}
 
-  MCObjectWriter *createObjectWriter(raw_pwrite_stream &OS) const override;
+  std::unique_ptr<MCObjectTargetWriter>
+  createObjectTargetWriter() const override;
 
   void applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
                   const MCValue &Target, MutableArrayRef<char> Data,
-                  uint64_t Value, bool IsResolved) const override;
+                  uint64_t Value, bool IsResolved,
+                  const MCSubtargetInfo *STI) const override;
 
   Optional<MCFixupKind> getFixupKind(StringRef Name) const override;
   const MCFixupKindInfo &getFixupKindInfo(MCFixupKind Kind) const override;
@@ -56,7 +59,8 @@ public:
   /// relaxation.
   ///
   /// \param Inst - The instruction to test.
-  bool mayNeedRelaxation(const MCInst &Inst) const override {
+  bool mayNeedRelaxation(const MCInst &Inst,
+                         const MCSubtargetInfo &STI) const override {
     return false;
   }
 
@@ -81,8 +85,12 @@ public:
 
   /// @}
 
-  bool writeNopData(uint64_t Count, MCObjectWriter *OW) const override;
+  bool writeNopData(raw_ostream &OS, uint64_t Count) const override;
 
+  bool shouldForceRelocation(const MCAssembler &Asm, const MCFixup &Fixup,
+                             const MCValue &Target) override;
+
+  bool isMicroMips(const MCSymbol *Sym) const override;
 }; // class MipsAsmBackend
 
 } // namespace

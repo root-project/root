@@ -1,9 +1,8 @@
 //===- InstCombineSimplifyDemanded.cpp ------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -22,6 +21,17 @@ using namespace llvm;
 using namespace llvm::PatternMatch;
 
 #define DEBUG_TYPE "instcombine"
+
+namespace {
+
+struct AMDGPUImageDMaskIntrinsic {
+  unsigned Intr;
+};
+
+#define GET_AMDGPUImageDMaskIntrinsicTable_IMPL
+#include "InstCombineTables.inc"
+
+} // end anonymous namespace
 
 /// Check to see if the specified operand of the specified instruction is a
 /// constant integer. If so, check to see if there are any bits set in the
@@ -303,11 +313,32 @@ Value *InstCombiner::SimplifyDemandedUseBits(Value *V, APInt DemandedMask,
     Known.One  = std::move(IKnownOne);
     break;
   }
-  case Instruction::Select:
-    // If this is a select as part of a min/max pattern, don't simplify any
-    // further in case we break the structure.
+  case Instruction::Select: {
     Value *LHS, *RHS;
-    if (matchSelectPattern(I, LHS, RHS).Flavor != SPF_UNKNOWN)
+    SelectPatternFlavor SPF = matchSelectPattern(I, LHS, RHS).Flavor;
+    if (SPF == SPF_UMAX) {
+      // UMax(A, C) == A if ...
+      // The lowest non-zero bit of DemandMask is higher than the highest
+      // non-zero bit of C.
+      const APInt *C;
+      unsigned CTZ = DemandedMask.countTrailingZeros();
+      if (match(RHS, m_APInt(C)) && CTZ >= C->getActiveBits())
+        return LHS;
+    } else if (SPF == SPF_UMIN) {
+      // UMin(A, C) == A if ...
+      // The lowest non-zero bit of DemandMask is higher than the highest
+      // non-one bit of C.
+      // This comes from using DeMorgans on the above umax example.
+      const APInt *C;
+      unsigned CTZ = DemandedMask.countTrailingZeros();
+      if (match(RHS, m_APInt(C)) &&
+          CTZ >= C->getBitWidth() - C->countLeadingOnes())
+        return LHS;
+    }
+
+    // If this is a select as part of any other min/max pattern, don't simplify
+    // any further in case we break the structure.
+    if (SPF != SPF_UNKNOWN)
       return nullptr;
 
     if (SimplifyDemandedBits(I, 2, DemandedMask, RHSKnown, Depth + 1) ||
@@ -325,6 +356,7 @@ Value *InstCombiner::SimplifyDemandedUseBits(Value *V, APInt DemandedMask,
     Known.One = RHSKnown.One & LHSKnown.One;
     Known.Zero = RHSKnown.Zero & LHSKnown.Zero;
     break;
+  }
   case Instruction::ZExt:
   case Instruction::Trunc: {
     unsigned SrcBitWidth = I->getOperand(0)->getType()->getScalarSizeInBits();
@@ -333,10 +365,9 @@ Value *InstCombiner::SimplifyDemandedUseBits(Value *V, APInt DemandedMask,
     KnownBits InputKnown(SrcBitWidth);
     if (SimplifyDemandedBits(I, 0, InputDemandedMask, InputKnown, Depth + 1))
       return I;
-    Known = Known.zextOrTrunc(BitWidth);
-    // Any top bits are known to be zero.
-    if (BitWidth > SrcBitWidth)
-      Known.Zero.setBitsFrom(SrcBitWidth);
+    assert(InputKnown.getBitWidth() == SrcBitWidth && "Src width changed?");
+    Known = InputKnown.zextOrTrunc(BitWidth,
+                                   true /* ExtendedBitsAreKnownZero */);
     assert(!Known.hasConflict() && "Bits known to be one AND zero?");
     break;
   }
@@ -396,50 +427,50 @@ Value *InstCombiner::SimplifyDemandedUseBits(Value *V, APInt DemandedMask,
     /// If the high-bits of an ADD/SUB are not demanded, then we do not care
     /// about the high bits of the operands.
     unsigned NLZ = DemandedMask.countLeadingZeros();
-    if (NLZ > 0) {
-      // Right fill the mask of bits for this ADD/SUB to demand the most
-      // significant bit and all those below it.
-      APInt DemandedFromOps(APInt::getLowBitsSet(BitWidth, BitWidth-NLZ));
-      if (ShrinkDemandedConstant(I, 0, DemandedFromOps) ||
-          SimplifyDemandedBits(I, 0, DemandedFromOps, LHSKnown, Depth + 1) ||
-          ShrinkDemandedConstant(I, 1, DemandedFromOps) ||
-          SimplifyDemandedBits(I, 1, DemandedFromOps, RHSKnown, Depth + 1)) {
+    // Right fill the mask of bits for this ADD/SUB to demand the most
+    // significant bit and all those below it.
+    APInt DemandedFromOps(APInt::getLowBitsSet(BitWidth, BitWidth-NLZ));
+    if (ShrinkDemandedConstant(I, 0, DemandedFromOps) ||
+        SimplifyDemandedBits(I, 0, DemandedFromOps, LHSKnown, Depth + 1) ||
+        ShrinkDemandedConstant(I, 1, DemandedFromOps) ||
+        SimplifyDemandedBits(I, 1, DemandedFromOps, RHSKnown, Depth + 1)) {
+      if (NLZ > 0) {
         // Disable the nsw and nuw flags here: We can no longer guarantee that
         // we won't wrap after simplification. Removing the nsw/nuw flags is
         // legal here because the top bit is not demanded.
         BinaryOperator &BinOP = *cast<BinaryOperator>(I);
         BinOP.setHasNoSignedWrap(false);
         BinOP.setHasNoUnsignedWrap(false);
-        return I;
       }
-
-      // If we are known to be adding/subtracting zeros to every bit below
-      // the highest demanded bit, we just return the other side.
-      if (DemandedFromOps.isSubsetOf(RHSKnown.Zero))
-        return I->getOperand(0);
-      // We can't do this with the LHS for subtraction, unless we are only
-      // demanding the LSB.
-      if ((I->getOpcode() == Instruction::Add ||
-           DemandedFromOps.isOneValue()) &&
-          DemandedFromOps.isSubsetOf(LHSKnown.Zero))
-        return I->getOperand(1);
+      return I;
     }
 
-    // Otherwise just hand the add/sub off to computeKnownBits to fill in
-    // the known zeros and ones.
-    computeKnownBits(V, Known, Depth, CxtI);
+    // If we are known to be adding/subtracting zeros to every bit below
+    // the highest demanded bit, we just return the other side.
+    if (DemandedFromOps.isSubsetOf(RHSKnown.Zero))
+      return I->getOperand(0);
+    // We can't do this with the LHS for subtraction, unless we are only
+    // demanding the LSB.
+    if ((I->getOpcode() == Instruction::Add ||
+         DemandedFromOps.isOneValue()) &&
+        DemandedFromOps.isSubsetOf(LHSKnown.Zero))
+      return I->getOperand(1);
+
+    // Otherwise just compute the known bits of the result.
+    bool NSW = cast<OverflowingBinaryOperator>(I)->hasNoSignedWrap();
+    Known = KnownBits::computeForAddSub(I->getOpcode() == Instruction::Add,
+                                        NSW, LHSKnown, RHSKnown);
     break;
   }
   case Instruction::Shl: {
     const APInt *SA;
     if (match(I->getOperand(1), m_APInt(SA))) {
       const APInt *ShrAmt;
-      if (match(I->getOperand(0), m_Shr(m_Value(), m_APInt(ShrAmt)))) {
-        Instruction *Shr = cast<Instruction>(I->getOperand(0));
-        if (Value *R = simplifyShrShlDemandedBits(
-                Shr, *ShrAmt, I, *SA, DemandedMask, Known))
-          return R;
-      }
+      if (match(I->getOperand(0), m_Shr(m_Value(), m_APInt(ShrAmt))))
+        if (Instruction *Shr = dyn_cast<Instruction>(I->getOperand(0)))
+          if (Value *R = simplifyShrShlDemandedBits(Shr, *ShrAmt, I, *SA,
+                                                    DemandedMask, Known))
+            return R;
 
       uint64_t ShiftAmt = SA->getLimitedValue(BitWidth-1);
       APInt DemandedMaskIn(DemandedMask.lshr(ShiftAmt));
@@ -521,28 +552,48 @@ Value *InstCombiner::SimplifyDemandedUseBits(Value *V, APInt DemandedMask,
       if (SimplifyDemandedBits(I, 0, DemandedMaskIn, Known, Depth + 1))
         return I;
 
+      unsigned SignBits = ComputeNumSignBits(I->getOperand(0), Depth + 1, CxtI);
+
       assert(!Known.hasConflict() && "Bits known to be one AND zero?");
-      // Compute the new bits that are at the top now.
-      APInt HighBits(APInt::getHighBitsSet(BitWidth, ShiftAmt));
+      // Compute the new bits that are at the top now plus sign bits.
+      APInt HighBits(APInt::getHighBitsSet(
+          BitWidth, std::min(SignBits + ShiftAmt - 1, BitWidth)));
       Known.Zero.lshrInPlace(ShiftAmt);
       Known.One.lshrInPlace(ShiftAmt);
 
-      // Handle the sign bits.
-      APInt SignMask(APInt::getSignMask(BitWidth));
-      // Adjust to where it is now in the mask.
-      SignMask.lshrInPlace(ShiftAmt);
-
       // If the input sign bit is known to be zero, or if none of the top bits
       // are demanded, turn this into an unsigned shift right.
-      if (BitWidth <= ShiftAmt || Known.Zero[BitWidth-ShiftAmt-1] ||
+      assert(BitWidth > ShiftAmt && "Shift amount not saturated?");
+      if (Known.Zero[BitWidth-ShiftAmt-1] ||
           !DemandedMask.intersects(HighBits)) {
         BinaryOperator *LShr = BinaryOperator::CreateLShr(I->getOperand(0),
                                                           I->getOperand(1));
         LShr->setIsExact(cast<BinaryOperator>(I)->isExact());
         return InsertNewInstWith(LShr, *I);
-      } else if (Known.One.intersects(SignMask)) { // New bits are known one.
+      } else if (Known.One[BitWidth-ShiftAmt-1]) { // New bits are known one.
         Known.One |= HighBits;
       }
+    }
+    break;
+  }
+  case Instruction::UDiv: {
+    // UDiv doesn't demand low bits that are zero in the divisor.
+    const APInt *SA;
+    if (match(I->getOperand(1), m_APInt(SA))) {
+      // If the shift is exact, then it does demand the low bits.
+      if (cast<UDivOperator>(I)->isExact())
+        break;
+
+      // FIXME: Take the demanded mask of the result into account.
+      unsigned RHSTrailingZeros = SA->countTrailingZeros();
+      APInt DemandedMaskIn =
+          APInt::getHighBitsSet(BitWidth, BitWidth - RHSTrailingZeros);
+      if (SimplifyDemandedBits(I, 0, DemandedMaskIn, LHSKnown, Depth + 1))
+        return I;
+
+      // Propagate zero bits from the input.
+      Known.Zero.setHighBits(std::min(
+          BitWidth, LHSKnown.Zero.countLeadingOnes() + RHSTrailingZeros));
     }
     break;
   }
@@ -635,6 +686,30 @@ Value *InstCombiner::SimplifyDemandedUseBits(Value *V, APInt DemandedMask,
         }
 
         // TODO: Could compute known zero/one bits based on the input.
+        break;
+      }
+      case Intrinsic::fshr:
+      case Intrinsic::fshl: {
+        const APInt *SA;
+        if (!match(I->getOperand(2), m_APInt(SA)))
+          break;
+
+        // Normalize to funnel shift left. APInt shifts of BitWidth are well-
+        // defined, so no need to special-case zero shifts here.
+        uint64_t ShiftAmt = SA->urem(BitWidth);
+        if (II->getIntrinsicID() == Intrinsic::fshr)
+          ShiftAmt = BitWidth - ShiftAmt;
+
+        APInt DemandedMaskLHS(DemandedMask.lshr(ShiftAmt));
+        APInt DemandedMaskRHS(DemandedMask.shl(BitWidth - ShiftAmt));
+        if (SimplifyDemandedBits(I, 0, DemandedMaskLHS, LHSKnown, Depth + 1) ||
+            SimplifyDemandedBits(I, 1, DemandedMaskRHS, RHSKnown, Depth + 1))
+          return I;
+
+        Known.Zero = LHSKnown.Zero.shl(ShiftAmt) |
+                     RHSKnown.Zero.lshr(BitWidth - ShiftAmt);
+        Known.One = LHSKnown.One.shl(ShiftAmt) |
+                    RHSKnown.One.lshr(BitWidth - ShiftAmt);
         break;
       }
       case Intrinsic::x86_mmx_pmovmskb:
@@ -889,6 +964,108 @@ InstCombiner::simplifyShrShlDemandedBits(Instruction *Shr, const APInt &ShrOp1,
   return nullptr;
 }
 
+/// Implement SimplifyDemandedVectorElts for amdgcn buffer and image intrinsics.
+///
+/// Note: This only supports non-TFE/LWE image intrinsic calls; those have
+///       struct returns.
+Value *InstCombiner::simplifyAMDGCNMemoryIntrinsicDemanded(IntrinsicInst *II,
+                                                           APInt DemandedElts,
+                                                           int DMaskIdx) {
+  unsigned VWidth = II->getType()->getVectorNumElements();
+  if (VWidth == 1)
+    return nullptr;
+
+  ConstantInt *NewDMask = nullptr;
+
+  if (DMaskIdx < 0) {
+    // Pretend that a prefix of elements is demanded to simplify the code
+    // below.
+    DemandedElts = (1 << DemandedElts.getActiveBits()) - 1;
+  } else {
+    ConstantInt *DMask = cast<ConstantInt>(II->getArgOperand(DMaskIdx));
+    unsigned DMaskVal = DMask->getZExtValue() & 0xf;
+
+    // Mask off values that are undefined because the dmask doesn't cover them
+    DemandedElts &= (1 << countPopulation(DMaskVal)) - 1;
+
+    unsigned NewDMaskVal = 0;
+    unsigned OrigLoadIdx = 0;
+    for (unsigned SrcIdx = 0; SrcIdx < 4; ++SrcIdx) {
+      const unsigned Bit = 1 << SrcIdx;
+      if (!!(DMaskVal & Bit)) {
+        if (!!DemandedElts[OrigLoadIdx])
+          NewDMaskVal |= Bit;
+        OrigLoadIdx++;
+      }
+    }
+
+    if (DMaskVal != NewDMaskVal)
+      NewDMask = ConstantInt::get(DMask->getType(), NewDMaskVal);
+  }
+
+  unsigned NewNumElts = DemandedElts.countPopulation();
+  if (!NewNumElts)
+    return UndefValue::get(II->getType());
+
+  if (NewNumElts >= VWidth && DemandedElts.isMask()) {
+    if (NewDMask)
+      II->setArgOperand(DMaskIdx, NewDMask);
+    return nullptr;
+  }
+
+  // Determine the overload types of the original intrinsic.
+  auto IID = II->getIntrinsicID();
+  SmallVector<Intrinsic::IITDescriptor, 16> Table;
+  getIntrinsicInfoTableEntries(IID, Table);
+  ArrayRef<Intrinsic::IITDescriptor> TableRef = Table;
+
+  // Validate function argument and return types, extracting overloaded types
+  // along the way.
+  FunctionType *FTy = II->getCalledFunction()->getFunctionType();
+  SmallVector<Type *, 6> OverloadTys;
+  Intrinsic::matchIntrinsicSignature(FTy, TableRef, OverloadTys);
+
+  Module *M = II->getParent()->getParent()->getParent();
+  Type *EltTy = II->getType()->getVectorElementType();
+  Type *NewTy = (NewNumElts == 1) ? EltTy : VectorType::get(EltTy, NewNumElts);
+
+  OverloadTys[0] = NewTy;
+  Function *NewIntrin = Intrinsic::getDeclaration(M, IID, OverloadTys);
+
+  SmallVector<Value *, 16> Args;
+  for (unsigned I = 0, E = II->getNumArgOperands(); I != E; ++I)
+    Args.push_back(II->getArgOperand(I));
+
+  if (NewDMask)
+    Args[DMaskIdx] = NewDMask;
+
+  IRBuilderBase::InsertPointGuard Guard(Builder);
+  Builder.SetInsertPoint(II);
+
+  CallInst *NewCall = Builder.CreateCall(NewIntrin, Args);
+  NewCall->takeName(II);
+  NewCall->copyMetadata(*II);
+
+  if (NewNumElts == 1) {
+    return Builder.CreateInsertElement(UndefValue::get(II->getType()), NewCall,
+                                       DemandedElts.countTrailingZeros());
+  }
+
+  SmallVector<uint32_t, 8> EltMask;
+  unsigned NewLoadIdx = 0;
+  for (unsigned OrigLoadIdx = 0; OrigLoadIdx < VWidth; ++OrigLoadIdx) {
+    if (!!DemandedElts[OrigLoadIdx])
+      EltMask.push_back(NewLoadIdx++);
+    else
+      EltMask.push_back(NewNumElts);
+  }
+
+  Value *Shuffle =
+      Builder.CreateShuffleVector(NewCall, UndefValue::get(NewTy), EltMask);
+
+  return Shuffle;
+}
+
 /// The specified value produces a vector with any number of elements.
 /// DemandedElts contains the set of elements that are actually used by the
 /// caller. This method analyzes which elements of the operand are undef and
@@ -917,8 +1094,7 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
 
   UndefElts = 0;
 
-  // Handle ConstantAggregateZero, ConstantVector, ConstantDataSequential.
-  if (Constant *C = dyn_cast<Constant>(V)) {
+  if (auto *C = dyn_cast<Constant>(V)) {
     // Check if this is identity. If so, return 0 since we are not simplifying
     // anything.
     if (DemandedElts.isAllOnesValue())
@@ -926,7 +1102,6 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
 
     Type *EltTy = cast<VectorType>(V->getType())->getElementType();
     Constant *Undef = UndefValue::get(EltTy);
-
     SmallVector<Constant*, 16> Elts;
     for (unsigned i = 0; i != VWidth; ++i) {
       if (!DemandedElts[i]) {   // If not demanded, set to undef.
@@ -974,12 +1149,57 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
   if (!I) return nullptr;        // Only analyze instructions.
 
   bool MadeChange = false;
+  auto simplifyAndSetOp = [&](Instruction *Inst, unsigned OpNum,
+                              APInt Demanded, APInt &Undef) {
+    auto *II = dyn_cast<IntrinsicInst>(Inst);
+    Value *Op = II ? II->getArgOperand(OpNum) : Inst->getOperand(OpNum);
+    if (Value *V = SimplifyDemandedVectorElts(Op, Demanded, Undef, Depth + 1)) {
+      if (II)
+        II->setArgOperand(OpNum, V);
+      else
+        Inst->setOperand(OpNum, V);
+      MadeChange = true;
+    }
+  };
+
   APInt UndefElts2(VWidth, 0);
   APInt UndefElts3(VWidth, 0);
-  Value *TmpV;
   switch (I->getOpcode()) {
   default: break;
 
+  case Instruction::GetElementPtr: {
+    // The LangRef requires that struct geps have all constant indices.  As
+    // such, we can't convert any operand to partial undef.
+    auto mayIndexStructType = [](GetElementPtrInst &GEP) {
+      for (auto I = gep_type_begin(GEP), E = gep_type_end(GEP);
+           I != E; I++)
+        if (I.isStruct())
+          return true;;
+      return false;
+    };
+    if (mayIndexStructType(cast<GetElementPtrInst>(*I)))
+      break;
+    
+    // Conservatively track the demanded elements back through any vector
+    // operands we may have.  We know there must be at least one, or we
+    // wouldn't have a vector result to get here. Note that we intentionally
+    // merge the undef bits here since gepping with either an undef base or
+    // index results in undef. 
+    for (unsigned i = 0; i < I->getNumOperands(); i++) {
+      if (isa<UndefValue>(I->getOperand(i))) {
+        // If the entire vector is undefined, just return this info.
+        UndefElts = EltMask;
+        return nullptr;
+      }
+      if (I->getOperand(i)->getType()->isVectorTy()) {
+        APInt UndefEltsOp(VWidth, 0);
+        simplifyAndSetOp(I, i, DemandedElts, UndefEltsOp);
+        UndefElts |= UndefEltsOp;
+      }
+    }
+
+    break;
+  }
   case Instruction::InsertElement: {
     // If this is a variable index, we don't know which element it overwrites.
     // demand exactly the same input as we produce.
@@ -987,27 +1207,25 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
     if (!Idx) {
       // Note that we can't propagate undef elt info, because we don't know
       // which elt is getting updated.
-      TmpV = SimplifyDemandedVectorElts(I->getOperand(0), DemandedElts,
-                                        UndefElts2, Depth + 1);
-      if (TmpV) { I->setOperand(0, TmpV); MadeChange = true; }
+      simplifyAndSetOp(I, 0, DemandedElts, UndefElts2);
       break;
     }
 
+    // The element inserted overwrites whatever was there, so the input demanded
+    // set is simpler than the output set.
+    unsigned IdxNo = Idx->getZExtValue();
+    APInt PreInsertDemandedElts = DemandedElts;
+    if (IdxNo < VWidth)
+      PreInsertDemandedElts.clearBit(IdxNo);
+
+    simplifyAndSetOp(I, 0, PreInsertDemandedElts, UndefElts);
+
     // If this is inserting an element that isn't demanded, remove this
     // insertelement.
-    unsigned IdxNo = Idx->getZExtValue();
     if (IdxNo >= VWidth || !DemandedElts[IdxNo]) {
       Worklist.Add(I);
       return I->getOperand(0);
     }
-
-    // Otherwise, the element inserted overwrites whatever was there, so the
-    // input demanded set is simpler than the output set.
-    APInt DemandedElts2 = DemandedElts;
-    DemandedElts2.clearBit(IdxNo);
-    TmpV = SimplifyDemandedVectorElts(I->getOperand(0), DemandedElts2,
-                                      UndefElts, Depth + 1);
-    if (TmpV) { I->setOperand(0, TmpV); MadeChange = true; }
 
     // The inserted element is defined.
     UndefElts.clearBit(IdxNo);
@@ -1033,14 +1251,10 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
     }
 
     APInt LHSUndefElts(LHSVWidth, 0);
-    TmpV = SimplifyDemandedVectorElts(I->getOperand(0), LeftDemanded,
-                                      LHSUndefElts, Depth + 1);
-    if (TmpV) { I->setOperand(0, TmpV); MadeChange = true; }
+    simplifyAndSetOp(I, 0, LeftDemanded, LHSUndefElts);
 
     APInt RHSUndefElts(LHSVWidth, 0);
-    TmpV = SimplifyDemandedVectorElts(I->getOperand(1), RightDemanded,
-                                      RHSUndefElts, Depth + 1);
-    if (TmpV) { I->setOperand(1, TmpV); MadeChange = true; }
+    simplifyAndSetOp(I, 1, RightDemanded, RHSUndefElts);
 
     bool NewUndefElts = false;
     unsigned LHSIdx = -1u, LHSValIdx = -1u;
@@ -1124,32 +1338,43 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
     break;
   }
   case Instruction::Select: {
-    APInt LeftDemanded(DemandedElts), RightDemanded(DemandedElts);
-    if (ConstantVector* CV = dyn_cast<ConstantVector>(I->getOperand(0))) {
+    // If this is a vector select, try to transform the select condition based
+    // on the current demanded elements.
+    SelectInst *Sel = cast<SelectInst>(I);
+    if (Sel->getCondition()->getType()->isVectorTy()) {
+      // TODO: We are not doing anything with UndefElts based on this call.
+      // It is overwritten below based on the other select operands. If an
+      // element of the select condition is known undef, then we are free to
+      // choose the output value from either arm of the select. If we know that
+      // one of those values is undef, then the output can be undef.
+      simplifyAndSetOp(I, 0, DemandedElts, UndefElts);
+    }
+
+    // Next, see if we can transform the arms of the select.
+    APInt DemandedLHS(DemandedElts), DemandedRHS(DemandedElts);
+    if (auto *CV = dyn_cast<ConstantVector>(Sel->getCondition())) {
       for (unsigned i = 0; i < VWidth; i++) {
+        // isNullValue() always returns false when called on a ConstantExpr.
+        // Skip constant expressions to avoid propagating incorrect information.
         Constant *CElt = CV->getAggregateElement(i);
-        // Method isNullValue always returns false when called on a
-        // ConstantExpr. If CElt is a ConstantExpr then skip it in order to
-        // to avoid propagating incorrect information.
         if (isa<ConstantExpr>(CElt))
           continue;
+        // TODO: If a select condition element is undef, we can demand from
+        // either side. If one side is known undef, choosing that side would
+        // propagate undef.
         if (CElt->isNullValue())
-          LeftDemanded.clearBit(i);
+          DemandedLHS.clearBit(i);
         else
-          RightDemanded.clearBit(i);
+          DemandedRHS.clearBit(i);
       }
     }
 
-    TmpV = SimplifyDemandedVectorElts(I->getOperand(1), LeftDemanded, UndefElts,
-                                      Depth + 1);
-    if (TmpV) { I->setOperand(1, TmpV); MadeChange = true; }
+    simplifyAndSetOp(I, 1, DemandedLHS, UndefElts2);
+    simplifyAndSetOp(I, 2, DemandedRHS, UndefElts3);
 
-    TmpV = SimplifyDemandedVectorElts(I->getOperand(2), RightDemanded,
-                                      UndefElts2, Depth + 1);
-    if (TmpV) { I->setOperand(2, TmpV); MadeChange = true; }
-
-    // Output elements are undefined if both are undefined.
-    UndefElts &= UndefElts2;
+    // Output elements are undefined if the element from each arm is undefined.
+    // TODO: This can be improved. See comment in select condition handling.
+    UndefElts = UndefElts2 & UndefElts3;
     break;
   }
   case Instruction::BitCast: {
@@ -1187,13 +1412,7 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
       break;
     }
 
-    // div/rem demand all inputs, because they don't want divide by zero.
-    TmpV = SimplifyDemandedVectorElts(I->getOperand(0), InputDemandedElts,
-                                      UndefElts2, Depth + 1);
-    if (TmpV) {
-      I->setOperand(0, TmpV);
-      MadeChange = true;
-    }
+    simplifyAndSetOp(I, 0, InputDemandedElts, UndefElts2);
 
     if (VWidth == InVWidth) {
       UndefElts = UndefElts2;
@@ -1218,37 +1437,39 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
     }
     break;
   }
-  case Instruction::And:
-  case Instruction::Or:
-  case Instruction::Xor:
-  case Instruction::Add:
-  case Instruction::Sub:
-  case Instruction::Mul:
-    // div/rem demand all inputs, because they don't want divide by zero.
-    TmpV = SimplifyDemandedVectorElts(I->getOperand(0), DemandedElts, UndefElts,
-                                      Depth + 1);
-    if (TmpV) { I->setOperand(0, TmpV); MadeChange = true; }
-    TmpV = SimplifyDemandedVectorElts(I->getOperand(1), DemandedElts,
-                                      UndefElts2, Depth + 1);
-    if (TmpV) { I->setOperand(1, TmpV); MadeChange = true; }
-
-    // Output elements are undefined if both are undefined.  Consider things
-    // like undef&0.  The result is known zero, not undef.
-    UndefElts &= UndefElts2;
-    break;
   case Instruction::FPTrunc:
   case Instruction::FPExt:
-    TmpV = SimplifyDemandedVectorElts(I->getOperand(0), DemandedElts, UndefElts,
-                                      Depth + 1);
-    if (TmpV) { I->setOperand(0, TmpV); MadeChange = true; }
+    simplifyAndSetOp(I, 0, DemandedElts, UndefElts);
     break;
 
   case Instruction::Call: {
     IntrinsicInst *II = dyn_cast<IntrinsicInst>(I);
     if (!II) break;
     switch (II->getIntrinsicID()) {
-    default: break;
-
+    case Intrinsic::masked_gather: // fallthrough
+    case Intrinsic::masked_load: {
+      // Subtlety: If we load from a pointer, the pointer must be valid
+      // regardless of whether the element is demanded.  Doing otherwise risks
+      // segfaults which didn't exist in the original program.
+      APInt DemandedPtrs(APInt::getAllOnesValue(VWidth)),
+        DemandedPassThrough(DemandedElts);
+      if (auto *CV = dyn_cast<ConstantVector>(II->getOperand(2)))
+        for (unsigned i = 0; i < VWidth; i++) {
+          Constant *CElt = CV->getAggregateElement(i);
+          if (CElt->isNullValue())
+            DemandedPtrs.clearBit(i);
+          else if (CElt->isAllOnesValue())
+            DemandedPassThrough.clearBit(i);
+        }
+      if (II->getIntrinsicID() == Intrinsic::masked_gather)
+        simplifyAndSetOp(II, 0, DemandedPtrs, UndefElts2);
+      simplifyAndSetOp(II, 3, DemandedPassThrough, UndefElts3);
+      
+      // Output elements are undefined if the element from both sources are.
+      // TODO: can strengthen via mask as well.
+      UndefElts = UndefElts2 & UndefElts3;
+      break;
+    }
     case Intrinsic::x86_xop_vfrcz_ss:
     case Intrinsic::x86_xop_vfrcz_sd:
       // The instructions for these intrinsics are speced to zero upper bits not
@@ -1262,9 +1483,7 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
 
       // Only the lower element is used.
       DemandedElts = 1;
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(0), DemandedElts,
-                                        UndefElts, Depth + 1);
-      if (TmpV) { II->setArgOperand(0, TmpV); MadeChange = true; }
+      simplifyAndSetOp(II, 0, DemandedElts, UndefElts);
 
       // Only the lower element is undefined. The high elements are zero.
       UndefElts = UndefElts[0];
@@ -1273,11 +1492,7 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
     // Unary scalar-as-vector operations that work column-wise.
     case Intrinsic::x86_sse_rcp_ss:
     case Intrinsic::x86_sse_rsqrt_ss:
-    case Intrinsic::x86_sse_sqrt_ss:
-    case Intrinsic::x86_sse2_sqrt_sd:
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(0), DemandedElts,
-                                        UndefElts, Depth + 1);
-      if (TmpV) { II->setArgOperand(0, TmpV); MadeChange = true; }
+      simplifyAndSetOp(II, 0, DemandedElts, UndefElts);
 
       // If lowest element of a scalar op isn't used then use Arg0.
       if (!DemandedElts[0]) {
@@ -1297,9 +1512,7 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
     case Intrinsic::x86_sse2_min_sd:
     case Intrinsic::x86_sse2_max_sd:
     case Intrinsic::x86_sse2_cmp_sd: {
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(0), DemandedElts,
-                                        UndefElts, Depth + 1);
-      if (TmpV) { II->setArgOperand(0, TmpV); MadeChange = true; }
+      simplifyAndSetOp(II, 0, DemandedElts, UndefElts);
 
       // If lowest element of a scalar op isn't used then use Arg0.
       if (!DemandedElts[0]) {
@@ -1309,9 +1522,7 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
 
       // Only lower element is used for operand 1.
       DemandedElts = 1;
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(1), DemandedElts,
-                                        UndefElts2, Depth + 1);
-      if (TmpV) { II->setArgOperand(1, TmpV); MadeChange = true; }
+      simplifyAndSetOp(II, 1, DemandedElts, UndefElts2);
 
       // Lower element is undefined if both lower elements are undefined.
       // Consider things like undef&0.  The result is known zero, not undef.
@@ -1328,9 +1539,7 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
       // Don't use the low element of operand 0.
       APInt DemandedElts2 = DemandedElts;
       DemandedElts2.clearBit(0);
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(0), DemandedElts2,
-                                        UndefElts, Depth + 1);
-      if (TmpV) { II->setArgOperand(0, TmpV); MadeChange = true; }
+      simplifyAndSetOp(II, 0, DemandedElts2, UndefElts);
 
       // If lowest element of a scalar op isn't used then use Arg0.
       if (!DemandedElts[0]) {
@@ -1340,9 +1549,7 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
 
       // Only lower element is used for operand 1.
       DemandedElts = 1;
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(1), DemandedElts,
-                                        UndefElts2, Depth + 1);
-      if (TmpV) { II->setArgOperand(1, TmpV); MadeChange = true; }
+      simplifyAndSetOp(II, 1, DemandedElts, UndefElts2);
 
       // Take the high undef elements from operand 0 and take the lower element
       // from operand 1.
@@ -1366,21 +1573,7 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
     case Intrinsic::x86_avx512_mask_sub_sd_round:
     case Intrinsic::x86_avx512_mask_max_sd_round:
     case Intrinsic::x86_avx512_mask_min_sd_round:
-    case Intrinsic::x86_fma_vfmadd_ss:
-    case Intrinsic::x86_fma_vfmsub_ss:
-    case Intrinsic::x86_fma_vfnmadd_ss:
-    case Intrinsic::x86_fma_vfnmsub_ss:
-    case Intrinsic::x86_fma_vfmadd_sd:
-    case Intrinsic::x86_fma_vfmsub_sd:
-    case Intrinsic::x86_fma_vfnmadd_sd:
-    case Intrinsic::x86_fma_vfnmsub_sd:
-    case Intrinsic::x86_avx512_mask_vfmadd_ss:
-    case Intrinsic::x86_avx512_mask_vfmadd_sd:
-    case Intrinsic::x86_avx512_maskz_vfmadd_ss:
-    case Intrinsic::x86_avx512_maskz_vfmadd_sd:
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(0), DemandedElts,
-                                        UndefElts, Depth + 1);
-      if (TmpV) { II->setArgOperand(0, TmpV); MadeChange = true; }
+      simplifyAndSetOp(II, 0, DemandedElts, UndefElts);
 
       // If lowest element of a scalar op isn't used then use Arg0.
       if (!DemandedElts[0]) {
@@ -1390,12 +1583,8 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
 
       // Only lower element is used for operand 1 and 2.
       DemandedElts = 1;
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(1), DemandedElts,
-                                        UndefElts2, Depth + 1);
-      if (TmpV) { II->setArgOperand(1, TmpV); MadeChange = true; }
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(2), DemandedElts,
-                                        UndefElts3, Depth + 1);
-      if (TmpV) { II->setArgOperand(2, TmpV); MadeChange = true; }
+      simplifyAndSetOp(II, 1, DemandedElts, UndefElts2);
+      simplifyAndSetOp(II, 2, DemandedElts, UndefElts3);
 
       // Lower element is undefined if all three lower elements are undefined.
       // Consider things like undef&0.  The result is known zero, not undef.
@@ -1403,68 +1592,6 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
         UndefElts.clearBit(0);
 
       break;
-
-    case Intrinsic::x86_avx512_mask3_vfmadd_ss:
-    case Intrinsic::x86_avx512_mask3_vfmadd_sd:
-    case Intrinsic::x86_avx512_mask3_vfmsub_ss:
-    case Intrinsic::x86_avx512_mask3_vfmsub_sd:
-    case Intrinsic::x86_avx512_mask3_vfnmsub_ss:
-    case Intrinsic::x86_avx512_mask3_vfnmsub_sd:
-      // These intrinsics get the passthru bits from operand 2.
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(2), DemandedElts,
-                                        UndefElts, Depth + 1);
-      if (TmpV) { II->setArgOperand(2, TmpV); MadeChange = true; }
-
-      // If lowest element of a scalar op isn't used then use Arg2.
-      if (!DemandedElts[0]) {
-        Worklist.Add(II);
-        return II->getArgOperand(2);
-      }
-
-      // Only lower element is used for operand 0 and 1.
-      DemandedElts = 1;
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(0), DemandedElts,
-                                        UndefElts2, Depth + 1);
-      if (TmpV) { II->setArgOperand(0, TmpV); MadeChange = true; }
-      TmpV = SimplifyDemandedVectorElts(II->getArgOperand(1), DemandedElts,
-                                        UndefElts3, Depth + 1);
-      if (TmpV) { II->setArgOperand(1, TmpV); MadeChange = true; }
-
-      // Lower element is undefined if all three lower elements are undefined.
-      // Consider things like undef&0.  The result is known zero, not undef.
-      if (!UndefElts2[0] || !UndefElts3[0])
-        UndefElts.clearBit(0);
-
-      break;
-
-    case Intrinsic::x86_sse2_pmulu_dq:
-    case Intrinsic::x86_sse41_pmuldq:
-    case Intrinsic::x86_avx2_pmul_dq:
-    case Intrinsic::x86_avx2_pmulu_dq:
-    case Intrinsic::x86_avx512_pmul_dq_512:
-    case Intrinsic::x86_avx512_pmulu_dq_512: {
-      Value *Op0 = II->getArgOperand(0);
-      Value *Op1 = II->getArgOperand(1);
-      unsigned InnerVWidth = Op0->getType()->getVectorNumElements();
-      assert((VWidth * 2) == InnerVWidth && "Unexpected input size");
-
-      APInt InnerDemandedElts(InnerVWidth, 0);
-      for (unsigned i = 0; i != VWidth; ++i)
-        if (DemandedElts[i])
-          InnerDemandedElts.setBit(i * 2);
-
-      UndefElts2 = APInt(InnerVWidth, 0);
-      TmpV = SimplifyDemandedVectorElts(Op0, InnerDemandedElts, UndefElts2,
-                                        Depth + 1);
-      if (TmpV) { II->setArgOperand(0, TmpV); MadeChange = true; }
-
-      UndefElts3 = APInt(InnerVWidth, 0);
-      TmpV = SimplifyDemandedVectorElts(Op1, InnerDemandedElts, UndefElts3,
-                                        Depth + 1);
-      if (TmpV) { II->setArgOperand(1, TmpV); MadeChange = true; }
-
-      break;
-    }
 
     case Intrinsic::x86_sse2_packssdw_128:
     case Intrinsic::x86_sse2_packsswb_128:
@@ -1502,14 +1629,8 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
         }
 
         // Demand elements from the operand.
-        auto *Op = II->getArgOperand(OpNum);
         APInt OpUndefElts(InnerVWidth, 0);
-        TmpV = SimplifyDemandedVectorElts(Op, OpDemandedElts, OpUndefElts,
-                                          Depth + 1);
-        if (TmpV) {
-          II->setArgOperand(OpNum, TmpV);
-          MadeChange = true;
-        }
+        simplifyAndSetOp(II, OpNum, OpDemandedElts, OpUndefElts);
 
         // Pack the operand's UNDEF elements, one lane at a time.
         OpUndefElts = OpUndefElts.zext(VWidth);
@@ -1537,10 +1658,7 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
     // PERMV
     case Intrinsic::x86_avx2_permd:
     case Intrinsic::x86_avx2_permps: {
-      Value *Op1 = II->getArgOperand(1);
-      TmpV = SimplifyDemandedVectorElts(Op1, DemandedElts, UndefElts,
-                                        Depth + 1);
-      if (TmpV) { II->setArgOperand(1, TmpV); MadeChange = true; }
+      simplifyAndSetOp(II, 1, DemandedElts, UndefElts);
       break;
     }
 
@@ -1554,128 +1672,44 @@ Value *InstCombiner::SimplifyDemandedVectorElts(Value *V, APInt DemandedElts,
       break;
     case Intrinsic::amdgcn_buffer_load:
     case Intrinsic::amdgcn_buffer_load_format:
-    case Intrinsic::amdgcn_image_sample:
-    case Intrinsic::amdgcn_image_sample_cl:
-    case Intrinsic::amdgcn_image_sample_d:
-    case Intrinsic::amdgcn_image_sample_d_cl:
-    case Intrinsic::amdgcn_image_sample_l:
-    case Intrinsic::amdgcn_image_sample_b:
-    case Intrinsic::amdgcn_image_sample_b_cl:
-    case Intrinsic::amdgcn_image_sample_lz:
-    case Intrinsic::amdgcn_image_sample_cd:
-    case Intrinsic::amdgcn_image_sample_cd_cl:
+    case Intrinsic::amdgcn_raw_buffer_load:
+    case Intrinsic::amdgcn_raw_buffer_load_format:
+    case Intrinsic::amdgcn_struct_buffer_load:
+    case Intrinsic::amdgcn_struct_buffer_load_format:
+      return simplifyAMDGCNMemoryIntrinsicDemanded(II, DemandedElts);
+    default: {
+      if (getAMDGPUImageDMaskIntrinsic(II->getIntrinsicID()))
+        return simplifyAMDGCNMemoryIntrinsicDemanded(II, DemandedElts, 0);
 
-    case Intrinsic::amdgcn_image_sample_c:
-    case Intrinsic::amdgcn_image_sample_c_cl:
-    case Intrinsic::amdgcn_image_sample_c_d:
-    case Intrinsic::amdgcn_image_sample_c_d_cl:
-    case Intrinsic::amdgcn_image_sample_c_l:
-    case Intrinsic::amdgcn_image_sample_c_b:
-    case Intrinsic::amdgcn_image_sample_c_b_cl:
-    case Intrinsic::amdgcn_image_sample_c_lz:
-    case Intrinsic::amdgcn_image_sample_c_cd:
-    case Intrinsic::amdgcn_image_sample_c_cd_cl:
-
-    case Intrinsic::amdgcn_image_sample_o:
-    case Intrinsic::amdgcn_image_sample_cl_o:
-    case Intrinsic::amdgcn_image_sample_d_o:
-    case Intrinsic::amdgcn_image_sample_d_cl_o:
-    case Intrinsic::amdgcn_image_sample_l_o:
-    case Intrinsic::amdgcn_image_sample_b_o:
-    case Intrinsic::amdgcn_image_sample_b_cl_o:
-    case Intrinsic::amdgcn_image_sample_lz_o:
-    case Intrinsic::amdgcn_image_sample_cd_o:
-    case Intrinsic::amdgcn_image_sample_cd_cl_o:
-
-    case Intrinsic::amdgcn_image_sample_c_o:
-    case Intrinsic::amdgcn_image_sample_c_cl_o:
-    case Intrinsic::amdgcn_image_sample_c_d_o:
-    case Intrinsic::amdgcn_image_sample_c_d_cl_o:
-    case Intrinsic::amdgcn_image_sample_c_l_o:
-    case Intrinsic::amdgcn_image_sample_c_b_o:
-    case Intrinsic::amdgcn_image_sample_c_b_cl_o:
-    case Intrinsic::amdgcn_image_sample_c_lz_o:
-    case Intrinsic::amdgcn_image_sample_c_cd_o:
-    case Intrinsic::amdgcn_image_sample_c_cd_cl_o:
-
-    case Intrinsic::amdgcn_image_getlod: {
-      if (VWidth == 1 || !DemandedElts.isMask())
-        return nullptr;
-
-      // TODO: Handle 3 vectors when supported in code gen.
-      unsigned NewNumElts = PowerOf2Ceil(DemandedElts.countTrailingOnes());
-      if (NewNumElts == VWidth)
-        return nullptr;
-
-      Module *M = II->getParent()->getParent()->getParent();
-      Type *EltTy = V->getType()->getVectorElementType();
-
-      Type *NewTy = (NewNumElts == 1) ? EltTy :
-        VectorType::get(EltTy, NewNumElts);
-
-      auto IID = II->getIntrinsicID();
-
-      bool IsBuffer = IID == Intrinsic::amdgcn_buffer_load ||
-                      IID == Intrinsic::amdgcn_buffer_load_format;
-
-      Function *NewIntrin = IsBuffer ?
-        Intrinsic::getDeclaration(M, IID, NewTy) :
-        // Samplers have 3 mangled types.
-        Intrinsic::getDeclaration(M, IID,
-                                  { NewTy, II->getArgOperand(0)->getType(),
-                                      II->getArgOperand(1)->getType()});
-
-      SmallVector<Value *, 5> Args;
-      for (unsigned I = 0, E = II->getNumArgOperands(); I != E; ++I)
-        Args.push_back(II->getArgOperand(I));
-
-      IRBuilderBase::InsertPointGuard Guard(Builder);
-      Builder.SetInsertPoint(II);
-
-      CallInst *NewCall = Builder.CreateCall(NewIntrin, Args);
-      NewCall->takeName(II);
-      NewCall->copyMetadata(*II);
-
-      if (!IsBuffer) {
-        ConstantInt *DMask = dyn_cast<ConstantInt>(NewCall->getArgOperand(3));
-        if (DMask) {
-          unsigned DMaskVal = DMask->getZExtValue() & 0xf;
-
-          unsigned PopCnt = 0;
-          unsigned NewDMask = 0;
-          for (unsigned I = 0; I < 4; ++I) {
-            const unsigned Bit = 1 << I;
-            if (!!(DMaskVal & Bit)) {
-              if (++PopCnt > NewNumElts)
-                break;
-
-              NewDMask |= Bit;
-            }
-          }
-
-          NewCall->setArgOperand(3, ConstantInt::get(DMask->getType(), NewDMask));
-        }
-      }
-
-
-      if (NewNumElts == 1) {
-        return Builder.CreateInsertElement(UndefValue::get(V->getType()),
-                                           NewCall, static_cast<uint64_t>(0));
-      }
-
-      SmallVector<uint32_t, 8> EltMask;
-      for (unsigned I = 0; I < VWidth; ++I)
-        EltMask.push_back(I);
-
-      Value *Shuffle = Builder.CreateShuffleVector(
-        NewCall, UndefValue::get(NewTy), EltMask);
-
-      MadeChange = true;
-      return Shuffle;
+      break;
     }
-    }
+    } // switch on IntrinsicID
     break;
+  } // case Call
+  } // switch on Opcode
+
+  // TODO: We bail completely on integer div/rem and shifts because they have
+  // UB/poison potential, but that should be refined.
+  BinaryOperator *BO;
+  if (match(I, m_BinOp(BO)) && !BO->isIntDivRem() && !BO->isShift()) {
+    simplifyAndSetOp(I, 0, DemandedElts, UndefElts);
+    simplifyAndSetOp(I, 1, DemandedElts, UndefElts2);
+
+    // Any change to an instruction with potential poison must clear those flags
+    // because we can not guarantee those constraints now. Other analysis may
+    // determine that it is safe to re-apply the flags.
+    if (MadeChange)
+      BO->dropPoisonGeneratingFlags();
+
+    // Output elements are undefined if both are undefined. Consider things
+    // like undef & 0. The result is known zero, not undef.
+    UndefElts &= UndefElts2;
   }
-  }
+
+  // If we've proven all of the lanes undef, return an undef value.
+  // TODO: Intersect w/demanded lanes
+  if (UndefElts.isAllOnesValue())
+    return UndefValue::get(I->getType());;
+
   return MadeChange ? I : nullptr;
 }

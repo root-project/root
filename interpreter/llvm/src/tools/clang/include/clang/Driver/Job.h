@@ -1,9 +1,8 @@
-//===--- Job.h - Commands to Execute ----------------------------*- C++ -*-===//
+//===- Job.h - Commands to Execute ------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,24 +11,22 @@
 
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/iterator.h"
 #include "llvm/Option/Option.h"
 #include <memory>
-
-namespace llvm {
-  class raw_ostream;
-}
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace clang {
 namespace driver {
-class Action;
-class Command;
-class Tool;
-class InputInfo;
 
-// Re-export this as clang::driver::ArgStringList.
-using llvm::opt::ArgStringList;
+class Action;
+class InputInfo;
+class Tool;
 
 struct CrashReportInfo {
   StringRef Filename;
@@ -58,9 +55,12 @@ class Command {
   /// The list of program arguments which are inputs.
   llvm::opt::ArgStringList InputFilenames;
 
+  /// Whether to print the input filenames when executing.
+  bool PrintInputFilenames = false;
+
   /// Response file name, if this command is set to use one, or nullptr
   /// otherwise
-  const char *ResponseFile;
+  const char *ResponseFile = nullptr;
 
   /// The input file list in case we need to emit a file list instead of a
   /// proper response file
@@ -92,13 +92,13 @@ public:
   // FIXME: This really shouldn't be copyable, but is currently copied in some
   // error handling in Driver::generateCompilationDiagnostics.
   Command(const Command &) = default;
-  virtual ~Command() {}
+  virtual ~Command() = default;
 
   virtual void Print(llvm::raw_ostream &OS, const char *Terminator, bool Quote,
                      CrashReportInfo *CrashInfo = nullptr) const;
 
-  virtual int Execute(const StringRef **Redirects, std::string *ErrMsg,
-                      bool *ExecutionFailed) const;
+  virtual int Execute(ArrayRef<Optional<StringRef>> Redirects,
+                      std::string *ErrMsg, bool *ExecutionFailed) const;
 
   /// getSource - Return the Action which caused the creation of this job.
   const Action &getSource() const { return Source; }
@@ -115,7 +115,7 @@ public:
     InputFileList = std::move(List);
   }
 
-  /// \brief Sets the environment to be used by the new process.
+  /// Sets the environment to be used by the new process.
   /// \param NewEnvironment An array of environment variables.
   /// \remark If the environment remains unset, then the environment
   ///         from the parent process will be used.
@@ -127,6 +127,9 @@ public:
 
   /// Print a command argument, and optionally quote it.
   static void printArg(llvm::raw_ostream &OS, StringRef Arg, bool Quote);
+
+  /// Set whether to print the input filenames when executing.
+  void setPrintInputFilenames(bool P) { PrintInputFilenames = P; }
 };
 
 /// Like Command, but with a fallback which is executed in case
@@ -134,14 +137,15 @@ public:
 class FallbackCommand : public Command {
 public:
   FallbackCommand(const Action &Source_, const Tool &Creator_,
-                  const char *Executable_, const ArgStringList &Arguments_,
+                  const char *Executable_,
+                  const llvm::opt::ArgStringList &Arguments_,
                   ArrayRef<InputInfo> Inputs,
                   std::unique_ptr<Command> Fallback_);
 
   void Print(llvm::raw_ostream &OS, const char *Terminator, bool Quote,
              CrashReportInfo *CrashInfo = nullptr) const override;
 
-  int Execute(const StringRef **Redirects, std::string *ErrMsg,
+  int Execute(ArrayRef<Optional<StringRef>> Redirects, std::string *ErrMsg,
               bool *ExecutionFailed) const override;
 
 private:
@@ -152,23 +156,24 @@ private:
 class ForceSuccessCommand : public Command {
 public:
   ForceSuccessCommand(const Action &Source_, const Tool &Creator_,
-                      const char *Executable_, const ArgStringList &Arguments_,
+                      const char *Executable_,
+                      const llvm::opt::ArgStringList &Arguments_,
                       ArrayRef<InputInfo> Inputs);
 
   void Print(llvm::raw_ostream &OS, const char *Terminator, bool Quote,
              CrashReportInfo *CrashInfo = nullptr) const override;
 
-  int Execute(const StringRef **Redirects, std::string *ErrMsg,
+  int Execute(ArrayRef<Optional<StringRef>> Redirects, std::string *ErrMsg,
               bool *ExecutionFailed) const override;
 };
 
 /// JobList - A sequence of jobs to perform.
 class JobList {
 public:
-  typedef SmallVector<std::unique_ptr<Command>, 4> list_type;
-  typedef list_type::size_type size_type;
-  typedef llvm::pointee_iterator<list_type::iterator> iterator;
-  typedef llvm::pointee_iterator<list_type::const_iterator> const_iterator;
+  using list_type = SmallVector<std::unique_ptr<Command>, 4>;
+  using size_type = list_type::size_type;
+  using iterator = llvm::pointee_iterator<list_type::iterator>;
+  using const_iterator = llvm::pointee_iterator<list_type::const_iterator>;
 
 private:
   list_type Jobs;
@@ -193,7 +198,7 @@ public:
   const_iterator end() const { return Jobs.end(); }
 };
 
-} // end namespace driver
-} // end namespace clang
+} // namespace driver
+} // namespace clang
 
-#endif
+#endif // LLVM_CLANG_DRIVER_JOB_H

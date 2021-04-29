@@ -10,7 +10,7 @@
 #include "DeclUnloader.h"
 
 #include "cling/Utils/AST.h"
-#ifdef LLVM_ON_WIN32
+#ifdef _WIN32
 #include "cling/Utils/Diagnostics.h"
 #endif
 
@@ -43,11 +43,6 @@ bool DeclUnloader::isInstantiatedInPCH(const Decl *D) {
   return false;
 }
 
-bool DeclUnloader::isDefinition(TagDecl* R) {
-  return R->isCompleteDefinition() && isa<CXXRecordDecl>(R);
-}
-
-
 void DeclUnloader::resetDefinitionData(TagDecl *decl) {
   auto canon = dyn_cast<CXXRecordDecl>(decl->getCanonicalDecl());
   assert(canon && "Only CXXRecordDecl have DefinitionData");
@@ -59,11 +54,21 @@ void DeclUnloader::resetDefinitionData(TagDecl *decl) {
   }
 }
 
+constexpr static bool isDefinition(void*) { return false; }
+static bool isDefinition(TagDecl* R) {
+  return R->isCompleteDefinition() && isa<CXXRecordDecl>(R);
+}
+
 // Copied and adapted from: ASTReaderDecl.cpp
 template<typename DeclT>
-void DeclUnloader::removeRedeclFromChain(DeclT* R) {
+static void removeRedeclFromChain(DeclT* R) {
   //RedeclLink is a protected member.
   struct RedeclDerived : public Redeclarable<DeclT> {
+     // FIXME: Report this false positive diagnostic to clang.
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif // __clang__
     typedef typename Redeclarable<DeclT>::DeclLink DeclLink_t;
     static DeclLink_t& getLink(DeclT* LR) {
       Redeclarable<DeclT>* D = LR;
@@ -85,6 +90,9 @@ void DeclUnloader::removeRedeclFromChain(DeclT* R) {
         = DeclLink_t(DeclLink_t::LatestLink, First->getASTContext());
       getLink(First).setLatest(Latest);
     }
+#ifdef __clang__
+#pragma clang diagnostic push
+#endif // __clang__
   };
 
   assert(R != R->getFirstDecl() && "Cannot remove only redecl from chain");
@@ -120,7 +128,7 @@ void DeclUnloader::removeRedeclFromChain(DeclT* R) {
   // DefinitionData pointing to it.
   // This is really need only if DeclT is a TagDecl or derived.
   if (isdef) {
-    resetDefinitionData(Prev);
+     DeclUnloader::resetDefinitionData(Prev);
   }
 }
 
@@ -385,18 +393,16 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
 
   bool DeclUnloader::VisitDecl(Decl* D) {
     assert(D && "The Decl is null");
-    CollectFilesToUncache(D->getLocStart());
+    CollectFilesToUncache(D->getBeginLoc());
 
     DeclContext* DC = D->getLexicalDeclContext();
 
-    bool Successful = true;
     if (DC->containsDecl(D))
       DC->removeDecl(D);
 
-    // With the bump allocator this is nop.
-    if (Successful)
-      m_Sema->getASTContext().Deallocate(D);
-    return Successful;
+    // With the bump allocator this is a no-op.
+    m_Sema->getASTContext().Deallocate(D);
+    return true;
   }
 
   // Remove a decl and possibly it's parent entry in lookup tables.
@@ -611,9 +617,9 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
 
         // Collect all the specializations without the one to remove.
         for(Set::const_iterator I = specs.begin(),E = specs.end(); I != E; ++I){
-          assert(I->Function && "Must have a specialization.");
-          if (I->Function != specialization)
-            specializations.push_back(I->Function);
+          assert(I->getFunction() && "Must have a specialization.");
+          if (I->getFunction() != specialization)
+            specializations.push_back(I->getFunction());
         }
 
         This->getCommonPtr()->Specializations.clear();
@@ -813,8 +819,7 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
   }
 
   void DeclUnloader::MaybeRemoveDeclFromModule(GlobalDecl& GD) const {
-    if (!m_CurTransaction
-        || !m_CurTransaction->getModule()) // syntax-only mode exit
+    if (!m_CurTransaction || !m_CodeGen) // syntax-only mode exit
       return;
 
     using namespace llvm;
@@ -857,7 +862,7 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
 
       std::string mangledName;
       {
-#if LLVM_ON_WIN32
+#if _WIN32
         // clang cannot mangle everything in the ms-abi.
 #ifndef NDEBUG
         utils::DiagnosticsStore Errors(m_Sema->getDiagnostics(), false, false);
@@ -881,12 +886,14 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
         }
       }
 
-      auto M = m_CurTransaction->getModule();
-      GlobalValue* GV = M->getNamedValue(mangledName);
-      if (GV) { // May be deferred decl and thus 0
-        GlobalValueEraser GVEraser(m_CodeGen);
-        GVEraser.EraseGlobalValue(GV);
+      if (auto M = m_CurTransaction->getModule()) {
+        GlobalValue* GV = M->getNamedValue(mangledName);
+        if (GV) { // May be deferred decl and thus 0
+          GlobalValueEraser GVEraser(m_CodeGen);
+          GVEraser.EraseGlobalValue(GV);
+        }
       }
+      // DeferredDecls exist even without Module.
       m_CodeGen->forgetDecl(GD, mangledName);
     }
   }

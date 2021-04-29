@@ -1,9 +1,8 @@
 //===-- PPCMCAsmInfo.cpp - PPC asm properties -----------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -24,6 +23,7 @@ PPCMCAsmInfoDarwin::PPCMCAsmInfoDarwin(bool is64Bit, const Triple& T) {
   }
   IsLittleEndian = false;
 
+  SeparatorString = "@";
   CommentString = ";";
   ExceptionsType = ExceptionHandling::DwarfCFI;
 
@@ -60,7 +60,7 @@ PPCELFMCAsmInfo::PPCELFMCAsmInfo(bool is64Bit, const Triple& T) {
   CommentString = "#";
 
   // Uses '.section' before '.bss' directive
-  UsesELFSectionDirectiveForBSS = true;  
+  UsesELFSectionDirectiveForBSS = true;
 
   // Debug Information
   SupportsDebugInformation = true;
@@ -72,7 +72,7 @@ PPCELFMCAsmInfo::PPCELFMCAsmInfo(bool is64Bit, const Triple& T) {
 
   // Exceptions handling
   ExceptionsType = ExceptionHandling::DwarfCFI;
-    
+
   ZeroDirective = "\t.space\t";
   Data64bitsDirective = is64Bit ? "\t.quad\t" : nullptr;
   AssemblerDialect = 1;           // New-Style mnemonics.
@@ -81,3 +81,9 @@ PPCELFMCAsmInfo::PPCELFMCAsmInfo(bool is64Bit, const Triple& T) {
   UseIntegratedAssembler = true;
 }
 
+void PPCXCOFFMCAsmInfo::anchor() {}
+
+PPCXCOFFMCAsmInfo::PPCXCOFFMCAsmInfo(bool Is64Bit, const Triple &T) {
+  assert(!IsLittleEndian && "Little-endian XCOFF not supported.");
+  CodePointerSize = CalleeSaveStackSlotSize = Is64Bit ? 8 : 4;
+}

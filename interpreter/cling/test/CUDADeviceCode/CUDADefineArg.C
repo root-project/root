@@ -9,7 +9,7 @@
 
 // The Test checks whether a define argument (-DTEST=3) is passed to the PTX
 // compiler. If it works, it should not throw an error.
-// RUN: cat %s | %cling -DTEST=3 -x cuda -Xclang -verify 2>&1 | FileCheck %s
+// RUN: cat %s | %cling -DTEST=3 -x cuda --cuda-path=%cudapath %cudasmlevel -Xclang -verify 2>&1 | FileCheck %s
 // REQUIRES: cuda-runtime
 
 #include <iostream>
@@ -17,12 +17,12 @@
 // Check if cuda driver is available
 int version;
 cudaDriverGetVersion(&version)
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 
 // Check if a CUDA compatible device (GPU) is available.
 int device_count = 0;
 cudaGetDeviceCount(&device_count)
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 device_count > 0
 // CHECK: (bool) true
 
@@ -42,7 +42,7 @@ __global__ void g(){
 // the host interpreter.
 g<<<1,1>>>();
 cudaGetLastError()
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 
 // expected-no-diagnostics
 .q

@@ -67,6 +67,10 @@ being read stays in RAM.
 
 For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 
+
+### Creating a dataset using RDataFrame
+\see RooAbsDataHelper, rf408_RDataFrameToRooFit.C
+
 **/
 
 #include "RooDataSet.h"
@@ -90,6 +94,7 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 #include "RooTrace.h"
 #include "RooHelpers.h"
 
+#include "Math/Util.h"
 #include "TTree.h"
 #include "TH2.h"
 #include "TFile.h"
@@ -1060,26 +1065,6 @@ const RooArgSet* RooDataSet::get(Int_t index) const
 Double_t RooDataSet::sumEntries() const 
 {
   return store()->sumEntries() ;
-  
-  //---------
-
-  // Shortcut for unweighted unselected datasets
-  if (!isWeighted()) {
-    return numEntries() ;
-  }
-
-  // Otherwise sum the weights in the event
-  Double_t sumw(0), carry(0);
-  Int_t i ;
-  for (i=0 ; i<numEntries() ; i++) {
-    get(i) ;
-    Double_t y = weight() - carry;
-    Double_t t = sumw + y;
-    carry = (t - sumw) - y;
-    sumw = t;
-  }  
-
-  return sumw ;  
 }
 
 
@@ -1090,9 +1075,9 @@ Double_t RooDataSet::sumEntries() const
 Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const 
 {
   // Setup RooFormulaVar for cutSpec if it is present
-  RooFormula* select = 0 ;
+  std::unique_ptr<RooFormula> select = nullptr ;
   if (cutSpec && strlen(cutSpec) > 0) {
-    select = new RooFormula("select",cutSpec,*get()) ;
+    select = std::make_unique<RooFormula>("select",cutSpec,*get()) ;
   }
   
   // Shortcut for unweighted unselected datasets
@@ -1101,21 +1086,15 @@ Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
   }
 
   // Otherwise sum the weights in the event
-  Double_t sumw(0), carry(0);
-  Int_t i ;
-  for (i=0 ; i<numEntries() ; i++) {
+  ROOT::Math::KahanSum<double> sumw{0.0};
+  for (int i = 0 ; i<numEntries() ; i++) {
     get(i) ;
     if (select && select->eval()==0.) continue ;
     if (cutRange && !_vars.allInRange(cutRange)) continue ;
-    Double_t y = weight() - carry;
-    Double_t t = sumw + y;
-    carry = (t - sumw) - y;
-    sumw = t;
+    sumw += weight();
   }
 
-  if (select) delete select ;
-
-  return sumw ;  
+  return sumw.Sum() ;
 }
 
 

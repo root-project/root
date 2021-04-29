@@ -1,9 +1,9 @@
 /*===-- attributes.c - tool for testing libLLVM and llvm-c API ------------===*\
 |*                                                                            *|
-|*                     The LLVM Compiler Infrastructure                       *|
-|*                                                                            *|
-|* This file is distributed under the University of Illinois Open Source      *|
-|* License. See LICENSE.TXT for details.                                      *|
+|* Part of the LLVM Project, under the Apache License v2.0 with LLVM          *|
+|* Exceptions.                                                                *|
+|* See https://llvm.org/LICENSE.txt for license information.                  *|
+|* SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception                    *|
 |*                                                                            *|
 |*===----------------------------------------------------------------------===*|
 |*                                                                            *|
@@ -14,6 +14,7 @@
 
 #include "llvm-c-test.h"
 
+#include <assert.h>
 #include <stdlib.h>
 
 int llvm_test_function_attributes(void) {
@@ -28,8 +29,12 @@ int llvm_test_function_attributes(void) {
     for (Idx = LLVMAttributeFunctionIndex, ParamCount = LLVMCountParams(F);
          Idx <= ParamCount; ++Idx) {
       int AttrCount = LLVMGetAttributeCountAtIndex(F, Idx);
-      LLVMAttributeRef *Attrs =
-          (LLVMAttributeRef *)malloc(AttrCount * sizeof(LLVMAttributeRef));
+      LLVMAttributeRef *Attrs = 0;
+      if (AttrCount) {
+        Attrs =
+            (LLVMAttributeRef *)malloc(AttrCount * sizeof(LLVMAttributeRef));
+        assert(Attrs);
+      }
       LLVMGetAttributesAtIndex(F, Idx, Attrs);
       free(Attrs);
     }
@@ -59,8 +64,12 @@ int llvm_test_callsite_attributes(void) {
               ParamCount = LLVMCountParams(F);
                Idx <= ParamCount; ++Idx) {
             int AttrCount = LLVMGetCallSiteAttributeCount(I, Idx);
-            LLVMAttributeRef *Attrs = (LLVMAttributeRef *)malloc(
-                AttrCount * sizeof(LLVMAttributeRef));
+            LLVMAttributeRef *Attrs = 0;
+            if (AttrCount) {
+              Attrs = (LLVMAttributeRef *)malloc(
+                  AttrCount * sizeof(LLVMAttributeRef));
+              assert(Attrs);
+            }
             LLVMGetCallSiteAttributes(I, Idx, Attrs);
             free(Attrs);
           }

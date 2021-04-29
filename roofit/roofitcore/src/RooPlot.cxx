@@ -1096,8 +1096,7 @@ void RooPlot::SetMinimum(Double_t minimum)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate and return reduced chi-squared of curve with given name with respect
-/// to histogram with given name.
+/// Calculate and return reduced chi-squared between a curve and a histogram.
 ///
 /// \param[in] curvename  Name of the curve or nullptr for last curve
 /// \param[in] histname   Name of the histogram to compare to or nullptr for last added histogram
@@ -1105,8 +1104,11 @@ void RooPlot::SetMinimum(Double_t minimum)
 /// number. This means that the curve was fitted to the data with nFitParam floating
 /// parameters, which needs to be reflected in the calculation of \f$\chi^2 / \mathrm{ndf}\f$.
 /// 
-/// \return \f$ \chi^2 / \mathrm{ndf} \f$
-
+/// \return \f$ \chi^2 / \mathrm{ndf} \f$ between the plotted curve and the data.
+///
+/// \note The \f$ \chi^2 \f$ is calculated between a *plot of the original distribution* and the data.
+/// It therefore has more rounding errors than directly calculating the \f$ \chi^2 \f$ from a PDF or
+/// function. To do this, use RooChi2Var.
 Double_t RooPlot::chiSquare(const char* curvename, const char* histname, int nFitParam) const
 {
 
@@ -1133,6 +1135,8 @@ Double_t RooPlot::chiSquare(const char* curvename, const char* histname, int nFi
 /// to curve 'curvename'. If normalize is true, the residuals are divided by the error
 /// of the histogram, effectively returning a pull histogram.
 /// The plotting range of the graph is adapted to the plotting range of the current plot.
+/// If `useAverage` is true, the histogram is compared with the curve's average values within a given bin.
+/// Otherwise, the curve is interpolated at the bin centres, which is not accurate for curved distributions.
 RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool normalize, bool useAverage) const
 {
   // Find curve object
@@ -1151,6 +1155,8 @@ RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool no
 
   auto residhist = hist->makeResidHist(*curve,normalize,useAverage);
   residhist->GetHistogram()->GetXaxis()->SetRangeUser(_hist->GetXaxis()->GetXmin(), _hist->GetXaxis()->GetXmax());
+  residhist->GetHistogram()->GetXaxis()->SetTitle(_hist->GetXaxis()->GetTitle());
+  residhist->GetHistogram()->GetYaxis()->SetTitle(normalize ? "(Data - curve) / #sigma_{data}" : "Data - curve");
 
   return residhist;
 }

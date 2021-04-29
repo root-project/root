@@ -1,9 +1,8 @@
 //===- llvm/InlineAsm.h - Class to represent inline asm strings -*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -101,7 +100,7 @@ public:
     /// input constraint is required to match it (e.g. "0").  The value is the
     /// constraint number that matches this one (for example, if this is
     /// constraint #0 and constraint #4 has the value "0", this will be 4).
-    signed char MatchingInput = -1;
+    int MatchingInput = -1;
 
     /// Code - The constraint code, either the register name (in braces) or the
     /// constraint letter/number.
@@ -128,7 +127,7 @@ public:
     /// input constraint is required to match it (e.g. "0").  The value is the
     /// constraint number that matches this one (for example, if this is
     /// constraint #0 and constraint #4 has the value "0", this will be 4).
-    signed char MatchingInput = -1;
+    int MatchingInput = -1;
 
     /// hasMatchingInput - Return true if this is an output constraint that has
     /// a matching input constraint.
@@ -245,6 +244,7 @@ public:
     Constraint_m,
     Constraint_o,
     Constraint_v,
+    Constraint_A,
     Constraint_Q,
     Constraint_R,
     Constraint_S,

@@ -1,9 +1,8 @@
 //===- SymbolRecord.h -------------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,6 +13,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/iterator.h"
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/DebugInfo/CodeView/CVRecord.h"
 #include "llvm/DebugInfo/CodeView/CodeView.h"
@@ -156,15 +156,19 @@ public:
   uint32_t RecordOffset;
 };
 
-struct BinaryAnnotationIterator {
-  struct AnnotationData {
-    BinaryAnnotationsOpCode OpCode;
-    StringRef Name;
-    uint32_t U1;
-    uint32_t U2;
-    int32_t S1;
-  };
+struct DecodedAnnotation {
+  StringRef Name;
+  ArrayRef<uint8_t> Bytes;
+  BinaryAnnotationsOpCode OpCode;
+  uint32_t U1 = 0;
+  uint32_t U2 = 0;
+  int32_t S1 = 0;
+};
 
+struct BinaryAnnotationIterator
+    : public iterator_facade_base<BinaryAnnotationIterator,
+                                  std::forward_iterator_tag,
+                                  DecodedAnnotation> {
   BinaryAnnotationIterator() = default;
   BinaryAnnotationIterator(ArrayRef<uint8_t> Annotations) : Data(Annotations) {}
   BinaryAnnotationIterator(const BinaryAnnotationIterator &Other)
@@ -172,10 +176,6 @@ struct BinaryAnnotationIterator {
 
   bool operator==(BinaryAnnotationIterator Other) const {
     return Data == Other.Data;
-  }
-
-  bool operator!=(const BinaryAnnotationIterator &Other) const {
-    return !(*this == Other);
   }
 
   BinaryAnnotationIterator &operator=(const BinaryAnnotationIterator Other) {
@@ -194,13 +194,7 @@ struct BinaryAnnotationIterator {
     return *this;
   }
 
-  BinaryAnnotationIterator operator++(int) {
-    BinaryAnnotationIterator Orig(*this);
-    ++(*this);
-    return Orig;
-  }
-
-  const AnnotationData &operator*() {
+  const DecodedAnnotation &operator*() {
     ParseCurrentAnnotation();
     return Current.getValue();
   }
@@ -242,17 +236,17 @@ private:
              (ThirdByte << 8) | FourthByte;
 
     return -1;
-  };
+  }
 
   static int32_t DecodeSignedOperand(uint32_t Operand) {
     if (Operand & 1)
       return -(Operand >> 1);
     return Operand >> 1;
-  };
+  }
 
   static int32_t DecodeSignedOperand(ArrayRef<uint8_t> &Annotations) {
     return DecodeSignedOperand(GetCompressedAnnotation(Annotations));
-  };
+  }
 
   bool ParseCurrentAnnotation() {
     if (Current.hasValue())
@@ -260,7 +254,7 @@ private:
 
     Next = Data;
     uint32_t Op = GetCompressedAnnotation(Next);
-    AnnotationData Result;
+    DecodedAnnotation Result;
     Result.OpCode = static_cast<BinaryAnnotationsOpCode>(Op);
     switch (Result.OpCode) {
     case BinaryAnnotationsOpCode::Invalid:
@@ -325,11 +319,12 @@ private:
       break;
     }
     }
+    Result.Bytes = Data.take_front(Data.size() - Next.size());
     Current = Result;
     return true;
   }
 
-  Optional<AnnotationData> Current;
+  Optional<DecodedAnnotation> Current;
   ArrayRef<uint8_t> Data;
   ArrayRef<uint8_t> Next;
 };
@@ -358,17 +353,18 @@ public:
 // S_PUB32
 class PublicSym32 : public SymbolRecord {
 public:
+  PublicSym32() : SymbolRecord(SymbolRecordKind::PublicSym32) {}
   explicit PublicSym32(SymbolRecordKind Kind) : SymbolRecord(Kind) {}
   explicit PublicSym32(uint32_t RecordOffset)
       : SymbolRecord(SymbolRecordKind::PublicSym32),
         RecordOffset(RecordOffset) {}
 
-  PublicSymFlags Flags;
-  uint32_t Offset;
-  uint16_t Segment;
+  PublicSymFlags Flags = PublicSymFlags::None;
+  uint32_t Offset = 0;
+  uint16_t Segment = 0;
   StringRef Name;
 
-  uint32_t RecordOffset;
+  uint32_t RecordOffset = 0;
 };
 
 // S_REGISTER
@@ -399,6 +395,7 @@ public:
   uint16_t Module;
   StringRef Name;
 
+  uint16_t modi() const { return Module - 1; }
   uint32_t RecordOffset;
 };
 
@@ -636,6 +633,7 @@ public:
 // S_OBJNAME
 class ObjNameSym : public SymbolRecord {
 public:
+  explicit ObjNameSym() : SymbolRecord(SymbolRecordKind::ObjNameSym) {}
   explicit ObjNameSym(SymbolRecordKind Kind) : SymbolRecord(Kind) {}
   ObjNameSym(uint32_t RecordOffset)
       : SymbolRecord(SymbolRecordKind::ObjNameSym), RecordOffset(RecordOffset) {
@@ -718,6 +716,7 @@ public:
 // S_COMPILE3
 class Compile3Sym : public SymbolRecord {
 public:
+  Compile3Sym() : SymbolRecord(SymbolRecordKind::Compile3Sym) {}
   explicit Compile3Sym(SymbolRecordKind Kind) : SymbolRecord(Kind) {}
   Compile3Sym(uint32_t RecordOffset)
       : SymbolRecord(SymbolRecordKind::Compile3Sym),
@@ -739,8 +738,17 @@ public:
     Flags = CompileSym3Flags((uint32_t(Flags) & 0xFFFFFF00) | uint32_t(Lang));
   }
 
-  uint8_t getLanguage() const { return static_cast<uint32_t>(Flags) & 0xFF; }
-  uint32_t getFlags() const { return static_cast<uint32_t>(Flags) & ~0xFF; }
+  SourceLanguage getLanguage() const {
+    return static_cast<SourceLanguage>(static_cast<uint32_t>(Flags) & 0xFF);
+  }
+  CompileSym3Flags getFlags() const {
+    return static_cast<CompileSym3Flags>(static_cast<uint32_t>(Flags) & ~0xFF);
+  }
+
+  bool hasOptimizations() const {
+    return CompileSym3Flags::None !=
+           (getFlags() & (CompileSym3Flags::PGO | CompileSym3Flags::LTCG));
+  }
 
   uint32_t RecordOffset;
 };
@@ -761,7 +769,21 @@ public:
   uint16_t SectionIdOfExceptionHandler;
   FrameProcedureOptions Flags;
 
+  /// Extract the register this frame uses to refer to local variables.
+  RegisterId getLocalFramePtrReg(CPUType CPU) const {
+    return decodeFramePtrReg(
+        EncodedFramePtrReg((uint32_t(Flags) >> 14U) & 0x3U), CPU);
+  }
+
+  /// Extract the register this frame uses to refer to parameters.
+  RegisterId getParamFramePtrReg(CPUType CPU) const {
+    return decodeFramePtrReg(
+        EncodedFramePtrReg((uint32_t(Flags) >> 16U) & 0x3U), CPU);
+  }
+
   uint32_t RecordOffset;
+
+private:
 };
 
 // S_CALLSITEINFO
@@ -942,8 +964,39 @@ public:
   uint32_t RecordOffset;
 };
 
+// S_UNAMESPACE
+class UsingNamespaceSym : public SymbolRecord {
+public:
+  explicit UsingNamespaceSym(SymbolRecordKind Kind) : SymbolRecord(Kind) {}
+  explicit UsingNamespaceSym(uint32_t RecordOffset)
+      : SymbolRecord(SymbolRecordKind::UsingNamespaceSym),
+        RecordOffset(RecordOffset) {}
+
+  StringRef Name;
+
+  uint32_t RecordOffset;
+};
+
+// S_ANNOTATION
+class AnnotationSym : public SymbolRecord {
+public:
+  explicit AnnotationSym(SymbolRecordKind Kind) : SymbolRecord(Kind) {}
+  explicit AnnotationSym(uint32_t RecordOffset)
+      : SymbolRecord(SymbolRecordKind::AnnotationSym),
+        RecordOffset(RecordOffset) {}
+
+  uint32_t CodeOffset = 0;
+  uint16_t Segment = 0;
+  std::vector<StringRef> Strings;
+
+  uint32_t RecordOffset;
+};
+
 using CVSymbol = CVRecord<SymbolKind>;
 using CVSymbolArray = VarStreamArray<CVSymbol>;
+
+Expected<CVSymbol> readSymbolFromStream(BinaryStreamRef Stream,
+                                        uint32_t Offset);
 
 } // end namespace codeview
 } // end namespace llvm

@@ -27,6 +27,7 @@
 #include "TAttMarker.h"
 #include "TVectorFfwd.h"
 #include "TVectorDfwd.h"
+#include "TFitResultPtr.h"
 
 class TBrowser;
 class TAxis;
@@ -35,8 +36,7 @@ class TH1F;
 class TCollection;
 class TF1;
 class TSpline;
-
-#include "TFitResultPtr.h"
+class TList;
 
 class TGraph : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -67,11 +67,11 @@ protected:
 public:
    // TGraph status bits
    enum EStatusBits {
-      kClipFrame     = BIT(10),  ///< clip to the frame boundary
+      kClipFrame     = BIT(10),  ///< Clip to the frame boundary
       kResetHisto    = BIT(17),  ///< fHistogram must be reset in GetHistogram
-      kNotEditable   = BIT(18),  ///< bit set if graph is non editable
-      kIsSortedX     = BIT(19),  ///< graph is sorted in X points
-      kIsHighlight   = BIT(20)   ///< bit set if graph is highlight
+      kNotEditable   = BIT(18),  ///< Bit set if graph is non editable
+      kIsSortedX     = BIT(19),  ///< Graph is sorted in X points
+      kIsHighlight   = BIT(20)   ///< Bit set if graph is highlight
    };
 
    TGraph();
@@ -101,9 +101,9 @@ public:
    virtual void          Draw(Option_t *chopt="");
    virtual void          DrawGraph(Int_t n, const Int_t *x, const Int_t *y, Option_t *option="");
    virtual void          DrawGraph(Int_t n, const Float_t *x, const Float_t *y, Option_t *option="");
-   virtual void          DrawGraph(Int_t n, const Double_t *x=0, const Double_t *y=0, Option_t *option="");
+   virtual void          DrawGraph(Int_t n, const Double_t *x=nullptr, const Double_t *y=nullptr, Option_t *option="");
    virtual void          DrawPanel(); // *MENU*
-   virtual Double_t      Eval(Double_t x, TSpline *spline=0, Option_t *option="") const;
+   virtual Double_t      Eval(Double_t x, TSpline *spline=nullptr, Option_t *option="") const;
    virtual void          ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void          Expand(Int_t newsize);
    virtual void          Expand(Int_t newsize, Int_t step);
@@ -130,16 +130,16 @@ public:
    virtual Double_t      GetErrorYlow(Int_t bin)  const;
    Double_t             *GetX()  const {return fX;}
    Double_t             *GetY()  const {return fY;}
-   virtual Double_t     *GetEX() const {return 0;}
-   virtual Double_t     *GetEY() const {return 0;}
-   virtual Double_t     *GetEXhigh() const {return 0;}
-   virtual Double_t     *GetEXlow()  const {return 0;}
-   virtual Double_t     *GetEYhigh() const {return 0;}
-   virtual Double_t     *GetEYlow()  const {return 0;}
-   virtual Double_t     *GetEXlowd()  const {return 0;}
-   virtual Double_t     *GetEXhighd() const {return 0;}
-   virtual Double_t     *GetEYlowd()  const {return 0;}
-   virtual Double_t     *GetEYhighd() const {return 0;}
+   virtual Double_t     *GetEX() const {return nullptr;}
+   virtual Double_t     *GetEY() const {return nullptr;}
+   virtual Double_t     *GetEXhigh() const {return nullptr;}
+   virtual Double_t     *GetEXlow()  const {return nullptr;}
+   virtual Double_t     *GetEYhigh() const {return nullptr;}
+   virtual Double_t     *GetEYlow()  const {return nullptr;}
+   virtual Double_t     *GetEXlowd()  const {return nullptr;}
+   virtual Double_t     *GetEXhighd() const {return nullptr;}
+   virtual Double_t     *GetEYlowd()  const {return nullptr;}
+   virtual Double_t     *GetEYhighd() const {return nullptr;}
    Double_t              GetMaximum()  const {return fMaximum;}
    Double_t              GetMinimum()  const {return fMinimum;}
    TAxis                *GetXaxis() const ;

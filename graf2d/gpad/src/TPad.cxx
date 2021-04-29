@@ -560,6 +560,7 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
             leg->AddEntry( obj, mes.Data(), opt );
          }
       }
+      opt = "";
    }
    if (leg) {
       TVirtualPad *gpadsave;
@@ -1306,7 +1307,7 @@ void TPad::Draw(Option_t *option)
    // pad cannot be in itself and it can only be in one other pad at a time
    if (!fPrimitives) fPrimitives = new TList;
    if (gPad != this) {
-      if (fMother && fMother->TestBit(kNotDeleted)) 
+      if (fMother && fMother->TestBit(kNotDeleted))
             if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
       TPad *oldMother = fMother;
       fCanvas = gPad->GetCanvas();
@@ -3242,10 +3243,10 @@ void TPad::FillCollideGridTGraph(TObject *o)
    Double_t ys   = (fY2-fY1)/fCGny;
 
    Int_t n = g->GetN();
+   Int_t s = TMath::Max(n/10,1);
    Double_t x1, x2, y1, y2;
-
-   for (Int_t i=1; i<n; i++) {
-      g->GetPoint(i-1,x1,y1);
+   for (Int_t i=s; i<n; i=i+s) {
+      g->GetPoint(TMath::Max(0,i-s),x1,y1);
       g->GetPoint(i  ,x2,y2);
       if (fLogx) {
          if (x1 > 0) x1 = TMath::Log10(x1);
@@ -5698,15 +5699,18 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    char quote='"';
    char lcname[10];
    const char *cname = GetName();
-   Int_t nch = strlen(cname);
-   if (nch < 10) {
-      strlcpy(lcname,cname,10);
-      for (Int_t k=1;k<=nch;k++) {if (lcname[nch-k] == ' ') lcname[nch-k] = 0;}
-      if (lcname[0] == 0) {
-         if (this == gPad->GetCanvas()) {strlcpy(lcname,"c1",10);  nch = 2;}
-         else                           {strlcpy(lcname,"pad",10); nch = 3;}
-      }
-      cname = lcname;
+   size_t nch = strlen(cname);
+   if (nch < sizeof(lcname)) {
+      strlcpy(lcname, cname, sizeof(lcname));
+      for(size_t k = 0; k < nch; k++)
+         if (lcname[k] == ' ')
+            lcname[k] = 0;
+      if (lcname[0] != 0)
+         cname = lcname;
+      else if (this == gPad->GetCanvas())
+         cname = "c1";
+      else
+         cname = "pad";
    }
 
    //   Write pad parameters
@@ -6218,7 +6222,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    TPad *is_pad = dynamic_cast<TPad *>( object );
    TVirtualPad *padSave = 0;
    padSave = gPad;
-   if (is_pad) 
+   if (is_pad)
      if (is_pad->GetMother()) is_pad->GetMother()->cd();
 
    static TPad * tmpGuideLinePad;
@@ -6886,26 +6890,27 @@ void TPad::UseCurrentStyle()
 
 TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 {
-   if (!gPad) return 0;
+   if (!gPad) return nullptr;
 
    if (strlen(emode)) gROOT->SetEditorMode(emode);
    if (gROOT->GetEditorMode() == 0 && strlen(pname) > 2) gROOT->SetEditorMode(&pname[1]);
 
    if (!fPrimitives) fPrimitives = new TList;
    gSystem->ProcessEvents();
-   TObject *oldlast = gPad->GetListOfPrimitives()->Last();
-   TObject *obj = 0;
+   TObject *oldlast = gPad->GetListOfPrimitives() ? gPad->GetListOfPrimitives()->Last() : nullptr;
+   TObject *obj = nullptr;
    Bool_t testlast = kFALSE;
    Bool_t hasname = strlen(pname) > 0;
    if (!pname[0] && !emode[0]) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
-   while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad()) {
+   while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad() && gPad) {
       if (gROOT->GetEditorMode() == 0) {
          if (hasname) {
             obj = FindObject(pname);
             if (obj) return obj;
          }
          if (testlast) {
+            if (!gPad->GetListOfPrimitives()) return nullptr;
             obj = gPad->GetListOfPrimitives()->Last();
             if (obj != oldlast) return obj;
             Int_t event = GetEvent();
@@ -6920,7 +6925,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
       gSystem->Sleep(10);
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

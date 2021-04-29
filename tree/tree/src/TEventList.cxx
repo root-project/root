@@ -485,7 +485,7 @@ TEventList operator+(const TEventList &list1, const TEventList &list2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Substraction
+/// Subtraction
 
 TEventList operator-(const TEventList &list1, const TEventList &list2)
 {

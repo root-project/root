@@ -35,6 +35,7 @@
 #include "TClassEdit.h"
 #include "TClassRef.h"
 #include "TDirectory.h"
+#include "TError.h" // for R__ASSERT, Warning
 #include "TFile.h" // for SnapshotHelper
 #include "TH1.h"
 #include "TGraph.h"
@@ -1052,30 +1053,11 @@ class BoolArray {
       return b;
    }
 
-   bool *CopyArray(bool *o, std::size_t size)
-   {
-      auto b = new bool[size];
-      for (auto i = 0u; i < size; ++i)
-         b[i] = o[i];
-      return b;
-   }
-
 public:
-   // this generic constructor could be replaced with a constexpr if in SetBranchesHelper
    BoolArray() = default;
-   template <typename T>
-   BoolArray(const T &) { throw std::runtime_error("This constructor should never be called"); }
    BoolArray(const RVec<bool> &v) : fSize(v.size()), fBools(CopyVector(v)) {}
-   BoolArray(const BoolArray &b)
-   {
-      CopyArray(b.fBools, b.fSize);
-   }
-   BoolArray &operator=(const BoolArray &b)
-   {
-      delete[] fBools;
-      CopyArray(b.fBools, b.fSize);
-      return *this;
-   }
+   BoolArray(const BoolArray &b) = delete;
+   BoolArray &operator=(const BoolArray &b) = delete;
    BoolArray(BoolArray &&b)
    {
       fSize = b.fSize;
@@ -1180,10 +1162,10 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
       }
    }
    const bool isTClonesArray = inputBranch != nullptr && std::string(inputBranch->GetClassName()) == "TClonesArray";
-   const auto mustWriteStdVec = !inputBranch || isTClonesArray ||
-                                ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
+   const auto mustWriteRVec = !inputBranch || isTClonesArray ||
+                              ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
 
-   if (mustWriteStdVec) {
+   if (mustWriteRVec) {
       // Treat:
       // 2. RVec coming from a custom column or a source
       // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
@@ -1195,7 +1177,7 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
                  "be written out as a std::vector instead of a TClonesArray. Specify that the type of the branch is "
                  "TClonesArray as a Snapshot template parameter to write out a TClonesArray instead.", inName.c_str());
       }
-      outputTree.Branch(outName.c_str(), &ab->AsVector());
+      outputTree.Branch(outName.c_str(), ab);
       return;
    }
 
@@ -1305,7 +1287,7 @@ public:
       // associated to those is re-allocated. As a result the value of the pointer can change therewith
       // leaving associated to the branch of the output tree an invalid pointer.
       // With this code, we set the value of the pointer in the output branch anew when needed.
-      // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and 
+      // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and
       // we need an int for the expander list.
       int expander[] = {(fBranches[S] && fBranchAddresses[S] != GetData(values)
                          ? fBranches[S]->SetAddress(GetData(values)),
@@ -1359,15 +1341,14 @@ public:
 
    void Finalize()
    {
-      if (fOutputFile && fOutputTree) {
-         // because TTree::Write writes in gDirectory, not in fDirectory
-         fOutputTree->AutoSave("flushbaskets");
-         // must destroy the TTree first, otherwise TFile will delete it too leading to a double delete
-         fOutputTree.reset();
-         fOutputFile->Close();
-      } else {
-         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
-      }
+      R__ASSERT(fOutputTree != nullptr);
+      R__ASSERT(fOutputFile != nullptr);
+
+      // use AutoSave to flush TTree contents because TTree::Write writes in gDirectory, not in fDirectory
+      fOutputTree->AutoSave("flushbaskets");
+      // must destroy the TTree first, otherwise TFile will delete it too leading to a double delete
+      fOutputTree.reset();
+      fOutputFile->Close();
    }
 
    std::string GetActionName() { return "Snapshot"; }
@@ -1392,7 +1373,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
    // Addresses of branches in output per slot, non-null only for the ones holding C arrays
    std::vector<std::vector<TBranch *>> fBranches;
    // Addresses associated to output branches per slot, non-null only for the ones holding C arrays
-   std::vector<std::vector<void *>> fBranchAddresses; 
+   std::vector<std::vector<void *>> fBranchAddresses;
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
@@ -1402,7 +1383,7 @@ public:
       : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots), fIsFirstEvent(fNSlots, 1), fFileName(filename),
         fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
         fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots), fBoolArrays(fNSlots),
-        fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)), 
+        fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)),
         fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr))
    {
       ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
@@ -1520,6 +1501,11 @@ public:
 
    void Finalize()
    {
+      const bool allNullFiles =
+         std::all_of(fOutputFiles.begin(), fOutputFiles.end(),
+                     [](const std::shared_ptr<ROOT::Experimental::TBufferMergerFile> &ptr) { return ptr == nullptr; });
+      R__ASSERT(!allNullFiles);
+
       auto fileWritten = false;
       for (auto &file : fOutputFiles) {
          if (file) {
@@ -1530,12 +1516,8 @@ public:
       }
 
       if (!fileWritten) {
-         if (std::none_of(fOutputFiles.begin(), fOutputFiles.end(), [] (const std::shared_ptr<ROOT::Experimental::TBufferMergerFile> ptr) { return bool(ptr); })) {
-            Warning("Snapshot",
-                    "No input entries (input TTree was empty or no entry passed the Filters). Output TTree is empty.");
-         } else {
-            Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
-         }
+         Warning("Snapshot",
+                 "No input entries (input TTree was empty or no entry passed the Filters). Output TTree is empty.");
       }
 
       // flush all buffers to disk by destroying the TBufferMerger

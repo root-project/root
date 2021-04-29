@@ -13,16 +13,6 @@
 #define ROOT_TGString
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGString and TGHotString                                             //
-//                                                                      //
-// TGString wraps a TString and adds some graphics routines like        //
-// drawing, size of string on screen depending on font, etc.            //
-// TGHotString is a string with a "hot" character unerlined.            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TString.h"
 #include "GuiTypes.h"
 
@@ -52,12 +42,12 @@ public:
 class TGHotString : public TGString {
 
 protected:
-   char        fHotChar;      // hot character
-   Int_t       fHotPos;       // position of hot character
+   char        fHotChar;      ///< hot character
+   Int_t       fHotPos;       ///< position of hot character
 
-   GContext_t  fLastGC;       // context used during last drawing
-   Int_t       fOff1;         // variable used during drawing (cache)
-   Int_t       fOff2;         // variable used during drawing (cache)
+   GContext_t  fLastGC;       ///< context used during last drawing
+   Int_t       fOff1;         ///< variable used during drawing (cache)
+   Int_t       fOff2;         ///< variable used during drawing (cache)
 
    void DrawHotChar(Drawable_t id, GContext_t gc, Int_t x, Int_t y);
 

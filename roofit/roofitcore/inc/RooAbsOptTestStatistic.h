@@ -31,9 +31,8 @@ public:
   // Constructors, assignment etc
   RooAbsOptTestStatistic() ;
   RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
-			 const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0,
-			 Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE,
-			 Bool_t cloneInputData = true, double integrateOverBinsPrecision = -1.);
+                         const RooArgSet& projDeps,
+                         RooAbsTestStatistic::Configuration const& cfg);
   RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=0);
   virtual ~RooAbsOptTestStatistic();
 
@@ -65,6 +64,7 @@ protected:
 		 const char* addCoefRangeName)  ;
 
   friend class RooAbsReal ;
+  friend class RooAbsTestStatistic ;
 
   virtual Bool_t allowFunctionCache() { return kTRUE ;  }
   void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;

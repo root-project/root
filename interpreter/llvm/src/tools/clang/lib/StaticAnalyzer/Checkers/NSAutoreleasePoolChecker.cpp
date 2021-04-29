@@ -1,9 +1,8 @@
 //=- NSAutoreleasePoolChecker.cpp --------------------------------*- C++ -*-==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -15,7 +14,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugReporter.h"
@@ -76,6 +75,9 @@ void NSAutoreleasePoolChecker::checkPreObjCMessage(const ObjCMethodCall &msg,
 }
 
 void ento::registerNSAutoreleasePoolChecker(CheckerManager &mgr) {
-  if (mgr.getLangOpts().getGC() != LangOptions::NonGC)
-    mgr.registerChecker<NSAutoreleasePoolChecker>();
+  mgr.registerChecker<NSAutoreleasePoolChecker>();
+}
+
+bool ento::shouldRegisterNSAutoreleasePoolChecker(const LangOptions &LO) {
+  return LO.getGC() != LangOptions::NonGC;
 }

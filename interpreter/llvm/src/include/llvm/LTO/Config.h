@@ -1,9 +1,8 @@
 //===-Config.h - LLVM Link Time Optimizer Configuration -------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -40,7 +39,7 @@ struct Config {
   TargetOptions Options;
   std::vector<std::string> MAttrs;
   Optional<Reloc::Model> RelocModel = Reloc::PIC_;
-  CodeModel::Model CodeModel = CodeModel::Default;
+  Optional<CodeModel::Model> CodeModel = None;
   CodeGenOpt::Level CGOptLevel = CodeGenOpt::Default;
   TargetMachine::CodeGenFileType CGFileType = TargetMachine::CGFT_ObjectFile;
   unsigned OptLevel = 2;
@@ -49,8 +48,15 @@ struct Config {
   /// Use the new pass manager
   bool UseNewPM = false;
 
+  /// Flag to indicate that the optimizer should not assume builtins are present
+  /// on the target.
+  bool Freestanding = false;
+
   /// Disable entirely the optimizer, including importing for ThinLTO
   bool CodeGenOnly = false;
+
+  /// Run PGO context sensitive IR instrumentation.
+  bool RunCSIRInstr = false;
 
   /// If this field is set, the set of passes run in the middle-end optimizer
   /// will be the one specified by the string. Only works with the new pass
@@ -70,14 +76,46 @@ struct Config {
   /// with this triple.
   std::string DefaultTriple;
 
+  /// Context Sensitive PGO profile path.
+  std::string CSIRProfile;
+
   /// Sample PGO profile path.
   std::string SampleProfile;
+
+  /// Name remapping file for profile data.
+  std::string ProfileRemapping;
+
+  /// The directory to store .dwo files.
+  std::string DwoDir;
+
+  /// The name for the split debug info file used for the DW_AT_[GNU_]dwo_name
+  /// attribute in the skeleton CU. This should generally only be used when
+  /// running an individual backend directly via thinBackend(), as otherwise
+  /// all objects would use the same .dwo file. Not used as output path.
+  std::string SplitDwarfFile;
+
+  /// The path to write a .dwo file to. This should generally only be used when
+  /// running an individual backend directly via thinBackend(), as otherwise
+  /// all .dwo files will be written to the same path. Not used in skeleton CU.
+  std::string SplitDwarfOutput;
 
   /// Optimization remarks file path.
   std::string RemarksFilename = "";
 
+  /// Optimization remarks pass filter.
+  std::string RemarksPasses = "";
+
   /// Whether to emit optimization remarks with hotness informations.
   bool RemarksWithHotness = false;
+
+  /// The format used for serializing remarks (default: YAML).
+  std::string RemarksFormat = "";
+
+  /// Whether to emit the pass manager debuggging informations.
+  bool DebugPassManager = false;
+
+  /// Statistics output file path.
+  std::string StatsFile;
 
   bool ShouldDiscardValueNames = true;
   DiagnosticHandlerFunction DiagHandler;
@@ -112,7 +150,7 @@ struct Config {
   ///
   /// Note that in out-of-process backend scenarios, none of the hooks will be
   /// called for ThinLTO tasks.
-  typedef std::function<bool(unsigned Task, const Module &)> ModuleHookFn;
+  using ModuleHookFn = std::function<bool(unsigned Task, const Module &)>;
 
   /// This module hook is called after linking (regular LTO) or loading
   /// (ThinLTO) the module, before modifying it.
@@ -145,8 +183,8 @@ struct Config {
   ///
   /// It is called regardless of whether the backend is in-process, although it
   /// is not called from individual backend processes.
-  typedef std::function<bool(const ModuleSummaryIndex &Index)>
-      CombinedIndexHookFn;
+  using CombinedIndexHookFn =
+      std::function<bool(const ModuleSummaryIndex &Index)>;
   CombinedIndexHookFn CombinedIndexHook;
 
   /// This is a convenience function that configures this Config object to write
@@ -168,20 +206,27 @@ struct Config {
                      bool UseInputModulePath = false);
 };
 
+struct LTOLLVMDiagnosticHandler : public DiagnosticHandler {
+  DiagnosticHandlerFunction *Fn;
+  LTOLLVMDiagnosticHandler(DiagnosticHandlerFunction *DiagHandlerFn)
+      : Fn(DiagHandlerFn) {}
+  bool handleDiagnostics(const DiagnosticInfo &DI) override {
+    (*Fn)(DI);
+    return true;
+  }
+};
 /// A derived class of LLVMContext that initializes itself according to a given
 /// Config object. The purpose of this class is to tie ownership of the
 /// diagnostic handler to the context, as opposed to the Config object (which
 /// may be ephemeral).
+// FIXME: This should not be required as diagnostic handler is not callback.
 struct LTOLLVMContext : LLVMContext {
-  static void funcDiagHandler(const DiagnosticInfo &DI, void *Context) {
-    auto *Fn = static_cast<DiagnosticHandlerFunction *>(Context);
-    (*Fn)(DI);
-  }
 
   LTOLLVMContext(const Config &C) : DiagHandler(C.DiagHandler) {
     setDiscardValueNames(C.ShouldDiscardValueNames);
     enableDebugTypeODRUniquing();
-    setDiagnosticHandler(funcDiagHandler, &DiagHandler, true);
+    setDiagnosticHandler(
+        llvm::make_unique<LTOLLVMDiagnosticHandler>(&DiagHandler), true);
   }
   DiagnosticHandlerFunction DiagHandler;
 };

@@ -1,30 +1,32 @@
 =========================
-Clang 5.0.0 Release Notes
+Clang 9.0.0 Release Notes
 =========================
 
 .. contents::
    :local:
    :depth: 2
 
-Written by the `LLVM Team <http://llvm.org/>`_
+Written by the `LLVM Team <https://llvm.org/>`_
+
 
 Introduction
 ============
 
 This document contains the release notes for the Clang C/C++/Objective-C
-frontend, part of the LLVM Compiler Infrastructure, release 5.0.0. Here we
+frontend, part of the LLVM Compiler Infrastructure, release 9.0.0. Here we
 describe the status of Clang in some detail, including major
 improvements from the previous release and new feature work. For the
 general LLVM release notes, see `the LLVM
-documentation <http://llvm.org/docs/ReleaseNotes.html>`_. All LLVM
+documentation <https://llvm.org/docs/ReleaseNotes.html>`_. All LLVM
 releases may be downloaded from the `LLVM releases web
-site <http://llvm.org/releases/>`_.
+site <https://llvm.org/releases/>`_.
 
 For more information about Clang or LLVM, including information about the
-latest release, please see the `Clang Web Site <http://clang.llvm.org>`_ or the
-`LLVM Web Site <http://llvm.org>`_.
+latest release, please see the `Clang Web Site <https://clang.llvm.org>`_ or the
+`LLVM Web Site <https://llvm.org>`_.
 
-What's New in Clang 5.0.0?
+
+What's New in Clang 9.0.0?
 ==========================
 
 Some of the major new features and improvements to Clang are listed
@@ -35,333 +37,323 @@ sections with improvements to Clang's support for those languages.
 Major New Features
 ------------------
 
-C++ coroutines
-^^^^^^^^^^^^^^
-`C++ coroutines TS
-<http://open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4680.pdf>`_
-implementation has landed. Use ``-fcoroutines-ts -stdlib=libc++`` to enable
-coroutine support. Here is `an example
-<https://wandbox.org/permlink/Dth1IO5q8Oe31ew2>`_ to get you started.
+- Experimental support for :ref:`C++ for OpenCL <openclcpp>` has been
+  added.
 
 
-Improvements to Clang's diagnostics
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Non-comprehensive list of changes in this release
+-------------------------------------------------
 
--  ``-Wcast-qual`` was implemented for C++. C-style casts are now properly
-   diagnosed.
+- The ``__VERSION__`` macro has been updated.
+  Previously this macro contained the string '4.2.1 Compatible' to achieve
+  compatibility with GCC 4.2.1, but that should no longer be necessary.
+  However, to retrieve Clang's version, please favor the one of the macro
+  defined in :ref:`clang namespaced version macros <languageextensions-builtin-macros>`.
 
--  ``-Wunused-lambda-capture`` warns when a variable explicitly captured
-   by a lambda is not used in the body of the lambda.
-
--  ``-Wstrict-prototypes`` is a new warning that warns about non-prototype
-   function and block declarations and types in C and Objective-C.
-
--  ``-Wunguarded-availability`` is a new warning that warns about uses of new
-   APIs that were introduced in a system whose version is newer than the
-   deployment target version. A new Objective-C expression ``@available`` has
-   been introduced to perform system version checking at runtime. This warning
-   is off by default to prevent unexpected warnings in existing projects.
-   However, its less strict sibling ``-Wunguarded-availability-new`` is on by
-   default. It warns about unguarded uses of APIs only when they were introduced
-   in or after macOS 10.13, iOS 11, tvOS 11 or watchOS 4.
-
--  The ``-Wdocumentation`` warning now allows the use of ``\param`` and
-   ``\returns`` documentation directives in the documentation comments for
-   declarations with a function or a block pointer type.
-
--  The compiler no longer warns about unreachable ``__builtin_unreachable``
-   statements.
 
 New Compiler Flags
 ------------------
 
-- ``--autocomplete`` was implemented to obtain a list of flags and its arguments.
-  This is used for shell autocompletion.
+- ``-ftime-trace`` and ``ftime-trace-granularity=N``
+  Emits flame chart style compilation time report in chrome://tracing and
+  speedscope.app compatible format. A trace .json file is written next to the
+  compiled object file, containing hierarchical time information about frontend
+  activities (file parsing, template instantiation) and backend activities
+  (modules and functions being optimized, optimization passes).
 
-Deprecated Compiler Flags
--------------------------
 
-The following options are deprecated and ignored. They will be removed in
-future versions of Clang.
-
-- ``-fslp-vectorize-aggressive`` used to enable the BB vectorizing pass. They have been superseeded
-  by the normal SLP vectorizer.
-- ``-fno-slp-vectorize-aggressive`` used to be the default behavior of clang.
-
-New Pragmas in Clang
+Modified Compiler Flags
 -----------------------
 
-- Clang now supports the ``clang attribute`` pragma that allows users to apply
-  an attribute to multiple declarations.
+- ``clang -dumpversion`` now returns the version of Clang itself.
 
-- ``pragma pack`` directives that are included in a precompiled header are now
-  applied correctly to the declarations in the compilation unit that includes
-  that precompiled header.
 
-Attribute Changes in Clang
---------------------------
+Windows Support
+---------------
 
--  The ``overloadable`` attribute now allows at most one function with a given
-   name to lack the ``overloadable`` attribute. This unmarked function will not
-   have its name mangled.
--  The ``ms_abi`` attribute and the ``__builtin_ms_va_list`` types and builtins
-   are now supported on AArch64.
+- clang-cl now treats non-existent files as possible typos for flags,
+  ``clang-cl /diagnostic:caret /c test.cc`` for example now produces
+  ``clang: error: no such file or directory: '/diagnostic:caret'; did you mean '/diagnostics:caret'?``
+
+- clang now parses the ``__declspec(allocator)`` specifier and generates debug
+  information, so that memory usage can be tracked in Visual Studio.
+
+- The ``-print-search-dirs`` option now separates elements with semicolons,
+  as is the norm for path lists on Windows
+
+- Improved handling of dllexport in conjunction with explicit template
+  instantiations for MinGW, to allow building a shared libc++ for MinGW
+  without ``--export-all-symbols`` to override the dllexport attributes
+
 
 C Language Changes in Clang
 ---------------------------
 
-- Added near complete support for implicit scalar to vector conversion, a GNU
-  C/C++ language extension. With this extension, the following code is
-  considered valid:
+- The ``__FILE_NAME__`` macro has been added as a Clang specific extension supported
+  in all C-family languages. This macro is similar to ``__FILE__`` except it
+  will always provide the last path component when possible.
 
-.. code-block:: c
-
-    typedef unsigned v4i32 __attribute__((vector_size(16)));
-
-    v4i32 foo(v4i32 a) {
-      // Here 5 is implicitly casted to an unsigned value and replicated into a
-      // vector with as many elements as 'a'.
-      return a + 5;
-    }
-
-The implicit conversion of a scalar value to a vector value--in the context of
-a vector expression--occurs when:
-
-- The type of the vector is that of a ``__attribute__((vector_size(size)))``
-  vector, not an OpenCL ``__attribute__((ext_vector_type(size)))`` vector type.
-
-- The scalar value can be casted to that of the vector element's type without
-  the loss of precision based on the type of the scalar and the type of the
-  vector's elements.
-
-- For compile time constant values, the above rule is weakened to consider the
-  value of the scalar constant rather than the constant's type. However,
-  for compatibility with GCC, floating point constants with precise integral
-  representations are not implicitly converted to integer values.
-
-Currently the basic integer and floating point types with the following
-operators are supported: ``+``, ``/``, ``-``, ``*``, ``%``, ``>``, ``<``,
-``>=``, ``<=``, ``==``, ``!=``, ``&``, ``|``, ``^`` and the corresponding
-assignment operators where applicable.
+- Initial support for ``asm goto`` statements (a GNU C extension) has been
+  added for control flow from inline assembly to labels. The main consumers of
+  this construct are the Linux kernel (CONFIG_JUMP_LABEL=y) and glib. There are
+  still a few unsupported corner cases in Clang's integrated assembler and
+  IfConverter. Please file bugs for any issues you run into.
 
 
 C++ Language Changes in Clang
 -----------------------------
 
-- We expect this to be the last Clang release that defaults to ``-std=gnu++98``
-  when using the GCC-compatible ``clang++`` driver. From Clang 6 onwards we
-  expect to use ``-std=gnu++14`` or a later standard by default, to match the
-  behavior of recent GCC releases. Users are encouraged to change their build
-  files to explicitly specify their desired C++ standard.
+- Support for the address space attribute in various C++ features was improved,
+  refer to :ref:`C++ for OpenCL <openclcpp>` for more details. The following
+  features deviated from OpenCL:
 
-- Support for the C++17 standard has been completed. This mode can be enabled
-  using ``-std=c++17`` (the old flag ``-std=c++1z`` is still supported for
-  compatibility).
+  (1) Address spaces as method qualifiers are not accepted yet;
 
-- When targeting a platform that uses the Itanium C++ ABI, Clang implements a
-  `recent change to the ABI`__ that passes objects of class type indirectly if they
-  have a non-trivial move constructor. Previous versions of Clang only
-  considered the copy constructor, resulting in an ABI change in rare cases,
-  but GCC has already implemented this change for several releases.
-  This affects all targets other than Windows and PS4. You can opt out of this
-  ABI change with ``-fclang-abi-compat=4.0``.
+  (2) There is no address space deduction.
 
-- As mentioned in `C Language Changes in Clang`_, Clang's support for
-  implicit scalar to vector conversions also applies to C++. Additionally
-  the following operators are also supported: ``&&`` and ``||``.
-
-.. __: https://github.com/itanium-cxx-abi/cxx-abi/commit/7099637aba11fed6bdad7ee65bf4fd3f97fbf076
 
 Objective-C Language Changes in Clang
 -------------------------------------
 
-- Clang now guarantees that a ``readwrite`` property is synthesized when an
-  ambiguous property (i.e. a property that's declared in multiple protocols)
-  is synthesized. The ``-Wprotocol-property-synthesis-ambiguity`` warning that
-  warns about incompatible property types is now promoted to an error when
-  there's an ambiguity between ``readwrite`` and ``readonly`` properties.
+- Fixed encoding of ObjC pointer types that are pointers to typedefs.
 
-- Clang now prohibits synthesis of ambiguous properties with incompatible
-  explicit property attributes. The following property attributes are
-  checked for differences: ``copy``, ``retain``/``strong``, ``atomic``,
-  ``getter`` and ``setter``.
+  .. code-block:: objc
 
-OpenCL C Language Changes in Clang
-----------------------------------
+      typedef NSArray<NSObject *> MyArray;
 
-Various bug fixes and improvements:
+      // clang used to encode this as "^{NSArray=#}" instead of "@".
+      const char *s0 = @encode(MyArray *);
 
--  Extended OpenCL-related Clang tests.
+OpenCL Kernel Language Changes in Clang
+---------------------------------------
 
--  Improved diagnostics across several areas: scoped address space
-   qualified variables, function pointers, atomics, type rank for overloading,
-   block captures, ``reserve_id_t``.
+OpenCL C
+^^^^^^^^
 
--  Several address space related fixes for constant address space function scope variables,
-   IR generation, mangling of ``generic`` and alloca (post-fix from general Clang
-   refactoring of address spaces).
+- Enabled use of variadic macro as a Clang extension.
 
--  Several improvements in extensions: fixed OpenCL version for ``cl_khr_mipmap_image``,
-   added missing ``cl_khr_3d_image_writes``.
+- Added initial support for implicitly including OpenCL builtin
+  fuctions using efficient trie lookup generated by TableGen.
+  A corresponding frontend-only flag ``-fdeclare-opencl-builtins``
+  has been added to enable trie during parsing.
 
--  Improvements in ``enqueue_kernel``, especially the implementation of ``ndrange_t`` and blocks.
+- Refactored header file to be used for common parts between
+  regular header added using ``-finclude-default-header`` and trie
+  based declarations added using ``-fdeclare-opencl-builtins``.
 
--  OpenCL type related fixes: global samplers, the ``pipe_t`` size, internal type redefinition,
-   and type compatibility checking in ternary and other operations.
+- Improved string formatting diagnostics in printf for vector types.
 
--  The OpenCL header has been extended with missing extension guards, and direct mapping of ``as_type``
-   to ``__builtin_astype``.
+- Simplified the internal representation of blocks, including their
+  generation in IR. Furthermore, indirect calls to block function
+  has been changed to direct function calls.
 
--  Fixed ``kernel_arg_type_qual`` and OpenCL/SPIR version in metadata.
+- Added diagnostics for conversions of nested pointers with
+  different address spaces.
 
--  Added proper use of the kernel calling convention to various targets.
+- Added ``cl_arm_integer_dot_product`` extension.
 
-The following new functionalities have been added:
+- Fixed global samplers in OpenCL v2.0.
 
--  Added documentation on OpenCL to Clang user manual.
+- Improved math builtin functions with parameters of type ``long
+  long`` for x86.
 
--  Extended Clang builtins with required ``cl_khr_subgroups`` support.
+.. _openclcpp:
 
--  Add ``intel_reqd_sub_group_size`` attribute support.
+C++ for OpenCL
+^^^^^^^^^^^^^^
 
--  Added OpenCL types to ``CIndex``.
+Experimental support for C++17 features in OpenCL has been added
+and backwards compatibility with OpenCL C v2.0 was enabled.
+The documentation has been added for supported language features
+into :doc:`LanguageExtensions` and :doc:`UsersManual`.
+
+Implemented features are:
+
+- Address space behavior is improved in majority of C++ features:
+
+  - Templates parameters and arguments;
+
+  - Reference types;
+
+  - Type deduction;
+
+  - Objects and member functions, including special member
+    functions;
+
+  - Builtin operators;
+
+  - Method qualifiers now include address space;
+
+  - Address space deduction has been extended for C++ use cases;
+
+  - Improved overload ranking rules;
+
+  - All standard cast operators now prevent converting address
+    spaces (except for conversions allowed implicitly). They
+    can still be cast using C-style cast.
+
+- Vector types as in OpenCL C, including compound vector
+  initialization.
+
+- OpenCL-specific types: images, samplers, events, pipes, are
+  accepted. Note that blocks are not supported yet.
+
+- OpenCL standard header in Clang can be compiled in C++ mode.
+
+- Global constructors can be invoked from the host side using
+  a specific, compiler-generated kernel.
+
+- Overloads with generic address space are added to all atomic
+  builtin functions, including the ones prior to OpenCL v2.0.
+
+
+OpenMP Support in Clang
+-----------------------
+
+- Added emission of the debug information for NVPTX target devices.
+
+CUDA Support in Clang
+---------------------
+
+- Added emission of the debug information for the device code.
+
+Internal API Changes
+--------------------
+
+These are major API changes that have happened since the 8.0.0 release of
+Clang. If upgrading an external codebase that uses Clang as a library,
+this section should help get you past the largest hurdles of upgrading.
+
+Build System Changes
+--------------------
+
+These are major changes to the build system that have happened since the 8.0.0
+release of Clang. Users of the build system should adjust accordingly.
+
+- In 8.0.0 and below, the install-clang-headers target would install clang's
+  resource directory headers. This installation is now performed by the
+  install-clang-resource-headers target. Users of the old install-clang-headers
+  target should switch to the new install-clang-resource-headers target. The
+  install-clang-headers target now installs clang's API headers (corresponding
+  to its libraries), which is consistent with the install-llvm-headers target.
+
+- In 9.0.0 and later Clang added a new target on Linux/Unix systems, clang-cpp,
+  which generates a shared library comprised of all the clang component
+  libraries and exporting the clang C++ APIs. Additionally the build system
+  gained the new "CLANG_LINK_CLANG_DYLIB" option, which defaults Off, and when
+  set to On, will force clang (and clang-based tools) to link the clang-cpp
+  library instead of statically linking clang's components. This option will
+  reduce the size of binary distributions at the expense of compiler performance.
 
 
 clang-format
 ------------
 
-* Option **BreakBeforeInheritanceComma** added to break before ``:`` and ``,``  in case of
-  multiple inheritance in a class declaration. Enabled by default in the Mozilla coding style.
-
-  +---------------------+----------------------------------------+
-  | true                | false                                  |
-  +=====================+========================================+
-  | .. code-block:: c++ | .. code-block:: c++                    |
-  |                     |                                        |
-  |   class MyClass     |   class MyClass : public X, public Y { |
-  |       : public X    |   };                                   |
-  |       , public Y {  |                                        |
-  |   };                |                                        |
-  +---------------------+----------------------------------------+
-
-* Align block comment decorations.
-
-  +----------------------+---------------------+
-  | Before               | After               |
-  +======================+=====================+
-  |  .. code-block:: c++ | .. code-block:: c++ |
-  |                      |                     |
-  |    /* line 1         |   /* line 1         |
-  |      * line 2        |    * line 2         |
-  |     */               |    */               |
-  +----------------------+---------------------+
-
-* The :doc:`ClangFormatStyleOptions` documentation provides detailed examples for most options.
-
-* Namespace end comments are now added or updated automatically.
-
-  +---------------------+---------------------+
-  | Before              | After               |
-  +=====================+=====================+
-  | .. code-block:: c++ | .. code-block:: c++ |
-  |                     |                     |
-  |   namespace A {     |   namespace A {     |
-  |   int i;            |   int i;            |
-  |   int j;            |   int j;            |
-  |   }                 |   } // namespace A  |
-  +---------------------+---------------------+
-
-* Comment reflow support added. Overly long comment lines will now be reflown with the rest of
-  the paragraph instead of just broken. Option **ReflowComments** added and enabled by default.
+- Add language support for clang-formatting C# files.
+- Add Microsoft coding style to encapsulate default C# formatting style.
+- Added new option ``PPDIS_BeforeHash`` (in configuration: ``BeforeHash``) to
+  ``IndentPPDirectives`` which indents preprocessor directives before the hash.
+- Added new option ``AlignConsecutiveMacros`` to align the C/C++ preprocessor
+  macros of consecutive lines.
 
 libclang
 --------
 
-- Libclang now provides code-completion results for more C++ constructs
-  and keywords. The following keywords/identifiers are now included in the
-  code-completion results: ``static_assert``, ``alignas``, ``constexpr``,
-  ``final``, ``noexcept``, ``override`` and ``thread_local``.
+- When ``CINDEXTEST_INCLUDE_ATTRIBUTED_TYPES`` is not provided when making a
+  CXType, the equivalent type of the AttributedType is returned instead of the
+  modified type if the user does not want attribute sugar. The equivalent type
+  represents the minimally-desugared type which the AttributedType is
+  canonically equivalent to.
 
-- Libclang now provides code-completion results for members from dependent
-  classes. For example:
-
-  .. code-block:: c++
-
-    template<typename T>
-    void appendValue(std::vector<T> &dest, const T &value) {
-        dest. // Relevant completion results are now shown after '.'
-    }
-
-  Note that code-completion results are still not provided when the member
-  expression includes a dependent base expression. For example:
-
-  .. code-block:: c++
-
-    template<typename T>
-    void appendValue(std::vector<std::vector<T>> &dest, const T &value) {
-        dest.at(0). // Libclang fails to provide completion results after '.'
-    }
 
 Static Analyzer
 ---------------
 
-- The static analyzer now supports using the
-  `z3 theorem prover <https://github.com/z3prover/z3>`_ from Microsoft Research
-  as an external constraint solver. This allows reasoning over more complex
-  queries, but performance is ~15x slower than the default range-based
-  constraint solver. To enable the z3 solver backend, clang must be built with
-  the ``CLANG_ANALYZER_BUILD_Z3=ON`` option, and the
-  ``-Xanalyzer -analyzer-constraints=z3`` arguments passed at runtime.
+- Fixed a bug where an incorrect checker name would be displayed for a bug
+  report.
 
-Undefined Behavior Sanitizer (UBSan)
-------------------------------------
+- New checker: ``security.insecureAPI.DeprecatedOrUnsafeBufferHandling`` to detect
+  uses of unsafe/deprecated buffer handling functions for C code using the C11
+  standard or newer.
 
-- The Undefined Behavior Sanitizer has a new check for pointer overflow. This
-  check is on by default. The flag to control this functionality is
-  ``-fsanitize=pointer-overflow``.
+- New checker: ``osx.MIGChecker`` to find violations of the Mach Interface
+  Generator calling convention
 
-  Pointer overflow is an indicator of undefined behavior: when a pointer
-  indexing expression wraps around the address space, or produces other
-  unexpected results, its result may not point to a valid object.
+- New checker: ``optin.osx.OSObjectCStyleCast`` to find C-style casts of of XNU
+  libkern OSObjects
 
-- UBSan has several new checks which detect violations of nullability
-  annotations. These checks are off by default. The flag to control this group
-  of checks is ``-fsanitize=nullability``. The checks can be individially enabled
-  by ``-fsanitize=nullability-arg`` (which checks calls),
-  ``-fsanitize=nullability-assign`` (which checks assignments), and
-  ``-fsanitize=nullability-return`` (which checks return statements).
+- New package: ``apiModeling.llvm`` contains modeling checkers to improve the
+  accuracy of reports on LLVM's own codebase.
 
-- UBSan can now detect invalid loads from bitfields and from ObjC BOOLs.
+- The Static Analyzer received
+  :ref:`developer documentation <clang-static-analyzer-docs>`.
 
-- UBSan can now avoid emitting unnecessary type checks in C++ class methods and
-  in several other cases where the result is known at compile-time. UBSan can
-  also avoid emitting unnecessary overflow checks in arithmetic expressions
-  with promoted integer operands.
+- The UninitializedObject checker is now considered as stable.
+  (moved from the ``alpha.cplusplus`` to the ``optin.cplusplus`` package)
+
+- New frontend flags: The list of available checkers are now split into 3
+  different frontend flags:
+
+  - ``-analyzer-checker-help``: The list of user-facing, stable checkers.
+
+  - ``-analyzer-checker-help-alpha``: The list of in-development
+    checkers not yet advised to be turned on.
+
+  - ``-analyzer-checker-help-developer``: Checkers never meant to be
+    enabled/disabled by hand + development checkers.
+
+- New frontend flags: While they have always been around, for the first time,
+  checker and package options are listable:
+
+  - ``-analyzer-checker-option-help``: The list of user-facing, stable checker
+    and package options.
+
+  - ``-analyzer-checker-option-help-alpha``: The list of in-development checker
+    options not yet advised to be used.
+
+  - ``-analyzer-checker-option-help-developer``: Options never meant to be
+    enabled/disabled by hand + development options.
+
+- New frontend flag: ``-analyzer-werror`` to turn analyzer warnings into errors.
+
+- Numerous fixes to increase the stability of the experimental cross translation
+  unit analysis (CTU).
+
+- CTU now handles virtual functions as well.
 
 
-Python Binding Changes
-----------------------
+Linux Kernel
+============
 
-Python bindings now support both Python 2 and Python 3.
+With support for asm goto, the mainline Linux kernel for x86_64 is now buildable
+(and bootable) with Clang 9.  Other architectures that don't require
+CONFIG_JUMP_LABEL=y such as arm, aarch64, ppc32, ppc64le, (and possibly mips)
+have been supported with older releases of Clang (Clang 4 was first used with
+aarch64).
 
-The following methods have been added:
+The Android and ChromeOS Linux distributions have moved to building their Linux
+kernels with Clang, and Google is currently testing Clang built kernels for
+their production Linux kernels.
 
-- ``is_scoped_enum`` has been added to ``Cursor``.
+Further, LLD, llvm-objcopy, llvm-ar, llvm-nm, llvm-objdump can all be used to
+build a working Linux kernel.
 
-- ``exception_specification_kind`` has been added to ``Cursor``.
+More information about building Linux kernels with Clang can be found:
 
-- ``get_address_space`` has been added to ``Type``.
-
-- ``get_typedef_name`` has been added to ``Type``.
-
-- ``get_exception_specification_kind`` has been added to ``Type``.
-
+- `ClangBuiltLinux web page <https://clangbuiltlinux.github.io/>`_.
+- `Issue Tracker <https://github.com/ClangBuiltLinux/linux/issues>`_.
+- `Wiki <https://github.com/ClangBuiltLinux/linux/wiki>`_.
+- `Mailing List <clang-built-linux@googlegroups.com>`_.
+- `Bi-weekly Meeting <https://calendar.google.com/calendar/embed?src=google.com_bbf8m6m4n8nq5p2bfjpele0n5s%40group.calendar.google.com>`_.
+- #clangbuiltlinux on Freenode.
+- `Clang Meta bug <https://bugs.llvm.org/show_bug.cgi?id=4068>`_.
+- `Continuous Integration <https://travis-ci.com/ClangBuiltLinux/continuous-integration>`_.
 
 Additional Information
 ======================
 
 A wide variety of additional information is available on the `Clang web
-page <http://clang.llvm.org/>`_. The web page contains versions of the
+page <https://clang.llvm.org/>`_. The web page contains versions of the
 API documentation which are up-to-date with the Subversion version of
 the source code. You can access versions of these documents specific to
 this release by going into the "``clang/docs/``" directory in the Clang
@@ -369,4 +361,4 @@ tree.
 
 If you have any questions or comments about Clang, please feel free to
 contact us via the `mailing
-list <http://lists.llvm.org/mailman/listinfo/cfe-dev>`_.
+list <https://lists.llvm.org/mailman/listinfo/cfe-dev>`_.

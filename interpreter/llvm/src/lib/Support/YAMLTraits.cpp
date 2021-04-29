@@ -1,9 +1,8 @@
 //===- lib/Support/YAMLTraits.cpp -----------------------------------------===//
 //
-//                             The LLVM Linker
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -19,6 +18,7 @@
 #include "llvm/Support/Format.h"
 #include "llvm/Support/LineIterator.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/Unicode.h"
 #include "llvm/Support/YAMLParser.h"
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
@@ -97,7 +97,7 @@ bool Input::setCurrentDocument() {
       ++DocIterator;
       return setCurrentDocument();
     }
-    TopNode = this->createHNodes(N);
+    TopNode = createHNodes(N);
     CurrentNode = TopNode.get();
     return true;
   }
@@ -113,6 +113,11 @@ const Node *Input::getCurrentNode() const {
 }
 
 bool Input::mapTag(StringRef Tag, bool Default) {
+  // CurrentNode can be null if setCurrentDocument() was unable to
+  // parse the document because it was invalid or empty.
+  if (!CurrentNode)
+    return false;
+
   std::string foundTag = CurrentNode->_node->getVerbatimTag();
   if (foundTag.empty()) {
     // If no tag found and 'Tag' is the default, say it was found.
@@ -160,7 +165,8 @@ bool Input::preflightKey(const char *Key, bool Required, bool, bool &UseDefault,
 
   MapHNode *MN = dyn_cast<MapHNode>(CurrentNode);
   if (!MN) {
-    setError(CurrentNode, "not a mapping");
+    if (Required || !isa<EmptyHNode>(CurrentNode))
+      setError(CurrentNode, "not a mapping");
     return false;
   }
   MN->ValidKeys.push_back(Key);
@@ -329,7 +335,7 @@ void Input::endBitSetScalar() {
   }
 }
 
-void Input::scalarString(StringRef &S, bool) {
+void Input::scalarString(StringRef &S, QuotingType) {
   if (ScalarHNode *SN = dyn_cast<ScalarHNode>(CurrentNode)) {
     S = SN->value();
   } else {
@@ -337,11 +343,25 @@ void Input::scalarString(StringRef &S, bool) {
   }
 }
 
-void Input::blockScalarString(StringRef &S) { scalarString(S, false); }
+void Input::blockScalarString(StringRef &S) { scalarString(S, QuotingType::None); }
+
+void Input::scalarTag(std::string &Tag) {
+  Tag = CurrentNode->_node->getVerbatimTag();
+}
 
 void Input::setError(HNode *hnode, const Twine &message) {
   assert(hnode && "HNode must not be NULL");
-  this->setError(hnode->_node, message);
+  setError(hnode->_node, message);
+}
+
+NodeKind Input::getNodeKind() {
+  if (isa<ScalarHNode>(CurrentNode))
+    return NodeKind::Scalar;
+  else if (isa<MapHNode>(CurrentNode))
+    return NodeKind::Map;
+  else if (isa<SequenceHNode>(CurrentNode))
+    return NodeKind::Sequence;
+  llvm_unreachable("Unsupported node kind");
 }
 
 void Input::setError(Node *node, const Twine &message) {
@@ -364,7 +384,7 @@ std::unique_ptr<Input::HNode> Input::createHNodes(Node *N) {
   } else if (SequenceNode *SQ = dyn_cast<SequenceNode>(N)) {
     auto SQHNode = llvm::make_unique<SequenceHNode>(N);
     for (Node &SN : *SQ) {
-      auto Entry = this->createHNodes(&SN);
+      auto Entry = createHNodes(&SN);
       if (EC)
         break;
       SQHNode->Entries.push_back(std::move(Entry));
@@ -374,18 +394,22 @@ std::unique_ptr<Input::HNode> Input::createHNodes(Node *N) {
     auto mapHNode = llvm::make_unique<MapHNode>(N);
     for (KeyValueNode &KVN : *Map) {
       Node *KeyNode = KVN.getKey();
-      ScalarNode *KeyScalar = dyn_cast<ScalarNode>(KeyNode);
-      if (!KeyScalar) {
-        setError(KeyNode, "Map key must be a scalar");
+      ScalarNode *Key = dyn_cast<ScalarNode>(KeyNode);
+      Node *Value = KVN.getValue();
+      if (!Key || !Value) {
+        if (!Key)
+          setError(KeyNode, "Map key must be a scalar");
+        if (!Value)
+          setError(KeyNode, "Map value must not be empty");
         break;
       }
       StringStorage.clear();
-      StringRef KeyStr = KeyScalar->getValue(StringStorage);
+      StringRef KeyStr = Key->getValue(StringStorage);
       if (!StringStorage.empty()) {
         // Copy string to permanent storage
         KeyStr = StringStorage.str().copy(StringAllocator);
       }
-      auto ValueHNode = this->createHNodes(KVN.getValue());
+      auto ValueHNode = createHNodes(Value);
       if (EC)
         break;
       mapHNode->Mapping[KeyStr] = std::move(ValueHNode);
@@ -400,7 +424,7 @@ std::unique_ptr<Input::HNode> Input::createHNodes(Node *N) {
 }
 
 void Input::setError(const Twine &Message) {
-  this->setError(CurrentNode, Message);
+  setError(CurrentNode, Message);
 }
 
 bool Input::canElideEmptySequence() {
@@ -422,7 +446,8 @@ bool Output::outputting() {
 
 void Output::beginMapping() {
   StateStack.push_back(inMapFirstKey);
-  NeedsNewLine = true;
+  PaddingBeforeContainer = Padding;
+  Padding = "\n";
 }
 
 bool Output::mapTag(StringRef Tag, bool Use) {
@@ -430,15 +455,17 @@ bool Output::mapTag(StringRef Tag, bool Use) {
     // If this tag is being written inside a sequence we should write the start
     // of the sequence before writing the tag, otherwise the tag won't be
     // attached to the element in the sequence, but rather the sequence itself.
-    bool SequenceElement =
-        StateStack.size() > 1 && (StateStack[StateStack.size() - 2] == inSeq ||
-          StateStack[StateStack.size() - 2] == inFlowSeq);
-    if (SequenceElement && StateStack.back() == inMapFirstKey) {
-      this->newLineCheck();
-    } else {
-      this->output(" ");
+    bool SequenceElement = false;
+    if (StateStack.size() > 1) {
+      auto &E = StateStack[StateStack.size() - 2];
+      SequenceElement = inSeqAnyElement(E) || inFlowSeqAnyElement(E);
     }
-    this->output(Tag);
+    if (SequenceElement && StateStack.back() == inMapFirstKey) {
+      newLineCheck();
+    } else {
+      output(" ");
+    }
+    output(Tag);
     if (SequenceElement) {
       // If we're writing the tag during the first element of a map, the tag
       // takes the place of the first element in the sequence.
@@ -448,13 +475,20 @@ bool Output::mapTag(StringRef Tag, bool Use) {
       }
       // Tags inside maps in sequences should act as keys in the map from a
       // formatting perspective, so we always want a newline in a sequence.
-      NeedsNewLine = true;
+      Padding = "\n";
     }
   }
   return Use;
 }
 
 void Output::endMapping() {
+  // If we did not map anything, we should explicitly emit an empty map
+  if (StateStack.back() == inMapFirstKey) {
+    Padding = PaddingBeforeContainer;
+    newLineCheck();
+    output("{}");
+    Padding = "\n";
+  }
   StateStack.pop_back();
 }
 
@@ -470,8 +504,8 @@ bool Output::preflightKey(const char *Key, bool Required, bool SameAsDefault,
     if (State == inFlowMapFirstKey || State == inFlowMapOtherKey) {
       flowKey(Key);
     } else {
-      this->newLineCheck();
-      this->paddedKey(Key);
+      newLineCheck();
+      paddedKey(Key);
     }
     return true;
   }
@@ -490,23 +524,23 @@ void Output::postflightKey(void *) {
 
 void Output::beginFlowMapping() {
   StateStack.push_back(inFlowMapFirstKey);
-  this->newLineCheck();
+  newLineCheck();
   ColumnAtMapFlowStart = Column;
   output("{ ");
 }
 
 void Output::endFlowMapping() {
   StateStack.pop_back();
-  this->outputUpToEndOfLine(" }");
+  outputUpToEndOfLine(" }");
 }
 
 void Output::beginDocuments() {
-  this->outputUpToEndOfLine("---");
+  outputUpToEndOfLine("---");
 }
 
 bool Output::preflightDocument(unsigned index) {
   if (index > 0)
-    this->outputUpToEndOfLine("\n---");
+    outputUpToEndOfLine("\n---");
   return true;
 }
 
@@ -518,12 +552,20 @@ void Output::endDocuments() {
 }
 
 unsigned Output::beginSequence() {
-  StateStack.push_back(inSeq);
-  NeedsNewLine = true;
+  StateStack.push_back(inSeqFirstElement);
+  PaddingBeforeContainer = Padding;
+  Padding = "\n";
   return 0;
 }
 
 void Output::endSequence() {
+  // If we did not emit anything, we should explicitly emit an empty sequence
+  if (StateStack.back() == inSeqFirstElement) {
+    Padding = PaddingBeforeContainer;
+    newLineCheck();
+    output("[]");
+    Padding = "\n";
+  }
   StateStack.pop_back();
 }
 
@@ -532,11 +574,18 @@ bool Output::preflightElement(unsigned, void *&) {
 }
 
 void Output::postflightElement(void *) {
+  if (StateStack.back() == inSeqFirstElement) {
+    StateStack.pop_back();
+    StateStack.push_back(inSeqOtherElement);
+  } else if (StateStack.back() == inFlowSeqFirstElement) {
+    StateStack.pop_back();
+    StateStack.push_back(inFlowSeqOtherElement);
+  }
 }
 
 unsigned Output::beginFlowSequence() {
-  StateStack.push_back(inFlowSeq);
-  this->newLineCheck();
+  StateStack.push_back(inFlowSeqFirstElement);
+  newLineCheck();
   ColumnAtFlowStart = Column;
   output("[ ");
   NeedFlowSequenceComma = false;
@@ -545,7 +594,7 @@ unsigned Output::beginFlowSequence() {
 
 void Output::endFlowSequence() {
   StateStack.pop_back();
-  this->outputUpToEndOfLine(" ]");
+  outputUpToEndOfLine(" ]");
 }
 
 bool Output::preflightFlowElement(unsigned, void *&) {
@@ -571,8 +620,8 @@ void Output::beginEnumScalar() {
 
 bool Output::matchEnumScalar(const char *Str, bool Match) {
   if (Match && !EnumerationMatchFound) {
-    this->newLineCheck();
-    this->outputUpToEndOfLine(Str);
+    newLineCheck();
+    outputUpToEndOfLine(Str);
     EnumerationMatchFound = true;
   }
   return false;
@@ -591,7 +640,7 @@ void Output::endEnumScalar() {
 }
 
 bool Output::beginBitSetScalar(bool &DoClear) {
-  this->newLineCheck();
+  newLineCheck();
   output("[ ");
   NeedBitValueComma = false;
   DoClear = false;
@@ -602,45 +651,58 @@ bool Output::bitSetMatch(const char *Str, bool Matches) {
   if (Matches) {
     if (NeedBitValueComma)
       output(", ");
-    this->output(Str);
+    output(Str);
     NeedBitValueComma = true;
   }
   return false;
 }
 
 void Output::endBitSetScalar() {
-  this->outputUpToEndOfLine(" ]");
+  outputUpToEndOfLine(" ]");
 }
 
-void Output::scalarString(StringRef &S, bool MustQuote) {
-  this->newLineCheck();
+void Output::scalarString(StringRef &S, QuotingType MustQuote) {
+  newLineCheck();
   if (S.empty()) {
     // Print '' for the empty string because leaving the field empty is not
     // allowed.
-    this->outputUpToEndOfLine("''");
+    outputUpToEndOfLine("''");
     return;
   }
-  if (!MustQuote) {
+  if (MustQuote == QuotingType::None) {
     // Only quote if we must.
-    this->outputUpToEndOfLine(S);
+    outputUpToEndOfLine(S);
     return;
   }
+
+  const char *const Quote = MustQuote == QuotingType::Single ? "'" : "\"";
+  output(Quote); // Starting quote.
+
+  // When using double-quoted strings (and only in that case), non-printable characters may be
+  // present, and will be escaped using a variety of unicode-scalar and special short-form
+  // escapes. This is handled in yaml::escape.
+  if (MustQuote == QuotingType::Double) {
+    output(yaml::escape(S, /* EscapePrintable= */ false));
+    outputUpToEndOfLine(Quote);
+    return;
+  }
+
   unsigned i = 0;
   unsigned j = 0;
   unsigned End = S.size();
-  output("'"); // Starting single quote.
   const char *Base = S.data();
+
+  // When using single-quoted strings, any single quote ' must be doubled to be escaped.
   while (j < End) {
-    // Escape a single quote by doubling it.
-    if (S[j] == '\'') {
-      output(StringRef(&Base[i], j - i + 1));
-      output("'");
+    if (S[j] == '\'') {                    // Escape quotes.
+      output(StringRef(&Base[i], j - i));  // "flush".
+      output(StringLiteral("''"));         // Print it as ''
       i = j + 1;
     }
     ++j;
   }
   output(StringRef(&Base[i], j - i));
-  this->outputUpToEndOfLine("'"); // Ending single quote.
+  outputUpToEndOfLine(Quote); // Ending quote.
 }
 
 void Output::blockScalarString(StringRef &S) {
@@ -661,6 +723,14 @@ void Output::blockScalarString(StringRef &S) {
   }
 }
 
+void Output::scalarTag(std::string &Tag) {
+  if (Tag.empty())
+    return;
+  newLineCheck();
+  output(Tag);
+  output(" ");
+}
+
 void Output::setError(const Twine &message) {
 }
 
@@ -674,7 +744,7 @@ bool Output::canElideEmptySequence() {
     return true;
   if (StateStack.back() != inMapFirstKey)
     return true;
-  return (StateStack[StateStack.size()-2] != inSeq);
+  return !inSeqAnyElement(StateStack[StateStack.size() - 2]);
 }
 
 void Output::output(StringRef s) {
@@ -683,11 +753,10 @@ void Output::output(StringRef s) {
 }
 
 void Output::outputUpToEndOfLine(StringRef s) {
-  this->output(s);
-  if (StateStack.empty() || (StateStack.back() != inFlowSeq &&
-                             StateStack.back() != inFlowMapFirstKey &&
-                             StateStack.back() != inFlowMapOtherKey))
-    NeedsNewLine = true;
+  output(s);
+  if (StateStack.empty() || (!inFlowSeqAnyElement(StateStack.back()) &&
+                             !inFlowMapAnyKey(StateStack.back())))
+    Padding = "\n";
 }
 
 void Output::outputNewLine() {
@@ -700,22 +769,28 @@ void Output::outputNewLine() {
 //
 
 void Output::newLineCheck() {
-  if (!NeedsNewLine)
+  if (Padding != "\n") {
+    output(Padding);
+    Padding = {};
     return;
-  NeedsNewLine = false;
+  }
+  outputNewLine();
+  Padding = {};
 
-  this->outputNewLine();
+  if (StateStack.size() == 0)
+    return;
 
-  assert(StateStack.size() > 0);
   unsigned Indent = StateStack.size() - 1;
   bool OutputDash = false;
 
-  if (StateStack.back() == inSeq) {
+  if (StateStack.back() == inSeqFirstElement ||
+      StateStack.back() == inSeqOtherElement) {
     OutputDash = true;
-  } else if ((StateStack.size() > 1) && ((StateStack.back() == inMapFirstKey) ||
-             (StateStack.back() == inFlowSeq) ||
-             (StateStack.back() == inFlowMapFirstKey)) &&
-             (StateStack[StateStack.size() - 2] == inSeq)) {
+  } else if ((StateStack.size() > 1) &&
+             ((StateStack.back() == inMapFirstKey) ||
+              inFlowSeqAnyElement(StateStack.back()) ||
+              (StateStack.back() == inFlowMapFirstKey)) &&
+             inSeqAnyElement(StateStack[StateStack.size() - 2])) {
     --Indent;
     OutputDash = true;
   }
@@ -734,9 +809,9 @@ void Output::paddedKey(StringRef key) {
   output(":");
   const char *spaces = "                ";
   if (key.size() < strlen(spaces))
-    output(&spaces[key.size()]);
+    Padding = &spaces[key.size()];
   else
-    output(" ");
+    Padding = " ";
 }
 
 void Output::flowKey(StringRef Key) {
@@ -751,6 +826,24 @@ void Output::flowKey(StringRef Key) {
   }
   output(Key);
   output(": ");
+}
+
+NodeKind Output::getNodeKind() { report_fatal_error("invalid call"); }
+
+bool Output::inSeqAnyElement(InState State) {
+  return State == inSeqFirstElement || State == inSeqOtherElement;
+}
+
+bool Output::inFlowSeqAnyElement(InState State) {
+  return State == inFlowSeqFirstElement || State == inFlowSeqOtherElement;
+}
+
+bool Output::inMapAnyKey(InState State) {
+  return State == inMapFirstKey || State == inMapOtherKey;
+}
+
+bool Output::inFlowMapAnyKey(InState State) {
+  return State == inFlowMapFirstKey || State == inFlowMapOtherKey;
 }
 
 //===----------------------------------------------------------------------===//

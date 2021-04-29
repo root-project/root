@@ -664,7 +664,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          snprintf(&line[kvalue],kline-kvalue,"->0");
       else if (!isbasic) {
          if (!fNoAddr) {
-            snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)p3pointer);
+            snprintf(&line[kvalue],kline-kvalue,"->%zx ", (size_t)p3pointer);
          }
       } else if (membertype) {
          if (!strcmp(membertype->GetTypeName(), "char")) {
@@ -705,7 +705,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          }
       } else {
          if (!fNoAddr) {
-            snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)p3pointer);
+            snprintf(&line[kvalue],kline-kvalue,"->%zx ", (size_t)p3pointer);
          }
       }
    } else if (membertype) {
@@ -727,7 +727,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          snprintf(&line[kvalue],kline-kvalue,"%s",str->Data());
       } else {
          if (!fNoAddr) {
-            snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)pointer);
+            snprintf(&line[kvalue],kline-kvalue,"->%zx ", (size_t)pointer);
          }
       }
    }
@@ -817,7 +817,7 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       }
    }
 
-   Long_t offset = Long_t(((Long_t) add) - ((Long_t) fRealDataObject));
+   Longptr_t offset = Longptr_t(((Longptr_t) add) - ((Longptr_t) fRealDataObject));
 
    if (TClassEdit::IsStdArray(dm->GetTypeName())){ // We tackle the std array case
       TString rdName;
@@ -2087,7 +2087,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
 ////////////////////////////////////////////////////////////////////////////////
 /// Build the list of real data for an emulated class
 
-void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl, Bool_t isTransient)
+void TClass::BuildEmulatedRealData(const char *name, Longptr_t offset, TClass *cl, Bool_t isTransient)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -2108,7 +2108,7 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl, 
    TStreamerElement *element;
    while ((element = (TStreamerElement*)next())) {
       Int_t etype    = element->GetType();
-      Long_t eoffset = element->GetOffset();
+      Longptr_t eoffset = element->GetOffset();
       TClass *cle    = element->GetClassPointer();
       if (element->IsBase() || etype == TVirtualStreamerInfo::kBase) {
          //base class are skipped in this loop, they will be added at the end.
@@ -2144,7 +2144,7 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl, 
       Int_t etype    = element->GetType();
       if (element->IsBase() || etype == TVirtualStreamerInfo::kBase) {
          //base class
-         Long_t eoffset = element->GetOffset();
+         Longptr_t eoffset = element->GetOffset();
          TClass *cle    = element->GetClassPointer();
          if (cle) cle->BuildEmulatedRealData(name,offset+eoffset,cl, isTransient);
       }
@@ -2514,12 +2514,12 @@ void TClass::Draw(Option_t *option)
 void TClass::Dump(const void *obj, Bool_t noAddr /*=kFALSE*/) const
 {
 
-   Long_t prObj = noAddr ? 0 : (Long_t)obj;
+   Longptr_t prObj = noAddr ? 0 : (Longptr_t)obj;
    if (IsTObject()) {
       if (!fIsOffsetStreamerSet) {
          CalculateStreamerOffset();
       }
-      TObject *tobj = (TObject*)((Long_t)obj + fOffsetStreamer);
+      TObject *tobj = (TObject*)((Longptr_t)obj + fOffsetStreamer);
 
 
       if (sizeof(this) == 4)
@@ -2843,12 +2843,12 @@ namespace {
             if (*thread_ptr==0) *thread_ptr = new TExMap();
             TExMap *lmap = (TExMap*)(*thread_ptr);
             ULong_t hash = TString::Hash(&cl, sizeof(void*));
-            ULong_t local = 0;
+            ULongptr_t local = 0;
             UInt_t slot;
-            if ((local = (ULong_t)lmap->GetValue(hash, (Long_t)cl, slot)) != 0) {
+            if ((local = (ULongptr_t)lmap->GetValue(hash, (Longptr_t)cl, slot)) != 0) {
             } else {
-               local = (ULong_t) new TClassLocalStorage();
-               lmap->AddAt(slot, hash, (Long_t)cl, local);
+               local = (ULongptr_t) new TClassLocalStorage();
+               lmap->AddAt(slot, hash, (Longptr_t)cl, local);
             }
             return (TClassLocalStorage*)local;
          }
@@ -3418,7 +3418,7 @@ const char *TClass::GetDeclFileName() const
 ///
 /// In case of an emulated class, the list of emulated TRealData is built
 
-Long_t TClass::GetDataMemberOffset(const char *name) const
+Longptr_t TClass::GetDataMemberOffset(const char *name) const
 {
    TRealData *rd = GetRealData(name);
    if (rd) return rd->GetThisOffset();
@@ -4464,14 +4464,14 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
 /// Look for a method in this class that has the interface function
 /// address faddr.
 
-TMethod *TClass::GetClassMethod(Long_t faddr)
+TMethod *TClass::GetClassMethod(Longptr_t faddr)
 {
    if (!HasInterpreterInfo()) return 0;
 
    TMethod *m;
    TIter    next(GetListOfMethods());
    while ((m = (TMethod *) next())) {
-      if (faddr == (Long_t)m->InterfaceMethod())
+      if (faddr == (Longptr_t)m->InterfaceMethod())
          return m;
    }
    return 0;
@@ -4905,9 +4905,9 @@ void *TClass::DynamicCast(const TClass *cl, void *obj, Bool_t up)
    Int_t off;
    if ((off = GetBaseClassOffset(cl, obj)) != -1) {
       if (up)
-         return (void*)((Long_t)obj+off);
+         return (void*)((Longptr_t)obj+off);
       else
-         return (void*)((Long_t)obj-off);
+         return (void*)((Longptr_t)obj-off);
    }
    return 0;
 }
@@ -6295,7 +6295,7 @@ void TClass::SetUnloaded()
       (*fEnums).Unload();
    }
 
-   if (fState <= kForwardDeclared && fStreamerInfo->GetEntries() != 0) {
+   if (fState <= kForwardDeclared && !fStreamerInfo->IsEmpty()) {
       fState = kEmulated;
    }
 
@@ -6645,20 +6645,24 @@ void TClass::AdoptReferenceProxy(TVirtualRefProxy* proxy)
 
 void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
 {
-   if (!fRealData) return;
+   if (fRealData) {
 
-   R__LOCKGUARD(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
 
-   TIter next(fRealData);
-   TRealData *rd;
-   while ((rd = (TRealData*)next())) {
-      if (strcmp(rd->GetName(),name) == 0) {
-         // If there is a TStreamerElement that took a pointer to the
-         // streamer we should inform it!
-         rd->AdoptStreamer(p);
-         break;
+      TIter next(fRealData);
+      TRealData *rd;
+      while ((rd = (TRealData*)next())) {
+         if (strcmp(rd->GetName(),name) == 0) {
+            // If there is a TStreamerElement that took a pointer to the
+            // streamer we should inform it!
+            rd->AdoptStreamer(p);
+            return;
+         }
       }
    }
+
+   Error("AdoptMemberStreamer","Cannot adope member streamer for %s::%s",GetName(), name);
+   delete p;
 
 //  NOTE: This alternative was proposed but not is not used for now,
 //  One of the major difference with the code above is that the code below
@@ -6675,7 +6679,6 @@ void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
 //       return;
 //    }
 //    dm->SetStreamer(p);
-   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6744,7 +6747,7 @@ void TClass::StreamerTObject(const TClass* pThis, void *object, TBuffer &b, cons
    if (!pThis->fIsOffsetStreamerSet) {
       pThis->CalculateStreamerOffset();
    }
-   TObject *tobj = (TObject*)((Long_t)object + pThis->fOffsetStreamer);
+   TObject *tobj = (TObject*)((Longptr_t)object + pThis->fOffsetStreamer);
    tobj->Streamer(b);
 }
 
@@ -6753,7 +6756,7 @@ void TClass::StreamerTObject(const TClass* pThis, void *object, TBuffer &b, cons
 
 void TClass::StreamerTObjectInitialized(const TClass* pThis, void *object, TBuffer &b, const TClass * /* onfile_class */)
 {
-   TObject *tobj = (TObject*)((Long_t)object + pThis->fOffsetStreamer);
+   TObject *tobj = (TObject*)((Longptr_t)object + pThis->fOffsetStreamer);
    tobj->Streamer(b);
 }
 

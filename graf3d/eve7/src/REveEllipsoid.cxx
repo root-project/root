@@ -19,8 +19,9 @@
 
 #include <cassert>
 
-using namespace ROOT::Experimental;
+#include <nlohmann/json.hpp>
 
+using namespace ROOT::Experimental;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

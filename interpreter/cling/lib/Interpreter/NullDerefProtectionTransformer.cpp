@@ -125,7 +125,7 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
       if(!m_clingthrowIfInvalidPointerCache)
         FindAndCacheRuntimeLookupResult();
 
-      SourceLocation Loc = Arg->getLocStart();
+      SourceLocation Loc = Arg->getBeginLoc();
       Expr* VoidSemaArg = utils::Synthesize::CStyleCastPtrExpr(&m_Sema,
                                                             m_Context.VoidPtrTy,
                                                             (uintptr_t)&m_Interp);
@@ -198,9 +198,8 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
              E = FDecl->specific_attr_end<NonNullAttr>(); I != E; ++I) {
 
         NonNullAttr *NonNull = *I;
-        for (NonNullAttr::args_iterator i = NonNull->args_begin(),
-               e = NonNull->args_end(); i != e; ++i) {
-          ArgIndexs.set(*i);
+        for (const auto &Idx : NonNull->args()) {
+          ArgIndexs.set(Idx.getASTIndex());
         }
       }
 
@@ -219,7 +218,7 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
       SourceLocation noLoc;
       m_clingthrowIfInvalidPointerCache = new LookupResult(m_Sema, Name, noLoc,
                                         Sema::LookupOrdinaryName,
-                                        Sema::ForRedeclaration);
+                                        Sema::ForVisibleRedeclaration);
       m_Sema.LookupQualifiedName(*m_clingthrowIfInvalidPointerCache,
                                  m_Context.getTranslationUnitDecl());
       assert(!m_clingthrowIfInvalidPointerCache->empty() &&

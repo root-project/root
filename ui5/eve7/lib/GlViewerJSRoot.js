@@ -27,6 +27,15 @@ sap.ui.define([
          this.createGeoPainter();
       },
 
+      cleanup: function() {
+         if (this.geo_painter) {
+            this.geo_painter.cleanup();
+            delete this.geo_painter;
+         }
+
+         GlViewer.prototype.cleanup.call(this);
+      },
+
       //==============================================================================
 
       make_object: function(name)
@@ -49,6 +58,7 @@ sap.ui.define([
          if (this.controller.kind != "3D") options += ", ortho_camera";
 
          // TODO: should be specified somehow in XML file
+         // MT-RCORE - why have I removed this ???
          this.get_view().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
 
          this.geo_painter = JSROOT.Painter.createGeoPainter(this.get_view().getDomRef(), null, options);
@@ -78,7 +88,7 @@ sap.ui.define([
             this.fxaa_pass.uniforms[ 'resolution' ].value.set( 1 / w, 1 / h );
             this.fxaa_pass.renderToScreen = true;
             this._effectComposer.addPass( this.fxaa_pass );
-         }
+         };
 
          this.geo_painter.setMouseTmout(this.controller.htimeout);
 
@@ -117,7 +127,7 @@ sap.ui.define([
                var c = intersect.object.get_ctrl();
                c.elementSelected(c.extractIndex(intersect));
             }
-         }
+         };
 
          /** Handler of mouse double click - either ignore or reset camera position */
          if (this.controller.dblclick_action != "Reset")
@@ -196,6 +206,8 @@ sap.ui.define([
 
          this.geo_painter.adjustCameraPosition(true);
          this.render();
+
+         this.controller.glViewerInitDone();
       },
 
       /** @summary Used together with the geo painter for processing context menu */

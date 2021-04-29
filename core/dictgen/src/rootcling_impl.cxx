@@ -66,7 +66,6 @@
 #include "cling/Interpreter/Value.h"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/Basic/Diagnostic.h"
-#include "clang/Basic/MemoryBufferCache.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
@@ -78,7 +77,8 @@
 #include "clang/Serialization/ASTWriter.h"
 #include "cling/Utils/AST.h"
 
-#include "llvm/Bitcode/BitstreamWriter.h"
+#include "llvm/ADT/StringRef.h"
+
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/PrettyStackTrace.h"
@@ -404,6 +404,8 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
 size_t GetFullArrayLength(const clang::ConstantArrayType *arrayType)
 {
+   if (!arrayType)
+      return 0;
    llvm::APInt len = arrayType->getSize();
    while (const clang::ConstantArrayType *subArrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual())) {
       len *= subArrayType->getSize();
@@ -858,11 +860,10 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(m.getType()), 0);
    Internal::RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
 
-   if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
+   if (!clxx || clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
 
    const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
    if (!tmplt_specialization) return 0;
-
 
    string stlType(ROOT::TMetaUtils::ShortTypeName(mTypename.c_str()));
    string stlName;
@@ -1261,7 +1262,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
       nesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream,cl);
    }
 
-   dictStream << "   namespace ROOT {" << std::endl;
+   dictStream << "   namespace ROOTDict {" << std::endl;
 
 #if !defined(R__AIX)
    dictStream << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
@@ -1985,13 +1986,14 @@ static bool InjectModuleUtilHeader(const char *argv0,
 /// If module is not a null pointer, we only write the given module to the
 /// given file and not the whole AST.
 /// Returns true if the AST was successfully written.
-static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstance, StringRef iSysRoot,
+static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compilerInstance,
+                     llvm::StringRef iSysRoot,
                      clang::Module *module = nullptr)
 {
    // From PCHGenerator and friends:
    llvm::SmallVector<char, 128> buffer;
    llvm::BitstreamWriter stream(buffer);
-   clang::ASTWriter writer(stream, buffer, compilerInstance->getPCMCache(), /*Extensions=*/{});
+   clang::ASTWriter writer(stream, buffer, compilerInstance->getModuleCache(), /*Extensions=*/{});
    std::unique_ptr<llvm::raw_ostream> out =
       compilerInstance->createOutputFile(fileName, /*Binary=*/true,
                                          /*RemoveFileOnSignal=*/false, /*InFile*/ "",
@@ -2111,6 +2113,10 @@ void AddPlatformDefines(std::vector<std::string> &clingArgs)
    snprintf(platformDefines, 64, "-DG__WIN32=%ld", (long)WIN32);
    clingArgs.push_back(platformDefines);
 # endif
+#endif
+#ifdef _WIN64
+   snprintf(platformDefines, 64, "-DG__WIN64=%ld", (long)_WIN64);
+   clingArgs.push_back(platformDefines);
 #endif
 #ifdef _MSC_VER
    snprintf(platformDefines, 64, "-DG__MSC_VER=%ld", (long)_MSC_VER);
@@ -2475,7 +2481,13 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
       if (llvm::isa<clang::ClassTemplateSpecializationDecl>(rDecl)) {
          fwdDeclaration = "";
          retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(*rDecl, interpreter, fwdDeclaration);
-         if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
+         if (retCode == 0) {
+            std::string fwdDeclarationTemplateSpec;
+            retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclIfTmplSpec(*rDecl, interpreter, fwdDeclarationTemplateSpec, normalizedName);
+            fwdDeclaration += '\n' + fwdDeclarationTemplateSpec;
+         }
+         if (retCode == 0)
+            ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
       }
 
 
@@ -2688,6 +2700,16 @@ int GenerateFullDict(std::ostream &dictStream,
             // Register the collections
             // coverity[fun_call_w_exception] - that's just fine.
             Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
+         } else if (CRD->getName() == "RVec") {
+            static const clang::DeclContext *vecOpsDC = nullptr;
+            if (!vecOpsDC)
+               vecOpsDC = llvm::dyn_cast<clang::DeclContext>(
+                  interp.getLookupHelper().findScope("ROOT::VecOps", cling::LookupHelper::NoDiagnostics));
+            if (vecOpsDC && vecOpsDC->Equals(CRD->getDeclContext())) {
+               // Register the collections
+               // coverity[fun_call_w_exception] - that's just fine.
+               Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
+            }
          } else {
             if (!gOptIgnoreExistingDict) {
                ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes,
@@ -2812,7 +2834,7 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
 
 void AddNamespaceSTDdeclaration(std::ostream &dictStream)
 {
-   dictStream  << "// The generated code does not explicitly qualifies STL entities\n"
+   dictStream  << "// The generated code does not explicitly qualify STL entities\n"
                << "namespace std {} using namespace std;\n\n";
 }
 
@@ -3301,10 +3323,16 @@ static std::string GenerateFwdDeclString(const RScanner &scan,
 //    for (auto* VAR: scan.fSelectedVariables)
 //       selectedDecls.push_back(VAR);
 
+   std::string fwdDeclLogs;
+
    // The "R\"DICTFWDDCLS(\n" ")DICTFWDDCLS\"" pieces have been moved to
    // TModuleGenerator to be able to make the diagnostics more telling in presence
    // of an issue ROOT-6752.
-   fwdDeclString += Decls2FwdDecls(selectedDecls,IsLinkdefFile,interp);
+   fwdDeclString += Decls2FwdDecls(selectedDecls,IsLinkdefFile,interp, genreflex::verbose ? &fwdDeclLogs : nullptr);
+
+   if (genreflex::verbose && !fwdDeclLogs.empty())
+      std::cout << "Logs from forward decl printer: \n"
+         << fwdDeclLogs;
 
    // Functions
 //    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
@@ -3445,7 +3473,8 @@ public:
    virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
                                    llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
                                    const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
-                                   llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/)
+                                   llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
+                                   clang::SrcMgr::CharacteristicKind /*FileType*/)
    {
       if (isLocked) return;
       if (IsAngled) return;
@@ -3838,14 +3867,14 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *modul
 ////////////////////////////////////////////////////////////////////////////////
 /// Check moduleName validity from modulemap. Check if this module is defined or not.
 static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
-                           StringRef LinkdefPath, const std::string &moduleName)
+                             llvm::StringRef LinkdefPath, const std::string &moduleName)
 {
    clang::CompilerInstance *CI = interpreter.getCI();
    clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
    headerSearch.loadTopLevelSystemModules();
 
    // Actually lookup the module on the computed module name.
-   clang::Module *module = headerSearch.lookupModule(StringRef(moduleName));
+   clang::Module *module = headerSearch.lookupModule(llvm::StringRef(moduleName));
 
    // Inform the user and abort if we can't find a module with a given name.
    if (!module) {
@@ -4153,7 +4182,7 @@ int RootClingMain(int argc,
    bool isPCH = (gOptDictionaryFileName.getValue() == "allDict.cxx");
    std::string outputFile;
    // Data is in 'outputFile', therefore in the same scope.
-   StringRef moduleName;
+   llvm::StringRef moduleName;
    std::string vfsArg;
    // Adding -fmodules to the args will break lexing with __CINT__ defined,
    // and we actually do lex with __CINT__ and reuse this variable later,
@@ -4206,7 +4235,7 @@ int RootClingMain(int argc,
          remove((moduleCachePath + llvm::sys::path::get_separator() + "vcruntime.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "services.pcm").str().c_str());
 #endif
-         
+
 #ifdef R__MACOSX
          remove((moduleCachePath + llvm::sys::path::get_separator() + "Darwin.pcm").str().c_str());
 #else
@@ -4219,6 +4248,8 @@ int RootClingMain(int argc,
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Rtypes.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_C.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_Stage1_NoRTTI.pcm").str().c_str());
+      } else if (moduleName == "MathCore") {
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "Vc.pcm").str().c_str());
       }
 
       // Set the C++ modules output directory to the directory where we generate
@@ -4459,7 +4490,7 @@ int RootClingMain(int argc,
       IgnoringPragmaHandler(const char* pragma):
          clang::PragmaNamespace(pragma) {}
       void HandlePragma(clang::Preprocessor &PP,
-                        clang::PragmaIntroducerKind Introducer,
+                        clang::PragmaIntroducer Introducer,
                         clang::Token &tok) {
          PP.DiscardUntilEndOfDirective();
       }
@@ -4536,6 +4567,7 @@ int RootClingMain(int argc,
    }
 
    std::ostream &dictStream = (!gOptIgnoreExistingDict && !gOptDictionaryFileName.empty()) ? fileout : std::cout;
+   bool isACLiC = gOptDictionaryFileName.getValue().find("_ACLiC_dict") != std::string::npos;
 
    if (!gOptIgnoreExistingDict) {
       // Now generate a second stream for the split dictionary if it is necessary
@@ -4559,9 +4591,12 @@ int RootClingMain(int argc,
          CreateDictHeader(*splitDictStream, main_dictname);
 
       if (!gOptNoGlobalUsingStd) {
-         AddNamespaceSTDdeclaration(dictStream);
-         if (gOptSplit) {
-            AddNamespaceSTDdeclaration(*splitDictStream);
+         // ACLiC'ed macros might rely on `using namespace std` in front of user headers
+         if (isACLiC) {
+            AddNamespaceSTDdeclaration(dictStream);
+            if (gOptSplit) {
+               AddNamespaceSTDdeclaration(*splitDictStream);
+            }
          }
       }
    }
@@ -4798,6 +4833,15 @@ int RootClingMain(int argc,
             GenerateNecessaryIncludes(*splitDictStream, includeForSource, extraIncludes);
          }
       }
+      if (!gOptNoGlobalUsingStd) {
+         // ACLiC'ed macros might have relied on `using namespace std` in front of user headers
+         if (!isACLiC) {
+            AddNamespaceSTDdeclaration(dictStream);
+            if (gOptSplit) {
+               AddNamespaceSTDdeclaration(*splitDictStream);
+            }
+         }
+      }
       if (gDriverConfig->fInitializeStreamerInfoROOTFile) {
          gDriverConfig->fInitializeStreamerInfoROOTFile(modGen.GetModuleFileName().c_str());
       }
@@ -4981,7 +5025,7 @@ int RootClingMain(int argc,
                                               scan.fSelectedTypedefs,
                                               interp);
 
-      rootclingRetCode = CreateNewRootMapFile(gOptRootMapFileName,
+      rootclingRetCode += CreateNewRootMapFile(gOptRootMapFileName,
                                           rootmapLibName,
                                           classesDefsList,
                                           classesNamesForRootmap,
@@ -5631,7 +5675,7 @@ int GenReflexMain(int argc, char **argv)
          "      library (needs target library switch. See its documentation).\n"
       },
 
-      
+
       {
          NOGLOBALUSINGSTD,
          NOTYPE ,

@@ -13,14 +13,6 @@
 #define ROOT_TGFontDialog
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFontDialog.                                                        //
-//                                                                      //
-// The TGFontDialog allows easy font and font attribute selection.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 
@@ -37,38 +29,38 @@ class TGFontDialog : public TGTransientFrame {
 
 public:
    struct FontProp_t {
-      TString     fName;               // font name
-      Int_t       fSize;               // font size
-      UInt_t      fAlign;              // text alignment
-      Pixel_t     fColor;              // text color
-      Bool_t      fBold;               // bold flag
-      Bool_t      fItalic;             // italic flag
+      TString     fName;               ///< font name
+      Int_t       fSize;               ///< font size
+      UInt_t      fAlign;              ///< text alignment
+      Pixel_t     fColor;              ///< text color
+      Bool_t      fBold;               ///< bold flag
+      Bool_t      fItalic;             ///< italic flag
    };
 
 protected:
-   TGListBox           *fFontNames;    // list of font names
-   TGListBox           *fFontSizes;    // list of font sizes
-   TGListBox           *fFontStyles;   // list of font styles
-   TGComboBox          *fTextAligns;   // font alignment selection
-   TGLabel             *fSample;       // sample of selected font
-   TGColorSelect       *fColorSelect;  // color selection dialog
-   TString              fName;         // font name
-   TString              fLName;        // logical font name
-   FontProp_t          *fFontProp;     // font info structure
-   Bool_t               fItalic;       // italic flag
-   Bool_t               fBold;         // bold flag
-   Int_t                fSize;         // font size
-   Int_t                fTextAlign;    // text aligment
-   Pixel_t              fTextColor;    // text color
-   Pixel_t              fInitColor;    // initial value of text color
-   Int_t                fInitAlign;    // initialvalue of  text align
-   TGFont              *fInitFont;     // initial font
-   TString              fSampleText;   // string used for sample
-   TGGC                *fSampleTextGC; // GC used for sample text
-   TGFont              *fLabelFont;    // TGFont used for sample text
-   Bool_t               fHitOK;        // flag = kTRUE if user press the Ok button
-   Int_t                fNumberOfFonts;// total numbder of fonts
-   Bool_t               fWaitFor;      // if kTRUE WaitForUnmap is called in constructor.
+   TGListBox           *fFontNames;    ///< list of font names
+   TGListBox           *fFontSizes;    ///< list of font sizes
+   TGListBox           *fFontStyles;   ///< list of font styles
+   TGComboBox          *fTextAligns;   ///< font alignment selection
+   TGLabel             *fSample;       ///< sample of selected font
+   TGColorSelect       *fColorSelect;  ///< color selection dialog
+   TString              fName;         ///< font name
+   TString              fLName;        ///< logical font name
+   FontProp_t          *fFontProp;     ///< font info structure
+   Bool_t               fItalic;       ///< italic flag
+   Bool_t               fBold;         ///< bold flag
+   Int_t                fSize;         ///< font size
+   Int_t                fTextAlign;    ///< text alignment
+   Pixel_t              fTextColor;    ///< text color
+   Pixel_t              fInitColor;    ///< initial value of text color
+   Int_t                fInitAlign;    ///< initial value of  text align
+   TGFont              *fInitFont;     ///< initial font
+   TString              fSampleText;   ///< string used for sample
+   TGGC                *fSampleTextGC; ///< GC used for sample text
+   TGFont              *fLabelFont;    ///< TGFont used for sample text
+   Bool_t               fHitOK;        ///< flag = kTRUE if user press the Ok button
+   Int_t                fNumberOfFonts;///< total number of fonts
+   Bool_t               fWaitFor;      ///< if kTRUE WaitForUnmap is called in constructor.
 
    Bool_t               Build(char **fontList, Int_t cnt);
    void                 GetFontName();

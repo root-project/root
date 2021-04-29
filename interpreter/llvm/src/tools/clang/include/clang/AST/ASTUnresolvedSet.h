@@ -1,9 +1,8 @@
-//===-- ASTUnresolvedSet.h - Unresolved sets of declarations  ---*- C++ -*-===//
+//===- ASTUnresolvedSet.h - Unresolved sets of declarations -----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,14 +15,22 @@
 #define LLVM_CLANG_AST_ASTUNRESOLVEDSET_H
 
 #include "clang/AST/ASTVector.h"
+#include "clang/AST/DeclAccessPair.h"
 #include "clang/AST/UnresolvedSet.h"
+#include "clang/Basic/Specifiers.h"
+#include <cassert>
+#include <cstdint>
 
 namespace clang {
 
-/// \brief An UnresolvedSet-like class which uses the ASTContext's allocator.
+class NamedDecl;
+
+/// An UnresolvedSet-like class which uses the ASTContext's allocator.
 class ASTUnresolvedSet {
+  friend class LazyASTUnresolvedSet;
+
   struct DeclsTy : ASTVector<DeclAccessPair> {
-    DeclsTy() {}
+    DeclsTy() = default;
     DeclsTy(ASTContext &C, unsigned N) : ASTVector<DeclAccessPair>(C, N) {}
 
     bool isLazy() const { return getTag(); }
@@ -32,14 +39,12 @@ class ASTUnresolvedSet {
 
   DeclsTy Decls;
 
-  friend class LazyASTUnresolvedSet;
-
 public:
-  ASTUnresolvedSet() {}
+  ASTUnresolvedSet() = default;
   ASTUnresolvedSet(ASTContext &C, unsigned N) : Decls(C, N) {}
 
-  typedef UnresolvedSetIterator iterator;
-  typedef UnresolvedSetIterator const_iterator;
+  using iterator = UnresolvedSetIterator;
+  using const_iterator = UnresolvedSetIterator;
 
   iterator begin() { return iterator(Decls.begin()); }
   iterator end() { return iterator(Decls.end()); }
@@ -83,7 +88,7 @@ public:
   const DeclAccessPair &operator[](unsigned I) const { return Decls[I]; }
 };
 
-/// \brief An UnresolvedSet-like class that might not have been loaded from the
+/// An UnresolvedSet-like class that might not have been loaded from the
 /// external AST source yet.
 class LazyASTUnresolvedSet {
   mutable ASTUnresolvedSet Impl;
@@ -98,13 +103,14 @@ public:
   }
 
   void reserve(ASTContext &C, unsigned N) { Impl.reserve(C, N); }
+
   void addLazyDecl(ASTContext &C, uintptr_t ID, AccessSpecifier AS) {
     assert(Impl.empty() || Impl.Decls.isLazy());
     Impl.Decls.setLazy(true);
-    Impl.addDecl(C, reinterpret_cast<NamedDecl*>(ID << 2), AS);
+    Impl.addDecl(C, reinterpret_cast<NamedDecl *>(ID << 2), AS);
   }
 };
 
 } // namespace clang
 
-#endif
+#endif // LLVM_CLANG_AST_ASTUNRESOLVEDSET_H

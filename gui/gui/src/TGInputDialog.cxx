@@ -9,13 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Input Dialog Widget                                                   //
-//                                                                       //
-// An Input dialog box                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGInputDialog
+    \ingroup guiwidgets
+
+Input Dialog Widget
+
+An Input dialog box
+
+*/
+
 
 #include "TGInputDialog.h"
 #include "TGButton.h"
@@ -26,28 +29,27 @@ ClassImp(TGInputDialog);
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create simple input dialog.
+///
+/// It is important to know that the case where the constructor in
+/// which all the variables are initialized to their default values is
+/// only used for the TBrowser to inspect on the classes. For normal
+/// use the only variable that should be free is options.
+///
+/// Variables prompt, defval are the content of the input dialog while
+/// retstr has to be initialized to a char[256]. In case these are not
+/// initialized, they will show default values while retstr will be
+/// automatically allocated by the dialog. However this will make
+/// impossible to retrieve the value entered by the dialog.
+///
+/// To see TGInputDialog in use see:
+/// $ROOTSYS/tutorials/testInputDialog.cxx
 
 TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
                              const char *prompt, const char *defval,
                              char *retstr, UInt_t options) :
       TGTransientFrame(p, main, 10, 10, options)
 {
-   /** Create simple input dialog.
-
-   It is important to know that the case where the constructor in
-   which all the variables are initialized to their default values is
-   only used for the TBrowser to inspect on the classes. For normal
-   use the only variable that should be free is options.
-
-   Variables prompt, defval are the content of the input dialog while
-   retstr has to be initialized to a char[256]. In case these are not
-   initialized, they will show default values while retstr will be
-   automatically allocated by the dialog. However this will make
-   impossible to retrieve the value entered by the dialog.
-
-   To see TGInputDialog in use see:
-   $ROOTSYS/tutorials/testInputDialog.cxx
-   */
 
    if (!p && !main) {
       MakeZombie();
@@ -77,7 +79,6 @@ TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
    fOk = new TGTextButton(hf, "&Ok", 1);
    fOk->Associate(this);
    hf->AddFrame(fOk, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 5, 5, 0, 0));
-   height = fOk->GetDefaultHeight();
    width  = TMath::Max(width, fOk->GetDefaultWidth());
 
    fCancel = new TGTextButton(hf, "&Cancel", 2);
@@ -149,7 +150,7 @@ Bool_t TGInputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case 1:
                      // here copy the string from text buffer to return variable
                      // coverity[secure_coding]
-                     strcpy(fRetStr, fTE->GetBuffer()->GetString());
+                     strcpy(fRetStr, fTE->GetBuffer()->GetString()); // NOLINT
                      // if user selected an empty string, set the second
                      // char to 1,in order to distinguish between empty string
                      // selected with OK and Cancel button pressed
@@ -175,7 +176,7 @@ Bool_t TGInputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             case kTE_ENTER:
                // here copy the string from text buffer to return variable
                // coverity[secure_coding]
-               strcpy(fRetStr, fTE->GetBuffer()->GetString());
+               strcpy(fRetStr, fTE->GetBuffer()->GetString()); // NOLINT
                // if user selected an empty string, set the second
                // char to 1,in order to distinguish between empty string
                // selected with OK and Cancel button pressed

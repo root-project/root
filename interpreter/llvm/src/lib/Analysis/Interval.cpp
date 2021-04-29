@@ -1,9 +1,8 @@
 //===- Interval.cpp - Interval class code ---------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,7 +15,6 @@
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/Support/raw_ostream.h"
-#include <algorithm>
 
 using namespace llvm;
 
@@ -25,7 +23,6 @@ using namespace llvm;
 //===----------------------------------------------------------------------===//
 
 // isLoop - Find out if there is a back edge in this interval...
-//
 bool Interval::isLoop() const {
   // There is a loop in this interval iff one of the predecessors of the header
   // node lives in the interval.
@@ -35,7 +32,6 @@ bool Interval::isLoop() const {
       return true;
   return false;
 }
-
 
 void Interval::print(raw_ostream &OS) const {
   OS << "-------------------------------------------------------------\n"

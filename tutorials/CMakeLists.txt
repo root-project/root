@@ -53,6 +53,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogoff.C "{}")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.rootrc "
 Proof.Sandbox: /tmp/proof
 Rint.History:  .root_hist
+ACLiC.LinkLibs:  1
 ")
 
 #---Definition of the helper function--------------------------------
@@ -82,6 +83,8 @@ if (NOT dataframe)
     list(APPEND dataframe_veto graphs/timeSeriesFromCSV_TDF.C)
     # TMVA tutorials dependent on RDataFrame
     list(APPEND dataframe_veto tmva/tmva*.C)
+    # RooFit tutorial depending on RDataFrame
+    list(APPEND dataframe_veto roofit/rf408*)
 elseif(MSVC AND NOT win_broken_tests)
     list(APPEND dataframe_veto dataframe/*.py)
 endif()
@@ -89,6 +92,12 @@ endif()
 if(NOT sqlite)
     # RDF+SQlite tutorials
     list(APPEND dataframe_veto dataframe/*SQlite*)
+endif()
+if(NOT davix)
+    list(APPEND dataframe_veto dataframe/df027_SQliteDependencyOverVersion.C)
+    list(APPEND dataframe_veto dataframe/df028_SQliteIPLocation.C)
+    list(APPEND dataframe_veto dataframe/df029_SQlitePlatformDistribution.C)
+    list(APPEND dataframe_veto dataframe/df030_SQliteVersionsOfROOT.C)
 endif()
 
 if(MACOSX_VERSION VERSION_EQUAL 10.13)
@@ -267,8 +276,10 @@ if(root7)
   if(NOT davix)
     list(APPEND root7_veto v7/ntuple/ntpl003_lhcbOpenData.C)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
+    list(APPEND root7_veto v7/global_temperatures.cxx)
   endif()
   if(NOT dataframe)
+    list(APPEND root7_veto v7/global_temperatures.cxx)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
   endif()
 else()
@@ -570,6 +581,21 @@ if(ROOT_pyroot_FOUND)
      OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3)
      OR (MSVC AND NOT win_broken_tests))
     list(APPEND pyveto pyroot/pyroot004_NumbaDeclare.py)
+  endif()
+
+  if((dataframe AND DEFINED ENV{ROOTTEST_IGNORE_PANDAS_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2) OR
+     (dataframe AND DEFINED ENV{ROOTTEST_IGNORE_PANDAS_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
+    list(APPEND pyveto dataframe/df026_AsNumpyArrays.py)
+  endif()
+
+  # Rules specific to distributed RDataFrame with Pyspark
+  # Disable distributed RDF tutorials if we didn't check dependencies in the environment first
+  if(NOT test_distrdf_pyspark)
+    list(APPEND pyveto dataframe/distrdf*)
+  endif()
+  # Use main Python executable to run in PySpark driver and executors
+  if(test_distrdf_pyspark)
+    list(APPEND ROOT_environ PYSPARK_PYTHON=${PYTHON_EXECUTABLE_Development_Main})
   endif()
 
   find_python_module(xgboost QUIET)

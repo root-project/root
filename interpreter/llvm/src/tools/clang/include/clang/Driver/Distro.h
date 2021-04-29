@@ -1,16 +1,15 @@
 //===--- Distro.h - Linux distribution detection support --------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_CLANG_DRIVER_DISTRO_H
 #define LLVM_CLANG_DRIVER_DISTRO_H
 
-#include "clang/Basic/VirtualFileSystem.h"
+#include "llvm/Support/VirtualFileSystem.h"
 
 namespace clang {
 namespace driver {
@@ -26,17 +25,21 @@ public:
     // NB: Releases of a particular Linux distro should be kept together
     // in this enum, because some tests are done by integer comparison against
     // the first and last known member in the family, e.g. IsRedHat().
+    AlpineLinux,
     ArchLinux,
     DebianLenny,
     DebianSqueeze,
     DebianWheezy,
     DebianJessie,
     DebianStretch,
+    DebianBuster,
+    DebianBullseye,
     Exherbo,
     RHEL5,
     RHEL6,
     RHEL7,
     Fedora,
+    Gentoo,
     OpenSUSE,
     UbuntuHardy,
     UbuntuIntrepid,
@@ -58,6 +61,10 @@ public:
     UbuntuYakkety,
     UbuntuZesty,
     UbuntuArtful,
+    UbuntuBionic,
+    UbuntuCosmic,
+    UbuntuDisco,
+    UbuntuEoan,
     UnknownDistro
   };
 
@@ -76,7 +83,7 @@ public:
   Distro(DistroType D) : DistroVal(D) {}
 
   /// Detects the distribution using specified VFS.
-  explicit Distro(clang::vfs::FileSystem& VFS);
+  explicit Distro(llvm::vfs::FileSystem &VFS);
 
   bool operator==(const Distro &Other) const {
     return DistroVal == Other.DistroVal;
@@ -107,11 +114,19 @@ public:
   }
 
   bool IsDebian() const {
-    return DistroVal >= DebianLenny && DistroVal <= DebianStretch;
+    return DistroVal >= DebianLenny && DistroVal <= DebianBullseye;
   }
 
   bool IsUbuntu() const {
-    return DistroVal >= UbuntuHardy && DistroVal <= UbuntuArtful;
+    return DistroVal >= UbuntuHardy && DistroVal <= UbuntuEoan;
+  }
+
+  bool IsAlpineLinux() const {
+    return DistroVal == AlpineLinux;
+  }
+
+  bool IsGentoo() const {
+    return DistroVal == Gentoo;
   }
 
   /// @}

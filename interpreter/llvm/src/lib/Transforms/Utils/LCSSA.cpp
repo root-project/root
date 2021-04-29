@@ -1,16 +1,15 @@
 //===-- LCSSA.cpp - Convert loops into loop-closed SSA form ---------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
 // This pass transforms loops by placing phi nodes at the end of the loops for
 // all values that are live across the loop boundary.  For example, it turns
 // the left into the right code:
-// 
+//
 // for (...)                for (...)
 //   if (c)                   if (c)
 //     X1 = ...                 X1 = ...
@@ -21,8 +20,8 @@
 //                          ... = X4 + 4
 //
 // This is still valid LLVM; the extra phi nodes are purely redundant, and will
-// be trivially eliminated by InstCombine.  The major benefit of this 
-// transformation is that it makes many other loop optimizations, such as 
+// be trivially eliminated by InstCombine.  The major benefit of this
+// transformation is that it makes many other loop optimizations, such as
 // LoopUnswitching, simpler.
 //
 //===----------------------------------------------------------------------===//
@@ -32,17 +31,21 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/BasicAliasAnalysis.h"
+#include "llvm/Analysis/BranchProbabilityInfo.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/LoopPass.h"
+#include "llvm/Analysis/MemorySSA.h"
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/Analysis/ScalarEvolutionAliasAnalysis.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/PredIteratorCache.h"
 #include "llvm/Pass.h"
-#include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Utils.h"
+#include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/LoopUtils.h"
 #include "llvm/Transforms/Utils/SSAUpdater.h"
 using namespace llvm;
@@ -56,9 +59,10 @@ static bool VerifyLoopLCSSA = true;
 #else
 static bool VerifyLoopLCSSA = false;
 #endif
-static cl::opt<bool,true>
-VerifyLoopLCSSAFlag("verify-loop-lcssa", cl::location(VerifyLoopLCSSA),
-                    cl::desc("Verify loop lcssa form (time consuming)"));
+static cl::opt<bool, true>
+    VerifyLoopLCSSAFlag("verify-loop-lcssa", cl::location(VerifyLoopLCSSA),
+                        cl::Hidden,
+                        cl::desc("Verify loop lcssa form (time consuming)"));
 
 /// Return true if the specified block is in the list.
 static bool isExitBlock(BasicBlock *BB,
@@ -142,7 +146,8 @@ bool llvm::formLCSSAForInstructions(SmallVectorImpl<Instruction *> &Worklist,
 
       PHINode *PN = PHINode::Create(I->getType(), PredCache.size(ExitBB),
                                     I->getName() + ".lcssa", &ExitBB->front());
-
+      // Get the debug location from the original instruction.
+      PN->setDebugLoc(I->getDebugLoc());
       // Add inputs from inside the loop for this PHI.
       for (BasicBlock *Pred : PredCache.get(ExitBB)) {
         PN->addIncoming(I, Pred);
@@ -194,8 +199,37 @@ bool llvm::formLCSSAForInstructions(SmallVectorImpl<Instruction *> &Worklist,
         continue;
       }
 
+      // If we added a single PHI, it must dominate all uses and we can directly
+      // rename it.
+      if (AddedPHIs.size() == 1) {
+        // Tell the VHs that the uses changed. This updates SCEV's caches.
+        // We might call ValueIsRAUWd multiple times for the same value.
+        if (UseToRewrite->get()->hasValueHandle())
+          ValueHandleBase::ValueIsRAUWd(*UseToRewrite, AddedPHIs[0]);
+        UseToRewrite->set(AddedPHIs[0]);
+        continue;
+      }
+
       // Otherwise, do full PHI insertion.
       SSAUpdate.RewriteUse(*UseToRewrite);
+    }
+
+    SmallVector<DbgValueInst *, 4> DbgValues;
+    llvm::findDbgValues(DbgValues, I);
+
+    // Update pre-existing debug value uses that reside outside the loop.
+    auto &Ctx = I->getContext();
+    for (auto DVI : DbgValues) {
+      BasicBlock *UserBB = DVI->getParent();
+      if (InstBB == UserBB || L->contains(UserBB))
+        continue;
+      // We currently only handle debug values residing in blocks that were
+      // traversed while rewriting the uses. If we inserted just a single PHI,
+      // we will handle all relevant debug values.
+      Value *V = AddedPHIs.size() == 1 ? AddedPHIs[0]
+                                       : SSAUpdate.FindValueForBlock(UserBB);
+      if (V)
+        DVI->setOperand(0, MetadataAsValue::get(Ctx, ValueAsMetadata::get(V)));
     }
 
     // SSAUpdater might have inserted phi-nodes inside other loops. We'll need
@@ -213,18 +247,27 @@ bool llvm::formLCSSAForInstructions(SmallVectorImpl<Instruction *> &Worklist,
         Worklist.push_back(PostProcessPN);
 
     // Keep track of PHI nodes that we want to remove because they did not have
-    // any uses rewritten.
+    // any uses rewritten. If the new PHI is used, store it so that we can
+    // try to propagate dbg.value intrinsics to it.
+    SmallVector<PHINode *, 2> NeedDbgValues;
     for (PHINode *PN : AddedPHIs)
       if (PN->use_empty())
         PHIsToRemove.insert(PN);
-
+      else
+        NeedDbgValues.push_back(PN);
+    insertDebugValuesForPHIs(InstBB, NeedDbgValues);
     Changed = true;
   }
-  // Remove PHI nodes that did not have any uses rewritten.
-  for (PHINode *PN : PHIsToRemove) {
-    assert (PN->use_empty() && "Trying to remove a phi with uses.");
-    PN->eraseFromParent();
-  }
+  // Remove PHI nodes that did not have any uses rewritten. We need to redo the
+  // use_empty() check here, because even if the PHI node wasn't used when added
+  // to PHIsToRemove, later added PHI nodes can be using it.  This cleanup is
+  // not guaranteed to handle trees/cycles of PHI nodes that only are used by
+  // each other. Such situations has only been noticed when the input IR
+  // contains unreachable code, and leaving some extra redundant PHI nodes in
+  // such situations is considered a minor problem.
+  for (PHINode *PN : PHIsToRemove)
+    if (PN->use_empty())
+      PN->eraseFromParent();
   return Changed;
 }
 
@@ -278,6 +321,12 @@ bool llvm::formLCSSA(Loop &L, DominatorTree &DT, LoopInfo *LI,
                      ScalarEvolution *SE) {
   bool Changed = false;
 
+#ifdef EXPENSIVE_CHECKS
+  // Verify all sub-loops are in LCSSA form already.
+  for (Loop *SubLoop: L)
+    assert(SubLoop->isRecursivelyLCSSAForm(DT, *LI) && "Subloop not in LCSSA!");
+#endif
+
   SmallVector<BasicBlock *, 8> ExitBlocks;
   L.getExitBlocks(ExitBlocks);
   if (ExitBlocks.empty())
@@ -297,6 +346,10 @@ bool llvm::formLCSSA(Loop &L, DominatorTree &DT, LoopInfo *LI,
   // Look at all the instructions in the loop, checking to see if they have uses
   // outside the loop.  If so, put them into the worklist to rewrite those uses.
   for (BasicBlock *BB : BlocksDominatingExits) {
+    // Skip blocks that are part of any sub-loops, they must be in LCSSA
+    // already.
+    if (LI->getLoopFor(BB) != &L)
+      continue;
     for (Instruction &I : *BB) {
       // Reject two common cases fast: instructions with no uses (like stores)
       // and instructions with one use that is in the same block as this.
@@ -391,6 +444,8 @@ struct LCSSAWrapperPass : public FunctionPass {
     AU.addPreserved<GlobalsAAWrapperPass>();
     AU.addPreserved<ScalarEvolutionWrapperPass>();
     AU.addPreserved<SCEVAAWrapperPass>();
+    AU.addPreserved<BranchProbabilityInfoWrapperPass>();
+    AU.addPreserved<MemorySSAWrapperPass>();
 
     // This is needed to perform LCSSA verification inside LPPassManager
     AU.addRequired<LCSSAVerificationPass>();
@@ -434,5 +489,9 @@ PreservedAnalyses LCSSAPass::run(Function &F, FunctionAnalysisManager &AM) {
   PA.preserve<GlobalsAA>();
   PA.preserve<SCEVAA>();
   PA.preserve<ScalarEvolutionAnalysis>();
+  // BPI maps terminators to probabilities, since we don't modify the CFG, no
+  // updates are needed to preserve it.
+  PA.preserve<BranchProbabilityAnalysis>();
+  PA.preserve<MemorySSAAnalysis>();
   return PA;
 }

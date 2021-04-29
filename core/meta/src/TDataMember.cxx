@@ -299,12 +299,12 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
 {
    if(this!=&dm) {
       gCling->DataMemberInfo_Delete(fInfo);
-      delete fValueSetter;
-      delete fValueGetter;
+      delete fValueSetter; fValueSetter = nullptr;
+      delete fValueGetter; fValueGetter = nullptr;
       if (fOptions) {
          fOptions->Delete();
          delete fOptions;
-         fOptions = 0;
+         fOptions = nullptr;
       }
 
       TDictionary::operator=(dm);
@@ -431,7 +431,7 @@ const char *TDataMember::GetTrueTypeName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Get offset from "this".
 
-Long_t TDataMember::GetOffset() const
+Longptr_t TDataMember::GetOffset() const
 {
    if (fOffset>=0) return fOffset;
 
@@ -480,7 +480,7 @@ Long_t TDataMember::GetOffset() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Get offset from "this" using the information in CINT only.
 
-Long_t TDataMember::GetOffsetCint() const
+Longptr_t TDataMember::GetOffsetCint() const
 {
    if (fOffset>=0) return fOffset;
 
@@ -624,10 +624,9 @@ void TDataMember::ExtractOptionsFromComment()
 
    char cmt[2048];
    char opt[2048];
-   const char *ptr1    = 0;
-   char *ptr2    = 0;
-   char *ptr3    = 0;
-   char *tok     = 0;
+   const char *ptr1 = nullptr;
+   char *ptr2    = nullptr;
+   char *ptr3    = nullptr;
    Int_t cnt     = 0;
    Int_t token_cnt;
    Int_t i;
@@ -658,25 +657,22 @@ void TDataMember::ExtractOptionsFromComment()
    // We'll put'em in an array for convenience;
    // You have to do it in this manner because you cannot use nested tokenizing
 
-   char *tokens[256];           // a storage for these sub-tokens.
+   std::vector<std::string> tokens;           // a storage for these sub-tokens.
    token_cnt = 0;
    cnt       = 0;
 
    do {                          //tokenizing loop
       ptr1 = R__STRTOK_R((char *)(cnt++ ? nullptr : opt), ";", &rest);
-      if (ptr1){
-         Int_t nch = strlen(ptr1)+1;
-         tok=new char[nch];
-         strlcpy(tok,ptr1,nch);
-         tokens[token_cnt]=tok;
+      if (ptr1) {
+         tokens.emplace_back(ptr1);
          token_cnt++;
       }
    } while (ptr1);
 
    // OK! Now let's check whether we have Get/Set methods encode in any string
    for (i=0;i<token_cnt;i++) {
-      if (strstr(tokens[i],"GetMethod")) {
-         ptr1 = R__STRTOK_R(tokens[i], "\"", &rest); // tokenizing-strip text "GetMethod"
+      if (strstr(tokens[i].c_str(),"GetMethod")) {
+         ptr1 = R__STRTOK_R(const_cast<char *>(tokens[i].c_str()), "\"", &rest); // tokenizing-strip text "GetMethod"
          if (ptr1 == 0) {
             Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",GetTitle());
             return;
@@ -694,8 +690,8 @@ void TDataMember::ExtractOptionsFromComment()
          continue; //next item!
       }
 
-      if (strstr(tokens[i],"SetMethod")) {
-         ptr1 = R__STRTOK_R(tokens[i], "\"", &rest);
+      if (strstr(tokens[i].c_str(),"SetMethod")) {
+         ptr1 = R__STRTOK_R(const_cast<char *>(tokens[i].c_str()), "\"", &rest);
          if (ptr1 == 0) {
             Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",GetTitle());
             return;
@@ -717,8 +713,8 @@ void TDataMember::ExtractOptionsFromComment()
    std::unique_ptr<TList> optionlist{new TList()};       //storage for options strings
 
    for (i=0;i<token_cnt;i++) {
-      if (strstr(tokens[i],"Items")) {
-         ptr1 = R__STRTOK_R(tokens[i], "()", &rest);
+      if (strstr(tokens[i].c_str(),"Items")) {
+         ptr1 = R__STRTOK_R(const_cast<char *>(tokens[i].c_str()), "()", &rest);
          if (ptr1 == 0) {
             Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",GetTitle());
             return;
@@ -799,12 +795,6 @@ void TDataMember::ExtractOptionsFromComment()
 
    }
 
-   // Garbage collection
-
-   //And dispose tokens string...
-   for (i=0;i<token_cnt;i++)
-      if(tokens[i])
-         delete [] tokens[i];
 }
 
 

@@ -20,7 +20,7 @@
 // The selection is passed either via the constructor or via            //
 // SetSelection.  The number of entries passing the selection (or       //
 // at least one element of the arrays or collections used in the        //
-// selection is passing the slection) is stored in fSeletedRwos         //
+// selection is passing the selection) is stored in fSeletedRwos        //
 // which can be retrieved via GetSelectedRows.                          //
 // See a usage example in TTreePlayer::GetEntries.                      //
 //                                                                      //
@@ -32,12 +32,12 @@ class TTree;
 class TTreeFormula;
 
 class TSelectorEntries : public TSelector {
-   Bool_t          fOwnInput;       // true if we created the input list.
+   Bool_t          fOwnInput;       ///<  True if we created the input list.
 public :
-   TTree          *fChain;          //! pointer to the analyzed TTree or TChain
-   TTreeFormula   *fSelect;         //  Pointer to selection formula
-   Long64_t        fSelectedRows;   //  Number of selected entries
-   Bool_t          fSelectMultiple; //  true if selection has a variable index
+   TTree          *fChain;          ///<! Pointer to the analyzed TTree or TChain
+   TTreeFormula   *fSelect;         ///<  Pointer to selection formula
+   Long64_t        fSelectedRows;   ///<  Number of selected entries
+   Bool_t          fSelectMultiple; ///<  True if selection has a variable index
 
    TSelectorEntries(TTree *tree = 0, const char *selection = 0);
    TSelectorEntries(const char *selection);

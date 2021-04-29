@@ -24,8 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooBreitWigner.h
     RooBukinPdf.h
     RooCBShape.h
-    RooDSCBShape.h
-    RooSDSCBShape.h
+    RooCrystalBall.h
     RooCFunction1Binding.h
     RooCFunction2Binding.h
     RooCFunction3Binding.h
@@ -46,6 +45,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooIntegralMorph.h
     RooJeffreysPrior.h
     RooKeysPdf.h
+    RooLagrangianMorphFunc.h
     RooLandau.h
     RooLognormal.h
     RooMathCoreReg.h
@@ -85,8 +85,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooBreitWigner.cxx
     src/RooBukinPdf.cxx
     src/RooCBShape.cxx
-    src/RooDSCBShape.cxx
-    src/RooSDSCBShape.cxx
+    src/RooCrystalBall.cxx
     src/RooCFunction1Binding.cxx
     src/RooCFunction2Binding.cxx
     src/RooCFunction3Binding.cxx
@@ -107,6 +106,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooIntegralMorph.cxx
     src/RooJeffreysPrior.cxx
     src/RooKeysPdf.cxx
+    src/RooLagrangianMorphFunc.cxx
     src/RooLandau.cxx
     src/RooLognormal.cxx
     src/RooMathCoreReg.cxx
@@ -150,6 +150,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:
-target_compile_options(RooFit PUBLIC -fno-math-errno)
+if(NOT MSVC)
+  target_compile_options(RooFit PUBLIC -fno-math-errno)
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

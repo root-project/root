@@ -292,10 +292,14 @@
 #   if defined(__i386__)
 #      define R__BYTESWAP
 #   endif
-#   if defined(__arm__) || defined (__arm64__)
+#   if defined(__x86_64__)
+#      define R__BYTESWAP
+#      define R__B64      /* enable when 64 bit machine */
+#   endif
+#   if defined(__arm__)
 #      define R__BYTESWAP
 #   endif
-#   if defined(__x86_64__)
+#   if defined (__arm64__)
 #      define R__BYTESWAP
 #      define R__B64      /* enable when 64 bit machine */
 #   endif
@@ -384,6 +388,14 @@
 #   define R__ACCESS_IN_SYMBOL
 //#   define __attribute__(X)
 //#   define thread_local static __declspec(thread)
+#endif
+#ifdef _WIN64
+#   define R__WIN64
+#   ifndef WIN64
+#      define WIN64
+#   endif
+#   define __x86_64__ 1
+#   define R__B64      /* enable when 64 bit machine */
 #endif
 
 #ifdef __SC__
@@ -482,35 +494,16 @@
 #define _R_DEPRECATED_REMOVE_NOW(REASON) __attribute__((REMOVE_THIS_NOW))
 #endif
 
-/* To be removed by 6.20 */
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,19,0)
-# define _R__DEPRECATED_620(REASON) _R__DEPRECATED_LATER(REASON)
+/* USE AS `R__DEPRECATED(6,28, "Not threadsafe; use TFoo::Bar().")`
+   To be removed by 6.28 */
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,27,0)
+# define _R__DEPRECATED_628(REASON) _R__DEPRECATED_LATER(REASON)
 #else
-# define _R__DEPRECATED_620(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+# define _R__DEPRECATED_628(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
 #endif
 
-/* To be removed by 6.22 */
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,21,0)
-# define _R__DEPRECATED_622(REASON) _R__DEPRECATED_LATER(REASON)
-#else
-# define _R__DEPRECATED_622(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
-#endif
-
-/* To be removed by 6.24 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,23,0)
-# define _R__DEPRECATED_624(REASON) _R__DEPRECATED_LATER(REASON)
-#else
-# define _R__DEPRECATED_624(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
-#endif
-
-/* To be removed by 6.26 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,25,0)
-# define _R__DEPRECATED_626(REASON) _R__DEPRECATED_LATER(REASON)
-#else
-# define _R__DEPRECATED_626(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
-#endif
-
-/* To be removed by 7.00 */
+/* USE AS `R__DEPRECATED(7,00, "Not threadsafe; use TFoo::Bar().")`
+   To be removed by 7.00 */
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,99,0)
 # define _R__DEPRECATED_700(REASON) _R__DEPRECATED_LATER(REASON)
 #else

@@ -21,14 +21,14 @@
 **************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGResourcePool                                                       //
-//                                                                      //
-// This class implements a pool for the default GUI resource set,       //
-// like GC's, colors, fonts, etc..                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGResourcePool
+    \ingroup guiwidgets
+
+This class implements a pool for the default GUI resource set,
+like GC's, colors, fonts, etc..
+
+*/
+
 
 #include "RConfigure.h"
 

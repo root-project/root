@@ -27,7 +27,7 @@
 #include "clang/Serialization/Module.h"
 
 #include "llvm/ADT/Hashing.h"
-#include "llvm/Bitcode/BitstreamWriter.h"
+#include "llvm/Bitstream/BitstreamWriter.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
@@ -109,7 +109,7 @@ TClingRdictModuleFileExtension::Reader::Reader(clang::ModuleFileExtension *Ext, 
    llvm::SmallVector<uint64_t, 4> Record;
    llvm::StringRef CurrentRdictName;
    while (true) {
-      llvm::BitstreamEntry Entry = Stream.advanceSkippingSubblocks();
+      llvm::BitstreamEntry Entry = llvm::cantFail(Stream.advanceSkippingSubblocks());
       switch (Entry.Kind) {
       case llvm::BitstreamEntry::SubBlock:
       case llvm::BitstreamEntry::EndBlock:
@@ -120,7 +120,7 @@ TClingRdictModuleFileExtension::Reader::Reader(clang::ModuleFileExtension *Ext, 
 
       Record.clear();
       llvm::StringRef Blob;
-      unsigned RecCode = Stream.readRecord(Entry.ID, Record, &Blob);
+      unsigned RecCode = llvm::cantFail(Stream.readRecord(Entry.ID, Record, &Blob));
       using namespace clang::serialization;
       switch (RecCode) {
       case FIRST_EXTENSION_RECORD_ID: {

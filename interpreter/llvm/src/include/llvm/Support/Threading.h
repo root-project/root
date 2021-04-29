@@ -1,9 +1,8 @@
 //===-- llvm/Support/Threading.h - Control multithreading mode --*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -27,10 +26,14 @@
 #define LLVM_THREADING_USE_STD_CALL_ONCE 1
 #elif defined(LLVM_ON_UNIX) &&                                                 \
     (defined(_LIBCPP_VERSION) ||                                               \
-     !(defined(__NetBSD__) || defined(__OpenBSD__) || defined(__ppc__)))
+     !(defined(__NetBSD__) || defined(__OpenBSD__) ||                          \
+       (defined(__ppc__) || defined(__PPC__))))
 // std::call_once from libc++ is used on all Unix platforms. Other
 // implementations like libstdc++ are known to have problems on NetBSD,
 // OpenBSD and PowerPC.
+#define LLVM_THREADING_USE_STD_CALL_ONCE 1
+#elif defined(LLVM_ON_UNIX) &&                                                 \
+    ((defined(__ppc__) || defined(__PPC__)) && defined(__LITTLE_ENDIAN__))
 #define LLVM_THREADING_USE_STD_CALL_ONCE 1
 #else
 #define LLVM_THREADING_USE_STD_CALL_ONCE 0
@@ -72,7 +75,7 @@ void llvm_execute_on_thread(void (*UserFn)(void *), void *UserData,
 
   enum InitStatus { Uninitialized = 0, Wait = 1, Done = 2 };
 
-  /// \brief The llvm::once_flag structure
+  /// The llvm::once_flag structure
   ///
   /// This type is modeled after std::once_flag to use with llvm::call_once.
   /// This structure must be used as an opaque object. It is a struct to force
@@ -83,7 +86,7 @@ void llvm_execute_on_thread(void (*UserFn)(void *), void *UserData,
 
 #endif
 
-  /// \brief Execute the function specified as a parameter once.
+  /// Execute the function specified as a parameter once.
   ///
   /// Typical usage:
   /// \code
@@ -131,17 +134,25 @@ void llvm_execute_on_thread(void (*UserFn)(void *), void *UserData,
   /// Returns 1 when LLVM is configured with LLVM_ENABLE_THREADS=OFF
   unsigned heavyweight_hardware_concurrency();
 
-  /// \brief Return the current thread id, as used in various OS system calls.
+  /// Get the number of threads that the current program can execute
+  /// concurrently. On some systems std::thread::hardware_concurrency() returns
+  /// the total number of cores, without taking affinity into consideration.
+  /// Returns 1 when LLVM is configured with LLVM_ENABLE_THREADS=OFF.
+  /// Fallback to std::thread::hardware_concurrency() if sched_getaffinity is
+  /// not available.
+  unsigned hardware_concurrency();
+
+  /// Return the current thread id, as used in various OS system calls.
   /// Note that not all platforms guarantee that the value returned will be
   /// unique across the entire system, so portable code should not assume
   /// this.
   uint64_t get_threadid();
 
-  /// \brief Get the maximum length of a thread name on this platform.
+  /// Get the maximum length of a thread name on this platform.
   /// A value of 0 means there is no limit.
   uint32_t get_max_thread_name_length();
 
-  /// \brief Set the name of the current thread.  Setting a thread's name can
+  /// Set the name of the current thread.  Setting a thread's name can
   /// be helpful for enabling useful diagnostics under a debugger or when
   /// logging.  The level of support for setting a thread's name varies
   /// wildly across operating systems, and we only make a best effort to
@@ -149,13 +160,26 @@ void llvm_execute_on_thread(void (*UserFn)(void *), void *UserData,
   /// or failure is returned.
   void set_thread_name(const Twine &Name);
 
-  /// \brief Get the name of the current thread.  The level of support for
+  /// Get the name of the current thread.  The level of support for
   /// getting a thread's name varies wildly across operating systems, and it
   /// is not even guaranteed that if you can successfully set a thread's name
   /// that you can later get it back.  This function is intended for diagnostic
   /// purposes, and as with setting a thread's name no indication of whether
   /// the operation succeeded or failed is returned.
   void get_thread_name(SmallVectorImpl<char> &Name);
+
+  enum class ThreadPriority {
+    Background = 0,
+    Default = 1,
+  };
+  /// If priority is Background tries to lower current threads priority such
+  /// that it does not affect foreground tasks significantly. Can be used for
+  /// long-running, latency-insensitive tasks to make sure cpu is not hogged by
+  /// this task.
+  /// If the priority is default tries to restore current threads priority to
+  /// default scheduling priority.
+  enum class SetThreadPriorityResult { FAILURE, SUCCESS };
+  SetThreadPriorityResult set_thread_priority(ThreadPriority Priority);
 }
 
 #endif

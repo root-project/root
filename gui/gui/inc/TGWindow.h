@@ -13,14 +13,6 @@
 #define ROOT_TGWindow
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGWindow                                                             //
-//                                                                      //
-// ROOT GUI Window base class.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGObject.h"
 #include "TGClient.h"
 
@@ -33,11 +25,11 @@ class TGWindow : public TGObject {
 friend class TGClient;
 
 protected:
-   const TGWindow   *fParent;         // Parent window
-   Bool_t            fNeedRedraw;     // kTRUE if window needs to be redrawn
-   TString           fName;           // name of the window used in SavePrimitive()
-   static Int_t      fgCounter;       // counter of created windows in SavePrimitive
-   UInt_t            fEditDisabled;   // flags used for "guibuilding"
+   const TGWindow   *fParent;         ///< Parent window
+   Bool_t            fNeedRedraw;     ///< kTRUE if window needs to be redrawn
+   TString           fName;           ///< name of the window used in SavePrimitive()
+   static Int_t      fgCounter;       ///< counter of created windows in SavePrimitive
+   UInt_t            fEditDisabled;   ///< flags used for "guibuilding"
 
    TGWindow(Window_t id) :
       fParent(0), fNeedRedraw(kFALSE), fName(), fEditDisabled(0) { fClient = 0; fId = id; }
@@ -54,16 +46,16 @@ protected:
 
 public:
    enum  EEditMode {
-      kEditEnable        = 0,          // allow edit of this window
-      kEditDisable       = BIT(0),     // disable edit of this window
-      kEditDisableEvents = BIT(1),     // window events cannot be editted
-      kEditDisableGrab   = BIT(2),     // window grab cannot be editted
-      kEditDisableLayout = BIT(3),     // window layout cannot be editted
-      kEditDisableResize = BIT(4),     // window size cannot be editted
-      kEditDisableHeight = BIT(5),     // window height cannot be editted
-      kEditDisableWidth  = BIT(6),     // window width cannot be editted
-      kEditDisableBtnEnable = BIT(7),  // window can handle mouse button events
-      kEditDisableKeyEnable = BIT(8)   // window can handle keyboard events
+      kEditEnable        = 0,          ///< allow edit of this window
+      kEditDisable       = BIT(0),     ///< disable edit of this window
+      kEditDisableEvents = BIT(1),     ///< window events cannot be edited
+      kEditDisableGrab   = BIT(2),     ///< window grab cannot be edited
+      kEditDisableLayout = BIT(3),     ///< window layout cannot be edited
+      kEditDisableResize = BIT(4),     ///< window size cannot be edited
+      kEditDisableHeight = BIT(5),     ///< window height cannot be edited
+      kEditDisableWidth  = BIT(6),     ///< window width cannot be edited
+      kEditDisableBtnEnable = BIT(7),  ///< window can handle mouse button events
+      kEditDisableKeyEnable = BIT(8)   ///< window can handle keyboard events
    };
 
    enum EStatusBits {
@@ -130,14 +122,14 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGUnknownWindowHandler                                               //
-//                                                                      //
-// Handle events for windows that are not part of the native ROOT GUI.  //
-// Typically windows created by Xt or Motif.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGUnknownWindowHandler
+    \ingroup guiwidgets
+
+Handle events for windows that are not part of the native ROOT GUI.
+Typically windows created by Xt or Motif.
+
+*/
+
 
 class TGUnknownWindowHandler : public TObject {
 

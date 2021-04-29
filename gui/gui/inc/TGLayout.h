@@ -13,13 +13,6 @@
 #define ROOT_TGLayout
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A number of different layout classes (TGLayoutManager,               //
-// TGVerticalLayout, TGHorizontalLayout, TGLayoutHints, etc.).          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 #include "TGDimension.h"
 #include "TRefCnt.h"
@@ -46,13 +39,13 @@ class TGLayoutHints;
 class TList;
 class TGFrameElement;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLayoutHints                                                        //
-//                                                                      //
-// This class describes layout hints used by the layout classes.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLayoutHints
+    \ingroup guiwidgets
+
+This class describes layout hints used by the layout classes.
+
+*/
+
 
 class TGLayoutHints : public TObject, public TRefCnt {
 
@@ -131,13 +124,13 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLayoutManager                                                      //
-//                                                                      //
-// Frame layout manager. This is an abstract class.                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLayoutManager
+    \ingroup guiwidgets
+
+Frame layout manager. This is an abstract class.
+
+*/
+
 
 class TGLayoutManager : public TObject {
 protected:
@@ -157,11 +150,11 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGVerticalLayout and TGHorizontalLayout managers.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGVerticalLayout
+    \ingroup guiwidgets
+
+*/
+
 
 class TGVerticalLayout : public TGLayoutManager {
 
@@ -185,6 +178,12 @@ public:
    ClassDef(TGVerticalLayout,0)  // Vertical layout manager
 };
 
+/** \class TGHorizontalLayout
+    \ingroup guiwidgets
+
+*/
+
+
 class TGHorizontalLayout : public TGVerticalLayout {
 public:
    TGHorizontalLayout(TGCompositeFrame *main) : TGVerticalLayout(main) { }
@@ -197,13 +196,13 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGRowLayout and TGColumnLayout managers.                             //
-//                                                                      //
-// The follwing two layout managers do not make use of TGLayoutHints.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGRowLayout
+    \ingroup guiwidgets
+
+The following two layout managers do not make use of TGLayoutHints.
+
+*/
+
 
 class TGRowLayout : public TGVerticalLayout {
 public:
@@ -219,6 +218,14 @@ public:
    ClassDef(TGRowLayout,0)  // Row layout manager
 };
 
+/** \class TGColumnLayout
+    \ingroup guiwidgets
+
+The following layout manager do not make use of TGLayoutHints.
+
+*/
+
+
 class TGColumnLayout : public TGRowLayout {
 public:
    TGColumnLayout(TGCompositeFrame *main, Int_t s = 0) : TGRowLayout(main, s) { }
@@ -231,13 +238,33 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMatrixLayout manager.                                              //
-//                                                                      //
-// This layout managers does not make use of TGLayoutHints.             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGMatrixLayout
+    \ingroup guiwidgets
+
+This layout managers does not make use of TGLayoutHints.
+
+
+It arranges frames in a matrix-like way.
+This manager provides :
+- a column number (0 means unlimited)
+- a row number (0 means unlimited)
+- horizontal & vertical separators
+
+Notes : If both column and row are fixed values, any remaining
+        frames outside the count won't be managed.
+        Unlimited rows means the frame can expand downward
+        (the default behaviour in most UI).
+        Both unlimited rows and columns is undefined (read: will
+        crash the algorithm ;-).
+        With fixed dimensions, frames are always arranged in rows.
+        That is: 1st frame is at position (0,0), next one is at
+        row(0), column(1) and so on...
+        When specifying one dimension as unlimited (i.e. row=0 or
+        column=0) the frames are arranged according to the direction
+        of the fixed dimension. This layout manager does not make
+        use of TGLayoutHints.
+*/
+
 
 class TGMatrixLayout : public TGLayoutManager {
 
@@ -246,14 +273,14 @@ private:
    TGMatrixLayout& operator=(const TGMatrixLayout&);
 
 protected:
-   TGCompositeFrame *fMain;      // container frame
-   TList            *fList;      // list of frames to arrange
+   TGCompositeFrame *fMain;           ///< container frame
+   TList            *fList;           ///< list of frames to arrange
 
 public:
-   Int_t   fSep;                      // interval between frames
-   Int_t   fHints;                    // layout hints (currently not used)
-   UInt_t  fRows;                     // number of rows
-   UInt_t  fColumns;                  // number of columns
+   Int_t   fSep;                      ///< interval between frames
+   Int_t   fHints;                    ///< layout hints (currently not used)
+   UInt_t  fRows;                     ///< number of rows
+   UInt_t  fColumns;                  ///< number of columns
 
    TGMatrixLayout(TGCompositeFrame *main, UInt_t r, UInt_t c, Int_t s=0, Int_t h=0);
 
@@ -265,13 +292,13 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTileLayout, TGListLayout and TGListDetailsLayout managers.         //
-//                                                                      //
-// This are layout managers for the TGListView widget.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGTileLayout
+    \ingroup guiwidgets
+
+This is a layout manager for the TGListView widget.
+
+*/
+
 
 class TGTileLayout : public TGLayoutManager {
 
@@ -280,10 +307,10 @@ private:
    TGTileLayout& operator=(const TGTileLayout&);
 
 protected:
-   Int_t             fSep;    // separation between tiles
-   TGCompositeFrame *fMain;   // container frame
-   TList            *fList;   // list of frames to arrange
-   Bool_t            fModified;// layout changed
+   Int_t             fSep;     ///< separation between tiles
+   TGCompositeFrame *fMain;    ///< container frame
+   TList            *fList;     ///< list of frames to arrange
+   Bool_t            fModified; ///< layout changed
 
 
 public:
@@ -297,6 +324,14 @@ public:
    ClassDef(TGTileLayout,0)  // Tile layout manager
 };
 
+/** \class TGListLayout
+    \ingroup guiwidgets
+
+This is a layout manager for the TGListView widget.
+
+*/
+
+
 class TGListLayout : public TGTileLayout {
 public:
    TGListLayout(TGCompositeFrame *main, Int_t sep = 0) :
@@ -308,6 +343,14 @@ public:
 
    ClassDef(TGListLayout,0)  // Layout manager for TGListView widget
 };
+
+/** \class TGListDetailsLayout
+    \ingroup guiwidgets
+
+This is a layout manager for the TGListView widget.
+
+*/
+
 
 class TGListDetailsLayout : public TGTileLayout {
 private:

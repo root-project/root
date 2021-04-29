@@ -1,9 +1,8 @@
 //===- LowerAtomic.cpp - Lower atomic intrinsics --------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -15,7 +14,6 @@
 #include "llvm/Transforms/Scalar/LowerAtomic.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/Pass.h"
 #include "llvm/Transforms/Scalar.h"
 using namespace llvm;
@@ -28,7 +26,7 @@ static bool LowerAtomicCmpXchgInst(AtomicCmpXchgInst *CXI) {
   Value *Cmp = CXI->getCompareOperand();
   Value *Val = CXI->getNewValOperand();
 
-  LoadInst *Orig = Builder.CreateLoad(Ptr);
+  LoadInst *Orig = Builder.CreateLoad(Val->getType(), Ptr);
   Value *Equal = Builder.CreateICmpEQ(Orig, Cmp);
   Value *Res = Builder.CreateSelect(Equal, Val, Orig);
   Builder.CreateStore(Res, Ptr);
@@ -46,7 +44,7 @@ static bool LowerAtomicRMWInst(AtomicRMWInst *RMWI) {
   Value *Ptr = RMWI->getPointerOperand();
   Value *Val = RMWI->getValOperand();
 
-  LoadInst *Orig = Builder.CreateLoad(Ptr);
+  LoadInst *Orig = Builder.CreateLoad(Val->getType(), Ptr);
   Value *Res = nullptr;
 
   switch (RMWI->getOperation()) {
@@ -87,6 +85,12 @@ static bool LowerAtomicRMWInst(AtomicRMWInst *RMWI) {
   case AtomicRMWInst::UMin:
     Res = Builder.CreateSelect(Builder.CreateICmpULT(Orig, Val),
                                Orig, Val);
+    break;
+  case AtomicRMWInst::FAdd:
+    Res = Builder.CreateFAdd(Orig, Val);
+    break;
+  case AtomicRMWInst::FSub:
+    Res = Builder.CreateFSub(Orig, Val);
     break;
   }
   Builder.CreateStore(Res, Ptr);

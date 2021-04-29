@@ -41,7 +41,6 @@ using namespace HistFactory;
 
 FlexibleInterpVar::FlexibleInterpVar()
 {
-  _paramIter = _paramList.createIterator() ;
   _nominal = 0;
   _interpBoundary=1.;
   _logInit = kFALSE ;
@@ -59,12 +58,8 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _nominal(argNominal), _low(lowVec), _high(highVec), _interpBoundary(1.)
 {
   _logInit = kFALSE ;
-  _paramIter = _paramList.createIterator() ;
 
-
-  TIterator* paramIter = paramList.createIterator() ;
-  RooAbsArg* param ;
-  while((param = (RooAbsArg*)paramIter->Next())) {
+  for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
@@ -79,9 +74,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
      R__ASSERT(_low.size() == _high.size());
   }
 
-  delete paramIter ;
   TRACE_CREATE
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,12 +99,9 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   
   
   _logInit = kFALSE ;
-  _paramIter = _paramList.createIterator() ;
 
 
-  TIterator* paramIter = paramList.createIterator() ;
-  RooAbsArg* param ;
-  while((param = (RooAbsArg*)paramIter->Next())) {
+  for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
@@ -126,9 +116,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
      R__ASSERT(_low.size() == _high.size());
   }
 
-  delete paramIter ;
   TRACE_CREATE
-
 }
 
 
@@ -145,12 +133,8 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _nominal(argNominal), _low(lowVec), _high(highVec), _interpCode(code), _interpBoundary(1.)
 {
   _logInit = kFALSE ;
-  _paramIter = _paramList.createIterator() ;
 
-
-  TIterator* paramIter = paramList.createIterator() ;
-  RooAbsArg* param ;
-  while((param = (RooAbsArg*)paramIter->Next())) {
+  for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName()
 			    << " is not of type RooAbsReal" << endl ;
@@ -158,16 +142,16 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
       R__ASSERT(0) ;
     }
     _paramList.add(*param) ;
-  } 
+  }
+
   if (int(_low.size() ) != _paramList.getSize() || _low.size() != _high.size() || _low.size() != _interpCode.size()) {
      coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") invalid input vectors " << endl;
      R__ASSERT(int(_low.size() ) == _paramList.getSize());
      R__ASSERT(_low.size() == _high.size());
      R__ASSERT(_low.size() == _interpCode.size());
   }
-  delete paramIter ;
-  TRACE_CREATE
 
+  TRACE_CREATE
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +163,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
   _nominal(0), _interpBoundary(1.)
 {
   _logInit = kFALSE ;
-  _paramIter = _paramList.createIterator() ;
   TRACE_CREATE
 }
 
@@ -193,7 +176,6 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
 {
   // Copy constructor
   _logInit = kFALSE ;
-  _paramIter = _paramList.createIterator() ;
   TRACE_CREATE
   
 }
@@ -204,7 +186,6 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
 
 FlexibleInterpVar::~FlexibleInterpVar() 
 {
-  delete _paramIter ;
   TRACE_DESTROY
 }
 
@@ -389,19 +370,10 @@ const std::vector<double>& FlexibleInterpVar::high() const { return _high; }
 Double_t FlexibleInterpVar::evaluate() const 
 {
   Double_t total(_nominal) ;
-  _paramIter->Reset() ;
-
-  RooAbsReal* param ;
-  //const RooArgSet* nset = _paramList.nset() ;
   int i=0;
 
-  // TString name = GetName();
-  // if (name == TString("ZHWW_ll12_vzll_epsilon") )
-  //    //    std::cout << "evaluate flexible interp var - init flag is " << _logInit << std::endl;
-
-  while((param=(RooAbsReal*)_paramIter->Next())) {
-    //    param->Print("v");
-
+  for (auto arg : _paramList) {
+    auto param = static_cast<const RooAbsReal*>(arg);
 
     Int_t icode = _interpCode[i] ;
 
@@ -496,10 +468,9 @@ void FlexibleInterpVar::printMultiline(ostream& os, Int_t contents,
 
 void FlexibleInterpVar::printFlexibleInterpVars(ostream& os) const
 {
-  _paramIter->Reset();
   for (int i=0;i<(int)_low.size();i++) {
-    RooAbsReal* param=(RooAbsReal*)_paramIter->Next();
-    os << setw(36) << param->GetName()<<": "<<setw(7) << _low[i]<<"  "<<setw(7) << _high[i]
+    auto& param = static_cast<RooAbsReal&>(_paramList[i]);
+    os << setw(36) << param.GetName()<<": "<<setw(7) << _low[i]<<"  "<<setw(7) << _high[i]
        <<endl;
   }
 }

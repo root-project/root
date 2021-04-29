@@ -13,15 +13,6 @@
 #define ROOT_TGClient
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGClient                                                             //
-//                                                                      //
-// Window client. In client server windowing systems, like X11 this     //
-// class is used to make the initial connection to the window server.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 #include "GuiTypes.h"
 #include "TString.h"
@@ -48,47 +39,47 @@ class TGClient : public TObject, public TQObject {
 friend class TGCocoa;
 
 protected:
-   Pixel_t         fBackColor;        // default background color
-   Pixel_t         fForeColor;        // default foreground color
-   Pixel_t         fHilite;           // default hilite color
-   Pixel_t         fShadow;           // default shadow color
-   Pixel_t         fSelBackColor;     // default selection background color
-   Pixel_t         fSelForeColor;     // default selection foreground color
-   Pixel_t         fWhite;            // white color index
-   Pixel_t         fBlack;            // black color index
-   TGWindow       *fDefaultRoot;      // default root window (base window of display)
-   TGWindow       *fRoot;             // current root window (changing root window allows embedding)
-   Int_t           fXfd;              // file descriptor of connection to server
-   TGResourcePool *fResourcePool;     // global GUI resource pool
-   TGGCPool       *fGCPool;           // graphics context pool
-   TGFontPool     *fFontPool;         // font pool
-   TGPicturePool  *fPicturePool;      // pixmap pool
-   TGMimeTypes    *fMimeTypeList;     // mimetype list
-   Colormap_t      fDefaultColormap;  // default colormap
-   Bool_t          fGlobalNeedRedraw; // true if at least one window needs to be redrawn
-   Bool_t          fForceRedraw;      // redraw widgets as soon as possible
-   THashList      *fWlist;            // list of frames
-   TList          *fPlist;            // list of popup windows used in HandleMaskEvent()
-   TList          *fUWHandlers;       // list of event handlers for unknown windows
-   TList          *fIdleHandlers;     // list of idle handlers
-   EGEventType     fWaitForEvent;     // event to wait for
-   Window_t        fWaitForWindow;    // window in which to wait for event
-   UInt_t          fStyle;            // GUI style (modern or classic)
+   Pixel_t         fBackColor;        ///< default background color
+   Pixel_t         fForeColor;        ///< default foreground color
+   Pixel_t         fHilite;           ///< default highlight color
+   Pixel_t         fShadow;           ///< default shadow color
+   Pixel_t         fSelBackColor;     ///< default selection background color
+   Pixel_t         fSelForeColor;     ///< default selection foreground color
+   Pixel_t         fWhite;            ///< white color index
+   Pixel_t         fBlack;            ///< black color index
+   TGWindow       *fDefaultRoot;      ///< default root window (base window of display)
+   TGWindow       *fRoot;             ///< current root window (changing root window allows embedding)
+   Int_t           fXfd;              ///< file descriptor of connection to server
+   TGResourcePool *fResourcePool;     ///< global GUI resource pool
+   TGGCPool       *fGCPool;           ///< graphics context pool
+   TGFontPool     *fFontPool;         ///< font pool
+   TGPicturePool  *fPicturePool;      ///< pixmap pool
+   TGMimeTypes    *fMimeTypeList;     ///< mimetype list
+   Colormap_t      fDefaultColormap;  ///< default colormap
+   Bool_t          fGlobalNeedRedraw; ///< true if at least one window needs to be redrawn
+   Bool_t          fForceRedraw;      ///< redraw widgets as soon as possible
+   THashList      *fWlist;            ///< list of frames
+   TList          *fPlist;            ///< list of popup windows used in HandleMaskEvent()
+   TList          *fUWHandlers;       ///< list of event handlers for unknown windows
+   TList          *fIdleHandlers;     ///< list of idle handlers
+   EGEventType     fWaitForEvent;     ///< event to wait for
+   Window_t        fWaitForWindow;    ///< window in which to wait for event
+   UInt_t          fStyle;            ///< GUI style (modern or classic)
 
-   TGClient(const TGClient&);             // not implemented
-   TGClient& operator=(const TGClient&);  // not implemented
+   TGClient(const TGClient&) = delete;
+   TGClient& operator=(const TGClient&) = delete;
 
    Bool_t  ProcessOneEvent();
    Bool_t  ProcessIdleEvent();
    Bool_t  DoRedraw();
 
 public:
-   TGClient(const char *dpyName = 0);
+   TGClient(const char *dpyName = nullptr);
    virtual ~TGClient();
 
    const TGWindow *GetRoot() const;
    const TGWindow *GetDefaultRoot() const;
-   void            SetRoot(TGWindow *root = 0);
+   void            SetRoot(TGWindow *root = nullptr);
    TGWindow       *GetWindowById(Window_t sw) const;
    TGWindow       *GetWindowByName(const char *name) const;
 

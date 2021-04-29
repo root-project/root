@@ -1,9 +1,8 @@
 //===- OperationKinds.h - Operation enums -----------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,14 +15,12 @@
 #define LLVM_CLANG_AST_OPERATIONKINDS_H
 
 namespace clang {
-  
+
 /// CastKind - The kind of operation required for a conversion.
 enum CastKind {
 #define CAST_OPERATION(Name) CK_##Name,
 #include "clang/AST/OperationKinds.def"
 };
-
-static const CastKind CK_Invalid = static_cast<CastKind>(-1);
 
 enum BinaryOperatorKind {
 #define BINARY_OPERATION(Name, Spelling) BO_##Name,
@@ -35,15 +32,15 @@ enum UnaryOperatorKind {
 #include "clang/AST/OperationKinds.def"
 };
 
-/// \brief The kind of bridging performed by the Objective-C bridge cast.
+/// The kind of bridging performed by the Objective-C bridge cast.
 enum ObjCBridgeCastKind {
-  /// \brief Bridging via __bridge, which does nothing but reinterpret
+  /// Bridging via __bridge, which does nothing but reinterpret
   /// the bits.
   OBC_Bridge,
-  /// \brief Bridging via __bridge_transfer, which transfers ownership of an
+  /// Bridging via __bridge_transfer, which transfers ownership of an
   /// Objective-C pointer into ARC.
   OBC_BridgeTransfer,
-  /// \brief Bridging via __bridge_retain, which makes an ARC object available
+  /// Bridging via __bridge_retain, which makes an ARC object available
   /// as a +1 C pointer.
   OBC_BridgeRetained
 };

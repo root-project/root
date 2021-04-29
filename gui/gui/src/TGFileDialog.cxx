@@ -9,23 +9,24 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFileDialog                                                         //
-//                                                                      //
-// This class creates a file selection dialog. It contains a combo box  //
-// to select the desired directory. A listview with the different       //
-// files in the current directory and a combo box with which you can    //
-// select a filter (on file extensions).                                //
-// When creating a file dialog one passes a pointer to a TGFileInfo     //
-// object. In this object you can set the fFileTypes and fIniDir to     //
-// specify the list of file types for the filter combo box and the      //
-// initial directory. When the TGFileDialog ctor returns the selected   //
-// file name can be found in the TGFileInfo::fFilename field and the    //
-// selected directory in TGFileInfo::fIniDir. The fFilename and         //
-// fIniDir are deleted by the TGFileInfo dtor.                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGFileDialog
+    \ingroup guiwidgets
+
+This class creates a file selection dialog. It contains a combo box
+to select the desired directory. A listview with the different
+files in the current directory and a combo box with which you can
+select a filter (on file extensions).
+When creating a file dialog one passes a pointer to a TGFileInfo
+object. In this object you can set the fFileTypes and fIniDir to
+specify the list of file types for the filter combo box and the
+initial directory. When the TGFileDialog ctor returns the selected
+file name can be found in the TGFileInfo::fFilename field and the
+selected directory in TGFileInfo::fIniDir. The fFilename and
+fIniDir are deleted by the TGFileInfo dtor.
+
+*/
+
 
 #include "TGFileDialog.h"
 #include "TGLabel.h"
@@ -131,7 +132,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    TGTransientFrame(p, main, 10, 10, kVerticalFrame), fTbfname(0), fName(0),
    fTypes(0), fTreeLB(0), fCdup(0), fNewf(0), fList(0), fDetails(0), fCheckB(0),
    fPcdup(0), fPnewf(0), fPlist(0), fPdetails(0), fOk(0), fCancel(0), fFv(0),
-   fFc(0), fFileInfo(0)
+   fFc(0), fFileInfo(0), fDlgType(dlg_type)
 {
    SetCleanup(kDeepCleanup);
    Connect("CloseWindow()", "TGFileDialog", this, "CloseWindow()");
@@ -161,7 +162,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    TGHorizontalFrame *fHtop = new TGHorizontalFrame(this, 10, 10);
 
    //--- top toolbar elements
-   TGLabel *fLookin = new TGLabel(fHtop, new TGHotString((dlg_type == kFDSave)
+   TGLabel *fLookin = new TGLabel(fHtop, new TGHotString((dlg_type == kFDSave || dlg_type == kDSave)
                                                   ? "S&ave in:" : "&Look in:"));
    fTreeLB = new TGFSComboBox(fHtop, kIDF_FSLB);
    fTreeLB->Associate(this);
@@ -209,13 +210,15 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    if (dlg_type == kFDSave) {
       fCheckB = new TGCheckButton(fHtop, "&Overwrite", kIDF_CHECKB);
       fCheckB->SetToolTipText("Overwrite a file without displaying a message if selected");
-   } else {
+   } else if (dlg_type == kFDOpen) {
       fCheckB = new TGCheckButton(fHtop, "&Multiple files", kIDF_CHECKB);
       fCheckB->SetToolTipText("Allows multiple file selection when SHIFT is pressed");
       fCheckB->Connect("Toggled(Bool_t)","TGFileInfo",fFileInfo,"SetMultipleSelection(Bool_t)");
    }
-   fHtop->AddFrame(fCheckB, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-   fCheckB->SetOn(fFileInfo->fMultipleSelection);
+   if (fCheckB) {
+      fHtop->AddFrame(fCheckB, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+      fCheckB->SetOn(fFileInfo->fMultipleSelection);
+   }
    AddFrame(fHtop, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 4, 4, 3, 1));
 
    //--- file view
@@ -264,7 +267,8 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    TGHorizontalFrame *fHfname = new TGHorizontalFrame(fVf, 10, 10);
 
-   TGLabel *fLfname = new TGLabel(fHfname, new TGHotString("File &name:"));
+   TGLabel *fLfname = new TGLabel(fHfname, new TGHotString(
+      (dlg_type == kDOpen || dlg_type == kDSave ) ? "Folder &name:" : "File &name:"));
    fTbfname = new TGTextBuffer(1034);
    fName = new TGTextEntry(fHfname, fTbfname);
    fName->Resize(230, fName->GetDefaultHeight());
@@ -311,6 +315,10 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    }
 
    fTypes->GetListBox()->Resize(230, 120);
+   if (dlg_type == kDOpen || dlg_type == kDSave) {
+      fTypes->SetEnabled(kFALSE);
+   }
+
    fHftype->AddFrame(fLftypes, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 5, 2, 2));
    fHftype->AddFrame(fTypes, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 0, 20, 2, 2));
 
@@ -322,7 +330,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    TGVerticalFrame *fVbf = new TGVerticalFrame(fHf, 10, 10, kFixedWidth);
 
-   fOk = new TGTextButton(fVbf, new TGHotString((dlg_type == kFDSave)
+   fOk = new TGTextButton(fVbf, new TGHotString((dlg_type == kFDSave || dlg_type == kDSave)
                                                  ? "&Save" : "&Open"), kIDF_OK);
    fCancel = new TGTextButton(fVbf, new TGHotString("Cancel"), kIDF_CANCEL);
 
@@ -355,7 +363,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    SetWMSize(size.fWidth, size.fHeight);
    SetWMSizeHints(size.fWidth, size.fHeight, 10000, 10000, 1, 1);
 
-   const char *wname = (dlg_type == kFDSave) ? "Save As..." : "Open";
+   const char *wname = (dlg_type == kFDSave || dlg_type == kDSave) ? "Save As..." : "Open";
    SetWindowName(wname);
    SetIconName(wname);
    SetClassHints("ROOT", "FileDialog");
@@ -368,7 +376,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    MapWindow();
    fFc->DisplayDirectory();
-   if (dlg_type == kFDSave)
+   if (dlg_type == kFDSave || dlg_type == kDSave)
       fName->SetFocus();
    fClient->WaitFor(this);
 }
@@ -379,8 +387,8 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 TGFileDialog::~TGFileDialog()
 {
    if (IsZombie()) return;
-   TString str = fCheckB->GetString();
-   if (str.Contains("Multiple"))
+   TString str = fCheckB ? fCheckB->GetString() : "";
+   if (str.Contains("Multiple") && fCheckB)
       fCheckB->Disconnect("Toggled(Bool_t)");
    fClient->FreePicture(fPcdup);
    fClient->FreePicture(fPnewf);
@@ -439,7 +447,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                      kMBOk);
                         return kTRUE;
                      } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists) &&
-                                !strcmp(fOk->GetTitle(), "Save") &&
+                                !strcmp(fOk->GetTitle(), "Save") && fCheckB &&
                                 (!(fCheckB->GetState() == kButtonDown))) {
                         Int_t ret;
                         txt = TString::Format("File name %s already exists, OK to overwrite it?",
@@ -571,11 +579,23 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   if (fFc->NumSelected() > 0) {
                      if ( fFileInfo->fMultipleSelection == kFALSE ) {
                         TGLVEntry *e2 = (TGLVEntry *) fFc->GetNextSelected(&p);
-                        if ((e2) && !R_ISDIR(((TGFileItem *)e2)->GetType())) {
-                           fTbfname->Clear();
-                           if (e2->GetItemName())
-                              fTbfname->AddText(0, e2->GetItemName()->GetString());
-                           fClient->NeedRedraw(fName);
+                        if (fDlgType == kFDOpen || fDlgType == kFDSave) {
+                           if ((e2) && !R_ISDIR(((TGFileItem *)e2)->GetType())) {
+                              fTbfname->Clear();
+                              if (e2->GetItemName())
+                                 fTbfname->AddText(0, e2->GetItemName()->GetString());
+                              fClient->NeedRedraw(fName);
+                           }
+                        } else {
+                           if ((e2) && R_ISDIR(((TGFileItem *)e2)->GetType())) {
+                              fTbfname->Clear();
+                              if (e2->GetItemName())
+                                 fTbfname->AddText(0, e2->GetItemName()->GetString());
+                              fClient->NeedRedraw(fName);
+                              fOk->SetEnabled(kTRUE);
+                           } else if ((e2)) {
+                              fOk->SetEnabled(kFALSE);
+                           }
                         }
                      }
                      else {
@@ -617,8 +637,13 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         if (strcmp(gSystem->WorkingDirectory(),fFc->GetDirectory())) {
                            gSystem->cd(fFc->GetDirectory());
                         }
-                     } else {
-                        if (!strcmp(fOk->GetTitle(), "Save") &&
+                        if (fDlgType == kDOpen || fDlgType == kDSave) {
+                           fTbfname->Clear();
+                           fTbfname->AddText(0, fFc->GetDirectory());
+                           fClient->NeedRedraw(fName);
+                        }
+                     } else if (fDlgType == kFDOpen || fDlgType == kFDSave) {
+                        if (!strcmp(fOk->GetTitle(), "Save") && fCheckB &&
                             (!(fCheckB->GetState() == kButtonDown))) {
 
                            Int_t ret;
@@ -657,6 +682,10 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          break;
 
       case kC_TEXTENTRY:
+         // when typing, re-enable previously disabled button after having clicked on file instead of folder
+         if ((fDlgType==kDOpen || fDlgType==kDSave) && fOk->GetState()==kButtonDisabled)
+            fOk->SetEnabled(kTRUE);
+
          switch (GET_SUBMSG(msg)) {
             case kTE_ENTER:
                // same code as under kIDF_OK
@@ -678,7 +707,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      fName->SetText("", kFALSE);
                      return kTRUE;
                   }
-                  else if (!strcmp(fOk->GetTitle(), "Save") &&
+                  else if (!strcmp(fOk->GetTitle(), "Save") && fCheckB &&
                           (!(fCheckB->GetState() == kButtonDown))) {
                      Int_t ret;
                      txt = TString::Format("File name %s already exists, OK to overwrite it?",

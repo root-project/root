@@ -14,11 +14,14 @@
 
 #include "TSQLRow.h"
 
-#include <occi.h>
+#include <vector>
 
-#ifdef CONST
-#undef CONST
-#endif
+namespace oracle {
+namespace occi {
+   class ResultSet;
+   struct MetaData;
+}
+}
 
 class TOracleRow : public TSQLRow {
 
@@ -30,8 +33,8 @@ private:
 
    Bool_t  IsValid(Int_t field);
 
-   TOracleRow(const TOracleRow&) = delete;            // Not implemented.
-   TOracleRow &operator=(const TOracleRow&)= delete; // Not implemented.
+   TOracleRow(const TOracleRow &) = delete;
+   TOracleRow &operator=(const TOracleRow &) = delete;
 
 protected:
    void        GetRowData();

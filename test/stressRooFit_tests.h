@@ -676,10 +676,12 @@ public:
     // -------------------------------------------------------
 
     // Construct a histogram with the residuals of the data w.r.t. the curve
-    RooHist* hresid = frame1->residHist() ;
+    // we set `useAverage` to false for this test because this was done for the reference histogram
+    RooHist* hresid = frame1->residHist(nullptr, nullptr, false, false) ;
 
     // Construct a histogram with the pulls of the data w.r.t the curve
-    RooHist* hpull = frame1->pullHist() ;
+    // we set `useAverage` to false for this test because this was done for the reference histogram
+    RooHist* hpull = frame1->pullHist(nullptr, nullptr, false) ;
 
     // Create a new frame to draw the residual distribution and add the distribution to the frame
     RooPlot* frame2 = x.frame(Title("Residual Distribution")) ;

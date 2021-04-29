@@ -960,7 +960,6 @@ Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
          if (delim == '<') delim = '>';
          ++pos;
          line.erase(0, pos);
-         pos = 0;
          pos = line.find(delim);
          if (pos == std::string::npos) continue;
          line.erase(pos);

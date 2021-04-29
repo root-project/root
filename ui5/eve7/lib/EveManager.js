@@ -37,8 +37,37 @@ sap.ui.define([], function() {
 
       this.initialized = false;
       this.busyProcessingChanges = false;
-   }
 
+
+      // ---------------------------------
+      JSROOT.EVE.console = {};
+      JSROOT.EVE.console.txt = "";
+
+      JSROOT.EVE.console.stdlog = console.log.bind(console);
+      console.log = function () {
+         JSROOT.EVE.console.txt += "<p>";
+         JSROOT.EVE.console.txt += Array.from(arguments);
+         JSROOT.EVE.console.stdlog.apply(console, arguments);
+         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
+      }
+
+      JSROOT.EVE.console.stderror = console.error.bind(console);
+      console.error = function () {
+         JSROOT.EVE.console.txt += "<p style=\"color:red;\">";
+         JSROOT.EVE.console.txt += Array.from(arguments);
+         JSROOT.EVE.console.stderror.apply(console, arguments);
+         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
+      }
+
+      JSROOT.EVE.console.stdwarn = console.warn.bind(console);
+      console.warning = function () {
+         JSROOT.EVE.console.txt += "<p style=\"color:yellow;\">";
+         JSROOT.EVE.console.txt += Array.from(arguments);
+         JSROOT.EVE.console.stdwarn.apply(console, arguments);
+         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
+      }
+
+   }
 
    //==============================================================================
    // BEGIN protoype functions
@@ -104,51 +133,49 @@ sap.ui.define([], function() {
    }
 
    /** Called when data comes via the websocket */
-   EveManager.prototype.onWebsocketMsg = function(handle, msg, offset)
-   {
+   EveManager.prototype.onWebsocketMsg = function (handle, msg, offset) {
       // if (this.ignore_all) return;
 
-      if (typeof msg != "string")
-      {
-         // console.log('ArrayBuffer size ',
-         // msg.byteLength, 'offset', offset);
-         this.ImportSceneBinary(msg, offset);
+      try {
+         if (typeof msg != "string") {
+            // console.log('ArrayBuffer size ',
+            // msg.byteLength, 'offset', offset);
+            this.ImportSceneBinary(msg, offset);
 
-         return;
-      }
+            return;
+         }
 
-      if (JSROOT.EVE.gDebug)
-         console.log("onWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 1000) ? msg : (msg.substr(0,1000) + "..."));
+         if (JSROOT.EVE.gDebug)
+            console.log("OnWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 1000) ? msg : (msg.substr(0, 1000) + "..."));
 
-      let resp = JSON.parse(msg);
+         let resp = JSON.parse(msg);
 
-      if (resp === undefined)
-      {
-         console.log("onWebsocketMsg can't parse json: msg len=", msg.length, " txt:", msg.substr(0,120), "...");
-         return;
-      }
+         if (resp === undefined) {
+            console.log("OnWebsocketMsg can't parse json: msg len=", msg.length, " txt:", msg.substr(0, 120), "...");
+            return;
+         }
 
-      else if (resp[0] && resp[0].content == "REveScene::StreamElements")
-      {
-         this.ImportSceneJson(resp);
+         else if (resp[0] && resp[0].content == "REveScene::StreamElements") {
+            this.ImportSceneJson(resp);
+         }
+         else if (resp.header && resp.header.content == "ElementsRepresentaionChanges") {
+            this.ImportSceneChangeJson(resp);
+         }
+         else if (resp.content == "BeginChanges") {
+            this.listScenesToRedraw = [];
+            this.busyProcessingChanges = true;
+         }
+         else if (resp.content == "EndChanges") {
+            this.ServerEndRedrawCallback();
+         }
+         else if (resp.content == "BrowseElement") {
+            this.BrowseElement(resp.id);
+         } else {
+            console.error("OnWebsocketMsg Unhandled message type: msg len=", msg.length, " txt:", msg.substr(0, 120), "...");
+         }
       }
-      else if (resp.header && resp.header.content == "ElementsRepresentaionChanges")
-      {
-         this.ImportSceneChangeJson(resp);
-      }
-      else if (resp.content == "BeginChanges")
-      {
-         this.listScenesToRedraw = [];
-         this.busyProcessingChanges = true;
-      }
-      else if (resp.content == "EndChanges")
-      {
-         this.ServerEndRedrawCallback();
-      }
-      else if (resp.content == "BrowseElement") {
-         this.BrowseElement(resp.id);
-      } else {
-         console.log("onWebsocketMsg Unhandled message type: msg len=", msg.length, " txt:", msg.substr(0,120), "...");
+      catch (e) {
+         console.error("OnWebsocketMsg ", e);
       }
    }
 
@@ -486,12 +513,10 @@ sap.ui.define([], function() {
       let lastChild = scenes.childs.length -1;
 
       if (scenes.childs[lastChild].fElementId == msg.fSceneId)
-      {
-         for (let i = 0; i < this.controllers.length; ++i)
-         {
-            this.controllers[i]["OnEveManagerInit"]();
-         }
-      }
+         this.controllers.forEach(ctrl => {
+            if (ctrl.onEveManagerInit) 
+               ctrl.onEveManagerInit();
+         });
    },
 
    //------------------------------------------------------------------------------

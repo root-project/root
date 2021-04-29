@@ -35,6 +35,7 @@ discrete dimensions.
 #include "RooCategory.h"
 #include "RooWorkspace.h"
 #include "RooGlobalFunc.h"
+#include "RooHelpers.h"
 
 #include "TError.h"
 #include "TBuffer.h"
@@ -216,17 +217,9 @@ Double_t RooHistPdf::evaluate() const
     }
   }
 
-  Double_t ret = _dataHist->weight(_histObsList, _intOrder, !_unitNorm, _cdfBoundaries);
-//  cout << "RooHistPdf::evaluate(" << GetName() << ") ret = " << ret << " ";
-//  cout << _histObsList[0] << " ";
-//  _histObsList[0]->Print("");
-//  _dataHist->Print("V");
-//  _dataHist->dump2();
+  double ret = _dataHist->weightFast(_histObsList, _intOrder, !_unitNorm, _cdfBoundaries);
 
-  if (ret<0) {
-    ret=0 ;
-  }  
-  return ret ;
+  return std::max(ret, 0.0);
 }
 
 
@@ -275,22 +268,20 @@ bool fullRange(const RooAbsArg& x, const RooAbsArg& y ,const char* range)
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Determine integration scenario. If no interpolation is used,
-/// RooHistPdf can perform all integrals over its dependents
-/// analytically via partial or complete summation of the input
-/// histogram. If interpolation is used on the integral over
-/// all histogram observables is supported
-
-Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
-{
+Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
+                                        RooArgSet& analVars,
+                                        const char* rangeName,
+                                        RooArgSet const& histObsList,
+                                        RooSetProxy const& pdfObsList,
+                                        Int_t intOrder) {
   // First make list of pdf observables to histogram observables
   // and select only those for which the integral is over the full range
 
-  Int_t code = 0, frcode = 0;
-  for (unsigned int n=0; n < _pdfObsList.size() && n < _histObsList.size(); ++n) {
-    const auto pa = _pdfObsList[n];
-    const auto ha = _histObsList[n];
+  Int_t code = 0;
+  Int_t frcode = 0;
+  for (unsigned int n=0; n < pdfObsList.size() && n < histObsList.size(); ++n) {
+    const auto pa = pdfObsList[n];
+    const auto ha = histObsList[n];
 
     if (allVars.find(*pa)) {
       code |= 2 << n;
@@ -306,10 +297,11 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
     // full range integration over all observables
     code |= 1;
   }
+
   // Disable partial analytical integrals if interpolation is used, and we
   // integrate over sub-ranges, but leave them enabled when we integrate over
   // the full range of one or several variables
-  if (_intOrder > 1 && !(code & 1)) {
+  if (intOrder > 1 && !(code & 1)) {
     analVars.removeAll();
     return 0;
   }
@@ -317,47 +309,30 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return integral identified by 'code'. The actual integration
-/// is deferred to RooDataHist::sum() which implements partial
-/// or complete summation over the histograms contents.
-
-Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const 
-{
+Double_t RooHistPdf::analyticalIntegral(Int_t code,
+                                        const char* rangeName,
+                                        RooArgSet const& histObsList,
+                                        RooSetProxy const& pdfObsList,
+                                        RooDataHist& dataHist,
+                                        bool histFuncMode) {
   // Simplest scenario, full-range integration over all dependents
-  if (((2 << _histObsList.getSize()) - 1) == code) {
-    return _dataHist->sum(kFALSE);
+  if (((2 << histObsList.getSize()) - 1) == code) {
+    return dataHist.sum(histFuncMode);
   }
 
   // Partial integration scenario, retrieve set of variables, calculate partial
   // sum, figure out integration ranges (if needed)
   RooArgSet intSet;
-  std::map<const RooAbsArg*, std::pair<Double_t, Double_t> > ranges;
-  for (unsigned int n=0; n < _pdfObsList.size() && n < _histObsList.size(); ++n) {
-    const auto pa = _pdfObsList[n];
-    const auto ha = _histObsList[n];
+  std::map<const RooAbsArg*, std::pair<double, double> > ranges;
+  for (unsigned int n=0; n < pdfObsList.size() && n < histObsList.size(); ++n) {
+    const auto pa = pdfObsList[n];
+    const auto ha = histObsList[n];
 
     if (code & (2 << n)) {
       intSet.add(*ha);
     }
     if (!(code & 1)) {
-      RooAbsRealLValue* rlv = dynamic_cast<RooAbsRealLValue*>(pa);
-      if (rlv) {
-        const RooAbsBinning* binning = rlv->getBinningPtr(rangeName);
-        if (rangeName && rlv->hasRange(rangeName)) {
-          ranges[ha] = std::make_pair(
-              rlv->getMin(rangeName), rlv->getMax(rangeName));
-        } else if (binning) {
-          if (!binning->isParameterized()) {
-            ranges[ha] = std::make_pair(
-                binning->lowBound(), binning->highBound());
-          } else {
-            ranges[ha] = std::make_pair(
-                binning->lowBoundFunc()->getVal(), binning->highBoundFunc()->getVal());
-          }
-        }
-      }
+      ranges[ha] = RooHelpers::getRangeOrBinningInterval(pa, rangeName);
     }
     // WVE must sync hist slice list values to pdf slice list
     // Transfer values from
@@ -367,18 +342,34 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
     }
   }
 
-  Double_t ret = (code & 1) ?
-      _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE) :
-      _dataHist->sum(intSet,_histObsList,kFALSE,kTRUE, ranges);
-
-  //    cout << "intSet = " << intSet << endl ;
-  //    cout << "slice position = " << endl ;
-  //    _histObsList.Print("v") ;
-  //    cout << "RooHistPdf::ai(" << GetName() << ") code = " << code << " ret = " << ret << endl ;
+  Double_t ret = (code & 1) ? dataHist.sum(intSet,histObsList,true,!histFuncMode) :
+                              dataHist.sum(intSet,histObsList,true,!histFuncMode, ranges);
 
   return ret ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Determine integration scenario. If no interpolation is used,
+/// RooHistPdf can perform all integrals over its dependents
+/// analytically via partial or complete summation of the input
+/// histogram. If interpolation is used on the integral over
+/// all histogram observables is supported
+
+Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+{
+  return getAnalyticalIntegral(allVars, analVars, rangeName, _histObsList, _pdfObsList, _intOrder);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return integral identified by 'code'. The actual integration
+/// is deferred to RooDataHist::sum() which implements partial
+/// or complete summation over the histograms contents.
+
+Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const 
+{
+    return analyticalIntegral(code, rangeName, _histObsList, _pdfObsList, *_dataHist, false);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

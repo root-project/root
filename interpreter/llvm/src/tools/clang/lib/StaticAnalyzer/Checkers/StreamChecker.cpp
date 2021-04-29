@@ -1,9 +1,8 @@
 //===-- StreamChecker.cpp -----------------------------------------*- C++ -*--//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -11,10 +10,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "clang/StaticAnalyzer/Core/CheckerManager.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/CallEvent.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramStateTrait.h"
@@ -72,7 +72,7 @@ public:
       II_fsetpos(nullptr), II_clearerr(nullptr), II_feof(nullptr),
       II_ferror(nullptr), II_fileno(nullptr) {}
 
-  bool evalCall(const CallExpr *CE, CheckerContext &C) const;
+  bool evalCall(const CallEvent &Call, CheckerContext &C) const;
   void checkDeadSymbols(SymbolReaper &SymReaper, CheckerContext &C) const;
 
 private:
@@ -104,9 +104,13 @@ private:
 REGISTER_MAP_WITH_PROGRAMSTATE(StreamMap, SymbolRef, StreamState)
 
 
-bool StreamChecker::evalCall(const CallExpr *CE, CheckerContext &C) const {
-  const FunctionDecl *FD = C.getCalleeDecl(CE);
+bool StreamChecker::evalCall(const CallEvent &Call, CheckerContext &C) const {
+  const auto *FD = dyn_cast_or_null<FunctionDecl>(Call.getDecl());
   if (!FD || FD->getKind() != Decl::Function)
+    return false;
+
+  const auto *CE = dyn_cast_or_null<CallExpr>(Call.getOriginExpr());
+  if (!CE)
     return false;
 
   ASTContext &Ctx = C.getASTContext();
@@ -242,22 +246,19 @@ void StreamChecker::Fclose(CheckerContext &C, const CallExpr *CE) const {
 
 void StreamChecker::Fread(CheckerContext &C, const CallExpr *CE) const {
   ProgramStateRef state = C.getState();
-  if (!CheckNullStream(state->getSVal(CE->getArg(3), C.getLocationContext()),
-                       state, C))
+  if (!CheckNullStream(C.getSVal(CE->getArg(3)), state, C))
     return;
 }
 
 void StreamChecker::Fwrite(CheckerContext &C, const CallExpr *CE) const {
   ProgramStateRef state = C.getState();
-  if (!CheckNullStream(state->getSVal(CE->getArg(3), C.getLocationContext()),
-                       state, C))
+  if (!CheckNullStream(C.getSVal(CE->getArg(3)), state, C))
     return;
 }
 
 void StreamChecker::Fseek(CheckerContext &C, const CallExpr *CE) const {
   ProgramStateRef state = C.getState();
-  if (!(state = CheckNullStream(state->getSVal(CE->getArg(0),
-                                               C.getLocationContext()), state, C)))
+  if (!(state = CheckNullStream(C.getSVal(CE->getArg(0)), state, C)))
     return;
   // Check the legality of the 'whence' argument of 'fseek'.
   SVal Whence = state->getSVal(CE->getArg(2), C.getLocationContext());
@@ -283,57 +284,49 @@ void StreamChecker::Fseek(CheckerContext &C, const CallExpr *CE) const {
 
 void StreamChecker::Ftell(CheckerContext &C, const CallExpr *CE) const {
   ProgramStateRef state = C.getState();
-  if (!CheckNullStream(state->getSVal(CE->getArg(0), C.getLocationContext()),
-                       state, C))
+  if (!CheckNullStream(C.getSVal(CE->getArg(0)), state, C))
     return;
 }
 
 void StreamChecker::Rewind(CheckerContext &C, const CallExpr *CE) const {
   ProgramStateRef state = C.getState();
-  if (!CheckNullStream(state->getSVal(CE->getArg(0), C.getLocationContext()),
-                       state, C))
+  if (!CheckNullStream(C.getSVal(CE->getArg(0)), state, C))
     return;
 }
 
 void StreamChecker::Fgetpos(CheckerContext &C, const CallExpr *CE) const {
   ProgramStateRef state = C.getState();
-  if (!CheckNullStream(state->getSVal(CE->getArg(0), C.getLocationContext()),
-                       state, C))
+  if (!CheckNullStream(C.getSVal(CE->getArg(0)), state, C))
     return;
 }
 
 void StreamChecker::Fsetpos(CheckerContext &C, const CallExpr *CE) const {
   ProgramStateRef state = C.getState();
-  if (!CheckNullStream(state->getSVal(CE->getArg(0), C.getLocationContext()),
-                       state, C))
+  if (!CheckNullStream(C.getSVal(CE->getArg(0)), state, C))
     return;
 }
 
 void StreamChecker::Clearerr(CheckerContext &C, const CallExpr *CE) const {
   ProgramStateRef state = C.getState();
-  if (!CheckNullStream(state->getSVal(CE->getArg(0), C.getLocationContext()),
-                       state, C))
+  if (!CheckNullStream(C.getSVal(CE->getArg(0)), state, C))
     return;
 }
 
 void StreamChecker::Feof(CheckerContext &C, const CallExpr *CE) const {
   ProgramStateRef state = C.getState();
-  if (!CheckNullStream(state->getSVal(CE->getArg(0), C.getLocationContext()),
-                       state, C))
+  if (!CheckNullStream(C.getSVal(CE->getArg(0)), state, C))
     return;
 }
 
 void StreamChecker::Ferror(CheckerContext &C, const CallExpr *CE) const {
   ProgramStateRef state = C.getState();
-  if (!CheckNullStream(state->getSVal(CE->getArg(0), C.getLocationContext()),
-                       state, C))
+  if (!CheckNullStream(C.getSVal(CE->getArg(0)), state, C))
     return;
 }
 
 void StreamChecker::Fileno(CheckerContext &C, const CallExpr *CE) const {
   ProgramStateRef state = C.getState();
-  if (!CheckNullStream(state->getSVal(CE->getArg(0), C.getLocationContext()),
-                       state, C))
+  if (!CheckNullStream(C.getSVal(CE->getArg(0)), state, C))
     return;
 }
 
@@ -363,8 +356,7 @@ ProgramStateRef StreamChecker::CheckNullStream(SVal SV, ProgramStateRef state,
 ProgramStateRef StreamChecker::CheckDoubleClose(const CallExpr *CE,
                                                ProgramStateRef state,
                                                CheckerContext &C) const {
-  SymbolRef Sym =
-    state->getSVal(CE->getArg(0), C.getLocationContext()).getAsSymbol();
+  SymbolRef Sym = C.getSVal(CE->getArg(0)).getAsSymbol();
   if (!Sym)
     return state;
 
@@ -395,29 +387,33 @@ ProgramStateRef StreamChecker::CheckDoubleClose(const CallExpr *CE,
 
 void StreamChecker::checkDeadSymbols(SymbolReaper &SymReaper,
                                      CheckerContext &C) const {
+  ProgramStateRef state = C.getState();
+
   // TODO: Clean up the state.
-  for (SymbolReaper::dead_iterator I = SymReaper.dead_begin(),
-         E = SymReaper.dead_end(); I != E; ++I) {
-    SymbolRef Sym = *I;
-    ProgramStateRef state = C.getState();
-    const StreamState *SS = state->get<StreamMap>(Sym);
-    if (!SS)
+  const StreamMapTy &Map = state->get<StreamMap>();
+  for (const auto &I: Map) {
+    SymbolRef Sym = I.first;
+    const StreamState &SS = I.second;
+    if (!SymReaper.isDead(Sym) || !SS.isOpened())
       continue;
 
-    if (SS->isOpened()) {
-      ExplodedNode *N = C.generateErrorNode();
-      if (N) {
-        if (!BT_ResourceLeak)
-          BT_ResourceLeak.reset(new BuiltinBug(
-              this, "Resource Leak",
-              "Opened File never closed. Potential Resource leak."));
-        C.emitReport(llvm::make_unique<BugReport>(
-            *BT_ResourceLeak, BT_ResourceLeak->getDescription(), N));
-      }
-    }
+    ExplodedNode *N = C.generateErrorNode();
+    if (!N)
+      return;
+
+    if (!BT_ResourceLeak)
+      BT_ResourceLeak.reset(
+          new BuiltinBug(this, "Resource Leak",
+                         "Opened File never closed. Potential Resource leak."));
+    C.emitReport(llvm::make_unique<BugReport>(
+        *BT_ResourceLeak, BT_ResourceLeak->getDescription(), N));
   }
 }
 
 void ento::registerStreamChecker(CheckerManager &mgr) {
   mgr.registerChecker<StreamChecker>();
+}
+
+bool ento::shouldRegisterStreamChecker(const LangOptions &LO) {
+  return true;
 }

@@ -77,7 +77,7 @@ sap.ui.define([
                for (let k = 1; k < arr.length; ++k)
                   if (arr[k] == col) { id = k; break; }
             if ((id < 0) && (col.indexOf("rgb") == 0)) id = 9999;
-         } else if (!isNaN(col) && arr[col]) {
+         } else if (Number.isInteger(col) && arr[col]) {
             id = col;
             col = arr[id];
          }
@@ -206,7 +206,7 @@ sap.ui.define([
                exec = `exec:SetLabelOffset(${pars.value})`;
                break;
             case "axis/fLabelSize":
-               exec = `exec:SetLabelOffset(${pars.value})`;
+               exec = `exec:SetLabelSize(${pars.value})`;
                break;
             case "color_title":
                axis.fLabelColor = this.currentPadPainter.addColor(pars.value);

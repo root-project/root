@@ -12,17 +12,8 @@
 #ifndef ROOT_TAttLineEditor
 #define ROOT_TAttLineEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttLineEditor                                                      //
-//                                                                      //
-//  Implements GUI for editing line attributes.                         //                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
-
-#include "TGSlider.h"
 
 class TGLineStyleComboBox;
 class TGLineWidthComboBox;
@@ -33,11 +24,11 @@ class TGNumberEntryField;
 class TAttLineEditor : public TGedFrame {
 
 protected:
-   TAttLine             *fAttLine;          // line attribute object
-   TGLineStyleComboBox  *fStyleCombo;       // line style combo box
-   TGLineWidthComboBox  *fWidthCombo;       // line width combo box
-   TGColorSelect        *fColorSelect;      // line color widget
-   TGHSlider            *fAlpha;            // fill opacity
+   TAttLine             *fAttLine;          ///< line attribute object
+   TGLineStyleComboBox  *fStyleCombo;       ///< line style combo box
+   TGLineWidthComboBox  *fWidthCombo;       ///< line width combo box
+   TGColorSelect        *fColorSelect;      ///< line color widget
+   TGHSlider            *fAlpha;            ///< fill opacity
    TGNumberEntryField   *fAlphaField;
 
    virtual void   ConnectSignals2Slots();

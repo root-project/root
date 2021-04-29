@@ -1796,7 +1796,8 @@ Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsize)
    while ((obj=next())) {
       nbytes += obj->Write(0,opt,bufsize);
    }
-   SaveSelf(kTRUE);   // force save itself
+   if (R__likely(!(opt & kOnlyPrepStep)))
+      SaveSelf(kTRUE);   // force save itself
 
    return nbytes;
 }

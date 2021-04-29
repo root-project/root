@@ -1,16 +1,14 @@
-//===--- Mips.cpp - Mips ToolChain Implementations --------------*- C++ -*-===//
+//===-- MipsLinux.cpp - Mips ToolChain Implementations ----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #include "MipsLinux.h"
 #include "Arch/Mips.h"
 #include "CommonArgs.h"
-#include "clang/Config/config.h"
 #include "clang/Driver/Driver.h"
 #include "clang/Driver/DriverDiagnostic.h"
 #include "clang/Driver/Options.h"
@@ -94,16 +92,18 @@ MipsLLVMToolChain::GetCXXStdlibType(const ArgList &Args) const {
   return ToolChain::CST_Libcxx;
 }
 
-std::string MipsLLVMToolChain::findLibCxxIncludePath() const {
+void MipsLLVMToolChain::addLibCxxIncludePaths(
+    const llvm::opt::ArgList &DriverArgs,
+    llvm::opt::ArgStringList &CC1Args) const {
   if (const auto &Callback = Multilibs.includeDirsCallback()) {
     for (std::string Path : Callback(SelectedMultilib)) {
       Path = getDriver().getInstalledDir() + Path + "/c++/v1";
       if (llvm::sys::fs::exists(Path)) {
-        return Path;
+        addSystemInclude(DriverArgs, CC1Args, Path);
+        return;
       }
     }
   }
-  return "";
 }
 
 void MipsLLVMToolChain::AddCXXStdlibLibArgs(const ArgList &Args,
@@ -118,11 +118,23 @@ void MipsLLVMToolChain::AddCXXStdlibLibArgs(const ArgList &Args,
 
 std::string MipsLLVMToolChain::getCompilerRT(const ArgList &Args,
                                              StringRef Component,
-                                             bool Shared) const {
+                                             FileType Type) const {
   SmallString<128> Path(getDriver().ResourceDir);
   llvm::sys::path::append(Path, SelectedMultilib.osSuffix(), "lib" + LibSuffix,
                           getOS());
-  llvm::sys::path::append(Path, Twine("libclang_rt." + Component + "-" +
-                                      "mips" + (Shared ? ".so" : ".a")));
+  const char *Suffix;
+  switch (Type) {
+  case ToolChain::FT_Object:
+    Suffix = ".o";
+    break;
+  case ToolChain::FT_Static:
+    Suffix = ".a";
+    break;
+  case ToolChain::FT_Shared:
+    Suffix = ".so";
+    break;
+  }
+  llvm::sys::path::append(
+      Path, Twine("libclang_rt." + Component + "-" + "mips" + Suffix));
   return Path.str();
 }

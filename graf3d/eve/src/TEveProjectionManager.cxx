@@ -109,6 +109,11 @@ void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type)
             fProjections[type] = new TEveRPhiProjection();
             break;
          }
+         case TEveProjection::kPT_XZ:
+         {
+            fProjections[type] = new TEveXZProjection();
+            break;
+         }
          case TEveProjection::kPT_RhoZ:
          {
             fProjections[type] = new TEveRhoZProjection();

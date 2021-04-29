@@ -20,16 +20,17 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGText                                                               //
-//                                                                      //
-// A TGText is a multi line text buffer. It allows the text to be       //
-// loaded from file, saved to file and edited. It is used in the        //
-// TGTextEdit widget. Single line text is handled by TGTextBuffer       //
-// and the TGTextEntry widget.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGText
+    \ingroup guiwidgets
+
+A TGText is a multi line text buffer. It allows the text to be
+loaded from file, saved to file and edited. It is used in the
+TGTextEdit widget. Single line text is handled by TGTextBuffer
+and the TGTextEntry widget.
+
+*/
+
 
 #include "TGText.h"
 #include "strlcpy.h"
@@ -718,7 +719,7 @@ Bool_t TGText::InsChar(TGLongPosition pos, char c)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get character a position pos. If charcater not valid return -1.
+/// Get character a position pos. If character not valid return -1.
 
 char TGText::GetChar(TGLongPosition pos)
 {
@@ -1250,7 +1251,6 @@ TString TGText::AsString()
       }
       char *txt = travel->GetText();
       ret += txt;
-      delete [] txt;
       travel = travel->fNext;
       if (travel) ret += '\n';
       line_count++;

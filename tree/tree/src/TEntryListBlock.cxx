@@ -460,10 +460,10 @@ Int_t TEntryListBlock::Next()
       i = fLastIndexReturned>>4;
       j = fLastIndexReturned & 15;
       Bool_t result=(fIndices[i] & (1<<j))!=0;
-      while (result==0){
+      while (!result) {
          if (j==15) {j=0; i++;}
          else j++;
-         result = (fIndices[i] & (1<<j))!=0;
+         result = (fIndices[i] & (1<<j)) != 0;
       }
       fLastIndexReturned = i*16+j;
       fLastIndexQueried++;

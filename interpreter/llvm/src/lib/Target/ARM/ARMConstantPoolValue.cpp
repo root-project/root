@@ -1,9 +1,8 @@
-//===-- ARMConstantPoolValue.cpp - ARM constantpool value -----------------===//
+//===- ARMConstantPoolValue.cpp - ARM constantpool value ------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,8 +12,8 @@
 
 #include "ARMConstantPoolValue.h"
 #include "llvm/ADT/FoldingSet.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
+#include "llvm/Config/llvm-config.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/GlobalValue.h"
@@ -140,8 +139,9 @@ ARMConstantPoolConstant::ARMConstantPoolConstant(const Constant *C,
 ARMConstantPoolConstant::ARMConstantPoolConstant(const GlobalVariable *GV,
                                                  const Constant *C)
     : ARMConstantPoolValue((Type *)C->getType(), 0, ARMCP::CPPromotedGlobal, 0,
-                           ARMCP::no_modifier, false),
-      CVal(C), GVar(GV) {}
+                           ARMCP::no_modifier, false), CVal(C) {
+  GVars.insert(GV);
+}
 
 ARMConstantPoolConstant *
 ARMConstantPoolConstant::Create(const Constant *C, unsigned ID) {
@@ -189,7 +189,15 @@ const BlockAddress *ARMConstantPoolConstant::getBlockAddress() const {
 
 int ARMConstantPoolConstant::getExistingMachineCPValue(MachineConstantPool *CP,
                                                        unsigned Alignment) {
-  return getExistingMachineCPValueImpl<ARMConstantPoolConstant>(CP, Alignment);
+  int index =
+    getExistingMachineCPValueImpl<ARMConstantPoolConstant>(CP, Alignment);
+  if (index != -1) {
+    auto *CPV = static_cast<ARMConstantPoolValue*>(
+        CP->getConstants()[index].Val.MachineCPVal);
+    auto *Constant = cast<ARMConstantPoolConstant>(CPV);
+    Constant->GVars.insert(GVars.begin(), GVars.end());
+  }
+  return index;
 }
 
 bool ARMConstantPoolConstant::hasSameValue(ARMConstantPoolValue *ACPV) {
@@ -199,6 +207,8 @@ bool ARMConstantPoolConstant::hasSameValue(ARMConstantPoolValue *ACPV) {
 
 void ARMConstantPoolConstant::addSelectionDAGCSEId(FoldingSetNodeID &ID) {
   ID.AddPointer(CVal);
+  for (const auto *GV : GVars)
+    ID.AddPointer(GV);
   ARMConstantPoolValue::addSelectionDAGCSEId(ID);
 }
 
@@ -282,6 +292,6 @@ void ARMConstantPoolMBB::addSelectionDAGCSEId(FoldingSetNodeID &ID) {
 }
 
 void ARMConstantPoolMBB::print(raw_ostream &O) const {
-  O << "BB#" << MBB->getNumber();
+  O << printMBBReference(*MBB);
   ARMConstantPoolValue::print(O);
 }

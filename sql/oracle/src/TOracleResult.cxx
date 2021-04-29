@@ -13,7 +13,12 @@
 #include "TOracleRow.h"
 #include "TList.h"
 
-using namespace std;
+#ifndef R__WIN32
+#include <sys/time.h>
+#endif
+
+#include <occi.h>
+
 using namespace oracle::occi;
 
 ClassImp(TOracleResult);
@@ -31,12 +36,12 @@ void TOracleResult::initResultSet(Statement *stmt)
          if (stmt->status() == Statement::RESULT_SET_AVAILABLE) {
             fResultType  = 1;
             fResult      = stmt->getResultSet();
-            fFieldInfo   = (fResult==0) ? 0 : new vector<MetaData>(fResult->getColumnListMetaData());
-            fFieldCount  = (fFieldInfo==0) ? 0 : fFieldInfo->size();
+            fFieldInfo   = fResult ? new std::vector<MetaData>(fResult->getColumnListMetaData()) : nullptr;
+            fFieldCount  = fFieldInfo ? fFieldInfo->size() : 0;
          } else if (stmt->status() == Statement::UPDATE_COUNT_AVAILABLE) {
             fResultType  = 3; // this is update_count_available
-            fResult      = 0;
-            fFieldInfo   = 0;
+            fResult      = nullptr;
+            fFieldInfo   = nullptr;
             fFieldCount  = 0;
             fUpdateCount = stmt->getUpdateCount();
          }
@@ -84,7 +89,7 @@ TOracleResult::TOracleResult(Connection *conn, const char *tableName)
       Error("TOracleResult", "construction: empty input parameter");
    } else {
       MetaData connMD = conn->getMetaData(tableName, MetaData::PTYPE_TABLE);
-      fFieldInfo   = new vector<MetaData>(connMD.getVector(MetaData::ATTR_LIST_COLUMNS));
+      fFieldInfo   = new std::vector<MetaData>(connMD.getVector(MetaData::ATTR_LIST_COLUMNS));
       fFieldCount  = fFieldInfo->size();
       fResultType  = 2; // indicates that this is just an table metainfo
    }

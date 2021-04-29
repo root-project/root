@@ -164,6 +164,12 @@ rarely have to include this file directly).
   efficient to use the ``InstVisitor`` class to dispatch over the instruction
   type directly.
 
+``isa_and_nonnull<>``:
+  The ``isa_and_nonnull<>`` operator works just like the ``isa<>`` operator,
+  except that it allows for a null pointer as an argument (which it then
+  returns false).  This can sometimes be useful, allowing you to combine several
+  null checks into one.
+
 ``cast_or_null<>``:
   The ``cast_or_null<>`` operator works just like the ``cast<>`` operator,
   except that it allows for a null pointer as an argument (which it then
@@ -441,6 +447,15 @@ the program where they can be handled appropriately. Handling the error may be
 as simple as reporting the issue to the user, or it may involve attempts at
 recovery.
 
+.. note::
+
+   While it would be ideal to use this error handling scheme throughout
+   LLVM, there are places where this hasn't been practical to apply. In
+   situations where you absolutely must emit a non-programmatic error and
+   the ``Error`` model isn't workable you can call ``report_fatal_error``,
+   which will call installed error handlers, print a message, and exit the
+   program.
+
 Recoverable errors are modeled using LLVM's ``Error`` scheme. This scheme
 represents errors using function return values, similar to classic C integer
 error codes, or C++'s ``std::error_code``. However, the ``Error`` class is
@@ -486,7 +501,7 @@ that inherits from the ErrorInfo utility, E.g.:
 
   Error printFormattedFile(StringRef Path) {
     if (<check for valid format>)
-      return make_error<InvalidObjectFile>(Path);
+      return make_error<BadFileFormat>(Path);
     // print file contents.
     return Error::success();
   }
@@ -647,19 +662,21 @@ taken is to report them to the user so that the user can attempt to fix the
 environment. In this case representing the error as a string makes perfect
 sense. LLVM provides the ``StringError`` class for this purpose. It takes two
 arguments: A string error message, and an equivalent ``std::error_code`` for
-interoperability:
+interoperability. It also provides a ``createStringError`` function to simplify
+common usage of this class:
 
 .. code-block:: c++
 
-  make_error<StringError>("Bad executable",
-                          make_error_code(errc::executable_format_error"));
+  // These two lines of code are equivalent:
+  make_error<StringError>("Bad executable", errc::executable_format_error);
+  createStringError(errc::executable_format_error, "Bad executable");
 
 If you're certain that the error you're building will never need to be converted
 to a ``std::error_code`` you can use the ``inconvertibleErrorCode()`` function:
 
 .. code-block:: c++
 
-  make_error<StringError>("Bad executable", inconvertibleErrorCode());
+  createStringError(inconvertibleErrorCode(), "Bad executable");
 
 This should be done only after careful consideration. If any attempt is made to
 convert this error to a ``std::error_code`` it will trigger immediate program
@@ -667,6 +684,14 @@ termination. Unless you are certain that your errors will not need
 interoperability you should look for an existing ``std::error_code`` that you
 can convert to, and even (as painful as it is) consider introducing a new one as
 a stopgap measure.
+
+``createStringError`` can take ``printf`` style format specifiers to provide a
+formatted message:
+
+.. code-block:: c++
+
+  createStringError(errc::executable_format_error,
+                    "Bad executable: %s", FileName);
 
 Interoperability with std::error_code and ErrorOr
 """""""""""""""""""""""""""""""""""""""""""""""""
@@ -796,7 +821,7 @@ T value:
 
 Like the ExitOnError utility, cantFail simplifies control flow. Their treatment
 of error cases is very different however: Where ExitOnError is guaranteed to
-terminate the program on an error input, cantFile simply asserts that the result
+terminate the program on an error input, cantFail simply asserts that the result
 is success. In debug builds this will result in an assertion failure if an error
 is encountered. In release builds the behavior of cantFail for failure values is
 undefined. As such, care must be taken in the use of cantFail: clients must be
@@ -916,27 +941,85 @@ Building fallible iterators and iterator ranges
 
 The archive walking examples above retrieve archive members by index, however
 this requires considerable boiler-plate for iteration and error checking. We can
-clean this up by using ``Error`` with the "fallible iterator" pattern. The usual
-C++ iterator patterns do not allow for failure on increment, but we can
-incorporate support for it by having iterators hold an Error reference through
-which they can report failure. In this pattern, if an increment operation fails
-the failure is recorded via the Error reference and the iterator value is set to
-the end of the range in order to terminate the loop. This ensures that the
-dereference operation is safe anywhere that an ordinary iterator dereference
-would be safe (i.e. when the iterator is not equal to end). Where this pattern
-is followed (as in the ``llvm::object::Archive`` class) the result is much
-cleaner iteration idiom:
+clean this up by using the "fallible iterator" pattern, which supports the
+following natural iteration idiom for fallible containers like Archive:
 
 .. code-block:: c++
 
   Error Err;
   for (auto &Child : Ar->children(Err)) {
-    // Use Child - we only enter the loop when it's valid
+    // Use Child - only enter the loop when it's valid
+
+    // Allow early exit from the loop body, since we know that Err is success
+    // when we're inside the loop.
+    if (BailOutOn(Child))
+      return;
+
     ...
   }
   // Check Err after the loop to ensure it didn't break due to an error.
   if (Err)
     return Err;
+
+To enable this idiom, iterators over fallible containers are written in a
+natural style, with their ``++`` and ``--`` operators replaced with fallible
+``Error inc()`` and ``Error dec()`` functions. E.g.:
+
+.. code-block:: c++
+
+  class FallibleChildIterator {
+  public:
+    FallibleChildIterator(Archive &A, unsigned ChildIdx);
+    Archive::Child &operator*();
+    friend bool operator==(const ArchiveIterator &LHS,
+                           const ArchiveIterator &RHS);
+
+    // operator++/operator-- replaced with fallible increment / decrement:
+    Error inc() {
+      if (!A.childValid(ChildIdx + 1))
+        return make_error<BadArchiveMember>(...);
+      ++ChildIdx;
+      return Error::success();
+    }
+
+    Error dec() { ... }
+  };
+
+Instances of this kind of fallible iterator interface are then wrapped with the
+fallible_iterator utility which provides ``operator++`` and ``operator--``,
+returning any errors via a reference passed in to the wrapper at construction
+time. The fallible_iterator wrapper takes care of (a) jumping to the end of the
+range on error, and (b) marking the error as checked whenever an iterator is
+compared to ``end`` and found to be inequal (in particular: this marks the
+error as checked throughout the body of a range-based for loop), enabling early
+exit from the loop without redundant error checking.
+
+Instances of the fallible iterator interface (e.g. FallibleChildIterator above)
+are wrapped using the ``make_fallible_itr`` and ``make_fallible_end``
+functions. E.g.:
+
+.. code-block:: c++
+
+  class Archive {
+  public:
+    using child_iterator = fallible_iterator<FallibleChildIterator>;
+
+    child_iterator child_begin(Error &Err) {
+      return make_fallible_itr(FallibleChildIterator(*this, 0), Err);
+    }
+
+    child_iterator child_end() {
+      return make_fallible_end(FallibleChildIterator(*this, size()));
+    }
+
+    iterator_range<child_iterator> children(Error &Err) {
+      return make_range(child_begin(Err), child_end());
+    }
+  };
+
+Using the fallible_iterator utility allows for both natural construction of
+fallible iterators (using failing ``inc`` and ``dec`` operations) and
+relatively natural use of c++ iterator/loop idioms.
 
 .. _function_apis:
 
@@ -1011,8 +1094,8 @@ be passed by value.
 
 .. _DEBUG:
 
-The ``DEBUG()`` macro and ``-debug`` option
--------------------------------------------
+The ``LLVM_DEBUG()`` macro and ``-debug`` option
+------------------------------------------------
 
 Often when working on your pass you will put a bunch of debugging printouts and
 other code into your pass.  After you get it working, you want to remove it, but
@@ -1024,14 +1107,14 @@ them out, allowing you to enable them if you need them in the future.
 
 The ``llvm/Support/Debug.h`` (`doxygen
 <http://llvm.org/doxygen/Debug_8h_source.html>`__) file provides a macro named
-``DEBUG()`` that is a much nicer solution to this problem.  Basically, you can
-put arbitrary code into the argument of the ``DEBUG`` macro, and it is only
+``LLVM_DEBUG()`` that is a much nicer solution to this problem.  Basically, you can
+put arbitrary code into the argument of the ``LLVM_DEBUG`` macro, and it is only
 executed if '``opt``' (or any other tool) is run with the '``-debug``' command
 line argument:
 
 .. code-block:: c++
 
-  DEBUG(errs() << "I am here!\n");
+  LLVM_DEBUG(dbgs() << "I am here!\n");
 
 Then you can run your pass like this:
 
@@ -1042,13 +1125,13 @@ Then you can run your pass like this:
   $ opt < a.bc > /dev/null -mypass -debug
   I am here!
 
-Using the ``DEBUG()`` macro instead of a home-brewed solution allows you to not
+Using the ``LLVM_DEBUG()`` macro instead of a home-brewed solution allows you to not
 have to create "yet another" command line option for the debug output for your
-pass.  Note that ``DEBUG()`` macros are disabled for non-asserts builds, so they
+pass.  Note that ``LLVM_DEBUG()`` macros are disabled for non-asserts builds, so they
 do not cause a performance impact at all (for the same reason, they should also
 not contain side-effects!).
 
-One additional nice thing about the ``DEBUG()`` macro is that you can enable or
+One additional nice thing about the ``LLVM_DEBUG()`` macro is that you can enable or
 disable it directly in gdb.  Just use "``set DebugFlag=0``" or "``set
 DebugFlag=1``" from the gdb if the program is running.  If the program hasn't
 been started yet, you can always just run it with ``-debug``.
@@ -1067,10 +1150,10 @@ follows:
 .. code-block:: c++
 
   #define DEBUG_TYPE "foo"
-  DEBUG(errs() << "'foo' debug type\n");
+  LLVM_DEBUG(dbgs() << "'foo' debug type\n");
   #undef  DEBUG_TYPE
   #define DEBUG_TYPE "bar"
-  DEBUG(errs() << "'bar' debug type\n"));
+  LLVM_DEBUG(dbgs() << "'bar' debug type\n");
   #undef  DEBUG_TYPE
 
 Then you can run your pass like this:
@@ -1111,8 +1194,8 @@ preceding example could be written as:
 
 .. code-block:: c++
 
-  DEBUG_WITH_TYPE("foo", errs() << "'foo' debug type\n");
-  DEBUG_WITH_TYPE("bar", errs() << "'bar' debug type\n"));
+  DEBUG_WITH_TYPE("foo", dbgs() << "'foo' debug type\n");
+  DEBUG_WITH_TYPE("bar", dbgs() << "'bar' debug type\n");
 
 .. _Statistic:
 
@@ -1224,7 +1307,7 @@ Define your DebugCounter like this:
 .. code-block:: c++
 
   DEBUG_COUNTER(DeleteAnInstruction, "passname-delete-instruction",
-		"Controls which instructions get delete").
+		"Controls which instructions get delete");
 
 The ``DEBUG_COUNTER`` macro defines a static variable, whose name
 is specified by the first argument.  The name of the counter
@@ -1289,8 +1372,8 @@ these functions in your code in places you want to debug.
 
 Getting this to work requires a small amount of setup.  On Unix systems
 with X11, install the `graphviz <http://www.graphviz.org>`_ toolkit, and make
-sure 'dot' and 'gv' are in your path.  If you are running on Mac OS X, download
-and install the Mac OS X `Graphviz program
+sure 'dot' and 'gv' are in your path.  If you are running on macOS, download
+and install the macOS `Graphviz program
 <http://www.pixelglow.com/graphviz/>`_ and add
 ``/Applications/Graphviz.app/Contents/MacOS/`` (or wherever you install it) to
 your path. The programs need not be present when configuring, building or
@@ -1426,7 +1509,7 @@ order (so you can do pointer arithmetic between elements), supports efficient
 push_back/pop_back operations, supports efficient random access to its elements,
 etc.
 
-The advantage of SmallVector is that it allocates space for some number of
+The main advantage of SmallVector is that it allocates space for some number of
 elements (N) **in the object itself**.  Because of this, if the SmallVector is
 dynamically smaller than N, no malloc is performed.  This can be a big win in
 cases where the malloc/free call is far more expensive than the code that
@@ -1440,6 +1523,21 @@ SmallVectors are most useful when on the stack.
 
 SmallVector also provides a nice portable and efficient replacement for
 ``alloca``.
+
+SmallVector has grown a few other minor advantages over std::vector, causing
+``SmallVector<Type, 0>`` to be preferred over ``std::vector<Type>``.
+
+#. std::vector is exception-safe, and some implementations have pessimizations
+   that copy elements when SmallVector would move them.
+
+#. SmallVector understands ``llvm::is_trivially_copyable<Type>`` and uses realloc aggressively.
+
+#. Many LLVM APIs take a SmallVectorImpl as an out parameter (see the note
+   below).
+
+#. SmallVector with N equal to 0 is smaller than std::vector on 64-bit
+   platforms, since it uses ``unsigned`` (instead of ``void*``) for its size
+   and capacity.
 
 .. note::
 
@@ -1473,12 +1571,10 @@ SmallVector also provides a nice portable and efficient replacement for
 <vector>
 ^^^^^^^^
 
-``std::vector`` is well loved and respected.  It is useful when SmallVector
-isn't: when the size of the vector is often large (thus the small optimization
-will rarely be a benefit) or if you will be allocating many instances of the
-vector itself (which would waste space for elements that aren't in the
-container).  vector is also useful when interfacing with code that expects
-vectors :).
+``std::vector<T>`` is well loved and respected.  However, ``SmallVector<T, 0>``
+is often a better option due to the advantages listed above.  std::vector is
+still useful when you need to store more than ``UINT32_MAX`` elements or when
+interfacing with code that expects vectors :).
 
 One worthwhile note about std::vector: avoid code like this:
 
@@ -1823,7 +1919,7 @@ A sorted 'vector'
 ^^^^^^^^^^^^^^^^^
 
 If you intend to insert a lot of elements, then do a lot of queries, a great
-approach is to use a vector (or other sequential container) with
+approach is to use an std::vector (or other sequential container) with
 std::sort+std::unique to remove duplicates.  This approach works really well if
 your usage pattern has these two distinct phases (insert then query), and can be
 coupled with a good choice of :ref:`sequential container <ds_sequential>`.
@@ -1850,9 +1946,7 @@ to :ref:`std::set <dss_set>`, but for pointers it uses something far better,
 :ref:`SmallPtrSet <dss_smallptrset>`.
 
 The magic of this class is that it handles small sets extremely efficiently, but
-gracefully handles extremely large sets without loss of efficiency.  The
-drawback is that the interface is quite small: it supports insertion, queries
-and erasing, but does not support iteration.
+gracefully handles extremely large sets without loss of efficiency.
 
 .. _dss_smallptrset:
 
@@ -1860,11 +1954,11 @@ llvm/ADT/SmallPtrSet.h
 ^^^^^^^^^^^^^^^^^^^^^^
 
 ``SmallPtrSet`` has all the advantages of ``SmallSet`` (and a ``SmallSet`` of
-pointers is transparently implemented with a ``SmallPtrSet``), but also supports
-iterators.  If more than N insertions are performed, a single quadratically
-probed hash table is allocated and grows as needed, providing extremely
-efficient access (constant time insertion/deleting/queries with low constant
-factors) and is very stingy with malloc traffic.
+pointers is transparently implemented with a ``SmallPtrSet``). If more than N
+insertions are performed, a single quadratically probed hash table is allocated
+and grows as needed, providing extremely efficient access (constant time
+insertion/deleting/queries with low constant factors) and is very stingy with
+malloc traffic.
 
 Note that, unlike :ref:`std::set <dss_set>`, the iterators of ``SmallPtrSet``
 are invalidated whenever an insertion occurs.  Also, the values visited by the
@@ -2105,7 +2199,7 @@ is stored in the same allocation as the Value of a pair).
 StringMap also provides query methods that take byte ranges, so it only ever
 copies a string if a value is inserted into the table.
 
-StringMap iteratation order, however, is not guaranteed to be deterministic, so
+StringMap iteration order, however, is not guaranteed to be deterministic, so
 any uses which require that should instead use a std::map.
 
 .. _dss_indexmap:
@@ -2571,7 +2665,7 @@ Iterating over def-use & use-def chains
 
 Frequently, we might have an instance of the ``Value`` class (`doxygen
 <http://llvm.org/doxygen/classllvm_1_1Value.html>`__) and we want to determine
-which ``User`` s use the ``Value``.  The list of all ``User``\ s of a particular
+which ``User``\ s use the ``Value``.  The list of all ``User``\ s of a particular
 ``Value`` is called a *def-use* chain.  For example, let's say we have a
 ``Function*`` named ``F`` to a particular function ``foo``.  Finding all of the
 instructions that *use* ``foo`` is as simple as iterating over the *def-use*
@@ -2885,37 +2979,6 @@ For example:
   GV->eraseFromParent();
 
 
-.. _create_types:
-
-How to Create Types
--------------------
-
-In generating IR, you may need some complex types.  If you know these types
-statically, you can use ``TypeBuilder<...>::get()``, defined in
-``llvm/Support/TypeBuilder.h``, to retrieve them.  ``TypeBuilder`` has two forms
-depending on whether you're building types for cross-compilation or native
-library use.  ``TypeBuilder<T, true>`` requires that ``T`` be independent of the
-host environment, meaning that it's built out of types from the ``llvm::types``
-(`doxygen <http://llvm.org/doxygen/namespacellvm_1_1types.html>`__) namespace
-and pointers, functions, arrays, etc. built of those.  ``TypeBuilder<T, false>``
-additionally allows native C types whose size may depend on the host compiler.
-For example,
-
-.. code-block:: c++
-
-  FunctionType *ft = TypeBuilder<types::i<8>(types::i<32>*), true>::get();
-
-is easier to read and write than the equivalent
-
-.. code-block:: c++
-
-  std::vector<const Type*> params;
-  params.push_back(PointerType::getUnqual(Type::Int32Ty));
-  FunctionType *ft = FunctionType::get(Type::Int8Ty, params, false);
-
-See the `class comment
-<http://llvm.org/doxygen/TypeBuilder_8h_source.html#l00001>`_ for more details.
-
 .. _threading:
 
 Threads and LLVM
@@ -2975,7 +3038,7 @@ Conceptually, ``LLVMContext`` provides isolation.  Every LLVM entity
 in-memory IR belongs to an ``LLVMContext``.  Entities in different contexts
 *cannot* interact with each other: ``Module``\ s in different contexts cannot be
 linked together, ``Function``\ s cannot be added to ``Module``\ s in different
-contexts, etc.  What this means is that is is safe to compile on multiple
+contexts, etc.  What this means is that is safe to compile on multiple
 threads simultaneously, as long as no two threads operate on entities within the
 same context.
 
@@ -3324,8 +3387,8 @@ compatible LLVM libraries built without it defined.  By default,
 turning on assertions also turns on `LLVM_ENABLE_ABI_BREAKING_CHECKS`
 so a default +Asserts build is not ABI compatible with a
 default -Asserts build.  Clients that want ABI compatibility
-between +Asserts and -Asserts builds should use the CMake or autoconf
-build systems to set `LLVM_ENABLE_ABI_BREAKING_CHECKS` independently
+between +Asserts and -Asserts builds should use the CMake build system
+to set `LLVM_ENABLE_ABI_BREAKING_CHECKS` independently
 of `LLVM_ENABLE_ASSERTIONS`.
 
 .. _coreclasses:
@@ -3502,11 +3565,17 @@ Important Public Members of the ``Module`` class
   Look up the specified function in the ``Module`` SymbolTable_.  If it does not
   exist, return ``null``.
 
-* ``Function *getOrInsertFunction(const std::string &Name, const FunctionType
-  *T)``
+* ``FunctionCallee getOrInsertFunction(const std::string &Name,
+  const FunctionType *T)``
 
-  Look up the specified function in the ``Module`` SymbolTable_.  If it does not
-  exist, add an external declaration for the function and return it.
+  Look up the specified function in the ``Module`` SymbolTable_.  If
+  it does not exist, add an external declaration for the function and
+  return it. Note that the function signature already present may not
+  match the requested signature. Thus, in order to enable the common
+  usage of passing the result directly to EmitCall, the return type is
+  a struct of ``{FunctionType *T, Constant *FunctionPtr}``, rather
+  than simply the ``Function*`` with potentially an unexpected
+  signature.
 
 * ``std::string getTypeName(const Type *Ty)``
 
@@ -3712,16 +3781,9 @@ Important Subclasses of the ``Instruction`` class
 
 * ``CmpInst``
 
-  This subclass respresents the two comparison instructions,
+  This subclass represents the two comparison instructions,
   `ICmpInst <LangRef.html#i_icmp>`_ (integer opreands), and
   `FCmpInst <LangRef.html#i_fcmp>`_ (floating point operands).
-
-.. _TerminatorInst:
-
-* ``TerminatorInst``
-
-  This subclass is the parent of all terminator instructions (those which can
-  terminate a block).
 
 .. _m_Instruction:
 
@@ -4048,7 +4110,7 @@ This class represents a single entry single exit section of the code, commonly
 known as a basic block by the compiler community.  The ``BasicBlock`` class
 maintains a list of Instruction_\ s, which form the body of the block.  Matching
 the language definition, the last element of this list of instructions is always
-a terminator instruction (a subclass of the TerminatorInst_ class).
+a terminator instruction.
 
 In addition to tracking the list of instructions that make up the block, the
 ``BasicBlock`` class also keeps track of the :ref:`Function <c_Function>` that
@@ -4099,7 +4161,7 @@ Important Public Members of the ``BasicBlock`` class
   Returns a pointer to :ref:`Function <c_Function>` the block is embedded into,
   or a null pointer if it is homeless.
 
-* ``TerminatorInst *getTerminator()``
+* ``Instruction *getTerminator()``
 
   Returns a pointer to the terminator instruction that appears at the end of the
   ``BasicBlock``.  If there is no terminator instruction, or if the last

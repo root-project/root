@@ -118,7 +118,13 @@ else()
                    COMMAND ${CMAKE_CXX_COMPILER} -E -x c++ -
                    COMMAND tail -n1
                    OUTPUT_VARIABLE CXX_STANDARD_STRING
+                   ERROR_QUIET
                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+   # if the above command fails to set the variable for any reason, let's default to 2011 with a warning
+   if (NOT CXX_STANDARD_STRING)
+      message(WARNING "Could not detect the default C++ standard in use by the detected compiler (${CMAKE_CXX_COMPILER}). Falling back to C++11 as a default, can be overridden by setting CMAKE_CXX_STANDARD.")
+      set(CXX_STANDARD_STRING 2011)
+   endif()
 endif()
 # Lexicographically compare the value of __cplusplus (e.g. "201703L" for C++17) to figure out
 # what standard CMAKE_CXX_COMPILER uses by default.

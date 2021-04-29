@@ -46,6 +46,7 @@ All page sink classes need to support the common options.
 class RNTupleWriteOptions {
   int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
   ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
+  bool fUseBufferedWrite = true;
 
 public:
   int GetCompression() const { return fCompression; }
@@ -56,6 +57,9 @@ public:
 
   ENTupleContainerFormat GetContainerFormat() const { return fContainerFormat; }
   void SetContainerFormat(ENTupleContainerFormat val) { fContainerFormat = val; }
+
+  bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
+  void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
 };
 
 

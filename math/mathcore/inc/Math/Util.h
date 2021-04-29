@@ -129,6 +129,15 @@ namespace ROOT {
          std::fill(std::begin(fCarry), std::end(fCarry), 0.);
        }
 
+       /// Constructor to create a KahanSum from another KahanSum with a different number of accumulators
+       template <unsigned int M>
+       KahanSum(KahanSum<T,M> const& other) {
+         fSum[0] = other.Sum();
+         fCarry[0] = other.Carry();
+         std::fill(std::begin(fSum)+1, std::end(fSum), 0.);
+         std::fill(std::begin(fCarry)+1, std::end(fCarry), 0.);
+       }
+
        /// Single-element accumulation. Will not vectorise.
        void Add(T x) {
           auto y = x - fCarry[0];
@@ -227,6 +236,26 @@ namespace ROOT {
        /// Add `arg` into accumulator. Does not vectorise.
        KahanSum<T, N>& operator+=(T arg) {
          Add(arg);
+         return *this;
+       }
+
+       /// Add `arg` into accumulator. Does not vectorise.
+       template<typename U>
+       KahanSum& operator+=(const KahanSum<U>& arg) {
+         Add(arg.Sum());
+         fCarry[0] += arg.Carry();
+         return *this;
+       }
+
+       /// Subtract other KahanSum. Does not vectorise.
+       ///
+       /// This is only meaningfull when both the sum and carry of each operand are of similar order of magnitude.
+       KahanSum<T, N>& operator-=(KahanSum<T, N> const& other) {
+         fSum[0]   -= other.Sum();
+         fCarry[0] -= other.Carry();
+         // add zero such that if the summed carry is large enough to be partly represented in the sum,
+         // it will happen
+         Add(T{});
          return *this;
        }
 

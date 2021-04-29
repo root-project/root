@@ -42,22 +42,20 @@ namespace {
     BreakProtection::resetCachedLinkage(ND);
     if (const CXXRecordDecl* CXXRD = dyn_cast<CXXRecordDecl>(ND))
       clearLinkageForClass(CXXRD);
-    else
-    if (ClassTemplateDecl *temp = dyn_cast<ClassTemplateDecl>(ND)) {
+    else if (ClassTemplateDecl *CTD = dyn_cast<ClassTemplateDecl>(ND)) {
       // Clear linkage for the template pattern.
-      CXXRecordDecl *record = temp->getTemplatedDecl();
+      CXXRecordDecl *record = CTD->getTemplatedDecl();
       clearLinkageForClass(record);
 
       // We need to clear linkage for specializations, too.
       for (ClassTemplateDecl::spec_iterator
-             i = temp->spec_begin(), e = temp->spec_end(); i != e; ++i)
+             i = CTD->spec_begin(), e = CTD->spec_end(); i != e; ++i)
         clearLinkage(*i);
-    } else
+    } else if (FunctionTemplateDecl *FTD= dyn_cast<FunctionTemplateDecl>(ND)) {
       // Clear cached linkage for function template decls, too.
-    if (FunctionTemplateDecl *temp = dyn_cast<FunctionTemplateDecl>(ND)) {
-      clearLinkage(temp->getTemplatedDecl());
+      clearLinkage(FTD->getTemplatedDecl());
       for (FunctionTemplateDecl::spec_iterator
-             i = temp->spec_begin(), e = temp->spec_end(); i != e; ++i)
+             i = FTD->spec_begin(), e = FTD->spec_end(); i != e; ++i)
         clearLinkage(*i);
     }
   }
@@ -119,6 +117,9 @@ namespace cling {
     Scope* TUScope = m_Sema->TUScope;
     llvm::SmallVector<Stmt*, 4> Stmts;
 
+    if (CS->body_empty())
+      return FD;
+
     for (CompoundStmt::body_iterator I = CS->body_begin(), EI = CS->body_end();
          I != EI; ++I) {
       DeclStmt* DS = dyn_cast<DeclStmt>(*I);
@@ -178,7 +179,7 @@ namespace cling {
         }
       }
     }
-    bool hasNoErrors = !CheckForClashingNames(TouchedDecls, WrapperDC, TUScope);
+    bool hasNoErrors = !CheckForClashingNames(TouchedDecls, WrapperDC);
     if (hasNoErrors) {
       for (size_t i = 0; i < TouchedDecls.size(); ++i) {
         // We should skip the checks for annonymous decls and we should not
@@ -210,7 +211,10 @@ namespace cling {
       }
     }
 
-    CS->setStmts(*m_Context, Stmts);
+    // Create a new body.
+    auto newCS = CompoundStmt::Create(*m_Context, Stmts, CS->getLBracLoc(),
+                                      CS->getRBracLoc());
+    FD->setBody(newCS);
 
     if (hasNoErrors && !TouchedDecls.empty()) {
       // Put the wrapper after its declarations. (Nice when AST dumping)
@@ -241,6 +245,7 @@ namespace cling {
     SourceLocation Loc;
     NamedDecl* ND = m_Sema->ImplicitlyDefineFunction(Loc, IIFD, TUScope);
     if (FunctionDecl* FD = dyn_cast_or_null<FunctionDecl>(ND)) {
+      Sema::SynthesizedFunctionScope Scope(*m_Sema, FD);
       FD->setImplicit(false); // Better for debugging
 
       // Add a return statement if it doesn't exist
@@ -261,8 +266,7 @@ namespace cling {
 
       // Wrap Stmts into a function body.
       llvm::ArrayRef<Stmt*> StmtsRef(Stmts.data(), Stmts.size());
-      CompoundStmt* CS = new (*m_Context)CompoundStmt(*m_Context, StmtsRef,
-                                                      Loc, Loc);
+      CompoundStmt* CS = CompoundStmt::Create(*m_Context, StmtsRef, Loc, Loc);
       FD->setBody(CS);
       Emit(FD);
 
@@ -296,13 +300,13 @@ namespace cling {
   ///\returns true if there is another declaration with the same name
   bool DeclExtractor::CheckForClashingNames(
                                   const llvm::SmallVector<NamedDecl*, 4>& Decls,
-                                            DeclContext* DC, Scope* S) {
+                                            DeclContext* DC) {
     for (size_t i = 0; i < Decls.size(); ++i) {
       NamedDecl* ND = Decls[i];
 
       if (TagDecl* TD = dyn_cast<TagDecl>(ND)) {
         LookupResult Previous(*m_Sema, ND->getDeclName(), ND->getLocation(),
-                              Sema::LookupTagName, Sema::ForRedeclaration
+                              Sema::LookupTagName, Sema::ForVisibleRedeclaration
                               );
 
         m_Sema->LookupQualifiedName(Previous, DC);
@@ -316,7 +320,7 @@ namespace cling {
       }
       else if (VarDecl* VD = dyn_cast<VarDecl>(ND)) {
         LookupResult Previous(*m_Sema, ND->getDeclName(), ND->getLocation(),
-                              Sema::LookupOrdinaryName, Sema::ForRedeclaration
+                              Sema::LookupOrdinaryName, Sema::ForVisibleRedeclaration
                               );
         m_Sema->LookupQualifiedName(Previous, DC);
         m_Sema->CheckVariableDeclaration(VD, Previous);
@@ -538,7 +542,7 @@ namespace cling {
                                   isExplicitSpecialization)) {
           // Make sure that this wasn't declared as an enum and now used as a
           // struct or something similar.
-          SourceLocation KWLoc = NewTD->getLocStart();
+          SourceLocation KWLoc = NewTD->getBeginLoc();
           if (!m_Sema->isAcceptableTagRedeclaration(PrevTagDecl, Kind,
                                           NewTD->isThisDeclarationADefinition(),
                                                     KWLoc, Name)) {

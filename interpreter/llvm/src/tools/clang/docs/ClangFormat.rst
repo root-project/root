@@ -11,12 +11,12 @@ Standalone Tool
 ===============
 
 :program:`clang-format` is located in `clang/tools/clang-format` and can be used
-to format C/C++/Obj-C code.
+to format C/C++/Java/JavaScript/Objective-C/Protobuf/C# code.
 
 .. code-block:: console
 
   $ clang-format -help
-  OVERVIEW: A tool to format C/C++/Java/JavaScript/Objective-C/Protobuf code.
+  OVERVIEW: A tool to format C/C++/Java/JavaScript/Objective-C/Protobuf/C# code.
 
   If no arguments are specified, it formats the code from standard input
   and writes the result to the standard output.
@@ -71,6 +71,7 @@ to format C/C++/Obj-C code.
                                 Use -style="{key: value, ...}" to set specific
                                 parameters, e.g.:
                                   -style="{BasedOnStyle: llvm, IndentWidth: 8}"
+    -verbose                  - If set, shows the list of processed files
 
   Generic Options:
 
@@ -164,11 +165,24 @@ menu item by renaming the script, and can assign the menu item a keyboard
 shortcut in the BBEdit preferences, under Menus & Shortcuts.
 
 
+CLion Integration
+==================
+
+:program:`clang-format` is integrated into `CLion <https://www.jetbrains
+.com/clion/>`_ as an alternative code formatter. It is disabled by default and
+can be turned on in Settings/Preferences | Editor | Code Style.
+
+If :program:`clang-format` support is enabled, CLion detects config files when
+opening a project and suggests overriding the current IDE settings. Code style
+rules from the ``.clang-format`` files are then applied automatically to all
+editor actions, including auto-completion, code generation, and refactorings.
+
+
 Visual Studio Integration
 =========================
 
 Download the latest Visual Studio extension from the `alpha build site
-<http://llvm.org/builds/>`_. The default key-binding is Ctrl-R,Ctrl-F.
+<https://llvm.org/builds/>`_. The default key-binding is Ctrl-R,Ctrl-F.
 
 
 Script for patch reformatting
@@ -198,6 +212,12 @@ So to reformat all the lines in the latest :program:`git` commit, just do:
 .. code-block:: console
 
   git diff -U0 --no-color HEAD^ | clang-format-diff.py -i -p1
+
+With Mercurial/:program:`hg`:
+
+.. code-block:: console
+
+  hg diff -U0 --color=never | clang-format-diff.py -i -p1
 
 In an SVN client, you can do:
 

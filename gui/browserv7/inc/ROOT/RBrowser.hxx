@@ -47,7 +47,7 @@ protected:
    void CloseTab(const std::string &name);
 
    std::string ProcessBrowserRequest(const std::string &msg);
-   std::string ProcessDblClick(const std::string &path, const std::string &drawingOptions, const std::string &);
+   std::string ProcessDblClick(std::vector<std::string> &args);
    std::string NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget);
    long ProcessRunMacro(const std::string &file_path);
    void ProcessSaveFile(const std::string &fname, const std::string &content);

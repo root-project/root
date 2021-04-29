@@ -49,6 +49,12 @@ TBufferMerger::~TBufferMerger()
 
    if (!fQueue.empty())
       Merge();
+
+   // Since we support purely incremental merging, Merge does not write the target objects
+   // that are attached to the file (TTree and histograms) and thus we need to write them
+   // now.
+   if (TFile *out = fMerger.GetOutputFile())
+      out->Write("",TObject::kOverwrite);
 }
 
 std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
@@ -62,6 +68,7 @@ std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
 
 size_t TBufferMerger::GetQueueSize() const
 {
+   std::lock_guard<std::mutex> lock(fQueueMutex);
    return fQueue.size();
 }
 
@@ -101,23 +108,40 @@ void TBufferMerger::SetMergeOptions(const TString& options)
 void TBufferMerger::Merge()
 {
    if (fMergeMutex.try_lock()) {
-      std::queue<TBufferFile *> queue;
-      {
-         std::lock_guard<std::mutex> q(fQueueMutex);
-         std::swap(queue, fQueue);
-         fBuffered = 0;
-      }
-
-      while (!queue.empty()) {
-         std::unique_ptr<TBufferFile> buffer{queue.front()};
-         fMerger.AddAdoptFile(new TMemFile(fMerger.GetOutputFileName(), std::move(buffer)));
-         queue.pop();
-      }
-
-      fMerger.PartialMerge();
-      fMerger.Reset();
+      MergeImpl();
       fMergeMutex.unlock();
    }
+}
+
+void TBufferMerger::MergeImpl()
+{
+   std::queue<TBufferFile *> queue;
+   {
+      std::lock_guard<std::mutex> q(fQueueMutex);
+      std::swap(queue, fQueue);
+      fBuffered = 0;
+   }
+
+   while (!queue.empty()) {
+      std::unique_ptr<TBufferFile> buffer{queue.front()};
+      fMerger.AddAdoptFile(new TMemFile(fMerger.GetOutputFileName(), std::move(buffer)));
+      queue.pop();
+   }
+
+   fMerger.PartialMerge(TFileMerger::kAll | TFileMerger::kIncremental | TFileMerger::kDelayWrite | TFileMerger::kKeepCompression);
+   fMerger.Reset();
+}
+
+bool TBufferMerger::TryMerge(ROOT::Experimental::TBufferMergerFile *memfile)
+{
+   if (fMergeMutex.try_lock()) {
+      memfile->WriteStreamerInfo();
+      fMerger.AddFile(memfile);
+      MergeImpl();
+      fMergeMutex.unlock();
+      return true;
+   } else
+      return false;
 }
 
 } // namespace Experimental

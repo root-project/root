@@ -53,6 +53,20 @@ public:
     return _intOrder ; 
   }
 
+  static Int_t getAnalyticalIntegral(RooArgSet& allVars,
+                                     RooArgSet& analVars,
+                                     const char* rangeName,
+                                     RooArgSet const& histObsList,
+                                     RooSetProxy const& pdfObsList,
+                                     Int_t intOrder) ;
+
+  static Double_t analyticalIntegral(Int_t code,
+                                     const char* rangeName,
+                                     RooArgSet const& histObsList,
+                                     RooSetProxy const& pdfObsList,
+                                     RooDataHist& dataHist,
+                                     bool histFuncMode) ;
+
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 

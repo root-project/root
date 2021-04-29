@@ -13,7 +13,7 @@
 
 #include "TVirtualRWMutex.h"
 #include "ROOT/TSpinMutex.hxx"
-#include "ROOT/TReentrantRWLock.hxx"
+#include "TReentrantRWLock.hxx"
 
 #include "TBuffer.h" // Needed by ClassDefInlineOverride
 

@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,16 +13,6 @@
 #define ROOT_TGTextEdit
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextEdit                                                           //
-//                                                                      //
-// A TGTextEdit is a specialization of TGTextView. It provides the      //
-// text edit functionality to the static text viewing widget.           //
-// For the messages supported by this widget see the TGView class.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGTextView.h"
 
 class TGPopupMenu;
@@ -32,8 +22,8 @@ class TGTextEditHist;
 class TGTextEdit : public TGTextView {
 
 private:
-   TGTextEdit(const TGTextEdit&); // Not implemented
-   TGTextEdit& operator=(const TGTextEdit&); // Not implemented
+   TGTextEdit(const TGTextEdit&) = delete;
+   TGTextEdit& operator=(const TGTextEdit&) = delete;
 
 public:
    enum EInsertMode { kInsert, kReplace };
@@ -44,18 +34,18 @@ public:
    };
 
 protected:
-   GContext_t       fCursor0GC;     // graphics context for erasing cursor
-   GContext_t       fCursor1GC;     // graphics context for drawing cursor
-   Int_t            fCursorState;   // cursor state (1=drawn, 2=erased)
-   TViewTimer      *fCurBlink;      // cursor blink timer
-   TGPopupMenu     *fMenu;          // popup menu with editor actions
-   TGSearchType    *fSearch;        // structure used by search dialog
-   TGLongPosition   fCurrent;       // current cursor position
-   EInsertMode      fInsertMode;    // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
-   Bool_t           fEnableMenu;    // enable context menu with editor actions
-   TGTextEditHist  *fHistory;       // undo manager
-   Bool_t           fEnableCursorWithoutFocus; // enable cursor visibility when focus went out from
-                                               // text editor window (default is kTRUE)
+   GContext_t       fCursor0GC;     ///< graphics context for erasing cursor
+   GContext_t       fCursor1GC;     ///< graphics context for drawing cursor
+   Int_t            fCursorState;   ///< cursor state (1=drawn, 2=erased)
+   TViewTimer      *fCurBlink;      ///< cursor blink timer
+   TGPopupMenu     *fMenu;          ///< popup menu with editor actions
+   TGSearchType    *fSearch;        ///< structure used by search dialog
+   TGLongPosition   fCurrent;       ///< current cursor position
+   EInsertMode      fInsertMode;    ///< *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
+   Bool_t           fEnableMenu;    ///< enable context menu with editor actions
+   TGTextEditHist  *fHistory;       ///< undo manager
+   Bool_t           fEnableCursorWithoutFocus; ///< enable cursor visibility when focus went out from
+                                               ///< text editor window (default is kTRUE)
 
    static TGGC     *fgCursor0GC;
    static TGGC     *fgCursor1GC;
@@ -73,7 +63,7 @@ protected:
    static const TGGC &GetCursor1GC();
 
 public:
-   TGTextEdit(const TGWindow *parent = 0, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
+   TGTextEdit(const TGWindow *parent = nullptr, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
               UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
               Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());

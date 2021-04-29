@@ -2,10 +2,9 @@
 #
 #===- clang-format-diff.py - ClangFormat Diff Reformatter ----*- python -*--===#
 #
-#                     The LLVM Compiler Infrastructure
-#
-# This file is distributed under the University of Illinois Open Source
-# License. See LICENSE.TXT for details.
+# Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+# See https://llvm.org/LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #
 #===------------------------------------------------------------------------===#
 
@@ -21,14 +20,18 @@ Example usage for git/svn users:
   svn diff --diff-cmd=diff -x-U0 | clang-format-diff.py -i
 
 """
+from __future__ import absolute_import, division, print_function
 
 import argparse
 import difflib
 import re
-import string
 import subprocess
-import StringIO
 import sys
+
+if sys.version_info.major >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 
 def main():
@@ -63,7 +66,7 @@ def main():
   filename = None
   lines_by_file = {}
   for line in sys.stdin:
-    match = re.search('^\+\+\+\ (.*?/){%s}(\S*)' % args.p, line)
+    match = re.search(r'^\+\+\+\ (.*?/){%s}(\S*)' % args.p, line)
     if match:
       filename = match.group(2)
     if filename == None:
@@ -76,7 +79,7 @@ def main():
       if not re.match('^%s$' % args.iregex, filename, re.IGNORECASE):
         continue
 
-    match = re.search('^@@.*\+(\d+)(,(\d+))?', line)
+    match = re.search(r'^@@.*\+(\d+)(,(\d+))?', line)
     if match:
       start_line = int(match.group(1))
       line_count = 1
@@ -84,14 +87,14 @@ def main():
         line_count = int(match.group(3))
       if line_count == 0:
         continue
-      end_line = start_line + line_count - 1;
+      end_line = start_line + line_count - 1
       lines_by_file.setdefault(filename, []).extend(
           ['-lines', str(start_line) + ':' + str(end_line)])
 
   # Reformat files containing changes in place.
-  for filename, lines in lines_by_file.iteritems():
+  for filename, lines in lines_by_file.items():
     if args.i and args.verbose:
-      print 'Formatting', filename
+      print('Formatting {}'.format(filename))
     command = [args.binary, filename]
     if args.i:
       command.append('-i')
@@ -100,20 +103,23 @@ def main():
     command.extend(lines)
     if args.style:
       command.extend(['-style', args.style])
-    p = subprocess.Popen(command, stdout=subprocess.PIPE,
-                         stderr=None, stdin=subprocess.PIPE)
+    p = subprocess.Popen(command,
+                         stdout=subprocess.PIPE,
+                         stderr=None,
+                         stdin=subprocess.PIPE,
+                         universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.returncode != 0:
-      sys.exit(p.returncode);
+      sys.exit(p.returncode)
 
     if not args.i:
       with open(filename) as f:
         code = f.readlines()
-      formatted_code = StringIO.StringIO(stdout).readlines()
+      formatted_code = StringIO(stdout).readlines()
       diff = difflib.unified_diff(code, formatted_code,
                                   filename, filename,
                                   '(before formatting)', '(after formatting)')
-      diff_string = string.join(diff, '')
+      diff_string = ''.join(diff)
       if len(diff_string) > 0:
         sys.stdout.write(diff_string)
 

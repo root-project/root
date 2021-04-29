@@ -1,9 +1,8 @@
 //===-- CrossDSOCFI.cpp - Externalize this module's CFI checks ------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,9 +12,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/IPO/CrossDSOCFI.h"
-#include "llvm/ADT/DenseSet.h"
-#include "llvm/ADT/EquivalenceClasses.h"
+#include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/ADT/Triple.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
@@ -31,7 +30,6 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/IPO.h"
-#include "llvm/Transforms/Utils/BasicBlockUtils.h"
 
 using namespace llvm;
 
@@ -81,7 +79,7 @@ ConstantInt *CrossDSOCFI::extractNumericTypeId(MDNode *MD) {
 void CrossDSOCFI::buildCFICheck(Module &M) {
   // FIXME: verify that __cfi_check ends up near the end of the code section,
   // but before the jump slots created in LowerTypeTests.
-  llvm::DenseSet<uint64_t> TypeIds;
+  SetVector<uint64_t> TypeIds;
   SmallVector<MDNode *, 2> Types;
   for (GlobalObject &GO : M.global_objects()) {
     Types.clear();
@@ -107,14 +105,19 @@ void CrossDSOCFI::buildCFICheck(Module &M) {
   }
 
   LLVMContext &Ctx = M.getContext();
-  Constant *C = M.getOrInsertFunction(
+  FunctionCallee C = M.getOrInsertFunction(
       "__cfi_check", Type::getVoidTy(Ctx), Type::getInt64Ty(Ctx),
       Type::getInt8PtrTy(Ctx), Type::getInt8PtrTy(Ctx));
-  Function *F = dyn_cast<Function>(C);
+  Function *F = dyn_cast<Function>(C.getCallee());
   // Take over the existing function. The frontend emits a weak stub so that the
   // linker knows about the symbol; this pass replaces the function body.
   F->deleteBody();
   F->setAlignment(4096);
+
+  Triple T(M.getTargetTriple());
+  if (T.isARM() || T.isThumb())
+    F->addFnAttr("target-features", "+thumb-mode");
+
   auto args = F->arg_begin();
   Value &CallSiteTypeId = *(args++);
   CallSiteTypeId.setName("CallSiteTypeId");
@@ -129,9 +132,9 @@ void CrossDSOCFI::buildCFICheck(Module &M) {
 
   BasicBlock *TrapBB = BasicBlock::Create(Ctx, "fail", F);
   IRBuilder<> IRBFail(TrapBB);
-  Constant *CFICheckFailFn = M.getOrInsertFunction(
-      "__cfi_check_fail", Type::getVoidTy(Ctx), Type::getInt8PtrTy(Ctx),
-      Type::getInt8PtrTy(Ctx));
+  FunctionCallee CFICheckFailFn =
+      M.getOrInsertFunction("__cfi_check_fail", Type::getVoidTy(Ctx),
+                            Type::getInt8PtrTy(Ctx), Type::getInt8PtrTy(Ctx));
   IRBFail.CreateCall(CFICheckFailFn, {&CFICheckFailData, &Addr});
   IRBFail.CreateBr(ExitBB);
 
@@ -158,9 +161,6 @@ void CrossDSOCFI::buildCFICheck(Module &M) {
 }
 
 bool CrossDSOCFI::runOnModule(Module &M) {
-  if (skipModule(M))
-    return false;
-
   VeryLikelyWeights =
     MDBuilder(M.getContext()).createBranchWeights((1U << 20) - 1, 1);
   if (M.getModuleFlag("Cross-DSO CFI") == nullptr)

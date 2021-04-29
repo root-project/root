@@ -1,14 +1,13 @@
 //===--- TargetCXXABI.h - C++ ABI Target Configuration ----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief Defines the TargetCXXABI class, which abstracts details of the
+/// Defines the TargetCXXABI class, which abstracts details of the
 /// C++ ABI that we're targeting.
 ///
 //===----------------------------------------------------------------------===//
@@ -20,10 +19,10 @@
 
 namespace clang {
 
-/// \brief The basic abstraction for the target C++ ABI.
+/// The basic abstraction for the target C++ ABI.
 class TargetCXXABI {
 public:
-  /// \brief The basic C++ ABI kind.
+  /// The basic C++ ABI kind.
   enum Kind {
     /// The generic Itanium ABI is the standard ABI of most open-source
     /// and Unix-like platforms.  It is the primary ABI targeted by
@@ -131,7 +130,7 @@ public:
 
   Kind getKind() const { return TheKind; }
 
-  /// \brief Does this ABI generally fall into the Itanium family of ABIs?
+  /// Does this ABI generally fall into the Itanium family of ABIs?
   bool isItaniumFamily() const {
     switch (getKind()) {
     case GenericAArch64:
@@ -150,7 +149,7 @@ public:
     llvm_unreachable("bad ABI kind");
   }
 
-  /// \brief Is this ABI an MSVC-compatible ABI?
+  /// Is this ABI an MSVC-compatible ABI?
   bool isMicrosoft() const {
     switch (getKind()) {
     case GenericAArch64:
@@ -169,7 +168,7 @@ public:
     llvm_unreachable("bad ABI kind");
   }
 
-  /// \brief Are member functions differently aligned?
+  /// Are member functions differently aligned?
   ///
   /// Many Itanium-style C++ ABIs require member functions to be aligned, so
   /// that a pointer to such a function is guaranteed to have a zero in the
@@ -199,13 +198,6 @@ public:
     llvm_unreachable("bad ABI kind");
   }
 
-  /// \brief Is the default C++ member function calling convention
-  /// the same as the default calling convention?
-  bool isMemberFunctionCCDefault() const {
-    // Right now, this is always false for Microsoft.
-    return !isMicrosoft();
-  }
-
   /// Are arguments to a call destroyed left to right in the callee?
   /// This is a fundamental language change, since it implies that objects
   /// passed by value do *not* live to the end of the full expression.
@@ -217,25 +209,25 @@ public:
     return isMicrosoft();
   }
 
-  /// \brief Does this ABI have different entrypoints for complete-object
+  /// Does this ABI have different entrypoints for complete-object
   /// and base-subobject constructors?
   bool hasConstructorVariants() const {
     return isItaniumFamily();
   }
 
-  /// \brief Does this ABI allow virtual bases to be primary base classes?
+  /// Does this ABI allow virtual bases to be primary base classes?
   bool hasPrimaryVBases() const {
     return isItaniumFamily();
   }
 
-  /// \brief Does this ABI use key functions?  If so, class data such as the
+  /// Does this ABI use key functions?  If so, class data such as the
   /// vtable is emitted with strong linkage by the TU containing the key
   /// function.
   bool hasKeyFunctions() const {
     return isItaniumFamily();
   }
 
-  /// \brief Can an out-of-line inline function serve as a key function?
+  /// Can an out-of-line inline function serve as a key function?
   ///
   /// This flag is only useful in ABIs where type data (for example,
   /// vtables and type_info objects) are emitted only after processing

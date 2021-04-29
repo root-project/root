@@ -12,13 +12,38 @@
  * \class MemPoolForRooSets
  * \ingroup roofitcore
  * RooArgSet and RooDataSet were using a mempool that guarantees that allocating,
- * de-allocating and re-allocating a set does not yield the same pointer. Since
- * both were using the same logic, the functionality has been put in this class.
- * This class solves RooFit's static destruction order problems by intentionally leaking
- * arenas of the mempool that still contain live objects at the end of the program.
+ * de-allocating and re-allocating a set does not yield the same pointer.
+ * RooFit relies on this, unfortunately, because it compares the pointers of RooArgSets
+ * to figure out caching, e.g. of integrals.
  *
- * When the set types are compared based on a unique ID instead of their pointer,
- * one can go back to normal memory management, and this class becomes obsolete.
+ * Since both RooArgSet and RooDataSet were using the same logic to manage their memory pools,
+ * the functionality has been put here in a single place.
+ * The introduction of this common mempool also solved RooFit's static destruction order
+ * problems by letting arenas of the mempool leak if RooArgSets are still alive.
+ * This is necessary if the tear down of the mempool happens before all RooArgSets of the entire
+ * process have been deleted. This might e.g. happen in static configs for integrators or when a
+ * plot of a PDF is alive when quitting the interpreter.
+ *
+ * ### If this memory pool seems to leak memory:
+ * - It is likely a leaking RooArgSet / RooDataSet
+ * - Disable the memory pool using the `#define` in RooArgSet.h / RooDataSet.h
+ * - Rerun the leak check to find the leaking RooXSet
+ * - Fix it
+ * - Re-enable the memory pool
+ *
+ * \warning Disabling the memory pools might seem to work at first sight, but can eventually
+ * lead to wrong computations. This would happen if the operating system decides
+ * to assign the same memory address when a RooArgSet is deleted and re-allocated, and both the deleted
+ * as well as the new set happen to be used in the same computation graph. RooFit will
+ * think that the cache doesn't have to be recalculated, and will return an outdated result.
+ * These errors are hard to track down, because they might only happen in a specific toy
+ * MC run on a specific OS / architecture.
+ *
+ * ### How to get rid of the memory pool
+ * If RooArgSet or RooDataSet were compared based on a unique ID instead of their pointer,
+ * this class would become obsolete.
+ * It should be tested, though, if handing memory management over to the OS has an impact on speed.
+ * This is less of a worry, though, because OSs got smarter over RooFit's life time.
  */
 
 #ifndef ROOFIT_ROOFITCORE_SRC_MEMPOOLFORROOSETS_H_
@@ -26,38 +51,35 @@
 
 #include "TStorage.h"
 
-#include <vector>
 #include <algorithm>
-#include <set>
+#include <array>
+#include <bitset>
+#include <vector>
 
 template <class RooSet_t, std::size_t POOLSIZE>
 class MemPoolForRooSets {
 
   struct Arena {
     Arena()
-      : ownedMemory{static_cast<RooSet_t *>(TStorage::ObjectAlloc(POOLSIZE * sizeof(RooSet_t)))},
+      : ownedMemory{static_cast<RooSet_t *>(TStorage::ObjectAlloc(2 * POOLSIZE * sizeof(RooSet_t)))},
         memBegin{ownedMemory}, nextItem{ownedMemory},
-        memEnd{memBegin + POOLSIZE}, refCount{0}
-    {
-    }
-
-
+        memEnd{memBegin + 2 * POOLSIZE}
+    {}
 
     Arena(const Arena &) = delete;
     Arena(Arena && other)
       : ownedMemory{other.ownedMemory},
         memBegin{other.memBegin}, nextItem{other.nextItem}, memEnd{other.memEnd},
-        refCount{other.refCount}
-#ifndef NDEBUG
-      , deletedElements { std::move(other.deletedElements) }
-#endif
+        refCount{other.refCount},
+        totCount{other.totCount},
+        assigned{other.assigned}
     {
       // Needed for unique ownership
       other.ownedMemory = nullptr;
       other.refCount = 0;
+      other.totCount = 0;
+      other.assigned = 0;
     }
-
-
 
     Arena & operator=(const Arena &) = delete;
     Arena & operator=(Arena && other)
@@ -66,18 +88,17 @@ class MemPoolForRooSets {
       memBegin = other.memBegin;
       nextItem = other.nextItem;
       memEnd   = other.memEnd;
-#ifndef NDEBUG
-      deletedElements = std::move(other.deletedElements);
-#endif
       refCount     = other.refCount;
+      totCount     = other.totCount;
+      assigned     = other.assigned;
 
       other.ownedMemory = nullptr;
       other.refCount = 0;
+      other.totCount = 0;
+      other.assigned = 0;
 
       return *this;
     }
-
-
 
     // If there is any user left, the arena shouldn't be deleted.
     // If this happens, nevertheless, one has an order of destruction problem.
@@ -104,7 +125,9 @@ class MemPoolForRooSets {
       return inPool(static_cast<const RooSet_t * const>(ptr));
     }
 
-    bool hasSpace() const { return ownedMemory && nextItem < memEnd; }
+    bool hasSpace() const {
+        return totCount < POOLSIZE * sizeof(RooSet_t) && refCount < POOLSIZE;
+    }
     bool empty() const { return refCount == 0; }
 
     void tryFree(bool freeNonFull) {
@@ -118,23 +141,42 @@ class MemPoolForRooSets {
     {
       if (!hasSpace()) return nullptr;
 
-      ++refCount;
-      return nextItem++;
+      for(std::size_t i = 0; i < POOLSIZE; ++i) {
+        if (nextItem == memEnd) {
+          nextItem = ownedMemory;
+        }
+        std::size_t index = (static_cast<RooSet_t *>(nextItem) - memBegin) / 2;
+        nextItem += 2;
+        if(!assigned[index]) {
+          if (cycle[index] == sizeof(RooSet_t)) {
+            continue;
+          }
+          ++refCount;
+          ++totCount;
+          assigned[index] = true;
+          auto ptr = reinterpret_cast<RooSet_t*>(reinterpret_cast<char*>(ownedMemory + 2 * index) + cycle[index]);
+          cycle[index]++;
+          return ptr;
+        }
+      }
+
+      return nullptr;
     }
 
     bool tryDeallocate(void * ptr)
     {
       if (inPool(ptr)) {
         --refCount;
+        tryFree(false);
+        const std::size_t index = ( (reinterpret_cast<const char *>(ptr) - reinterpret_cast<const char *>(memBegin)) / 2) / sizeof(RooSet_t);
 #ifndef NDEBUG
-        const std::size_t index = static_cast<RooSet_t *>(ptr) - memBegin;
-        if (deletedElements.count(index) != 0) {
+        if (assigned[index] == false) {
           std::cerr << "Double delete of " << ptr << " at index " << index << " in Arena with refCount " << refCount
               << ".\n\tArena: |" << memBegin << "\t" << ptr << "\t" << memEnd << "|" << std::endl;
           throw;
         }
-        deletedElements.insert(index);
 #endif
+        assigned[index] = false;
         return true;
       } else
         return false;
@@ -149,10 +191,11 @@ class MemPoolForRooSets {
     const RooSet_t * memBegin;
     RooSet_t * nextItem;
     const RooSet_t * memEnd;
-    std::size_t refCount;
-#ifndef NDEBUG
-    std::set<std::size_t> deletedElements;
-#endif
+    std::size_t refCount = 0;
+    std::size_t totCount = 0;
+
+    std::bitset<POOLSIZE> assigned = {};
+    std::array<int, POOLSIZE> cycle = {};
   };
 
 
@@ -178,20 +221,24 @@ class MemPoolForRooSets {
     }
   }
 
-
-
   /// Allocate memory for the templated set type. Fails if bytes != sizeof(RooSet_t).
   void * allocate(std::size_t bytes)
   {
     if (bytes != sizeof(RooSet_t))
       throw std::bad_alloc();
 
-    if (fArenas.empty() || !fArenas.back().hasSpace()) {
+    if (fArenas.empty()) {
       newArena();
-      prune();
     }
 
     void * ptr = fArenas.back().tryAllocate();
+
+    if (ptr == nullptr) {
+      newArena();
+      prune();
+      ptr = fArenas.back().tryAllocate();
+    }
+
     assert(ptr != nullptr);
 
     return ptr;
@@ -223,7 +270,9 @@ class MemPoolForRooSets {
   ////////////////////////////////////////////////////////////////////////////////
   /// Free memory in arenas that don't have space and no users.
   /// In fTeardownMode, it will also delete the arena that still has space.
-  ///
+  /// Arenas are never deleted, because the pointers of RooArgSets/RooDataSets need
+  /// to be unique for RooFit's caching to work. The arenas only give back the memory to
+  /// the OS.
   void prune()
   {
     for (auto & arena : fArenas) {
@@ -270,7 +319,7 @@ class MemPoolForRooSets {
       Arena ar;
       if (std::none_of(fArenas.begin(), fArenas.end(),
           [&ar](Arena& other){return ar.memoryOverlaps(other);})) {
-        fArenas.push_back(std::move(ar));
+        fArenas.emplace_back(std::move(ar));
         break;
       }
       else {

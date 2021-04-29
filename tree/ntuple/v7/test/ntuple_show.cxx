@@ -267,3 +267,49 @@ TEST(RNTupleShow, Objects)
       + "}\n" };
    EXPECT_EQ(fString, os.str());
 }
+
+
+TEST(RNTupleShow, Collections)
+{
+   std::string rootFileName{"test_ntuple_show_collection.root"};
+   std::string ntupleName{"Collections"};
+   FileRaii fileGuard(rootFileName);
+   {
+      auto model = RNTupleModel::Create();
+      auto collection_model = RNTupleModel::Create();
+      auto int_field = collection_model->MakeField<int>("myInt");
+      auto float_field = collection_model->MakeField<float>("myFloat");
+      auto collection = model->MakeCollection("collection", std::move(collection_model));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
+      *int_field = 0;
+      *float_field = 10.0;
+      collection->Fill();
+      *int_field = 1;
+      *float_field = 20.0;
+      collection->Fill();
+      ntuple->Fill();
+    }
+
+   auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
+   std::ostringstream osData;
+   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, osData);
+   std::string outputData{ std::string("")
+      + "{\n"
+      + "  \"collection\": [{\"myInt\": 0, \"myFloat\": 10}, {\"myInt\": 1, \"myFloat\": 20}]\n"
+      + "}\n" };
+   EXPECT_EQ(outputData, osData.str());
+
+   std::ostringstream osFields;
+   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
+   std::string outputFields{ std::string("")
+      + "************************************ NTUPLE ************************************\n"
+      + "* N-Tuple : Collections                                                        *\n"
+      + "* Entries : 1                                                                  *\n"
+      + "********************************************************************************\n"
+      + "* Field 1           : collection (std::vector<>)                               *\n"
+      + "*   Field 1.1       : _0                                                       *\n"
+      + "*     Field 1.1.1   : myInt (std::int32_t)                                     *\n"
+      + "*     Field 1.1.2   : myFloat (float)                                          *\n"
+      + "********************************************************************************\n" };
+   EXPECT_EQ(outputFields, osFields.str());
+}

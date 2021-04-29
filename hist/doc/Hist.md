@@ -26,8 +26,8 @@ ROOT supports the following histogram types:
 
   - [The Chapter about the Histogram classes in the Users Guide](ftp://root.cern.ch/root/doc/3Histograms.pdf)
   - [The Chapter about Fitting Histogram in the Users Guide](ftp://root.cern.ch/root/doc/5FittingHistograms.pdf)
-  - [How to use the Histogram classes](http://root.cern.ch/drupal/content/how-use-histograms-classes)
-  - [How to Merge files with histograms and Trees](http://root.cern.ch/drupal/content/how-merge-histograms-files)
-  - [How to Fit Histograms](http://root.cern.ch/drupal/content/how-fit-histograms-or-data-points)
-  - [How to Fit find peaks in histograms](http://root.cern.ch/root/html/tutorials/spectrum/peaks.C.html)
-  - [How to convert Hbook/PAW files to ROOT](http://root.cern.ch/drupal/content/how-convert-hbookpaw-files-root-files)
+  - [How to use the Histogram classes](https://root.cern/manual/histograms/)
+  - [How to Merge files with histograms and Trees](https://root.cern/manual/storing_root_objects/#merging-root-files-with-hadd)
+  - [How to Fit Histograms](https://root.cern/manual/fitting/)
+  - [How to Fit find peaks in histograms](https://root.cern/doc/master/peaks_8C.html)
+  - [How to convert Hbook/PAW files to ROOT](https://root-forum.cern.ch/t/how-to-convert-hbook-paw-files-to-root/)

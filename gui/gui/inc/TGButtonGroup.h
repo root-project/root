@@ -12,36 +12,26 @@
 #ifndef ROOT_TGButtonGroup
 #define ROOT_TGButtonGroup
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGButtonGroup, TGVButtonGroup and TGHButtonGroup                     //
-//                                                                      //
-// This header defines button group frames.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
-#include "TMap.h"
-
 
 class TGButton;
-
-
+class TMap;
 
 class TGButtonGroup : public TGGroupFrame {
 
 friend class TGButton;
 
 private:
-   TGButtonGroup(const TGButtonGroup&); // Not implemented
-   TGButtonGroup& operator=(const TGButtonGroup&); // Not implemented
+   TGButtonGroup(const TGButtonGroup&) = delete;
+   TGButtonGroup& operator=(const TGButtonGroup&) = delete;
 
 protected:
-   Bool_t  fState;           // kTRUE if group is enabled
-   Bool_t  fExclGroup;       // kTRUE if group is exclusive
-   Bool_t  fRadioExcl;       // kTRUE if radio buttons are exclusive
-   Bool_t  fDrawBorder;      // kTRUE if border and title are drawn
-   TMap   *fMapOfButtons;    // map of button/id pairs in this group
+   Bool_t  fState;           ///< kTRUE if group is enabled
+   Bool_t  fExclGroup;       ///< kTRUE if group is exclusive
+   Bool_t  fRadioExcl;       ///< kTRUE if radio buttons are exclusive
+   Bool_t  fDrawBorder;      ///< kTRUE if border and title are drawn
+   TMap   *fMapOfButtons;    ///< map of button/id pairs in this group
 
    void Init();
    virtual void DoRedraw();
@@ -76,7 +66,7 @@ public:
    Bool_t IsExclusive() const { return fExclGroup; }
    Bool_t IsRadioButtonExclusive() const  { return fRadioExcl; }
    Bool_t IsBorderDrawn() const { return fDrawBorder; }
-   Int_t  GetCount() const { return fMapOfButtons->GetSize(); }
+   Int_t  GetCount() const;
    Int_t  GetId(TGButton *button) const;
 
    virtual void SetExclusive(Bool_t flag = kTRUE);

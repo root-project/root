@@ -15,7 +15,7 @@ using namespace ROOT::Experimental;
 
 /** Provider for drawing of ROOT7 classes */
 
-class TLeafDraw7Provider : public TLeafProvider<void> {
+class TLeafDraw7Provider : public TLeafProvider {
 public:
    bool AddHist(std::shared_ptr<RPadBase> &subpad, TH1 *hist, const std::string &opt)
    {
@@ -44,6 +44,10 @@ public:
 
       RegisterDraw7(TBranchElement::Class(), [this](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
          return AddHist(subpad, DrawBranchElement(obj), opt);
+      });
+
+      RegisterDraw7(TBranch::Class(), [this](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
+         return AddHist(subpad, DrawBranch(obj), opt);
       });
 
       RegisterDraw7(TVirtualBranchBrowsable::Class(), [this](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {

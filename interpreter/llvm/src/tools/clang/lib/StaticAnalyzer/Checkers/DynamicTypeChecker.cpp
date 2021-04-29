@@ -1,9 +1,8 @@
 //== DynamicTypeChecker.cpp ------------------------------------ -*- C++ -*--=//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -17,7 +16,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "clang/StaticAnalyzer/Core/CheckerManager.h"
@@ -38,8 +37,7 @@ class DynamicTypeChecker : public Checker<check::PostStmt<ImplicitCastExpr>> {
           new BugType(this, "Dynamic and static type mismatch", "Type Error"));
   }
 
-  class DynamicTypeBugVisitor
-      : public BugReporterVisitorImpl<DynamicTypeBugVisitor> {
+  class DynamicTypeBugVisitor : public BugReporterVisitor {
   public:
     DynamicTypeBugVisitor(const MemRegion *Reg) : Reg(Reg) {}
 
@@ -50,7 +48,6 @@ class DynamicTypeChecker : public Checker<check::PostStmt<ImplicitCastExpr>> {
     }
 
     std::shared_ptr<PathDiagnosticPiece> VisitNode(const ExplodedNode *N,
-                                                   const ExplodedNode *PrevN,
                                                    BugReporterContext &BRC,
                                                    BugReport &BR) override;
 
@@ -93,11 +90,10 @@ void DynamicTypeChecker::reportTypeError(QualType DynamicType,
 
 std::shared_ptr<PathDiagnosticPiece>
 DynamicTypeChecker::DynamicTypeBugVisitor::VisitNode(const ExplodedNode *N,
-                                                     const ExplodedNode *PrevN,
                                                      BugReporterContext &BRC,
-                                                     BugReport &BR) {
+                                                     BugReport &) {
   ProgramStateRef State = N->getState();
-  ProgramStateRef StatePrev = PrevN->getState();
+  ProgramStateRef StatePrev = N->getFirstPred()->getState();
 
   DynamicTypeInfo TrackedType = getDynamicTypeInfo(State, Reg);
   DynamicTypeInfo TrackedTypePrev = getDynamicTypeInfo(StatePrev, Reg);
@@ -208,4 +204,8 @@ void DynamicTypeChecker::checkPostStmt(const ImplicitCastExpr *CE,
 
 void ento::registerDynamicTypeChecker(CheckerManager &mgr) {
   mgr.registerChecker<DynamicTypeChecker>();
+}
+
+bool ento::shouldRegisterDynamicTypeChecker(const LangOptions &LO) {
+  return true;
 }

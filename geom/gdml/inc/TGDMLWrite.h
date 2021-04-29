@@ -124,6 +124,7 @@ private:
    Int_t  fgNamingSpeed;                                   //input option for volume and solid naming
    Bool_t fgG4Compatibility;                               //input option for Geant4 compatibility
    XMLDocPointer_t  fGdmlFile;                             //pointer storing xml file
+   TString fDefault_lunit;                                 //Default unit of length (depends on ROOT unit system)
    TString fTopVolumeName;                                 //name of top volume
    TXMLEngine *fGdmlE;                                     //xml engine pointer
 

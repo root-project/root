@@ -1,9 +1,8 @@
 //===- InlineAlways.cpp - Code to inline always_inline functions ----------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -15,15 +14,12 @@
 #include "llvm/Transforms/IPO/AlwaysInliner.h"
 #include "llvm/ADT/SetVector.h"
 #include "llvm/Analysis/AssumptionCache.h"
-#include "llvm/Analysis/CallGraph.h"
 #include "llvm/Analysis/InlineCost.h"
-#include "llvm/Analysis/ProfileSummaryInfo.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Instructions.h"
-#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Transforms/IPO.h"
@@ -35,8 +31,17 @@ using namespace llvm;
 
 #define DEBUG_TYPE "inline"
 
-PreservedAnalyses AlwaysInlinerPass::run(Module &M, ModuleAnalysisManager &) {
-  InlineFunctionInfo IFI;
+PreservedAnalyses AlwaysInlinerPass::run(Module &M,
+                                         ModuleAnalysisManager &MAM) {
+  // Add inline assumptions during code generation.
+  FunctionAnalysisManager &FAM =
+      MAM.getResult<FunctionAnalysisManagerModuleProxy>(M).getManager();
+  std::function<AssumptionCache &(Function &)> GetAssumptionCache =
+      [&](Function &F) -> AssumptionCache & {
+    return FAM.getResult<AssumptionAnalysis>(F);
+  };
+  InlineFunctionInfo IFI(/*cg=*/nullptr, &GetAssumptionCache);
+
   SmallSetVector<CallSite, 16> Calls;
   bool Changed = false;
   SmallVector<Function *, 16> InlinedFunctions;
@@ -53,7 +58,8 @@ PreservedAnalyses AlwaysInlinerPass::run(Module &M, ModuleAnalysisManager &) {
       for (CallSite CS : Calls)
         // FIXME: We really shouldn't be able to fail to inline at this point!
         // We should do something to log or check the inline failures here.
-        Changed |= InlineFunction(CS, IFI);
+        Changed |=
+            InlineFunction(CS, IFI, /*CalleeAAR=*/nullptr, InsertLifetime);
 
       // Remember to try and delete this function afterward. This both avoids
       // re-walking the rest of the module and avoids dealing with any iterator
@@ -132,7 +138,7 @@ Pass *llvm::createAlwaysInlinerLegacyPass(bool InsertLifetime) {
   return new AlwaysInlinerLegacyPass(InsertLifetime);
 }
 
-/// \brief Get the inline cost for the always-inliner.
+/// Get the inline cost for the always-inliner.
 ///
 /// The always inliner *only* handles functions which are marked with the
 /// attribute to force inlining. As such, it is dramatically simpler and avoids
@@ -148,11 +154,20 @@ InlineCost AlwaysInlinerLegacyPass::getInlineCost(CallSite CS) {
   Function *Callee = CS.getCalledFunction();
 
   // Only inline direct calls to functions with always-inline attributes
-  // that are viable for inlining. FIXME: We shouldn't even get here for
-  // declarations.
-  if (Callee && !Callee->isDeclaration() &&
-      CS.hasFnAttr(Attribute::AlwaysInline) && isInlineViable(*Callee))
-    return InlineCost::getAlways();
+  // that are viable for inlining.
+  if (!Callee)
+    return InlineCost::getNever("indirect call");
 
-  return InlineCost::getNever();
+  // FIXME: We shouldn't even get here for declarations.
+  if (Callee->isDeclaration())
+    return InlineCost::getNever("no definition");
+
+  if (!CS.hasFnAttr(Attribute::AlwaysInline))
+    return InlineCost::getNever("no alwaysinline attribute");
+
+  auto IsViable = isInlineViable(*Callee);
+  if (!IsViable)
+    return InlineCost::getNever(IsViable.message);
+
+  return InlineCost::getAlways("always inliner");
 }

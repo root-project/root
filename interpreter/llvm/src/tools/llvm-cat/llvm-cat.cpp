@@ -1,9 +1,8 @@
-//===-- llvm-cat.cpp - LLVM module concatenation utility ------------------===//
+//===- llvm-cat.cpp - LLVM module concatenation utility -------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,25 +12,43 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/raw_ostream.h"
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <system_error>
+#include <vector>
 
 using namespace llvm;
 
+cl::OptionCategory CatCategory("llvm-cat Options");
+
 static cl::opt<bool>
-    BinaryCat("b", cl::desc("Whether to perform binary concatenation"));
+    BinaryCat("b", cl::desc("Whether to perform binary concatenation"),
+              cl::cat(CatCategory));
 
 static cl::opt<std::string> OutputFilename("o", cl::Required,
                                            cl::desc("Output filename"),
-                                           cl::value_desc("filename"));
+                                           cl::value_desc("filename"),
+                                           cl::cat(CatCategory));
 
 static cl::list<std::string> InputFilenames(cl::Positional, cl::ZeroOrMore,
-                                            cl::desc("<input  files>"));
+                                            cl::desc("<input  files>"),
+                                            cl::cat(CatCategory));
 
 int main(int argc, char **argv) {
+  cl::HideUnrelatedOptions(CatCategory);
   cl::ParseCommandLineOptions(argc, argv, "Module concatenation");
 
   ExitOnError ExitOnErr("llvm-cat: ");
@@ -61,7 +78,7 @@ int main(int argc, char **argv) {
         Err.print(argv[0], errs());
         return 1;
       }
-      Writer.writeModule(M.get());
+      Writer.writeModule(*M);
       OwnedMods.push_back(std::move(M));
     }
     Writer.writeStrtab();
@@ -70,8 +87,8 @@ int main(int argc, char **argv) {
   std::error_code EC;
   raw_fd_ostream OS(OutputFilename, EC, sys::fs::OpenFlags::F_None);
   if (EC) {
-    llvm::errs() << argv[0] << ": cannot open " << OutputFilename
-                 << " for writing: " << EC.message();
+    errs() << argv[0] << ": cannot open " << OutputFilename << " for writing: "
+           << EC.message();
     return 1;
   }
 

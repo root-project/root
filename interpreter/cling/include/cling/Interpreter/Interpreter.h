@@ -46,13 +46,13 @@ namespace clang {
   class NamedDecl;
   class Parser;
   class Preprocessor;
+  class PresumedLoc;
   class QualType;
   class RecordDecl;
   class Sema;
   class SourceLocation;
   class SourceManager;
   class Type;
-  class PresumedLoc;
 }
 
 namespace cling {
@@ -67,13 +67,13 @@ namespace cling {
   class ClangInternalState;
   class CompilationOptions;
   class DynamicLibraryManager;
+  class IncrementalCUDADeviceCompiler;
   class IncrementalExecutor;
   class IncrementalParser;
   class InterpreterCallbacks;
   class LookupHelper;
-  class Value;
   class Transaction;
-  class IncrementalCUDADeviceCompiler;
+  class Value;
 
   ///\brief Class that implements the interpreter-like behavior. It manages the
   /// incremental compilation.
@@ -692,6 +692,10 @@ namespace cling {
     clang::CompilerInstance* getCIOrNull() const;
     clang::Sema& getSema() const;
     clang::DiagnosticsEngine& getDiagnostics() const;
+
+    IncrementalCUDADeviceCompiler* getCUDACompiler() const {
+      return m_CUDACompiler.get();
+    }
 
     ///\brief Create suitable default compilation options.
     CompilationOptions makeDefaultCompilationOpts() const;

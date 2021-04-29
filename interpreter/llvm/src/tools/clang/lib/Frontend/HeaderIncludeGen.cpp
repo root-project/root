@@ -1,9 +1,8 @@
-//===--- HeaderIncludes.cpp - Generate Header Includes --------------------===//
+//===-- HeaderIncludeGen.cpp - Generate Header Includes -------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -80,8 +79,22 @@ void clang::AttachHeaderIncludeGen(Preprocessor &PP,
                                    const DependencyOutputOptions &DepOpts,
                                    bool ShowAllHeaders, StringRef OutputPath,
                                    bool ShowDepth, bool MSStyle) {
-  raw_ostream *OutputFile = MSStyle ? &llvm::outs() : &llvm::errs();
+  raw_ostream *OutputFile = &llvm::errs();
   bool OwnsOutputFile = false;
+
+  // Choose output stream, when printing in cl.exe /showIncludes style.
+  if (MSStyle) {
+    switch (DepOpts.ShowIncludesDest) {
+    default:
+      llvm_unreachable("Invalid destination for /showIncludes output!");
+    case ShowIncludesDestination::Stderr:
+      OutputFile = &llvm::errs();
+      break;
+    case ShowIncludesDestination::Stdout:
+      OutputFile = &llvm::outs();
+      break;
+    }
+  }
 
   // Open the output file, if used.
   if (!OutputPath.empty()) {

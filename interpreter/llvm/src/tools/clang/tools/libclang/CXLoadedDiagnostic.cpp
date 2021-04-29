@@ -1,9 +1,8 @@
 //===-- CXLoadedDiagnostic.cpp - Handling of persisent diags ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -21,7 +20,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
-#include "llvm/Bitcode/BitstreamReader.h"
+#include "llvm/Bitstream/BitstreamReader.h"
 #include "llvm/Support/ErrorHandling.h"
 
 using namespace clang;
@@ -47,7 +46,7 @@ public:
   FileManager FakeFiles;
   llvm::DenseMap<unsigned, const FileEntry *> Files;
 
-  /// \brief Copy the string into our own allocator.
+  /// Copy the string into our own allocator.
   const char *copyString(StringRef Blob) {
     char *mem = Alloc.Allocate<char>(Blob.size() + 1);
     memcpy(mem, Blob.data(), Blob.size());

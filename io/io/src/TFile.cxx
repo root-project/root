@@ -14,6 +14,7 @@
 
   The library collecting the ROOT classes dedicated to data input and output.
 
+  The detailed internal description of the \ref rootio is available.
 */
 
 /**
@@ -541,7 +542,7 @@ TFile::~TFile()
    }
 
    if (gDebug)
-      Info("~TFile", "dtor called for %s [%lx]", GetName(),(Long_t)this);
+      Info("~TFile", "dtor called for %s [%zx]", GetName(),(size_t)this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1881,7 +1882,7 @@ TProcessID  *TFile::ReadProcessID(UShort_t pidf)
    snprintf(pidname,32,"ProcessID%d",pidf);
    pid = (TProcessID *)Get(pidname);
    if (gDebug > 0) {
-      printf("ReadProcessID, name=%s, file=%s, pid=%lx\n",pidname,GetName(),(Long_t)pid);
+      printf("ReadProcessID, name=%s, file=%s, pid=%zx\n",pidname,GetName(),(size_t)pid);
    }
    if (!pid) {
       //file->Error("ReadProcessID","Cannot find %s in file %s",pidname,file->GetName());

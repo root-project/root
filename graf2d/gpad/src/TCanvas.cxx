@@ -52,9 +52,7 @@
 class TCanvasInit {
 public:
    TCanvasInit() { TApplication::NeedGraphicsLibs(); }
-};
-static TCanvasInit gCanvasInit;
-
+} gCanvasInit;
 
 //*-*x16 macros/layout_canvas
 
@@ -691,13 +689,13 @@ void TCanvas::Destructor()
 
    if (!TestBit(kNotDeleted)) return;
 
-   if (fContextMenu) { delete fContextMenu; fContextMenu = 0; }
+   SafeDelete(fContextMenu);
    if (!gPad) return;
 
    Close();
 
    //If not yet (batch mode?).
-   delete fPainter;
+   SafeDelete(fPainter);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2624,8 +2622,7 @@ void TCanvas::DeleteCanvasPainter()
       gGLManager->MakeCurrent(fGLDevice);
    }
 
-   delete fPainter;
-   fPainter = 0;
+   SafeDelete(fPainter);
 
    if (fGLDevice != -1) {
       gGLManager->DeleteGLContext(fGLDevice);//?

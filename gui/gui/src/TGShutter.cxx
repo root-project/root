@@ -9,16 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGShutter, TGShutterItem                                             //
-//                                                                      //
-// A shutter widget contains a set of shutter items that can be         //
-// open and closed like a shutter.                                      //
-// This widget is usefull to group a large number of options in         //
-// a number of categories.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGShutter
+    \ingroup guiwidgets
+
+A shutter widget contains a set of shutter items that can be
+open and closed like a shutter.
+This widget is usefull to group a large number of options in
+a number of categories.
+
+*/
+
 
 #include "TGShutter.h"
 #include "TGButton.h"

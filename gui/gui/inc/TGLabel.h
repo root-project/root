@@ -13,14 +13,6 @@
 #define ROOT_TGLabel
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLabel                                                              //
-//                                                                      //
-// This class handles GUI labels.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGDimension.h"
 #include "TGString.h"
@@ -32,23 +24,23 @@ class TGFont;
 class TGLabel : public TGFrame {
 
 protected:
-   TGString      *fText;         // label text
-   UInt_t         fTWidth;       // text width
-   UInt_t         fTHeight;      // text height
-   Int_t          fMLeft;        // margin left
-   Int_t          fMRight;       // margin right
-   Int_t          fMTop;         // margin top
-   Int_t          fMBottom;      // margin bottom
-   Int_t          fTMode;        // text alignment
-   Int_t          f3DStyle;      // 3D style (0 - normal, kRaisedFrame - raised, kSunkenFrame - sunken)
-   Int_t          fWrapLength;   // wrap length
-   Int_t          fTFlags;       // text flags (see TGFont.h  ETextLayoutFlags)
-   Bool_t         fTextChanged;  // has text changed
-   GContext_t     fNormGC;       // graphics context used for drawing label
-   TGFont        *fFont;         // font to draw label
-   TGTextLayout  *fTLayout;      // text layout
-   Bool_t         fHasOwnFont;   // kTRUE - font defined locally,  kFALSE - globally
-   Bool_t         fDisabled;     // if kTRUE label looks disabled (shaded text)
+   TGString      *fText;         ///< label text
+   UInt_t         fTWidth;       ///< text width
+   UInt_t         fTHeight;      ///< text height
+   Int_t          fMLeft;        ///< margin left
+   Int_t          fMRight;       ///< margin right
+   Int_t          fMTop;         ///< margin top
+   Int_t          fMBottom;      ///< margin bottom
+   Int_t          fTMode;        ///< text alignment
+   Int_t          f3DStyle;      ///< 3D style (0 - normal, kRaisedFrame - raised, kSunkenFrame - sunken)
+   Int_t          fWrapLength;   ///< wrap length
+   Int_t          fTFlags;       ///< text flags (see TGFont.h  ETextLayoutFlags)
+   Bool_t         fTextChanged;  ///< has text changed
+   GContext_t     fNormGC;       ///< graphics context used for drawing label
+   TGFont        *fFont;         ///< font to draw label
+   TGTextLayout  *fTLayout;      ///< text layout
+   Bool_t         fHasOwnFont;   ///< kTRUE - font defined locally,  kFALSE - globally
+   Bool_t         fDisabled;     ///< if kTRUE label looks disabled (shaded text)
 
    virtual void DoRedraw();
    virtual void DrawText(GContext_t gc, Int_t x, Int_t y);
@@ -57,8 +49,8 @@ protected:
    static const TGGC    *fgDefaultGC;
 
 private:
-   TGLabel(const TGLabel&);             // not implemented
-   TGLabel& operator=(const TGLabel&);  // not implemented
+   TGLabel(const TGLabel&) = delete;
+   TGLabel& operator=(const TGLabel&) = delete;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -69,7 +61,7 @@ public:
            FontStruct_t font = GetDefaultFontStruct(),
            UInt_t options = kChildFrame,
            Pixel_t back = GetDefaultFrameBackground());
-   TGLabel(const TGWindow *p = 0, const char *text = 0,
+   TGLabel(const TGWindow *p = nullptr, const char *text = nullptr,
            GContext_t norm = GetDefaultGC()(),
            FontStruct_t font = GetDefaultFontStruct(),
            UInt_t options = kChildFrame,

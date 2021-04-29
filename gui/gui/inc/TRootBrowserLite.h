@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,14 +13,6 @@
 #ifndef ROOT_TRootBrowserLite
 #define ROOT_TRootBrowserLite
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootBrowserLite                                                     //
-//                                                                      //
-// This class creates a ROOT object browser (looking like Windows       //
-// Explorer). The widgets used are the new native ROOT GUI widgets.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TBrowserImp.h"
 #include "TGFrame.h"
@@ -66,15 +58,15 @@ private:
    TGLayoutHints       *fMenuBarHelpLayout;
    TGLayoutHints       *fComboLayout;
    TGLayoutHints       *fBarLayout;
-   TGComboBox          *fDrawOption;         // drawing option entry
-   TGLayoutHints       *fExpandLayout;       //
-   Bool_t               fBrowseTextFile;     //
+   TGComboBox          *fDrawOption;         ///< drawing option entry
+   TGLayoutHints       *fExpandLayout;       ///<
+   Bool_t               fBrowseTextFile;     ///<
    TString              fTextFileName;
 
    TList               *fWidgets;
-   TList               *fHistory;            // history of browsing
-   TObject             *fHistoryCursor;      // current hsitory position
-   const TGPicture     *fIconPic;            // icon picture
+   TList               *fHistory;            ///< history of browsing
+   TObject             *fHistoryCursor;      ///< current history position
+   const TGPicture     *fIconPic;            ///< icon picture
 
    void  CreateBrowser(const char *name);
    void  ListTreeHighlight(TGListTreeItem *item);
@@ -97,6 +89,9 @@ private:
    Bool_t  HistoryForward();
    void    ClearHistory();
 
+   TRootBrowserLite(const TRootBrowserLite&) = delete;
+   TRootBrowserLite& operator=(const TRootBrowserLite&) = delete;
+
 protected:
    TGPopupMenu         *fFileMenu;
    TGPopupMenu         *fViewMenu;
@@ -107,67 +102,67 @@ protected:
    TRootIconBox        *fIconBox;
    TGCanvas            *fTreeView;
    TGListTree          *fLt;
-   TGButton            *fToolBarButton[7];  // same size as gToolBarData[]
+   TGButton            *fToolBarButton[7];  ///< same size as gToolBarData[]
    TGFSComboBox        *fFSComboBox;
    TGStatusBar         *fStatusBar;
-   TGListTreeItem      *fListLevel;         // current TGListTree level
-   Bool_t               fTreeLock;          // true when we want to lock TGListTree
-   Int_t                fViewMode;          // current IconBox view mode
-   Int_t                fSortMode;          // current IconBox sort mode
-   TGTextEdit          *fTextEdit;          // contents of browsed text file
+   TGListTreeItem      *fListLevel;         ///< current TGListTree level
+   Bool_t               fTreeLock;          ///< true when we want to lock TGListTree
+   Int_t                fViewMode;          ///< current IconBox view mode
+   Int_t                fSortMode;          ///< current IconBox sort mode
+   TGTextEdit          *fTextEdit;          ///< contents of browsed text file
 
 public:
-   TRootBrowserLite(TBrowser *b = 0, const char *title = "ROOT Browser", UInt_t width = 800, UInt_t height = 500);
+   TRootBrowserLite(TBrowser *b = nullptr, const char *title = "ROOT Browser", UInt_t width = 800, UInt_t height = 500);
    TRootBrowserLite(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TRootBrowserLite();
 
-   virtual void Add(TObject *obj, const char *name = 0, Int_t check = -1);
+   void         Add(TObject *obj, const char *name = nullptr, Int_t check = -1) override;
    virtual void AddToBox(TObject *obj, const char *name);
    virtual void AddToTree(TObject *obj, const char *name, Int_t check = -1);
 
-   virtual void AddCheckBox(TObject *obj, Bool_t check = kFALSE);
-   virtual void CheckObjectItem(TObject *obj, Bool_t check = kFALSE);
-   virtual void RemoveCheckBox(TObject *obj);
+   void         AddCheckBox(TObject *obj, Bool_t check = kFALSE) override;
+   void         CheckObjectItem(TObject *obj, Bool_t check = kFALSE) override;
+   void         RemoveCheckBox(TObject *obj) override;
 
-   virtual void BrowseObj(TObject *obj);             //*SIGNAL*
-   virtual void ExecuteDefaultAction(TObject *obj);  //*SIGNAL*
+   void         BrowseObj(TObject *obj) override;             //*SIGNAL*
+   void         ExecuteDefaultAction(TObject *obj) override;  //*SIGNAL*
    virtual void DoubleClicked(TObject *obj);         //*SIGNAL*
    virtual void Checked(TObject *obj, Bool_t check); //*SIGNAL*
-   virtual void CloseTabs() { }
-   virtual void Iconify() { }
-   virtual void RecursiveRemove(TObject *obj);
-   virtual void Refresh(Bool_t force = kFALSE);
+   void         CloseTabs() override { }
+   void         Iconify() override { }
+   void         RecursiveRemove(TObject *obj) override;
+   void         Refresh(Bool_t force = kFALSE) override;
    virtual void ResizeBrowser() { }
    virtual void ShowToolBar(Bool_t show = kTRUE);
    virtual void ShowStatusBar(Bool_t show = kTRUE);
-   virtual void Show() { MapRaised(); }
-   virtual void SetDefaults(const char *iconStyle = 0, const char *sortBy = 0);
-   virtual Bool_t HandleKey(Event_t *event);
-   virtual void SetStatusText(const char *txt, Int_t col);
+   void         Show() override { MapRaised(); }
+   virtual void SetDefaults(const char *iconStyle = nullptr, const char *sortBy = nullptr);
+   Bool_t       HandleKey(Event_t *event) override;
+   void         SetStatusText(const char *txt, Int_t col) override;
 
    TGListTree      *GetListTree()  const { return fLt; }
    TGFileContainer *GetIconBox()   const;
    TGStatusBar     *GetStatusBar() const { return fStatusBar; }
-   TGMenuBar       *GetMenuBar()   const { return  fMenuBar; }
+   TGMenuBar       *GetMenuBar()   const { return fMenuBar; }
    TGToolBar       *GetToolBar()   const { return fToolBar; }
-   void             SetDrawOption(Option_t *option="");
-   Option_t        *GetDrawOption() const;
+   void             SetDrawOption(Option_t *option = "") override;
+   Option_t        *GetDrawOption() const override;
    void             SetSortMode(Int_t new_mode);
-   TGMainFrame     *GetMainFrame() const { return (TGMainFrame *)this; }
+   TGMainFrame     *GetMainFrame() const override { return (TGMainFrame *)this; }
 
    // overridden from TGMainFrame
-   void     CloseWindow();
-   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   void     ReallyDelete();
+   void     CloseWindow() override;
+   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   void     ReallyDelete() override;
 
-   // auxilary (a la privae) methods
+   // auxiliary (a la private) methods
    void     ExecMacro();
    void     InterruptMacro();
 
-   static TBrowserImp *NewBrowser(TBrowser *b = 0, const char *title = "ROOT Browser", UInt_t width = 800, UInt_t height = 500, Option_t *opt="");
+   static TBrowserImp *NewBrowser(TBrowser *b = nullptr, const char *title = "ROOT Browser", UInt_t width = 800, UInt_t height = 500, Option_t *opt="");
    static TBrowserImp *NewBrowser(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt="");
 
-   ClassDef(TRootBrowserLite,0)  //ROOT native GUI version of browser
+   ClassDefOverride(TRootBrowserLite,0)  //ROOT native GUI version of browser
 };
 
 #endif

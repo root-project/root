@@ -342,6 +342,6 @@
   source="" target="fBinSumw2" \
   code="{ fBinSumw2.Reset(); }"
 
-
+#pragma read sourceClass="TF1" targetClass="TF1" version="[10]" source="TF1AbsComposition* fComposition_ptr" target="fComposition" code="{ fComposition.reset(onfile.fComposition_ptr); onfile.fComposition_ptr = nullptr; }"
 
 #endif

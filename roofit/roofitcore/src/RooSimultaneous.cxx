@@ -805,9 +805,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   RooArgList wgtCompList ;
 //RooAbsPdf* pdf ;
   RooRealProxy* proxy ;
-  TIterator* pIter = _pdfProxyList.MakeIterator() ;
+  TIter pIter = _pdfProxyList.MakeIterator() ;
   Double_t sumWeight(0) ;
-  while((proxy=(RooRealProxy*)pIter->Next())) {
+  while((proxy=(RooRealProxy*)pIter.Next())) {
 
     idxCatClone->setLabel(proxy->name()) ;
 
@@ -1076,15 +1076,10 @@ RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
                                 correctForBinVolume, showProgress) == 0)
     return 0;
 
-  Double_t sum = 0;
-  for (int i=0 ; i<hist->numEntries() ; i++) {
-    hist->get(i) ;
-    sum += hist->weight();
-  }
+  const double sum = hist->sumEntries();
   if (sum != 0) {
     for (int i=0 ; i<hist->numEntries() ; i++) {
-      hist->get(i) ;
-      hist->set (hist->weight() / sum);
+      hist->set(i, hist->weight(i) / sum, 0.);
     }
   }
 

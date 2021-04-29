@@ -301,6 +301,7 @@ Int_t  TGeoManager::fgNumThreads      = 0;
 UInt_t TGeoManager::fgExportPrecision = 17;
 TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kG4Units;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
+static Bool_t gGeometryLocked = kTRUE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -1690,7 +1691,8 @@ void TGeoManager::AnimateTracks(Double_t tmin, Double_t tmax, Int_t nframes, Opt
    if (opt.Contains("/G")) geomanim = kTRUE;
    SetTminTmax(0,0);
    DrawTracks(opt.Data());
-   Double_t start[6], end[6];
+   Double_t start[6] = {0,0,0,0,0,0};
+   Double_t end[6] = {0,0,0,0,0,0};
    Double_t dd[6] = {0,0,0,0,0,0};
    Double_t dlat=0, dlong=0, dpsi=0;
    if (geomanim) {
@@ -4006,7 +4008,32 @@ void TGeoManager::SetUseParallelWorldNav(Bool_t flag)
    if (fParallelWorld->CloseGeometry()) fUsePWNav=kTRUE;
 }
 
+Bool_t TGeoManager::LockDefaultUnits(Bool_t new_value)    {
+  Bool_t val = gGeometryLocked;
+  gGeometryLocked = new_value;
+  return val;
+}
+
 TGeoManager::EDefaultUnits TGeoManager::GetDefaultUnits()
 {
   return fgDefaultUnits;
+}
+
+void TGeoManager::SetDefaultUnits(EDefaultUnits new_value)
+{
+   if ( fgDefaultUnits == new_value )   {
+      return;
+   }
+   else if ( gGeometryLocked )    {
+      ::Fatal("TGeoManager","The system of units may only be changed once, \n"
+	      "BEFORE any elements and materials are created! \n"
+	      "Alternatively unlock the default units at own risk.");
+   }
+   else if ( new_value == kG4Units )   {
+      ::Warning("TGeoManager","Changing system of units to Geant4 units (mm, ns, MeV).");
+   }
+   else if ( new_value == kRootUnits )   {
+      ::Warning("TGeoManager","Changing system of units to ROOT units (cm, s, GeV).");
+   }
+   fgDefaultUnits = new_value;
 }

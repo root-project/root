@@ -164,7 +164,13 @@ private:
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName()), fValue(fField.GenerateValue())
    {
-      Detail::RFieldFuse::ConnectRecursively(fieldId, *pageSource, fField);
+      fField.SetOnDiskId(fieldId);
+      fField.ConnectPageStorage(*pageSource);
+      for (auto &f : fField) {
+         auto subFieldId = pageSource->GetDescriptor().FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId());
+         f.SetOnDiskId(subFieldId);
+         f.ConnectPageStorage(*pageSource);
+      }
    }
 
 public:
@@ -242,13 +248,25 @@ public:
                                  collectionStart.GetIndex() + size);
    }
 
+   /// Raises an exception if there is no field with the given name.
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, fCollectionFieldId);
+      if (fieldId == kInvalidDescriptorId) {
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '"
+            + fSource->GetDescriptor().GetName() + "'"
+         ));
+      }
       return RNTupleView<T>(fieldId, fSource);
    }
+   /// Raises an exception if there is no field with the given name.
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, fCollectionFieldId);
+      if (fieldId == kInvalidDescriptorId) {
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '"
+            + fSource->GetDescriptor().GetName() + "'"
+         ));
+      }
       return RNTupleViewCollection(fieldId, fSource);
    }
 

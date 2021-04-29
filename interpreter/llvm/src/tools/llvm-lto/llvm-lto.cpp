@@ -1,9 +1,8 @@
-//===-- llvm-lto: a simple command-line program to link modules with LTO --===//
+//===- llvm-lto: a simple command-line program to link modules with LTO ---===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,28 +11,54 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "llvm-c/lto.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSet.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
-#include "llvm/CodeGen/CommandFlags.h"
+#include "llvm/CodeGen/CommandFlags.inc"
+#include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/ModuleSummaryIndex.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/LTO/legacy/LTOCodeGenerator.h"
 #include "llvm/LTO/legacy/LTOModule.h"
 #include "llvm/LTO/legacy/ThinLTOCodeGenerator.h"
+#include "llvm/Support/Allocator.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/Error.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/FileSystem.h"
-#include "llvm/Support/ManagedStatic.h"
+#include "llvm/Support/InitLLVM.h"
+#include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
-#include "llvm/Support/PrettyStackTrace.h"
-#include "llvm/Support/Signals.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/ToolOutputFile.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Target/TargetOptions.h"
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <cstdlib>
 #include <list>
+#include <map>
+#include <memory>
+#include <string>
+#include <system_error>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 using namespace llvm;
 
@@ -128,6 +153,22 @@ static cl::opt<std::string> ThinLTOModuleId(
 static cl::opt<std::string>
     ThinLTOCacheDir("thinlto-cache-dir", cl::desc("Enable ThinLTO caching."));
 
+static cl::opt<int>
+    ThinLTOCachePruningInterval("thinlto-cache-pruning-interval",
+    cl::init(1200), cl::desc("Set ThinLTO cache pruning interval."));
+
+static cl::opt<uint64_t> ThinLTOCacheMaxSizeBytes(
+    "thinlto-cache-max-size-bytes",
+    cl::desc("Set ThinLTO cache pruning directory maximum size in bytes."));
+
+static cl::opt<int>
+    ThinLTOCacheMaxSizeFiles("thinlto-cache-max-size-files", cl::init(1000000),
+    cl::desc("Set ThinLTO cache pruning directory maximum number of files."));
+
+static cl::opt<unsigned>
+    ThinLTOCacheEntryExpiration("thinlto-cache-entry-expiration", cl::init(604800) /* 1w */,
+    cl::desc("Set ThinLTO cache entry expiration time."));
+
 static cl::opt<std::string> ThinLTOSaveTempsPrefix(
     "thinlto-save-temps",
     cl::desc("Save ThinLTO temp files using filenames created by adding "
@@ -163,6 +204,10 @@ static cl::opt<bool> ListSymbolsOnly(
     "list-symbols-only", cl::init(false),
     cl::desc("Instead of running LTO, list the symbols in each IR file"));
 
+static cl::opt<bool> ListDependentLibrariesOnly(
+    "list-dependent-libraries-only", cl::init(false),
+    cl::desc("Instead of running LTO, list the dependent libraries in each IR file"));
+
 static cl::opt<bool> SetMergedModule(
     "set-merged-module", cl::init(false),
     cl::desc("Use the first input module as the merged module"));
@@ -179,10 +224,12 @@ static cl::opt<bool> CheckHasObjC(
     cl::desc("Only check if the module has objective-C defined in it"));
 
 namespace {
+
 struct ModuleInfo {
   std::vector<bool> CanBeHidden;
 };
-}
+
+} // end anonymous namespace
 
 static void handleDiagnostics(lto_codegen_diagnostic_severity_t Severity,
                               const char *Msg, void *) {
@@ -205,34 +252,40 @@ static void handleDiagnostics(lto_codegen_diagnostic_severity_t Severity,
 }
 
 static std::string CurrentActivity;
-static void diagnosticHandler(const DiagnosticInfo &DI, void *Context) {
-  raw_ostream &OS = errs();
-  OS << "llvm-lto: ";
-  switch (DI.getSeverity()) {
-  case DS_Error:
-    OS << "error";
-    break;
-  case DS_Warning:
-    OS << "warning";
-    break;
-  case DS_Remark:
-    OS << "remark";
-    break;
-  case DS_Note:
-    OS << "note";
-    break;
+
+namespace {
+  struct LLVMLTODiagnosticHandler : public DiagnosticHandler {
+    bool handleDiagnostics(const DiagnosticInfo &DI) override {
+      raw_ostream &OS = errs();
+      OS << "llvm-lto: ";
+      switch (DI.getSeverity()) {
+      case DS_Error:
+        OS << "error";
+        break;
+      case DS_Warning:
+        OS << "warning";
+        break;
+      case DS_Remark:
+        OS << "remark";
+        break;
+      case DS_Note:
+        OS << "note";
+        break;
+      }
+      if (!CurrentActivity.empty())
+        OS << ' ' << CurrentActivity;
+      OS << ": ";
+  
+      DiagnosticPrinterRawOStream DP(OS);
+      DI.print(DP);
+      OS << '\n';
+  
+      if (DI.getSeverity() == DS_Error)
+        exit(1);
+      return true;
+    }
+  };
   }
-  if (!CurrentActivity.empty())
-    OS << ' ' << CurrentActivity;
-  OS << ": ";
-
-  DiagnosticPrinterRawOStream DP(OS);
-  DI.print(DP);
-  OS << '\n';
-
-  if (DI.getSeverity() == DS_Error)
-    exit(1);
-}
 
 static void error(const Twine &Msg) {
   errs() << "llvm-lto: " << Msg << '\n';
@@ -263,7 +316,8 @@ getLocalLTOModule(StringRef Path, std::unique_ptr<MemoryBuffer> &Buffer,
   Buffer = std::move(BufferOrErr.get());
   CurrentActivity = ("loading file '" + Path + "'").str();
   std::unique_ptr<LLVMContext> Context = llvm::make_unique<LLVMContext>();
-  Context->setDiagnosticHandler(diagnosticHandler, nullptr, true);
+  Context->setDiagnosticHandler(llvm::make_unique<LLVMLTODiagnosticHandler>(),
+                                true);
   ErrorOr<std::unique_ptr<LTOModule>> Ret = LTOModule::createInLocalContext(
       std::move(Context), Buffer->getBufferStart(), Buffer->getBufferSize(),
       Options, Path);
@@ -277,7 +331,7 @@ void printIndexStats() {
   for (auto &Filename : InputFilenames) {
     ExitOnError ExitOnErr("llvm-lto: error loading file '" + Filename + "': ");
     std::unique_ptr<ModuleSummaryIndex> Index =
-        ExitOnErr(llvm::getModuleSummaryIndexForFile(Filename));
+        ExitOnErr(getModuleSummaryIndexForFile(Filename));
     // Skip files without a module summary.
     if (!Index)
       report_fatal_error(Filename + " does not contain an index");
@@ -303,7 +357,7 @@ void printIndexStats() {
   }
 }
 
-/// \brief List symbols in each IR file.
+/// List symbols in each IR file.
 ///
 /// The main point here is to provide lit-testable coverage for the LTOModule
 /// functionality that's exposed by the C API to list symbols.  Moreover, this
@@ -322,18 +376,46 @@ static void listSymbols(const TargetOptions &Options) {
   }
 }
 
+static std::unique_ptr<MemoryBuffer> loadFile(StringRef Filename) {
+    ExitOnError ExitOnErr("llvm-lto: error loading file '" + Filename.str() +
+        "': ");
+    return ExitOnErr(errorOrToExpected(MemoryBuffer::getFileOrSTDIN(Filename)));
+}
+
+static void listDependentLibraries() {
+  for (auto &Filename : InputFilenames) {
+    auto Buffer = loadFile(Filename);
+    std::string E;
+    std::unique_ptr<lto::InputFile> Input(LTOModule::createInputFile(
+        Buffer->getBufferStart(), Buffer->getBufferSize(), Filename.c_str(),
+        E));
+    if (!Input)
+      error(E);
+
+    // List the dependent libraries.
+    outs() << Filename << ":\n";
+    for (size_t I = 0, C = LTOModule::getDependentLibraryCount(Input.get());
+         I != C; ++I) {
+      size_t L = 0;
+      const char *S = LTOModule::getDependentLibrary(Input.get(), I, &L);
+      assert(S);
+      outs() << StringRef(S, L) << "\n";
+    }
+  }
+}
+
 /// Create a combined index file from the input IR files and write it.
 ///
 /// This is meant to enable testing of ThinLTO combined index generation,
 /// currently available via the gold plugin via -thinlto.
 static void createCombinedModuleSummaryIndex() {
-  ModuleSummaryIndex CombinedIndex;
+  ModuleSummaryIndex CombinedIndex(/*HaveGVs=*/false);
   uint64_t NextModuleId = 0;
   for (auto &Filename : InputFilenames) {
     ExitOnError ExitOnErr("llvm-lto: error loading file '" + Filename + "': ");
     std::unique_ptr<MemoryBuffer> MB =
         ExitOnErr(errorOrToExpected(MemoryBuffer::getFileOrSTDIN(Filename)));
-    ExitOnErr(readModuleSummaryIndex(*MB, CombinedIndex, ++NextModuleId));
+    ExitOnErr(readModuleSummaryIndex(*MB, CombinedIndex, NextModuleId++));
   }
   std::error_code EC;
   assert(!OutputFilename.empty());
@@ -396,25 +478,34 @@ std::unique_ptr<ModuleSummaryIndex> loadCombinedIndex() {
     report_fatal_error("Missing -thinlto-index for ThinLTO promotion stage");
   ExitOnError ExitOnErr("llvm-lto: error loading file '" + ThinLTOIndex +
                         "': ");
-  return ExitOnErr(llvm::getModuleSummaryIndexForFile(ThinLTOIndex));
+  return ExitOnErr(getModuleSummaryIndexForFile(ThinLTOIndex));
 }
 
-static std::unique_ptr<Module> loadModule(StringRef Filename,
-                                          LLVMContext &Ctx) {
-  SMDiagnostic Err;
-  std::unique_ptr<Module> M(parseIRFile(Filename, Err, Ctx));
-  if (!M) {
-    Err.print("llvm-lto", errs());
-    report_fatal_error("Can't load module for file " + Filename);
-  }
-  maybeVerifyModule(*M);
+static std::unique_ptr<lto::InputFile> loadInputFile(MemoryBufferRef Buffer) {
+  ExitOnError ExitOnErr("llvm-lto: error loading input '" +
+                        Buffer.getBufferIdentifier().str() + "': ");
+  return ExitOnErr(lto::InputFile::create(Buffer));
+}
 
+static std::unique_ptr<Module> loadModuleFromInput(lto::InputFile &File,
+                                                   LLVMContext &CTX) {
+  auto &Mod = File.getSingleBitcodeModule();
+  auto ModuleOrErr = Mod.parseModule(CTX);
+  if (!ModuleOrErr) {
+    handleAllErrors(ModuleOrErr.takeError(), [&](ErrorInfoBase &EIB) {
+      SMDiagnostic Err = SMDiagnostic(Mod.getModuleIdentifier(),
+                                      SourceMgr::DK_Error, EIB.message());
+      Err.print("llvm-lto", errs());
+    });
+    report_fatal_error("Can't load module, abort.");
+  }
+  maybeVerifyModule(**ModuleOrErr);
   if (ThinLTOModuleId.getNumOccurrences()) {
     if (InputFilenames.size() != 1)
       report_fatal_error("Can't override the module id for multiple files");
-    M->setModuleIdentifier(ThinLTOModuleId);
+    (*ModuleOrErr)->setModuleIdentifier(ThinLTOModuleId);
   }
-  return M;
+  return std::move(*ModuleOrErr);
 }
 
 static void writeModuleToFile(Module &TheModule, StringRef Filename) {
@@ -422,7 +513,7 @@ static void writeModuleToFile(Module &TheModule, StringRef Filename) {
   raw_fd_ostream OS(Filename, EC, sys::fs::OpenFlags::F_None);
   error(EC, "error opening the file '" + Filename + "'");
   maybeVerifyModule(TheModule);
-  WriteBitcodeToFile(&TheModule, OS, /* ShouldPreserveUseListOrder */ true);
+  WriteBitcodeToFile(TheModule, OS, /* ShouldPreserveUseListOrder */ true);
 }
 
 class ThinLTOProcessing {
@@ -433,6 +524,10 @@ public:
     ThinGenerator.setCodePICModel(getRelocModel());
     ThinGenerator.setTargetOptions(Options);
     ThinGenerator.setCacheDir(ThinLTOCacheDir);
+    ThinGenerator.setCachePruningInterval(ThinLTOCachePruningInterval);
+    ThinGenerator.setCacheEntryExpiration(ThinLTOCacheEntryExpiration);
+    ThinGenerator.setCacheMaxSizeFiles(ThinLTOCacheMaxSizeFiles);
+    ThinGenerator.setCacheMaxSizeBytes(ThinLTOCacheMaxSizeBytes);
     ThinGenerator.setFreestanding(EnableFreestanding);
 
     // Add all the exported symbols to the table of symbols to preserve.
@@ -489,7 +584,6 @@ private:
     raw_fd_ostream OS(OutputFilename, EC, sys::fs::OpenFlags::F_None);
     error(EC, "error opening the file '" + OutputFilename + "'");
     WriteIndexToFile(*CombinedIndex, OS);
-    return;
   }
 
   /// Load the combined index from disk, then compute and generate
@@ -508,11 +602,16 @@ private:
 
     auto Index = loadCombinedIndex();
     for (auto &Filename : InputFilenames) {
+      LLVMContext Ctx;
+      auto Buffer = loadFile(Filename);
+      auto Input = loadInputFile(Buffer->getMemBufferRef());
+      auto TheModule = loadModuleFromInput(*Input, Ctx);
+
       // Build a map of module to the GUIDs and summary objects that should
       // be written to its index.
       std::map<std::string, GVSummaryMapTy> ModuleToSummariesForIndex;
-      ThinLTOCodeGenerator::gatherImportedSummariesForModule(
-          Filename, *Index, ModuleToSummariesForIndex);
+      ThinGenerator.gatherImportedSummariesForModule(
+          *TheModule, *Index, ModuleToSummariesForIndex, *Input);
 
       std::string OutputName = OutputFilename;
       if (OutputName.empty()) {
@@ -540,12 +639,17 @@ private:
 
     auto Index = loadCombinedIndex();
     for (auto &Filename : InputFilenames) {
+      LLVMContext Ctx;
+      auto Buffer = loadFile(Filename);
+      auto Input = loadInputFile(Buffer->getMemBufferRef());
+      auto TheModule = loadModuleFromInput(*Input, Ctx);
       std::string OutputName = OutputFilename;
       if (OutputName.empty()) {
         OutputName = Filename + ".imports";
       }
-      OutputName = getThinLTOOutputFile(OutputName, OldPrefix, NewPrefix);
-      ThinLTOCodeGenerator::emitImports(Filename, OutputName, *Index);
+      OutputName =
+          getThinLTOOutputFile(OutputName, OldPrefix, NewPrefix);
+      ThinGenerator.emitImports(*TheModule, OutputName, *Index, *Input);
     }
   }
 
@@ -563,9 +667,11 @@ private:
     auto Index = loadCombinedIndex();
     for (auto &Filename : InputFilenames) {
       LLVMContext Ctx;
-      auto TheModule = loadModule(Filename, Ctx);
+      auto Buffer = loadFile(Filename);
+      auto Input = loadInputFile(Buffer->getMemBufferRef());
+      auto TheModule = loadModuleFromInput(*Input, Ctx);
 
-      ThinGenerator.promote(*TheModule, *Index);
+      ThinGenerator.promote(*TheModule, *Index, *Input);
 
       std::string OutputName = OutputFilename;
       if (OutputName.empty()) {
@@ -594,9 +700,11 @@ private:
 
     for (auto &Filename : InputFilenames) {
       LLVMContext Ctx;
-      auto TheModule = loadModule(Filename, Ctx);
+      auto Buffer = loadFile(Filename);
+      auto Input = loadInputFile(Buffer->getMemBufferRef());
+      auto TheModule = loadModuleFromInput(*Input, Ctx);
 
-      ThinGenerator.crossModuleImport(*TheModule, *Index);
+      ThinGenerator.crossModuleImport(*TheModule, *Index, *Input);
 
       std::string OutputName = OutputFilename;
       if (OutputName.empty()) {
@@ -625,9 +733,11 @@ private:
 
     for (auto &Filename : InputFilenames) {
       LLVMContext Ctx;
-      auto TheModule = loadModule(Filename, Ctx);
+      auto Buffer = loadFile(Filename);
+      auto Input = loadInputFile(Buffer->getMemBufferRef());
+      auto TheModule = loadModuleFromInput(*Input, Ctx);
 
-      ThinGenerator.internalize(*TheModule, *Index);
+      ThinGenerator.internalize(*TheModule, *Index, *Input);
 
       std::string OutputName = OutputFilename;
       if (OutputName.empty()) {
@@ -648,7 +758,9 @@ private:
 
     for (auto &Filename : InputFilenames) {
       LLVMContext Ctx;
-      auto TheModule = loadModule(Filename, Ctx);
+      auto Buffer = loadFile(Filename);
+      auto Input = loadInputFile(Buffer->getMemBufferRef());
+      auto TheModule = loadModuleFromInput(*Input, Ctx);
 
       ThinGenerator.optimize(*TheModule);
 
@@ -745,14 +857,10 @@ private:
   /// Load the combined index from disk, then load every file referenced by
 };
 
-} // namespace thinlto
+} // end namespace thinlto
 
 int main(int argc, char **argv) {
-  // Print a stack trace if we signal out.
-  sys::PrintStackTraceOnErrorSignal(argv[0]);
-  PrettyStackTraceProgram X(argc, argv);
-
-  llvm_shutdown_obj Y; // Call llvm_shutdown() on exit.
+  InitLLVM X(argc, argv);
   cl::ParseCommandLineOptions(argc, argv, "llvm LTO linker\n");
 
   if (OptLevel < '0' || OptLevel > '3')
@@ -772,6 +880,11 @@ int main(int argc, char **argv) {
     return 0;
   }
 
+  if (ListDependentLibrariesOnly) {
+    listDependentLibraries();
+    return 0;
+  }
+
   if (IndexStats) {
     printIndexStats();
     return 0;
@@ -784,7 +897,7 @@ int main(int argc, char **argv) {
       std::unique_ptr<MemoryBuffer> BufferOrErr =
           ExitOnErr(errorOrToExpected(MemoryBuffer::getFile(Filename)));
       auto Buffer = std::move(BufferOrErr.get());
-      if (ExitOnErr(llvm::isBitcodeContainingObjCCategory(*Buffer)))
+      if (ExitOnErr(isBitcodeContainingObjCCategory(*Buffer)))
         outs() << "Bitcode " << Filename << " contains ObjC\n";
       else
         outs() << "Bitcode " << Filename << " does not contain ObjC\n";
@@ -808,7 +921,8 @@ int main(int argc, char **argv) {
   unsigned BaseArg = 0;
 
   LLVMContext Context;
-  Context.setDiagnosticHandler(diagnosticHandler, nullptr, true);
+  Context.setDiagnosticHandler(llvm::make_unique<LLVMLTODiagnosticHandler>(),
+                               true);
 
   LTOCodeGenerator CodeGen(Context);
 
@@ -822,7 +936,7 @@ int main(int argc, char **argv) {
   CodeGen.setTargetOptions(Options);
   CodeGen.setShouldRestoreGlobalsLinkage(RestoreGlobalsLinkage);
 
-  llvm::StringSet<llvm::MallocAllocator> DSOSymbolsSet;
+  StringSet<MallocAllocator> DSOSymbolsSet;
   for (unsigned i = 0; i < DSOSymbols.size(); ++i)
     DSOSymbolsSet.insert(DSOSymbols[i]);
 
@@ -899,7 +1013,7 @@ int main(int argc, char **argv) {
         error("writing merged module failed.");
     }
 
-    std::list<tool_output_file> OSs;
+    std::list<ToolOutputFile> OSs;
     std::vector<raw_pwrite_stream *> OSPtrs;
     for (unsigned I = 0; I != Parallelism; ++I) {
       std::string PartFilename = OutputFilename;
@@ -916,7 +1030,7 @@ int main(int argc, char **argv) {
       // Diagnostic messages should have been printed by the handler.
       error("error compiling the code");
 
-    for (tool_output_file &OS : OSs)
+    for (ToolOutputFile &OS : OSs)
       OS.keep();
   } else {
     if (Parallelism != 1)

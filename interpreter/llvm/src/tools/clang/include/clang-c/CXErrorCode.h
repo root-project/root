@@ -1,9 +1,9 @@
 /*===-- clang-c/CXErrorCode.h - C Index Error Codes  --------------*- C -*-===*\
 |*                                                                            *|
-|*                     The LLVM Compiler Infrastructure                       *|
-|*                                                                            *|
-|* This file is distributed under the University of Illinois Open Source      *|
-|* License. See LICENSE.TXT for details.                                      *|
+|* Part of the LLVM Project, under the Apache License v2.0 with LLVM          *|
+|* Exceptions.                                                                *|
+|* See https://llvm.org/LICENSE.txt for license information.                  *|
+|* SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception                    *|
 |*                                                                            *|
 |*===----------------------------------------------------------------------===*|
 |*                                                                            *|
@@ -21,19 +21,19 @@ extern "C" {
 #endif
 
 /**
- * \brief Error codes returned by libclang routines.
+ * Error codes returned by libclang routines.
  *
  * Zero (\c CXError_Success) is the only error code indicating success.  Other
  * error codes, including not yet assigned non-zero values, indicate errors.
  */
 enum CXErrorCode {
   /**
-   * \brief No error.
+   * No error.
    */
   CXError_Success = 0,
 
   /**
-   * \brief A generic error code, no further details are available.
+   * A generic error code, no further details are available.
    *
    * Errors of this kind can get their own specific error codes in future
    * libclang versions.
@@ -41,18 +41,18 @@ enum CXErrorCode {
   CXError_Failure = 1,
 
   /**
-   * \brief libclang crashed while performing the requested operation.
+   * libclang crashed while performing the requested operation.
    */
   CXError_Crashed = 2,
 
   /**
-   * \brief The function detected that the arguments violate the function
+   * The function detected that the arguments violate the function
    * contract.
    */
   CXError_InvalidArguments = 3,
 
   /**
-   * \brief An AST deserialization error has occurred.
+   * An AST deserialization error has occurred.
    */
   CXError_ASTReadError = 4
 };

@@ -1,6 +1,7 @@
 #include "ROOTUnitTestSupport.h"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RResultHandle.hxx"
+#include "TH1D.h" // for NullResultPtr test case
 
 #include "gtest/gtest.h"
 
@@ -51,6 +52,32 @@ TEST(RResultPtr, MoveCtor)
    EXPECT_EQ(*res, 1u);
 }
 
+TEST(RResultPtr, NullResultPtr)
+{
+   // build null result ptr
+   ROOT::RDF::RResultPtr<TH1D> r1;
+
+   // set result ptr to null with a move
+   auto r2 = ROOT::RDataFrame(1).Histo1D<ULong64_t>("rdfentry_");
+   ROOT::RDF::RResultPtr<TH1D>(std::move(r2));
+
+   // make sure they have consistent, sane behavior
+   auto checkResPtr = [](ROOT::RDF::RResultPtr<TH1D> &r) {
+      EXPECT_EQ(r, nullptr);
+      EXPECT_EQ(r.GetPtr(), nullptr);
+      EXPECT_FALSE(r.IsReady());
+      EXPECT_FALSE(bool(r));
+
+      EXPECT_THROW(r.GetValue(), std::runtime_error);
+      EXPECT_THROW(r.OnPartialResult(1, [] (TH1D&) {}), std::runtime_error);
+      EXPECT_THROW(r->GetEntries(), std::runtime_error);
+      EXPECT_THROW(*r, std::runtime_error);
+   };
+
+   checkResPtr(r1);
+   checkResPtr(r2);
+}
+
 TEST(RResultPtr, ImplConv)
 {
    RResultPtr<Dummy> p1;
@@ -80,6 +107,14 @@ TEST(RResultPtr, IsReady)
 
    p.GetValue();
    EXPECT_TRUE(p.IsReady());
+}
+
+// ROOT-9785, ROOT-10321
+TEST(RResultPtr, CastToBase)
+{
+   auto ptr = ROOT::RDataFrame(42).Histo1D<ULong64_t>("rdfentry_");
+   auto basePtr = ROOT::RDF::RResultPtr<TH1>(ptr);
+   EXPECT_EQ(basePtr->GetEntries(), 42ll);
 }
 
 TEST(RResultHandle, Ctor)

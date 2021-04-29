@@ -863,9 +863,9 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  TIterator* iter = aset.createIterator() ;
+  TIter iter = aset.createIterator() ;
   RooAbsArg* sarg ;
-  while((sarg=(RooAbsArg*)iter->Next())) {
+  while((sarg=(RooAbsArg*)iter.Next())) {
     // If missing, either import or report error
     if (!arg(sarg->GetName())) {
       if (importMissing) {
@@ -878,7 +878,7 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
     }
     wsargs.add(*arg(sarg->GetName())) ;
   }
-  delete iter ;
+
 
   // Install named set
   _namedSets[name].removeAll() ;
@@ -1433,9 +1433,9 @@ RooArgSet RooWorkspace::allFunctions() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) &&
 	!parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
 	!parg->IsA()->InheritsFrom(RooConstVar::Class()) &&
@@ -1456,9 +1456,9 @@ RooArgSet RooWorkspace::allCatFunctions() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) &&
 	!parg->IsA()->InheritsFrom(RooCategory::Class())) {
       ret.add(*parg) ;
@@ -1477,9 +1477,9 @@ RooArgSet RooWorkspace::allResolutionModels() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
       if (!((RooResolutionModel*)parg)->isConvolved()) {
 	ret.add(*parg) ;
@@ -1498,9 +1498,9 @@ RooArgSet RooWorkspace::allPdfs() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
 	!parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
       ret.add(*parg) ;
@@ -1938,10 +1938,10 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   // Make list of all immediate base classes of this class
   TString baseNameList ;
   TList* bl = tc->GetListOfBases() ;
-  TIterator* iter = bl->MakeIterator() ;
+  TIter iter = bl->MakeIterator() ;
   TBaseClass* base ;
   list<TClass*> bases ;
-  while((base=(TBaseClass*)iter->Next())) {
+  while((base=(TBaseClass*)iter.Next())) {
     if (baseNameList.Length()>0) {
       baseNameList += "," ;
     }
@@ -1986,9 +1986,9 @@ Bool_t RooWorkspace::makeDir()
   TString title= Form("TDirectory representation of RooWorkspace %s",GetName()) ;
   _dir = new WSDir(GetName(),title.Data(),this) ;
 
-  TIterator* iter = componentIterator() ;
+  TIter iter = componentIterator() ;
   RooAbsArg* darg ;
-  while((darg=(RooAbsArg*)iter->Next())) {
+  while((darg=(RooAbsArg*)iter.Next())) {
     if (darg->IsA() != RooConstVar::Class()) {
       _dir->InternalAppend(darg) ;
     }
@@ -2680,19 +2680,19 @@ void RooWorkspace::Streamer(TBuffer &R__b)
      // Reinstate clients here
 
 
-     for (auto iterx : extClients) {
+     for (auto &iterx : extClients) {
        for (auto client : iterx.second) {
          iterx.first->_clientList.Add(client);
        }
      }
 
-     for (auto iterx : extValueClients) {
+     for (auto &iterx : extValueClients) {
        for (auto client : iterx.second) {
          iterx.first->_clientListValue.Add(client);
        }
      }
 
-     for (auto iterx : extShapeClients) {
+     for (auto &iterx : extShapeClients) {
        for (auto client : iterx.second) {
          iterx.first->_clientListShape.Add(client);
        }
@@ -3162,7 +3162,7 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
    _genObjects.RecursiveRemove(removedObj);
    _studyMods.RecursiveRemove(removedObj);
 
-   for(auto c : _namedSets) {
+   for(auto &c : _namedSets) {
       c.second.RecursiveRemove(removedObj);
    }
 

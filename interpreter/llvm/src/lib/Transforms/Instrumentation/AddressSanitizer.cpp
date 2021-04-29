@@ -1,67 +1,89 @@
-//===-- AddressSanitizer.cpp - memory error detector ------------*- C++ -*-===//
+//===- AddressSanitizer.cpp - memory error detector -----------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
 // This file is a part of AddressSanitizer, an address sanity checker.
 // Details of the algorithm:
-//  http://code.google.com/p/address-sanitizer/wiki/AddressSanitizerAlgorithm
+//  https://github.com/google/sanitizers/wiki/AddressSanitizerAlgorithm
 //
 //===----------------------------------------------------------------------===//
 
+#include "llvm/Transforms/Instrumentation/AddressSanitizer.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DepthFirstIterator.h"
-#include "llvm/ADT/SetVector.h"
-#include "llvm/ADT/SmallSet.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Analysis/MemoryBuiltins.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/BinaryFormat/MachO.h"
 #include "llvm/IR/Argument.h"
+#include "llvm/IR/Attributes.h"
+#include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CallSite.h"
+#include "llvm/IR/Comdat.h"
+#include "llvm/IR/Constant.h"
+#include "llvm/IR/Constants.h"
 #include "llvm/IR/DIBuilder.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/DebugInfoMetadata.h"
+#include "llvm/IR/DebugLoc.h"
+#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/GlobalAlias.h"
+#include "llvm/IR/GlobalValue.h"
+#include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/InstVisitor.h"
+#include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/Instruction.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/MDBuilder.h"
+#include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
+#include "llvm/IR/Use.h"
+#include "llvm/IR/Value.h"
 #include "llvm/MC/MCSectionMachO.h"
+#include "llvm/Pass.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
-#include "llvm/Support/DataTypes.h"
 #include "llvm/Support/Debug.h"
-#include "llvm/Support/Endian.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/MathExtras.h"
 #include "llvm/Support/ScopedPrinter.h"
-#include "llvm/Support/SwapByteOrder.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Instrumentation.h"
-#include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/ASanStackFrameLayout.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
-#include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/ModuleUtils.h"
 #include "llvm/Transforms/Utils/PromoteMemToReg.h"
 #include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <iomanip>
 #include <limits>
+#include <memory>
 #include <sstream>
 #include <string>
-#include <system_error>
+#include <tuple>
 
 using namespace llvm;
 
@@ -70,21 +92,32 @@ using namespace llvm;
 static const uint64_t kDefaultShadowScale = 3;
 static const uint64_t kDefaultShadowOffset32 = 1ULL << 29;
 static const uint64_t kDefaultShadowOffset64 = 1ULL << 44;
-static const uint64_t kDynamicShadowSentinel = ~(uint64_t)0;
-static const uint64_t kIOSShadowOffset32 = 1ULL << 30;
-static const uint64_t kIOSSimShadowOffset32 = 1ULL << 30;
-static const uint64_t kIOSSimShadowOffset64 = kDefaultShadowOffset64;
-static const uint64_t kSmallX86_64ShadowOffset = 0x7FFF8000;  // < 2G.
+static const uint64_t kDynamicShadowSentinel =
+    std::numeric_limits<uint64_t>::max();
+static const uint64_t kSmallX86_64ShadowOffsetBase = 0x7FFFFFFF;  // < 2G.
+static const uint64_t kSmallX86_64ShadowOffsetAlignMask = ~0xFFFULL;
 static const uint64_t kLinuxKasan_ShadowOffset64 = 0xdffffc0000000000;
-static const uint64_t kPPC64_ShadowOffset64 = 1ULL << 41;
+static const uint64_t kPPC64_ShadowOffset64 = 1ULL << 44;
 static const uint64_t kSystemZ_ShadowOffset64 = 1ULL << 52;
 static const uint64_t kMIPS32_ShadowOffset32 = 0x0aaa0000;
 static const uint64_t kMIPS64_ShadowOffset64 = 1ULL << 37;
 static const uint64_t kAArch64_ShadowOffset64 = 1ULL << 36;
 static const uint64_t kFreeBSD_ShadowOffset32 = 1ULL << 30;
 static const uint64_t kFreeBSD_ShadowOffset64 = 1ULL << 46;
+static const uint64_t kNetBSD_ShadowOffset32 = 1ULL << 30;
+static const uint64_t kNetBSD_ShadowOffset64 = 1ULL << 46;
+static const uint64_t kNetBSDKasan_ShadowOffset64 = 0xdfff900000000000;
 static const uint64_t kPS4CPU_ShadowOffset64 = 1ULL << 40;
 static const uint64_t kWindowsShadowOffset32 = 3ULL << 28;
+static const uint64_t kEmscriptenShadowOffset = 0;
+
+static const uint64_t kMyriadShadowScale = 5;
+static const uint64_t kMyriadMemoryOffset32 = 0x80000000ULL;
+static const uint64_t kMyriadMemorySize32 = 0x20000000ULL;
+static const uint64_t kMyriadTagShift = 29;
+static const uint64_t kMyriadDDRTag = 4;
+static const uint64_t kMyriadCacheBitMask32 = 0x40000000ULL;
+
 // The shadow memory space is dynamically allocated.
 static const uint64_t kWindowsShadowOffset64 = kDynamicShadowSentinel;
 
@@ -111,15 +144,15 @@ static const char *const kAsanUnregisterElfGlobalsName =
 static const char *const kAsanPoisonGlobalsName = "__asan_before_dynamic_init";
 static const char *const kAsanUnpoisonGlobalsName = "__asan_after_dynamic_init";
 static const char *const kAsanInitName = "__asan_init";
-static const char *const kAsanVersionCheckName =
-    "__asan_version_mismatch_check_v8";
+static const char *const kAsanVersionCheckNamePrefix =
+    "__asan_version_mismatch_check_v";
 static const char *const kAsanPtrCmp = "__sanitizer_ptr_cmp";
 static const char *const kAsanPtrSub = "__sanitizer_ptr_sub";
 static const char *const kAsanHandleNoReturnName = "__asan_handle_no_return";
 static const int kMaxAsanStackMallocSizeClass = 10;
 static const char *const kAsanStackMallocNameTemplate = "__asan_stack_malloc_";
 static const char *const kAsanStackFreeNameTemplate = "__asan_stack_free_";
-static const char *const kAsanGenPrefix = "__asan_gen_";
+static const char *const kAsanGenPrefix = "___asan_gen_";
 static const char *const kODRGenPrefix = "__odr_asan_gen_";
 static const char *const kSanCovGenPrefix = "__sancov_gen_";
 static const char *const kAsanSetShadowPrefix = "__asan_set_shadow_";
@@ -148,9 +181,11 @@ static const size_t kNumberOfAccessSizes = 5;
 static const unsigned kAllocaRzSize = 32;
 
 // Command-line flags.
+
 static cl::opt<bool> ClEnableKasan(
     "asan-kernel", cl::desc("Enable KernelAddressSanitizer instrumentation"),
     cl::Hidden, cl::init(false));
+
 static cl::opt<bool> ClRecover(
     "asan-recover",
     cl::desc("Enable recovery mode (continue-after-error)."),
@@ -160,21 +195,37 @@ static cl::opt<bool> ClRecover(
 static cl::opt<bool> ClInstrumentReads("asan-instrument-reads",
                                        cl::desc("instrument read instructions"),
                                        cl::Hidden, cl::init(true));
+
 static cl::opt<bool> ClInstrumentWrites(
     "asan-instrument-writes", cl::desc("instrument write instructions"),
     cl::Hidden, cl::init(true));
+
 static cl::opt<bool> ClInstrumentAtomics(
     "asan-instrument-atomics",
     cl::desc("instrument atomic instructions (rmw, cmpxchg)"), cl::Hidden,
     cl::init(true));
+
 static cl::opt<bool> ClAlwaysSlowPath(
     "asan-always-slow-path",
     cl::desc("use instrumentation with slow path for all accesses"), cl::Hidden,
     cl::init(false));
+
 static cl::opt<bool> ClForceDynamicShadow(
     "asan-force-dynamic-shadow",
     cl::desc("Load shadow address into a local variable for each function"),
     cl::Hidden, cl::init(false));
+
+static cl::opt<bool>
+    ClWithIfunc("asan-with-ifunc",
+                cl::desc("Access dynamic shadow through an ifunc global on "
+                         "platforms that support this"),
+                cl::Hidden, cl::init(true));
+
+static cl::opt<bool> ClWithIfuncSuppressRemat(
+    "asan-with-ifunc-suppress-remat",
+    cl::desc("Suppress rematerialization of dynamic shadow address by passing "
+             "it through inline asm in prologue."),
+    cl::Hidden, cl::init(true));
 
 // This flag limits the number of instructions to be instrumented
 // in any given BB. Normally, this should be set to unlimited (INT_MAX),
@@ -184,6 +235,7 @@ static cl::opt<int> ClMaxInsnsToInstrumentPerBB(
     "asan-max-ins-per-bb", cl::init(10000),
     cl::desc("maximal number of instructions to instrument in any given BB"),
     cl::Hidden);
+
 // This flag may need to be replaced with -f[no]asan-stack.
 static cl::opt<bool> ClStack("asan-stack", cl::desc("Handle stack memory"),
                              cl::Hidden, cl::init(true));
@@ -192,32 +244,50 @@ static cl::opt<uint32_t> ClMaxInlinePoisoningSize(
     cl::desc(
         "Inline shadow poisoning for blocks up to the given size in bytes."),
     cl::Hidden, cl::init(64));
+
 static cl::opt<bool> ClUseAfterReturn("asan-use-after-return",
                                       cl::desc("Check stack-use-after-return"),
                                       cl::Hidden, cl::init(true));
+
 static cl::opt<bool> ClRedzoneByvalArgs("asan-redzone-byval-args",
                                         cl::desc("Create redzones for byval "
                                                  "arguments (extra copy "
                                                  "required)"), cl::Hidden,
                                         cl::init(true));
+
 static cl::opt<bool> ClUseAfterScope("asan-use-after-scope",
                                      cl::desc("Check stack-use-after-scope"),
                                      cl::Hidden, cl::init(false));
+
 // This flag may need to be replaced with -f[no]asan-globals.
 static cl::opt<bool> ClGlobals("asan-globals",
                                cl::desc("Handle global objects"), cl::Hidden,
                                cl::init(true));
+
 static cl::opt<bool> ClInitializers("asan-initialization-order",
                                     cl::desc("Handle C++ initializer order"),
                                     cl::Hidden, cl::init(true));
+
 static cl::opt<bool> ClInvalidPointerPairs(
     "asan-detect-invalid-pointer-pair",
     cl::desc("Instrument <, <=, >, >=, - with pointer operands"), cl::Hidden,
     cl::init(false));
+
+static cl::opt<bool> ClInvalidPointerCmp(
+    "asan-detect-invalid-pointer-cmp",
+    cl::desc("Instrument <, <=, >, >= with pointer operands"), cl::Hidden,
+    cl::init(false));
+
+static cl::opt<bool> ClInvalidPointerSub(
+    "asan-detect-invalid-pointer-sub",
+    cl::desc("Instrument - operations with pointer operands"), cl::Hidden,
+    cl::init(false));
+
 static cl::opt<unsigned> ClRealignStack(
     "asan-realign-stack",
     cl::desc("Realign stack to the value of this flag (power of two)"),
     cl::Hidden, cl::init(32));
+
 static cl::opt<int> ClInstrumentationWithCallsThreshold(
     "asan-instrumentation-with-call-threshold",
     cl::desc(
@@ -225,14 +295,17 @@ static cl::opt<int> ClInstrumentationWithCallsThreshold(
         "this number of memory accesses, use callbacks instead of "
         "inline checks (-1 means never use callbacks)."),
     cl::Hidden, cl::init(7000));
+
 static cl::opt<std::string> ClMemoryAccessCallbackPrefix(
     "asan-memory-access-callback-prefix",
     cl::desc("Prefix for memory access callbacks"), cl::Hidden,
     cl::init("__asan_"));
+
 static cl::opt<bool>
     ClInstrumentDynamicAllocas("asan-instrument-dynamic-allocas",
                                cl::desc("instrument dynamic allocas"),
                                cl::Hidden, cl::init(true));
+
 static cl::opt<bool> ClSkipPromotableAllocas(
     "asan-skip-promotable-allocas",
     cl::desc("Do not instrument promotable allocas"), cl::Hidden,
@@ -241,24 +314,30 @@ static cl::opt<bool> ClSkipPromotableAllocas(
 // These flags allow to change the shadow mapping.
 // The shadow mapping looks like
 //    Shadow = (Mem >> scale) + offset
+
 static cl::opt<int> ClMappingScale("asan-mapping-scale",
                                    cl::desc("scale of asan shadow mapping"),
                                    cl::Hidden, cl::init(0));
-static cl::opt<unsigned long long> ClMappingOffset(
-    "asan-mapping-offset",
-    cl::desc("offset of asan shadow mapping [EXPERIMENTAL]"), cl::Hidden,
-    cl::init(0));
+
+static cl::opt<uint64_t>
+    ClMappingOffset("asan-mapping-offset",
+                    cl::desc("offset of asan shadow mapping [EXPERIMENTAL]"),
+                    cl::Hidden, cl::init(0));
 
 // Optimization flags. Not user visible, used mostly for testing
 // and benchmarking the tool.
+
 static cl::opt<bool> ClOpt("asan-opt", cl::desc("Optimize instrumentation"),
                            cl::Hidden, cl::init(true));
+
 static cl::opt<bool> ClOptSameTemp(
     "asan-opt-same-temp", cl::desc("Instrument the same temp just once"),
     cl::Hidden, cl::init(true));
+
 static cl::opt<bool> ClOptGlobals("asan-opt-globals",
                                   cl::desc("Don't instrument scalar globals"),
                                   cl::Hidden, cl::init(true));
+
 static cl::opt<bool> ClOptStack(
     "asan-opt-stack", cl::desc("Don't instrument scalar stack variables"),
     cl::Hidden, cl::init(false));
@@ -274,10 +353,14 @@ static cl::opt<uint32_t> ClForceExperiment(
     cl::init(0));
 
 static cl::opt<bool>
-    ClUsePrivateAliasForGlobals("asan-use-private-alias",
-                                cl::desc("Use private aliases for global"
-                                         " variables"),
-                                cl::Hidden, cl::init(false));
+    ClUsePrivateAlias("asan-use-private-alias",
+                      cl::desc("Use private aliases for global variables"),
+                      cl::Hidden, cl::init(false));
+
+static cl::opt<bool>
+    ClUseOdrIndicator("asan-use-odr-indicator",
+                      cl::desc("Use odr indicators to improve ODR reporting"),
+                      cl::Hidden, cl::init(false));
 
 static cl::opt<bool>
     ClUseGlobalsGC("asan-globals-live-support",
@@ -293,14 +376,19 @@ static cl::opt<bool>
                  cl::Hidden, cl::init(true));
 
 // Debug flags.
+
 static cl::opt<int> ClDebug("asan-debug", cl::desc("debug"), cl::Hidden,
                             cl::init(0));
+
 static cl::opt<int> ClDebugStack("asan-debug-stack", cl::desc("debug stack"),
                                  cl::Hidden, cl::init(0));
+
 static cl::opt<std::string> ClDebugFunc("asan-debug-func", cl::Hidden,
                                         cl::desc("Debug func"));
+
 static cl::opt<int> ClDebugMin("asan-debug-min", cl::desc("Debug min inst"),
                                cl::Hidden, cl::init(-1));
+
 static cl::opt<int> ClDebugMax("asan-debug-max", cl::desc("Debug max inst"),
                                cl::Hidden, cl::init(-1));
 
@@ -312,127 +400,69 @@ STATISTIC(NumOptimizedAccessesToStackVar,
           "Number of optimized accesses to stack vars");
 
 namespace {
-/// Frontend-provided metadata for source location.
-struct LocationMetadata {
-  StringRef Filename;
-  int LineNo;
-  int ColumnNo;
-
-  LocationMetadata() : Filename(), LineNo(0), ColumnNo(0) {}
-
-  bool empty() const { return Filename.empty(); }
-
-  void parse(MDNode *MDN) {
-    assert(MDN->getNumOperands() == 3);
-    MDString *DIFilename = cast<MDString>(MDN->getOperand(0));
-    Filename = DIFilename->getString();
-    LineNo =
-        mdconst::extract<ConstantInt>(MDN->getOperand(1))->getLimitedValue();
-    ColumnNo =
-        mdconst::extract<ConstantInt>(MDN->getOperand(2))->getLimitedValue();
-  }
-};
-
-/// Frontend-provided metadata for global variables.
-class GlobalsMetadata {
- public:
-  struct Entry {
-    Entry() : SourceLoc(), Name(), IsDynInit(false), IsBlacklisted(false) {}
-    LocationMetadata SourceLoc;
-    StringRef Name;
-    bool IsDynInit;
-    bool IsBlacklisted;
-  };
-
-  GlobalsMetadata() : inited_(false) {}
-
-  void reset() {
-    inited_ = false;
-    Entries.clear();
-  }
-
-  void init(Module &M) {
-    assert(!inited_);
-    inited_ = true;
-    NamedMDNode *Globals = M.getNamedMetadata("llvm.asan.globals");
-    if (!Globals) return;
-    for (auto MDN : Globals->operands()) {
-      // Metadata node contains the global and the fields of "Entry".
-      assert(MDN->getNumOperands() == 5);
-      auto *GV = mdconst::extract_or_null<GlobalVariable>(MDN->getOperand(0));
-      // The optimizer may optimize away a global entirely.
-      if (!GV) continue;
-      // We can already have an entry for GV if it was merged with another
-      // global.
-      Entry &E = Entries[GV];
-      if (auto *Loc = cast_or_null<MDNode>(MDN->getOperand(1)))
-        E.SourceLoc.parse(Loc);
-      if (auto *Name = cast_or_null<MDString>(MDN->getOperand(2)))
-        E.Name = Name->getString();
-      ConstantInt *IsDynInit =
-          mdconst::extract<ConstantInt>(MDN->getOperand(3));
-      E.IsDynInit |= IsDynInit->isOne();
-      ConstantInt *IsBlacklisted =
-          mdconst::extract<ConstantInt>(MDN->getOperand(4));
-      E.IsBlacklisted |= IsBlacklisted->isOne();
-    }
-  }
-
-  /// Returns metadata entry for a given global.
-  Entry get(GlobalVariable *G) const {
-    auto Pos = Entries.find(G);
-    return (Pos != Entries.end()) ? Pos->second : Entry();
-  }
-
- private:
-  bool inited_;
-  DenseMap<GlobalVariable *, Entry> Entries;
-};
 
 /// This struct defines the shadow mapping using the rule:
 ///   shadow = (mem >> Scale) ADD-or-OR Offset.
+/// If InGlobal is true, then
+///   extern char __asan_shadow[];
+///   shadow = (mem >> Scale) + &__asan_shadow
 struct ShadowMapping {
   int Scale;
   uint64_t Offset;
   bool OrShadowOffset;
+  bool InGlobal;
 };
+
+} // end anonymous namespace
 
 static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
                                       bool IsKasan) {
   bool IsAndroid = TargetTriple.isAndroid();
   bool IsIOS = TargetTriple.isiOS() || TargetTriple.isWatchOS();
   bool IsFreeBSD = TargetTriple.isOSFreeBSD();
+  bool IsNetBSD = TargetTriple.isOSNetBSD();
   bool IsPS4CPU = TargetTriple.isPS4CPU();
   bool IsLinux = TargetTriple.isOSLinux();
-  bool IsPPC64 = TargetTriple.getArch() == llvm::Triple::ppc64 ||
-                 TargetTriple.getArch() == llvm::Triple::ppc64le;
-  bool IsSystemZ = TargetTriple.getArch() == llvm::Triple::systemz;
-  bool IsX86 = TargetTriple.getArch() == llvm::Triple::x86;
-  bool IsX86_64 = TargetTriple.getArch() == llvm::Triple::x86_64;
-  bool IsMIPS32 = TargetTriple.getArch() == llvm::Triple::mips ||
-                  TargetTriple.getArch() == llvm::Triple::mipsel;
-  bool IsMIPS64 = TargetTriple.getArch() == llvm::Triple::mips64 ||
-                  TargetTriple.getArch() == llvm::Triple::mips64el;
-  bool IsAArch64 = TargetTriple.getArch() == llvm::Triple::aarch64;
+  bool IsPPC64 = TargetTriple.getArch() == Triple::ppc64 ||
+                 TargetTriple.getArch() == Triple::ppc64le;
+  bool IsSystemZ = TargetTriple.getArch() == Triple::systemz;
+  bool IsX86_64 = TargetTriple.getArch() == Triple::x86_64;
+  bool IsMIPS32 = TargetTriple.isMIPS32();
+  bool IsMIPS64 = TargetTriple.isMIPS64();
+  bool IsArmOrThumb = TargetTriple.isARM() || TargetTriple.isThumb();
+  bool IsAArch64 = TargetTriple.getArch() == Triple::aarch64;
   bool IsWindows = TargetTriple.isOSWindows();
   bool IsFuchsia = TargetTriple.isOSFuchsia();
+  bool IsMyriad = TargetTriple.getVendor() == llvm::Triple::Myriad;
+  bool IsEmscripten = TargetTriple.isOSEmscripten();
 
   ShadowMapping Mapping;
 
+  Mapping.Scale = IsMyriad ? kMyriadShadowScale : kDefaultShadowScale;
+  if (ClMappingScale.getNumOccurrences() > 0) {
+    Mapping.Scale = ClMappingScale;
+  }
+
   if (LongSize == 32) {
-    // Android is always PIE, which means that the beginning of the address
-    // space is always available.
     if (IsAndroid)
-      Mapping.Offset = 0;
+      Mapping.Offset = kDynamicShadowSentinel;
     else if (IsMIPS32)
       Mapping.Offset = kMIPS32_ShadowOffset32;
     else if (IsFreeBSD)
       Mapping.Offset = kFreeBSD_ShadowOffset32;
+    else if (IsNetBSD)
+      Mapping.Offset = kNetBSD_ShadowOffset32;
     else if (IsIOS)
-      // If we're targeting iOS and x86, the binary is built for iOS simulator.
-      Mapping.Offset = IsX86 ? kIOSSimShadowOffset32 : kIOSShadowOffset32;
+      Mapping.Offset = kDynamicShadowSentinel;
     else if (IsWindows)
       Mapping.Offset = kWindowsShadowOffset32;
+    else if (IsEmscripten)
+      Mapping.Offset = kEmscriptenShadowOffset;
+    else if (IsMyriad) {
+      uint64_t ShadowOffset = (kMyriadMemoryOffset32 + kMyriadMemorySize32 -
+                               (kMyriadMemorySize32 >> Mapping.Scale));
+      Mapping.Offset = ShadowOffset - (kMyriadMemoryOffset32 >> Mapping.Scale);
+    }
     else
       Mapping.Offset = kDefaultShadowOffset32;
   } else {  // LongSize == 64
@@ -444,24 +474,27 @@ static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
       Mapping.Offset = kPPC64_ShadowOffset64;
     else if (IsSystemZ)
       Mapping.Offset = kSystemZ_ShadowOffset64;
-    else if (IsFreeBSD)
+    else if (IsFreeBSD && !IsMIPS64)
       Mapping.Offset = kFreeBSD_ShadowOffset64;
-    else if (IsPS4CPU)
+    else if (IsNetBSD) {
+      if (IsKasan)
+        Mapping.Offset = kNetBSDKasan_ShadowOffset64;
+      else
+        Mapping.Offset = kNetBSD_ShadowOffset64;
+    } else if (IsPS4CPU)
       Mapping.Offset = kPS4CPU_ShadowOffset64;
     else if (IsLinux && IsX86_64) {
       if (IsKasan)
         Mapping.Offset = kLinuxKasan_ShadowOffset64;
       else
-        Mapping.Offset = kSmallX86_64ShadowOffset;
+        Mapping.Offset = (kSmallX86_64ShadowOffsetBase &
+                          (kSmallX86_64ShadowOffsetAlignMask << Mapping.Scale));
     } else if (IsWindows && IsX86_64) {
       Mapping.Offset = kWindowsShadowOffset64;
     } else if (IsMIPS64)
       Mapping.Offset = kMIPS64_ShadowOffset64;
     else if (IsIOS)
-      // If we're targeting iOS and x86, the binary is built for iOS simulator.
-      // We are using dynamic shadow offset on the 64-bit devices.
-      Mapping.Offset =
-        IsX86_64 ? kIOSSimShadowOffset64 : kDynamicShadowSentinel;
+      Mapping.Offset = kDynamicShadowSentinel;
     else if (IsAArch64)
       Mapping.Offset = kAArch64_ShadowOffset64;
     else
@@ -470,11 +503,6 @@ static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
 
   if (ClForceDynamicShadow) {
     Mapping.Offset = kDynamicShadowSentinel;
-  }
-
-  Mapping.Scale = kDefaultShadowScale;
-  if (ClMappingScale.getNumOccurrences() > 0) {
-    Mapping.Scale = ClMappingScale;
   }
 
   if (ClMappingOffset.getNumOccurrences() > 0) {
@@ -489,6 +517,9 @@ static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
   Mapping.OrShadowOffset = !IsAArch64 && !IsPPC64 && !IsSystemZ && !IsPS4CPU &&
                            !(Mapping.Offset & (Mapping.Offset - 1)) &&
                            Mapping.Offset != kDynamicShadowSentinel;
+  bool IsAndroidWithIfuncSupport =
+      IsAndroid && !TargetTriple.isAndroidVersionLT(21);
+  Mapping.InGlobal = ClWithIfunc && IsAndroidWithIfuncSupport && IsArmOrThumb;
 
   return Mapping;
 }
@@ -499,23 +530,57 @@ static size_t RedzoneSizeForScale(int MappingScale) {
   return std::max(32U, 1U << MappingScale);
 }
 
-/// AddressSanitizer: instrument the code in module to find memory bugs.
-struct AddressSanitizer : public FunctionPass {
-  explicit AddressSanitizer(bool CompileKernel = false, bool Recover = false,
-                            bool UseAfterScope = false)
-      : FunctionPass(ID), CompileKernel(CompileKernel || ClEnableKasan),
-        Recover(Recover || ClRecover),
-        UseAfterScope(UseAfterScope || ClUseAfterScope),
-        LocalDynamicShadow(nullptr) {
-    initializeAddressSanitizerPass(*PassRegistry::getPassRegistry());
+namespace {
+
+/// Module analysis for getting various metadata about the module.
+class ASanGlobalsMetadataWrapperPass : public ModulePass {
+public:
+  static char ID;
+
+  ASanGlobalsMetadataWrapperPass() : ModulePass(ID) {
+    initializeASanGlobalsMetadataWrapperPassPass(
+        *PassRegistry::getPassRegistry());
   }
+
+  bool runOnModule(Module &M) override {
+    GlobalsMD = GlobalsMetadata(M);
+    return false;
+  }
+
   StringRef getPassName() const override {
-    return "AddressSanitizerFunctionPass";
+    return "ASanGlobalsMetadataWrapperPass";
   }
+
   void getAnalysisUsage(AnalysisUsage &AU) const override {
-    AU.addRequired<DominatorTreeWrapperPass>();
-    AU.addRequired<TargetLibraryInfoWrapperPass>();
+    AU.setPreservesAll();
   }
+
+  GlobalsMetadata &getGlobalsMD() { return GlobalsMD; }
+
+private:
+  GlobalsMetadata GlobalsMD;
+};
+
+char ASanGlobalsMetadataWrapperPass::ID = 0;
+
+/// AddressSanitizer: instrument the code in module to find memory bugs.
+struct AddressSanitizer {
+  AddressSanitizer(Module &M, GlobalsMetadata &GlobalsMD,
+                   bool CompileKernel = false, bool Recover = false,
+                   bool UseAfterScope = false)
+      : UseAfterScope(UseAfterScope || ClUseAfterScope), GlobalsMD(GlobalsMD) {
+    this->Recover = ClRecover.getNumOccurrences() > 0 ? ClRecover : Recover;
+    this->CompileKernel =
+        ClEnableKasan.getNumOccurrences() > 0 ? ClEnableKasan : CompileKernel;
+
+    C = &(M.getContext());
+    LongSize = M.getDataLayout().getPointerSizeInBits();
+    IntptrTy = Type::getIntNTy(*C, LongSize);
+    TargetTriple = Triple(M.getTargetTriple());
+
+    Mapping = getShadowMapping(TargetTriple, LongSize, this->CompileKernel);
+  }
+
   uint64_t getAllocaSizeInBytes(const AllocaInst &AI) const {
     uint64_t ArraySize = 1;
     if (AI.isArrayAllocation()) {
@@ -528,6 +593,7 @@ struct AddressSanitizer : public FunctionPass {
         AI.getModule()->getDataLayout().getTypeAllocSize(Ty);
     return SizeInBytes * ArraySize;
   }
+
   /// Check if we want (and can) handle this alloca.
   bool isInterestingAlloca(const AllocaInst &AI);
 
@@ -538,6 +604,7 @@ struct AddressSanitizer : public FunctionPass {
   Value *isInterestingMemoryAccess(Instruction *I, bool *IsWrite,
                                    uint64_t *TypeSize, unsigned *Alignment,
                                    Value **MaybeMask = nullptr);
+
   void instrumentMop(ObjectSizeOffsetVisitor &ObjSizeVis, Instruction *I,
                      bool UseCalls, const DataLayout &DL);
   void instrumentPointerComparisonOrSubtraction(Instruction *I);
@@ -556,17 +623,14 @@ struct AddressSanitizer : public FunctionPass {
                                  Value *SizeArgument, uint32_t Exp);
   void instrumentMemIntrinsic(MemIntrinsic *MI);
   Value *memToShadow(Value *Shadow, IRBuilder<> &IRB);
-  bool runOnFunction(Function &F) override;
+  bool instrumentFunction(Function &F, const TargetLibraryInfo *TLI);
   bool maybeInsertAsanInitAtFunctionEntry(Function &F);
   void maybeInsertDynamicShadowAtFunctionEntry(Function &F);
   void markEscapedLocalAllocas(Function &F);
-  bool doInitialization(Module &M) override;
-  bool doFinalization(Module &M) override;
-  static char ID;  // Pass identification, replacement for typeid
 
-  DominatorTree &getDominatorTree() const { return *DT; }
+private:
+  friend struct FunctionStackPoisoner;
 
- private:
   void initializeCallbacks(Module &M);
 
   bool LooksLikeCodeInBug11395(Instruction *I);
@@ -577,11 +641,13 @@ struct AddressSanitizer : public FunctionPass {
   /// Helper to cleanup per-function state.
   struct FunctionStateRAII {
     AddressSanitizer *Pass;
+
     FunctionStateRAII(AddressSanitizer *Pass) : Pass(Pass) {
       assert(Pass->ProcessedAllocas.empty() &&
              "last pass forgot to clear cache");
       assert(!Pass->LocalDynamicShadow);
     }
+
     ~FunctionStateRAII() {
       Pass->LocalDynamicShadow = nullptr;
       Pass->ProcessedAllocas.clear();
@@ -596,32 +662,71 @@ struct AddressSanitizer : public FunctionPass {
   bool UseAfterScope;
   Type *IntptrTy;
   ShadowMapping Mapping;
-  DominatorTree *DT;
-  Function *AsanHandleNoReturnFunc;
-  Function *AsanPtrCmpFunction, *AsanPtrSubFunction;
-  // This array is indexed by AccessIsWrite, Experiment and log2(AccessSize).
-  Function *AsanErrorCallback[2][2][kNumberOfAccessSizes];
-  Function *AsanMemoryAccessCallback[2][2][kNumberOfAccessSizes];
-  // This array is indexed by AccessIsWrite and Experiment.
-  Function *AsanErrorCallbackSized[2][2];
-  Function *AsanMemoryAccessCallbackSized[2][2];
-  Function *AsanMemmove, *AsanMemcpy, *AsanMemset;
+  FunctionCallee AsanHandleNoReturnFunc;
+  FunctionCallee AsanPtrCmpFunction, AsanPtrSubFunction;
+  Constant *AsanShadowGlobal;
+
+  // These arrays is indexed by AccessIsWrite, Experiment and log2(AccessSize).
+  FunctionCallee AsanErrorCallback[2][2][kNumberOfAccessSizes];
+  FunctionCallee AsanMemoryAccessCallback[2][2][kNumberOfAccessSizes];
+
+  // These arrays is indexed by AccessIsWrite and Experiment.
+  FunctionCallee AsanErrorCallbackSized[2][2];
+  FunctionCallee AsanMemoryAccessCallbackSized[2][2];
+
+  FunctionCallee AsanMemmove, AsanMemcpy, AsanMemset;
   InlineAsm *EmptyAsm;
-  Value *LocalDynamicShadow;
+  Value *LocalDynamicShadow = nullptr;
   GlobalsMetadata GlobalsMD;
   DenseMap<const AllocaInst *, bool> ProcessedAllocas;
-
-  friend struct FunctionStackPoisoner;
 };
 
-class AddressSanitizerModule : public ModulePass {
+class AddressSanitizerLegacyPass : public FunctionPass {
 public:
-  explicit AddressSanitizerModule(bool CompileKernel = false,
-                                  bool Recover = false,
-                                  bool UseGlobalsGC = true)
-      : ModulePass(ID), CompileKernel(CompileKernel || ClEnableKasan),
-        Recover(Recover || ClRecover),
-        UseGlobalsGC(UseGlobalsGC && ClUseGlobalsGC),
+  static char ID;
+
+  explicit AddressSanitizerLegacyPass(bool CompileKernel = false,
+                                      bool Recover = false,
+                                      bool UseAfterScope = false)
+      : FunctionPass(ID), CompileKernel(CompileKernel), Recover(Recover),
+        UseAfterScope(UseAfterScope) {
+    initializeAddressSanitizerLegacyPassPass(*PassRegistry::getPassRegistry());
+  }
+
+  StringRef getPassName() const override {
+    return "AddressSanitizerFunctionPass";
+  }
+
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.addRequired<ASanGlobalsMetadataWrapperPass>();
+    AU.addRequired<TargetLibraryInfoWrapperPass>();
+  }
+
+  bool runOnFunction(Function &F) override {
+    GlobalsMetadata &GlobalsMD =
+        getAnalysis<ASanGlobalsMetadataWrapperPass>().getGlobalsMD();
+    const TargetLibraryInfo *TLI =
+        &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
+    AddressSanitizer ASan(*F.getParent(), GlobalsMD, CompileKernel, Recover,
+                          UseAfterScope);
+    return ASan.instrumentFunction(F, TLI);
+  }
+
+private:
+  bool CompileKernel;
+  bool Recover;
+  bool UseAfterScope;
+};
+
+class ModuleAddressSanitizer {
+public:
+  ModuleAddressSanitizer(Module &M, GlobalsMetadata &GlobalsMD,
+                         bool CompileKernel = false, bool Recover = false,
+                         bool UseGlobalsGC = true, bool UseOdrIndicator = false)
+      : GlobalsMD(GlobalsMD), UseGlobalsGC(UseGlobalsGC && ClUseGlobalsGC),
+        // Enable aliases as they should have no downside with ODR indicators.
+        UsePrivateAlias(UseOdrIndicator || ClUsePrivateAlias),
+        UseOdrIndicator(UseOdrIndicator || ClUseOdrIndicator),
         // Not a typo: ClWithComdat is almost completely pointless without
         // ClUseGlobalsGC (because then it only works on modules without
         // globals, which are rare); it is a prerequisite for ClUseGlobalsGC;
@@ -629,10 +734,19 @@ public:
         // argument is designed as workaround. Therefore, disable both
         // ClWithComdat and ClUseGlobalsGC unless the frontend says it's ok to
         // do globals-gc.
-        UseCtorComdat(UseGlobalsGC && ClWithComdat) {}
-  bool runOnModule(Module &M) override;
-  static char ID; // Pass identification, replacement for typeid
-  StringRef getPassName() const override { return "AddressSanitizerModule"; }
+        UseCtorComdat(UseGlobalsGC && ClWithComdat) {
+    this->Recover = ClRecover.getNumOccurrences() > 0 ? ClRecover : Recover;
+    this->CompileKernel =
+        ClEnableKasan.getNumOccurrences() > 0 ? ClEnableKasan : CompileKernel;
+
+    C = &(M.getContext());
+    int LongSize = M.getDataLayout().getPointerSizeInBits();
+    IntptrTy = Type::getIntNTy(*C, LongSize);
+    TargetTriple = Triple(M.getTargetTriple());
+    Mapping = getShadowMapping(TargetTriple, LongSize, this->CompileKernel);
+  }
+
+  bool instrumentModule(Module &);
 
 private:
   void initializeCallbacks(Module &M);
@@ -667,27 +781,65 @@ private:
   size_t MinRedzoneSizeForGlobal() const {
     return RedzoneSizeForScale(Mapping.Scale);
   }
+  int GetAsanVersion(const Module &M) const;
 
   GlobalsMetadata GlobalsMD;
   bool CompileKernel;
   bool Recover;
   bool UseGlobalsGC;
+  bool UsePrivateAlias;
+  bool UseOdrIndicator;
   bool UseCtorComdat;
   Type *IntptrTy;
   LLVMContext *C;
   Triple TargetTriple;
   ShadowMapping Mapping;
-  Function *AsanPoisonGlobals;
-  Function *AsanUnpoisonGlobals;
-  Function *AsanRegisterGlobals;
-  Function *AsanUnregisterGlobals;
-  Function *AsanRegisterImageGlobals;
-  Function *AsanUnregisterImageGlobals;
-  Function *AsanRegisterElfGlobals;
-  Function *AsanUnregisterElfGlobals;
+  FunctionCallee AsanPoisonGlobals;
+  FunctionCallee AsanUnpoisonGlobals;
+  FunctionCallee AsanRegisterGlobals;
+  FunctionCallee AsanUnregisterGlobals;
+  FunctionCallee AsanRegisterImageGlobals;
+  FunctionCallee AsanUnregisterImageGlobals;
+  FunctionCallee AsanRegisterElfGlobals;
+  FunctionCallee AsanUnregisterElfGlobals;
 
   Function *AsanCtorFunction = nullptr;
   Function *AsanDtorFunction = nullptr;
+};
+
+class ModuleAddressSanitizerLegacyPass : public ModulePass {
+public:
+  static char ID;
+
+  explicit ModuleAddressSanitizerLegacyPass(bool CompileKernel = false,
+                                            bool Recover = false,
+                                            bool UseGlobalGC = true,
+                                            bool UseOdrIndicator = false)
+      : ModulePass(ID), CompileKernel(CompileKernel), Recover(Recover),
+        UseGlobalGC(UseGlobalGC), UseOdrIndicator(UseOdrIndicator) {
+    initializeModuleAddressSanitizerLegacyPassPass(
+        *PassRegistry::getPassRegistry());
+  }
+
+  StringRef getPassName() const override { return "ModuleAddressSanitizer"; }
+
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.addRequired<ASanGlobalsMetadataWrapperPass>();
+  }
+
+  bool runOnModule(Module &M) override {
+    GlobalsMetadata &GlobalsMD =
+        getAnalysis<ASanGlobalsMetadataWrapperPass>().getGlobalsMD();
+    ModuleAddressSanitizer ASanModule(M, GlobalsMD, CompileKernel, Recover,
+                                      UseGlobalGC, UseOdrIndicator);
+    return ASanModule.instrumentModule(M);
+  }
+
+private:
+  bool CompileKernel;
+  bool Recover;
+  bool UseGlobalGC;
+  bool UseOdrIndicator;
 };
 
 // Stack poisoning does not play well with exception handling.
@@ -713,11 +865,11 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
   SmallVector<Instruction *, 8> RetVec;
   unsigned StackAlignment;
 
-  Function *AsanStackMallocFunc[kMaxAsanStackMallocSizeClass + 1],
-      *AsanStackFreeFunc[kMaxAsanStackMallocSizeClass + 1];
-  Function *AsanSetShadowFunc[0x100] = {};
-  Function *AsanPoisonStackMemoryFunc, *AsanUnpoisonStackMemoryFunc;
-  Function *AsanAllocaPoisonFunc, *AsanAllocasUnpoisonFunc;
+  FunctionCallee AsanStackMallocFunc[kMaxAsanStackMallocSizeClass + 1],
+      AsanStackFreeFunc[kMaxAsanStackMallocSizeClass + 1];
+  FunctionCallee AsanSetShadowFunc[0x100] = {};
+  FunctionCallee AsanPoisonStackMemoryFunc, AsanUnpoisonStackMemoryFunc;
+  FunctionCallee AsanAllocaPoisonFunc, AsanAllocasUnpoisonFunc;
 
   // Stores a place and arguments of poisoning/unpoisoning call for alloca.
   struct AllocaPoisonCall {
@@ -728,6 +880,7 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
   };
   SmallVector<AllocaPoisonCall, 8> DynamicAllocaPoisonCallVec;
   SmallVector<AllocaPoisonCall, 8> StaticAllocaPoisonCallVec;
+  bool HasUntracedLifetimeIntrinsic = false;
 
   SmallVector<AllocaInst *, 1> DynamicAllocaVec;
   SmallVector<IntrinsicInst *, 1> StackRestoreVec;
@@ -735,7 +888,7 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
   IntrinsicInst *LocalEscapeCall = nullptr;
 
   // Maps Value to an AllocaInst from which the Value is originated.
-  typedef DenseMap<Value *, AllocaInst *> AllocaForValueMapTy;
+  using AllocaForValueMapTy = DenseMap<Value *, AllocaInst *>;
   AllocaForValueMapTy AllocaForValue;
 
   bool HasNonEmptyInlineAsm = false;
@@ -743,20 +896,16 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
   std::unique_ptr<CallInst> EmptyInlineAsm;
 
   FunctionStackPoisoner(Function &F, AddressSanitizer &ASan)
-      : F(F),
-        ASan(ASan),
-        DIB(*F.getParent(), /*AllowUnresolved*/ false),
-        C(ASan.C),
-        IntptrTy(ASan.IntptrTy),
-        IntptrPtrTy(PointerType::get(IntptrTy, 0)),
-        Mapping(ASan.Mapping),
+      : F(F), ASan(ASan), DIB(*F.getParent(), /*AllowUnresolved*/ false),
+        C(ASan.C), IntptrTy(ASan.IntptrTy),
+        IntptrPtrTy(PointerType::get(IntptrTy, 0)), Mapping(ASan.Mapping),
         StackAlignment(1 << Mapping.Scale),
         EmptyInlineAsm(CallInst::Create(ASan.EmptyAsm)) {}
 
   bool runOnFunction() {
     if (!ClStack) return false;
 
-    if (ClRedzoneByvalArgs && Mapping.Offset != kDynamicShadowSentinel)
+    if (ClRedzoneByvalArgs)
       copyArgsPassedByValToAllocas();
 
     // Collect alloca, ret, lifetime instructions etc.
@@ -766,11 +915,19 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
 
     initializeCallbacks(*F.getParent());
 
+    if (HasUntracedLifetimeIntrinsic) {
+      // If there are lifetime intrinsics which couldn't be traced back to an
+      // alloca, we may not know exactly when a variable enters scope, and
+      // therefore should "fail safe" by not poisoning them.
+      StaticAllocaPoisonCallVec.clear();
+      DynamicAllocaPoisonCallVec.clear();
+    }
+
     processDynamicAllocas();
     processStaticAllocas();
 
     if (ClDebugStack) {
-      DEBUG(dbgs() << F);
+      LLVM_DEBUG(dbgs() << F);
     }
     return true;
   }
@@ -789,13 +946,13 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
   void createDynamicAllocasInitStorage();
 
   // ----------------------- Visitors.
-  /// \brief Collect all Ret instructions.
+  /// Collect all Ret instructions.
   void visitReturnInst(ReturnInst &RI) { RetVec.push_back(&RI); }
 
-  /// \brief Collect all Resume instructions.
+  /// Collect all Resume instructions.
   void visitResumeInst(ResumeInst &RI) { RetVec.push_back(&RI); }
 
-  /// \brief Collect all CatchReturnInst instructions.
+  /// Collect all CatchReturnInst instructions.
   void visitCleanupReturnInst(CleanupReturnInst &CRI) { RetVec.push_back(&CRI); }
 
   void unpoisonDynamicAllocasBeforeInst(Instruction *InstBefore,
@@ -817,8 +974,9 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
                                      DynamicAreaOffset);
     }
 
-    IRB.CreateCall(AsanAllocasUnpoisonFunc,
-                   {IRB.CreateLoad(DynamicAllocaLayout), DynamicAreaPtr});
+    IRB.CreateCall(
+        AsanAllocasUnpoisonFunc,
+        {IRB.CreateLoad(IntptrTy, DynamicAllocaLayout), DynamicAreaPtr});
   }
 
   // Unpoison dynamic allocas redzones.
@@ -843,7 +1001,7 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
   // requested memory, but also left, partial and right redzones.
   void handleDynamicAllocaCall(AllocaInst *AI);
 
-  /// \brief Collect Alloca instructions we want (and can) handle.
+  /// Collect Alloca instructions we want (and can) handle.
   void visitAllocaInst(AllocaInst &AI) {
     if (!ASan.isInterestingAlloca(AI)) {
       if (AI.isStaticAlloca()) {
@@ -864,7 +1022,7 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
       AllocaVec.push_back(&AI);
   }
 
-  /// \brief Collect lifetime intrinsic calls to check for use-after-scope
+  /// Collect lifetime intrinsic calls to check for use-after-scope
   /// errors.
   void visitIntrinsicInst(IntrinsicInst &II) {
     Intrinsic::ID ID = II.getIntrinsicID();
@@ -872,7 +1030,7 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
     if (ID == Intrinsic::localescape) LocalEscapeCall = &II;
     if (!ASan.UseAfterScope)
       return;
-    if (ID != Intrinsic::lifetime_start && ID != Intrinsic::lifetime_end)
+    if (!II.isLifetimeStartOrEnd())
       return;
     // Found lifetime intrinsic, add ASan instrumentation if necessary.
     ConstantInt *Size = dyn_cast<ConstantInt>(II.getArgOperand(0));
@@ -885,8 +1043,14 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
         !ConstantInt::isValueValidForType(IntptrTy, SizeValue))
       return;
     // Find alloca instruction that corresponds to llvm.lifetime argument.
-    AllocaInst *AI = findAllocaForValue(II.getArgOperand(1));
-    if (!AI || !ASan.isInterestingAlloca(*AI))
+    AllocaInst *AI =
+        llvm::findAllocaForValue(II.getArgOperand(1), AllocaForValue);
+    if (!AI) {
+      HasUntracedLifetimeIntrinsic = true;
+      return;
+    }
+    // We're interested only in allocas we can handle.
+    if (!ASan.isInterestingAlloca(*AI))
       return;
     bool DoPoison = (ID == Intrinsic::lifetime_end);
     AllocaPoisonCall APC = {&II, AI, SizeValue, DoPoison};
@@ -899,24 +1063,15 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
   void visitCallSite(CallSite CS) {
     Instruction *I = CS.getInstruction();
     if (CallInst *CI = dyn_cast<CallInst>(I)) {
-      HasNonEmptyInlineAsm |=
-          CI->isInlineAsm() && !CI->isIdenticalTo(EmptyInlineAsm.get());
+      HasNonEmptyInlineAsm |= CI->isInlineAsm() &&
+                              !CI->isIdenticalTo(EmptyInlineAsm.get()) &&
+                              I != ASan.LocalDynamicShadow;
       HasReturnsTwiceCall |= CI->canReturnTwice();
     }
   }
 
   // ---------------------- Helpers.
   void initializeCallbacks(Module &M);
-
-  bool doesDominateAllExits(const Instruction *I) const {
-    for (auto Ret : RetVec) {
-      if (!ASan.getDominatorTree().dominates(I, Ret)) return false;
-    }
-    return true;
-  }
-
-  /// Finds alloca where the value comes from.
-  AllocaInst *findAllocaForValue(Value *V);
 
   // Copies bytes from ShadowBytes into shadow memory for indexes where
   // ShadowMask is not zero. If ShadowMask[i] is zero, we assume that
@@ -938,37 +1093,136 @@ struct FunctionStackPoisoner : public InstVisitor<FunctionStackPoisoner> {
                      Instruction *ThenTerm, Value *ValueIfFalse);
 };
 
-} // anonymous namespace
+} // end anonymous namespace
 
-char AddressSanitizer::ID = 0;
+void LocationMetadata::parse(MDNode *MDN) {
+  assert(MDN->getNumOperands() == 3);
+  MDString *DIFilename = cast<MDString>(MDN->getOperand(0));
+  Filename = DIFilename->getString();
+  LineNo = mdconst::extract<ConstantInt>(MDN->getOperand(1))->getLimitedValue();
+  ColumnNo =
+      mdconst::extract<ConstantInt>(MDN->getOperand(2))->getLimitedValue();
+}
+
+// FIXME: It would be cleaner to instead attach relevant metadata to the globals
+// we want to sanitize instead and reading this metadata on each pass over a
+// function instead of reading module level metadata at first.
+GlobalsMetadata::GlobalsMetadata(Module &M) {
+  NamedMDNode *Globals = M.getNamedMetadata("llvm.asan.globals");
+  if (!Globals)
+    return;
+  for (auto MDN : Globals->operands()) {
+    // Metadata node contains the global and the fields of "Entry".
+    assert(MDN->getNumOperands() == 5);
+    auto *V = mdconst::extract_or_null<Constant>(MDN->getOperand(0));
+    // The optimizer may optimize away a global entirely.
+    if (!V)
+      continue;
+    auto *StrippedV = V->stripPointerCasts();
+    auto *GV = dyn_cast<GlobalVariable>(StrippedV);
+    if (!GV)
+      continue;
+    // We can already have an entry for GV if it was merged with another
+    // global.
+    Entry &E = Entries[GV];
+    if (auto *Loc = cast_or_null<MDNode>(MDN->getOperand(1)))
+      E.SourceLoc.parse(Loc);
+    if (auto *Name = cast_or_null<MDString>(MDN->getOperand(2)))
+      E.Name = Name->getString();
+    ConstantInt *IsDynInit = mdconst::extract<ConstantInt>(MDN->getOperand(3));
+    E.IsDynInit |= IsDynInit->isOne();
+    ConstantInt *IsBlacklisted =
+        mdconst::extract<ConstantInt>(MDN->getOperand(4));
+    E.IsBlacklisted |= IsBlacklisted->isOne();
+  }
+}
+
+AnalysisKey ASanGlobalsMetadataAnalysis::Key;
+
+GlobalsMetadata ASanGlobalsMetadataAnalysis::run(Module &M,
+                                                 ModuleAnalysisManager &AM) {
+  return GlobalsMetadata(M);
+}
+
+AddressSanitizerPass::AddressSanitizerPass(bool CompileKernel, bool Recover,
+                                           bool UseAfterScope)
+    : CompileKernel(CompileKernel), Recover(Recover),
+      UseAfterScope(UseAfterScope) {}
+
+PreservedAnalyses AddressSanitizerPass::run(Function &F,
+                                            AnalysisManager<Function> &AM) {
+  auto &MAMProxy = AM.getResult<ModuleAnalysisManagerFunctionProxy>(F);
+  auto &MAM = MAMProxy.getManager();
+  Module &M = *F.getParent();
+  if (auto *R = MAM.getCachedResult<ASanGlobalsMetadataAnalysis>(M)) {
+    const TargetLibraryInfo *TLI = &AM.getResult<TargetLibraryAnalysis>(F);
+    AddressSanitizer Sanitizer(M, *R, CompileKernel, Recover, UseAfterScope);
+    if (Sanitizer.instrumentFunction(F, TLI))
+      return PreservedAnalyses::none();
+    return PreservedAnalyses::all();
+  }
+
+  report_fatal_error(
+      "The ASanGlobalsMetadataAnalysis is required to run before "
+      "AddressSanitizer can run");
+  return PreservedAnalyses::all();
+}
+
+ModuleAddressSanitizerPass::ModuleAddressSanitizerPass(bool CompileKernel,
+                                                       bool Recover,
+                                                       bool UseGlobalGC,
+                                                       bool UseOdrIndicator)
+    : CompileKernel(CompileKernel), Recover(Recover), UseGlobalGC(UseGlobalGC),
+      UseOdrIndicator(UseOdrIndicator) {}
+
+PreservedAnalyses ModuleAddressSanitizerPass::run(Module &M,
+                                                  AnalysisManager<Module> &AM) {
+  GlobalsMetadata &GlobalsMD = AM.getResult<ASanGlobalsMetadataAnalysis>(M);
+  ModuleAddressSanitizer Sanitizer(M, GlobalsMD, CompileKernel, Recover,
+                                   UseGlobalGC, UseOdrIndicator);
+  if (Sanitizer.instrumentModule(M))
+    return PreservedAnalyses::none();
+  return PreservedAnalyses::all();
+}
+
+INITIALIZE_PASS(ASanGlobalsMetadataWrapperPass, "asan-globals-md",
+                "Read metadata to mark which globals should be instrumented "
+                "when running ASan.",
+                false, true)
+
+char AddressSanitizerLegacyPass::ID = 0;
+
 INITIALIZE_PASS_BEGIN(
-    AddressSanitizer, "asan",
+    AddressSanitizerLegacyPass, "asan",
     "AddressSanitizer: detects use-after-free and out-of-bounds bugs.", false,
     false)
-INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(ASanGlobalsMetadataWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
 INITIALIZE_PASS_END(
-    AddressSanitizer, "asan",
+    AddressSanitizerLegacyPass, "asan",
     "AddressSanitizer: detects use-after-free and out-of-bounds bugs.", false,
     false)
+
 FunctionPass *llvm::createAddressSanitizerFunctionPass(bool CompileKernel,
                                                        bool Recover,
                                                        bool UseAfterScope) {
   assert(!CompileKernel || Recover);
-  return new AddressSanitizer(CompileKernel, Recover, UseAfterScope);
+  return new AddressSanitizerLegacyPass(CompileKernel, Recover, UseAfterScope);
 }
 
-char AddressSanitizerModule::ID = 0;
+char ModuleAddressSanitizerLegacyPass::ID = 0;
+
 INITIALIZE_PASS(
-    AddressSanitizerModule, "asan-module",
+    ModuleAddressSanitizerLegacyPass, "asan-module",
     "AddressSanitizer: detects use-after-free and out-of-bounds bugs."
     "ModulePass",
     false, false)
-ModulePass *llvm::createAddressSanitizerModulePass(bool CompileKernel,
-                                                   bool Recover,
-                                                   bool UseGlobalsGC) {
+
+ModulePass *llvm::createModuleAddressSanitizerLegacyPassPass(
+    bool CompileKernel, bool Recover, bool UseGlobalsGC, bool UseOdrIndicator) {
   assert(!CompileKernel || Recover);
-  return new AddressSanitizerModule(CompileKernel, Recover, UseGlobalsGC);
+  return new ModuleAddressSanitizerLegacyPass(CompileKernel, Recover,
+                                              UseGlobalsGC, UseOdrIndicator);
 }
 
 static size_t TypeSizeToSizeIndex(uint32_t TypeSize) {
@@ -977,25 +1231,11 @@ static size_t TypeSizeToSizeIndex(uint32_t TypeSize) {
   return Res;
 }
 
-// \brief Create a constant for Str so that we can pass it to the run-time lib.
-static GlobalVariable *createPrivateGlobalForString(Module &M, StringRef Str,
-                                                    bool AllowMerging) {
-  Constant *StrConst = ConstantDataArray::getString(M.getContext(), Str);
-  // We use private linkage for module-local strings. If they can be merged
-  // with another one, we set the unnamed_addr attribute.
-  GlobalVariable *GV =
-      new GlobalVariable(M, StrConst->getType(), true,
-                         GlobalValue::PrivateLinkage, StrConst, kAsanGenPrefix);
-  if (AllowMerging) GV->setUnnamedAddr(GlobalValue::UnnamedAddr::Global);
-  GV->setAlignment(1);  // Strings may not be merged w/o setting align 1.
-  return GV;
-}
-
-/// \brief Create a global describing a source location.
+/// Create a global describing a source location.
 static GlobalVariable *createPrivateGlobalForSourceLoc(Module &M,
                                                        LocationMetadata MD) {
   Constant *LocData[] = {
-      createPrivateGlobalForString(M, MD.Filename, true),
+      createPrivateGlobalForString(M, MD.Filename, true, kAsanGenPrefix),
       ConstantInt::get(Type::getInt32Ty(M.getContext()), MD.LineNo),
       ConstantInt::get(Type::getInt32Ty(M.getContext()), MD.ColumnNo),
   };
@@ -1007,8 +1247,12 @@ static GlobalVariable *createPrivateGlobalForSourceLoc(Module &M,
   return GV;
 }
 
-/// \brief Check if \p G has been created by a trusted compiler pass.
+/// Check if \p G has been created by a trusted compiler pass.
 static bool GlobalWasGeneratedByCompiler(GlobalVariable *G) {
+  // Do not instrument @llvm.global_ctors, @llvm.used, etc.
+  if (G->getName().startswith("llvm."))
+    return true;
+
   // Do not instrument asan globals.
   if (G->getName().startswith(kAsanGenPrefix) ||
       G->getName().startswith(kSanCovGenPrefix) ||
@@ -1182,11 +1426,24 @@ static bool isPointerOperand(Value *V) {
 // This is a rough heuristic; it may cause both false positives and
 // false negatives. The proper implementation requires cooperation with
 // the frontend.
-static bool isInterestingPointerComparisonOrSubtraction(Instruction *I) {
+static bool isInterestingPointerComparison(Instruction *I) {
   if (ICmpInst *Cmp = dyn_cast<ICmpInst>(I)) {
-    if (!Cmp->isRelational()) return false;
-  } else if (BinaryOperator *BO = dyn_cast<BinaryOperator>(I)) {
-    if (BO->getOpcode() != Instruction::Sub) return false;
+    if (!Cmp->isRelational())
+      return false;
+  } else {
+    return false;
+  }
+  return isPointerOperand(I->getOperand(0)) &&
+         isPointerOperand(I->getOperand(1));
+}
+
+// This is a rough heuristic; it may cause both false positives and
+// false negatives. The proper implementation requires cooperation with
+// the frontend.
+static bool isInterestingPointerSubtraction(Instruction *I) {
+  if (BinaryOperator *BO = dyn_cast<BinaryOperator>(I)) {
+    if (BO->getOpcode() != Instruction::Sub)
+      return false;
   } else {
     return false;
   }
@@ -1198,13 +1455,16 @@ bool AddressSanitizer::GlobalIsLinkerInitialized(GlobalVariable *G) {
   // If a global variable does not have dynamic initialization we don't
   // have to instrument it.  However, if a global does not have initializer
   // at all, we assume it has dynamic initializer (in other TU).
+  //
+  // FIXME: Metadata should be attched directly to the global directly instead
+  // of being added to llvm.asan.globals.
   return G->hasInitializer() && !GlobalsMD.get(G).IsDynInit;
 }
 
 void AddressSanitizer::instrumentPointerComparisonOrSubtraction(
     Instruction *I) {
   IRBuilder<> IRB(I);
-  Function *F = isa<ICmpInst>(I) ? AsanPtrCmpFunction : AsanPtrSubFunction;
+  FunctionCallee F = isa<ICmpInst>(I) ? AsanPtrCmpFunction : AsanPtrSubFunction;
   Value *Param[2] = {I->getOperand(0), I->getOperand(1)};
   for (Value *&i : Param) {
     if (i->getType()->isPointerTy())
@@ -1256,13 +1516,13 @@ static void instrumentMaskedLoadOrStore(AddressSanitizer *Pass,
     } else {
       IRBuilder<> IRB(I);
       Value *MaskElem = IRB.CreateExtractElement(Mask, Idx);
-      TerminatorInst *ThenTerm = SplitBlockAndInsertIfThen(MaskElem, I, false);
+      Instruction *ThenTerm = SplitBlockAndInsertIfThen(MaskElem, I, false);
       InsertBefore = ThenTerm;
     }
 
     IRBuilder<> IRB(InsertBefore);
     InstrumentedAddress =
-        IRB.CreateGEP(Addr, {Zero, ConstantInt::get(IntptrTy, Idx)});
+        IRB.CreateGEP(VTy, Addr, {Zero, ConstantInt::get(IntptrTy, Idx)});
     doInstrumentAddress(Pass, I, InsertBefore, InstrumentedAddress, Alignment,
                         Granularity, ElemTypeSize, IsWrite, SizeArgument,
                         UseCalls, Exp);
@@ -1383,6 +1643,8 @@ void AddressSanitizer::instrumentAddress(Instruction *OrigIns,
                                          uint32_t TypeSize, bool IsWrite,
                                          Value *SizeArgument, bool UseCalls,
                                          uint32_t Exp) {
+  bool IsMyriad = TargetTriple.getVendor() == llvm::Triple::Myriad;
+
   IRBuilder<> IRB(InsertBefore);
   Value *AddrLong = IRB.CreatePointerCast(Addr, IntptrTy);
   size_t AccessSizeIndex = TypeSizeToSizeIndex(TypeSize);
@@ -1397,22 +1659,40 @@ void AddressSanitizer::instrumentAddress(Instruction *OrigIns,
     return;
   }
 
+  if (IsMyriad) {
+    // Strip the cache bit and do range check.
+    // AddrLong &= ~kMyriadCacheBitMask32
+    AddrLong = IRB.CreateAnd(AddrLong, ~kMyriadCacheBitMask32);
+    // Tag = AddrLong >> kMyriadTagShift
+    Value *Tag = IRB.CreateLShr(AddrLong, kMyriadTagShift);
+    // Tag == kMyriadDDRTag
+    Value *TagCheck =
+        IRB.CreateICmpEQ(Tag, ConstantInt::get(IntptrTy, kMyriadDDRTag));
+
+    Instruction *TagCheckTerm =
+        SplitBlockAndInsertIfThen(TagCheck, InsertBefore, false,
+                                  MDBuilder(*C).createBranchWeights(1, 100000));
+    assert(cast<BranchInst>(TagCheckTerm)->isUnconditional());
+    IRB.SetInsertPoint(TagCheckTerm);
+    InsertBefore = TagCheckTerm;
+  }
+
   Type *ShadowTy =
       IntegerType::get(*C, std::max(8U, TypeSize >> Mapping.Scale));
   Type *ShadowPtrTy = PointerType::get(ShadowTy, 0);
   Value *ShadowPtr = memToShadow(AddrLong, IRB);
   Value *CmpVal = Constant::getNullValue(ShadowTy);
   Value *ShadowValue =
-      IRB.CreateLoad(IRB.CreateIntToPtr(ShadowPtr, ShadowPtrTy));
+      IRB.CreateLoad(ShadowTy, IRB.CreateIntToPtr(ShadowPtr, ShadowPtrTy));
 
   Value *Cmp = IRB.CreateICmpNE(ShadowValue, CmpVal);
   size_t Granularity = 1ULL << Mapping.Scale;
-  TerminatorInst *CrashTerm = nullptr;
+  Instruction *CrashTerm = nullptr;
 
   if (ClAlwaysSlowPath || (TypeSize < 8 * Granularity)) {
     // We use branch weights for the slow path check, to indicate that the slow
     // path is rarely taken. This seems to be the case for SPEC benchmarks.
-    TerminatorInst *CheckTerm = SplitBlockAndInsertIfThen(
+    Instruction *CheckTerm = SplitBlockAndInsertIfThen(
         Cmp, InsertBefore, false, MDBuilder(*C).createBranchWeights(1, 100000));
     assert(cast<BranchInst>(CheckTerm)->isUnconditional());
     BasicBlock *NextBB = CheckTerm->getSuccessor(0);
@@ -1462,7 +1742,7 @@ void AddressSanitizer::instrumentUnusualSizeOrAlignment(
   }
 }
 
-void AddressSanitizerModule::poisonOneInitializer(Function &GlobalInit,
+void ModuleAddressSanitizer::poisonOneInitializer(Function &GlobalInit,
                                                   GlobalValue *ModuleName) {
   // Set up the arguments to our poison/unpoison functions.
   IRBuilder<> IRB(&GlobalInit.front(),
@@ -1478,7 +1758,7 @@ void AddressSanitizerModule::poisonOneInitializer(Function &GlobalInit,
       CallInst::Create(AsanUnpoisonGlobals, "", RI);
 }
 
-void AddressSanitizerModule::createInitializerPoisonCalls(
+void ModuleAddressSanitizer::createInitializerPoisonCalls(
     Module &M, GlobalValue *ModuleName) {
   GlobalVariable *GV = M.getGlobalVariable("llvm.global_ctors");
   if (!GV)
@@ -1503,28 +1783,49 @@ void AddressSanitizerModule::createInitializerPoisonCalls(
   }
 }
 
-bool AddressSanitizerModule::ShouldInstrumentGlobal(GlobalVariable *G) {
+bool ModuleAddressSanitizer::ShouldInstrumentGlobal(GlobalVariable *G) {
   Type *Ty = G->getValueType();
-  DEBUG(dbgs() << "GLOBAL: " << *G << "\n");
+  LLVM_DEBUG(dbgs() << "GLOBAL: " << *G << "\n");
 
+  // FIXME: Metadata should be attched directly to the global directly instead
+  // of being added to llvm.asan.globals.
   if (GlobalsMD.get(G).IsBlacklisted) return false;
   if (!Ty->isSized()) return false;
   if (!G->hasInitializer()) return false;
   if (GlobalWasGeneratedByCompiler(G)) return false; // Our own globals.
-  // Touch only those globals that will not be defined in other modules.
-  // Don't handle ODR linkage types and COMDATs since other modules may be built
-  // without ASan.
-  if (G->getLinkage() != GlobalVariable::ExternalLinkage &&
-      G->getLinkage() != GlobalVariable::PrivateLinkage &&
-      G->getLinkage() != GlobalVariable::InternalLinkage)
-    return false;
-  if (G->hasComdat()) return false;
   // Two problems with thread-locals:
   //   - The address of the main thread's copy can't be computed at link-time.
   //   - Need to poison all copies, not just the main thread's one.
   if (G->isThreadLocal()) return false;
   // For now, just ignore this Global if the alignment is large.
   if (G->getAlignment() > MinRedzoneSizeForGlobal()) return false;
+
+  // For non-COFF targets, only instrument globals known to be defined by this
+  // TU.
+  // FIXME: We can instrument comdat globals on ELF if we are using the
+  // GC-friendly metadata scheme.
+  if (!TargetTriple.isOSBinFormatCOFF()) {
+    if (!G->hasExactDefinition() || G->hasComdat())
+      return false;
+  } else {
+    // On COFF, don't instrument non-ODR linkages.
+    if (G->isInterposable())
+      return false;
+  }
+
+  // If a comdat is present, it must have a selection kind that implies ODR
+  // semantics: no duplicates, any, or exact match.
+  if (Comdat *C = G->getComdat()) {
+    switch (C->getSelectionKind()) {
+    case Comdat::Any:
+    case Comdat::ExactMatch:
+    case Comdat::NoDuplicates:
+      break;
+    case Comdat::Largest:
+    case Comdat::SameSize:
+      return false;
+    }
+  }
 
   if (G->hasSection()) {
     StringRef Section = G->getSection();
@@ -1542,12 +1843,17 @@ bool AddressSanitizerModule::ShouldInstrumentGlobal(GlobalVariable *G) {
       return false;
     }
 
-    // Callbacks put into the CRT initializer/terminator sections
-    // should not be instrumented.
-    // See https://code.google.com/p/address-sanitizer/issues/detail?id=305
+    // On COFF, if the section name contains '$', it is highly likely that the
+    // user is using section sorting to create an array of globals similar to
+    // the way initialization callbacks are registered in .init_array and
+    // .CRT$XCU. The ATL also registers things in .ATL$__[azm]. Adding redzones
+    // to such globals is counterproductive, because the intent is that they
+    // will form an array, and out-of-bounds accesses are expected.
+    // See https://github.com/google/sanitizers/issues/305
     // and http://msdn.microsoft.com/en-US/en-en/library/bb918180(v=vs.120).aspx
-    if (Section.startswith(".CRT")) {
-      DEBUG(dbgs() << "Ignoring a global initializer callback: " << *G << "\n");
+    if (TargetTriple.isOSBinFormatCOFF() && Section.contains('$')) {
+      LLVM_DEBUG(dbgs() << "Ignoring global in sorted section (contains '$'): "
+                        << *G << "\n");
       return false;
     }
 
@@ -1564,10 +1870,10 @@ bool AddressSanitizerModule::ShouldInstrumentGlobal(GlobalVariable *G) {
       // them.
       if (ParsedSegment == "__OBJC" ||
           (ParsedSegment == "__DATA" && ParsedSection.startswith("__objc_"))) {
-        DEBUG(dbgs() << "Ignoring ObjC runtime global: " << *G << "\n");
+        LLVM_DEBUG(dbgs() << "Ignoring ObjC runtime global: " << *G << "\n");
         return false;
       }
-      // See http://code.google.com/p/address-sanitizer/issues/detail?id=32
+      // See https://github.com/google/sanitizers/issues/32
       // Constant CFString instances are compiled in the following way:
       //  -- the string buffer is emitted into
       //     __TEXT,__cstring,cstring_literals
@@ -1576,13 +1882,13 @@ bool AddressSanitizerModule::ShouldInstrumentGlobal(GlobalVariable *G) {
       // Therefore there's no point in placing redzones into __DATA,__cfstring.
       // Moreover, it causes the linker to crash on OS X 10.7
       if (ParsedSegment == "__DATA" && ParsedSection == "__cfstring") {
-        DEBUG(dbgs() << "Ignoring CFString: " << *G << "\n");
+        LLVM_DEBUG(dbgs() << "Ignoring CFString: " << *G << "\n");
         return false;
       }
       // The linker merges the contents of cstring_literals and removes the
       // trailing zeroes.
       if (ParsedSegment == "__TEXT" && (TAA & MachO::S_CSTRING_LITERALS)) {
-        DEBUG(dbgs() << "Ignoring a cstring literal: " << *G << "\n");
+        LLVM_DEBUG(dbgs() << "Ignoring a cstring literal: " << *G << "\n");
         return false;
       }
     }
@@ -1594,7 +1900,7 @@ bool AddressSanitizerModule::ShouldInstrumentGlobal(GlobalVariable *G) {
 // On Mach-O platforms, we emit global metadata in a separate section of the
 // binary in order to allow the linker to properly dead strip. This is only
 // supported on recent versions of ld64.
-bool AddressSanitizerModule::ShouldUseMachOGlobalsSection() const {
+bool ModuleAddressSanitizer::ShouldUseMachOGlobalsSection() const {
   if (!TargetTriple.isOSBinFormatMachO())
     return false;
 
@@ -1608,7 +1914,7 @@ bool AddressSanitizerModule::ShouldUseMachOGlobalsSection() const {
   return false;
 }
 
-StringRef AddressSanitizerModule::getGlobalMetadataSection() const {
+StringRef ModuleAddressSanitizer::getGlobalMetadataSection() const {
   switch (TargetTriple.getObjectFormat()) {
   case Triple::COFF:  return ".ASAN$GL";
   case Triple::ELF:   return "asan_globals";
@@ -1618,52 +1924,39 @@ StringRef AddressSanitizerModule::getGlobalMetadataSection() const {
   llvm_unreachable("unsupported object format");
 }
 
-void AddressSanitizerModule::initializeCallbacks(Module &M) {
+void ModuleAddressSanitizer::initializeCallbacks(Module &M) {
   IRBuilder<> IRB(*C);
 
   // Declare our poisoning and unpoisoning functions.
-  AsanPoisonGlobals = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-      kAsanPoisonGlobalsName, IRB.getVoidTy(), IntptrTy));
-  AsanPoisonGlobals->setLinkage(Function::ExternalLinkage);
-  AsanUnpoisonGlobals = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-      kAsanUnpoisonGlobalsName, IRB.getVoidTy()));
-  AsanUnpoisonGlobals->setLinkage(Function::ExternalLinkage);
+  AsanPoisonGlobals =
+      M.getOrInsertFunction(kAsanPoisonGlobalsName, IRB.getVoidTy(), IntptrTy);
+  AsanUnpoisonGlobals =
+      M.getOrInsertFunction(kAsanUnpoisonGlobalsName, IRB.getVoidTy());
 
   // Declare functions that register/unregister globals.
-  AsanRegisterGlobals = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-      kAsanRegisterGlobalsName, IRB.getVoidTy(), IntptrTy, IntptrTy));
-  AsanRegisterGlobals->setLinkage(Function::ExternalLinkage);
-  AsanUnregisterGlobals = checkSanitizerInterfaceFunction(
-      M.getOrInsertFunction(kAsanUnregisterGlobalsName, IRB.getVoidTy(),
-                            IntptrTy, IntptrTy));
-  AsanUnregisterGlobals->setLinkage(Function::ExternalLinkage);
+  AsanRegisterGlobals = M.getOrInsertFunction(
+      kAsanRegisterGlobalsName, IRB.getVoidTy(), IntptrTy, IntptrTy);
+  AsanUnregisterGlobals = M.getOrInsertFunction(
+      kAsanUnregisterGlobalsName, IRB.getVoidTy(), IntptrTy, IntptrTy);
 
   // Declare the functions that find globals in a shared object and then invoke
   // the (un)register function on them.
-  AsanRegisterImageGlobals =
-      checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-          kAsanRegisterImageGlobalsName, IRB.getVoidTy(), IntptrTy));
-  AsanRegisterImageGlobals->setLinkage(Function::ExternalLinkage);
+  AsanRegisterImageGlobals = M.getOrInsertFunction(
+      kAsanRegisterImageGlobalsName, IRB.getVoidTy(), IntptrTy);
+  AsanUnregisterImageGlobals = M.getOrInsertFunction(
+      kAsanUnregisterImageGlobalsName, IRB.getVoidTy(), IntptrTy);
 
-  AsanUnregisterImageGlobals =
-      checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-          kAsanUnregisterImageGlobalsName, IRB.getVoidTy(), IntptrTy));
-  AsanUnregisterImageGlobals->setLinkage(Function::ExternalLinkage);
-
-  AsanRegisterElfGlobals = checkSanitizerInterfaceFunction(
+  AsanRegisterElfGlobals =
       M.getOrInsertFunction(kAsanRegisterElfGlobalsName, IRB.getVoidTy(),
-                            IntptrTy, IntptrTy, IntptrTy));
-  AsanRegisterElfGlobals->setLinkage(Function::ExternalLinkage);
-
-  AsanUnregisterElfGlobals = checkSanitizerInterfaceFunction(
+                            IntptrTy, IntptrTy, IntptrTy);
+  AsanUnregisterElfGlobals =
       M.getOrInsertFunction(kAsanUnregisterElfGlobalsName, IRB.getVoidTy(),
-                            IntptrTy, IntptrTy, IntptrTy));
-  AsanUnregisterElfGlobals->setLinkage(Function::ExternalLinkage);
+                            IntptrTy, IntptrTy, IntptrTy);
 }
 
 // Put the metadata and the instrumented global in the same group. This ensures
 // that the metadata is discarded if the instrumented global is discarded.
-void AddressSanitizerModule::SetComdatForGlobalMetadata(
+void ModuleAddressSanitizer::SetComdatForGlobalMetadata(
     GlobalVariable *G, GlobalVariable *Metadata, StringRef InternalSuffix) {
   Module &M = *G->getParent();
   Comdat *C = G->getComdat();
@@ -1683,9 +1976,14 @@ void AddressSanitizerModule::SetComdatForGlobalMetadata(
       C = M.getOrInsertComdat(G->getName());
     }
 
-    // Make this IMAGE_COMDAT_SELECT_NODUPLICATES on COFF.
-    if (TargetTriple.isOSBinFormatCOFF())
+    // Make this IMAGE_COMDAT_SELECT_NODUPLICATES on COFF. Also upgrade private
+    // linkage to internal linkage so that a symbol table entry is emitted. This
+    // is necessary in order to create the comdat group.
+    if (TargetTriple.isOSBinFormatCOFF()) {
       C->setSelectionKind(Comdat::NoDuplicates);
+      if (G->hasPrivateLinkage())
+        G->setLinkage(GlobalValue::InternalLinkage);
+    }
     G->setComdat(C);
   }
 
@@ -1696,7 +1994,7 @@ void AddressSanitizerModule::SetComdatForGlobalMetadata(
 // Create a separate metadata global and put it in the appropriate ASan
 // global registration section.
 GlobalVariable *
-AddressSanitizerModule::CreateMetadataGlobal(Module &M, Constant *Initializer,
+ModuleAddressSanitizer::CreateMetadataGlobal(Module &M, Constant *Initializer,
                                              StringRef OriginalName) {
   auto Linkage = TargetTriple.isOSBinFormatMachO()
                      ? GlobalVariable::InternalLinkage
@@ -1708,7 +2006,7 @@ AddressSanitizerModule::CreateMetadataGlobal(Module &M, Constant *Initializer,
   return Metadata;
 }
 
-IRBuilder<> AddressSanitizerModule::CreateAsanModuleDtor(Module &M) {
+IRBuilder<> ModuleAddressSanitizer::CreateAsanModuleDtor(Module &M) {
   AsanDtorFunction =
       Function::Create(FunctionType::get(Type::getVoidTy(*C), false),
                        GlobalValue::InternalLinkage, kAsanModuleDtorName, &M);
@@ -1717,7 +2015,7 @@ IRBuilder<> AddressSanitizerModule::CreateAsanModuleDtor(Module &M) {
   return IRBuilder<>(ReturnInst::Create(*C, AsanDtorBB));
 }
 
-void AddressSanitizerModule::InstrumentGlobalsCOFF(
+void ModuleAddressSanitizer::InstrumentGlobalsCOFF(
     IRBuilder<> &IRB, Module &M, ArrayRef<GlobalVariable *> ExtendedGlobals,
     ArrayRef<Constant *> MetadataInitializers) {
   assert(ExtendedGlobals.size() == MetadataInitializers.size());
@@ -1741,7 +2039,7 @@ void AddressSanitizerModule::InstrumentGlobalsCOFF(
   }
 }
 
-void AddressSanitizerModule::InstrumentGlobalsELF(
+void ModuleAddressSanitizer::InstrumentGlobalsELF(
     IRBuilder<> &IRB, Module &M, ArrayRef<GlobalVariable *> ExtendedGlobals,
     ArrayRef<Constant *> MetadataInitializers,
     const std::string &UniqueModuleId) {
@@ -1800,7 +2098,7 @@ void AddressSanitizerModule::InstrumentGlobalsELF(
                        IRB.CreatePointerCast(StopELFMetadata, IntptrTy)});
 }
 
-void AddressSanitizerModule::InstrumentGlobalsMachO(
+void ModuleAddressSanitizer::InstrumentGlobalsMachO(
     IRBuilder<> &IRB, Module &M, ArrayRef<GlobalVariable *> ExtendedGlobals,
     ArrayRef<Constant *> MetadataInitializers) {
   assert(ExtendedGlobals.size() == MetadataInitializers.size());
@@ -1857,7 +2155,7 @@ void AddressSanitizerModule::InstrumentGlobalsMachO(
                       {IRB.CreatePointerCast(RegisteredFlag, IntptrTy)});
 }
 
-void AddressSanitizerModule::InstrumentGlobalsWithMetadataArray(
+void ModuleAddressSanitizer::InstrumentGlobalsWithMetadataArray(
     IRBuilder<> &IRB, Module &M, ArrayRef<GlobalVariable *> ExtendedGlobals,
     ArrayRef<Constant *> MetadataInitializers) {
   assert(ExtendedGlobals.size() == MetadataInitializers.size());
@@ -1871,6 +2169,8 @@ void AddressSanitizerModule::InstrumentGlobalsWithMetadataArray(
   auto AllGlobals = new GlobalVariable(
       M, ArrayOfGlobalStructTy, false, GlobalVariable::InternalLinkage,
       ConstantArray::get(ArrayOfGlobalStructTy, MetadataInitializers), "");
+  if (Mapping.Scale > 3)
+    AllGlobals->setAlignment(1ULL << Mapping.Scale);
 
   IRB.CreateCall(AsanRegisterGlobals,
                  {IRB.CreatePointerCast(AllGlobals, IntptrTy),
@@ -1889,9 +2189,9 @@ void AddressSanitizerModule::InstrumentGlobalsWithMetadataArray(
 // redzones and inserts this function into llvm.global_ctors.
 // Sets *CtorComdat to true if the global registration code emitted into the
 // asan constructor is comdat-compatible.
-bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M, bool *CtorComdat) {
+bool ModuleAddressSanitizer::InstrumentGlobals(IRBuilder<> &IRB, Module &M,
+                                               bool *CtorComdat) {
   *CtorComdat = false;
-  GlobalsMD.init(M);
 
   SmallVector<GlobalVariable *, 16> GlobalsToChange;
 
@@ -1928,19 +2228,21 @@ bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M, bool
   // We shouldn't merge same module names, as this string serves as unique
   // module ID in runtime.
   GlobalVariable *ModuleName = createPrivateGlobalForString(
-      M, M.getModuleIdentifier(), /*AllowMerging*/ false);
+      M, M.getModuleIdentifier(), /*AllowMerging*/ false, kAsanGenPrefix);
 
   for (size_t i = 0; i < n; i++) {
     static const uint64_t kMaxGlobalRedzone = 1 << 18;
     GlobalVariable *G = GlobalsToChange[i];
 
+    // FIXME: Metadata should be attched directly to the global directly instead
+    // of being added to llvm.asan.globals.
     auto MD = GlobalsMD.get(G);
     StringRef NameForGlobal = G->getName();
     // Create string holding the global name (use global name from metadata
     // if it's available, otherwise just write the name of global variable).
     GlobalVariable *Name = createPrivateGlobalForString(
         M, MD.Name.empty() ? NameForGlobal : MD.Name,
-        /*AllowMerging*/ true);
+        /*AllowMerging*/ true, kAsanGenPrefix);
 
     Type *Ty = G->getValueType();
     uint64_t SizeInBytes = DL.getTypeAllocSize(Ty);
@@ -1967,7 +2269,12 @@ bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M, bool
         new GlobalVariable(M, NewTy, G->isConstant(), Linkage, NewInitializer,
                            "", G, G->getThreadLocalMode());
     NewGlobal->copyAttributesFrom(G);
+    NewGlobal->setComdat(G->getComdat());
     NewGlobal->setAlignment(MinRZ);
+    // Don't fold globals with redzones. ODR violation detector and redzone
+    // poisoning implicitly creates a dependence on the global's address, so it
+    // is no longer valid for it to be marked unnamed_addr.
+    NewGlobal->setUnnamedAddr(GlobalValue::UnnamedAddr::None);
 
     // Move null-terminated C strings to "__asan_cstring" section on Darwin.
     if (TargetTriple.isOSBinFormatMachO() && !G->hasSection() &&
@@ -2008,12 +2315,18 @@ bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M, bool
     bool CanUsePrivateAliases =
         TargetTriple.isOSBinFormatELF() || TargetTriple.isOSBinFormatMachO() ||
         TargetTriple.isOSBinFormatWasm();
-    if (CanUsePrivateAliases && ClUsePrivateAliasForGlobals) {
+    if (CanUsePrivateAliases && UsePrivateAlias) {
       // Create local alias for NewGlobal to avoid crash on ODR between
       // instrumented and non-instrumented libraries.
-      auto *GA = GlobalAlias::create(GlobalValue::InternalLinkage,
-                                     NameForGlobal + M.getName(), NewGlobal);
+      InstrumentedGlobal =
+          GlobalAlias::create(GlobalValue::PrivateLinkage, "", NewGlobal);
+    }
 
+    // ODR should not happen for local linkage.
+    if (NewGlobal->hasLocalLinkage()) {
+      ODRIndicator = ConstantExpr::getIntToPtr(ConstantInt::get(IntptrTy, -1),
+                                               IRB.getInt8PtrTy());
+    } else if (UseOdrIndicator) {
       // With local aliases, we need to provide another externally visible
       // symbol __odr_asan_XXX to detect ODR violation.
       auto *ODRIndicatorSym =
@@ -2027,7 +2340,6 @@ bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M, bool
       ODRIndicatorSym->setDLLStorageClass(NewGlobal->getDLLStorageClass());
       ODRIndicatorSym->setAlignment(1);
       ODRIndicator = ODRIndicatorSym;
-      InstrumentedGlobal = GA;
     }
 
     Constant *Initializer = ConstantStruct::get(
@@ -2042,10 +2354,20 @@ bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M, bool
 
     if (ClInitializers && MD.IsDynInit) HasDynamicallyInitializedGlobals = true;
 
-    DEBUG(dbgs() << "NEW GLOBAL: " << *NewGlobal << "\n");
+    LLVM_DEBUG(dbgs() << "NEW GLOBAL: " << *NewGlobal << "\n");
 
     Initializers[i] = Initializer;
   }
+
+  // Add instrumented globals to llvm.compiler.used list to avoid LTO from
+  // ConstantMerge'ing them.
+  SmallVector<GlobalValue *, 16> GlobalsToAddToUsedList;
+  for (size_t i = 0; i < n; i++) {
+    GlobalVariable *G = NewGlobals[i];
+    if (G->getName().empty()) continue;
+    GlobalsToAddToUsedList.push_back(G);
+  }
+  appendToCompilerUsed(M, ArrayRef<GlobalValue *>(GlobalsToAddToUsedList));
 
   std::string ELFUniqueModuleId =
       (UseGlobalsGC && TargetTriple.isOSBinFormatELF()) ? getUniqueModuleId(&M)
@@ -2066,16 +2388,21 @@ bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M, bool
   if (HasDynamicallyInitializedGlobals)
     createInitializerPoisonCalls(M, ModuleName);
 
-  DEBUG(dbgs() << M);
+  LLVM_DEBUG(dbgs() << M);
   return true;
 }
 
-bool AddressSanitizerModule::runOnModule(Module &M) {
-  C = &(M.getContext());
+int ModuleAddressSanitizer::GetAsanVersion(const Module &M) const {
   int LongSize = M.getDataLayout().getPointerSizeInBits();
-  IntptrTy = Type::getIntNTy(*C, LongSize);
-  TargetTriple = Triple(M.getTargetTriple());
-  Mapping = getShadowMapping(TargetTriple, LongSize, CompileKernel);
+  bool isAndroid = Triple(M.getTargetTriple()).isAndroid();
+  int Version = 8;
+  // 32-bit Android is one version ahead because of the switch to dynamic
+  // shadow.
+  Version += (LongSize == 32 && isAndroid);
+  return Version;
+}
+
+bool ModuleAddressSanitizer::instrumentModule(Module &M) {
   initializeCallbacks(M);
 
   if (CompileKernel)
@@ -2083,9 +2410,11 @@ bool AddressSanitizerModule::runOnModule(Module &M) {
 
   // Create a module constructor. A destructor is created lazily because not all
   // platforms, and not all modules need it.
+  std::string VersionCheckName =
+      kAsanVersionCheckNamePrefix + std::to_string(GetAsanVersion(M));
   std::tie(AsanCtorFunction, std::ignore) = createSanitizerCtorAndInitFunctions(
       M, kAsanModuleCtorName, kAsanInitName, /*InitArgTypes=*/{},
-      /*InitArgs=*/{}, kAsanVersionCheckName);
+      /*InitArgs=*/{}, VersionCheckName);
 
   bool CtorComdat = true;
   bool Changed = false;
@@ -2124,7 +2453,6 @@ void AddressSanitizer::initializeCallbacks(Module &M) {
     for (size_t AccessIsWrite = 0; AccessIsWrite <= 1; AccessIsWrite++) {
       const std::string TypeStr = AccessIsWrite ? "store" : "load";
       const std::string ExpStr = Exp ? "exp_" : "";
-      const std::string SuffixStr = CompileKernel ? "N" : "_n";
       const std::string EndingStr = Recover ? "_noabort" : "";
 
       SmallVector<Type *, 3> Args2 = {IntptrTy, IntptrTy};
@@ -2134,75 +2462,56 @@ void AddressSanitizer::initializeCallbacks(Module &M) {
         Args2.push_back(ExpType);
         Args1.push_back(ExpType);
       }
-	    AsanErrorCallbackSized[AccessIsWrite][Exp] =
-	        checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-	            kAsanReportErrorTemplate + ExpStr + TypeStr + SuffixStr +
-	                EndingStr,
-	            FunctionType::get(IRB.getVoidTy(), Args2, false)));
+      AsanErrorCallbackSized[AccessIsWrite][Exp] = M.getOrInsertFunction(
+          kAsanReportErrorTemplate + ExpStr + TypeStr + "_n" + EndingStr,
+          FunctionType::get(IRB.getVoidTy(), Args2, false));
 
-	    AsanMemoryAccessCallbackSized[AccessIsWrite][Exp] =
-	        checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-	            ClMemoryAccessCallbackPrefix + ExpStr + TypeStr + "N" + EndingStr,
-	            FunctionType::get(IRB.getVoidTy(), Args2, false)));
+      AsanMemoryAccessCallbackSized[AccessIsWrite][Exp] = M.getOrInsertFunction(
+          ClMemoryAccessCallbackPrefix + ExpStr + TypeStr + "N" + EndingStr,
+          FunctionType::get(IRB.getVoidTy(), Args2, false));
 
-	    for (size_t AccessSizeIndex = 0; AccessSizeIndex < kNumberOfAccessSizes;
-	         AccessSizeIndex++) {
-	      const std::string Suffix = TypeStr + itostr(1ULL << AccessSizeIndex);
-	      AsanErrorCallback[AccessIsWrite][Exp][AccessSizeIndex] =
-	          checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-	              kAsanReportErrorTemplate + ExpStr + Suffix + EndingStr,
-	              FunctionType::get(IRB.getVoidTy(), Args1, false)));
+      for (size_t AccessSizeIndex = 0; AccessSizeIndex < kNumberOfAccessSizes;
+           AccessSizeIndex++) {
+        const std::string Suffix = TypeStr + itostr(1ULL << AccessSizeIndex);
+        AsanErrorCallback[AccessIsWrite][Exp][AccessSizeIndex] =
+            M.getOrInsertFunction(
+                kAsanReportErrorTemplate + ExpStr + Suffix + EndingStr,
+                FunctionType::get(IRB.getVoidTy(), Args1, false));
 
-	      AsanMemoryAccessCallback[AccessIsWrite][Exp][AccessSizeIndex] =
-	          checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-	              ClMemoryAccessCallbackPrefix + ExpStr + Suffix + EndingStr,
-	              FunctionType::get(IRB.getVoidTy(), Args1, false)));
-	    }
-	  }
+        AsanMemoryAccessCallback[AccessIsWrite][Exp][AccessSizeIndex] =
+            M.getOrInsertFunction(
+                ClMemoryAccessCallbackPrefix + ExpStr + Suffix + EndingStr,
+                FunctionType::get(IRB.getVoidTy(), Args1, false));
+      }
+    }
   }
 
   const std::string MemIntrinCallbackPrefix =
       CompileKernel ? std::string("") : ClMemoryAccessCallbackPrefix;
-  AsanMemmove = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-      MemIntrinCallbackPrefix + "memmove", IRB.getInt8PtrTy(),
-      IRB.getInt8PtrTy(), IRB.getInt8PtrTy(), IntptrTy));
-  AsanMemcpy = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-      MemIntrinCallbackPrefix + "memcpy", IRB.getInt8PtrTy(),
-      IRB.getInt8PtrTy(), IRB.getInt8PtrTy(), IntptrTy));
-  AsanMemset = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-      MemIntrinCallbackPrefix + "memset", IRB.getInt8PtrTy(),
-      IRB.getInt8PtrTy(), IRB.getInt32Ty(), IntptrTy));
+  AsanMemmove = M.getOrInsertFunction(MemIntrinCallbackPrefix + "memmove",
+                                      IRB.getInt8PtrTy(), IRB.getInt8PtrTy(),
+                                      IRB.getInt8PtrTy(), IntptrTy);
+  AsanMemcpy = M.getOrInsertFunction(MemIntrinCallbackPrefix + "memcpy",
+                                     IRB.getInt8PtrTy(), IRB.getInt8PtrTy(),
+                                     IRB.getInt8PtrTy(), IntptrTy);
+  AsanMemset = M.getOrInsertFunction(MemIntrinCallbackPrefix + "memset",
+                                     IRB.getInt8PtrTy(), IRB.getInt8PtrTy(),
+                                     IRB.getInt32Ty(), IntptrTy);
 
-  AsanHandleNoReturnFunc = checkSanitizerInterfaceFunction(
-      M.getOrInsertFunction(kAsanHandleNoReturnName, IRB.getVoidTy()));
+  AsanHandleNoReturnFunc =
+      M.getOrInsertFunction(kAsanHandleNoReturnName, IRB.getVoidTy());
 
-  AsanPtrCmpFunction = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-      kAsanPtrCmp, IRB.getVoidTy(), IntptrTy, IntptrTy));
-  AsanPtrSubFunction = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-      kAsanPtrSub, IRB.getVoidTy(), IntptrTy, IntptrTy));
+  AsanPtrCmpFunction =
+      M.getOrInsertFunction(kAsanPtrCmp, IRB.getVoidTy(), IntptrTy, IntptrTy);
+  AsanPtrSubFunction =
+      M.getOrInsertFunction(kAsanPtrSub, IRB.getVoidTy(), IntptrTy, IntptrTy);
   // We insert an empty inline asm after __asan_report* to avoid callback merge.
   EmptyAsm = InlineAsm::get(FunctionType::get(IRB.getVoidTy(), false),
                             StringRef(""), StringRef(""),
                             /*hasSideEffects=*/true);
-}
-
-// virtual
-bool AddressSanitizer::doInitialization(Module &M) {
-  // Initialize the private fields. No one has accessed them before.
-  GlobalsMD.init(M);
-
-  C = &(M.getContext());
-  LongSize = M.getDataLayout().getPointerSizeInBits();
-  IntptrTy = Type::getIntNTy(*C, LongSize);
-  TargetTriple = Triple(M.getTargetTriple());
-
-  Mapping = getShadowMapping(TargetTriple, LongSize, CompileKernel);
-  return true;
-}
-
-bool AddressSanitizer::doFinalization(Module &M) {
-  GlobalsMD.reset();
-  return false;
+  if (Mapping.InGlobal)
+    AsanShadowGlobal = M.getOrInsertGlobal("__asan_shadow",
+                                           ArrayType::get(IRB.getInt8Ty(), 0));
 }
 
 bool AddressSanitizer::maybeInsertAsanInitAtFunctionEntry(Function &F) {
@@ -2214,7 +2523,7 @@ bool AddressSanitizer::maybeInsertAsanInitAtFunctionEntry(Function &F) {
   // We cannot just ignore these methods, because they may call other
   // instrumented functions.
   if (F.getName().find(" load]") != std::string::npos) {
-    Function *AsanInitFunction =
+    FunctionCallee AsanInitFunction =
         declareSanitizerInitFunction(*F.getParent(), kAsanInitName, {});
     IRBuilder<> IRB(&F.front(), F.front().begin());
     IRB.CreateCall(AsanInitFunction, {});
@@ -2229,9 +2538,25 @@ void AddressSanitizer::maybeInsertDynamicShadowAtFunctionEntry(Function &F) {
     return;
 
   IRBuilder<> IRB(&F.front().front());
-  Value *GlobalDynamicAddress = F.getParent()->getOrInsertGlobal(
-      kAsanShadowMemoryDynamicAddress, IntptrTy);
-  LocalDynamicShadow = IRB.CreateLoad(GlobalDynamicAddress);
+  if (Mapping.InGlobal) {
+    if (ClWithIfuncSuppressRemat) {
+      // An empty inline asm with input reg == output reg.
+      // An opaque pointer-to-int cast, basically.
+      InlineAsm *Asm = InlineAsm::get(
+          FunctionType::get(IntptrTy, {AsanShadowGlobal->getType()}, false),
+          StringRef(""), StringRef("=r,0"),
+          /*hasSideEffects=*/false);
+      LocalDynamicShadow =
+          IRB.CreateCall(Asm, {AsanShadowGlobal}, ".asan.shadow");
+    } else {
+      LocalDynamicShadow =
+          IRB.CreatePointerCast(AsanShadowGlobal, IntptrTy, ".asan.shadow");
+    }
+  } else {
+    Value *GlobalDynamicAddress = F.getParent()->getOrInsertGlobal(
+        kAsanShadowMemoryDynamicAddress, IntptrTy);
+    LocalDynamicShadow = IRB.CreateLoad(IntptrTy, GlobalDynamicAddress);
+  }
 }
 
 void AddressSanitizer::markEscapedLocalAllocas(Function &F) {
@@ -2262,7 +2587,8 @@ void AddressSanitizer::markEscapedLocalAllocas(Function &F) {
   }
 }
 
-bool AddressSanitizer::runOnFunction(Function &F) {
+bool AddressSanitizer::instrumentFunction(Function &F,
+                                          const TargetLibraryInfo *TLI) {
   if (F.getLinkage() == GlobalValue::AvailableExternallyLinkage) return false;
   if (!ClDebugFunc.empty() && ClDebugFunc == F.getName()) return false;
   if (F.getName().startswith("__asan_")) return false;
@@ -2271,17 +2597,16 @@ bool AddressSanitizer::runOnFunction(Function &F) {
 
   // If needed, insert __asan_init before checking for SanitizeAddress attr.
   // This function needs to be called even if the function body is not
-  // instrumented.  
+  // instrumented.
   if (maybeInsertAsanInitAtFunctionEntry(F))
     FunctionModified = true;
-  
+
   // Leave if the function doesn't need instrumentation.
   if (!F.hasFnAttribute(Attribute::SanitizeAddress)) return FunctionModified;
 
-  DEBUG(dbgs() << "ASAN instrumenting:\n" << F << "\n");
+  LLVM_DEBUG(dbgs() << "ASAN instrumenting:\n" << F << "\n");
 
   initializeCallbacks(*F.getParent());
-  DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
 
   FunctionStateRAII CleanupObj(this);
 
@@ -2293,7 +2618,7 @@ bool AddressSanitizer::runOnFunction(Function &F) {
 
   // We want to instrument every address only once per basic block (unless there
   // are calls between uses).
-  SmallSet<Value *, 16> TempsToInstrument;
+  SmallPtrSet<Value *, 16> TempsToInstrument;
   SmallVector<Instruction *, 16> ToInstrument;
   SmallVector<Instruction *, 8> NoReturnCalls;
   SmallVector<BasicBlock *, 16> AllBlocks;
@@ -2302,8 +2627,6 @@ bool AddressSanitizer::runOnFunction(Function &F) {
   bool IsWrite;
   unsigned Alignment;
   uint64_t TypeSize;
-  const TargetLibraryInfo *TLI =
-      &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
 
   // Fill the set of memory operations to instrument.
   for (auto &BB : F) {
@@ -2327,8 +2650,10 @@ bool AddressSanitizer::runOnFunction(Function &F) {
               continue; // We've seen this temp in the current BB.
           }
         }
-      } else if (ClInvalidPointerPairs &&
-                 isInterestingPointerComparisonOrSubtraction(&Inst)) {
+      } else if (((ClInvalidPointerPairs || ClInvalidPointerCmp) &&
+                  isInterestingPointerComparison(&Inst)) ||
+                 ((ClInvalidPointerPairs || ClInvalidPointerSub) &&
+                  isInterestingPointerSubtraction(&Inst))) {
         PointerComparisonsOrSubtracts.push_back(&Inst);
         continue;
       } else if (isa<MemIntrinsic>(Inst)) {
@@ -2339,7 +2664,8 @@ bool AddressSanitizer::runOnFunction(Function &F) {
         if (CS) {
           // A call inside BB.
           TempsToInstrument.clear();
-          if (CS.doesNotReturn()) NoReturnCalls.push_back(CS.getInstruction());
+          if (CS.doesNotReturn() && !CS->getMetadata("nosanitize"))
+            NoReturnCalls.push_back(CS.getInstruction());
         }
         if (CallInst *CI = dyn_cast<CallInst>(&Inst))
           maybeMarkSanitizerLibraryCallNoBuiltin(CI, TLI);
@@ -2352,7 +2678,6 @@ bool AddressSanitizer::runOnFunction(Function &F) {
   }
 
   bool UseCalls =
-      CompileKernel ||
       (ClInstrumentationWithCallsThreshold >= 0 &&
        ToInstrument.size() > (unsigned)ClInstrumentationWithCallsThreshold);
   const DataLayout &DL = F.getParent()->getDataLayout();
@@ -2377,8 +2702,8 @@ bool AddressSanitizer::runOnFunction(Function &F) {
   FunctionStackPoisoner FSP(F, *this);
   bool ChangedStack = FSP.runOnFunction();
 
-  // We must unpoison the stack before every NoReturn call (throw, _exit, etc).
-  // See e.g. http://code.google.com/p/address-sanitizer/issues/detail?id=37
+  // We must unpoison the stack before NoReturn calls (throw, _exit, etc).
+  // See e.g. https://github.com/google/sanitizers/issues/37
   for (auto CI : NoReturnCalls) {
     IRBuilder<> IRB(CI);
     IRB.CreateCall(AsanHandleNoReturnFunc, {});
@@ -2392,8 +2717,8 @@ bool AddressSanitizer::runOnFunction(Function &F) {
   if (NumInstrumented > 0 || ChangedStack || !NoReturnCalls.empty())
     FunctionModified = true;
 
-  DEBUG(dbgs() << "ASAN done instrumenting: " << FunctionModified << " "
-               << F << "\n");
+  LLVM_DEBUG(dbgs() << "ASAN done instrumenting: " << FunctionModified << " "
+                    << F << "\n");
 
   return FunctionModified;
 }
@@ -2414,20 +2739,17 @@ void FunctionStackPoisoner::initializeCallbacks(Module &M) {
   IRBuilder<> IRB(*C);
   for (int i = 0; i <= kMaxAsanStackMallocSizeClass; i++) {
     std::string Suffix = itostr(i);
-    AsanStackMallocFunc[i] = checkSanitizerInterfaceFunction(
-        M.getOrInsertFunction(kAsanStackMallocNameTemplate + Suffix, IntptrTy,
-                              IntptrTy));
-    AsanStackFreeFunc[i] = checkSanitizerInterfaceFunction(
+    AsanStackMallocFunc[i] = M.getOrInsertFunction(
+        kAsanStackMallocNameTemplate + Suffix, IntptrTy, IntptrTy);
+    AsanStackFreeFunc[i] =
         M.getOrInsertFunction(kAsanStackFreeNameTemplate + Suffix,
-                              IRB.getVoidTy(), IntptrTy, IntptrTy));
+                              IRB.getVoidTy(), IntptrTy, IntptrTy);
   }
   if (ASan.UseAfterScope) {
-    AsanPoisonStackMemoryFunc = checkSanitizerInterfaceFunction(
-        M.getOrInsertFunction(kAsanPoisonStackMemoryName, IRB.getVoidTy(),
-                              IntptrTy, IntptrTy));
-    AsanUnpoisonStackMemoryFunc = checkSanitizerInterfaceFunction(
-        M.getOrInsertFunction(kAsanUnpoisonStackMemoryName, IRB.getVoidTy(),
-                              IntptrTy, IntptrTy));
+    AsanPoisonStackMemoryFunc = M.getOrInsertFunction(
+        kAsanPoisonStackMemoryName, IRB.getVoidTy(), IntptrTy, IntptrTy);
+    AsanUnpoisonStackMemoryFunc = M.getOrInsertFunction(
+        kAsanUnpoisonStackMemoryName, IRB.getVoidTy(), IntptrTy, IntptrTy);
   }
 
   for (size_t Val : {0x00, 0xf1, 0xf2, 0xf3, 0xf5, 0xf8}) {
@@ -2435,15 +2757,13 @@ void FunctionStackPoisoner::initializeCallbacks(Module &M) {
     Name << kAsanSetShadowPrefix;
     Name << std::setw(2) << std::setfill('0') << std::hex << Val;
     AsanSetShadowFunc[Val] =
-        checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-            Name.str(), IRB.getVoidTy(), IntptrTy, IntptrTy));
+        M.getOrInsertFunction(Name.str(), IRB.getVoidTy(), IntptrTy, IntptrTy);
   }
 
-  AsanAllocaPoisonFunc = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-      kAsanAllocaPoison, IRB.getVoidTy(), IntptrTy, IntptrTy));
-  AsanAllocasUnpoisonFunc =
-      checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-          kAsanAllocasUnpoison, IRB.getVoidTy(), IntptrTy, IntptrTy));
+  AsanAllocaPoisonFunc = M.getOrInsertFunction(
+      kAsanAllocaPoison, IRB.getVoidTy(), IntptrTy, IntptrTy);
+  AsanAllocasUnpoisonFunc = M.getOrInsertFunction(
+      kAsanAllocasUnpoison, IRB.getVoidTy(), IntptrTy, IntptrTy);
 }
 
 void FunctionStackPoisoner::copyToShadowInline(ArrayRef<uint8_t> ShadowMask,
@@ -2546,8 +2866,13 @@ static int StackMallocSizeClass(uint64_t LocalStackSize) {
 }
 
 void FunctionStackPoisoner::copyArgsPassedByValToAllocas() {
-  BasicBlock &FirstBB = *F.begin();
-  IRBuilder<> IRB(&FirstBB, FirstBB.getFirstInsertionPt());
+  Instruction *CopyInsertPoint = &F.front().front();
+  if (CopyInsertPoint == ASan.LocalDynamicShadow) {
+    // Insert after the dynamic shadow location is determined
+    CopyInsertPoint = CopyInsertPoint->getNextNode();
+    assert(CopyInsertPoint);
+  }
+  IRBuilder<> IRB(CopyInsertPoint);
   const DataLayout &DL = F.getParent()->getDataLayout();
   for (Argument &Arg : F.args()) {
     if (Arg.hasByValAttr()) {
@@ -2555,14 +2880,15 @@ void FunctionStackPoisoner::copyArgsPassedByValToAllocas() {
       unsigned Align = Arg.getParamAlignment();
       if (Align == 0) Align = DL.getABITypeAlignment(Ty);
 
-      const std::string &Name = Arg.hasName() ? Arg.getName().str() :
-          "Arg" + llvm::to_string(Arg.getArgNo());
-      AllocaInst *AI = IRB.CreateAlloca(Ty, nullptr, Twine(Name) + ".byval");
+      AllocaInst *AI = IRB.CreateAlloca(
+          Ty, nullptr,
+          (Arg.hasName() ? Arg.getName() : "Arg" + Twine(Arg.getArgNo())) +
+              ".byval");
       AI->setAlignment(Align);
       Arg.replaceAllUsesWith(AI);
 
       uint64_t AllocSize = DL.getTypeAllocSize(Ty);
-      IRB.CreateMemCpy(AI, &Arg, AllocSize, Align);
+      IRB.CreateMemCpy(AI, Align, &Arg, Align, AllocSize);
     }
   }
 }
@@ -2674,9 +3000,10 @@ void FunctionStackPoisoner::processStaticAllocas() {
 
   // Minimal header size (left redzone) is 4 pointers,
   // i.e. 32 bytes on 64-bit platforms and 16 bytes in 32-bit platforms.
-  size_t MinHeaderSize = ASan.LongSize / 2;
+  size_t Granularity = 1ULL << Mapping.Scale;
+  size_t MinHeaderSize = std::max((size_t)ASan.LongSize / 2, Granularity);
   const ASanStackFrameLayout &L =
-      ComputeASanStackFrameLayout(SVD, 1ULL << Mapping.Scale, MinHeaderSize);
+      ComputeASanStackFrameLayout(SVD, Granularity, MinHeaderSize);
 
   // Build AllocaToSVDMap for ASanStackVariableDescription lookup.
   DenseMap<const AllocaInst *, ASanStackVariableDescription *> AllocaToSVDMap;
@@ -2702,7 +3029,7 @@ void FunctionStackPoisoner::processStaticAllocas() {
   }
 
   auto DescriptionString = ComputeASanStackFrameDescription(SVD);
-  DEBUG(dbgs() << DescriptionString << " --- " << L.FrameSize << "\n");
+  LLVM_DEBUG(dbgs() << DescriptionString << " --- " << L.FrameSize << "\n");
   uint64_t LocalStackSize = L.FrameSize;
   bool DoStackMalloc = ClUseAfterReturn && !ASan.CompileKernel &&
                        LocalStackSize <= kMaxStackMallocSize;
@@ -2721,17 +3048,21 @@ void FunctionStackPoisoner::processStaticAllocas() {
 
   Value *FakeStack;
   Value *LocalStackBase;
+  Value *LocalStackBaseAlloca;
+  uint8_t DIExprFlags = DIExpression::ApplyOffset;
 
   if (DoStackMalloc) {
+    LocalStackBaseAlloca =
+        IRB.CreateAlloca(IntptrTy, nullptr, "asan_local_stack_base");
     // void *FakeStack = __asan_option_detect_stack_use_after_return
     //     ? __asan_stack_malloc_N(LocalStackSize)
     //     : nullptr;
     // void *LocalStackBase = (FakeStack) ? FakeStack : alloca(LocalStackSize);
     Constant *OptionDetectUseAfterReturn = F.getParent()->getOrInsertGlobal(
         kAsanOptionDetectUseAfterReturn, IRB.getInt32Ty());
-    Value *UseAfterReturnIsEnabled =
-        IRB.CreateICmpNE(IRB.CreateLoad(OptionDetectUseAfterReturn),
-                         Constant::getNullValue(IRB.getInt32Ty()));
+    Value *UseAfterReturnIsEnabled = IRB.CreateICmpNE(
+        IRB.CreateLoad(IRB.getInt32Ty(), OptionDetectUseAfterReturn),
+        Constant::getNullValue(IRB.getInt32Ty()));
     Instruction *Term =
         SplitBlockAndInsertIfThen(UseAfterReturnIsEnabled, InsBefore, false);
     IRBuilder<> IRBIf(Term);
@@ -2753,24 +3084,30 @@ void FunctionStackPoisoner::processStaticAllocas() {
     IRBIf.SetCurrentDebugLocation(EntryDebugLocation);
     Value *AllocaValue =
         DoDynamicAlloca ? createAllocaForLayout(IRBIf, L, true) : StaticAlloca;
+
     IRB.SetInsertPoint(InsBefore);
     IRB.SetCurrentDebugLocation(EntryDebugLocation);
     LocalStackBase = createPHI(IRB, NoFakeStack, AllocaValue, Term, FakeStack);
+    IRB.SetCurrentDebugLocation(EntryDebugLocation);
+    IRB.CreateStore(LocalStackBase, LocalStackBaseAlloca);
+    DIExprFlags |= DIExpression::DerefBefore;
   } else {
     // void *FakeStack = nullptr;
     // void *LocalStackBase = alloca(LocalStackSize);
     FakeStack = ConstantInt::get(IntptrTy, 0);
     LocalStackBase =
         DoDynamicAlloca ? createAllocaForLayout(IRB, L, true) : StaticAlloca;
+    LocalStackBaseAlloca = LocalStackBase;
   }
 
   // Replace Alloca instructions with base+offset.
   for (const auto &Desc : SVD) {
     AllocaInst *AI = Desc.AI;
+    replaceDbgDeclareForAlloca(AI, LocalStackBaseAlloca, DIB, DIExprFlags,
+                               Desc.Offset);
     Value *NewAllocaPtr = IRB.CreateIntToPtr(
         IRB.CreateAdd(LocalStackBase, ConstantInt::get(IntptrTy, Desc.Offset)),
         AI->getType());
-    replaceDbgDeclareForAlloca(AI, NewAllocaPtr, DIB, DIExpression::NoDeref);
     AI->replaceAllUsesWith(NewAllocaPtr);
   }
 
@@ -2786,7 +3123,7 @@ void FunctionStackPoisoner::processStaticAllocas() {
       IntptrPtrTy);
   GlobalVariable *StackDescriptionGlobal =
       createPrivateGlobalForString(*F.getParent(), DescriptionString,
-                                   /*AllowMerging*/ true);
+                                   /*AllowMerging*/ true, kAsanGenPrefix);
   Value *Description = IRB.CreatePointerCast(StackDescriptionGlobal, IntptrTy);
   IRB.CreateStore(Description, BasePlus1);
   // Write the PC to redzone[2].
@@ -2844,7 +3181,7 @@ void FunctionStackPoisoner::processStaticAllocas() {
       //     <This is not a fake stack; unpoison the redzones>
       Value *Cmp =
           IRBRet.CreateICmpNE(FakeStack, Constant::getNullValue(IntptrTy));
-      TerminatorInst *ThenTerm, *ElseTerm;
+      Instruction *ThenTerm, *ElseTerm;
       SplitBlockAndInsertIfThenElse(Cmp, Ret, &ThenTerm, &ElseTerm);
 
       IRBuilder<> IRBPoison(ThenTerm);
@@ -2858,7 +3195,7 @@ void FunctionStackPoisoner::processStaticAllocas() {
             FakeStack,
             ConstantInt::get(IntptrTy, ClassSize - ASan.LongSize / 8));
         Value *SavedFlagPtr = IRBPoison.CreateLoad(
-            IRBPoison.CreateIntToPtr(SavedFlagPtrPtr, IntptrPtrTy));
+            IntptrTy, IRBPoison.CreateIntToPtr(SavedFlagPtrPtr, IntptrPtrTy));
         IRBPoison.CreateStore(
             Constant::getNullValue(IRBPoison.getInt8Ty()),
             IRBPoison.CreateIntToPtr(SavedFlagPtr, IRBPoison.getInt8PtrTy()));
@@ -2898,40 +3235,6 @@ void FunctionStackPoisoner::poisonAlloca(Value *V, uint64_t Size,
 //     variable may go in and out of scope several times, e.g. in loops).
 // (3) if we poisoned at least one %alloca in a function,
 //     unpoison the whole stack frame at function exit.
-
-AllocaInst *FunctionStackPoisoner::findAllocaForValue(Value *V) {
-  if (AllocaInst *AI = dyn_cast<AllocaInst>(V))
-    // We're interested only in allocas we can handle.
-    return ASan.isInterestingAlloca(*AI) ? AI : nullptr;
-  // See if we've already calculated (or started to calculate) alloca for a
-  // given value.
-  AllocaForValueMapTy::iterator I = AllocaForValue.find(V);
-  if (I != AllocaForValue.end()) return I->second;
-  // Store 0 while we're calculating alloca for value V to avoid
-  // infinite recursion if the value references itself.
-  AllocaForValue[V] = nullptr;
-  AllocaInst *Res = nullptr;
-  if (CastInst *CI = dyn_cast<CastInst>(V))
-    Res = findAllocaForValue(CI->getOperand(0));
-  else if (PHINode *PN = dyn_cast<PHINode>(V)) {
-    for (Value *IncValue : PN->incoming_values()) {
-      // Allow self-referencing phi-nodes.
-      if (IncValue == PN) continue;
-      AllocaInst *IncValueAI = findAllocaForValue(IncValue);
-      // AI for incoming values should exist and should all be equal.
-      if (IncValueAI == nullptr || (Res != nullptr && IncValueAI != Res))
-        return nullptr;
-      Res = IncValueAI;
-    }
-  } else if (GetElementPtrInst *EP = dyn_cast<GetElementPtrInst>(V)) {
-    Res = findAllocaForValue(EP->getPointerOperand());
-  } else {
-    DEBUG(dbgs() << "Alloca search canceled on unknown instruction: " << *V << "\n");
-  }
-  if (Res) AllocaForValue[V] = Res;
-  return Res;
-}
-
 void FunctionStackPoisoner::handleDynamicAllocaCall(AllocaInst *AI) {
   IRBuilder<> IRB(AI);
 

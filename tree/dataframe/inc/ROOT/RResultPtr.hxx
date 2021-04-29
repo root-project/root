@@ -19,21 +19,37 @@
 
 #include <memory>
 #include <functional>
+#include <type_traits> // std::is_constructible
 
 namespace ROOT {
+namespace RDF {
+template <typename T>
+class RResultPtr;
+
+template <typename Proxied, typename DataSource>
+class RInterface;
+} // namespace RDF
+
 namespace Internal {
 namespace RDF {
 class GraphCreatorHelper;
+
+// no-op overload
+template <typename T>
+inline void WarnOnLazySnapshotNotTriggered(const ROOT::RDF::RResultPtr<T> &)
+{
+}
+
+template <typename DS>
+void WarnOnLazySnapshotNotTriggered(
+   const ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, DS>> &r)
+{
+   if (!r.IsReady()) {
+      Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   }
+}
 }
 } // namespace Internal
-} // namespace ROOT
-
-namespace ROOT {
-namespace RDF {
-// Fwd decl for MakeResultPtr
-template <typename T>
-class RResultPtr;
-} // namespace RDF
 
 namespace Detail {
 namespace RDF {
@@ -137,9 +153,15 @@ class RResultPtr {
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
    T *Get()
    {
-      if (!fActionPtr->HasRun())
+      if (fActionPtr != nullptr && !fActionPtr->HasRun())
          TriggerRun();
       return fObjPtr.get();
+   }
+
+   void ThrowIfNull()
+   {
+      if (fObjPtr == nullptr)
+         throw std::runtime_error("Trying to access the contents of a null RResultPtr.");
    }
 
    RResultPtr(std::shared_ptr<T> objPtr, RDFDetail::RLoopManager *lm,
@@ -158,19 +180,30 @@ public:
    RResultPtr &operator=(const RResultPtr &) = default;
    RResultPtr &operator=(RResultPtr &&) = default;
    explicit operator bool() const { return bool(fObjPtr); }
-   template <typename TO, typename std::enable_if<std::is_convertible<T, TO>::value, int>::type = 0>
-   operator RResultPtr<TO>() const
+   ~RResultPtr()
    {
-      RResultPtr<TO> rp;
-      rp.fLoopManager = fLoopManager;
-      rp.fObjPtr = fObjPtr;
-      rp.fActionPtr = fActionPtr;
-      return rp;
+      if (fObjPtr.use_count() == 1) {
+         ROOT::Internal::RDF::WarnOnLazySnapshotNotTriggered(*this);
+      }
+   }
+
+   /// Convert a RResultPtr<T2> to a RResultPtr<T>.
+   ///
+   /// Useful e.g. to store a number of RResultPtr<TH1D> and RResultPtr<TH2D> in a std::vector<RResultPtr<TH1>>.
+   /// The requirements on T2 and T are the same as for conversion between std::shared_ptr<T2> and std::shared_ptr<T>.
+   template <typename T2, typename std::enable_if<std::is_constructible<std::shared_ptr<T>, std::shared_ptr<T2>>::value,
+                                                  int>::type = 0>
+   RResultPtr(const RResultPtr<T2> &r) : fLoopManager(r.fLoopManager), fObjPtr(r.fObjPtr), fActionPtr(r.fActionPtr)
+   {
    }
 
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   const T &GetValue() { return *Get(); }
+   const T &GetValue()
+   {
+      ThrowIfNull();
+      return *Get();
+   }
 
    /// Get the pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
@@ -178,17 +211,26 @@ public:
 
    /// Get a pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   T &operator*() { return *Get(); }
+   T &operator*()
+   {
+      ThrowIfNull();
+      return *Get();
+   }
 
    /// Get a pointer to the encapsulated object.
    /// Ownership is not transferred to the caller.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   T *operator->() { return Get(); }
+   T *operator->()
+   {
+      ThrowIfNull();
+      return Get();
+   }
 
    /// Return an iterator to the beginning of the contained object if this makes
    /// sense, throw a compilation error otherwise
    typename RIterationHelper<T>::Iterator_t begin()
    {
+      ThrowIfNull();
       if (!fActionPtr->HasRun())
          TriggerRun();
       return RIterationHelper<T>::GetBegin(*fObjPtr);
@@ -198,6 +240,7 @@ public:
    /// sense, throw a compilation error otherwise
    typename RIterationHelper<T>::Iterator_t end()
    {
+      ThrowIfNull();
       if (!fActionPtr->HasRun())
          TriggerRun();
       return RIterationHelper<T>::GetEnd(*fObjPtr);
@@ -248,6 +291,7 @@ public:
    // clang-format on
    RResultPtr<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T &)> callback)
    {
+      ThrowIfNull();
       const auto nSlots = fLoopManager->GetNSlots();
       auto actionPtr = fActionPtr;
       auto c = [nSlots, actionPtr, callback](unsigned int slot) {
@@ -293,6 +337,7 @@ public:
    // clang-format on
    RResultPtr<T> &OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T &)> callback)
    {
+      ThrowIfNull();
       auto actionPtr = fActionPtr;
       auto c = [actionPtr, callback](unsigned int slot) {
          auto partialResult = static_cast<Value_t *>(actionPtr->PartialUpdate(slot));
@@ -314,6 +359,8 @@ public:
    // clang-format on
    bool IsReady() const
    {
+      if (fActionPtr == nullptr)
+         return false;
       return fActionPtr->HasRun();
    }
 };

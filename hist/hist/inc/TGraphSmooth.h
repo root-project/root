@@ -3,7 +3,7 @@
 
 /******************************************************************************
 * Copyright(c) 2001-    , Dr. Christian Stratowa, Vienna, Austria.            *
-* Author: Christian Stratowa with help from Rene Brun.                                                 *
+* Author: Christian Stratowa with help from Rene Brun.                        *
 *                                                                             *
 * Algorithms for smooth regression adapted from:                              *
 * R: A Computer Language for Statistical Data Analysis                        *
@@ -40,12 +40,12 @@ private:
    TGraphSmooth& operator=(const TGraphSmooth&); // Not implented
 
 protected:
-   Int_t       fNin;        //Number of input points
-   Int_t       fNout;       //Number of output points
-   TGraph     *fGin;        //Input graph
-   TGraph     *fGout;       //Output graph
-   Double_t    fMinX;       //Minimum value of array X
-   Double_t    fMaxX;       //Maximum value of array X
+   Int_t       fNin;        ///< Number of input points
+   Int_t       fNout;       ///< Number of output points
+   TGraph     *fGin;        ///< Input graph
+   TGraph     *fGout;       ///< Output graph
+   Double_t    fMinX;       ///< Minimum value of array X
+   Double_t    fMaxX;       ///< Maximum value of array X
 
 public :
    TGraphSmooth();

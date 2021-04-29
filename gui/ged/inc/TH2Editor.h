@@ -12,13 +12,6 @@
 #ifndef ROOT_TH2Editor
 #define ROOT_TH2Editor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TH2Editor                                                           //
-//                                                                      //
-//  Editor changing histogram attributes                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
 
@@ -41,68 +34,68 @@ class TGTextButton;
 class TH2Editor : public TGedFrame {
 
 protected:
-   TH2                 *fHist;            // histogram object
-   TGCompositeFrame    *fBin;             // Contains the Binning Widgets
-   TGCompositeFrame    *fFit;             // Contains the Fitting Widgets
-   TGTextEntry         *fTitle;           // histogram title input field
-   TGComboBox          *fTypeCombo;       // histogram type combo box
-   TGComboBox          *fCoordsCombo;     // Coordinate System combo box
-   TGComboBox          *fContCombo;       // Contour selecting combo box
-   TGLabel             *fColContLbl;      // No. of Contours Label 1
-   TGLabel             *fColContLbl1;     // No. of Contours Label 2
-   Int_t                fTitlePrec;       // font precision level
-   TGHButtonGroup      *fDimGroup;        // Radiobuttongroup to change 2D <-> 3D-Plot
-   TGRadioButton       *fDim;             // 2D-Plot RadioButton
-   TGRadioButton       *fDim0;            // 3D-Plot RadioButton
-   TGLayoutHints       *fDimlh;           // layout hints for 2D-Plot RadioButton
-   TGLayoutHints       *fDim0lh;          // layout hints for 3D-Plot RadioButton
-   TGCompositeFrame    *f6;               // Frame that contains the 2D CheckBox DrawOptions
-   TGCompositeFrame    *f9;               // Frame that contains the 3D CheckBox DrawOptions
-   TGCompositeFrame    *f12;              // Frame that contains the Bar-Title
-   TGCompositeFrame    *f13;              // Frame that contains the Bar Width/Offset NumberEntries
-   TGCompositeFrame    *f38;              // Frame that contains the Frame Fill widgets
-   TGCheckButton       *fAddError;        // CheckBox connected to error bars
-   TGCheckButton       *fAddPalette;      // CheckBox connected to Z option (2D)
-   TGCheckButton       *fAddPalette1;     // CheckBox connected to Z option (3D)
-   TGCheckButton       *fAddArr;          // CheckBox connected to Arr-Option
-   TGCheckButton       *fAddBox;          // CheckBox connected to Box-Option
-   TGCheckButton       *fAddScat;         // CheckBox connected to Scat-Option
-   TGCheckButton       *fAddCol;          // CheckBox connected to Col-Option
-   TGCheckButton       *fAddFB;           // Draw front box (or not)
-   TGCheckButton       *fAddBB;           // Draw back box (or not)
-   TGCheckButton       *fAddText;         // Draw bin contents as text
-   TGNumberEntry       *fContLevels;      // Set number of contour levels
-   TGNumberEntry       *fContLevels1;     // Set number of contour levels
-   TGNumberEntry       *fBarWidth;        // Set bar width of histogram
-   TGNumberEntry       *fBarOffset;       // Set bar offset of histogram
-   TGCompositeFrame    *fBinXCont;        // Contains the rebin widgets for case 1
-   TGHSlider           *fBinXSlider;      // Slider to set rebinning x integer value
-   TGNumberEntryField  *fBinXNumberEntry; // Label which shows the rebinned bin number
-   TGHSlider           *fBinYSlider;      // Slider to set rebinning y integer value
-   TGNumberEntryField  *fBinYNumberEntry; // Label which shows the rebinned bin number
-   TGTextButton        *fApply;           // Apply-Button to accept the rebinned histogram
-   TGTextButton        *fCancel;          // Cancel-Button to reprobate the rebinned histogram
-   TGCompositeFrame    *fBinXCont1;       // Contains the X Rebin Widgets for case 2
-   TGHSlider           *fBinXSlider1;     // Slider to set x rebinning integer value
-   TGNumberEntryField  *fBinXNumberEntry1;// Label which shows the rebinned x bin number
-   TGNumberEntryField  *fXOffsetNumberEntry; // Shows the offset to the x origin of the histogram
-   TGHSlider           *fXBinOffsetSld;   // Add an x-offset to the origin of the histogram
+   TH2                 *fHist;            ///< histogram object
+   TGCompositeFrame    *fBin;             ///< Contains the Binning Widgets
+   TGCompositeFrame    *fFit;             ///< Contains the Fitting Widgets
+   TGTextEntry         *fTitle;           ///< histogram title input field
+   TGComboBox          *fTypeCombo;       ///< histogram type combo box
+   TGComboBox          *fCoordsCombo;     ///< Coordinate System combo box
+   TGComboBox          *fContCombo;       ///< Contour selecting combo box
+   TGLabel             *fColContLbl;      ///< No. of Contours Label 1
+   TGLabel             *fColContLbl1;     ///< No. of Contours Label 2
+   Int_t                fTitlePrec;       ///< font precision level
+   TGHButtonGroup      *fDimGroup;        ///< Radiobuttongroup to change 2D <-> 3D-Plot
+   TGRadioButton       *fDim;             ///< 2D-Plot RadioButton
+   TGRadioButton       *fDim0;            ///< 3D-Plot RadioButton
+   TGLayoutHints       *fDimlh;           ///< layout hints for 2D-Plot RadioButton
+   TGLayoutHints       *fDim0lh;          ///< layout hints for 3D-Plot RadioButton
+   TGCompositeFrame    *f6;               ///< Frame that contains the 2D CheckBox DrawOptions
+   TGCompositeFrame    *f9;               ///< Frame that contains the 3D CheckBox DrawOptions
+   TGCompositeFrame    *f12;              ///< Frame that contains the Bar-Title
+   TGCompositeFrame    *f13;              ///< Frame that contains the Bar Width/Offset NumberEntries
+   TGCompositeFrame    *f38;              ///< Frame that contains the Frame Fill widgets
+   TGCheckButton       *fAddError;        ///< CheckBox connected to error bars
+   TGCheckButton       *fAddPalette;      ///< CheckBox connected to Z option (2D)
+   TGCheckButton       *fAddPalette1;     ///< CheckBox connected to Z option (3D)
+   TGCheckButton       *fAddArr;          ///< CheckBox connected to Arr-Option
+   TGCheckButton       *fAddBox;          ///< CheckBox connected to Box-Option
+   TGCheckButton       *fAddScat;         ///< CheckBox connected to Scat-Option
+   TGCheckButton       *fAddCol;          ///< CheckBox connected to Col-Option
+   TGCheckButton       *fAddFB;           ///< Draw front box (or not)
+   TGCheckButton       *fAddBB;           ///< Draw back box (or not)
+   TGCheckButton       *fAddText;         ///< Draw bin contents as text
+   TGNumberEntry       *fContLevels;      ///< Set number of contour levels
+   TGNumberEntry       *fContLevels1;     ///< Set number of contour levels
+   TGNumberEntry       *fBarWidth;        ///< Set bar width of histogram
+   TGNumberEntry       *fBarOffset;       ///< Set bar offset of histogram
+   TGCompositeFrame    *fBinXCont;        ///< Contains the rebin widgets for case 1
+   TGHSlider           *fBinXSlider;      ///< Slider to set rebinning x integer value
+   TGNumberEntryField  *fBinXNumberEntry; ///< Label which shows the rebinned bin number
+   TGHSlider           *fBinYSlider;      ///< Slider to set rebinning y integer value
+   TGNumberEntryField  *fBinYNumberEntry; ///< Label which shows the rebinned bin number
+   TGTextButton        *fApply;           ///< Apply-Button to accept the rebinned histogram
+   TGTextButton        *fCancel;          ///< Cancel-Button to reprobate the rebinned histogram
+   TGCompositeFrame    *fBinXCont1;       ///< Contains the X Rebin Widgets for case 2
+   TGHSlider           *fBinXSlider1;     ///< Slider to set x rebinning integer value
+   TGNumberEntryField  *fBinXNumberEntry1;///< Label which shows the rebinned x bin number
+   TGNumberEntryField  *fXOffsetNumberEntry; ///< Shows the offset to the x origin of the histogram
+   TGHSlider           *fXBinOffsetSld;   ///< Add an x-offset to the origin of the histogram
 
-   TGCompositeFrame    *fBinYCont1;       // Contains the Y Rebin Widgets for case 2
-   TGHSlider           *fBinYSlider1;     // Slider to set y rebinning integer value
-   TGNumberEntryField  *fBinYNumberEntry1;// Label which shows the rebinned y bin number
-   TGNumberEntryField  *fYOffsetNumberEntry; // Shows the offset to the y origin of the histogram
-   TGHSlider           *fYBinOffsetSld;   // Add an y-offset to the origin of the histogram
-   TGDoubleHSlider     *fSliderX;         // Slider to set x-axis range
-   TGNumberEntryField  *fSldXMin;         // Contains the minimum value of the x-Axis
-   TGNumberEntryField  *fSldXMax;         // Contains the maximum value of the x-Axis
-   TGDoubleHSlider     *fSliderY;         // Slider to set y-axis range
-   TGNumberEntryField  *fSldYMin;         // Contains the minimum value of the y-Axis
-   TGNumberEntryField  *fSldYMax;         // Contains the maximum value of the y-Axis
-   TGCheckButton       *fDelaydraw;       // Delayed drawing of the new axis range
-   TGColorSelect       *fFrameColor;      // Select the Frame Color
-   TGedPatternSelect   *fFramePattern;    // Select the Frame Pattern Style
-   TString              fCutString;       // Contais info about graphical cuts (if any)
+   TGCompositeFrame    *fBinYCont1;       ///< Contains the Y Rebin Widgets for case 2
+   TGHSlider           *fBinYSlider1;     ///< Slider to set y rebinning integer value
+   TGNumberEntryField  *fBinYNumberEntry1;///< Label which shows the rebinned y bin number
+   TGNumberEntryField  *fYOffsetNumberEntry; ///< Shows the offset to the y origin of the histogram
+   TGHSlider           *fYBinOffsetSld;   ///< Add an y-offset to the origin of the histogram
+   TGDoubleHSlider     *fSliderX;         ///< Slider to set x-axis range
+   TGNumberEntryField  *fSldXMin;         ///< Contains the minimum value of the x-Axis
+   TGNumberEntryField  *fSldXMax;         ///< Contains the maximum value of the x-Axis
+   TGDoubleHSlider     *fSliderY;         ///< Slider to set y-axis range
+   TGNumberEntryField  *fSldYMin;         ///< Contains the minimum value of the y-Axis
+   TGNumberEntryField  *fSldYMax;         ///< Contains the maximum value of the y-Axis
+   TGCheckButton       *fDelaydraw;       ///< Delayed drawing of the new axis range
+   TGColorSelect       *fFrameColor;      ///< Select the Frame Color
+   TGedPatternSelect   *fFramePattern;    ///< Select the Frame Pattern Style
+   TString              fCutString;       ///< Contais info about graphical cuts (if any)
 
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);

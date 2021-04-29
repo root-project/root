@@ -1,9 +1,8 @@
 //===- llvm/Type.h - Classes for handling data types ------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -208,6 +207,9 @@ public:
     return getScalarType()->isIntegerTy(BitWidth);
   }
 
+  /// Return true if this is an integer type or a pointer type.
+  bool isIntOrPtrTy() const { return isIntegerTy() || isPointerTy(); }
+
   /// True if this is an instance of FunctionType.
   bool isFunctionTy() const { return getTypeID() == FunctionTyID; }
 
@@ -229,7 +231,7 @@ public:
   /// Return true if this type could be converted with a lossless BitCast to
   /// type 'Ty'. For example, i8* to i32*. BitCasts are valid for types of the
   /// same size only where no re-interpretation of the bits is done.
-  /// @brief Determine if this type could be losslessly bitcast to Ty
+  /// Determine if this type could be losslessly bitcast to Ty
   bool canLosslesslyBitCastTo(Type *Ty) const;
 
   /// Return true if this type is empty, that is, it has no elements or all of
@@ -364,6 +366,7 @@ public:
     return ContainedTys[0];
   }
 
+  inline bool getVectorIsScalable() const;
   inline unsigned getVectorNumElements() const;
   Type *getVectorElementType() const {
     assert(getTypeID() == VectorTyID);
@@ -407,6 +410,20 @@ public:
   static IntegerType *getInt32Ty(LLVMContext &C);
   static IntegerType *getInt64Ty(LLVMContext &C);
   static IntegerType *getInt128Ty(LLVMContext &C);
+  template <typename ScalarTy> static Type *getScalarTy(LLVMContext &C) {
+    int noOfBits = sizeof(ScalarTy) * CHAR_BIT;
+    if (std::is_integral<ScalarTy>::value) {
+      return (Type*) Type::getIntNTy(C, noOfBits);
+    } else if (std::is_floating_point<ScalarTy>::value) {
+      switch (noOfBits) {
+      case 32:
+        return Type::getFloatTy(C);
+      case 64:
+        return Type::getDoubleTy(C);
+      }
+    }
+    llvm_unreachable("Unsupported type in Type::getScalarTy");
+  }
 
   //===--------------------------------------------------------------------===//
   // Convenience methods for getting pointer types with one of the above builtin
@@ -438,7 +455,7 @@ private:
 };
 
 // Printing of types.
-static inline raw_ostream &operator<<(raw_ostream &OS, const Type &T) {
+inline raw_ostream &operator<<(raw_ostream &OS, const Type &T) {
   T.print(OS);
   return OS;
 }
@@ -448,28 +465,6 @@ template <> struct isa_impl<PointerType, Type> {
   static inline bool doit(const Type &Ty) {
     return Ty.getTypeID() == Type::PointerTyID;
   }
-};
-
-//===----------------------------------------------------------------------===//
-// Provide specializations of GraphTraits to be able to treat a type as a
-// graph of sub types.
-
-template <> struct GraphTraits<Type *> {
-  using NodeRef = Type *;
-  using ChildIteratorType = Type::subtype_iterator;
-
-  static NodeRef getEntryNode(Type *T) { return T; }
-  static ChildIteratorType child_begin(NodeRef N) { return N->subtype_begin(); }
-  static ChildIteratorType child_end(NodeRef N) { return N->subtype_end(); }
-};
-
-template <> struct GraphTraits<const Type*> {
-  using NodeRef = const Type *;
-  using ChildIteratorType = Type::subtype_iterator;
-
-  static NodeRef getEntryNode(NodeRef T) { return T; }
-  static ChildIteratorType child_begin(NodeRef N) { return N->subtype_begin(); }
-  static ChildIteratorType child_end(NodeRef N) { return N->subtype_end(); }
 };
 
 // Create wrappers for C Binding types (see CBindingWrapping.h).

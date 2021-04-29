@@ -38,11 +38,6 @@ target_include_directories(ClingUtils PRIVATE
 target_include_directories(ClingUtils SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
-# This is to avoid warnings coming from GCC 7 in llvm/src/include/llvm/ADT/DenseMap.h:1010
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-maybe-uninitialized)
-endif()
-
 ROOT_INSTALL_HEADERS()
 
 #### STL dictionary (replacement for cintdlls)##############################
@@ -110,6 +105,10 @@ set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 set(custom_modulemaps)
 if (runtime_cxxmodules)
   set(custom_modulemaps boost.modulemap tinyxml2.modulemap cuda.modulemap module.modulemap.build)
+  # FIXME: We should install vc.modulemap only when Vc is found (Vc_FOUND) but
+  # some systems install it under /usr/include/Vc/Vc which allows rootcling to
+  # discover it and assert that the modulemap is not found.
+  set(custom_modulemaps ${custom_modulemaps} vc.modulemap)
   if (NOT libcxx)
     if (MSVC)
       set(custom_modulemaps ${custom_modulemaps} vcruntime.modulemap)

@@ -20,25 +20,30 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGComboBox, TGComboBoxPopup                                          //
-//                                                                      //
-// A combobox (also known as a drop down listbox) allows the selection  //
-// of one item out of a list of items. The selected item is visible in  //
-// a little window. To view the list of possible items one has to click //
-// on a button on the right of the little window. This will drop down   //
-// a listbox. After selecting an item from the listbox the box will     //
-// disappear and the newly selected item will be shown in the little    //
-// window.                                                              //
-//                                                                      //
-// The TGComboBox is user callable. The TGComboBoxPopup is a service    //
-// class of the combobox.                                               //
-//                                                                      //
-// Selecting an item in the combobox will generate the event:           //
-// kC_COMMAND, kCM_COMBOBOX, combobox id, item id.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGComboBox
+    \ingroup guiwidgets
+
+A combobox (also known as a drop down listbox) allows the selection
+of one item out of a list of items. The selected item is visible in
+a little window. To view the list of possible items one has to click
+on a button on the right of the little window. This will drop down
+a listbox. After selecting an item from the listbox the box will
+disappear and the newly selected item will be shown in the little
+window.
+
+The TGComboBox is user callable.
+
+\class TGComboBoxPopup
+\ingroup guiwidgets
+
+A service class of the combobox.
+
+Selecting an item in the combobox will generate the event:
+  - kC_COMMAND, kCM_COMBOBOX, combobox id, item id.
+
+*/
+
 
 #include "TGComboBox.h"
 #include "TGScrollBar.h"
@@ -464,6 +469,7 @@ void TGComboBox::Select(Int_t id, Bool_t emit)
          if (emit) {
             Selected(fWidgetId, id);
             Selected(id);
+            Changed();
          }
       }
    }
@@ -609,6 +615,7 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
                }
                Selected(fWidgetId, (Int_t)parm2);
                Selected((Int_t)parm2);
+               Changed();
                fClient->NeedRedraw(this);
                break;
          }
@@ -621,7 +628,7 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Emit signal.
+/// Emit signal, done only when selected entry changed.
 
 void TGComboBox::Selected(Int_t widgetId, Int_t id)
 {

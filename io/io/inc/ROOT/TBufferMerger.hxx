@@ -70,6 +70,12 @@ public:
    /** Returns the number of buffers currently in the queue. */
    size_t GetQueueSize() const;
 
+   /** Returns the number of bytes currently buffered (i.e. in the queue). */
+   size_t GetBuffered() const
+   {
+      return fBuffered;
+   }
+
    /** Returns the current value of the auto save setting in bytes (default = 0). */
    size_t GetAutoSave() const;
 
@@ -93,6 +99,44 @@ public:
     */
    void SetMergeOptions(const TString& options);
 
+   /** Indicates that any TTree objects in the file should be skipped
+    * and thus that steps that are specific to TTree can be skipped */
+   void SetNotrees(Bool_t notrees=kFALSE)
+   {
+      fMerger.SetNotrees(notrees);
+   }
+
+   /** Returns whether the the file has been marked as not containing any TTree objects
+    * and thus that steps that are specific to TTree can be skipped */
+   Bool_t GetNotrees() const
+   {
+      return fMerger.GetNotrees();
+   }
+
+   /** Indicates that the temporary keys (corresponding to the object held by the directories
+    *  of the TMemFile) should be compressed or not.   Those object are stored in the TMemFile
+    * (and thus possibly compressed) when a thread push its data forward (by calling
+    * TBufferMergerFile::Write) and the queue is being processed by another.
+    * Once the TMemFile is picked (by any thread to be merged), *after* taking the
+    * TBufferMerger::fMergeMutex, those object are read back (and thus possibly uncompressed)
+    * and then used by merging.
+    * In order word, the compression of those objects/keys is only usefull to reduce the size
+    * in memory (of the TMemFile) and does not affect (at all) the compression factor of the end
+    * result.
+    */
+   void SetCompressTemporaryKeys(Bool_t request_compression = true)
+   {
+      fCompressTemporaryKeys = request_compression;
+   }
+
+   /** Returns whether to compressed the TKey in the TMemFile for the object held by
+    * the TDirectories.  See TBufferMerger::SetCompressTemporaryKeys for more details.
+    */
+   Bool_t GetCompressTemporaryKeys() const
+   {
+      return fCompressTemporaryKeys;
+   }
+
    friend class TBufferMergerFile;
 
 private:
@@ -107,14 +151,18 @@ private:
 
    void Init(std::unique_ptr<TFile>);
 
+   void MergeImpl();
+
    void Merge();
    void Push(TBufferFile *buffer);
+   bool TryMerge(TBufferMergerFile *memfile);
 
+   bool fCompressTemporaryKeys{false};                           //< Enable compression of the TKeys in the TMemFile (save memory at the expense of time, end result is unchanged)
    size_t fAutoSave{0};                                          //< AutoSave only every fAutoSave bytes
-   size_t fBuffered{0};                                          //< Number of bytes currently buffered
+   std::atomic<size_t> fBuffered{0};                             //< Number of bytes currently buffered
    TFileMerger fMerger{false, false};                            //< TFileMerger used to merge all buffers
    std::mutex fMergeMutex;                                       //< Mutex used to lock fMerger
-   std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
+   mutable std::mutex fQueueMutex;                               //< Mutex used to lock fQueue
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
 };

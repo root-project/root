@@ -8,11 +8,8 @@
 #include <exception>
 
 
-/**
- * The dispatch pointer points to the instance of the compute library in use, provided it has been loaded. 
- * The pointer is of type RooBatchComputeInterface*, so that calling functions through it are always virtual calls.
- * \see RooBatchComputeInterface, RooBatchComputeClass, RF_ARCH
- */
+// First initialisation of the pointer. When implementations of the batch compute library are loaded,
+// they will overwrite the pointer.
 RooBatchCompute::RooBatchComputeInterface* RooBatchCompute::dispatch=nullptr;
 
 namespace {

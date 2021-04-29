@@ -1,9 +1,8 @@
 //===---------- IssueHash.h - Generate identification hashes ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 #ifndef LLVM_CLANG_STATICANALYZER_CORE_ISSUE_HASH_H
@@ -17,7 +16,7 @@ class SourceManager;
 class FullSourceLoc;
 class LangOptions;
 
-/// \brief Get an MD5 hash to help identify bugs.
+/// Get an MD5 hash to help identify bugs.
 ///
 /// This function returns a hash that helps identify bugs within a source file.
 /// This identification can be utilized to diff diagnostic results on different
@@ -29,7 +28,7 @@ class LangOptions;
 /// location. The bugtype and the name of the checker is also part of the hash.
 /// The last component is the string representation of the enclosing declaration
 /// of the associated location.
-/// 
+///
 /// In case a new hash is introduced, the old one should still be maintained for
 /// a while. One should not introduce a new hash for every change, it is
 /// possible to introduce experimental hashes that may change in the future.
@@ -41,7 +40,7 @@ llvm::SmallString<32> GetIssueHash(const SourceManager &SM,
                                    llvm::StringRef BugType, const Decl *D,
                                    const LangOptions &LangOpts);
 
-/// \brief Get the string representation of issue hash. See GetIssueHash() for
+/// Get the string representation of issue hash. See GetIssueHash() for
 /// more information.
 std::string GetIssueString(const SourceManager &SM, FullSourceLoc &IssueLoc,
                            llvm::StringRef CheckerName, llvm::StringRef BugType,

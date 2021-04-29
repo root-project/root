@@ -1,9 +1,8 @@
 //===- SjLjEHPrepare.cpp - Eliminate Invoke & Unwind instructions ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,6 +15,7 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/Transforms/Utils/Local.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
@@ -27,7 +27,6 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Transforms/Utils/Local.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "sjljehprepare"
@@ -40,15 +39,15 @@ class SjLjEHPrepare : public FunctionPass {
   Type *doubleUnderDataTy;
   Type *doubleUnderJBufTy;
   Type *FunctionContextTy;
-  Constant *RegisterFn;
-  Constant *UnregisterFn;
-  Constant *BuiltinSetupDispatchFn;
-  Constant *FrameAddrFn;
-  Constant *StackAddrFn;
-  Constant *StackRestoreFn;
-  Constant *LSDAAddrFn;
-  Constant *CallSiteFn;
-  Constant *FuncCtxFn;
+  FunctionCallee RegisterFn;
+  FunctionCallee UnregisterFn;
+  Function *BuiltinSetupDispatchFn;
+  Function *FrameAddrFn;
+  Function *StackAddrFn;
+  Function *StackRestoreFn;
+  Function *LSDAAddrFn;
+  Function *CallSiteFn;
+  Function *FuncCtxFn;
   AllocaInst *FuncCtx;
 
 public:
@@ -64,7 +63,6 @@ public:
 
 private:
   bool setupEntryBlockAndCallSites(Function &F);
-  bool undoSwiftErrorSelect(Function &F);
   void substituteLPadValues(LandingPadInst *LPI, Value *ExnVal, Value *SelVal);
   Value *setupFunctionContext(Function &F, ArrayRef<LandingPadInst *> LPads);
   void lowerIncomingArguments(Function &F);
@@ -191,14 +189,16 @@ Value *SjLjEHPrepare::setupFunctionContext(Function &F,
         Builder.CreateConstGEP2_32(FunctionContextTy, FuncCtx, 0, 2, "__data");
 
     // The exception values come back in context->__data[0].
+    Type *Int32Ty = Type::getInt32Ty(F.getContext());
     Value *ExceptionAddr = Builder.CreateConstGEP2_32(doubleUnderDataTy, FCData,
                                                       0, 0, "exception_gep");
-    Value *ExnVal = Builder.CreateLoad(ExceptionAddr, true, "exn_val");
+    Value *ExnVal = Builder.CreateLoad(Int32Ty, ExceptionAddr, true, "exn_val");
     ExnVal = Builder.CreateIntToPtr(ExnVal, Builder.getInt8PtrTy());
 
     Value *SelectorAddr = Builder.CreateConstGEP2_32(doubleUnderDataTy, FCData,
                                                      0, 1, "exn_selector_gep");
-    Value *SelVal = Builder.CreateLoad(SelectorAddr, true, "exn_selector_val");
+    Value *SelVal =
+        Builder.CreateLoad(Int32Ty, SelectorAddr, true, "exn_selector_val");
 
     substituteLPadValues(LPI, ExnVal, SelVal);
   }
@@ -233,6 +233,13 @@ void SjLjEHPrepare::lowerIncomingArguments(Function &F) {
   assert(AfterAllocaInsPt != F.front().end());
 
   for (auto &AI : F.args()) {
+    // Swift error really is a register that we model as memory -- instruction
+    // selection will perform mem-to-reg for us and spill/reload appropriately
+    // around calls that clobber it. There is no need to spill this
+    // value to the stack and doing so would not be allowed.
+    if (AI.isSwiftError())
+      continue;
+
     Type *Ty = AI.getType();
 
     // Use 'select i8 true, %arg, undef' to simulate a 'no-op' instruction.
@@ -301,8 +308,8 @@ void SjLjEHPrepare::lowerAcrossUnwindEdges(Function &F,
       for (InvokeInst *Invoke : Invokes) {
         BasicBlock *UnwindBlock = Invoke->getUnwindDest();
         if (UnwindBlock != &BB && LiveBBs.count(UnwindBlock)) {
-          DEBUG(dbgs() << "SJLJ Spill: " << Inst << " around "
-                       << UnwindBlock->getName() << "\n");
+          LLVM_DEBUG(dbgs() << "SJLJ Spill: " << Inst << " around "
+                            << UnwindBlock->getName() << "\n");
           NeedsSpill = true;
           break;
         }
@@ -462,25 +469,6 @@ bool SjLjEHPrepare::setupEntryBlockAndCallSites(Function &F) {
   return true;
 }
 
-bool SjLjEHPrepare::undoSwiftErrorSelect(Function &F) {
-  // We have inserted dummy copies 'select true, arg, undef' in the entry block
-  // for arguments to simplify this pass.
-  // swifterror arguments cannot be used in this way. Undo the select for the
-  // swifterror argument.
-  for (auto &AI : F.args()) {
-    if (AI.isSwiftError()) {
-      assert(AI.hasOneUse() && "Must have converted the argument to a select");
-      auto *Select = dyn_cast<SelectInst>(AI.use_begin()->getUser());
-      assert(Select && "There must be single select user");
-      auto *OrigSwiftError = cast<Argument>(Select->getTrueValue());
-      Select->replaceAllUsesWith(OrigSwiftError);
-      Select->eraseFromParent();
-      return true;
-    }
-  }
-  return false;
-}
-
 bool SjLjEHPrepare::runOnFunction(Function &F) {
   Module &M = *F.getParent();
   RegisterFn = M.getOrInsertFunction(
@@ -499,7 +487,5 @@ bool SjLjEHPrepare::runOnFunction(Function &F) {
   FuncCtxFn = Intrinsic::getDeclaration(&M, Intrinsic::eh_sjlj_functioncontext);
 
   bool Res = setupEntryBlockAndCallSites(F);
-  if (Res)
-    Res |= undoSwiftErrorSelect(F);
   return Res;
 }

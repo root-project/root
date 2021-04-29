@@ -62,7 +62,7 @@ class Controller(BaseController):
                                 preexec_fn=setsid, startupinfo=startupinfo)
 
         # It is assumed that this kind of tools (gnome-open, kfmclient,
-        # exo-open, xdg-open and open for OSX) immediately exit after lauching
+        # exo-open, xdg-open and open for OSX) immediately exit after launching
         # the specific application
         returncode = pipe.wait()
         if hasattr(self, 'fixreturncode'):
@@ -85,7 +85,7 @@ class Controller(BaseController):
 if sys.platform[:3] == 'win':
 
     class Start(BaseController):
-        '''Controller for the win32 start progam through os.startfile.'''
+        '''Controller for the win32 start program through os.startfile.'''
 
         def open(self, filename):
             try:
@@ -110,7 +110,10 @@ elif sys.platform == 'darwin':
 # Platform support for Unix
 else:
 
-    import commands
+    try:
+        from commands import getoutput
+    except ImportError:
+        from subprocess import getoutput
 
     # @WARNING: use the private API of the webbrowser module
     from webbrowser import _iscommand
@@ -125,7 +128,7 @@ else:
         def detect_kde_version(self):
             kde_version = None
             try:
-                info = commands.getoutput('kde-config --version')
+                info = getoutput('kde-config --version')
 
                 for line in info.splitlines():
                     if line.startswith('KDE'):
@@ -158,7 +161,7 @@ else:
             desktop_environment = 'gnome'
         else:
             try:
-                info = commands.getoutput('xprop -root _DT_SAVE_MODE')
+                info = getoutput('xprop -root _DT_SAVE_MODE')
                 if ' = "xfce4"' in info:
                     desktop_environment = 'xfce'
             except (OSError, RuntimeError):
@@ -189,7 +192,7 @@ else:
             return _controllers[controller_name].open
 
         except KeyError:
-            if _controllers.has_key('xdg-open'):
+            if 'xdg-open' in _controllers:
                 return _controllers['xdg-open'].open
             else:
                 return webbrowser.open
@@ -201,6 +204,6 @@ else:
 
 
 def open(filename):
-    '''Open a file or an URL in the registered default application.'''
+    '''Open a file or a URL in the registered default application.'''
 
     return _open(filename)

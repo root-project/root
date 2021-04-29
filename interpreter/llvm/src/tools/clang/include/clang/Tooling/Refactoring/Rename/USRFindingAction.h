@@ -1,14 +1,13 @@
 //===--- USRFindingAction.h - Clang refactoring library -------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief Provides an action to find all relevant USRs at a point.
+/// Provides an action to find all relevant USRs at a point.
 ///
 //===----------------------------------------------------------------------===//
 
@@ -23,10 +22,24 @@
 
 namespace clang {
 class ASTConsumer;
+class ASTContext;
 class CompilerInstance;
 class NamedDecl;
 
 namespace tooling {
+
+/// Returns the canonical declaration that best represents a symbol that can be
+/// renamed.
+///
+/// The following canonicalization rules are currently used:
+///
+/// - A constructor is canonicalized to its class.
+/// - A destructor is canonicalized to its class.
+const NamedDecl *getCanonicalSymbolDeclaration(const NamedDecl *FoundDecl);
+
+/// Returns the set of USRs that correspond to the given declaration.
+std::vector<std::string> getUSRsForDeclaration(const NamedDecl *ND,
+                                               ASTContext &Context);
 
 struct USRFindingAction {
   USRFindingAction(ArrayRef<unsigned> SymbolOffsets,

@@ -69,6 +69,7 @@ General purpose message signal
 #include "RQ_OBJECT.h"
 #include "TVirtualMutex.h"
 #include "RConfigure.h"
+#include "strlcpy.h"
 
 void *gTQSender; // A pointer to the object that sent the last signal.
                  // Getting access to the sender might be practical
@@ -171,7 +172,7 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Checking of consitency of sender/receiver methods/arguments.
+/// Checking of consistency of sender/receiver methods/arguments.
 /// Returns -1 on error, otherwise number or arguments of signal function.
 /// Static method.
 
@@ -179,8 +180,9 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
                                  TClass *sender_class, const char *signal,
                                  TClass *receiver_class, const char *slot)
 {
-   char *signal_method = new char[strlen(signal)+1];
-   if (signal_method) strcpy(signal_method, signal);
+   auto len = strlen(signal)+1;
+   char *signal_method = new char[len];
+   if (signal_method) strlcpy(signal_method, signal, len);
 
    char *signal_proto;
    char *tmp;
@@ -236,11 +238,12 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
    // cleaning
    delete [] signal_method;
 
-   char *slot_method = new char[strlen(slot)+1];
-   if (slot_method) strcpy(slot_method, slot);
+   auto len2 = strlen(slot)+1;
+   char *slot_method = new char[len2];
+   if (slot_method) strlcpy(slot_method, slot, len2);
 
    char *slot_proto;
-   char *slot_params = 0;
+   char *slot_params = nullptr;
 
    if ((slot_proto = strchr(slot_method,'('))) {
 
@@ -254,7 +257,7 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
    if (!slot_proto) slot_proto = (char*)"";     // avoid zero strings
    if ((slot_params = strchr(slot_proto,'='))) *slot_params = ' ';
 
-   TFunction *slotMethod = 0;
+   TFunction *slotMethod = nullptr;
    if (!receiver_class) {
       // case of slot_method is compiled/intrepreted function
       slotMethod = gROOT->GetGlobalFunction(slot_method,0,kFALSE);
@@ -571,7 +574,7 @@ Bool_t TQObject::ConnectToClass(TQObject *sender,
    TString signal_name = CompressName(signal);
    TString slot_name   = CompressName(slot);
 
-   // check consitency of signal/slot methods/args
+   // check consistency of signal/slot methods/args
    Int_t nsigargs;
    if ((nsigargs = CheckConnectArgs(sender, sender->IsA(), signal_name, cl, slot_name)) == -1)
       return kFALSE;
@@ -629,7 +632,7 @@ Bool_t TQObject::ConnectToClass(const char *class_name,
    TString signal_name = CompressName(signal);
    TString slot_name   = CompressName(slot);
 
-   // check consitency of signal/slot methods/args
+   // check consistency of signal/slot methods/args
    Int_t nsigargs;
    if ((nsigargs = CheckConnectArgs(0, sender, signal_name, cl, slot_name)) == -1)
       return kFALSE;
@@ -719,7 +722,7 @@ Bool_t TQObject::Connect(TQObject *sender,
    TString signal_name = CompressName(signal);
    TString slot_name   = CompressName(slot);
 
-   // check consitency of signal/slot methods/args
+   // check consistency of signal/slot methods/args
    Int_t nsigargs;
    if ((nsigargs = CheckConnectArgs(sender, sender->IsA(), signal_name, 0, slot_name)) == -1)
       return kFALSE;
@@ -815,7 +818,7 @@ Bool_t TQObject::Connect(const char *class_name,
    TString signal_name = CompressName(signal);
    TString slot_name   = CompressName(slot);
 
-   // check consitency of signal/slot methods/args
+   // check consistency of signal/slot methods/args
    Int_t nsigargs;
    if ((nsigargs = CheckConnectArgs(0, sender, signal_name, 0, slot_name)) == -1)
       return kFALSE;
@@ -872,7 +875,7 @@ Bool_t TQObject::Connect(const char *signal,
    TString signal_name = CompressName(signal);
    TString slot_name   = CompressName(slot);
 
-   // check consitency of signal/slot methods/args
+   // check consistency of signal/slot methods/args
    TClass *cl = 0;
    if (receiver_class)
       cl = TClass::GetClass(receiver_class);

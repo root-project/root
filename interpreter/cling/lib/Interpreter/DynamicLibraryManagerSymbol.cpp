@@ -35,7 +35,7 @@
 #include <mach-o/dyld.h>
 #endif // __APPLE__
 
-#ifdef LLVM_ON_WIN32
+#ifdef _WIN32
 #include <windows.h>
 #include <libloaderapi.h> // For GetModuleFileNameA
 #include <memoryapi.h> // For VirtualQuery
@@ -240,9 +240,7 @@ static llvm::StringRef GetGnuHashSection(llvm::object::ObjectFile *file) {
     llvm::StringRef name;
     S.getName(name);
     if (name == ".gnu.hash") {
-      llvm::StringRef content;
-      S.getContents(content);
-      return content;
+      return llvm::cantFail(S.getContents());
     }
   }
   return "";
@@ -261,8 +259,8 @@ static bool MayExistInElfObjectFile(llvm::object::ObjectFile *soFile,
                                  uint32_t hash) {
   assert(soFile->isELF() && "Not ELF");
 
-  // LLVM9: soFile->makeTriple().is64Bit()
-  const int bits = 8 * soFile->getBytesInAddress();
+  // Compute the platform bitness -- either 64 or 32.
+  const unsigned bits = 8 * soFile->getBytesInAddress();
 
   llvm::StringRef contents = GetGnuHashSection(soFile);
   if (contents.size() < 16)
@@ -892,7 +890,7 @@ namespace cling {
   std::string DynamicLibraryManager::getSymbolLocation(void *func) {
 #if defined(__CYGWIN__) && defined(__GNUC__)
     return {};
-#elif defined(LLVM_ON_WIN32)
+#elif defined(_WIN32)
     MEMORY_BASIC_INFORMATION mbi;
     if (!VirtualQuery (func, &mbi, sizeof (mbi)))
       return {};

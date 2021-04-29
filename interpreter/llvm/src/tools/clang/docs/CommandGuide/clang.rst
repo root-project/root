@@ -60,7 +60,7 @@ Linker
 
 The Clang Static Analyzer is a tool that scans source code to try to find bugs
 through code analysis.  This tool uses many parts of Clang and is built into
-the same driver.  Please see <http://clang-analyzer.llvm.org> for more details
+the same driver.  Please see <https://clang-analyzer.llvm.org> for more details
 on how to use the static analyzer.
 
 OPTIONS
@@ -98,9 +98,128 @@ Language Selection and Mode Options
 
  Treat subsequent input files as having type language.
 
-.. option:: -std=<language>
+.. option:: -std=<standard>
 
  Specify the language standard to compile for.
+
+ Supported values for the C language are:
+
+  | ``c89``
+  | ``c90``
+  | ``iso9899:1990``
+
+   ISO C 1990
+
+  | ``iso9899:199409``
+
+   ISO C 1990 with amendment 1
+
+  | ``gnu89``
+  | ``gnu90``
+
+   ISO C 1990 with GNU extensions
+
+  | ``c99``
+  | ``iso9899:1999``
+
+   ISO C 1999
+
+  | ``gnu99``
+
+   ISO C 1999 with GNU extensions
+
+  | ``c11``
+  | ``iso9899:2011``
+
+   ISO C 2011
+
+  | ``gnu11``
+
+   ISO C 2011 with GNU extensions
+
+  | ``c17``
+  | ``iso9899:2017``
+
+   ISO C 2017
+
+  | ``gnu17``
+
+   ISO C 2017 with GNU extensions
+
+ The default C language standard is ``gnu11``, except on PS4, where it is
+ ``gnu99``.
+
+ Supported values for the C++ language are:
+
+  | ``c++98``
+  | ``c++03``
+
+   ISO C++ 1998 with amendments
+
+  | ``gnu++98``
+  | ``gnu++03``
+
+   ISO C++ 1998 with amendments and GNU extensions
+
+  | ``c++11``
+
+   ISO C++ 2011 with amendments
+
+  | ``gnu++11``
+
+    ISO C++ 2011 with amendments and GNU extensions
+
+  | ``c++14``
+
+   ISO C++ 2014 with amendments
+
+  | ``gnu++14``
+
+   ISO C++ 2014 with amendments and GNU extensions
+
+  | ``c++17``
+
+   ISO C++ 2017 with amendments
+
+  | ``gnu++17``
+
+   ISO C++ 2017 with amendments and GNU extensions
+
+  | ``c++2a``
+
+   Working draft for ISO C++ 2020
+
+  | ``gnu++2a``
+
+   Working draft for ISO C++ 2020 with GNU extensions
+
+ The default C++ language standard is ``gnu++14``.
+
+ Supported values for the OpenCL language are:
+
+  | ``cl1.0``
+
+   OpenCL 1.0
+
+  | ``cl1.1``
+
+   OpenCL 1.1
+
+  | ``cl1.2``
+
+   OpenCL 1.2
+
+  | ``cl2.0``
+
+   OpenCL 2.0
+
+ The default OpenCL language standard is ``cl1.0``.
+
+ Supported values for the CUDA language are:
+
+  | ``cuda``
+
+   NVIDIA CUDA(tm)
 
 .. option:: -stdlib=<library>
 
@@ -197,13 +316,23 @@ number of cross compilers, or may only support a native target.
 
 .. option:: -mmacosx-version-min=<version>
 
-  When building for Mac OS X, specify the minimum version supported by your
+  When building for macOS, specify the minimum version supported by your
   application.
 
 .. option:: -miphoneos-version-min
 
   When building for iPhone OS, specify the minimum version supported by your
   application.
+
+.. option:: --print-supported-cpus
+
+  Print out a list of supported processors for the given target (specified
+  through --target=<architecture> or -arch <architecture>). If no target is
+  specified, the system default target will be used.
+
+.. option:: -mcpu=?, -mtune=?
+
+  Aliases of --print-supported-cpus
 
 .. option:: -march=<cpu>
 
@@ -242,7 +371,7 @@ Code Generation Options
     :option:`-Oz` Like :option:`-Os` (and thus :option:`-O2`), but reduces code
     size further.
 
-    :option:`-Og` Like :option:`-O1`. In future versions, this option might 
+    :option:`-Og` Like :option:`-O1`. In future versions, this option might
     disable different optimizations in order to improve debuggability.
 
     :option:`-O` Equivalent to :option:`-O2`.
@@ -506,7 +635,7 @@ ENVIRONMENT
 BUGS
 ----
 
-To report bugs, please visit <http://llvm.org/bugs/>.  Most bug reports should
+To report bugs, please visit <https://bugs.llvm.org/>.  Most bug reports should
 include preprocessed source files (use the :option:`-E` option) and the full
 output of the compiler, along with information to reproduce.
 
@@ -514,4 +643,3 @@ SEE ALSO
 --------
 
 :manpage:`as(1)`, :manpage:`ld(1)`
-

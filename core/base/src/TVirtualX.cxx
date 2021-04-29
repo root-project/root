@@ -56,7 +56,7 @@ TVirtualX::TVirtualX(const char *name, const char *title) : TNamed(name, title),
 
 TVirtualX *&TVirtualX::Instance()
 {
-   static TVirtualX *instance = 0;
+   static TVirtualX *instance = nullptr;
    if (gPtr2VirtualX) instance = gPtr2VirtualX();
    return instance;
 }
@@ -536,7 +536,7 @@ Window_t TVirtualX::GetWindowID(Int_t /*wid*/)
 /// Creates a new window and return window number.
 /// Returns -1 if window initialization fails.
 
-Int_t TVirtualX::InitWindow(ULong_t /*window*/)
+Int_t TVirtualX::InitWindow(ULongptr_t /*window*/)
 {
    return 0;
 }
@@ -547,7 +547,7 @@ Int_t TVirtualX::InitWindow(ULong_t /*window*/)
 /// \param [in] qwid   window identifier
 /// \param [in] w, h   the width and height, which define the window size
 
-Int_t TVirtualX::AddWindow(ULong_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
+Int_t TVirtualX::AddWindow(ULongptr_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
 {
    return 0;
 }
@@ -558,7 +558,7 @@ Int_t TVirtualX::AddWindow(ULong_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
 /// \param [in] pixid  pixmap identifier
 /// \param [in] w, h   the width and height, which define the pixmap size
 
-Int_t TVirtualX::AddPixmap(ULong_t /*pixid*/, UInt_t /*w*/, UInt_t /*h*/)
+Int_t TVirtualX::AddPixmap(ULongptr_t /*pixid*/, UInt_t /*w*/, UInt_t /*h*/)
 {
    return 0;
 }
@@ -567,7 +567,7 @@ Int_t TVirtualX::AddPixmap(ULong_t /*pixid*/, UInt_t /*w*/, UInt_t /*h*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Removes the created by Qt window "qwid".
 
-void TVirtualX::RemoveWindow(ULong_t /*qwid*/)
+void TVirtualX::RemoveWindow(ULongptr_t /*qwid*/)
 {
 }
 
@@ -1123,7 +1123,7 @@ void TVirtualX::IconifyWindow(Window_t /*id*/)
 /// all paint operations within "expose" / "paint" like low level event
 /// or equivalent
 
-Bool_t TVirtualX::NeedRedraw(ULong_t /*tgwindow*/, Bool_t /*force*/)
+Bool_t TVirtualX::NeedRedraw(ULongptr_t /*tgwindow*/, Bool_t /*force*/)
 {
    return kFALSE;
 }

@@ -200,6 +200,9 @@ Long64_t InterpreterCalc(const std::string &code, const std::string &context = "
 /// Whether custom column with name colName is an "internal" column such as rdfentry_ or rdfslot_
 bool IsInternalColumn(std::string_view colName);
 
+/// Get optimal column width for printing a table given the names and the desired minimal space between columns
+unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigned int minColumnSpace = 8u);
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT

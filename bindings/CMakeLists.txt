@@ -25,6 +25,10 @@ if(pyroot)
     add_subdirectory(tpython)
     add_subdirectory(jupyroot)
     add_subdirectory(jsmva)
+    if(dataframe)
+      add_subdirectory(experimental/distrdf)
+    endif()
+
   endif()
 endif()
 

@@ -93,6 +93,9 @@ public:
   Bool_t loadSnapshot(const char* name) ;  
   const RooArgSet* getSnapshot(const char* name) const ;
 
+  // Retrieve list of parameter snapshots
+  RooLinkedList getSnapshots(){ return this->_snapshots; }
+
   void merge(const RooWorkspace& /*other*/) {} ;
 
   // Join p.d.f.s and datasets for simultaneous analysis

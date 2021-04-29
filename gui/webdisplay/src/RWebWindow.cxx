@@ -75,6 +75,8 @@ RWebWindow::RWebWindow() = default;
 
 RWebWindow::~RWebWindow()
 {
+   StopThread();
+
    if (fMaster)
       fMaster->RemoveEmbedWindow(fMasterConnId, fMasterChannel);
 
@@ -162,41 +164,45 @@ THttpServer *RWebWindow::GetServer()
 
 unsigned RWebWindow::Show(const RWebDisplayArgs &args)
 {
-   return fMgr->ShowWindow(*this, false, args);
+   return fMgr->ShowWindow(*this, args);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Create batch job for specified window
-/// Normally only single batch job is used, but many can be created
+/// Start headless browser for specified window
+/// Normally only single instance is used, but many can be created
 /// See ROOT::Experimental::RWebWindowsManager::Show() docu for more info
 /// returns (future) connection id (or 0 when fails)
 
-unsigned RWebWindow::MakeBatch(bool create_new, const RWebDisplayArgs &args)
+unsigned RWebWindow::MakeHeadless(bool create_new)
 {
    unsigned connid = 0;
    if (!create_new)
-      connid = FindBatch();
-   if (!connid)
-      connid = fMgr->ShowWindow(*this, true, args);
+      connid = FindHeadlessConnection();
+   if (!connid) {
+      RWebDisplayArgs args;
+      args.SetHeadless(true);
+      connid = fMgr->ShowWindow(*this, args);
+   }
    return connid;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Returns connection id of batch job
+/// Returns connection id of window running in headless mode
+/// This can be special connection which may run picture production jobs in background
 /// Connection to that job may not be initialized yet
 /// If connection does not exists, returns 0
 
-unsigned RWebWindow::FindBatch()
+unsigned RWebWindow::FindHeadlessConnection()
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    for (auto &entry : fPendingConn) {
-      if (entry->fBatchMode)
+      if (entry->fHeadlessMode)
          return entry->fConnId;
    }
 
    for (auto &conn : fConn) {
-      if (conn->fBatchMode)
+      if (conn->fHeadlessMode)
          return conn->fConnId;
    }
 
@@ -214,12 +220,12 @@ unsigned RWebWindow::GetDisplayConnection() const
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    for (auto &entry : fPendingConn) {
-      if (!entry->fBatchMode)
+      if (!entry->fHeadlessMode)
          return entry->fConnId;
    }
 
    for (auto &conn : fConn) {
-      if (!conn->fBatchMode)
+      if (!conn->fHeadlessMode)
          return conn->fConnId;
    }
 
@@ -412,13 +418,13 @@ void RWebWindow::InvokeCallbacks(bool force)
 /// Key is random number generated when starting new window
 /// When client is connected, key should be supplied to correctly identify it
 
-unsigned RWebWindow::AddDisplayHandle(bool batch_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle)
+unsigned RWebWindow::AddDisplayHandle(bool headless_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    ++fConnCnt;
 
-   auto conn = std::make_shared<WebConn>(fConnCnt, batch_mode, key);
+   auto conn = std::make_shared<WebConn>(fConnCnt, headless_mode, key);
 
    std::swap(conn->fDisplayHandle, handle);
 
@@ -500,7 +506,7 @@ void RWebWindow::CheckInactiveConnections()
       auto pred = [&](std::shared_ptr<WebConn> &conn) {
          std::chrono::duration<double> diff = stamp - conn->fSendStamp;
          // introduce large timeout
-         if ((diff.count() > batch_tmout) && conn->fBatchMode) {
+         if ((diff.count() > batch_tmout) && conn->fHeadlessMode) {
             conn->fActive = false;
             clr.emplace_back(conn);
             return true;
@@ -558,6 +564,16 @@ std::string RWebWindow::GetConnToken() const
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    return fConnToken;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Internal method to verify and thread id has to be assigned from manager again
+/// Special case when ProcessMT was enabled just until thread id will be assigned
+
+void RWebWindow::CheckThreadAssign()
+{
+   if (fProcessMT && fMgr->fExternalProcessEvents)
+      fMgr->AssignWindowThreadId(*this);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1196,9 +1212,15 @@ void RWebWindow::SendBinary(unsigned connid, const void *data, std::size_t len)
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Assign thread id which has to be used for callbacks
+/// WARNING!!!  only for expert use
+/// Automatically done at the moment when any callback function is invoked
+/// Can be invoked once again if window Run method will be invoked from other thread
+/// Normally should be invoked before Show() method is called
 
-void RWebWindow::AssignCallbackThreadId()
+void RWebWindow::AssignThreadId()
 {
+   fUseServerThreads = false;
+   fProcessMT = false;
    fCallbacksThrdIdSet = true;
    fCallbacksThrdId = std::this_thread::get_id();
    if (!RWebWindowsManager::IsMainThrd()) {
@@ -1208,6 +1230,57 @@ void RWebWindow::AssignCallbackThreadId()
       R__LOG_ERROR(WebGUILog()) << "create web window from main thread when THttpServer created with special thread - not supported";
    }
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Let use THttpServer threads to process requests
+/// WARNING!!! only for expert use
+/// Should be only used when application provides proper locking and
+/// does not block. Such mode provides minimal possible latency
+/// Must be called before callbacks are assigned
+
+void RWebWindow::UseServerThreads()
+{
+   fUseServerThreads = true;
+   fCallbacksThrdIdSet = false;
+   fProcessMT = true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Start special thread which will be used by the window to handle all callbacks
+/// One has to be sure, that access to global ROOT structures are minimized and
+/// protected with ROOT::EnableThreadSafety(); call
+
+void RWebWindow::StartThread()
+{
+   if (fHasWindowThrd) {
+      R__LOG_WARNING(WebGUILog()) << "thread already started for the window";
+      return;
+   }
+
+   fHasWindowThrd = true;
+
+   std::thread thrd([this] {
+      AssignThreadId();
+      while(fHasWindowThrd)
+         Run(0.1);
+      fCallbacksThrdIdSet = false;
+   });
+
+   fWindowThrd = std::move(thrd);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Stop special thread
+
+void RWebWindow::StopThread()
+{
+   if (!fHasWindowThrd)
+      return;
+
+   fHasWindowThrd = false;
+   fWindowThrd.join();
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Set call-back function for data, received from the clients via websocket
@@ -1232,7 +1305,7 @@ void RWebWindow::AssignCallbackThreadId()
 
 void RWebWindow::SetDataCallBack(WebWindowDataCallback_t func)
 {
-   AssignCallbackThreadId();
+   if (!fUseServerThreads) AssignThreadId();
    fDataCallback = func;
 }
 
@@ -1241,7 +1314,7 @@ void RWebWindow::SetDataCallBack(WebWindowDataCallback_t func)
 
 void RWebWindow::SetConnectCallBack(WebWindowConnectCallback_t func)
 {
-   AssignCallbackThreadId();
+   if (!fUseServerThreads) AssignThreadId();
    fConnCallback = func;
 }
 
@@ -1250,7 +1323,7 @@ void RWebWindow::SetConnectCallBack(WebWindowConnectCallback_t func)
 
 void RWebWindow::SetDisconnectCallBack(WebWindowConnectCallback_t func)
 {
-   AssignCallbackThreadId();
+   if (!fUseServerThreads) AssignThreadId();
    fDisconnCallback = func;
 }
 
@@ -1259,7 +1332,7 @@ void RWebWindow::SetDisconnectCallBack(WebWindowConnectCallback_t func)
 
 void RWebWindow::SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn)
 {
-   AssignCallbackThreadId();
+   if (!fUseServerThreads) AssignThreadId();
    fConnCallback = conn;
    fDataCallback = data;
    fDisconnCallback = disconn;

@@ -371,12 +371,18 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (oo.indexOf("<")==0)
          this.beg = (oo.indexOf("<|") == 0) ? 12 : 2;
-      if (oo.indexOf("->-")>=0)  this.mid = 1; else
-      if (oo.indexOf("-|>-")>=0) this.mid = 11; else
-      if (oo.indexOf("-<-")>=0) this.mid = 2; else
-      if (oo.indexOf("-<|-")>=0) this.mid = 12;
-      if (oo.lastIndexOf(">") == oo.length-1)
-         this.end = ((oo.lastIndexOf("|>") == oo.length-2) && (oo.length>1)) ? 11 : 1;
+      if (oo.indexOf("->-")>=0)
+         this.mid = 1;
+      else if (oo.indexOf("-|>-")>=0)
+         this.mid = 11;
+      else if (oo.indexOf("-<-")>=0)
+         this.mid = 2;
+      else if (oo.indexOf("-<|-")>=0)
+         this.mid = 12;
+
+      let p1 = oo.lastIndexOf(">"), p2 = oo.lastIndexOf("|>"), len = oo.length;
+      if ((p1 >= 0) && (p1 == len-1))
+         this.end = ((p2 >= 0) && (p2 == len-2)) ? 11 : 1;
 
       this.createAttLine({ attr: arrow });
 
@@ -397,7 +403,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          res += "l"+Math.round(dx)+","+Math.round(dy);
          if (x0 && (y0===undefined)) res+="z";
          return res;
-      }
+      };
 
       this.createPath = function() {
          let angle = Math.atan2(this.y2 - this.y1, this.x2 - this.x1),
@@ -426,7 +432,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                 "L" + Math.round(this.x2 - (this.end > 10 ? dx : 0)) + "," +
                       Math.round(this.y2 - (this.end > 10 ? dy : 0)) +
                 path;
-      }
+      };
 
       let elem = this.draw_g.append("svg:path")
                      .attr("d", this.createPath())
@@ -448,14 +454,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                       sz1 = Math.sqrt(Math.pow(x-this.x1,2) + Math.pow(y-this.y1,2))/fullsize,
                       sz2 = Math.sqrt(Math.pow(x-this.x2,2) + Math.pow(y-this.y2,2))/fullsize;
                   if (sz1>0.9) this.side = 1; else if (sz2>0.9) this.side = -1; else this.side = 0;
-               }
+               };
 
             if (!this.moveDrag)
                this.moveDrag = function(dx,dy) {
                   if (this.side != 1) { this.x1 += dx; this.y1 += dy; }
                   if (this.side != -1) { this.x2 += dx; this.y2 += dy; }
                   this.draw_g.select('path').attr("d", this.createPath());
-               }
+               };
 
             if (!this.moveEnd)
                this.moveEnd = function(not_changed) {
@@ -468,7 +474,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                   if (this.side != 1) exec += "SetX1(" + arrow.fX1 + ");;SetY1(" + arrow.fY1 + ");;";
                   if (this.side != -1) exec += "SetX2(" + arrow.fX2 + ");;SetY2(" + arrow.fY2 + ");;";
                   this.submitCanvExec(exec + "Notify();;");
-               }
+               };
 
             inter.addMoveHandler(this);
          });
@@ -528,19 +534,27 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       if ((tf1.fSave.length > 0) && !this.nosave) {
          // in the case where the points have been saved, useful for example
          // if we don't have the user's function
+
          let np = tf1.fSave.length - 2,
              xmin = tf1.fSave[np],
              xmax = tf1.fSave[np+1],
-             dx = (xmax - xmin) / (np-1),
-             res = [];
+             use_histo = tf1.$histo && (xmin === xmax),
+             bin = 0, dx = 0, res = [];
 
-         for (let n=0; n < np; ++n) {
-            let xx = xmin + dx*n;
+         if (use_histo) {
+            xmin = tf1.fSave[--np];
+            bin = tf1.$histo.fXaxis.FindBin(xmin, 0);
+         } else {
+            dx = (xmax - xmin) / (np-1);
+         }
+
+         for (let n = 0; n < np; ++n) {
+            let xx = use_histo ? tf1.$histo.fXaxis.GetBinCenter(bin+n+1) : xmin + dx*n;
             // check if points need to be displayed at all, keep at least 4-5 points for Bezier curves
             if ((gxmin !== gxmax) && ((xx + 2*dx < gxmin) || (xx - 2*dx > gxmax))) continue;
             let yy = tf1.fSave[n];
 
-            if (!isNaN(yy)) res.push({ x : xx, y : yy });
+            if (Number.isFinite(yy)) res.push({ x : xx, y : yy });
          }
          return res;
       }
@@ -566,7 +580,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          let xx = xmin + n*dx;
          if (logx) xx = Math.exp(xx);
          let yy = tf1.evalPar(xx);
-         if (!isNaN(yy)) res.push({ x: xx, y: yy });
+         if (Number.isFinite(yy)) res.push({ x: xx, y: yy });
       }
       return res;
    }
@@ -613,9 +627,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TF1Painter.prototype.processTooltipEvent = function(pnt) {
       let cleanup = false;
 
-      if (!pnt || (this.bins === null)) {
+      if (!pnt || (this.bins === null) || pnt.disabled) {
          cleanup = true;
-      } else if ((this.bins.length==0) || (pnt.x < this.bins[0].grx) || (pnt.x > this.bins[this.bins.length-1].grx)) {
+      } else if (!this.bins.length || (pnt.x < this.bins[0].grx) || (pnt.x > this.bins[this.bins.length-1].grx)) {
          cleanup = true;
       }
 
@@ -806,8 +820,6 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    /** @summary Decode options  */
    TGraphPainter.prototype.decodeOptions = function(opt) {
 
-      if (!opt) opt = this.getMainPainter() ? "lp" : "alp";
-
       if ((typeof opt == "string") && (opt.indexOf("same ")==0))
          opt = opt.substr(5);
 
@@ -818,13 +830,20 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       JSROOT.extend(this.options, {
          Line: 0, Curve: 0, Rect: 0, Mark: 0, Bar: 0, OutRange: 0,  EF:0, Fill: 0, NoOpt: 0,
-         MainError: 1, Ends: 1, Axis: "", PadStats: false, PadTitle: false, original: opt
+         MainError: 1, Ends: 1, Axis: "", PadStats: false, original: opt
        });
 
       let res = this.options;
 
+      // check pad options first
       res.PadStats = d.check("USE_PAD_STATS");
-      res.PadTitle = d.check("USE_PAD_TITLE");
+      let hopt = "", checkhopt = ["USE_PAD_TITLE", "LOGXY", "LOGX", "LOGY", "LOGZ", "GRIDXY", "GRIDX", "GRIDY", "TICKXY", "TICKX", "TICKY"];
+      checkhopt.forEach(name => { if (d.check(name)) hopt += ";" + name; });
+
+      if (d.empty()) {
+         res.original = this.getMainPainter() ? "lp" : "alp";
+         d = new JSROOT.DrawOptions(res.original);
+      }
 
       res._pfc = d.check("PFC");
       res._plc = d.check("PLC");
@@ -880,11 +899,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          let pp = this.getPadPainter();
          let pad = pp ? pp.getRootPad(true) : null;
          if (!pad || (pad.fPrimitives && (pad.fPrimitives.arr[0] === graph))) res.Axis = "AXIS";
-      } else if (res.Axis.indexOf("A")<0) {
+      } else if (res.Axis.indexOf("A") < 0) {
          res.Axis = "AXIS," + res.Axis;
       }
 
-      if (res.PadTitle) res.Axis += ";USE_PAD_TITLE";
+      res.Axis += hopt;
 
       res.HOptions = res.Axis;
    }
@@ -963,7 +982,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       let graph = this.getObject();
 
       if (graph.fMinimum != -1111) minimum = ymin = graph.fMinimum;
-      if (graph.fMaximum != -1111) maximum = ymax = graph.fMaximum;
+      if (graph.fMaximum != -1111) maximum = graph.fMaximum;
       if ((minimum < 0) && (ymin >=0)) minimum = 0.9*ymin;
 
       histo = graph.fHistogram;
@@ -1421,6 +1440,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
          }
       }
+
+      if (JSROOT.batch_mode) return;
+
+      return JSROOT.require(['interactive'])
+                   .then(inter => inter.addMoveHandler(this, this.testEditable()));
    }
 
    /** @summary Provide tooltip at specified point
@@ -1428,10 +1452,10 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TGraphPainter.prototype.extractTooltip = function(pnt) {
       if (!pnt) return null;
 
-      if ((this.draw_kind=="lines") || (this.draw_kind=="path") || (this.draw_kind=="mark"))
+      if ((this.draw_kind == "lines") || (this.draw_kind == "path") || (this.draw_kind == "mark"))
          return this.extractTooltipForPath(pnt);
 
-      if (this.draw_kind!="nodes") return null;
+      if (this.draw_kind != "nodes") return null;
 
       let pmain = this.getFramePainter(),
           height = pmain.getFrameHeight(),
@@ -1440,7 +1464,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
           findbin = null, best_dist2 = 1e10, best = null,
           msize = this.marker_size ? Math.round(this.marker_size/2 + 1.5) : 0;
 
-      this.draw_g.selectAll('.grpoint').each(() => {
+      this.draw_g.selectAll('.grpoint').each(function() {
          let d = d3.select(this).datum();
          if (d===undefined) return;
          let dist2 = Math.pow(pnt.x - d.grx1, 2);
@@ -1472,7 +1496,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
              best_dist2 = dist2;
              findbin = this;
              best = rect;
-             best.exact = matchx && matchy;
+             best.exact = /* matchx && */ matchy;
           }
        });
 
@@ -1594,7 +1618,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
             if (IsInside(pnt.x, grx0, grx)) {
                // if inside interval, check Y distance
-               gry0 = pmain.gry(bin0.y)
+               gry0 = pmain.gry(bin0.y);
                gry = pmain.gry(bin.y);
 
                if (Math.abs(grx - grx0) < 1) {
@@ -1626,13 +1650,15 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
-   /** @summary Check editable flag for TGraph */
-   TGraphPainter.prototype.testEditable = function(toggle) {
+   /** @summary Check editable flag for TGraph
+     * @desc if arg specified changes or toggles editable flag */
+   TGraphPainter.prototype.testEditable = function(arg) {
       let obj = this.getObject(),
           kNotEditable = JSROOT.BIT(18);   // bit set if graph is non editable
 
       if (!obj) return false;
-      if (toggle) obj.InvertBit(kNotEditable);
+      if ((arg == "toggle") || ((arg!==undefined) && (!arg != obj.TestBit(kNotEditable))))
+         obj.InvertBit(kNotEditable);
       return !obj.TestBit(kNotEditable);
    }
 
@@ -1723,7 +1749,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                  .attr("width", 2*hint.radius)
                  .attr("height", 2*hint.radius);
          } else {
-            ttbin.append("svg:circle").attr("cy", Math.round(hint.gry1))
+            ttbin.append("svg:circle").attr("cy", Math.round(hint.gry1));
             if (Math.abs(hint.gry1-hint.gry2) > 1)
                ttbin.append("svg:circle").attr("cy", Math.round(hint.gry2));
 
@@ -1745,6 +1771,12 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
             }
          }
       }
+   }
+
+   /** @summary Check if graph moving is enabled
+     * @private */
+   TGraphPainter.prototype.moveEnabled = function() {
+      return this.testEditable();
    }
 
    /** @summary Start moving of TGraph
@@ -1817,7 +1849,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       JSROOT.ObjectPainter.prototype.fillContextMenu.call(this, menu);
 
       if (!this.snapid)
-         menu.addchk(this.testEditable(), "Editable", () => this.testEditable(true));
+         menu.addchk(this.testEditable(), "Editable", () => { this.testEditable("toggle"); this.drawGraph(); });
 
       return menu.size() > 0;
    }
@@ -2035,11 +2067,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       return promise.then(() => {
          painter.addToPadPrimitives();
-         painter.drawGraph();
+         return painter.drawGraph();
          // wait until interactive elements assigned
-         if (painter.testEditable() && !JSROOT.batch_mode)
-            return JSROOT.require(['interactive'])
-                         .then(inter => inter.addMoveHandler(painter));
       }).then(() => painter.drawNextFunction(0));
    }
 
@@ -2770,7 +2799,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       let name = this.getObjectHint();
       if (name.length > 0) res.lines.push(name);
-      res.lines.push("x = " + main.axisAsText("x", xx))
+      res.lines.push("x = " + main.axisAsText("x", xx));
       res.lines.push("y = " + main.axisAsText("y", yy));
       if (knot !== null) {
          res.lines.push("knot = " + indx);
@@ -2844,7 +2873,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          // for tooltips use markers only if nodes where not created
          let path = "";
 
-         this.createAttMarker({ attr: spline })
+         this.createAttMarker({ attr: spline });
 
          this.markeratt.resetPos();
 
@@ -3360,7 +3389,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    /** @summary draw speical histogram for axis
      * @returns {Promise} when ready */
-   TMultiGraphPainter.prototype.drawAxis = function() {
+   TMultiGraphPainter.prototype.drawAxis = function(hopt) {
 
       let mgraph = this.getObject(),
           pp = this.getPadPainter(),
@@ -3368,7 +3397,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       // histogram painter will be first in the pad, will define axis and
       // interactive actions
-      return JSROOT.draw(this.getDom(), histo, "AXIS");
+      return JSROOT.draw(this.getDom(), histo, "AXIS" + hopt);
    }
 
    /** @summary method draws next function from the functions list  */
@@ -3423,9 +3452,12 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       painter._plc = d.check("PLC");
       painter._pmc = d.check("PMC");
 
+      let hopt = "", checkhopt = ["USE_PAD_TITLE", "LOGXY", "LOGX", "LOGY", "LOGZ", "GRIDXY", "GRIDX", "GRIDY", "TICKXY", "TICKX", "TICKY"];
+      checkhopt.forEach(name => { if (d.check(name)) hopt += ";" + name; });
+
       let promise = Promise.resolve(painter);
       if (d.check("A") || !painter.getMainPainter())
-         promise = painter.drawAxis().then(fp => {
+         promise = painter.drawAxis(hopt).then(fp => {
             painter.firstpainter = fp;
             return painter;
          });
@@ -3433,7 +3465,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return promise.then(() => {
          painter.addToPadPrimitives();
          return painter.drawNextGraph(0, d.remain());
-      })
+      });
    }
 
    // =========================================================================================
@@ -3500,7 +3532,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                   check_attributes();
                   continue;
                case "x":
-                  this.createAttMarker({ attr: this.ReadAttr(arr[k], ["fMarkerColor", "fMarkerStyle", "fMarkerSize"]), force: true })
+                  this.createAttMarker({ attr: this.ReadAttr(arr[k], ["fMarkerColor", "fMarkerStyle", "fMarkerSize"]), force: true });
                   check_attributes();
                   continue;
                case "o":
@@ -3682,7 +3714,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                 fColorGreen: obj._blob[9],
                 fColorBlue: obj._blob[10],
                 fColorAlpha: obj._blob[11]
-            }
+            };
 
             obj.fWidth = obj._blob[12];
             obj.fHeight = obj._blob[13];
@@ -3738,7 +3770,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                let indx = Math.round((zval - this.arr[0]) / (this.arr[this.arr.length-1] - this.arr[0]) * (this.rgba.length-4)/4) * 4;
                return "rgba(" + this.rgba[indx] + "," + this.rgba[indx+1] + "," + this.rgba[indx+2] + "," + this.rgba[indx+3] + ")";
             }
-         }
+         };
          for (let k=0;k<200;k++)
             this.fContour.arr[k] = min + (max-min)/(200-1)*k;
 
@@ -3818,7 +3850,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
 
       if (url)
-         this.createG(true)
+         this.createG(fp ? true : false)
              .append("image")
              .attr("href", url)
              .attr("width", rect.width)
@@ -3960,7 +3992,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    function drawASImage(divid, obj, opt) {
       let painter = new TASImagePainter(divid, obj, opt);
       painter.decodeOptions(opt);
-      return jsrp.ensureTCanvas(painter)
+      return jsrp.ensureTCanvas(painter, false)
                  .then(() => painter.drawImage())
                  .then(() => {
                      painter.fillToolbar();
@@ -3990,6 +4022,126 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return Promise.resolve(painter);
    }
 
+   // =================================================================================
+
+   /**
+    * @summary Painter class for TRatioPlot
+    *
+    * @class
+    * @memberof JSROOT
+    * @extends JSROOT.ObjectPainter
+    * @param {object|string} dom - DOM element for drawing or element id
+    * @param {object} ratio - TRatioPlot object
+    * @param {string} [opt] - draw options
+    * @private
+    */
+
+   function TRatioPlotPainter(dom, ratio, opt) {
+      JSROOT.ObjectPainter.call(this, dom, ratio, opt);
+   }
+
+   TRatioPlotPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
+
+   /** @summary Redraw TRatioPlot */
+   TRatioPlotPainter.prototype.redraw = function() {
+      let ratio = this.getObject(),
+          pp = this.getPadPainter();
+
+      let top_p = pp.findPainterFor(ratio.fTopPad, "top_pad", "TPad");
+      if (top_p) top_p.disablePadDrawing();
+
+      let up_p = pp.findPainterFor(ratio.fUpperPad, "upper_pad", "TPad"),
+          up_main = up_p ? up_p.getMainPainter() : null,
+          up_fp = up_p ? up_p.getFramePainter() : null,
+          low_p = pp.findPainterFor(ratio.fLowerPad, "lower_pad", "TPad"),
+          low_main = low_p ? low_p.getMainPainter() : null,
+          low_fp = low_p ? low_p.getFramePainter() : null,
+          lbl_size = 20, promise_up = Promise.resolve(true);
+
+      if (up_p && up_main && up_fp && low_fp && !up_p._ratio_configured) {
+         up_p._ratio_configured = true;
+         up_main.options.Axis = 0; // draw both axes
+
+         lbl_size = up_main.getHisto().fYaxis.fLabelSize;
+         if (lbl_size < 1) lbl_size = Math.round(lbl_size*Math.min(up_p.getPadWidth(), up_p.getPadHeight()));
+
+         let h = up_main.getHisto();
+         h.fXaxis.fLabelSize = 0; // do not draw X axis labels
+         h.fXaxis.fTitle = ""; // do not draw X axis title
+         h.fYaxis.fLabelSize = lbl_size;
+         h.fYaxis.fTitleSize = lbl_size;
+
+         up_p.getRootPad().fTicky = 1;
+
+         promise_up = up_p.redrawPad().then(() => {
+            up_fp.o_zoom = up_fp.zoom;
+            up_fp._ratio_low_fp = low_fp;
+            up_fp.zoom = function(xmin,xmax,ymin,ymax,zmin,zmax) {
+               this._ratio_low_fp.o_zoom(xmin,xmax);
+               return this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax);
+            }
+
+            up_fp.o_sizeChanged = up_fp.sizeChanged;
+            up_fp.sizeChanged = function() {
+               this.o_sizeChanged();
+               this._ratio_low_fp.fX1NDC = this.fX1NDC;
+               this._ratio_low_fp.fX2NDC = this.fX2NDC;
+               this._ratio_low_fp.o_sizeChanged();
+            }
+            return true;
+         });
+      }
+
+      return promise_up.then(() => {
+
+         if (low_p && low_main && low_fp && up_fp && !low_p._ratio_configured) {
+            low_p._ratio_configured = true;
+            low_main.options.Axis = 0; // draw both axes
+            let h = low_main.getHisto();
+            h.fXaxis.fTitle = "x";
+            h.fXaxis.fLabelSize = lbl_size;
+            h.fXaxis.fTitleSize = lbl_size;
+            h.fYaxis.fLabelSize = lbl_size;
+            h.fYaxis.fTitleSize = lbl_size;
+            low_p.getRootPad().fTicky = 1;
+
+            low_p.forEachPainterInPad(objp => {
+               if (typeof objp.testEditable == 'function')
+                  objp.testEditable(false);
+            });
+
+            return low_fp.zoom(up_fp.scale_xmin,  up_fp.scale_xmax).then(() => {
+
+               low_fp.o_zoom = low_fp.zoom;
+               low_fp._ratio_up_fp = up_fp;
+
+               low_fp.zoom = function(xmin,xmax,ymin,ymax,zmin,zmax) {
+                  this._ratio_up_fp.o_zoom(xmin,xmax);
+                  return this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax);
+               }
+
+               low_fp.o_sizeChanged = low_fp.sizeChanged;
+               low_fp.sizeChanged = function() {
+                  this.o_sizeChanged();
+                  this._ratio_up_fp.fX1NDC = this.fX1NDC;
+                  this._ratio_up_fp.fX2NDC = this.fX2NDC;
+                  this._ratio_up_fp.o_sizeChanged();
+               }
+
+               return this;
+            });
+         }
+
+         return this;
+      });
+   }
+
+   let drawRatioPlot = (divid, ratio, opt) => {
+      let painter = new TRatioPlotPainter(divid, ratio, opt);
+
+      return jsrp.ensureTCanvas(painter, false).then(() => painter.redraw());
+
+   }
 
    // ==================================================================================================
 
@@ -4012,7 +4164,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    jsrp.drawEfficiency = drawEfficiency;
    jsrp.drawGraphPolargram = drawGraphPolargram;
    jsrp.drawASImage = drawASImage;
-
+   jsrp.drawRatioPlot = drawRatioPlot;
 
    JSROOT.TF1Painter = TF1Painter;
    JSROOT.TGraphPainter = TGraphPainter;
@@ -4020,6 +4172,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    JSROOT.TMultiGraphPainter = TMultiGraphPainter;
    JSROOT.TSplinePainter = TSplinePainter;
    JSROOT.TASImagePainter = TASImagePainter;
+   JSROOT.TRatioPlotPainter = TRatioPlotPainter;
 
    return JSROOT;
 

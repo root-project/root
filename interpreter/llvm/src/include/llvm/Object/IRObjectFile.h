@@ -1,9 +1,8 @@
 //===- IRObjectFile.h - LLVM IR object file implementation ------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -38,8 +37,7 @@ class IRObjectFile : public SymbolicFile {
 public:
   ~IRObjectFile() override;
   void moveSymbolNext(DataRefImpl &Symb) const override;
-  std::error_code printSymbolName(raw_ostream &OS,
-                                  DataRefImpl Symb) const override;
+  Error printSymbolName(raw_ostream &OS, DataRefImpl Symb) const override;
   uint32_t getSymbolFlags(DataRefImpl Symb) const override;
   basic_symbol_iterator symbol_begin() const override;
   basic_symbol_iterator symbol_end() const override;
@@ -50,14 +48,25 @@ public:
     return v->isIR();
   }
 
-  /// \brief Finds and returns bitcode embedded in the given object file, or an
-  /// error code if not found.
-  static ErrorOr<MemoryBufferRef> findBitcodeInObject(const ObjectFile &Obj);
+  using module_iterator =
+      pointee_iterator<std::vector<std::unique_ptr<Module>>::const_iterator,
+                       const Module>;
 
-  /// \brief Finds and returns bitcode in the given memory buffer (which may
+  module_iterator module_begin() const { return module_iterator(Mods.begin()); }
+  module_iterator module_end() const { return module_iterator(Mods.end()); }
+
+  iterator_range<module_iterator> modules() const {
+    return make_range(module_begin(), module_end());
+  }
+
+  /// Finds and returns bitcode embedded in the given object file, or an
+  /// error code if not found.
+  static Expected<MemoryBufferRef> findBitcodeInObject(const ObjectFile &Obj);
+
+  /// Finds and returns bitcode in the given memory buffer (which may
   /// be either a bitcode file or a native object file with embedded bitcode),
   /// or an error code if not found.
-  static ErrorOr<MemoryBufferRef>
+  static Expected<MemoryBufferRef>
   findBitcodeInMemBuffer(MemoryBufferRef Object);
 
   static Expected<std::unique_ptr<IRObjectFile>> create(MemoryBufferRef Object,

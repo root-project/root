@@ -9,15 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootControlBar                                                      //
-//                                                                      //
-// This class provides an interface to the GUI dependent functions of   //
-// the TControlBar class. A control bar is a horizontal or vertical bar //
-// with a number of buttons (text or picture buttons).                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class  TRootControlBar
+    \ingroup guiwidgets
+
+This class provides an interface to the GUI dependent functions of
+the TControlBar class. A control bar is a horizontal or vertical bar
+with a number of buttons (text or picture buttons).
+
+*/
+
 
 #include "TRootControlBar.h"
 #include "TControlBar.h"

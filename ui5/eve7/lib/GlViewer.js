@@ -20,6 +20,12 @@ sap.ui.define([], function() {
          this.controller = controller;
       },
 
+      cleanup: function()
+      {
+         // console.log(this.get_name() + ".cleanup()");
+         delete this.controller;
+      },
+
       //==============================================================================
 
       get_name:   function() { return "EVE.GlViewer" + this.viewer_class; },
@@ -31,7 +37,7 @@ sap.ui.define([], function() {
 
       make_object:   function(name) { return null; },
       get_top_scene: function()     { return null; },
-
+      get_manager:   function()     { return this.controller.mgr; }
    };
 
    return GlViewer;

@@ -176,9 +176,9 @@ public:
   Double_t chiSquare(int nFitParam=0) const { return chiSquare(0,0,nFitParam) ; } 
   Double_t chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
 
-  RooHist* residHist(const char* histname=0, const char* pdfname=0,bool normalize=false, bool useAverage=kFALSE) const ;
+  RooHist* residHist(const char* histname=0, const char* pdfname=0,bool normalize=false, bool useAverage=true) const ;
   ///Uses residHist() and sets normalize=true
-  RooHist* pullHist(const char* histname=0, const char* pdfname=0, bool useAverage=false) const 
+  RooHist* pullHist(const char* histname=0, const char* pdfname=0, bool useAverage=true) const 
     { return residHist(histname,pdfname,true,useAverage); }
 
   void Browse(TBrowser *b) ;

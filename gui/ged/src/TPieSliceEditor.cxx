@@ -1,8 +1,25 @@
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TPieSliceEditor.h"
 #include "TPieSlice.h"
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
+
+
+/** \class TPieSliceEditor
+\ingroup ged
+
+Editor for changing pie-chart's slice attributes.
+
+*/
+
 
 ClassImp(TPieSliceEditor);
 

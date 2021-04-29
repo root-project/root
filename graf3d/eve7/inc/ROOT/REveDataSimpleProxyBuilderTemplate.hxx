@@ -41,14 +41,14 @@ protected:
    }
 
    using REveDataSimpleProxyBuilder::BuildViewType;
-   void BuildViewType(const void *iData, int index, REveElement *itemHolder, std::string viewType, const REveViewContext *context) override
+   void BuildViewType(const void *iData, int index, REveElement *itemHolder, const std::string& viewType, const REveViewContext *context) override
    {
       if(iData) {
          BuildViewType(*reinterpret_cast<const T*> (iData), index, itemHolder, viewType, context);
       }
    }
 
-   virtual void BuildViewType(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, std::string /*viewType*/, const REveViewContext * /*context*/)
+   virtual void BuildViewType(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, const std::string& /*viewType*/, const REveViewContext * /*context*/)
    {
       throw std::runtime_error("virtual BuildViewType(const T&, int, REveElement&, const REveViewContext*) not implemented by inherited class.");
    }

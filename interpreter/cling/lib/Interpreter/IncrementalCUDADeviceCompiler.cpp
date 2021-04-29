@@ -7,8 +7,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-#include "IncrementalCUDADeviceCompiler.h"
-
+#include "cling/Interpreter/IncrementalCUDADeviceCompiler.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InvocationOptions.h"
 #include "cling/Interpreter/Transaction.h"
@@ -38,9 +37,7 @@ namespace cling {
       const cling::InvocationOptions& invocationOptions,
       const clang::CompilerInstance& CI)
       : m_FilePath(filePath),
-        m_FatbinFilePath(CI.getCodeGenOpts().CudaGpuBinaryFileNames.empty()
-                             ? ""
-                             : CI.getCodeGenOpts().CudaGpuBinaryFileNames[0]) {
+        m_FatbinFilePath(CI.getCodeGenOpts().CudaGpuBinaryFileName) {
     if (m_FatbinFilePath.empty()) {
       llvm::errs() << "Error: CudaGpuBinaryFileNames can't be empty\n";
       return;
@@ -52,16 +49,15 @@ namespace cling {
 
     // cling -std=c++xx -Ox -x cuda -S --cuda-gpu-arch=sm_xx --cuda-device-only
     // ${include headers} ${-I/paths} [-v] [-g] ${m_CuArgs->additionalPtxOpt}
-    std::vector<std::string> argv = {
-        "cling",
-        m_CuArgs->cppStdVersion.c_str(),
-        "-O" + std::to_string(optLevel),
-        "-x",
-        "cuda",
-        "-S",
-        std::string("--cuda-gpu-arch=sm_")
-            .append(std::to_string(m_CuArgs->smVersion)),
-        "--cuda-device-only"};
+    argv = {"cling",
+            m_CuArgs->cppStdVersion.c_str(),
+            "-O" + std::to_string(optLevel),
+            "-x",
+            "cuda",
+            "-S",
+            std::string("--cuda-gpu-arch=sm_")
+                .append(std::to_string(m_CuArgs->smVersion)),
+            "--cuda-device-only"};
 
     addHeaderSearchPathFlags(argv, CI.getHeaderSearchOptsPtr());
 
@@ -116,7 +112,7 @@ namespace cling {
       cppStdVersion = "-std=c++11";
     if (langOpts.CPlusPlus14)
       cppStdVersion = "-std=c++14";
-    if (langOpts.CPlusPlus1z)
+    if (langOpts.CPlusPlus17)
       cppStdVersion = "-std=c++1z";
     if (langOpts.CPlusPlus2a)
       cppStdVersion = "-std=c++2a";
@@ -157,6 +153,11 @@ namespace cling {
       std::string s = arg;
       if (s.compare(0, 2, "-D") == 0)
         additionalPtxOpt.push_back(s);
+    }
+
+    // use custom CUDA SDK path
+    if(!invocationOptions.CompilerOpts.CUDAPath.empty()){
+      additionalPtxOpt.push_back("--cuda-path=" + invocationOptions.CompilerOpts.CUDAPath);
     }
 
     enum FatBinFlags {
@@ -279,8 +280,7 @@ namespace cling {
     // delete compiled PTX code of last input
     m_PTX_code = "";
 
-    std::shared_ptr<llvm::Module> module =
-        m_PTX_interp->getLastTransaction()->getModule();
+    llvm::Module* module = m_PTX_interp->getLastTransaction()->getModule();
 
     std::string error;
     auto Target =
@@ -310,7 +310,8 @@ namespace cling {
     // object file is not supported and do not make sense
     auto FileType = llvm::TargetMachine::CGFT_AssemblyFile;
 
-    if (targetMachine->addPassesToEmitFile(pass, dest, FileType)) {
+    if (targetMachine->addPassesToEmitFile(pass, dest, /*DwoOut*/ nullptr,
+                                           FileType)) {
       llvm::errs() << "TargetMachine can't emit assembler code";
       return 1;
     }

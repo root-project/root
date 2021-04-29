@@ -59,6 +59,14 @@
 class TDavixFileInternal;
 struct Davix_fd;
 
+namespace ROOT {
+namespace Experimental {
+class RLogChannel;
+}
+}
+
+ROOT::Experimental::RLogChannel &TDavixLogChannel();
+
 class TDavixFile : public TFile {
 private:
     TDavixFileInternal* d_ptr;
@@ -106,6 +114,11 @@ public:
     // TDavixFile options
     /// Enable or disable certificate authority check
     void setCACheck(Bool_t check);
+
+    // Determine the value of the current token from the process's environment.
+    // Follows the WLCG Bearer Token Discovery schema.
+    // On error or no token discovered, returns the empty string.
+    std::string DiscoverToken();
 
     /// Enable the grid mode
     /// The grid Mode configure automatically all grid-CA path, VOMS authentication

@@ -25,9 +25,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (enabled !== undefined) this.tooltip_enabled = enabled;
       },
 
+      /** @summary central function which let show selected hints for the object */
       processFrameTooltipEvent: function(pnt, evnt) {
-         // make central function which let show selected hints for the object
-
          if (pnt && pnt.handler) {
             // special use of interactive handler in the frame painter
             let rect = this.draw_g ? this.draw_g.select(".main_layer") : null;
@@ -357,7 +356,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       function MakeResizeElements(group, width, height, handler) {
          function make(cursor, d) {
-            let clname = "js_" + cursor.replace('-', '_'),
+            let clname = "js_" + cursor.replace(/[-]/g, '_'),
                elem = group.select('.' + clname);
             if (elem.empty()) elem = group.append('path').classed(clname, true);
             elem.style('opacity', 0).style('cursor', cursor).attr('d', d);
@@ -582,10 +581,25 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Add move handlers for drawn element
      * @private */
-   function addMoveHandler(painter) {
+   function addMoveHandler(painter, enabled) {
 
-      if (!JSROOT.settings.MoveResize || JSROOT.batch_mode ||
-         !painter.draw_g || painter.draw_g.property("assigned_move")) return;
+      if (enabled === undefined) enabled = true;
+
+      if (!JSROOT.settings.MoveResize || JSROOT.batch_mode || !painter.draw_g) return;
+
+      if (!enabled) {
+         if (painter.draw_g.property("assigned_move")) {
+            let drag_move = d3.drag().subject(Object);
+            drag_move.on("start", null).on("drag", null).on("end", null);
+            painter.draw_g
+                  .style("cursor", null)
+                  .property("assigned_move", null)
+                  .call(drag_move);
+         }
+         return;
+      }
+
+      if (painter.draw_g.property("assigned_move")) return;
 
       function detectRightButton(event) {
          if ('buttons' in event) return event.buttons === 2;
@@ -595,10 +609,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       let drag_move = d3.drag().subject(Object),
-         not_changed = true;
+         not_changed = true, move_disabled = false;
 
       drag_move
          .on("start", function(evnt) {
+            move_disabled = this.moveEnabled ? !this.moveEnabled() : false;
+            if (move_disabled) return;
             if (detectRightButton(evnt.sourceEvent)) return;
             evnt.sourceEvent.preventDefault();
             evnt.sourceEvent.stopPropagation();
@@ -607,12 +623,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (this.moveStart)
                this.moveStart(pos[0], pos[1]);
          }.bind(painter)).on("drag", function(evnt) {
+            if (move_disabled) return;
             evnt.sourceEvent.preventDefault();
             evnt.sourceEvent.stopPropagation();
             not_changed = false;
             if (this.moveDrag)
                this.moveDrag(evnt.dx, evnt.dy);
          }.bind(painter)).on("end", function(evnt) {
+            if (move_disabled) return;
             evnt.sourceEvent.preventDefault();
             evnt.sourceEvent.stopPropagation();
             if (this.moveEnd)
@@ -642,7 +660,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (!this._frame_rotate && !this._frame_fixpos)
             addDragHandler(this, { obj: this, only_resize: true,
-                                    minwidth: 20, minheight: 20, redraw: this.sizeChanged.bind(this) });
+                                    minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
 
          let main_svg = this.draw_g.select(".main_layer");
 
@@ -1018,11 +1036,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let kind = "xyz";
          if (!valid_x) kind = this.swap_xy ? "x" : "y"; else
          if (!valid_y) kind = this.swap_xy ? "y" : "x";
-         if (this.unzoom(kind)) return;
-
-         let pp = this.getPadPainter();
-         let rect = this.getFrameRect();
-         if (pp) pp.selectObjectPainter(pp, { x: m[0] + rect.x, y: m[1] + rect.y, dbl: true });
+         this.unzoom(kind).then(changed => {
+            if (changed) return;
+            let pp = this.getPadPainter(), rect = this.getFrameRect();
+            if (pp) pp.selectObjectPainter(pp, { x: m[0] + rect.x, y: m[1] + rect.y, dbl: true });
+         });
       },
 
       startTouchZoom: function(evnt) {
@@ -1478,7 +1496,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    function toggleButtonsVisibility(handler, action) {
-      let group = handler.getLayerSvg("btns_layer"),
+      let group = handler.getLayerSvg("btns_layer", handler.this_pad_name),
           btn = group.select("[name='Toggle']");
 
       if (btn.empty()) return;
@@ -1529,7 +1547,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       findPadButton: function(keyname) {
-         let group = this.getLayerSvg("btns_layer"), found_func = "";
+         let group = this.getLayerSvg("btns_layer", this.this_pad_name), found_func = "";
          if (!group.empty())
             group.selectAll("svg").each(function() {
                if (d3.select(this).attr("key") === keyname)
@@ -1540,7 +1558,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       removePadButtons: function() {
-         let group = this.getLayerSvg("btns_layer");
+         let group = this.getLayerSvg("btns_layer", this.this_pad_name);
          if (!group.empty()) {
             group.selectAll("*").remove();
             group.property("nextx", null);
@@ -1548,11 +1566,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       showPadButtons: function() {
-         let group = this.getLayerSvg("btns_layer");
+         let group = this.getLayerSvg("btns_layer", this.this_pad_name);
          if (group.empty()) return;
 
          // clean all previous buttons
          group.selectAll("*").remove();
+         if (!this._buttons) return;
 
          let iscan = this.iscan || !this.has_canvas, ctrl,
              x = group.property('leftside') ? getButtonSize(this, 1.25) : 0, y = 0;
@@ -1570,7 +1589,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                 .on("mouseenter", () => toggleButtonsVisibility(this, 'enable'))
                 .on("mouseleave", () => toggleButtonsVisibility(this, 'disable'));
 
-            for (let k=0;k<this._buttons.length;++k) {
+            for (let k = 0; k < this._buttons.length; ++k) {
                let item = this._buttons[k];
 
                let btn = item.btn;

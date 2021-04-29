@@ -18,7 +18,6 @@
 
 #include "RooAbsReal.h"
 #include "RooListProxy.h"
-#include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 
 #include <list>

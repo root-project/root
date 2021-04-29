@@ -48,11 +48,17 @@ public:
    virtual void VisitArrayField(const RArrayField &field) { VisitField(field); }
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
    virtual void VisitClassField(const RClassField &field) { VisitField(field); }
+   virtual void VisitRecordField(const RRecordField &field) { VisitField(field); }
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
+   virtual void VisitCharField(const RField<char> &field) { VisitField(field); }
+   virtual void VisitInt8Field(const RField<std::int8_t> &field) { VisitField(field); }
+   virtual void VisitInt16Field(const RField<std::int16_t> &field) { VisitField(field); }
    virtual void VisitIntField(const RField<int> &field) { VisitField(field); }
+   virtual void VisitInt64Field(const RField<std::int64_t> &field) { VisitField(field); }
    virtual void VisitStringField(const RField<std::string> &field) { VisitField(field); }
+   virtual void VisitUInt16Field(const RField<std::uint16_t> &field) { VisitField(field); }
    virtual void VisitUInt32Field(const RField<std::uint32_t> &field) { VisitField(field); }
    virtual void VisitUInt64Field(const RField<std::uint64_t> &field) { VisitField(field); }
    virtual void VisitUInt8Field(const RField<std::uint8_t> &field) { VisitField(field); }
@@ -188,14 +194,20 @@ public:
    void VisitBoolField(const RField<bool> &field) final;
    void VisitDoubleField(const RField<double> &field) final;
    void VisitFloatField(const RField<float> &field) final;
+   void VisitCharField(const RField<char> &field) final;
+   void VisitInt8Field(const RField<std::int8_t> &field) final;
+   void VisitInt16Field(const RField<std::int16_t> &field) final;
    void VisitIntField(const RField<int> &field) final;
+   void VisitInt64Field(const RField<std::int64_t> &field) final;
    void VisitStringField(const RField<std::string> &field) final;
    void VisitUInt8Field(const RField<std::uint8_t> &field) final;
+   void VisitUInt16Field(const RField<std::uint16_t> &field) final;
    void VisitUInt32Field(const RField<std::uint32_t> &field) final;
    void VisitUInt64Field(const RField<std::uint64_t> &field) final;
 
    void VisitArrayField(const RArrayField &field) final;
    void VisitClassField(const RClassField &field) final;
+   void VisitRecordField(const RRecordField &field) final;
    void VisitVectorField(const RVectorField &field) final;
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
 };

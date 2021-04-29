@@ -51,7 +51,7 @@ class hierarchies (watch out for overlaps).
 #include "TRefTable.h"
 #include "TProcessID.h"
 
-Long_t TObject::fgDtorOnly = 0;
+Longptr_t TObject::fgDtorOnly = 0;
 Bool_t TObject::fgObjectStat = kTRUE;
 
 ClassImp(TObject);
@@ -773,6 +773,9 @@ void TObject::UseCurrentStyle()
 
 Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
 {
+   if (R__unlikely(option & kOnlyPrepStep))
+      return 0;
+
    TString opt = "";
    if (option & kSingleKey)   opt += "SingleKey";
    if (option & kOverwrite)   opt += "OverWrite";
@@ -976,7 +979,7 @@ void TObject::SetObjectStat(Bool_t stat)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return destructor only flag
 
-Long_t TObject::GetDtorOnly()
+Longptr_t TObject::GetDtorOnly()
 {
    return fgDtorOnly;
 }
@@ -986,7 +989,7 @@ Long_t TObject::GetDtorOnly()
 
 void TObject::SetDtorOnly(void *obj)
 {
-   fgDtorOnly = (Long_t) obj;
+   fgDtorOnly = (Longptr_t) obj;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -994,7 +997,7 @@ void TObject::SetDtorOnly(void *obj)
 
 void TObject::operator delete(void *ptr)
 {
-   if ((Long_t) ptr != fgDtorOnly)
+   if ((Longptr_t) ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr);
    else
       fgDtorOnly = 0;
@@ -1005,7 +1008,7 @@ void TObject::operator delete(void *ptr)
 
 void TObject::operator delete[](void *ptr)
 {
-   if ((Long_t) ptr != fgDtorOnly)
+   if ((Longptr_t) ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr);
    else
       fgDtorOnly = 0;
@@ -1017,7 +1020,7 @@ void TObject::operator delete[](void *ptr)
 
 void TObject::operator delete(void *ptr, size_t size)
 {
-   if ((Long_t) ptr != fgDtorOnly)
+   if ((Longptr_t) ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr, size);
    else
       fgDtorOnly = 0;
@@ -1028,7 +1031,7 @@ void TObject::operator delete(void *ptr, size_t size)
 
 void TObject::operator delete[](void *ptr, size_t size)
 {
-   if ((Long_t) ptr != fgDtorOnly)
+   if ((Longptr_t) ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr, size);
    else
       fgDtorOnly = 0;

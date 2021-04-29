@@ -12,14 +12,6 @@
 #ifndef ROOT__TAdvancedGraphicsDialog__
 #define ROOT__TAdvancedGraphicsDialog__
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TAdvancedGraphicsDialog                                              //
-//                                                                      //
-// Allows to create advanced graphics from the last fit made in the     //
-// fitpanel. This includes the scan graphics, the contour and the       //
-// confidence levels.                                                   //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TGButton.h"
@@ -46,31 +38,31 @@ enum EAdvanceGraphicsDialog {
 class TAdvancedGraphicsDialog : public TGTransientFrame {
 
 private:
-   TGVerticalFrame  *fMainFrame;     // Main Vertical Frame
-   TGTab            *fTab;           // Tab containing the available methods
+   TGVerticalFrame  *fMainFrame;     ///< Main Vertical Frame
+   TGTab            *fTab;           ///< Tab containing the available methods
 
-   TGVerticalFrame  *fContourFrame;  // Contour Frame
-   TGNumberEntry    *fContourPoints; // Number of points for the graph
-   TGComboBox       *fContourPar1;   // Parameter 1 for Contour
-   TGComboBox       *fContourPar2;   // Parameter 2 for Contour
-   TGNumberEntry    *fContourError;  // Error Level for Contour
-   TGCheckButton    *fContourOver;   // Superimpose the graphics
-   TGColorSelect    *fContourColor;  // Color for the graph
+   TGVerticalFrame  *fContourFrame;  ///< Contour Frame
+   TGNumberEntry    *fContourPoints; ///< Number of points for the graph
+   TGComboBox       *fContourPar1;   ///< Parameter 1 for Contour
+   TGComboBox       *fContourPar2;   ///< Parameter 2 for Contour
+   TGNumberEntry    *fContourError;  ///< Error Level for Contour
+   TGCheckButton    *fContourOver;   ///< Superimpose the graphics
+   TGColorSelect    *fContourColor;  ///< Color for the graph
 
-   TGVerticalFrame  *fScanFrame;     // Scan Frame
-   TGNumberEntry    *fScanPoints;    // Number of points for the graph
-   TGComboBox       *fScanPar;       // Parameter for Scan
-   TGNumberEntry    *fScanMin;       // Min Value for Contour
-   TGNumberEntry    *fScanMax;       // Max Value for Contour
+   TGVerticalFrame  *fScanFrame;     ///< Scan Frame
+   TGNumberEntry    *fScanPoints;    ///< Number of points for the graph
+   TGComboBox       *fScanPar;       ///< Parameter for Scan
+   TGNumberEntry    *fScanMin;       ///< Min Value for Contour
+   TGNumberEntry    *fScanMax;       ///< Max Value for Contour
 
-   TGVerticalFrame  *fConfFrame;     // Confidence Intervals Frame
-   TGNumberEntry    *fConfLevel;     // Confidence Level
-   TGColorSelect    *fConfColor;     // Color for the graph
+   TGVerticalFrame  *fConfFrame;     ///< Confidence Intervals Frame
+   TGNumberEntry    *fConfLevel;     ///< Confidence Level
+   TGColorSelect    *fConfColor;     ///< Color for the graph
 
-   TGTextButton     *fDraw;          // ok button
-   TGTextButton     *fClose;         // cancel button
+   TGTextButton     *fDraw;          ///< ok button
+   TGTextButton     *fClose;         ///< cancel button
 
-   TBackCompFitter  *fFitter;        // Fitter.
+   TBackCompFitter  *fFitter;        ///< Fitter.
 
    void CreateContourFrame();
    void CreateScanFrame();

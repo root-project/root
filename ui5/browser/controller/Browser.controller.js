@@ -14,6 +14,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/core/mvc/XMLView',
                'sap/ui/core/Icon',
                'sap/m/Button',
+               'sap/m/ButtonType',
+               'sap/ui/core/ValueState',
+               'sap/m/Dialog',
+               'sap/m/DialogType',
                'sap/ui/codeeditor/CodeEditor',
                'sap/m/Image',
                'sap/tnt/ToolHeader',
@@ -36,6 +40,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            XMLView,
            CoreIcon,
            Button,
+           ButtonType,
+           ValueState,
+           Dialog,
+           DialogType,
            CodeEditor,
            Image,
            ToolHeader,
@@ -635,37 +643,33 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.websocket.send("WIDGET_SELECTED:" + item.getKey());
       },
 
+      doCloseTabItem: function(item) {
+         let oTabContainer = this.byId("tabContainer");
+         if (item.getKey())
+            this.websocket.send("CLOSE_TAB:" + item.getKey());
+         oTabContainer.removeItem(item);
+      },
+
       /** @brief Close Tab event handler */
       handleTabClose: function(oEvent) {
          // prevent the tab being closed by default
          oEvent.preventDefault();
 
-         let oTabContainer = this.byId("tabContainer");
-         let oItemToClose = oEvent.getParameter('item');
-         let oModel = oItemToClose.getModel();
-
-         let closeItem = () => {
-            if (oItemToClose.getKey())
-               this.websocket.send("CLOSE_TAB:" + oItemToClose.getKey());
-            oTabContainer.removeItem(oItemToClose);
-         }
+         let oItemToClose = oEvent.getParameter('item'),
+             oModel = oItemToClose.getModel();
 
          if (oModel && oModel.getProperty("/can_close"))
-            return closeItem();
+            return this.doCloseTabItem(oItemToClose);
 
-         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
+         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getAdditionalText() + '" tab?', {
             onClose: oAction => {
                if (oAction === MessageBox.Action.OK) {
-                   closeItem();
+                   this.doCloseTabItem(oItemToClose);
                    MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', { duration: 1500 });
                 }
             }
          });
       },
-
-      /* ============================================ */
-      /* =============== TabContainer =============== */
-      /* ============================================ */
 
       /* ======================================== */
       /* =============== Terminal =============== */
@@ -746,10 +750,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary Double-click event handler */
       onRowDblClick: function (row) {
          let ctxt = row.getBindingContext(),
-            prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
-            fullpath = (prop && prop.fullpath) ? prop.fullpath.substr(1, prop.fullpath.length - 2) : "";
+            prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
-         if (!fullpath) return;
+         if (!prop || !prop.path) return;
 
          let className = this.getBaseClass(prop.className),
              opt = className ? this.drawingOptions[className] : "",
@@ -758,7 +761,49 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (this._oSettingsModel.getProperty("/DBLCLKRun")) exec = "exec";
          if (!opt) opt = "";
 
-         this.websocket.send(`DBLCLK:["${fullpath}","${opt}","${exec}"]`);
+         let args = prop.path.slice(); // make copy of array
+         args.push(opt, exec);
+
+         this.websocket.send("DBLCLK:" + JSON.stringify(args));
+
+         this.invokeWarning("Processing double click on: " + prop.name, 200);
+      },
+
+      invokeWarning: function(msg, tmout) {
+         this.cancelWarning();
+
+         this.warn_timeout = setTimeout(() => {
+            if (!this.warn_timeout) return;
+            delete this.warn_timeout;
+
+            this.oWarningDialog = new Dialog({
+               type: DialogType.Message,
+               title: "Warning",
+               state: ValueState.Warning,
+               content: new mText({ text: msg }),
+               beginButton: new Button({
+                  type: ButtonType.Emphasized,
+                  text: "OK",
+                  press: () => this.cancelWarning()
+               })
+            });
+
+            this.oWarningDialog.open();
+
+         }, tmout);
+
+      },
+
+      cancelWarning: function() {
+         if (this.warn_timeout) {
+            clearTimeout(this.warn_timeout);
+            delete this.warn_timeout;
+         }
+         if (this.oWarningDialog) {
+            this.oWarningDialog.close();
+            delete this.oWarningDialog;
+         }
+
       },
 
       getBaseClass: function(className) {
@@ -791,15 +836,23 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
      /** @summary Entry point for all data from server */
      onWebsocketMsg: function(handle, msg, offset) {
 
+         // any message from server clear all warnings
+         this.cancelWarning();
+
          if (typeof msg != "string")
             return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
+
+         // console.log('MSG', msg.substr(0,20));
 
          let mhdr = msg.split(":")[0];
          msg = msg.substr(mhdr.length+1);
 
+
          switch (mhdr) {
          case "INMSG":
             this.processInitMsg(msg);
+            break;
+         case "NOPE":
             break;
          case "EDITOR": { // update code editor
             let arr = JSON.parse(msg);
@@ -846,7 +899,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                let bresp = JSON.parse(msg);
                this.model.processResponse(bresp);
 
-               if (bresp.path === '/') {
+               if (bresp.path.length == 0) {
                   let tt = this.getView().byId("treeTable");
                   tt.autoResizeColumn(2);
                   tt.autoResizeColumn(1);
@@ -900,6 +953,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.doReload(true); // force also update of items on server
       },
 
+      onWorkingDirPress: function() {
+         this.websocket.send("CDWORKDIR");
+      },
+
       doReload: function(force_reload) {
          if (this.standalone) {
             this.showTextInBrowser();
@@ -913,6 +970,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary Quit ROOT session */
       onQuitRootPress: function() {
          this.websocket.send("QUIT_ROOT");
+         setTimeout(() => { if (window) window.close(); }, 2000);
       },
 
       onSearch : function(oEvt) {
@@ -989,13 +1047,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          })).then(oView => item.addContent(oView));
       },
 
-      createCanvas: async function(kind, url, name) {
+      createCanvas: async function(kind, url, name, title) {
          if (!url || !name || (kind != "tcanvas" && kind != "rcanvas")) return;
 
          let item = new TabContainerItem({
-            name: "ROOT Canvas",
+            name: (kind == "rcanvas") ? "RCanvas" : "TCanvas",
             key: name,
-            additionalText: name,
+            additionalText: title || name,
             icon: "sap-icon://column-chart-dual-axis"
          });
 
@@ -1021,7 +1079,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          });
 
          item.addContent(oView);
-      },
+
+         let ctrl = oView.getController();
+         ctrl.onCloseCanvasPress = this.doCloseTabItem.bind(this, item);
+      }
 
    });
 

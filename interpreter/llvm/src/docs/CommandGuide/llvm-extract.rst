@@ -1,6 +1,8 @@
 llvm-extract - extract a function from an LLVM module
 =====================================================
 
+.. program:: llvm-extract
+
 SYNOPSIS
 --------
 
@@ -75,5 +77,4 @@ occurs, it will exit with a non-zero value.
 SEE ALSO
 --------
 
-bugpoint
-
+:manpage:`bugpoint(1)`

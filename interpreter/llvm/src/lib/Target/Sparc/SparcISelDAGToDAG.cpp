@@ -1,9 +1,8 @@
 //===-- SparcISelDAGToDAG.cpp - A dag to dag inst selector for Sparc ------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -311,7 +310,9 @@ bool SparcDAGToDAGISel::tryInlineAsm(SDNode *N){
   if (!Changed)
     return false;
 
-  SDValue New = CurDAG->getNode(ISD::INLINEASM, SDLoc(N),
+  SelectInlineAsmMemoryOperands(AsmNodeOperands, SDLoc(N));
+
+  SDValue New = CurDAG->getNode(N->getOpcode(), SDLoc(N),
       CurDAG->getVTList(MVT::Other, MVT::Glue), AsmNodeOperands);
   New->setNodeId(-1);
   ReplaceNode(N, New.getNode());
@@ -327,7 +328,8 @@ void SparcDAGToDAGISel::Select(SDNode *N) {
 
   switch (N->getOpcode()) {
   default: break;
-  case ISD::INLINEASM: {
+  case ISD::INLINEASM:
+  case ISD::INLINEASM_BR: {
     if (tryInlineAsm(N))
       return;
     break;
@@ -360,12 +362,6 @@ void SparcDAGToDAGISel::Select(SDNode *N) {
 
     // FIXME: Handle div by immediate.
     unsigned Opcode = N->getOpcode() == ISD::SDIV ? SP::SDIVrr : SP::UDIVrr;
-    // SDIV is a hardware erratum on some LEON2 processors. Replace it with SDIVcc here.
-    if (((SparcTargetMachine&)TM).getSubtargetImpl()->performSDIVReplace()
-        &&
-        Opcode == SP::SDIVrr) {
-      Opcode = SP::SDIVCCrr;
-    }
     CurDAG->SelectNodeTo(N, Opcode, MVT::i32, DivLHS, DivRHS, TopPart);
     return;
   }

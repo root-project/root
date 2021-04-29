@@ -2,7 +2,7 @@
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2001, Rene Brun, Fons Rademakers and Reiner Rohlfs *
+ * Copyright (C) 1995-2021, Rene Brun, Fons Rademakers and Reiner Rohlfs *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -44,6 +44,7 @@ class TGFont;
 class TGIdleHandler;
 class THashTable;
 class TTimer;
+class TGPopupMenu;
 
 //----------------------------------------------------------------------
 
@@ -284,8 +285,8 @@ public:
 
 class TGHtmlTextElement : public TGHtmlElement {
 private:
-   TGHtmlTextElement(const TGHtmlTextElement&);            // Not implemented.
-   TGHtmlTextElement &operator=(const TGHtmlTextElement&); // Not implemented.
+   TGHtmlTextElement(const TGHtmlTextElement&) = delete;
+   TGHtmlTextElement &operator=(const TGHtmlTextElement&) = delete;
 
 public:
    TGHtmlTextElement(int size);
@@ -505,8 +506,8 @@ class TGHtmlImageMarkup;
 
 class TGHtmlImage : public TObject {
 private:
-   TGHtmlImage(const TGHtmlImage&);            // Not implemented.
-   TGHtmlImage &operator=(const TGHtmlImage&); // Not implemented.
+   TGHtmlImage(const TGHtmlImage&) = delete;
+   TGHtmlImage &operator=(const TGHtmlImage&) = delete;
 
 public:
    TGHtmlImage(TGHtml *htm, const char *url, const char *width,
@@ -960,6 +961,9 @@ public:   // reloadable methods
 public:
    const char *GetText() const { return fZText; }
 
+   void HandleMenu(Int_t);
+   void SaveFileAs();
+
    int GetMarginWidth() { return fMargins.fL + fMargins.fR; }
    int GetMarginHeight() { return fMargins.fT + fMargins.fB; }
 
@@ -1125,6 +1129,10 @@ protected:
    virtual void UpdateBackgroundStart();
 
 protected:
+   enum {
+      kM_FILE_SAVEAS, kM_FILE_PRINT
+   };
+
    TGHtmlElement *fPFirst;          // First HTML token on a list of them all
    TGHtmlElement *fPLast;           // Last HTML token on the list
    int            fNToken;          // Number of HTML tokens on the list.
@@ -1179,6 +1187,7 @@ protected:
    TGHtmlScript  *fPScript;         // <SCRIPT> currently being parsed
 
    TGIdleHandler *fIdle;
+   TGPopupMenu   *fMenu;            // popup menu with user actions
 
    // These fields hold state information used by the HtmlAddStyle routine.
    // We have to store this state information here since HtmlAddStyle

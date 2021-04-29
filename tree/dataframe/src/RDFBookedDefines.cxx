@@ -1,3 +1,11 @@
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "ROOT/RDF/RBookedDefines.hxx"
 
 namespace ROOT {
@@ -21,7 +29,11 @@ void RBookedDefines::AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &co
 
 void RBookedDefines::AddName(std::string_view name)
 {
-   auto newColsNames = std::make_shared<ColumnNames_t>(GetNames());
+   const auto &names = GetNames();
+   if (std::find(names.begin(), names.end(), name) != names.end())
+      return; // must be a Redefine of an existing column. Nothing to do.
+
+   auto newColsNames = std::make_shared<ColumnNames_t>(names);
    newColsNames->emplace_back(std::string(name));
    fDefinesNames = newColsNames;
 }

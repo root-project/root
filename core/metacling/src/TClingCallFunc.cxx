@@ -97,8 +97,9 @@ EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
 {
    // Evaluate an Expr* and return its cling::Value
    ASTContext &C = interp.getCI()->getASTContext();
-   APSInt res;
-   if (E->EvaluateAsInt(res, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
+   clang::Expr::EvalResult evalRes;
+   if (E->EvaluateAsInt(evalRes, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
+      APSInt res = evalRes.Val.getInt();
       // IntTy or maybe better E->getType()?
       V = cling::Value(C.IntTy, interp);
       // We must use the correct signedness otherwise the zero extension
@@ -222,7 +223,7 @@ namespace {
       }
       if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
             QT->isReferenceType()) {
-         return (returnType)(long) val.getPtr();
+         return (returnType)(Longptr_t) val.getPtr();
       }
       if (const EnumType *ET = dyn_cast<EnumType>(&*QT)) {
          if (ET->getDecl()->getIntegerType()->hasSignedIntegerRepresentation())
@@ -232,10 +233,10 @@ namespace {
       }
       if (QT->isMemberPointerType()) {
          const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
-         if (MPT->isMemberDataPointer()) {
+         if (MPT && MPT->isMemberDataPointer()) {
             return (returnType)(ptrdiff_t)val.getPtr();
          }
-         return (returnType)(long) val.getPtr();
+         return (returnType)(Longptr_t) val.getPtr();
       }
       ::Error("TClingCallFunc::sv_to", "Invalid Type!");
       QT->dump();
@@ -1996,7 +1997,7 @@ TClingCallFunc::InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret) {
       return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
    } else if (QT->isMemberPointerType()) {
       const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
-      if (MPT->isMemberDataPointer()) {
+      if (MPT && MPT->isMemberDataPointer()) {
          // A member data pointer is a actually a struct with one
          // member of ptrdiff_t, the offset from the base of the object
          // storage to the storage for the designated data member.
@@ -2126,9 +2127,9 @@ T TClingCallFunc::ExecT(void *address)
    return sv_to<T>(ret);
 }
 
-Long_t TClingCallFunc::ExecInt(void *address)
+Longptr_t TClingCallFunc::ExecInt(void *address)
 {
-   return ExecT<long>(address);
+   return ExecT<Longptr_t>(address);
 }
 
 long long TClingCallFunc::ExecInt64(void *address)
@@ -2354,7 +2355,7 @@ void TClingCallFunc::SetArg(unsigned long long param)
    fArgVals.back().getULL() = param;
 }
 
-void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
+void TClingCallFunc::SetArgArray(Longptr_t *paramArr, int nparam)
 {
    ResetArg();
    for (int i = 0; i < nparam; ++i) {
@@ -2369,13 +2370,13 @@ void TClingCallFunc::SetArgs(const char *params)
 }
 
 void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, const char *arglist,
-                             long *poffset)
+                             Longptr_t *poffset)
 {
    SetFunc(info, method, arglist, false, poffset);
 }
 
 void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, const char *arglist,
-                             bool objectIsConst, long *poffset)
+                             bool objectIsConst, Longptr_t *poffset)
 {
    Init(std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(fInterp)));
    if (poffset) {
@@ -2412,14 +2413,14 @@ void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
 }
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
-                                  const char *proto, long *poffset,
+                                  const char *proto, Longptr_t *poffset,
                                   EFunctionMatchMode mode/*=kConversionMatch*/)
 {
    SetFuncProto(info, method, proto, false, poffset, mode);
 }
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
-                                  const char *proto, bool objectIsConst, long *poffset,
+                                  const char *proto, bool objectIsConst, Longptr_t *poffset,
                                   EFunctionMatchMode mode/*=kConversionMatch*/)
 {
    Init(std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(fInterp)));
@@ -2440,7 +2441,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
 }
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
-                                  const llvm::SmallVectorImpl<clang::QualType> &proto, long *poffset,
+                                  const llvm::SmallVectorImpl<clang::QualType> &proto, Longptr_t *poffset,
                                   EFunctionMatchMode mode/*=kConversionMatch*/)
 {
    SetFuncProto(info, method, proto, false, poffset, mode);
@@ -2448,7 +2449,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
                                   const llvm::SmallVectorImpl<clang::QualType> &proto,
-                                  bool objectIsConst, long *poffset,
+                                  bool objectIsConst, Longptr_t *poffset,
                                   EFunctionMatchMode mode/*=kConversionMatch*/)
 {
    Init(std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(fInterp)));

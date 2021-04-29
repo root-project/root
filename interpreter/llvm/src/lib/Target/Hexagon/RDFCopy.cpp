@@ -1,24 +1,34 @@
-//===--- RDFCopy.cpp ------------------------------------------------------===//
+//===- RDFCopy.cpp --------------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
 // RDF-based copy propagation.
+//
+//===----------------------------------------------------------------------===//
 
 #include "RDFCopy.h"
 #include "RDFGraph.h"
 #include "RDFLiveness.h"
-#include "llvm/CodeGen/MachineBasicBlock.h"
+#include "RDFRegisters.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineInstr.h"
+#include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/TargetOpcodes.h"
+#include "llvm/CodeGen/TargetRegisterInfo.h"
+#include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/Support/CommandLine.h"
-#include "llvm/Target/TargetInstrInfo.h"
-#include "llvm/Target/TargetRegisterInfo.h"
+#include "llvm/Support/Debug.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/raw_ostream.h"
+#include <cassert>
+#include <cstdint>
+#include <utility>
+
 using namespace llvm;
 using namespace rdf;
 
@@ -50,12 +60,10 @@ bool CopyPropagation::interpretAsCopy(const MachineInstr *MI, EqualityMap &EM) {
   return false;
 }
 
-
 void CopyPropagation::recordCopy(NodeAddr<StmtNode*> SA, EqualityMap &EM) {
   CopyMap.insert(std::make_pair(SA.Id, EM));
   Copies.push_back(SA.Id);
 }
-
 
 bool CopyPropagation::scanBlock(MachineBasicBlock *B) {
   bool Changed = false;
@@ -77,7 +85,6 @@ bool CopyPropagation::scanBlock(MachineBasicBlock *B) {
   return Changed;
 }
 
-
 NodeId CopyPropagation::getLocalReachingDef(RegisterRef RefRR,
       NodeAddr<InstrNode*> IA) {
   NodeAddr<RefNode*> RA = L.getNearestAliasedRef(RefRR, IA);
@@ -91,13 +98,12 @@ NodeId CopyPropagation::getLocalReachingDef(RegisterRef RefRR,
   return 0;
 }
 
-
 bool CopyPropagation::run() {
   scanBlock(&DFG.getMF().front());
 
   if (trace()) {
     dbgs() << "Copies:\n";
-    for (auto I : Copies) {
+    for (NodeId I : Copies) {
       dbgs() << "Instr: " << *DFG.addr<StmtNode*>(I).Addr->getCode();
       dbgs() << "   eq: {";
       for (auto J : CopyMap[I])
@@ -124,7 +130,7 @@ bool CopyPropagation::run() {
     return 0;
   };
 
-  for (auto C : Copies) {
+  for (NodeId C : Copies) {
 #ifndef NDEBUG
     if (HasLimit && CpCount >= CpLimit)
       break;
@@ -205,4 +211,3 @@ bool CopyPropagation::run() {
 
   return Changed;
 }
-

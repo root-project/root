@@ -564,7 +564,8 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if ( ((isMovingPie || isMovingSlice || isRotating) && gPad->OpaqueMoving()) ||
                (isResizing && gPad->OpaqueResizing()) ) {
             isRedrawing = kTRUE;
-            event = kButton1Up;
+            // event = kButton1Up;
+            // intentionally no break to continue with kButton1Up handling
          }
          else break;
 
@@ -577,7 +578,6 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (gROOT->IsEscaped()) {
             gROOT->SetEscape(kFALSE);
             gIsUptSlice = kFALSE;
-            isRedrawing = kFALSE;
             break;
          }
 
@@ -601,7 +601,6 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          gPad->Modified(kTRUE);
 
 
-         isRedrawing = kFALSE;
          gIsUptSlice = kFALSE;
 
          gVirtualX->SetLineColor(-1);

@@ -256,7 +256,8 @@ We can then book the DL method using the built option string
       TString training1("LearningRate=1e-3,Momentum=0.9,"
                         "ConvergenceSteps=10,BatchSize=128,TestRepetitions=1,"
                         "MaxEpochs=30,WeightDecay=1e-4,Regularization=None,"
-                        "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0.");
+                        "Optimizer=ADAM,ADAM_beta1=0.9,ADAM_beta2=0.999,ADAM_eps=1.E-7," // ADAM default parameters
+                        "DropConfig=0.0+0.0+0.0+0.");
       //     TString training2("LearningRate=1e-3,Momentum=0.9"
       //                       "ConvergenceSteps=10,BatchSize=128,TestRepetitions=1,"
       //                       "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"

@@ -1,9 +1,8 @@
 //===- Unix/Threading.inc - Unix Threading Implementation ----- -*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -21,8 +20,8 @@
 
 #include <pthread.h>
 
-#if defined(__FreeBSD__)
-#include <pthread_np.h> // For pthread_getthreadid_np()
+#if defined(__FreeBSD__) || defined(__OpenBSD__)
+#include <pthread_np.h> // For pthread_getthreadid_np() / pthread_set_name_np()
 #endif
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
@@ -98,8 +97,6 @@ uint64_t llvm::get_threadid() {
   return uint64_t(gettid());
 #elif defined(__linux__)
   return uint64_t(syscall(SYS_gettid));
-#elif defined(LLVM_ON_WIN32)
-  return uint64_t(::GetCurrentThreadId());
 #else
   return uint64_t(pthread_self());
 #endif
@@ -108,17 +105,19 @@ uint64_t llvm::get_threadid() {
 
 static constexpr uint32_t get_max_thread_name_length_impl() {
 #if defined(__NetBSD__)
-	return PTHREAD_MAX_NAMELEN_NP;
+  return PTHREAD_MAX_NAMELEN_NP;
 #elif defined(__APPLE__)
-	return 64;
+  return 64;
 #elif defined(__linux__)
 #if HAVE_PTHREAD_SETNAME_NP
-	return 16;
+  return 16;
 #else
-	return 0;
+  return 0;
 #endif
 #elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
   return 16;
+#elif defined(__OpenBSD__)
+  return 32;
 #else
   return 0;
 #endif
@@ -138,8 +137,9 @@ void llvm::set_thread_name(const Twine &Name) {
   // terminated, but additionally the end of a long thread name will usually
   // be more unique than the beginning, since a common pattern is for similar
   // threads to share a common prefix.
+  // Note that the name length includes the null terminator.
   if (get_max_thread_name_length() > 0)
-    NameStr = NameStr.take_back(get_max_thread_name_length());
+    NameStr = NameStr.take_back(get_max_thread_name_length() - 1);
   (void)NameStr;
 #if defined(__linux__)
 #if (defined(__GLIBC__) && defined(_GNU_SOURCE)) || defined(__ANDROID__)
@@ -147,7 +147,7 @@ void llvm::set_thread_name(const Twine &Name) {
   ::pthread_setname_np(::pthread_self(), NameStr.data());
 #endif
 #endif
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__OpenBSD__)
   ::pthread_set_name_np(::pthread_self(), NameStr.data());
 #elif defined(__NetBSD__)
   ::pthread_setname_np(::pthread_self(), "%s",
@@ -175,7 +175,7 @@ void llvm::get_thread_name(SmallVectorImpl<char> &Name) {
     if (kp == nullptr || (error != 0 && errno == ENOMEM)) {
       // Add extra space in case threads are added before next call.
       len += sizeof(*kp) + len / 10;
-      nkp = (struct kinfo_proc *)realloc(kp, len);
+      nkp = (struct kinfo_proc *)::realloc(kp, len);
       if (nkp == nullptr) {
         free(kp);
         return;
@@ -202,14 +202,57 @@ void llvm::get_thread_name(SmallVectorImpl<char> &Name) {
   ::pthread_getname_np(::pthread_self(), buf, len);
 
   Name.append(buf, buf + strlen(buf));
+#elif defined(__OpenBSD__)
+  constexpr uint32_t len = get_max_thread_name_length_impl();
+  char buf[len];
+  ::pthread_get_name_np(::pthread_self(), buf, len);
+
+  Name.append(buf, buf + strlen(buf));
 #elif defined(__linux__)
-#if (defined(__GLIBC__) && defined(_GNU_SOURCE)) || defined(__ANDROID__)
 #if HAVE_PTHREAD_GETNAME_NP
   constexpr uint32_t len = get_max_thread_name_length_impl();
-  char Buffer[len];
+  char Buffer[len] = {'\0'};  // FIXME: working around MSan false positive.
   if (0 == ::pthread_getname_np(::pthread_self(), Buffer, len))
     Name.append(Buffer, Buffer + strlen(Buffer));
 #endif
 #endif
+}
+
+SetThreadPriorityResult llvm::set_thread_priority(ThreadPriority Priority) {
+#if defined(__linux__) && defined(SCHED_IDLE)
+  // Some *really* old glibcs are missing SCHED_IDLE.
+  // http://man7.org/linux/man-pages/man3/pthread_setschedparam.3.html
+  // http://man7.org/linux/man-pages/man2/sched_setscheduler.2.html
+  sched_param priority;
+  // For each of the above policies, param->sched_priority must be 0.
+  priority.sched_priority = 0;
+  // SCHED_IDLE    for running very low priority background jobs.
+  // SCHED_OTHER   the standard round-robin time-sharing policy;
+  return !pthread_setschedparam(
+             pthread_self(),
+             Priority == ThreadPriority::Background ? SCHED_IDLE : SCHED_OTHER,
+             &priority)
+             ? SetThreadPriorityResult::SUCCESS
+             : SetThreadPriorityResult::FAILURE;
+#elif defined(__APPLE__)
+  // https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/getpriority.2.html
+  // When setting a thread into background state the scheduling priority is set
+  // to lowest value, disk and network IO are throttled. Network IO will be
+  // throttled for any sockets the thread opens after going into background
+  // state. Any previously opened sockets are not affected.
+
+  // https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/getiopolicy_np.3.html
+  // I/Os with THROTTLE policy are called THROTTLE I/Os. If a THROTTLE I/O
+  // request occurs within a small time window (usually a fraction of a second)
+  // of another NORMAL I/O request, the thread that issues the THROTTLE I/O is
+  // forced to sleep for a certain interval. This slows down the thread that
+  // issues the THROTTLE I/O so that NORMAL I/Os can utilize most of the disk
+  // I/O bandwidth.
+  return !setpriority(PRIO_DARWIN_THREAD, 0,
+                      Priority == ThreadPriority::Background ? PRIO_DARWIN_BG
+                                                             : 0)
+             ? SetThreadPriorityResult::SUCCESS
+             : SetThreadPriorityResult::FAILURE;
 #endif
+  return SetThreadPriorityResult::FAILURE;
 }

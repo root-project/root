@@ -44,7 +44,7 @@ returns the target triple of the current machine.
 
     auto TargetTriple = sys::getDefaultTargetTriple();
 
-LLVM doesn't require us to to link in all the target
+LLVM doesn't require us to link in all the target
 functionality. For example, if we're just using the JIT, we don't need
 the assembly printers. Similarly, if we're only targeting certain
 architectures, we can only link in the functionality for those
@@ -157,7 +157,7 @@ pass:
   legacy::PassManager pass;
   auto FileType = TargetMachine::CGFT_ObjectFile;
 
-  if (TargetMachine->addPassesToEmitFile(pass, dest, FileType)) {
+  if (TargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
     errs() << "TargetMachine can't emit a file of this type";
     return 1;
   }

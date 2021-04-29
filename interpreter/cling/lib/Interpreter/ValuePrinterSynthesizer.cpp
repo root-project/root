@@ -105,7 +105,7 @@ namespace cling {
           *(CS->body_begin()+indexOfLastExpr) = Result;
       }
       // Clear the artificial NullStmt-s
-      if (!ClearNullStmts(CS)) {
+      if (!ClearNullStmts(FD)) {
         // FIXME: Why it is here? Shouldn't it be in DeclExtractor?
         // if no body remove the wrapper
         DeclContext* DC = FD->getDeclContext();
@@ -130,7 +130,7 @@ namespace cling {
 
     // Find cling_PrintValue
     if (!m_LookupResult)
-      FindAndCacheRuntimeLookupResult(E->getLocStart());
+      FindAndCacheRuntimeLookupResult(E->getBeginLoc());
 
 
     Expr* VoidEArg = utils::Synthesize::CStyleCastPtrExpr(m_Sema,
@@ -158,21 +158,33 @@ namespace cling {
       = m_Sema->BuildDeclarationNameExpr(CSS, *m_LookupResult,
                                          /*ADL*/ false).get();
 
-    Expr* Result = m_Sema->ActOnCallExpr(S, unresolvedLookup, E->getLocStart(),
-                                         CallArgs, E->getLocEnd()).get();
+    Expr* Result = m_Sema->ActOnCallExpr(S, unresolvedLookup, E->getBeginLoc(),
+                                         CallArgs, E->getEndLoc()).get();
     assert(Result && "Cannot create value printer!");
 
     return Result;
   }
 
 
-  unsigned ValuePrinterSynthesizer::ClearNullStmts(CompoundStmt* CS) {
+  unsigned ValuePrinterSynthesizer::ClearNullStmts(FunctionDecl* FD) {
+    CompoundStmt* CS = cast<CompoundStmt>(FD->getBody());
+    assert(CS && "Missing body?");
+
     llvm::SmallVector<Stmt*, 8> FBody;
     for (auto&& child: CS->children())
       if (!isa<NullStmt>(child))
         FBody.push_back(child);
 
-    CS->setStmts(*m_Context, FBody);
+    // If body would be empty, return early - the function will be removed.
+    if (FBody.empty())
+      return 0;
+
+    if (CS->size() != FBody.size()) {
+      auto BodyCS = CompoundStmt::Create(*m_Context, FBody, CS->getLBracLoc(),
+                                         CS->getRBracLoc());
+      FD->setBody(BodyCS);
+    }
+
     return FBody.size();
   }
 
@@ -183,7 +195,7 @@ namespace cling {
     DeclarationName PVName = &m_Context->Idents.get("cling_PrintValue");
     m_LookupResult = new LookupResult(*m_Sema, PVName, sourceLoc,
                                       Sema::LookupOrdinaryName,
-                                      Sema::ForRedeclaration);
+                                      Sema::ForVisibleRedeclaration);
 
     Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
     m_Sema->LookupName(*m_LookupResult, S);

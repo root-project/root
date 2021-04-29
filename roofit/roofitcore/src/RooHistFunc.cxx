@@ -34,6 +34,7 @@ discrete dimensions and may have negative values.
 #include "RooRealVar.h"
 #include "RooCategory.h"
 #include "RooWorkspace.h"
+#include "RooHistPdf.h"
 
 #include "TError.h"
 
@@ -84,14 +85,14 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
   if (vars.getSize()!=dvars->getSize()) {
     coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
 			  << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
-    assert(0) ;
+    throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
   }
 
   for (const auto arg : vars) {
     if (!dvars->find(arg->GetName())) {
       coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
 			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
-      assert(0) ;
+      throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
     }
   }
 
@@ -126,14 +127,14 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
   if (histObs.getSize()!=dvars->getSize()) {
     coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
 			  << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
-    assert(0) ;
+    throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
   }
 
   for (const auto arg : histObs) {
     if (!dvars->find(arg->GetName())) {
       coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
 			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
-      assert(0) ;
+      throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
     }
   }
 
@@ -195,7 +196,7 @@ Double_t RooHistFunc::evaluate() const
     }
   }
 
-  Double_t ret =  _dataHist->weight(_histObsList,_intOrder,kFALSE,_cdfBoundaries) ;  
+  Double_t ret =  _dataHist->weightFast(_histObsList,_intOrder,kFALSE,_cdfBoundaries) ;  
   return ret ;
 }
 
@@ -255,7 +256,6 @@ Double_t RooHistFunc::totVolume() const
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine integration scenario. If no interpolation is used,
 /// RooHistFunc can perform all integrals over its dependents
@@ -265,46 +265,8 @@ Double_t RooHistFunc::totVolume() const
 
 Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
-
-  // Only analytical integrals over the full range are defined
-  if (rangeName!=0) {
-    return 0 ;
-  }
-
-  // Simplest scenario, integrate over all dependents
-  RooAbsCollection *allVarsCommon = allVars.selectCommon(_depList) ;  
-  Bool_t intAllObs = (allVarsCommon->getSize()==_depList.getSize()) ;  
-  delete allVarsCommon ;
-  if (intAllObs && matchArgs(allVars,analVars,_depList)) {
-    return 1000 ;
-  }
-
-  // Disable partial analytical integrals if interpolation is used
-  if (_intOrder>0) {
-    return 0 ;
-  }
-
-  // Find subset of _depList that integration is requested over
-  RooArgSet* allVarsSel = (RooArgSet*) allVars.selectCommon(_depList) ;
-  if (allVarsSel->getSize()==0) {
-    delete allVarsSel ;
-    return 0 ;
-  }
-
-  // Partial integration scenarios.
-  // Build unique code from bit mask of integrated variables in depList
-  Int_t code(0),n(0) ;
-  for (const auto arg : _depList) {
-    if (allVars.find(arg->GetName())) code |= (1<<n) ;
-    n++ ;
-  }
-
-  analVars.add(*allVarsSel) ;
-
-  return code ;
-
+    return RooHistPdf::getAnalyticalIntegral(allVars, analVars, rangeName, _histObsList, _depList, _intOrder);
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -312,44 +274,10 @@ Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 /// is deferred to RooDataHist::sum() which implements partial
 /// or complete summation over the histograms contents
 
-Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
+Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  // WVE needs adaptation for rangeName feature
-
-  // Simplest scenario, integration over all dependents
-  if (code==1000) {
-    return _dataHist->sum(kTRUE) ;
-  }
-
-  // Partial integration scenario, retrieve set of variables, calculate partial sum
-  RooArgSet intSet ;
-  Int_t n(0) ;
-  for (const auto arg : _depList) {
-    if (code & (1<<n)) {
-      intSet.add(*arg) ;
-    }
-    n++ ;
-  }
-
-  if (_depList.getSize()>0) {
-    for (auto i = 0u; i < _histObsList.size(); ++i) {
-      const auto harg = _histObsList[i];
-      const auto parg = _depList[i];
-
-      if (harg != parg) {
-        parg->syncCache() ;
-        harg->copyCache(parg,kTRUE) ;
-        if (!harg->inRange(0)) {
-          return 0 ;
-        }
-      }
-    }
-  }
-
-  Double_t ret =  _dataHist->sum(intSet,_histObsList,kTRUE) ;
-  return ret ;
+    return RooHistPdf::analyticalIntegral(code, rangeName, _histObsList, _depList, *_dataHist, true);
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

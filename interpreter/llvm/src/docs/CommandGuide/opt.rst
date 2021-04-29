@@ -1,6 +1,8 @@
 opt - LLVM optimizer
 ====================
 
+.. program:: opt
+
 SYNOPSIS
 --------
 
@@ -96,7 +98,7 @@ OPTIONS
 .. option:: -debug
 
  If this is a debug build, this option will enable debug printouts from passes
- which use the ``DEBUG()`` macro.  See the `LLVM Programmer's Manual
+ which use the ``LLVM_DEBUG()`` macro.  See the `LLVM Programmer's Manual
  <../ProgrammersManual.html>`_, section ``#DEBUG`` for more information.
 
 .. option:: -load=<plugin>
@@ -120,4 +122,3 @@ EXIT STATUS
 
 If :program:`opt` succeeds, it will exit with 0.  Otherwise, if an error
 occurs, it will exit with a non-zero value.
-

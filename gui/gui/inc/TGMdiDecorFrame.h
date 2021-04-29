@@ -12,15 +12,6 @@
 #ifndef ROOT_TGMdiDecorFrame
 #define ROOT_TGMdiDecorFrame
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiDecorFrame, TGMdiTitleBar, TGMdiButtons, TGMdiTitleIcon,        //
-// TGMdiWinResizer, TGMdiVerticalWinResizer, TGMdiHorizontalWinResizer, //
-// and TGMdiCornerWinResizer.                                           //
-//                                                                      //
-// This header contains all different MDI frame decoration classes.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TGMenu.h"
@@ -32,7 +23,7 @@
 #include "TGMdiFrame.h"
 
 
-// placement of window resizers
+/// placement of window resizers
 enum EMdiResizerPlacement {
    kMdiResizerTop    = 1,
    kMdiResizerBottom = 2,
@@ -56,18 +47,18 @@ class TGMdiWinResizer : public TGFrame, public TGWidget {
 friend class TGMdiMainFrame;
 
 protected:
-   const TGWindow  *fMdiWin;                       // owner MDI Window
-   Int_t            fWinX, fWinY, fWinW, fWinH;    // MDI win position and dimension
-   Int_t            fOldX, fOldY, fOldW, fOldH;    // old MDI win position and dimension
-   Int_t            fNewX, fNewY, fNewW, fNewH;    // new MDI win position and dimension
-   Int_t            fMinW, fMinH;                  // Min width and height of the MDI Win
-   Int_t            fMdiOptions;                   // MDI options
-   Int_t            fPos;                          // position of the resizer
-   Int_t            fX0, fY0;                      // initial position of the mouse click
-   Bool_t           fLeftButPressed, fRightButPressed, fMidButPressed; // mouse buttons flags
+   const TGWindow  *fMdiWin;                       ///< owner MDI Window
+   Int_t            fWinX, fWinY, fWinW, fWinH;    ///< MDI win position and dimension
+   Int_t            fOldX, fOldY, fOldW, fOldH;    ///< old MDI win position and dimension
+   Int_t            fNewX, fNewY, fNewW, fNewH;    ///< new MDI win position and dimension
+   Int_t            fMinW, fMinH;                  ///< Min width and height of the MDI Win
+   Int_t            fMdiOptions;                   ///< MDI options
+   Int_t            fPos;                          ///< position of the resizer
+   Int_t            fX0, fY0;                      ///< initial position of the mouse click
+   Bool_t           fLeftButPressed, fRightButPressed, fMidButPressed; ///< mouse buttons flags
 
-   const TGGC      *fBoxGC;                        // GC used for resizing rectangle
-   Int_t            fLineW;                        // line width of resizing rectangle
+   const TGGC      *fBoxGC;                        ///< GC used for resizing rectangle
+   Int_t            fLineW;                        ///< line width of resizing rectangle
 
    void             MoveResizeIt();
    void             DrawBox(Int_t x, Int_t y, UInt_t width, UInt_t height);
@@ -140,9 +131,9 @@ class TGMdiButtons : public TGCompositeFrame {
 friend class TGMdiTitleBar;
 
 protected:
-   TGPictureButton      *fButton[5];                  // MDI picture buttons
-   TGLayoutHints        *fDefaultHint, *fCloseHint;   // Layout hints
-   const TGWindow       *fMsgWindow;                  // window handling container messages
+   TGPictureButton      *fButton[5];                  ///< MDI picture buttons
+   TGLayoutHints        *fDefaultHint, *fCloseHint;   ///< Layout hints
+   const TGWindow       *fMsgWindow;                  ///< window handling container messages
 
 public:
    TGMdiButtons(const TGWindow *p, const TGWindow *titlebar);
@@ -162,8 +153,8 @@ friend class TGMdiFrame;
 friend class TGMdiTitleBar;
 
 protected:
-   const TGWindow   *fMsgWindow;    // window handling container messages
-   TGPopupMenu      *fPopup;        // Popup menu associated to the title icon
+   const TGWindow   *fMsgWindow;    ///< window handling container messages
+   TGPopupMenu      *fPopup;        ///< Popup menu associated to the title icon
 
    virtual void     DoRedraw();
 
@@ -188,14 +179,14 @@ friend class TGMdiDecorFrame;
 friend class TGMdiMainFrame;
 
 protected:
-   const TGWindow       *fMdiWin;         // owner MDI window
-   TGMdiButtons         *fButtons;        // MDI buttons
-   TGMdiTitleIcon       *fWinIcon;        // title icon
-   TGLabel              *fWinName;        // window name label
-   TGCompositeFrame     *fLFrame, *fMFrame,*fRFrame; // the three parts of the title bar
-   TGLayoutHints        *fLHint, *fLeftHint, *fMiddleHint, *fRightHint; // layout hints
-   Int_t                fX0, fY0;         // initial position of the mouse click
-   Bool_t               fLeftButPressed, fRightButPressed, fMidButPressed; // mouse button pressed
+   const TGWindow       *fMdiWin;         ///< owner MDI window
+   TGMdiButtons         *fButtons;        ///< MDI buttons
+   TGMdiTitleIcon       *fWinIcon;        ///< title icon
+   TGLabel              *fWinName;        ///< window name label
+   TGCompositeFrame     *fLFrame, *fMFrame,*fRFrame; ///< the three parts of the title bar
+   TGLayoutHints        *fLHint, *fLeftHint, *fMiddleHint, *fRightHint; ///< layout hints
+   Int_t                fX0, fY0;         ///< initial position of the mouse click
+   Bool_t               fLeftButPressed, fRightButPressed, fMidButPressed; ///< mouse button pressed
 
    TGMdiTitleBar(const TGWindow *p, const TGWindow *mdiwin,
                  const char *name = "Untitled");
@@ -240,24 +231,24 @@ class TGMdiDecorFrame : public TGCompositeFrame {
 friend class TGMdiMainFrame;
 
 protected:
-   Int_t                      fPreResizeX, fPreResizeY;           // position before resizing
-   Int_t                      fPreResizeWidth, fPreResizeHeight;  // dimension before resizing
-   Int_t                      fMinimizedX, fMinimizedY;           // minimized position
-   Bool_t                     fIsMinimized, fIsMaximized;         // minimized and maximized flags
-   Bool_t                     fMinimizedUserPlacement;            // user placement flag
-   Bool_t                     fIsCurrent;                         // current mdi window flag
+   Int_t                      fPreResizeX, fPreResizeY;           ///< position before resizing
+   Int_t                      fPreResizeWidth, fPreResizeHeight;  ///< dimension before resizing
+   Int_t                      fMinimizedX, fMinimizedY;           ///< minimized position
+   Bool_t                     fIsMinimized, fIsMaximized;         ///< minimized and maximized flags
+   Bool_t                     fMinimizedUserPlacement;            ///< user placement flag
+   Bool_t                     fIsCurrent;                         ///< current mdi window flag
 
-   TGMdiFrame                *fFrame;                             // parent (owner) MDI frame
-   TGMdiMainFrame            *fMdiMainFrame;                      // MDI main frame
+   TGMdiFrame                *fFrame;                             ///< parent (owner) MDI frame
+   TGMdiMainFrame            *fMdiMainFrame;                      ///< MDI main frame
 
-   TGMdiVerticalWinResizer   *fUpperHR, *fLowerHR;                // upper and lower vertical resizers
-   TGMdiCornerWinResizer     *fUpperLeftCR, *fLowerLeftCR;        // upper left and lower left resizers
-   TGMdiCornerWinResizer     *fUpperRightCR, *fLowerRightCR;      // upper right and lower right resizers
-   TGMdiHorizontalWinResizer *fLeftVR, *fRightVR;                 // left and right horizontal resizers
-   TGLayoutHints             *fLHint, *fExpandHint;               // layout hints
+   TGMdiVerticalWinResizer   *fUpperHR, *fLowerHR;                ///< upper and lower vertical resizers
+   TGMdiCornerWinResizer     *fUpperLeftCR, *fLowerLeftCR;        ///< upper left and lower left resizers
+   TGMdiCornerWinResizer     *fUpperRightCR, *fLowerRightCR;      ///< upper right and lower right resizers
+   TGMdiHorizontalWinResizer *fLeftVR, *fRightVR;                 ///< left and right horizontal resizers
+   TGLayoutHints             *fLHint, *fExpandHint;               ///< layout hints
 
-   ULong_t                    fButtonMask;                        // mask used to display/hide buttons
-   TGMdiTitleBar             *fTitlebar;                          // MDI window title bar
+   ULong_t                    fButtonMask;                        ///< mask used to display/hide buttons
+   TGMdiTitleBar             *fTitlebar;                          ///< MDI window title bar
 
 public:
    enum {

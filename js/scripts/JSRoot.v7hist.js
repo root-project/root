@@ -573,12 +573,12 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       let nlevels = JSROOT.gStyle.fNumberContours,
           zmin = this.minbin, zmax = this.maxbin, zminpos = this.minposbin;
 
-      if (args && args.scatter_plot) {
+      if (args.scatter_plot) {
          if (nlevels > 50) nlevels = 50;
          zmin = this.minposbin;
       }
 
-      if (zmin === zmax) { zmin = this.gminbin; zmax = this.gmaxbin; zminpos = this.gminposbin }
+      if (zmin === zmax) { zmin = this.gminbin; zmax = this.gmaxbin; zminpos = this.gminposbin; }
 
       if (this.getDimension() < 3) {
          if (main.zoom_zmin !== main.zoom_zmax) {
@@ -600,18 +600,18 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    /** @summary Start dialog to modify range of axis where histogram values are displayed
      * @private */
-   RHistPainter.prototype.changeValuesRange = function(arg) {
+   RHistPainter.prototype.changeValuesRange = function(menu, arg) {
       let pmain = this.getFramePainter();
       if (!pmain) return;
       let prefix = pmain.isAxisZoomed(arg) ? "zoom_" + arg : arg;
       let curr = "[" + pmain[prefix+'min'] + "," + pmain[prefix+'max'] + "]";
-      let res = prompt("Enter values range for axis " + arg + " like [0,100] or empty string to unzoom", curr);
-      res = res ? JSON.parse(res) : [];
-
-      if (!res || (typeof res != "object") || (res.length!=2) || isNaN(res[0]) || isNaN(res[1]))
-         pmain.unzoom(arg);
-      else
-         pmain.zoom(arg, res[0], res[1]);
+      menu.input("Enter values range for axis " + arg + " like [0,100] or empty string to unzoom", curr).then(res => {
+         res = res ? JSON.parse(res) : [];
+         if (!res || (typeof res != "object") || (res.length!=2) || !Number.isFinite(res[0]) || !Number.isFinite(res[1]))
+            pmain.unzoom(arg);
+         else
+            pmain.zoom(arg, res[0], res[1]);
+      });
    }
 
    /** @summary Fill histogram context menu
@@ -624,7 +624,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          menu.addchk(this.toggleStat('only-check'), "Show statbox", () => this.toggleStat());
 
          if (this.getDimension() == 2)
-             menu.add("Values range", () => this.changeValuesRange("z"));
+             menu.add("Values range", () => this.changeValuesRange(menu, "z"));
 
          if (typeof this.fillHistContextMenu == 'function')
             this.fillHistContextMenu(menu);
@@ -874,13 +874,12 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          res.gry[j++] = res.gry[res.j2];
 
       //  find min/max values in selected range
-      binz = histo.getBinContent(res.i1 + 1, res.j1 + 1);
       this.maxbin = this.minbin = this.minposbin = null;
 
       for (i = res.i1; i < res.i2; i += res.stepi) {
          for (j = res.j1; j < res.j2; j += res.stepj) {
             binz = histo.getBinContent(i + 1, j + 1);
-            if (isNaN(binz)) continue;
+            if (!Number.isFinite(binz)) continue;
             res.sumz += binz;
             if (args.pixel_density) {
                binarea = (res.grx[i+res.stepi]-res.grx[i])*(res.gry[j]-res.gry[j+res.stepj]);
@@ -1139,7 +1138,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           bars = "", barsl = "", barsr = "";
 
       gry2 = pmain.swap_xy ? 0 : height;
-      if ((this.options.BaseLine !== false) && !isNaN(this.options.BaseLine))
+      if (Number.isFinite(this.options.BaseLine))
          if (this.options.BaseLine >= pmain.scale_ymin)
             gry2 = Math.round(pmain.gry(this.options.BaseLine));
 
@@ -1382,7 +1381,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                }
             }
          }
-      }
+      };
 
       for (i = left; i <= right; i += di) {
 
@@ -1566,7 +1565,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           width = pmain.getFrameWidth(),
           height = pmain.getFrameHeight(),
           histo = this.getHisto(), xaxis = this.getAxis("x"),
-          findbin = null, show_rect = true,
+          findbin = null, show_rect,
           grx1, midx, grx2, gry1, midy, gry2, gapx = 2,
           left = this.getSelectIndex("x", "left", -1),
           right = this.getSelectIndex("x", "right", 2),
@@ -2603,7 +2602,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          }
          if (do_close) cmd += "z";
          return cmd;
-      }
+      };
 
       if (this.options.Contour===14) {
          let dd = "M0,0h"+frame_w+"v"+frame_h+"h-"+frame_w+"z";
@@ -2723,7 +2722,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return cmd;
    }
 
-   RH2Painter.prototype.DrawPolyBinsColor = function() {
+   /** @summary draw TH2Poly as color
+     * @private */
+   RH2Painter.prototype.drawPolyBinsColor = function() {
       let histo = this.getHisto(),
           pmain = this.getFramePainter(),
           colPaths = [], textbins = [],
@@ -2945,12 +2946,12 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           absmin = Math.max(0, main.minbin),
           i, j, binz, absz, res = "", cross = "", btn1 = "", btn2 = "",
           zdiff, dgrx, dgry, xx, yy, ww, hh,
-          xyfactor = 1, uselogz = false, logmin = 0, logmax = 1,
+          xyfactor, uselogz = false, logmin = 0,
           di = handle.stepi, dj = handle.stepj;
 
       if (main.logz && (absmax>0)) {
          uselogz = true;
-         logmax = Math.log(absmax);
+         let logmax = Math.log(absmax);
          if (absmin>0) logmin = Math.log(absmin); else
          if ((main.minposbin>=1) && (main.minposbin<100)) logmin = Math.log(0.7); else
             logmin = (main.minposbin > 0) ? Math.log(0.7*main.minposbin) : logmax - 10;
@@ -3307,7 +3308,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       // if (this.lineatt.color == 'none') this.lineatt.color = 'cyan';
 
       if (this.isRH2Poly()) {
-         handle = this.DrawPolyBinsColor();
+         handle = this.drawPolyBinsColor();
       } else {
          if (this.options.Scat)
             handle = this.drawBinsScatter();
@@ -3442,8 +3443,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          // process tooltips from TH2Poly
 
          let pmain = this.getFramePainter(), foundindx = -1, bin;
-         const realx = (pmain.grx === pmain.x) ? pmain.x.invert(pnt.x) : undefined,
-               realy = (pmain.gry === pmain.y) ? pmain.y.invert(pnt.y) : undefined;
+         const realx = pmain.revertAxis("x", pnt.x),
+               realy = pmain.revertAxis("y", pnt.y);
 
          if ((realx!==undefined) && (realy!==undefined)) {
             const len = histo.fBins.arr.length;
@@ -3907,7 +3908,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       else
          text_g.selectAll("*").remove();
 
-      textFont.setSize(height/(nlines * 1.2))
+      textFont.setSize(height/(nlines * 1.2));
       this.startTextDrawing(textFont, 'font' , text_g);
 
       if (nlines == 1) {

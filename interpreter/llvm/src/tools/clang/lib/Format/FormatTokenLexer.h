@@ -1,14 +1,13 @@
 //===--- FormatTokenLexer.h - Format C++ code ----------------*- C++ ----*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file contains FormatTokenLexer, which tokenizes a source file
+/// This file contains FormatTokenLexer, which tokenizes a source file
 /// into a token stream suitable for ClangFormat.
 ///
 //===----------------------------------------------------------------------===//
@@ -21,6 +20,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Format/Format.h"
+#include "llvm/ADT/MapVector.h"
 #include "llvm/Support/Regex.h"
 
 #include <stack>
@@ -36,7 +36,7 @@ enum LexerState {
 
 class FormatTokenLexer {
 public:
-  FormatTokenLexer(const SourceManager &SourceMgr, FileID ID,
+  FormatTokenLexer(const SourceManager &SourceMgr, FileID ID, unsigned Column,
                    const FormatStyle &Style, encoding::Encoding Encoding);
 
   ArrayRef<FormatToken *> lex();
@@ -48,6 +48,11 @@ private:
 
   bool tryMergeLessLess();
   bool tryMergeNSStringLiteral();
+  bool tryMergeJSPrivateIdentifier();
+  bool tryMergeCSharpVerbatimStringLiteral();
+  bool tryMergeCSharpKeywordVariables();
+  bool tryMergeCSharpNullConditionals();
+  bool tryMergeCSharpDoubleQuestion();
 
   bool tryMergeTokens(ArrayRef<tok::TokenKind> Kinds, TokenType NewType);
 
@@ -73,6 +78,8 @@ private:
   // nested template parts by balancing curly braces.
   void handleTemplateStrings();
 
+  void tryParsePythonComment();
+
   bool tryMerge_TMacro();
 
   bool tryMergeConflictMarkers();
@@ -97,7 +104,8 @@ private:
   // Index (in 'Tokens') of the last token that starts a new line.
   unsigned FirstInLineIndex;
   SmallVector<FormatToken *, 16> Tokens;
-  SmallVector<IdentifierInfo *, 8> ForEachMacros;
+
+  llvm::SmallMapVector<IdentifierInfo *, TokenType, 8> Macros;
 
   bool FormattingDisabled;
 

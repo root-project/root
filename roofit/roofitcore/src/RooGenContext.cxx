@@ -370,6 +370,7 @@ void RooGenContext::initGenerator(const RooArgSet &theEvent)
 
   // Create iterator for uniform vars (if any)
   if (_uniformVars.getSize()>0) {
+    delete _uniIter;
     _uniIter = _uniformVars.createIterator() ;
   }
 }

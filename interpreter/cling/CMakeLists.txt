@@ -170,8 +170,19 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
 
   set( CLING_BUILT_STANDALONE 1 )
   set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
-else()
+else() # Building as part of LLVM
   set(BACKEND_PACKAGE_STRING "${PACKAGE_STRING}")
+  # Try finding the LLVMConfig.cmake if we build against prebuilt LLVM
+  set(LLVM_CMAKE_PATH "${LLVM_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/llvm")
+  set(LLVMCONFIG_FILE "${LLVM_CMAKE_PATH}/LLVMConfig.cmake")
+  if(EXISTS ${LLVMCONFIG_FILE})
+    list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_PATH}")
+    include(${LLVMCONFIG_FILE})
+  endif()
+  if (NOT CLANG_INCLUDE_DIRS)
+    set (CLANG_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/tools/clang/include"
+      "${CMAKE_BINARY_DIR}/tools/clang/include")
+  endif()
 endif()
 
 if( NOT "NVPTX" IN_LIST LLVM_TARGETS_TO_BUILD)
@@ -181,6 +192,10 @@ endif()
 
 set(CLING_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(CLING_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set(LLVM_TOOLS_BINARY_DIR "${LLVM_BINARY_DIR}/bin")
+if(DEFINED ROOT_BINARY_DIR)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${LLVM_TOOLS_BINARY_DIR}")
+endif()
 
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE )
   message(FATAL_ERROR "In-source builds are not allowed. CMake would overwrite "
@@ -330,6 +345,8 @@ macro(set_cling_windows_version_resource_properties name)
   endif()
 endmacro()
 
+include_directories(BEFORE SYSTEM ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})
+
 macro(add_cling_library name)
   cmake_parse_arguments(ARG
     "SHARED"
@@ -447,28 +464,6 @@ endmacro(add_cling_executable)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-option(ROOT_CLASSIC "Building as part of the ROOT (classic)." OFF)
-
-if(DEFINED ROOT_BINARY_DIR)
-  # Building as part of ROOT (CMake)
-  include_directories(BEFORE
-    ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include
-    ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
-    )
-elseif(ROOT_CLASSIC)
-  # Building as part of ROOT (classic)
-  include_directories(BEFORE
-    ${CMAKE_CURRENT_BINARY_DIR}/../llvm/obj/tools/clang/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../llvm/src/tools/clang/include
-    )
-else()
-  # and this when building Cling standalone:
-  include_directories(BEFORE
-    ${CMAKE_CURRENT_BINARY_DIR}/../clang/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../clang/include
-    )
-endif()
-
 include_directories(BEFORE
   ${CMAKE_CURRENT_BINARY_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -490,6 +485,7 @@ if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY)
     PATTERN "CMakeFiles" EXCLUDE
     PATTERN "*.inc"
     PATTERN "*.h"
+    PATTERN "*.modulemap"
     )
 endif()
 
@@ -576,31 +572,4 @@ endif()
 set(CLING_ORDER_FILE "" CACHE FILEPATH
   "Order file to use when compiling cling in order to improve startup time.")
 
-if (CLING_BUILT_STANDALONE OR CMAKE_VERSION VERSION_EQUAL 3 OR
-    CMAKE_VERSION VERSION_GREATER 3)
-  # Generate a list of CMake library targets so that other CMake projects can
-  # link against them. LLVM calls its version of this file LLVMExports.cmake, but
-  # the usual CMake convention seems to be ${Project}Targets.cmake.
-  set(CLING_INSTALL_PACKAGE_DIR lib${LLVM_LIBDIR_SUFFIX}/cmake/cling)
-  set(cling_cmake_builddir "${CMAKE_BINARY_DIR}/${CLING_INSTALL_PACKAGE_DIR}")
-  get_property(CLING_EXPORTS GLOBAL PROPERTY CLING_EXPORTS)
-  export(TARGETS ${CLING_EXPORTS} FILE ${cling_cmake_builddir}/ClingTargets.cmake)
-
-  # Install a <prefix>/lib/cmake/cling/ClingConfig.cmake file so that
-  # find_package(Cling) works. Install the target list with it.
-  install(EXPORT ClingTargets DESTINATION ${CLING_INSTALL_PACKAGE_DIR})
-
-  install(FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/ClingConfig.cmake
-    DESTINATION lib${LLVM_LIBDIR_SUFFIX}/cmake/cling)
-
-  install(DIRECTORY tools/Jupyter/kernel DESTINATION share/cling/Jupyter)
-
-
-  # Also copy ClingConfig.cmake to the build directory so that dependent projects
-  # can build against a build directory of Cling more easily.
-  configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/ClingConfig.cmake
-    ${CLING_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/cling/ClingConfig.cmake
-    COPYONLY)
-endif ()
+add_subdirectory(cmake/modules)

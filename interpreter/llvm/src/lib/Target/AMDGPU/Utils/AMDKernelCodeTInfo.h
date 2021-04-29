@@ -1,9 +1,8 @@
 //===--------------------- AMDKernelCodeTInfo.h ---------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -46,6 +45,7 @@
    int64_t Value = 0; \
    if (!expectAbsExpression(MCParser, Value, Err)) \
      return false; \
+   C.compute_pgm_resource_registers &= ~(SetMacro(0xFFFFFFFFFFFFFFFFULL) << Shift); \
    C.compute_pgm_resource_registers |= SetMacro(Value) << Shift; \
    return true; \
 }
@@ -73,7 +73,6 @@ FIELD2(amd_machine_version_stepping,  machine_version_stepping,   amd_machine_ve
 
 FIELD(kernel_code_entry_byte_offset),
 FIELD(kernel_code_prefetch_byte_size),
-FIELD(max_scratch_backing_memory_byte_size),
 
 COMPPGM1(granulated_workitem_vgpr_count,  compute_pgm_rsrc1_vgprs,          VGPRS),
 COMPPGM1(granulated_wavefront_sgpr_count, compute_pgm_rsrc1_sgprs,          SGPRS),
@@ -83,6 +82,9 @@ COMPPGM1(priv,                            compute_pgm_rsrc1_priv,           PRIV
 COMPPGM1(enable_dx10_clamp,               compute_pgm_rsrc1_dx10_clamp,     DX10_CLAMP),
 COMPPGM1(debug_mode,                      compute_pgm_rsrc1_debug_mode,     DEBUG_MODE),
 COMPPGM1(enable_ieee_mode,                compute_pgm_rsrc1_ieee_mode,      IEEE_MODE),
+COMPPGM1(enable_wgp_mode,                 compute_pgm_rsrc1_wgp_mode,       WGP_MODE),
+COMPPGM1(enable_mem_ordered,              compute_pgm_rsrc1_mem_ordered,    MEM_ORDERED),
+COMPPGM1(enable_fwd_progress,             compute_pgm_rsrc1_fwd_progress,   FWD_PROGRESS),
 // TODO: bulky
 // TODO: cdbg_user
 COMPPGM2(enable_sgpr_private_segment_wave_byte_offset, compute_pgm_rsrc2_scratch_en, SCRATCH_EN),
@@ -107,6 +109,7 @@ CODEPROP(enable_sgpr_private_segment_size,    ENABLE_SGPR_PRIVATE_SEGMENT_SIZE),
 CODEPROP(enable_sgpr_grid_workgroup_count_x,  ENABLE_SGPR_GRID_WORKGROUP_COUNT_X),
 CODEPROP(enable_sgpr_grid_workgroup_count_y,  ENABLE_SGPR_GRID_WORKGROUP_COUNT_Y),
 CODEPROP(enable_sgpr_grid_workgroup_count_z,  ENABLE_SGPR_GRID_WORKGROUP_COUNT_Z),
+CODEPROP(enable_wavefront_size32,             ENABLE_WAVEFRONT_SIZE32),
 CODEPROP(enable_ordered_append_gds,           ENABLE_ORDERED_APPEND_GDS),
 CODEPROP(private_element_size,                PRIVATE_ELEMENT_SIZE),
 CODEPROP(is_ptr64,                            IS_PTR64),

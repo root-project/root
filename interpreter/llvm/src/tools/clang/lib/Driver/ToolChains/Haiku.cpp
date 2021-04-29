@@ -1,9 +1,8 @@
 //===--- Haiku.cpp - Haiku ToolChain Implementations ------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -22,8 +21,10 @@ Haiku::Haiku(const Driver &D, const llvm::Triple& Triple, const ArgList &Args)
 
 }
 
-std::string Haiku::findLibCxxIncludePath() const {
-  return getDriver().SysRoot + "/system/develop/headers/c++/v1";
+void Haiku::addLibCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,
+                                  llvm::opt::ArgStringList &CC1Args) const {
+  addSystemInclude(DriverArgs, CC1Args,
+                   getDriver().SysRoot + "/system/develop/headers/c++/v1");
 }
 
 void Haiku::addLibStdCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,

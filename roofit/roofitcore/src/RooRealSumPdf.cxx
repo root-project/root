@@ -367,15 +367,15 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   // WVE needs adaptation for rangeName feature
   CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
   if (cache==0) { // revive the (sterilized) cache
-     //cout << "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << ": reviving cache "<< endl;
-     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
-     std::unique_ptr<RooArgSet> iset(  _normIntMgr.nameSet2ByIndex(code-1)->select(*vars) );
-     std::unique_ptr<RooArgSet> nset(  _normIntMgr.nameSet1ByIndex(code-1)->select(*vars) );
-     RooArgSet dummy;
-     Int_t code2 = getAnalyticalIntegralWN(*iset,dummy,nset.get(),rangeName);
-     R__ASSERT(code==code2); // must have revived the right (sterilized) slot...
-     cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
-     R__ASSERT(cache!=0);
+    //cout << "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << ": reviving cache "<< endl;
+    std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
+    std::unique_ptr<RooArgSet> iset(  _normIntMgr.nameSet2ByIndex(code-1)->select(*vars) );
+    std::unique_ptr<RooArgSet> nset(  _normIntMgr.nameSet1ByIndex(code-1)->select(*vars) );
+    RooArgSet dummy;
+    Int_t code2 = getAnalyticalIntegralWN(*iset,dummy,nset.get(),rangeName);
+    R__ASSERT(code==code2); // must have revived the right (sterilized) slot...
+    cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
+    R__ASSERT(cache!=0);
   }
 
   Double_t value(0) ;
@@ -394,13 +394,13 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     if (coefVal) {
       assert(func);
       if (normSet2 ==0 || func->isSelectedComp()) {
-	assert(funcInt);
-	value += funcInt->getVal()*coefVal ;
+        assert(funcInt);
+        value += funcInt->getVal()*coefVal ;
       }
       lastCoef -= coef->getVal(normSet2) ;
     }
   }
-  
+
   if (!haveLastCoef()) {
     // Add last func with correct coefficient
     const auto func = static_cast<const RooAbsReal*>(*funcIt);
@@ -411,16 +411,15 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
       assert(funcInt);
       value += funcInt->getVal()*lastCoef ;
     }
-    
+
     // Warn about coefficient degeneration
     if (!_haveWarned && (lastCoef<0 || lastCoef>1)) {
       coutW(Eval) << "RooRealSumPdf::evaluate(" << GetName() 
-		  << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
-		  << 1-lastCoef << endl ;
-      _haveWarned = true;
-    } 
+		      << " WARNING: sum of FUNC coefficients not in range [0-1], value="
+		      << 1-lastCoef << endl ;
+    }
   }
-  
+
   Double_t normVal(1) ;
   if (normSet2 && normSet2->getSize()>0) {
     normVal = 0 ;
@@ -444,7 +443,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
       assert(funcNorm);
 
       normVal += funcNorm->getVal()*lastCoef;
-    }      
+    }
   }
 
   return value / normVal;
@@ -508,11 +507,9 @@ std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_
 
 
 
-//_____________________________________________________________________________B
+/// Check if all components that depend on `obs` are binned.
 Bool_t RooRealSumPdf::isBinnedDistribution(const RooArgSet& obs) const 
 {
-  // If all components that depend on obs are binned that so is the product
-  
   for (const auto elm : _funcList) {
     auto func = static_cast<RooAbsReal*>(elm);
 

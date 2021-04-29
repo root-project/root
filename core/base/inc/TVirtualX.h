@@ -59,7 +59,7 @@ public:
    TVirtualX(const char *name, const char *title);
    virtual ~TVirtualX() { }
 
-   virtual Bool_t    Init(void *display=0);
+   virtual Bool_t    Init(void *display = nullptr);
    virtual void      ClearWindow();
    virtual void      ClosePixmap();
    virtual void      CloseWindow();
@@ -105,10 +105,10 @@ public:
    virtual Float_t   GetTextMagnitude();
    virtual Window_t  GetWindowID(Int_t wid);
    virtual Bool_t    HasTTFonts() const;
-   virtual Int_t     InitWindow(ULong_t window);
-   virtual Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
-   virtual Int_t     AddPixmap(ULong_t pixid, UInt_t w, UInt_t h);
-   virtual void      RemoveWindow(ULong_t qwid);
+   virtual Int_t     InitWindow(ULongptr_t window);
+   virtual Int_t     AddWindow(ULongptr_t qwid, UInt_t w, UInt_t h);
+   virtual Int_t     AddPixmap(ULongptr_t pixid, UInt_t w, UInt_t h);
+   virtual void      RemoveWindow(ULongptr_t qwid);
    virtual void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    virtual Int_t     OpenPixmap(UInt_t w, UInt_t h);
    virtual void      QueryPointer(Int_t &ix, Int_t &iy);
@@ -167,7 +167,7 @@ public:
    virtual void         MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void         ResizeWindow(Window_t id, UInt_t w, UInt_t h);
    virtual void         IconifyWindow(Window_t id);
-   virtual Bool_t       NeedRedraw(ULong_t tgwindow, Bool_t force);
+   virtual Bool_t       NeedRedraw(ULongptr_t tgwindow, Bool_t force);
    virtual void         ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y);
    virtual void         SetWindowBackground(Window_t id, ULong_t color);
    virtual void         SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm);

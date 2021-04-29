@@ -1,9 +1,8 @@
 //===-- RISCVMCTargetDesc.h - RISCV Target Descriptions ---------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -17,13 +16,14 @@
 #include "llvm/Config/config.h"
 #include "llvm/MC/MCTargetOptions.h"
 #include "llvm/Support/DataTypes.h"
+#include <memory>
 
 namespace llvm {
 class MCAsmBackend;
 class MCCodeEmitter;
 class MCContext;
 class MCInstrInfo;
-class MCObjectWriter;
+class MCObjectTargetWriter;
 class MCRegisterInfo;
 class MCSubtargetInfo;
 class StringRef;
@@ -32,19 +32,16 @@ class Triple;
 class raw_ostream;
 class raw_pwrite_stream;
 
-Target &getTheRISCV32Target();
-Target &getTheRISCV64Target();
-
 MCCodeEmitter *createRISCVMCCodeEmitter(const MCInstrInfo &MCII,
                                         const MCRegisterInfo &MRI,
                                         MCContext &Ctx);
 
-MCAsmBackend *createRISCVAsmBackend(const Target &T, const MCRegisterInfo &MRI,
-                                    const Triple &TT, StringRef CPU,
+MCAsmBackend *createRISCVAsmBackend(const Target &T, const MCSubtargetInfo &STI,
+                                    const MCRegisterInfo &MRI,
                                     const MCTargetOptions &Options);
 
-MCObjectWriter *createRISCVELFObjectWriter(raw_pwrite_stream &OS, uint8_t OSABI,
-                                           bool Is64Bit);
+std::unique_ptr<MCObjectTargetWriter> createRISCVELFObjectWriter(uint8_t OSABI,
+                                                                 bool Is64Bit);
 }
 
 // Defines symbolic names for RISC-V registers.
@@ -54,5 +51,8 @@ MCObjectWriter *createRISCVELFObjectWriter(raw_pwrite_stream &OS, uint8_t OSABI,
 // Defines symbolic names for RISC-V instructions.
 #define GET_INSTRINFO_ENUM
 #include "RISCVGenInstrInfo.inc"
+
+#define GET_SUBTARGETINFO_ENUM
+#include "RISCVGenSubtargetInfo.inc"
 
 #endif

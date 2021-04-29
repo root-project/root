@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,45 +13,34 @@
 #define ROOT_TGTextView
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextView                                                           //
-//                                                                      //
-// A TGTextView is a text viewer widget. It is a specialization of      //
-// TGView. It uses the TGText class (which contains all text            //
-// manipulation code, i.e. loading a file in memory, changing,          //
-// removing lines, etc.). Use a TGTextView to view non-editable text.   //
-// For supported messages see TGView.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGView.h"
 #include "TGText.h"
+#include "TTimer.h"
 
 class TViewTimer;
 
 class TGTextView : public TGView {
 
 protected:
-   TGText         *fText;         // text buffer
-   TGText         *fClipText;     // clipboard text buffer
-   FontStruct_t    fFont;         // text font
-   Int_t           fMaxAscent;    // maximum ascent in font
-   Int_t           fMaxDescent;   // maximum descent in font
-   Int_t           fMaxWidth;     // maximum width of character in font
-   TGGC            fNormGC;       // graphics context for drawing text
-   TGGC            fSelGC;        // graphics context for drawing marked text
-   TGGC            fSelbackGC;    // graphics context for drawing marked background
-   Bool_t          fMarkedFromX;  // true if text is marked from x
-   Bool_t          fMarkedFromY;  // true if text is marker from y
-   Bool_t          fIsMarked;     // true if text is marked/selected
-   Bool_t          fIsMarking;    // true if in marking mode
-   Bool_t          fIsSaved;      // true is content is saved
-   Bool_t          fReadOnly;     // text cannot be editted
-   TGLongPosition  fMarkedStart;  // start position of marked text
-   TGLongPosition  fMarkedEnd;    // end position of marked text
-   TViewTimer     *fScrollTimer;  // scrollbar timer
-   Atom_t         *fDNDTypeList;  // handles DND types
+   TGText         *fText;         ///< text buffer
+   TGText         *fClipText;     ///< clipboard text buffer
+   FontStruct_t    fFont;         ///< text font
+   Int_t           fMaxAscent;    ///< maximum ascent in font
+   Int_t           fMaxDescent;   ///< maximum descent in font
+   Int_t           fMaxWidth;     ///< maximum width of character in font
+   TGGC            fNormGC;       ///< graphics context for drawing text
+   TGGC            fSelGC;        ///< graphics context for drawing marked text
+   TGGC            fSelbackGC;    ///< graphics context for drawing marked background
+   Bool_t          fMarkedFromX;  ///< true if text is marked from x
+   Bool_t          fMarkedFromY;  ///< true if text is marker from y
+   Bool_t          fIsMarked;     ///< true if text is marked/selected
+   Bool_t          fIsMarking;    ///< true if in marking mode
+   Bool_t          fIsSaved;      ///< true is content is saved
+   Bool_t          fReadOnly;     ///< text cannot be edited
+   TGLongPosition  fMarkedStart;  ///< start position of marked text
+   TGLongPosition  fMarkedEnd;    ///< end position of marked text
+   TViewTimer     *fScrollTimer;  ///< scrollbar timer
+   Atom_t         *fDNDTypeList;  ///< handles DND types
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
@@ -72,11 +61,11 @@ protected:
    static const TGGC   &GetDefaultSelectedBackgroundGC();
 
 private:
-   TGTextView(const TGTextView&);
-   TGTextView& operator=(const TGTextView&);
+   TGTextView(const TGTextView&) = delete;
+   TGTextView& operator=(const TGTextView&) = delete;
 
 public:
-   TGTextView(const TGWindow *parent = 0, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
+   TGTextView(const TGWindow *parent = nullptr, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
               UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
               Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
@@ -157,8 +146,8 @@ class TViewTimer : public TTimer {
 private:
    TGView   *fView;
 
-   TViewTimer(const TViewTimer&);             // not implemented
-   TViewTimer& operator=(const TViewTimer&);  // not implemented
+   TViewTimer(const TViewTimer&) = delete;
+   TViewTimer& operator=(const TViewTimer&) = delete;
 
 public:
    TViewTimer(TGView *t, Long_t ms) : TTimer(ms, kTRUE), fView(t) { }

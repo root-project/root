@@ -20,27 +20,29 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGView                                                               //
-//                                                                      //
-// A TGView provides the infrastructure for text viewer and editor      //
-// widgets. It provides a canvas (TGViewFrame) and (optionally) a       //
-// vertical and horizontal scrollbar and methods for marking and        //
-// scrolling.                                                           //
-//                                                                      //
-// The TGView (and derivatives) will generate the following             //
-// event messages:                                                      //
-// kC_TEXTVIEW, kTXT_ISMARKED, widget id, [true|false]                  //
-// kC_TEXTVIEW, kTXT_DATACHANGE, widget id, 0                           //
-// kC_TEXTVIEW, kTXT_CLICK2, widget id, position (y << 16) | x)         //
-// kC_TEXTVIEW, kTXT_CLICK3, widget id, position (y << 16) | x)         //
-// kC_TEXTVIEW, kTXT_F3, widget id, true                                //
-// kC_TEXTVIEW, kTXT_OPEN, widget id, 0                                 //
-// kC_TEXTVIEW, kTXT_CLOSE, widget id, 0                                //
-// kC_TEXTVIEW, kTXT_SAVE, widget id, 0                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGView
+    \ingroup guiwidgets
+
+A TGView provides the infrastructure for text viewer and editor
+widgets. It provides a canvas (TGViewFrame) and (optionally) a
+vertical and horizontal scrollbar and methods for marking and
+scrolling.
+
+The TGView (and derivatives) will generate the following
+event messages:
+
+  - kC_TEXTVIEW, kTXT_ISMARKED, widget id, [true|false]
+  - kC_TEXTVIEW, kTXT_DATACHANGE, widget id, 0
+  - kC_TEXTVIEW, kTXT_CLICK2, widget id, position (y << 16) | x)
+  - kC_TEXTVIEW, kTXT_CLICK3, widget id, position (y << 16) | x)
+  - kC_TEXTVIEW, kTXT_F3, widget id, true
+  - kC_TEXTVIEW, kTXT_OPEN, widget id, 0
+  - kC_TEXTVIEW, kTXT_CLOSE, widget id, 0
+  - kC_TEXTVIEW, kTXT_SAVE, widget id, 0
+
+*/
+
 
 #include "TGView.h"
 #include "TGScrollBar.h"

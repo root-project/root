@@ -9,19 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttTextEditor                                                      //
-//                                                                      //
-//  Implements GUI for editing text attributes.                         //
-//          color, font, font size and alignment                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TAttTextEditor.gif">
+
+/** \class TAttTextEditor
+    \ingroup ged
+
+Implements GUI for editing text attributes.
+      color, font, font size and alignment
+
 */
-//End_Html
 
 
 #include "TAttTextEditor.h"
@@ -31,6 +26,7 @@
 #include "TColor.h"
 #include "TPaveLabel.h"
 #include "TGLabel.h"
+#include "TGSlider.h"
 #include "TGNumberEntry.h"
 #include "TCanvas.h"
 #include "TROOT.h"

@@ -20,14 +20,15 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGClient                                                             //
-//                                                                      //
-// Window client. In client server windowing systems, like X11 this     //
-// class is used to make the initial connection to the window server.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGClient
+    \ingroup guiwidgets
+
+Window client. In client server windowing systems, like X11 this
+class is used to make the initial connection to the window server.
+
+*/
+
 
 #include "RConfigure.h"
 
@@ -73,7 +74,7 @@ public:
    TGClientInit() {
       TROOT *rootlocal = ROOT::Internal::gROOTLocal;
       if (rootlocal && rootlocal->IsBatch()) {
-         // For now check if the heaeder files (or the module containing them)
+         // For now check if the header files (or the module containing them)
          // has been loaded in Cling.
          // This is required because the dictionaries must be initialized
          // __before__ the TGClient creation which will induce the creation

@@ -81,6 +81,7 @@ struct TTrainingSettings {
    Double_t momentum;
    Double_t weightDecay;
    std::vector<Double_t> dropoutProbabilities;
+   std::map<TString,double> optimizerParams;
    bool multithreading;
 };
 

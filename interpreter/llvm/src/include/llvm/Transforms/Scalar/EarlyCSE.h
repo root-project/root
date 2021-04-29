@@ -1,25 +1,26 @@
 //===- EarlyCSE.h - Simple and fast CSE pass --------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+//
 /// \file
 /// This file provides the interface for a simple, fast CSE pass.
-///
+//
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_TRANSFORMS_SCALAR_EARLYCSE_H
 #define LLVM_TRANSFORMS_SCALAR_EARLYCSE_H
 
-#include "llvm/IR/Function.h"
 #include "llvm/IR/PassManager.h"
 
 namespace llvm {
 
-/// \brief A simple and fast domtree-based CSE pass.
+class Function;
+
+/// A simple and fast domtree-based CSE pass.
 ///
 /// This pass does a simple depth-first walk over the dominator tree,
 /// eliminating trivially redundant instructions and using instsimplify to
@@ -29,12 +30,12 @@ namespace llvm {
 struct EarlyCSEPass : PassInfoMixin<EarlyCSEPass> {
   EarlyCSEPass(bool UseMemorySSA = false) : UseMemorySSA(UseMemorySSA) {}
 
-  /// \brief Run the pass over the function.
+  /// Run the pass over the function.
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 
   bool UseMemorySSA;
 };
 
-}
+} // end namespace llvm
 
-#endif
+#endif // LLVM_TRANSFORMS_SCALAR_EARLYCSE_H

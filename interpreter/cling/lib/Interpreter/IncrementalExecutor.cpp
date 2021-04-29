@@ -19,7 +19,6 @@
 
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/TargetOptions.h"
-#include "clang/Frontend/CodeGenOptions.h"
 #include "clang/Frontend/CompilerInstance.h"
 
 #include "llvm/IR/Constants.h"
@@ -55,13 +54,6 @@ CreateHostTargetMachine(const clang::CompilerInstance& CI) {
     return std::unique_ptr<TargetMachine>();
   }
 
-// We have to use large code model for PowerPC64 because TOC and text sections
-// can be more than 2GB apart.
-#if defined(__powerpc64__) || defined(__PPC64__)
-  CodeModel::Model CMModel = CodeModel::Large;
-#else
-  CodeModel::Model CMModel = CodeModel::JITDefault;
-#endif
   CodeGenOpt::Level OptLevel = CodeGenOpt::Default;
   switch (CGOpt.OptimizationLevel) {
     case 0: OptLevel = CodeGenOpt::None; break;
@@ -70,24 +62,50 @@ CreateHostTargetMachine(const clang::CompilerInstance& CI) {
     case 3: OptLevel = CodeGenOpt::Aggressive; break;
     default: OptLevel = CodeGenOpt::Default;
   }
+  using namespace llvm::orc;
+  auto JTMB = JITTargetMachineBuilder::detectHost();
+  if (!JTMB)
+    logAllUnhandledErrors(JTMB.takeError(), llvm::errs(),
+                          "Error detecting host");
 
-  std::string MCPU;
-  std::string FeaturesStr;
+  JTMB->setCodeGenOptLevel(OptLevel);
+#ifdef _WIN32
+  JTMB->getOptions().EmulatedTLS = false;
+#endif // _WIN32
 
-  auto TM = std::unique_ptr<TargetMachine>(TheTarget->createTargetMachine(
-      Triple, MCPU, FeaturesStr, llvm::TargetOptions(),
-      Optional<Reloc::Model>(), CMModel, OptLevel));
-#if defined(LLVM_ON_WIN32)
-  TM->Options.EmulatedTLS = false;
-#else
-  TM->Options.EmulatedTLS = true;
+  std::unique_ptr<TargetMachine> TM = cantFail(JTMB->createTargetMachine());
+
+#if defined(__powerpc64__) || defined(__PPC64__)
+  // We have to use large code model for PowerPC64 because TOC and text sections
+  // can be more than 2GB apart.
+  assert(TM->getCodeModel() >= CodeModel::Large);
 #endif
+
+  // Forcefully disable GlobalISel, it might be enabled on AArch64 without
+  // optimizations. In tests on an Apple M1 after the upgrade to LLVM 9, this
+  // new instruction selection framework emits branches / calls that expect all
+  // code to be reachable in +/- 128 MB. This cannot be guaranteed during JIT,
+  // which generates code into allocated pages on the heap and could span the
+  // entire address space of the process.
+  //
+  // TODO:
+  // 1. Try to reproduce the problem with vanilla lli of LLVM 9 to check that
+  //    this is not related to the way Cling incrementally JITs and executes.
+  // 2. Figure out exactly why GlobalISel emits different branch instructions,
+  //    and whether this is a problem in the framework or of the generated IR.
+  // 3. Verify if the same happens with LLVM 11/12 (whatever Cling will move to
+  //    next), and possibly fix the underlying issue in LLVM upstream's `main`.
+  //
+  // FIXME: Lift this restriction and allow the target to enable GlobalISel,
+  // if deemed ready by upstream developers.
+  TM->setGlobalISel(false);
+
   return TM;
 }
 
 } // anonymous namespace
 
-IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags,
+IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& /*diags*/,
                                          const clang::CompilerInstance& CI):
   m_Callbacks(nullptr), m_externalIncrementalExecutor(nullptr)
 #if 0
@@ -103,7 +121,13 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags,
                                           CI.getTargetOpts(),
                                           CI.getLangOpts(),
                                           *TM));
-  m_JIT.reset(new IncrementalJIT(*this, std::move(TM)));
+  auto RetainOwnership =
+    [this](llvm::orc::VModuleKey K, std::unique_ptr<Module> M) -> void {
+    assert (m_PendingModules.count(K) && "Unable to find the module");
+    m_PendingModules[K]->setModule(std::move(M));
+    m_PendingModules.erase(K);
+  };
+  m_JIT.reset(new IncrementalJIT(*this, std::move(TM), RetainOwnership));
 }
 
 // Keep in source: ~unique_ptr<ClingJIT> needs ClingJIT
@@ -131,10 +155,10 @@ void IncrementalExecutor::runAtExitFuncs() {
 }
 
 void IncrementalExecutor::AddAtExitFunc(void (*func)(void*), void* arg,
-                                       const std::shared_ptr<llvm::Module>& M) {
+                                        const Transaction* T) {
   // Register a CXAAtExit function
   cling::internal::SpinLockGuard slg(m_AtExitFuncsSpinLock);
-  m_AtExitFuncs[M].emplace_back(func, arg);
+  m_AtExitFuncs[T].emplace_back(func, arg);
 }
 
 void unresolvedSymbol()
@@ -206,10 +230,23 @@ freeCallersOfUnresolvedSymbols(llvm::SmallVectorImpl<llvm::Function*>&
 }
 #endif
 
+static bool isPracticallyEmptyModule(const llvm::Module* M) {
+  return M->empty() && M->global_empty() && M->alias_empty();
+}
+
+
 IncrementalExecutor::ExecutionResult
-IncrementalExecutor::runStaticInitializersOnce(const Transaction& T) const {
-  auto m = T.getModule();
-  assert(m.get() && "Module must not be null");
+IncrementalExecutor::runStaticInitializersOnce(Transaction& T) {
+  llvm::Module* m = T.getModule();
+  assert(m && "Module must not be null");
+
+  if (isPracticallyEmptyModule(m))
+    return kExeSuccess;
+
+  llvm::orc::VModuleKey K =
+    emitModule(T.takeModule(), T.getCompilationOpts().OptLevel);
+  m_PendingModules[K] = &T;
+
 
   // We don't care whether something was unresolved before.
   m_unresolvedSymbols.clear();
@@ -304,7 +341,7 @@ void IncrementalExecutor::runAndRemoveStaticDestructors(Transaction* T) {
   AtExitFunctions::mapped_type Local;
   {
     cling::internal::SpinLockGuard slg(m_AtExitFuncsSpinLock);
-    auto Itr = m_AtExitFuncs.find(T->getModule());
+    auto Itr = m_AtExitFuncs.find(T);
     if (Itr == m_AtExitFuncs.end()) return;
     m_AtExitFuncs.erase(Itr, &Local);
   } // end of spin lock lifetime block.
@@ -370,16 +407,15 @@ void* IncrementalExecutor::getAddressOfGlobal(llvm::StringRef symbolName,
 }
 
 void*
-IncrementalExecutor::getPointerToGlobalFromJIT(const llvm::GlobalValue& GV) const {
-  // Get the function / variable pointer referenced by GV.
+IncrementalExecutor::getPointerToGlobalFromJIT(llvm::StringRef name) const {
+  // Get the function / variable pointer referenced by name.
 
   // We don't care whether something was unresolved before.
   m_unresolvedSymbols.clear();
 
-  void* addr = (void*)m_JIT->getSymbolAddress(GV.getName(),
-                                              false /*no dlsym*/);
+  void* addr = (void*)m_JIT->getSymbolAddress(name, false /*no dlsym*/);
 
-  if (diagnoseUnresolvedSymbols(GV.getName(), "symbol"))
+  if (diagnoseUnresolvedSymbols(name, "symbol"))
     return 0;
   return addr;
 }

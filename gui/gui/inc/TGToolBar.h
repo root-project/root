@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,15 +12,6 @@
 #ifndef ROOT_TGToolBar
 #define ROOT_TGToolBar
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGToolBar                                                            //
-//                                                                      //
-// A toolbar is a composite frame that contains TGPictureButtons.       //
-// Often used in combination with a TGHorizontal3DLine.                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 
@@ -42,16 +33,16 @@ struct ToolBarData_t {
 class TGToolBar : public TGCompositeFrame {
 
 protected:
-   TList   *fPictures;      // list of pictures that should be freed
-   TList   *fTrash;         // list of buttons and layout hints to be deleted
-   TMap    *fMapOfButtons;  // map of button/id pairs in this group
+   TList   *fPictures;      ///< list of pictures that should be freed
+   TList   *fTrash;         ///< list of buttons and layout hints to be deleted
+   TMap    *fMapOfButtons;  ///< map of button/id pairs in this group
 
 private:
-   TGToolBar(const TGToolBar&);              // not implemented
-   TGToolBar& operator=(const TGToolBar&);   // not implemented
+   TGToolBar(const TGToolBar&) = delete;
+   TGToolBar& operator=(const TGToolBar&) = delete;
 
 public:
-   TGToolBar(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGToolBar(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
              UInt_t options = kHorizontalFrame,
              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGToolBar();

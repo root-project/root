@@ -33,8 +33,8 @@ protected:
    Int_t            fRead;            ///<! flag = 1 if clonesarray has been read
    Int_t            fN;               ///<! Number of elements in ClonesArray
    Int_t            fNdataMax;        ///<! Maximum value of fN
-   TString          fClassName;       ///< name of the class of the objets in the ClonesArray
-   TBranch          *fBranchCount;    ///< Branch with clones count
+   TString          fClassName;       ///<  Name of the class of the objets in the ClonesArray
+   TBranch          *fBranchCount;    ///<  Branch with clones count
 
    friend class TTreeCloner;
 

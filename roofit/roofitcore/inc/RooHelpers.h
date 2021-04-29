@@ -24,6 +24,11 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <utility>
+
+class RooAbsPdf;
+class RooAbsData;
+
 
 namespace RooHelpers {
 
@@ -92,7 +97,7 @@ std::vector<std::string> tokenise(const std::string &str, const std::string &del
 /// Check if the parameters have a range, and warn if the range extends below / above the set limits.
 void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_list<const RooAbsReal*> pars,
     double min = -std::numeric_limits<double>::max(), double max = std::numeric_limits<double>::max(),
-    bool limitsInAllowedRange = false, std::string extraMessage = "");
+    bool limitsInAllowedRange = false, std::string const& extraMessage = "");
 
 
 /// Disable all caches for sub-branches in an expression tree.
@@ -112,6 +117,9 @@ struct DisableCachingRAII {
 };
 
 
+std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const char* rangeName);
+
+bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vector<std::string> const& rangeNames);
 
 }
 

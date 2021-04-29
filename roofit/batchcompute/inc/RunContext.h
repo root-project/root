@@ -28,14 +28,15 @@ class RooArgProxy;
 
 namespace RooBatchCompute {
 
-/// Data that has to be passed around when evaluating functions / PDFs.
 struct RunContext {
+  /// Create an empty RunContext that doesn't have access to any computation results.
   RunContext() { }
   /// Deleted because copying the owned memory is expensive.
   /// If needed, it can be implemented, though.
   /// \warning Remember to relocate all spans in `spans` to new location
   /// in `ownedMemory` after data have been copied!
   RunContext(const RunContext&) = delete;
+  /// Move a RunContext. All spans pointing to data retrieved from the original remain valid.
   RunContext(RunContext&&) = default;
   RooSpan<const double> getBatch(const RooArgProxy& proxy) const;
   RooSpan<const double> getBatch(const RooAbsReal* owner) const;

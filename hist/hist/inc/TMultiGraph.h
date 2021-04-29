@@ -36,11 +36,11 @@ class TF1;
 class TMultiGraph : public TNamed {
 
 protected:
-   TList      *fGraphs;     //Pointer to list of TGraphs
-   TList      *fFunctions;  //Pointer to list of functions (fits and user)
-   TH1F       *fHistogram;  //Pointer to histogram used for drawing axis
-   Double_t    fMaximum;    //Maximum value for plotting along y
-   Double_t    fMinimum;    //Minimum value for plotting along y
+   TList      *fGraphs;     ///< Pointer to list of TGraphs
+   TList      *fFunctions;  ///< Pointer to list of functions (fits and user)
+   TH1F       *fHistogram;  ///< Pointer to histogram used for drawing axis
+   Double_t    fMaximum;    ///< Maximum value for plotting along y
+   Double_t    fMinimum;    ///< Minimum value for plotting along y
 
    TMultiGraph(const TMultiGraph&);
    TMultiGraph& operator=(const TMultiGraph&);

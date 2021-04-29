@@ -582,7 +582,7 @@ namespace cling {
       Transaction* nestedT = beginTransaction(T->getCompilationOpts());
       // Pull all template instantiations in that came from the consumers.
       getCI()->getSema().PerformPendingInstantiations();
-#ifdef LLVM_ON_WIN32
+#ifdef _WIN32
       // Microsoft-specific:
       // Late parsed templates can leave unswallowed "macro"-like tokens.
       // They will seriously confuse the Parser when entering the next
@@ -697,11 +697,18 @@ namespace cling {
       Parent->removeNestedTransaction(&T);
       T.setParent(0);
     } else {
-      // Remove from the queue
-      assert(&T == m_Transactions.back() && "Out of order transaction removal");
-      m_Transactions.pop_back();
-      if (!m_Transactions.empty())
-        m_Transactions.back()->setNext(0);
+      if (&T == m_Transactions.back()) {
+        // Remove from the queue
+        m_Transactions.pop_back();
+        if (!m_Transactions.empty())
+          m_Transactions.back()->setNext(0);
+      } else {
+        // If T is not the last transaction it must not be a previous
+        // transaction either, but a "disconnected" one, i.e. one that
+        // was not yet committed.
+        assert(std::find(m_Transactions.begin(), m_Transactions.end(), &T)
+              == m_Transactions.end() && "Out of order transaction removal");
+      }
     }
 
     m_TransactionPool->releaseTransaction(&T);
@@ -798,10 +805,10 @@ namespace cling {
     // Create an uninitialized memory buffer, copy code in and append "\n"
     size_t InputSize = input.size(); // don't include trailing 0
     // MemBuffer size should *not* include terminating zero
-    std::unique_ptr<llvm::MemoryBuffer>
-      MB(llvm::MemoryBuffer::getNewUninitMemBuffer(InputSize + 1,
-                                                   source_name.str()));
-    char* MBStart = const_cast<char*>(MB->getBufferStart());
+    std::unique_ptr<llvm::WritableMemoryBuffer>
+      MB(llvm::WritableMemoryBuffer::getNewUninitMemBuffer(InputSize + 1,
+                                                           source_name.str()));
+    char* MBStart = MB->getBufferStart();
     memcpy(MBStart, input.data(), InputSize);
     MBStart[InputSize] = '\n';
 
@@ -869,7 +876,7 @@ namespace cling {
       return kSuccess;
     }
 
-#ifdef LLVM_ON_WIN32
+#ifdef _WIN32
     // Microsoft-specific:
     // Late parsed templates can leave unswallowed "macro"-like tokens.
     // They will seriously confuse the Parser when entering the next

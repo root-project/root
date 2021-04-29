@@ -1,9 +1,8 @@
-//===-- MipsRegisterInfo.h - Mips Register Information Impl -----*- C++ -*-===//
+//===- MipsRegisterInfo.h - Mips Register Information Impl ------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -15,12 +14,16 @@
 #define LLVM_LIB_TARGET_MIPS_MIPSREGISTERINFO_H
 
 #include "Mips.h"
-#include "llvm/Target/TargetRegisterInfo.h"
+#include "llvm/CodeGen/MachineBasicBlock.h"
+#include <cstdint>
 
 #define GET_REGINFO_HEADER
 #include "MipsGenRegisterInfo.inc"
 
 namespace llvm {
+
+class TargetRegisterClass;
+
 class MipsRegisterInfo : public MipsGenRegisterInfo {
 public:
   enum class MipsPtrClass {
@@ -66,9 +69,9 @@ public:
   bool canRealignStack(const MachineFunction &MF) const override;
 
   /// Debug information queries.
-  unsigned getFrameRegister(const MachineFunction &MF) const override;
+  Register getFrameRegister(const MachineFunction &MF) const override;
 
-  /// \brief Return GPR register class.
+  /// Return GPR register class.
   virtual const TargetRegisterClass *intRegClass(unsigned Size) const = 0;
 
 private:
@@ -79,4 +82,4 @@ private:
 
 } // end namespace llvm
 
-#endif
+#endif // LLVM_LIB_TARGET_MIPS_MIPSREGISTERINFO_H

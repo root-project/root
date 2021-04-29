@@ -1,7 +1,36 @@
 # JSROOT changelog
 
-## Changes in 6.0.0
+## Changes in dev
+1. Fully deprecate old JSRootCore.js script, one have to use  JSRoot.core.js
+2. Upgrade three.js to r127
+3. Upgrade d3.js to 6.7.0
 
+
+## Changes in 6.1.0
+1. Support drawing produced by TRatioPlot, including interactive zooming
+2. Fix problem with TF1 drawing from histogram list of primitives
+3. Let disable showing of StreamerInfo in the GUI by adding &skipsi to URL
+4. Provide tooltips when TH1 drawn with "E" or "P" option
+5. Fix problem with zooming of many overlayed histograms
+6. API change -> PadPainter.zoom function returns Promise now
+7. Support gridx/y, tickx/y, logx/y options for (multi) graphs painter
+8. Provide simple Rebin functionality for TH1 (#210)
+9. Use jQuery dialog to input values, avoid prompt() which not always supported (#216)
+
+
+## Changes in 6.0.2
+1. Fix ZSTD size limitation, use streaming API (#214)
+2. Prevent endless recursion in JSROOT.parse() function
+
+
+## Changes in 6.0.1
+1. Fix problem with matrix calculations in Eve classes (#206)
+2. Fix errors in TNodejsFile (#208)
+3. Fix TGraph tooltips handling
+4. Fix TH2Poly tooltips handling
+
+
+## Changes in 6.0.0
 1. Major release with:
    - incompatible changes in API
    - heavy use of Promise class
@@ -45,7 +74,6 @@
 
 
 ## Changes in 5.9.1
-
 1. Fix zooming in color palette
 2. Fix interactive update of TGraph painting on time scale
 3. Fix I/O error in reading std::map (#204)

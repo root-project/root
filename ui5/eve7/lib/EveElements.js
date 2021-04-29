@@ -268,7 +268,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    {
       var fcol = jsrp.getColor(ebox.fMainColor);
       var boxMaterial = new THREE.MeshPhongMaterial({color: fcol,  flatShading: true});
-      var fcol = jsrp.getColor(ebox.fMainColor);
 
       // console.log("EveElements.prototype.makeFlatBox triangulate", idxBegin, idxEnd);
       let nTriang = (idxEnd - idxBegin) -2;
@@ -630,26 +629,24 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
         let vbuff = this.obj3d.eve_el.render_data.vtxBuff;
         let nbox = ibuff.length/2;
         let nBoxSelected = cells.length;
-        let boxIdcs = new Array;
+        let boxIdcs = [];
         for (let i = 0; i < cells.length; i++)
         {
             let bin = cells[i].b;
             let slice = cells[i].s;
-            let fraction =  cells[i].f;
-            for (let r = 0; r < nbox; r++) {
-                if (ibuff[r*2] == slice) {
+            // let fraction =  cells[i].f;
+           for (let r = 0; r < nbox; r++) {
+              if (ibuff[r * 2] == slice) {
 
-                if (bin > 0 && ibuff[r*2+1] == bin) {
+                 if (bin > 0 && ibuff[r * 2 + 1] == bin) {
                     boxIdcs.push(r);
                     break;
-                }
-                else if (bin < 0 && ibuff[r*2+1] == Math.abs(bin) && vbuff[r*12+1] < 0)
-                {
+                 } else if (bin < 0 && ibuff[r * 2 + 1] == Math.abs(bin) && vbuff[r * 12 + 1] < 0) {
                     boxIdcs.push(r);
                     break;
-                }
-                }
-            }
+                 }
+              }
+           }
         }
         var idxBuff = [];
         let vtxBuff =  new Float32Array(nBoxSelected * 4 * 3 );
@@ -707,7 +704,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    Calo2DControl.prototype.extractIndex = function(intersect)
    {
       let idx  = Math.floor(intersect.faceIndex/2);
-      return idx;ls
+      return idx;
    }
 
    Calo2DControl.prototype.getTooltipText = function(intersect)
@@ -988,12 +985,14 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    EveElements.prototype.makeEveGeometry = function(rnr_data, force)
    {
-      var nVert = rnr_data.idxBuff[1]*3;
-
       if (rnr_data.idxBuff[0] != GL.TRIANGLES)  throw "Expect triangles first.";
-      if (2 + nVert != rnr_data.idxBuff.length) throw "Expect single list of triangles in index buffer.";
 
-      if (this.useIndexAsIs) {
+      let nVert = 3 * rnr_data.idxBuff[1]; // number of vertices to draw
+
+      if (rnr_data.idxBuff.length != nVert + 2) throw "Expect single list of triangles in index buffer.";
+
+      if (this.useIndexAsIs)
+      {
          var body = new THREE.BufferGeometry();
          body.setAttribute('position', new THREE.BufferAttribute( rnr_data.vtxBuff, 3 ));
          body.setIndex(new THREE.BufferAttribute( rnr_data.idxBuff, 1 ));
@@ -1001,7 +1000,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          // this does not work correctly - draw range ignored when calculating normals
          // even worse - shift 2 makes complete logic wrong while wrong triangle are extracted
          // Let see if it will be fixed https://github.com/mrdoob/three.js/issues/15560
-         body.computeVertexNormals();
+         body.computeVertexNormalsIdxRange(2, nVert);
          return body;
       }
 
@@ -1095,7 +1094,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                body.setAttribute('position', pos_ba);
                body.setIndex(idx_ba);
                body.setDrawRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
-               body.computeVertexNormals();
+               body.computeVertexNormalsIdxRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
                var material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, depthWrite: false,
                                                color:fcol, transparent: true, opacity: 0.4 });
 

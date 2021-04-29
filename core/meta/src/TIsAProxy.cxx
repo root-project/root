@@ -39,19 +39,22 @@ namespace {
    {
       return (ClassMap_t::value_type*)p;
    }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Standard initializing constructor
 
 TIsAProxy::TIsAProxy(const std::type_info& typ)
-   : fType(&typ), fClass(nullptr), fLast(nullptr),
+   : fType(&typ), fClass(nullptr),
      fSubTypesReaders(0), fSubTypesWriteLockTaken(kFALSE),
-     fVirtual(kFALSE), fInit(kFALSE)
+     fInit(kFALSE), fVirtual(kFALSE)
 {
    static_assert(sizeof(ClassMap_t)<=sizeof(fSubTypes), "ClassMap size is to large for array");
 
    ::new(fSubTypes) ClassMap_t();
+   for(auto& slot : fLasts)
+      slot = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +75,8 @@ void TIsAProxy::SetClass(TClass *cl)
 {
    GetMap(fSubTypes)->clear();
    fClass = cl;
-   fLast = nullptr;
+   for(auto& slot : fLasts)
+      slot = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,45 +85,57 @@ void TIsAProxy::SetClass(TClass *cl)
 TClass* TIsAProxy::operator()(const void *obj)
 {
    if ( !fInit )  {
-      if ( !fClass.load() && fType ) {
-         auto cls = TClass::GetClass(*fType);
-         TClass* expected = nullptr;
-         fClass.compare_exchange_strong(expected,cls);
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      if ( !fClass && fType ) {
+         fClass = TClass::GetClass(*fType);
       }
-      if ( !fClass.load() ) return nullptr;
+      if ( !fClass ) return nullptr;
       fVirtual = (*fClass).ClassProperty() & kClassHasVirtual;
       fInit = kTRUE;
    }
    if ( !obj || !fVirtual )  {
-      return fClass.load();
+      return fClass;
    }
    // Avoid the case that the first word is a virtual_base_offset_table instead of
    // a virtual_function_table
    Long_t offset = **(Long_t**)obj;
    if ( offset == 0 ) {
-      return fClass.load();
+      return fClass;
    }
 
    DynamicType* ptr = (DynamicType*)obj;
    const std::type_info* typ = &typeid(*ptr);
 
    if ( typ == fType )  {
-     return fClass.load();
+     return fClass;
    }
-   auto last = ToPair(fLast.load());
-   if ( last && typ == last->first )  {
-      return last->second;
+   for(auto& slot : fLasts) {
+      auto last = ToPair(slot);
+      if ( last && typ == last->first )  {
+         return last->second;
+      }
    }
+
    // Check if type is already in sub-class cache
-   last = ToPair(FindSubType(typ));
-   if ( last == nullptr || last->second == nullptr )  {
+   auto last = ToPair(FindSubType(typ));
+   if ( last == nullptr )  {
       // Last resort: lookup root class
       auto cls = TClass::GetClass(*typ);
-      last = ToPair(CacheSubType(typ,cls));
+      if (cls)
+         last = ToPair(CacheSubType(typ,cls));
+      else
+         return nullptr; // Don't record failed searches (a library might be loaded between now and the next search).
    }
-   fLast.store(last);
 
-   return last == nullptr? nullptr: last->second;
+   UChar_t next = fNextLastSlot++;
+   if (next >= fgMaxLastSlot) {
+      UChar_t expected_value = next + 1;
+      next = next % fgMaxLastSlot;
+      fNextLastSlot.compare_exchange_strong(expected_value, next + 1);
+   }
+   fLasts[next].store(last);
+
+   return last ? last->second : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

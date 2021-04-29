@@ -1,9 +1,8 @@
 //===- StringTableBuilder.cpp - String table building utility -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -31,6 +30,7 @@ void StringTableBuilder::initSize() {
   // correct.
   switch (K) {
   case RAW:
+  case DWARF:
     Size = 0;
     break;
   case MachO:
@@ -82,38 +82,41 @@ static int charTailAt(StringPair *P, size_t Pos) {
 
 // Three-way radix quicksort. This is much faster than std::sort with strcmp
 // because it does not compare characters that we already know the same.
-static void multikey_qsort(StringPair **Begin, StringPair **End, int Pos) {
+static void multikeySort(MutableArrayRef<StringPair *> Vec, int Pos) {
 tailcall:
-  if (End - Begin <= 1)
+  if (Vec.size() <= 1)
     return;
 
-  // Partition items. Items in [Begin, P) are greater than the pivot,
-  // [P, Q) are the same as the pivot, and [Q, End) are less than the pivot.
-  int Pivot = charTailAt(*Begin, Pos);
-  StringPair **P = Begin;
-  StringPair **Q = End;
-  for (StringPair **R = Begin + 1; R < Q;) {
-    int C = charTailAt(*R, Pos);
+  // Partition items so that items in [0, I) are greater than the pivot,
+  // [I, J) are the same as the pivot, and [J, Vec.size()) are less than
+  // the pivot.
+  int Pivot = charTailAt(Vec[0], Pos);
+  size_t I = 0;
+  size_t J = Vec.size();
+  for (size_t K = 1; K < J;) {
+    int C = charTailAt(Vec[K], Pos);
     if (C > Pivot)
-      std::swap(*P++, *R++);
+      std::swap(Vec[I++], Vec[K++]);
     else if (C < Pivot)
-      std::swap(*--Q, *R);
+      std::swap(Vec[--J], Vec[K]);
     else
-      R++;
+      K++;
   }
 
-  multikey_qsort(Begin, P, Pos);
-  multikey_qsort(Q, End, Pos);
+  multikeySort(Vec.slice(0, I), Pos);
+  multikeySort(Vec.slice(J), Pos);
+
+  // multikeySort(Vec.slice(I, J - I), Pos + 1), but with
+  // tail call optimization.
   if (Pivot != -1) {
-    // qsort(P, Q, Pos + 1), but with tail call optimization.
-    Begin = P;
-    End = Q;
+    Vec = Vec.slice(I, J - I);
     ++Pos;
     goto tailcall;
   }
 }
 
 void StringTableBuilder::finalize() {
+  assert(K != DWARF);
   finalizeStringTable(/*Optimize=*/true);
 }
 
@@ -130,12 +133,7 @@ void StringTableBuilder::finalizeStringTable(bool Optimize) {
     for (StringPair &P : StringIndexMap)
       Strings.push_back(&P);
 
-    if (!Strings.empty()) {
-      // If we're optimizing, sort by name. If not, sort by previously assigned
-      // offset.
-      multikey_qsort(&Strings[0], &Strings[0] + Strings.size(), 0);
-    }
-
+    multikeySort(Strings, 0);
     initSize();
 
     StringRef Previous;
@@ -161,6 +159,13 @@ void StringTableBuilder::finalizeStringTable(bool Optimize) {
 
   if (K == MachO)
     Size = alignTo(Size, 4); // Pad to multiple of 4.
+
+  // The first byte in an ELF string table must be null, according to the ELF
+  // specification. In 'initSize()' we reserved the first byte to hold null for
+  // this purpose and here we actually add the string to allow 'getOffset()' to
+  // be called on an empty string.
+  if (K == ELF)
+    StringIndexMap[CachedHashStringRef("")] = 0;
 }
 
 void StringTableBuilder::clear() {

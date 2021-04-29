@@ -14,10 +14,9 @@ from ROOT import TMVA, TFile, TTree, TCut
 from subprocess import call
 from os.path import isfile
 
-from keras.models import Sequential
-from keras.layers.core import Dense, Activation
-from keras.regularizers import l2
-from keras.optimizers import SGD
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation
+from tensorflow.keras.optimizers import SGD
 
 # Setup TMVA
 TMVA.Tools.Instance()
@@ -29,7 +28,7 @@ factory = TMVA.Factory('TMVARegression', output,
 
 # Load data
 if not isfile('tmva_reg_example.root'):
-    call(['curl', '-O', 'http://root.cern.ch/files/tmva_reg_example.root'])
+    call(['curl', '-L', '-O', 'http://root.cern.ch/files/tmva_reg_example.root'])
 
 data = TFile.Open('tmva_reg_example.root')
 tree = data.Get('TreeR')
@@ -49,7 +48,7 @@ dataloader.PrepareTrainingAndTestTree(TCut(''),
 
 # Define model
 model = Sequential()
-model.add(Dense(64, activation='tanh', W_regularizer=l2(1e-5), input_dim=2))
+model.add(Dense(64, activation='tanh', input_dim=2))
 model.add(Dense(1, activation='linear'))
 
 # Set loss and optimizer

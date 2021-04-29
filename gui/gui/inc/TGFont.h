@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
- * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,15 +12,6 @@
 #ifndef ROOT_TGFont
 #define ROOT_TGFont
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFont and TGFontPool                                                //
-//                                                                      //
-// Encapsulate fonts used in the GUI system.                            //
-// TGFontPool provides a pool of fonts.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TNamed.h"
 #include "TGObject.h"
@@ -117,17 +108,17 @@ class TGTextLayout : public TObject {
 friend class TGFont;
 
 protected:
-   const TGFont  *fFont;         // The font used when laying out the text.
-   const char    *fString;       // The string that was layed out.
-   Int_t          fWidth;        // The maximum width of all lines in the text layout.
-   Int_t          fNumChunks;    // Number of chunks actually used in following array.
-   LayoutChunk_t *fChunks;       // Array of chunks. The actual size will be maxChunks.
+   const TGFont  *fFont;         ///< The font used when laying out the text.
+   const char    *fString;       ///< The string that was laid out.
+   Int_t          fWidth;        ///< The maximum width of all lines in the text layout.
+   Int_t          fNumChunks;    ///< Number of chunks actually used in following array.
+   LayoutChunk_t *fChunks;       ///< Array of chunks. The actual size will be maxChunks.
 
-   TGTextLayout(const TGTextLayout &tlayout);     // not implemented
-   void operator=(const TGTextLayout &tlayout);   // not implemented
+   TGTextLayout(const TGTextLayout &tlayout) = delete;
+   void operator=(const TGTextLayout &tlayout) = delete;
 
 public:
-   TGTextLayout(): fFont(NULL), fString(""), fWidth(0), fNumChunks(0), fChunks(NULL) {}
+   TGTextLayout(): fFont(nullptr), fString(""), fWidth(0), fNumChunks(0), fChunks(NULL) {}
    virtual ~TGTextLayout();
 
    void   DrawText(Drawable_t dst, GContext_t gc, Int_t x, Int_t y,
@@ -152,21 +143,21 @@ friend class TGFontPool;
 friend class TGTextLayout;
 
 private:
-   FontStruct_t     fFontStruct;      // Low level graphics fontstruct
-   FontH_t          fFontH;           // Font handle (derived from fontstruct)
-   FontMetrics_t    fFM;              // Cached font metrics
-   FontAttributes_t fFA;              // Actual font attributes obtained when the font was created
-   TObjString      *fNamedHash;       // Pointer to the named object TGFont was based on
-   Int_t            fTabWidth;        // Width of tabs in this font (pixels).
-   Int_t            fUnderlinePos;    // Offset from baseline to origin of underline bar
-                                      // (used for drawing underlines on a non-underlined font).
-   Int_t            fUnderlineHeight; // Height of underline bar (used for drawing
-                                      // underlines on a non-underlined font).
-   char             fTypes[256];      // Array giving types of all characters in
-                                      // the font, used when displaying control characters.
-   Int_t            fWidths[256];     // Array giving widths of all possible characters in the font.
-   Int_t            fBarHeight;       // Height of underline or overstrike bar
-                                      // (used for simulating a native underlined or strikeout font).
+   FontStruct_t     fFontStruct;      ///< Low level graphics fontstruct
+   FontH_t          fFontH;           ///< Font handle (derived from fontstruct)
+   FontMetrics_t    fFM;              ///< Cached font metrics
+   FontAttributes_t fFA;              ///< Actual font attributes obtained when the font was created
+   TObjString      *fNamedHash;       ///< Pointer to the named object TGFont was based on
+   Int_t            fTabWidth;        ///< Width of tabs in this font (pixels).
+   Int_t            fUnderlinePos;    ///< Offset from baseline to origin of underline bar
+                                      ///< (used for drawing underlines on a non-underlined font).
+   Int_t            fUnderlineHeight; ///< Height of underline bar (used for drawing
+                                      ///< underlines on a non-underlined font).
+   char             fTypes[256];      ///< Array giving types of all characters in
+                                      ///< the font, used when displaying control characters.
+   Int_t            fWidths[256];     ///< Array giving widths of all possible characters in the font.
+   Int_t            fBarHeight;       ///< Height of underline or overstrike bar
+                                      ///< (used for simulating a native underlined or strikeout font).
 
 protected:
    TGFont(const char *name)
@@ -180,8 +171,8 @@ protected:
       }
    }
 
-   TGFont(const TGFont &font);           // not implemented
-   void operator=(const TGFont &font);   // not implemented
+   TGFont(const TGFont &) = delete;
+   void operator=(const TGFont &) = delete;
 
    LayoutChunk_t *NewChunk(TGTextLayout *layout, int *maxPtr,
                            const char *start, int numChars,
@@ -230,8 +221,8 @@ private:
    THashTable    *fUidTable;   // Hash table for some used string values like family names, etc.
    THashTable    *fNamedTable; // Map a name to a set of attributes for a font
 
-   TGFontPool(const TGFontPool& fp);             // not implemented
-   TGFontPool& operator=(const TGFontPool& fp);  // not implemented
+   TGFontPool(const TGFontPool& fp) = delete;
+   TGFontPool& operator=(const TGFontPool& fp) = delete;
 
 protected:
    const char *GetUid(const char *string);

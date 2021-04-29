@@ -24,11 +24,11 @@ set(BUILTINS_armv7em-none-eabi_COMPILER_RT_OS_DIR "baremetal" CACHE STRING "armv
 
 set(LLVM_INSTALL_TOOLCHAIN_ONLY ON CACHE BOOL "")
 set(LLVM_TOOLCHAIN_TOOLS
+  dsymutil
   llc
   llvm-ar
   llvm-cxxfilt
   llvm-dwarfdump
-  llvm-dsymutil
   llvm-nm
   llvm-objdump
   llvm-ranlib
@@ -41,7 +41,7 @@ set(LLVM_TOOLCHAIN_TOOLS
 set(LLVM_DISTRIBUTION_COMPONENTS
   clang
   lld
-  clang-headers
+  clang-resource-headers
   builtins-armv6m-none-eabi
   builtins-armv7m-none-eabi
   builtins-armv7em-none-eabi

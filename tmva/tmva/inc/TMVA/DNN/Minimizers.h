@@ -174,7 +174,8 @@ public:
 //______________________________________________________________________________
 template <typename Architecture_t>
 TGradientDescent<Architecture_t>::TGradientDescent()
-   : fBatchSize(0), fStepCount(0), fConvergenceSteps(0), fConvergenceCount(0), fTestInterval(0), fLearningRate(0),
+   : fBatchSize(0), fStepCount(0), fConvergenceSteps(0), fConvergenceCount(0), fTestInterval(0),
+     fTrainingError(0), fTestError(0), fLearningRate(0),
      fMinimumError(std::numeric_limits<Scalar_t>::infinity())
 {
    // Nothing to do here.
@@ -184,7 +185,8 @@ TGradientDescent<Architecture_t>::TGradientDescent()
 template <typename Architecture_t>
 TGradientDescent<Architecture_t>::TGradientDescent(Scalar_t learningRate, size_t convergenceSteps, size_t testInterval)
    : fBatchSize(0), fStepCount(0), fConvergenceSteps(convergenceSteps), fConvergenceCount(0),
-     fTestInterval(testInterval), fLearningRate(learningRate), fMinimumError(std::numeric_limits<Scalar_t>::infinity())
+     fTestInterval(testInterval), fTrainingError(0), fTestError(0),
+     fLearningRate(learningRate), fMinimumError(std::numeric_limits<Scalar_t>::infinity())
 {
    // Nothing to do here.
 }

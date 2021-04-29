@@ -80,34 +80,36 @@ private:
    bool IsExcluded(Int_t bin) const;
 
 protected:
-   Bool_t   fFitDone;             // flags whether a valid fit has been performed
-   Int_t    fLowLimitX;           // first bin in X dimension
-   Int_t    fHighLimitX;          // last  bin in X dimension
-   Int_t    fLowLimitY;           // first bin in Y dimension
-   Int_t    fHighLimitY;          // last  bin in Y dimension
-   Int_t    fLowLimitZ;           // first bin in Z dimension
-   Int_t    fHighLimitZ;          // last  bin in Z dimension
-   std::vector<Int_t> fExcludedBins; // bins excluded from the fit
+   Bool_t   fFitDone;                   ///< Flags whether a valid fit has been performed
+   Int_t    fLowLimitX;                 ///< First bin in X dimension
+   Int_t    fHighLimitX;                ///< Last  bin in X dimension
+   Int_t    fLowLimitY;                 ///< First bin in Y dimension
+   Int_t    fHighLimitY;                ///< Last  bin in Y dimension
+   Int_t    fLowLimitZ;                 ///< First bin in Z dimension
+   Int_t    fHighLimitZ;                ///< Last  bin in Z dimension
+   std::vector<Int_t> fExcludedBins;    ///< Bins excluded from the fit
 
-   Int_t    fNpfits;              // Number of points used in the fit
-   Int_t    fNDF;                 // Number of degrees of freedom in the fit
-   Double_t fChisquare;           // Template fit chisquare
+   Int_t    fNpfits;                    ///< Number of points used in the fit
+   Int_t    fNDF;                       ///< Number of degrees of freedom in the fit
+   Double_t fChisquare;                 ///< Template fit chisquare
 
-   TObjArray fAji;                // array of pointers to predictions of real template distributions
+   TObjArray fAji;                      ///< Array of pointers to predictions of real template distributions
 
-   // Histograms
-   TH1*      fData;               // pointer to the "data" histogram to be fitted to
-   TObjArray fMCs;                // array of pointers to template histograms
-   TObjArray fWeights;            // array of pointers to corresponding weight factors (may be null)
-   Double_t  fIntegralData;       // "data" histogram content integral over allowed fit range
-   Double_t* fIntegralMCs;        // same for template histograms (weights not taken into account)
-   Double_t* fFractions;          // template fractions scaled to the "data" histogram statistics
-   TH1*      fPlot;               // pointer to histogram containing summed template predictions
-   ROOT::Fit::Fitter *fFractionFitter;  // pointer to Fitter class
+   ///@name Histograms
+   ///@{
+   TH1*      fData;                     ///< Pointer to the "data" histogram to be fitted to
+   TObjArray fMCs;                      ///< Array of pointers to template histograms
+   TObjArray fWeights;                  ///< Array of pointers to corresponding weight factors (may be null)
+   Double_t  fIntegralData;             ///< "data" histogram content integral over allowed fit range
+   Double_t* fIntegralMCs;              ///< Same for template histograms (weights not taken into account)
+   Double_t* fFractions;                ///< Template fractions scaled to the "data" histogram statistics
+   TH1*      fPlot;                     ///< Pointer to histogram containing summed template predictions
+   ROOT::Fit::Fitter *fFractionFitter;  ///< Pointer to Fitter class
+   ///@}
 
-   Int_t     fNpar;               // number of fit parameters
+   Int_t     fNpar;                     ///< number of fit parameters
 
-   ClassDef(TFractionFitter, 0);   // Fits MC fractions to data histogram
+   ClassDef(TFractionFitter, 0); // Fits MC fractions to data histogram
 };
 
 //

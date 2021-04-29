@@ -20,73 +20,120 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGButton, TGTextButton, TGPictureButton, TGCheckButton,              //
-// TGRadioButton and TGSplitButton                                      //
-//                                                                      //
-// This header defines all GUI button widgets.                          //
-//                                                                      //
-// TGButton is a button abstract base class. It defines general button  //
-// behaviour.                                                           //
-//                                                                      //
-// TGTextButton and TGPictureButton yield an action as soon as they are //
-// clicked. These buttons usually provide fast access to frequently     //
-// used or critical commands. They may appear alone or placed in a      //
-// group.                                                               //
-//                                                                      //
-// The action they perform can be inscribed with a meaningful tooltip   //
-// set by SetToolTipText(const char* text, Long_t delayms=400).         //
-//                                                                      //
-// The text button has a label indicating the action to be taken when   //
-// the button is pressed. The text can be a hot string ("&Exit") that   //
-// defines the label "Exit" and keyboard mnemonics Alt+E for button     //
-// selection. A button label can be changed by SetText(new_label).      //
-//                                                                      //
-// Selecting a text or picture button will generate the event:          //
-// kC_COMMAND, kCM_BUTTON, button id, user data.                        //
-//                                                                      //
-// The purpose of TGCheckButton and TGRadioButton is for selecting      //
-// different options. Like text buttons, they have text or hot string   //
-// as a label.                                                          //
-//                                                                      //
-// Radio buttons are grouped usually in logical sets of two or more     //
-// buttons to present mutually exclusive choices.                       //
-//                                                                      //
-// Selecting a check button will generate the event:                    //
-// kC_COMMAND, kCM_CHECKBUTTON, button id, user data.                   //
-//                                                                      //
-// Selecting a radio button will generate the event:                    //
-// kC_COMMAND, kCM_RADIOBUTTON, button id, user data.                   //
-//                                                                      //
-// If a command string has been specified (via SetCommand()) then this  //
-// command string will be executed via the interpreter whenever a       //
-// button is selected. A command string can contain the macros:         //
-// $MSG   -- kC_COMMAND, kCM[CHECK|RADIO]BUTTON packed message          //
-//           (use GET_MSG() and GET_SUBMSG() to unpack)                 //
-// $PARM1 -- button id                                                  //
-// $PARM2 -- user data pointer                                          //
-// Before executing these macros are expanded into the respective       //
-// Long_t's                                                             //
-//                                                                      //
-// TGSplitButton implements a button with added menu functionality.     //
-// There are 2 modes of operation available.                            //
-//                                                                      //
-// If the button is split, a menu will popup when the menu area of the  //
-// button is clicked. Activating a menu item changes the functionality  //
-// of the button by having it emit a additional signal when it is       //
-// clicked. The signal emitted when the button is clicked, is the       //
-// ItemClicked(Int_t) signal with a different fixed value for the       //
-// Int_t that corresponds to the id of the activated menu entry.        //
-//                                                                      //
-// If the button is not split, clicking it will popup the menu and the  //
-// ItemClicked(Int_t) signal will be emitted when a menu entry is       //
-// acitvated. The value of the Int_t is again equal to the value of     //
-// the id of the activated menu entry.                                  //
-//                                                                      //
-// The mode of operation of a SplitButton can be changed on the fly     //
-// by calling the SetSplit(Bool_t) method.                              //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGButton
+    \ingroup guiwidgets
+
+A button abstract base class. It defines general button behaviour.
+
+*/
+
+
+/** \class TGTextButton
+    \ingroup guiwidgets
+
+Yield an action as soon as it is clicked. This buttons usually provides fast access to
+frequently used or critical commands. It may appear alone or placed in a group.
+
+The action it performs can be inscribed with a meaningful tooltip
+set by `SetToolTipText(const char* text, Long_t delayms=400).
+
+The text button has a label indicating the action to be taken when
+the button is pressed. The text can be a hot string ("&Exit") that
+defines the label "Exit" and keyboard mnemonics Alt+E for button
+selection. A button label can be changed by SetText(new_label).
+
+Selecting a text or picture button will generate the event:
+  - kC_COMMAND, kCM_BUTTON, button id, user data.
+*/
+
+
+/** \class TGPictureButton
+    \ingroup guiwidgets
+
+Yield an action as soon as it is clicked. This buttons usually provides fast access to
+frequently used or critical commands. It may appear alone or placed in a group.
+
+The action it performs can be inscribed with a meaningful tooltip
+set by `SetToolTipText(const char* text, Long_t delayms=400).
+
+The text button has a label indicating the action to be taken when
+the button is pressed. The text can be a hot string ("&Exit") that
+defines the label "Exit" and keyboard mnemonics Alt+E for button
+selection. A button label can be changed by SetText(new_label).
+
+Selecting a text or picture button will generate the event:
+  - kC_COMMAND, kCM_BUTTON, button id, user data.
+*/
+
+
+/** \class TGCheckButton
+    \ingroup guiwidgets
+
+Selects different options. Like text buttons, they have text or hot string as a label.
+
+Selecting a check button will generate the event:
+  - kC_COMMAND, kCM_CHECKBUTTON, button id, user data.
+
+If a command string has been specified (via SetCommand()) then this
+command string will be executed via the interpreter whenever a
+button is selected. A command string can contain the macros:
+
+  - $MSG   -- kC_COMMAND, kCMCHECKBUTTON packed message
+              (use GET_MSG() and GET_SUBMSG() to unpack)
+  - $PARM1 -- button id
+  - $PARM2 -- user data pointer
+
+Before executing these macros are expanded into the respective Long_t's
+*/
+
+
+/** \class TGRadioButton
+    \ingroup guiwidgets
+
+Selects different options. Like text buttons, they have text or hot string as a label.
+
+Radio buttons are grouped usually in logical sets of two or more
+buttons to present mutually exclusive choices.
+
+Selecting a radio button will generate the event:
+  - kC_COMMAND, kCM_RADIOBUTTON, button id, user data.
+
+If a command string has been specified (via SetCommand()) then this
+command string will be executed via the interpreter whenever a
+button is selected. A command string can contain the macros:
+
+  - $MSG   -- kC_COMMAND, kCMRADIOBUTTON packed message
+              (use GET_MSG() and GET_SUBMSG() to unpack)
+  - $PARM1 -- button id
+  - $PARM2 -- user data pointer
+
+Before executing these macros are expanded into the respective Long_t's
+*/
+
+
+/** \class TGSplitButton
+    \ingroup guiwidgets
+
+Implements a button with added menu functionality.
+There are 2 modes of operation available.
+
+If the button is split, a menu will popup when the menu area of the
+button is clicked. Activating a menu item changes the functionality
+of the button by having it emit a additional signal when it is
+clicked. The signal emitted when the button is clicked, is the
+ItemClicked(Int_t) signal with a different fixed value for the
+Int_t that corresponds to the id of the activated menu entry.
+
+If the button is not split, clicking it will popup the menu and the
+ItemClicked(Int_t) signal will be emitted when a menu entry is
+activated. The value of the Int_t is again equal to the value of
+the id of the activated menu entry.
+
+The mode of operation of a SplitButton can be changed on the fly
+by calling the SetSplit(Bool_t) method.
+*/
+
 
 #include "TGButton.h"
 #include "TGWidget.h"
@@ -576,7 +623,7 @@ TGTextButton::~TGTextButton()
 
 void TGTextButton::Layout()
 {
-   delete fTLayout;
+   SafeDelete(fTLayout);
 
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
@@ -2119,7 +2166,7 @@ void TGRadioButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a menu button widget. The hotstring will be adopted and
-/// deleted by the menu button. This constructior creates a
+/// deleted by the menu button. This constructor creates a
 /// menubutton with a popup menu attached that appears when the
 /// button for it is clicked. The popup menu is adopted.
 
@@ -3135,7 +3182,7 @@ Bool_t TGSplitButton::HandleMotion(Event_t *event)
 void TGSplitButton::Layout()
 {
    UInt_t dummya = 0, dummyb = 0;
-   delete fTLayout;
+   SafeDelete(fTLayout);
 
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {

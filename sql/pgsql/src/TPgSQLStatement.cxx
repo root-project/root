@@ -27,6 +27,8 @@
 
 #include <cstdlib>
 
+#include <pg_config.h> // to get PG_VERSION_NUM
+
 #define pgsql_success(x) (((x) == PGRES_EMPTY_QUERY) \
                         || ((x) == PGRES_COMMAND_OK) \
                         || ((x) == PGRES_TUPLES_OK))
@@ -805,7 +807,8 @@ Bool_t TPgSQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
    if (!SetSQLParamType(npar, kFALSE, 0, maxsize)) return kFALSE;
 
-   strlcpy(fBind[npar], value, maxsize);
+   if (fBind[npar] && value)
+      strlcpy(fBind[npar], value, (maxsize > kBindStringSize) ? maxsize : kBindStringSize);
 
    return kTRUE;
 }
@@ -813,13 +816,14 @@ Bool_t TPgSQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set parameter value as binary data.
 
-Bool_t TPgSQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
+Bool_t TPgSQLStatement::SetBinary(Int_t npar, void *mem, Long_t size, Long_t maxsize)
 {
    if (size > maxsize) maxsize = size;
 
    if (!SetSQLParamType(npar, kTRUE, size, maxsize)) return kFALSE;
 
-   memcpy(fBind[npar], mem, size);
+   if (fBind[npar] && mem)
+      memcpy(fBind[npar], mem, size);
 
    return kTRUE;
 }

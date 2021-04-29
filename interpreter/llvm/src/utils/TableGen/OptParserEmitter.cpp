@@ -1,9 +1,8 @@
 //===- OptParserEmitter.cpp - Table Driven Command Line Parsing -----------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -298,5 +297,31 @@ void EmitOptParser(RecordKeeper &Records, raw_ostream &OS) {
     OS << ")\n";
   }
   OS << "#endif // OPTION\n";
+
+  OS << "\n";
+  OS << "#ifdef OPTTABLE_ARG_INIT\n";
+  OS << "//////////\n";
+  OS << "// Option Values\n\n";
+  for (unsigned I = 0, E = Opts.size(); I != E; ++I) {
+    const Record &R = *Opts[I];
+    if (isa<UnsetInit>(R.getValueInit("ValuesCode")))
+      continue;
+    OS << "{\n";
+    OS << "bool ValuesWereAdded;\n";
+    OS << R.getValueAsString("ValuesCode");
+    OS << "\n";
+    for (const std::string &Pref : R.getValueAsListOfStrings("Prefixes")) {
+      OS << "ValuesWereAdded = Opt.addValues(";
+      std::string S = (Pref + R.getValueAsString("Name")).str();
+      write_cstring(OS, S);
+      OS << ", Values);\n";
+      OS << "(void)ValuesWereAdded;\n";
+      OS << "assert(ValuesWereAdded && \"Couldn't add values to "
+            "OptTable!\");\n";
+    }
+    OS << "}\n";
+  }
+  OS << "\n";
+  OS << "#endif // OPTTABLE_ARG_INIT\n";
 }
 } // end namespace llvm

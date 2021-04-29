@@ -20,14 +20,15 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGToolBar                                                            //
-//                                                                      //
-// A toolbar is a composite frame that contains TGPictureButtons.       //
-// Often used in combination with a TGHorizontal3DLine.                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGToolBar
+\ingroup guiwidgets
+
+A toolbar is a composite frame that contains TGPictureButtons.
+Often used in combination with a TGHorizontal3DLine.
+
+*/
+
 
 #include "TGToolBar.h"
 #include "TList.h"
@@ -300,7 +301,7 @@ void TGToolBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    while ((f = (TGFrameElement *) next())) {
       if (f->fFrame->InheritsFrom(TGPictureButton::Class())) {
          if (!gROOT->ClassSaved(TGPictureButton::Class())) {
-            //  declare a structure used for pictute buttons
+            //  declare a structure used for picture buttons
             out << std::endl << "   ToolBarData_t t;" << std::endl;
          }
 

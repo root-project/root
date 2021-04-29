@@ -367,6 +367,25 @@ void MethodDL::ProcessOptions()
          settings.optimizer = DNN::EOptimizer::kAdam;
          settings.optimizerName = "ADAM";
       }
+      // check for specific optimizer parameters
+      std::vector<TString> optimParamLabels = {"_beta1", "_beta2", "_eps", "_rho"};
+      //default values
+      std::map<TString, double> defaultValues = {
+         {"ADADELTA_eps", 1.E-8}, {"ADADELTA_rho", 0.95},
+         {"ADAGRAD_eps", 1.E-8},
+         {"ADAM_beta1", 0.9},     {"ADAM_beta2", 0.999}, {"ADAM_eps", 1.E-7},
+         {"RMSPROP_eps", 1.E-7}, {"RMSPROP_rho", 0.9},
+      };
+      for (auto &pN : optimParamLabels) {
+         TString optimParamName = settings.optimizerName + pN;
+         // check if optimizer has default values for this specific  parameters
+         if (defaultValues.count(optimParamName) > 0) {
+            double defValue = defaultValues[optimParamName];
+            double val = fetchValueTmp(block, optimParamName, defValue);
+            // create entry in settings for this optimizer parameter
+            settings.optimizerParams[optimParamName] = val;
+         }
+      }
 
       fTrainingSettings.push_back(settings);
    }
@@ -1341,24 +1360,32 @@ void MethodDL::TrainDeepNet()
             new DNN::TSGD<Architecture_t, Layer_t, DeepNet_t>(settings.learningRate, deepNet, settings.momentum));
          break;
 
-      case EOptimizer::kAdam:
+      case EOptimizer::kAdam: {
          optimizer = std::unique_ptr<DNN::TAdam<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TAdam<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate));
+            new DNN::TAdam<Architecture_t, Layer_t, DeepNet_t>(
+               deepNet, settings.learningRate, settings.optimizerParams["ADAM_beta1"],
+               settings.optimizerParams["ADAM_beta2"], settings.optimizerParams["ADAM_eps"]));
          break;
+      }
 
       case EOptimizer::kAdagrad:
          optimizer = std::unique_ptr<DNN::TAdagrad<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TAdagrad<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate));
+            new DNN::TAdagrad<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate,
+                                                                  settings.optimizerParams["ADAGRAD_eps"]));
          break;
 
       case EOptimizer::kRMSProp:
          optimizer = std::unique_ptr<DNN::TRMSProp<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TRMSProp<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate, settings.momentum));
+            new DNN::TRMSProp<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate, settings.momentum,
+                                                                  settings.optimizerParams["RMSPROP_rho"],
+                                                                  settings.optimizerParams["RMSPROP_eps"]));
          break;
 
       case EOptimizer::kAdadelta:
          optimizer = std::unique_ptr<DNN::TAdadelta<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TAdadelta<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate));
+            new DNN::TAdadelta<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate,
+                                                                   settings.optimizerParams["ADADELTA_rho"],
+                                                                   settings.optimizerParams["ADADELTA_eps"]));
          break;
       }
 
@@ -1374,20 +1401,36 @@ void MethodDL::TrainDeepNet()
       std::chrono::time_point<std::chrono::system_clock> tstart, tend;
       tstart = std::chrono::system_clock::now();
 
+      // function building string with optimizer parameters values for logging
+      auto optimParametersString = [&]() {
+         TString optimParameters;
+         for ( auto & element :  settings.optimizerParams) {
+            TString key = element.first;
+            key.ReplaceAll(settings.optimizerName + "_", "");  // strip optimizerName_
+            double value = element.second;
+            if (!optimParameters.IsNull())
+               optimParameters += ",";
+            else
+               optimParameters += " (";
+            optimParameters += TString::Format("%s=%g", key.Data(), value);
+         }
+         if (!optimParameters.IsNull())
+            optimParameters += ")";
+         return optimParameters;
+      };
+
       Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ": "
             << " Optimizer " << settings.optimizerName
-            << " Learning rate = " << settings.learningRate
-            << " regularization " << (char) settings.regularization
-            << " minimum error = " << minValError
-            << Endl;
+            << optimParametersString()
+            << " Learning rate = " << settings.learningRate << " regularization " << (char)settings.regularization
+            << " minimum error = " << minValError << Endl;
       if (!fInteractive) {
          std::string separator(62, '-');
          Log() << separator << Endl;
          Log() << std::setw(10) << "Epoch"
-               << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Val. Err."
-               << std::setw(12) << "t(s)/epoch" << std::setw(12)  << "t(s)/Loss"
-               << std::setw(12) << "nEvents/s"
-               << std::setw(12) << "Conv. Steps" << Endl;
+               << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Val. Err." << std::setw(12)
+               << "t(s)/epoch" << std::setw(12) << "t(s)/Loss" << std::setw(12) << "nEvents/s" << std::setw(12)
+               << "Conv. Steps" << Endl;
          Log() << separator << Endl;
       }
 

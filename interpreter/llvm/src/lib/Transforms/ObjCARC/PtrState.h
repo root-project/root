@@ -1,9 +1,8 @@
-//===--- PtrState.h - ARC State for a Ptr -------------------*- C++ -*-----===//
+//===- PtrState.h - ARC State for a Ptr -------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -19,12 +18,16 @@
 
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Analysis/ObjCARCInstKind.h"
-#include "llvm/IR/Instruction.h"
-#include "llvm/IR/Value.h"
-#include "llvm/Support/Debug.h"
-#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/Compiler.h"
 
 namespace llvm {
+
+class BasicBlock;
+class Instruction;
+class MDNode;
+class raw_ostream;
+class Value;
+
 namespace objcarc {
 
 class ARCMDKindCache;
@@ -32,7 +35,7 @@ class ProvenanceAnalysis;
 
 /// \enum Sequence
 ///
-/// \brief A sequence of states that a pointer may go through in which an
+/// A sequence of states that a pointer may go through in which an
 /// objc_retain and objc_release are actually needed.
 enum Sequence {
   S_None,
@@ -47,7 +50,7 @@ enum Sequence {
 raw_ostream &operator<<(raw_ostream &OS,
                         const Sequence S) LLVM_ATTRIBUTE_UNUSED;
 
-/// \brief Unidirectional information about either a
+/// Unidirectional information about either a
 /// retain-decrement-use-release sequence or release-use-decrement-retain
 /// reverse sequence.
 struct RRInfo {
@@ -63,14 +66,14 @@ struct RRInfo {
   /// of any intervening side effects.
   ///
   /// KnownSafe is true when either of these conditions is satisfied.
-  bool KnownSafe;
+  bool KnownSafe = false;
 
   /// True of the objc_release calls are all marked with the "tail" keyword.
-  bool IsTailCallRelease;
+  bool IsTailCallRelease = false;
 
   /// If the Calls are objc_release calls and they all have a
   /// clang.imprecise_release tag, this is the metadata tag.
-  MDNode *ReleaseMetadata;
+  MDNode *ReleaseMetadata = nullptr;
 
   /// For a top-down sequence, the set of objc_retains or
   /// objc_retainBlocks. For bottom-up, the set of objc_releases.
@@ -82,11 +85,9 @@ struct RRInfo {
 
   /// If this is true, we cannot perform code motion but can still remove
   /// retain/release pairs.
-  bool CFGHazardAfflicted;
+  bool CFGHazardAfflicted = false;
 
-  RRInfo()
-      : KnownSafe(false), IsTailCallRelease(false), ReleaseMetadata(nullptr),
-        CFGHazardAfflicted(false) {}
+  RRInfo() = default;
 
   void clear();
 
@@ -95,16 +96,16 @@ struct RRInfo {
   bool Merge(const RRInfo &Other);
 };
 
-/// \brief This class summarizes several per-pointer runtime properties which
+/// This class summarizes several per-pointer runtime properties which
 /// are propagated through the flow graph.
 class PtrState {
 protected:
   /// True if the reference count is known to be incremented.
-  bool KnownPositiveRefCount;
+  bool KnownPositiveRefCount = false;
 
   /// True if we've seen an opportunity for partial RR elimination, such as
   /// pushing calls into a CFG triangle or into one side of a CFG diamond.
-  bool Partial;
+  bool Partial = false;
 
   /// The current position in the sequence.
   unsigned char Seq : 8;
@@ -112,7 +113,7 @@ protected:
   /// Unidirectional information about the current sequence.
   RRInfo RRI;
 
-  PtrState() : KnownPositiveRefCount(false), Partial(false), Seq(S_None) {}
+  PtrState() : Seq(S_None) {}
 
 public:
   bool IsKnownSafe() const { return RRI.KnownSafe; }
@@ -165,7 +166,7 @@ public:
 };
 
 struct BottomUpPtrState : PtrState {
-  BottomUpPtrState() : PtrState() {}
+  BottomUpPtrState() = default;
 
   /// (Re-)Initialize this bottom up pointer returning true if we detected a
   /// pointer with nested releases.
@@ -186,7 +187,7 @@ struct BottomUpPtrState : PtrState {
 };
 
 struct TopDownPtrState : PtrState {
-  TopDownPtrState() : PtrState() {}
+  TopDownPtrState() = default;
 
   /// (Re-)Initialize this bottom up pointer returning true if we detected a
   /// pointer with nested releases.
@@ -205,6 +206,7 @@ struct TopDownPtrState : PtrState {
 };
 
 } // end namespace objcarc
+
 } // end namespace llvm
 
-#endif
+#endif // LLVM_LIB_TRANSFORMS_OBJCARC_PTRSTATE_H

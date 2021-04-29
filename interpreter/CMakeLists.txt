@@ -4,8 +4,14 @@ if (NOT builtin_clang)
 endif()
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
+set(LLVM_APPEND_VC_REV OFF CACHE BOOL "")
+set(LLVM_ENABLE_BINDINGS OFF CACHE BOOL "")
+set(LLVM_ENABLE_FFI OFF CACHE BOOL "")
+set(LLVM_ENABLE_OCAMLDOC OFF CACHE BOOL "")
+set(LLVM_ENABLE_Z3_SOLVER OFF CACHE BOOL "")
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
+set(LLVM_INCLUDE_BENCHMARKS OFF CACHE BOOL "")
 set(CLANG_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "")
 set(CLANG_BUILD_TOOLS OFF CACHE BOOL "")
@@ -28,14 +34,15 @@ set(LLVM_BUILD_TOOLS OFF CACHE BOOL "")
 set(LLVM_TOOL_LLVM_AR_BUILD OFF CACHE BOOL "")
 set(CLANG_TOOL_CLANG_OFFLOAD_BUNDLER_BUILD OFF CACHE BOOL "")
 set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
+# Support gcc 4.8 and higher.
+set(LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN ON CACHE BOOL "")
 
 # will be set again in case NOT builtin_llvm
 set(LLVM_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm/src")
 if (clad)
   set(CLING_BUILD_PLUGINS ON)
 endif()
-set(LLVM_EXTERNAL_CLING_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cling" CACHE STRING "")
-set(LLVM_EXTERNAL_PROJECTS "cling" CACHE STRING "")
+
 # We only use llvm/clang through TCling which is (with the help of core/meta) already taking a lock
 # to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
 # mechanism.
@@ -83,7 +90,7 @@ elseif(ROOT_ARCHITECTURE MATCHES macosxarm64)
   set(ROOT_CLING_TARGET "AArch64")
 elseif(ROOT_ARCHITECTURE MATCHES macosx)
   set(ROOT_CLING_TARGET "X86")
-elseif(ROOT_ARCHITECTURE MATCHES win32)
+elseif(ROOT_ARCHITECTURE MATCHES win32 OR ROOT_ARCHITECTURE MATCHES win64)
   set(ROOT_CLING_TARGET "X86")
 else()
   set(ROOT_CLING_TARGET "all")
@@ -202,29 +209,32 @@ if(builtin_llvm)
   #---Disable VCS writing to prevent that we always have to rebuild when someone touched the git HEAD
   set(LLVM_APPEND_VC_REV OFF CACHE BOOL "Disabled LLVM revision dependency" FORCE)
 
-#---Add the sub-directory excluding all the targets from all-----------------------------------------
+  #---Add the sub-directory excluding all the targets from all-----------------------------------------
   if(CMAKE_GENERATOR MATCHES "Xcode")
     add_subdirectory(llvm/src)
   else()
     add_subdirectory(llvm/src EXCLUDE_FROM_ALL)
   endif()
 
-  #---Make LLVM compilation flags public---------------------------------------------------------------
-  # Extract the compilation flags from LLVM and make them public to the
-  # rest of ROOT so that we can compile against LLVM with matching flags.
-
-  # LLVM doesn't really give us a API to get this with an in-source build
-  # so we just use the normal way of doing this and read the llvm directory
-  # compilation properties.
-  get_directory_property(LLVM_DEFS DIRECTORY llvm/src COMPILE_DEFINITIONS)
-  # Turns DEFINE1;DEFINE2 to -DDEFINE1 -DDEFINE2
-  string (REPLACE ";" " -D" LLVM_DEFS ";${LLVM_DEFS}")
-  # CACHE variable that contains the additional flags that LLVM needs.
-  set(ROOT_LLVM_FLAGS "${LLVM_DEFS}" CACHE STRING "" FORCE)
+  set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include
+    ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include
+    CACHE STRING "LLVM include directories."
+    )
+  #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
+  set(llvmconfigfile "${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/CMakeLists.txt")
+  file(READ ${llvmconfigfile} _filestr)
+  foreach(versionpart LLVM_VERSION_MAJOR LLVM_VERSION_MINOR LLVM_VERSION_PATCH)
+    if("${_filestr}" MATCHES "set[(](${versionpart}[^)]+)")
+      string(REGEX REPLACE " *${versionpart} ([^)]+).*" "\\1" ${versionpart} "${CMAKE_MATCH_1}")
+    else()
+      MESSAGE(FATAL_ERROR "Cannot extract LLVM version number (${versionpart}) from ${llvmconfigfile}")
+    endif()
+  endforeach()
+  set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" PARENT_SCOPE)
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
-  find_program(LLVM_CONFIG NAMES "llvm-config" "llvm-config-5.0")
+  find_program(LLVM_CONFIG NAMES "llvm-config" "llvm-config-9.0")
   if(LLVM_CONFIG)
     message(STATUS "Found LLVM_CONFIG as ${LLVM_CONFIG}")
     set(CONFIG_COMMAND ${LLVM_CONFIG}
@@ -278,6 +288,8 @@ else()
   set(LLVM_BINARY_DIR ${LLVM_OBJ_ROOT} CACHE PATH "Path to LLVM build tree")
   set(LLVM_MAIN_SRC_DIR ${MAIN_SRC_DIR} CACHE PATH "Path to LLVM source tree")
 
+  set(LLVM_DIR "${LLVM_BINARY_DIR}")
+
   # Normalize LLVM_CMAKE_PATH. --cmakedir might contain backslashes.
   # CMake assumes slashes as PATH.
   file(TO_CMAKE_PATH ${LLVM_CONFIG_CMAKE_PATH} LLVM_CMAKE_PATH)
@@ -321,10 +333,10 @@ else()
   include(VersionFromVCS)
 
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "5\\.0(|\\.[0-9]+)")
+  if (${PACKAGE_VERSION} MATCHES "9\\.0(|\\.[0-9]+)")
     message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
   else()
-    message(FATAL_ERROR "LLVM version different from ROOT supported, please try 5.0.x")
+    message(FATAL_ERROR "LLVM version different from ROOT supported, please try 9.0.x")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
@@ -403,47 +415,6 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
     endif()
   endif()
 
-  set( CLANG_BUILT_STANDALONE 1 )
-  set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
-
-  # must be set before add_subdirectory(cling): it can change the value of LLVM_BINARY_DIR
-  set(LLVM_DIR "${LLVM_BINARY_DIR}")
-  if (builtin_clang)
-    # For builtin LLVM this is set in interpreter/llvm/src/CMakeLists.txt
-    set(Clang_DIR ${LLVM_BINARY_DIR}/tools/clang/)
-    add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
-  else()
-    set(Clang_DIR ${LLVM_BINARY_DIR}/lib/cmake/clang/)
-    add_subdirectory(cling)
-  endif()
-
-endif(builtin_llvm)
-
-#---Export the include directories------------------------------------------------------------------
-if (builtin_clang)
-  set(CLANG_INCLUDE_DIRS
-    ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
-    ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include
-    CACHE STRING "Clang include directories.")
-endif()
-
-if(builtin_llvm)
-  set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include
-    ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include
-    CACHE STRING "LLVM include directories."
-    )
-  #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
-  set(llvmconfigfile "${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/CMakeLists.txt")
-  file(READ ${llvmconfigfile} _filestr)
-  foreach(versionpart LLVM_VERSION_MAJOR LLVM_VERSION_MINOR LLVM_VERSION_PATCH)
-    if("${_filestr}" MATCHES "set[(](${versionpart}[^)]+)")
-      string(REGEX REPLACE " *${versionpart} ([^)]+).*" "\\1" ${versionpart} "${CMAKE_MATCH_1}")
-    else()
-      MESSAGE(FATAL_ERROR "Cannot extract LLVM version number (${versionpart}) from ${llvmconfigfile}")
-    endif()
-  endforeach()
-  set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" PARENT_SCOPE)
-else()
   set(LLVM_INCLUDE_DIRS ${LLVM_MAIN_INCLUDE_DIR}
     CACHE STRING "System LLVM include directories."
     )
@@ -451,7 +422,119 @@ else()
   # llvm version and set it in clang version.
   # FIXME: This is a very ugly workaround. Is there a better way to do this?
   set(LLVM_VERSION ${CLANG_VERSION} PARENT_SCOPE)
+
+  # We are in the case of NOT builtin_llvm
+  if (builtin_clang)
+    add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
+  endif(builtin_clang)
+
+  set( CLANG_BUILT_STANDALONE 1 )
+  set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
+endif(builtin_llvm)
+
+if (builtin_clang)
+  # For builtin LLVM this is set in interpreter/llvm/src/CMakeLists.txt
+  set(Clang_DIR "${LLVM_BINARY_DIR}/tools/clang/")
+  set(CLANG_INCLUDE_DIRS
+    ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
+    ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include
+    CACHE STRING "Clang include directories.")
+else()
+  set(Clang_DIR "${LLVM_BINARY_DIR}/lib/cmake/clang/")
 endif()
+
+add_custom_target(CLING)
+set(CLING_LIBRARIES clingInterpreter;clingMetaProcessor;clingUtils CACHE STRING "")
+if (builtin_cling)
+
+  # Extract the compilation flags from LLVM and make them public to the
+  # rest of ROOT so that we can compile against LLVM with matching flags.
+
+  # LLVM doesn't really give us a API to get this with an in-source build
+  # so we just use the normal way of doing this and read the llvm directory
+  # compilation properties.
+  get_directory_property(LLVM_DEFS DIRECTORY llvm/src COMPILE_DEFINITIONS)
+  # Turns DEFINE1;DEFINE2 to -DDEFINE1 -DDEFINE2
+  string (REPLACE ";" " -D" LLVM_DEFS ";${LLVM_DEFS}")
+
+  # FIXME: Reduce the usage of CLING_CXXFLAGS by adding a cmake routine in
+  # RootMacros.cmake for all cling-dependent libraries
+  if(MSVC)
+    set(CLING_CXXFLAGS " ${LLVM_DEFS} -DNOMINMAX -D_XKEYCHECK_H")
+  else()
+    # FIXME: Work hard to remove -Wno-shadow and -Wno-unused-parameter
+    set(CLING_CXXFLAGS " ${LLVM_DEFS} -fvisibility=hidden -fno-strict-aliasing -Wwrite-strings -Wno-shadow -Wno-unused-parameter -Wno-deprecated-declarations")
+  endif()
+
+  # Set the flags in the parent scope for the rest of the cling-based libraries in ROOT.
+  set(CLING_CXXFLAGS ${CLING_CXXFLAGS} PARENT_SCOPE)
+
+  string(APPEND CMAKE_CXX_FLAGS ${CLING_CXXFLAGS})
+  if (LLVM_ENABLE_PIC)
+    # FIXME: LLVM_ENABLE_PIC is ON by default, however not propagated to cling.
+    # FIXME: fPIC is required by the linker for libCling. Can we do that using
+    # cmake: set_property(TARGET clingInterpreter PROPERTY POSITION_INDEPENDENT_CODE ON)?
+    string(APPEND CMAKE_CXX_FLAGS " -fPIC")
+    string(APPEND CMAKE_C_FLAGS " -fPIC")
+  endif(LLVM_ENABLE_PIC)
+  # Avoid cling being installed under ROOTSYS/include.
+  add_subdirectory(cling EXCLUDE_FROM_ALL)
+  add_dependencies(CLING ${CLING_LIBRARIES})
+
+  set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include CACHE STRING "")
+
+
+
+  #---These are the libraries that we link ROOT with CLING---------------------------
+  if (builtin_llvm)
+    add_dependencies(CLING intrinsics_gen)
+  endif()
+  if (builtin_clang)
+    add_dependencies(CLING clang-headers clang-resource-headers)
+    # Windows (and some other LLVM setups) do not have that target available.
+    if (TARGET clang-cmake-exports)
+      add_dependencies(CLING clang-cmake-exports)
+    endif()
+  endif()
+else()
+  set(Cling_DIR ${LLVM_BINARY_DIR}/lib/cmake/cling/)
+  find_package(Cling REQUIRED CONFIG PATHS ${Cling_DIR} "${Cling_DIR}/lib/cmake/cling" "${Cling_DIR}/cmake" NO_DEFAULT_PATH)
+
+  # We need to consider not just the direct link dependencies, but also the
+  # transitive link dependencies. Do this by starting with the set of direct
+  # dependencies, then the dependencies of those dependencies, and so on.
+  set(new_libs "clingMetaProcessor")
+  set(link_libs ${new_libs})
+  while(NOT "${new_libs}" STREQUAL "")
+    foreach(lib ${new_libs})
+      if(TARGET ${lib})
+        get_target_property(lib_type ${lib} TYPE)
+        if("${lib_type}" STREQUAL "STATIC_LIBRARY")
+          list(APPEND static_libs ${lib})
+        else()
+          list(APPEND other_libs ${lib})
+        endif()
+        get_target_property(transitive_libs ${lib} INTERFACE_LINK_LIBRARIES)
+        if (NOT transitive_libs)
+          continue()
+        endif()
+        foreach(transitive_lib ${transitive_libs})
+          list(FIND link_libs ${transitive_lib} idx)
+          #if(TARGET ${transitive_lib} AND idx EQUAL -1)
+          if(idx EQUAL -1)
+            list(APPEND newer_libs ${transitive_lib})
+            list(APPEND link_libs ${transitive_lib})
+          endif()
+        endforeach(transitive_lib)
+      endif()
+    endforeach(lib)
+    set(new_libs ${newer_libs})
+    set(newer_libs "")
+  endwhile()
+  set(CLING_DEPEND_LIBS ${link_libs} CACHE STRING "")
+endif(builtin_cling)
+
+
 
 #---Avoid to dependencies to system (e.g. atomic) libraries without modifying the LLVM code----------
 if(CMAKE_SYSTEM_NAME STREQUAL Darwin)

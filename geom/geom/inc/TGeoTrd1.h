@@ -24,6 +24,8 @@ protected:
    Double_t              fDz;  // half length in Z
 
    // methods
+   TGeoTrd1(const TGeoTrd1&) = delete;
+   TGeoTrd1& operator=(const TGeoTrd1&) = delete;
 
 public:
    // constructors

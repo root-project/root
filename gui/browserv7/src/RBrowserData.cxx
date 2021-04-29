@@ -94,10 +94,8 @@ Browsable::RElementPath_t RBrowserData::DecomposePath(const std::string &strpath
 
 bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply)
 {
-   if (gDebug > 0)
-      printf("REQ: Do decompose path '%s'\n",request.path.c_str());
-
-   auto path = DecomposePath(request.path, true);
+   auto path = fWorkingPath;
+   path.insert(path.end(), request.path.begin(), request.path.end());
 
    if ((path != fLastPath) || !fLastElement) {
 
@@ -239,9 +237,21 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable
    }
 
    while (pos < (int) path.size()) {
+      std::string subname = path[pos];
+      int indx = Browsable::RElement::ExtractItemIndex(subname);
+
       auto iter = elem->GetChildsIter();
-      if (!iter || !iter->Find(path[pos]))
+      if (!iter)
          return nullptr;
+
+      if (!iter->Find(subname, indx)) {
+         if (indx < 0)
+            return nullptr;
+         iter = elem->GetChildsIter();
+         if (!iter || !iter->Find(subname))
+            return nullptr;
+      }
+
       elem = iter->GetElement();
 
       if (!elem)

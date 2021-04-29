@@ -1,9 +1,8 @@
 //===- LoopPass.h - LoopPass class ----------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -129,6 +128,9 @@ public:
   // Add a new loop into the loop queue.
   void addLoop(Loop &L);
 
+  // Mark \p L as deleted.
+  void markLoopAsDeleted(Loop &L);
+
   //===--------------------------------------------------------------------===//
   /// SimpleAnalysis - Provides simple interface to update analysis info
   /// maintained by various passes. Note, if required this interface can
@@ -152,6 +154,7 @@ private:
   std::deque<Loop *> LQ;
   LoopInfo *LI;
   Loop *CurrentLoop;
+  bool CurrentLoopDeleted;
 };
 
 // This pass is required by the LCSSA transformation. It is used inside

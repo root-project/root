@@ -141,8 +141,8 @@ namespace ROOT {
       //   protected:
    private:
       void CreateRuleSet( std::vector<ROOT::Internal::TSchemaHelper>& vect, Bool_t ProcessReadRules );
-      TGenericClassInfo(const TGenericClassInfo&); // Not implemented
-      TGenericClassInfo& operator=(const TGenericClassInfo&); // Not implemented
+      TGenericClassInfo(const TGenericClassInfo &) = delete;
+      TGenericClassInfo& operator=(const TGenericClassInfo &) = delete;
 
    private:
       TGenericClassInfo();

@@ -313,7 +313,7 @@ MARKDOWN_SUPPORT       = YES
 # Minimum value: 0, maximum value: 99, default value: 0.
 # This tag requires that the tag MARKDOWN_SUPPORT is set to YES.
 
-TOC_INCLUDE_HEADINGS   = 0
+TOC_INCLUDE_HEADINGS   = 3
 
 # When enabled doxygen tries to link words that correspond to documented
 # classes, or namespaces to their corresponding documentation. Such a link can
@@ -828,16 +828,10 @@ INPUT                  = . \
                          ../../graf3d/g3d/ \
                          ../../graf3d/gl/ \
                          ../../graf3d/gviz3d/ \
-                         ../../gui/fitpanel/ \
-                         ../../gui/ged/ \
-                         ../../gui/gui/ \
-                         ../../gui/guibuilder/ \
-                         ../../gui/guihtml/ \
-                         ../../gui/recorder/ \
-                         ../../gui/sessionviewer/ \
-                         ../../gui/webdisplay \
+                         ../../gui/ \
                          ../../hist/ \
                          ../../html/ \
+                         ../../io/doc/TFile \
                          ../../io/dcache/ \
                          ../../io/gfal/ \
                          ../../io/io/ \

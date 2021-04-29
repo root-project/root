@@ -25,7 +25,6 @@ namespace Browsable {
 
 class TObjectItem : public RItem {
    std::string className; ///< class name
-
 public:
 
    TObjectItem() = default;

@@ -147,15 +147,16 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
    }
    else {
       // when no fFitFunc is present take parameters from FitConfig
-      fParNames.reserve( npar );
+      fParNames.resize( npar );
       for (unsigned int i = 0; i < npar; ++i ) {
-         fParNames.push_back( fconfig.ParSettings(i).Name() );
+         fParNames[i] = fconfig.ParSettings(i).Name();
       }
    }
 
 
    // check for fixed or limited parameters
    unsigned int nfree = 0;
+   if (!fParamBounds.empty()) fParamBounds.clear();
    for (unsigned int ipar = 0; ipar < npar; ++ipar) {
       const ParameterSettings & par = fconfig.ParSettings(ipar);
       if (par.IsFixed() ) fFixedParams[ipar] = true;
@@ -187,6 +188,10 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
 
    // fill error matrix
    // if minimizer provides error provides also error matrix
+   // clear in case of re-filling an existing result
+   if (!fCovMatrix.empty()) fCovMatrix.clear();
+   if (!fGlobalCC.empty())  fGlobalCC.clear();
+
    if (min->Errors() != 0) {
 
       fErrors = std::vector<double>(min->Errors(), min->Errors() + npar ) ;
@@ -562,7 +567,7 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
    if (norm)
       corrFactor = TMath::StudentQuantile(0.5 + cl/2, fNdf) * std::sqrt( fChi2/fNdf );
    else
-      // correction to apply to the errors given a CL different than 1 sigma (cl=0.683) 
+      // correction to apply to the errors given a CL different than 1 sigma (cl=0.683)
       corrFactor = ROOT::Math::normal_quantile(0.5 + cl/2, 1);
 
 

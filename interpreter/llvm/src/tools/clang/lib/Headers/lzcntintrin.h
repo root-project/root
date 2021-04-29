@@ -1,22 +1,8 @@
 /*===---- lzcntintrin.h - LZCNT intrinsics ---------------------------------===
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+ * See https://llvm.org/LICENSE.txt for license information.
+ * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  *
  *===-----------------------------------------------------------------------===
  */
@@ -31,7 +17,8 @@
 /* Define the default attributes for the functions in this file. */
 #define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__, __target__("lzcnt")))
 
-/// \brief Counts the number of leading zero bits in the operand.
+#ifndef _MSC_VER
+/// Counts the number of leading zero bits in the operand.
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -41,13 +28,10 @@
 ///    An unsigned 16-bit integer whose leading zeros are to be counted.
 /// \returns An unsigned 16-bit integer containing the number of leading zero
 ///    bits in the operand.
-static __inline__ unsigned short __DEFAULT_FN_ATTRS
-__lzcnt16(unsigned short __X)
-{
-  return __X ? __builtin_clzs(__X) : 16;
-}
+#define __lzcnt16(X) __builtin_ia32_lzcnt_u16((unsigned short)(X))
+#endif // _MSC_VER
 
-/// \brief Counts the number of leading zero bits in the operand.
+/// Counts the number of leading zero bits in the operand.
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -57,13 +41,14 @@ __lzcnt16(unsigned short __X)
 ///    An unsigned 32-bit integer whose leading zeros are to be counted.
 /// \returns An unsigned 32-bit integer containing the number of leading zero
 ///    bits in the operand.
+/// \see _lzcnt_u32
 static __inline__ unsigned int __DEFAULT_FN_ATTRS
 __lzcnt32(unsigned int __X)
 {
-  return __X ? __builtin_clz(__X) : 32;
+  return __builtin_ia32_lzcnt_u32(__X);
 }
 
-/// \brief Counts the number of leading zero bits in the operand.
+/// Counts the number of leading zero bits in the operand.
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -73,14 +58,16 @@ __lzcnt32(unsigned int __X)
 ///    An unsigned 32-bit integer whose leading zeros are to be counted.
 /// \returns An unsigned 32-bit integer containing the number of leading zero
 ///    bits in the operand.
+/// \see __lzcnt32
 static __inline__ unsigned int __DEFAULT_FN_ATTRS
 _lzcnt_u32(unsigned int __X)
 {
-  return __X ? __builtin_clz(__X) : 32;
+  return __builtin_ia32_lzcnt_u32(__X);
 }
 
 #ifdef __x86_64__
-/// \brief Counts the number of leading zero bits in the operand.
+#ifndef _MSC_VER
+/// Counts the number of leading zero bits in the operand.
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -90,13 +77,11 @@ _lzcnt_u32(unsigned int __X)
 ///    An unsigned 64-bit integer whose leading zeros are to be counted.
 /// \returns An unsigned 64-bit integer containing the number of leading zero
 ///    bits in the operand.
-static __inline__ unsigned long long __DEFAULT_FN_ATTRS
-__lzcnt64(unsigned long long __X)
-{
-  return __X ? __builtin_clzll(__X) : 64;
-}
+/// \see _lzcnt_u64
+#define __lzcnt64(X) __builtin_ia32_lzcnt_u64((unsigned long long)(X))
+#endif // _MSC_VER
 
-/// \brief Counts the number of leading zero bits in the operand.
+/// Counts the number of leading zero bits in the operand.
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -106,10 +91,11 @@ __lzcnt64(unsigned long long __X)
 ///    An unsigned 64-bit integer whose leading zeros are to be counted.
 /// \returns An unsigned 64-bit integer containing the number of leading zero
 ///    bits in the operand.
+/// \see __lzcnt64
 static __inline__ unsigned long long __DEFAULT_FN_ATTRS
 _lzcnt_u64(unsigned long long __X)
 {
-  return __X ? __builtin_clzll(__X) : 64;
+  return __builtin_ia32_lzcnt_u64(__X);
 }
 #endif
 

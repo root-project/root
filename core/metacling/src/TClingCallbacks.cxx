@@ -101,7 +101,8 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          const clang::FileEntry *FE,
                                          llvm::StringRef /*SearchPath*/,
                                          llvm::StringRef /*RelativePath*/,
-                                         const clang::Module * Imported) {
+                                         const clang::Module * Imported,
+                                         clang::SrcMgr::CharacteristicKind FileType) {
    // We found a module. Do not try to do anything else.
    Sema &SemaR = m_Interpreter->getSema();
    if (Imported) {
@@ -172,13 +173,12 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
          // Save state of the preprocessor
          Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
          Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
+         // We parsed 'include' token. Store it.
+         clang::Parser::ParserCurTokRestoreRAII fSavedCurToken(P);
+         // We provide our own way of handling the entire #include "file.c+"
          // After we have saved the token reset the current one to
          // something which is safe (semi colon usually means empty decl)
          Token& Tok = const_cast<Token&>(P.getCurToken());
-         // We parsed 'include' token. We don't need to restore it, because
-         // we provide our own way of handling the entire #include "file.c+"
-         // Thus if we reverted the token back to the parser, we are in
-         // a trouble.
          Tok.setKind(tok::semi);
          // We can't PushDeclContext, because we go up and the routine that pops
          // the DeclContext assumes that we drill down always.

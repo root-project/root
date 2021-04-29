@@ -43,7 +43,7 @@ if(imt)
     DEPENDENCIES
       Core
       Thread
-      MultiProc
+      ${MULTIPROC_LIB}
     BUILTINS
       TBB
   )
@@ -55,7 +55,7 @@ if(imt)
     src/TThreadExecutor.cxx
   )
 
-  target_include_directories(Imt SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
+  target_include_directories(Imt PRIVATE ${TBB_INCLUDE_DIRS})
   target_link_libraries(Imt PRIVATE ${TBB_LIBRARIES})
   set_target_properties(Imt PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
 
@@ -69,7 +69,7 @@ else()
       Imt
     DEPENDENCIES
       Core
-      MultiProc
+      ${MULTIPROC_LIB}
   )
 endif()
 

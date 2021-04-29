@@ -1,9 +1,8 @@
 //===- ConstantInitBuilder.h - Builder for LLVM IR constants ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -266,7 +265,7 @@ public:
   /// (2) finishing the entire builder.
   ///
   /// This is useful for emitting certain kinds of structure which
-  /// contain some sort of summary field, generaly a count, before any
+  /// contain some sort of summary field, generally a count, before any
   /// of the data.  By emitting a placeholder first, the structure can
   /// be emitted eagerly.
   PlaceholderPosition addPlaceholder() {
@@ -295,7 +294,7 @@ public:
     slot = value;
   }
 
-  /// Produce an address which will eventually point to the the next
+  /// Produce an address which will eventually point to the next
   /// position to be filled.  This is computed with an indexed
   /// getelementptr rather than by computing offsets.
   ///

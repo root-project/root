@@ -20,36 +20,40 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGCanvas and TGViewPort and TGContainer                              //
-//                                                                      //
-// A TGCanvas is a frame containing two scrollbars (a horizontal and    //
-// a vertical) and a viewport. The viewport acts as the window through  //
-// which we look at the contents of the container frame.                //
-//                                                                      //
-// A TGContainer frame manages a content area. It can display and       //
-// control a hierarchy of multi-column items, and provides the ability  //
-// to add new items at any time. By default it doesn't map subwindows   //
-// which are items of the container. In this case subwindow must        //
-// provide DrawCopy method, see for example TGLVEntry class.            //
-// It is also possible to use option which allow to map subwindows.     //
-// This option has much slower drawing speed in case of more than 1000  //
-// items placed in container. To activate this option the fMapSubwindows//
-// data member must be set to kTRUE (for example TTVLVContainer class)  //
-//                                                                      //
-//   The TGContainer class can handle the keys:                         //
-//                                                                      //
-//    o  F7, Ctnrl-F - activate search dialog                           //
-//    o  F3, Ctnrl-G - continue search                                  //
-//    o  End - go to the last item in container                         //
-//    o  Home - go to the first item in container                       //
-//    o  PageUp,PageDown,arrow keys - navigate inside container         //
-//    o  Return/Enter - equivalent to double click of the mouse button  //
-//    o  Contrl-A - select/activate all items.                          //
-//    o  Space - invert selection.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGCanvas
+    \ingroup guiwidgets
+
+A frame containing two scrollbars (a horizontal and
+a vertical) and a viewport. The viewport acts as the window through
+which we look at the contents of the container frame.
+
+\class TGContainer
+\ingroup guiwidgets
+
+Manages a content area. It can display and
+control a hierarchy of multi-column items, and provides the ability
+to add new items at any time. By default it doesn't map subwindows
+which are items of the container. In this case subwindow must
+provide DrawCopy method, see for example TGLVEntry class.
+It is also possible to use option which allow to map subwindows.
+This option has much slower drawing speed in case of more than 1000
+items placed in container. To activate this option the fMapSubwindows
+data member must be set to kTRUE (for example TTVLVContainer class)
+
+  The TGContainer class can handle the keys:
+
+  - F7, Ctnrl-F - activate search dialog
+  - F3, Ctnrl-G - continue search
+  - End - go to the last item in container
+  - Home - go to the first item in container
+  - PageUp,PageDown,arrow keys - navigate inside container
+  - Return/Enter - equivalent to double click of the mouse button
+  - Ctnrl-A - select/activate all items.
+  - Space - invert selection.
+
+*/
+
 
 #include "TGCanvas.h"
 #include "TGListView.h"
@@ -228,7 +232,7 @@ void TGViewPort::SetVPos(Int_t ypos)
 
    if (!fContainer) return;
 
-   // for backward comatibility
+   // for backward compatibility
    if (!fContainer->InheritsFrom(TGContainer::Class())) {
       fContainer->Move(fX0, fY0 = ypos);
       return;
@@ -1686,7 +1690,7 @@ TGFrameElement *TGContainer::FindFrame(Int_t x, Int_t y, Bool_t exclude)
 void *TGContainer::FindItem(const TString& name, Bool_t direction,
                             Bool_t caseSensitive, Bool_t subString)
 {
-   // Find a frame which assosiated object has a name containing a "name"
+   // Find a frame which associated object has a name containing a "name"
    // string.
 
    if (name.IsNull()) return 0;
@@ -2172,8 +2176,8 @@ void TGCanvas::MapSubwindows()
       container->MapSubwindows();
       fVport->MapSubwindows();
       fVport->MapWindow();
+      Layout();
    }
-   Layout();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

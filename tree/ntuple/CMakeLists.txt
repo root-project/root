@@ -37,6 +37,8 @@ HEADERS
   ROOT/RPage.hxx
   ROOT/RPageAllocator.hxx
   ROOT/RPagePool.hxx
+  ROOT/RPageSinkBuf.hxx
+  ROOT/RPageSourceFriends.hxx
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageFile.hxx
 SOURCES
@@ -58,6 +60,8 @@ SOURCES
   v7/src/RPage.cxx
   v7/src/RPageAllocator.cxx
   v7/src/RPagePool.cxx
+  v7/src/RPageSinkBuf.cxx
+  v7/src/RPageSourceFriends.cxx
   v7/src/RPageStorage.cxx
   v7/src/RPageStorageFile.cxx
 LINKDEF

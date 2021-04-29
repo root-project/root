@@ -20,6 +20,7 @@
 #include "RooAbsCategory.h"
 #include "RooAbsReal.h"
 #include "RooChangeTracker.h"
+#include "RooRealVar.h"
 
 #include <list>
 #include <vector>
@@ -71,11 +72,20 @@ public:
 
   virtual const RooArgSet* getNative(Int_t index) const;
 
-  virtual Double_t weight() const override;
+  /// Return the weight of the last-retrieved data point.
+  Double_t weight() const override
+  {
+    if (_extWgtArray)
+      return _extWgtArray[_currentWeightIndex];
+    if (_wgtVar)
+      return _wgtVar->getVal();
+
+    return 1.0;
+  }
   virtual Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const override;
   virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const override;
   virtual Double_t weight(Int_t index) const override;
-  virtual Bool_t isWeighted() const override { return (_wgtVar!=0||_extWgtArray!=0) ; }
+  virtual Bool_t isWeighted() const override { return _wgtVar || _extWgtArray; }
 
   RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const override;
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
@@ -628,17 +638,14 @@ public:
   const Double_t* _extWgtErrHiArray ;    //! External weight array - high error
   const Double_t* _extSumW2Array ;       //! External sum of weights array
 
-  mutable Double_t  _curWgt ;      // Weight of current event
-  mutable Double_t  _curWgtErrLo ; // Weight of current event
-  mutable Double_t  _curWgtErrHi ; // Weight of current event
-  mutable Double_t  _curWgtErr ;   // Weight of current event
+  mutable std::size_t _currentWeightIndex{0}; //
 
   RooVectorDataStore* _cache ; //! Optimization cache
   RooAbsArg* _cacheOwner ; //! Cache owner
 
   Bool_t _forcedUpdate ; //! Request for forced cache update 
 
-  ClassDefOverride(RooVectorDataStore,4) // STL-vector-based Data Storage class
+  ClassDefOverride(RooVectorDataStore, 5) // STL-vector-based Data Storage class
 };
 
 

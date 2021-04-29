@@ -418,7 +418,7 @@ public:
    virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
    virtual void            CopyAddresses(TTree*,Bool_t undo = kFALSE);
-   virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1, Option_t *option = "");
+   virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1, Option_t *option = "", Bool_t needCopyAddresses = false);
    virtual TTree          *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual TBasket        *CreateBasket(TBranch*);
    virtual void            DirectoryAutoAdd(TDirectory *);
@@ -540,6 +540,7 @@ public:
    virtual Long64_t        GetZipBytes() const { return fZipBytes; }
    virtual void            IncrementTotalBuffers(Int_t nbytes) { fTotalBuffers += nbytes; }
    Bool_t                  IsFolder() const { return kTRUE; }
+   virtual Bool_t          InPlaceClone(TDirectory *newdirectory, const char *options = "");
    virtual Int_t           LoadBaskets(Long64_t maxmemory = 2000000000);
    virtual Long64_t        LoadTree(Long64_t entry);
    virtual Long64_t        LoadTreeFriend(Long64_t entry, TTree* T);

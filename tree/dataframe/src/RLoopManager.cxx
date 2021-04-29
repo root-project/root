@@ -1,3 +1,11 @@
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "RConfigure.h" // R__USE_IMT
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/GraphNode.hxx"
@@ -66,7 +74,6 @@ static bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
                        const std::string &friendName)
 {
-
    if (!friendName.empty()) {
       // In case of a friend tree, users might prepend its name/alias to the branch names
       const auto friendBName = friendName + "." + branchName;
@@ -79,7 +86,7 @@ static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// This overloads makes sure that the TLeaf has not been already inserted.
+/// This overload makes sure that the TLeaf has not been already inserted.
 static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
                        const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
 {
@@ -143,11 +150,8 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
             // Leaf list
             auto listOfLeaves = branch->GetListOfLeaves();
             if (listOfLeaves->GetEntries() == 1) {
-               auto leaf = static_cast<TLeaf *>(listOfLeaves->At(0));
-               const auto leafName = std::string(leaf->GetName());
-               if (leafName == branchName) {
-                  UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
-               }
+               auto leaf = static_cast<TLeaf *>(listOfLeaves->UncheckedAt(0));
+               UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
             }
 
             for (auto leaf : *listOfLeaves) {

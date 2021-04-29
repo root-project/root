@@ -64,7 +64,7 @@ public:
 
    public:
       /// Default-initialize the iterator as "past the end".
-      Iterator_t(): fEntry(-1), fReader() {}
+      Iterator_t(): fEntry(-1), fReader(nullptr) {}
 
       /// Initialize the iterator with the reader it steers and a
       /// tree entry number; -1 is invalid.
@@ -98,7 +98,7 @@ public:
             this->operator*();
             // Don't set the old entry: op* will if needed, and
             // in most cases it just adds a lot of spinning back
-            // and forth: in most cases teh sequence is ++i; *i.
+            // and forth: in most cases the sequence is ++i; *i.
          }
          return *this;
       }
@@ -142,14 +142,16 @@ public:
       kExternalLoadTree  ///< User code called LoadTree directly.
    };
 
-   static constexpr const char * const fgEntryStatusText[kEntryBeyondEnd + 1] = {
+   static constexpr const char * const fgEntryStatusText[kEntryUnknownError + 1] = {
       "valid entry",
       "the tree does not exist",
       "the tree entry number does not exist",
       "cannot access chain element",
       "problem in opening a chain's file",
       "problem reading dictionary info from tree",
-      "last entry loop has reached its end"
+      "last entry loop has reached its end",
+      "one of the readers was not successfully initialized",
+      "LoadTree return less than -4, likely a 'newer' error code"
    };
 
    TTreeReader();

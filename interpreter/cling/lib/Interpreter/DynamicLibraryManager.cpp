@@ -35,7 +35,7 @@ namespace cling {
       "DYLD_FALLBACK_FRAMEWORK_PATH",
       "DYLD_VERSIONED_FRAMEWORK_PATH",
       */
-  #elif defined(LLVM_ON_WIN32)
+  #elif defined(_WIN32)
       "PATH",
   #endif
     };
@@ -100,7 +100,7 @@ namespace cling {
       llvm::SmallString<512>::iterator IStemEnd = filenameWithExt.end() - 1;
 #endif
       static const char* DyLibExt = ".so";
-#elif defined(LLVM_ON_WIN32)
+#elif defined(_WIN32)
       static const char* DyLibExt = ".dll";
 #else
 # error "Unsupported platform."
@@ -249,6 +249,15 @@ namespace cling {
   bool DynamicLibraryManager::isSharedLibrary(llvm::StringRef libFullPath,
                                               bool* exists /*=0*/) {
     using namespace llvm;
+    auto filetype = sys::fs::get_file_type(libFullPath, /*Follow*/ true);
+    if (filetype != sys::fs::file_type::regular_file) {
+      if (exists) {
+        // get_file_type returns status_error also in case of file_not_found.
+        *exists = filetype != sys::fs::file_type::status_error;
+      }
+      return false;
+    }
+
     file_magic Magic;
     const std::error_code Error = identify_magic(libFullPath, Magic);
     if (exists)
@@ -266,7 +275,7 @@ namespace cling {
 #else
       (Magic == file_magic::elf_shared_object)
 #endif
-#elif defined(LLVM_ON_WIN32)
+#elif defined(_WIN32)
       (Magic == file_magic::pecoff_executable
        || platform::IsDLL(libFullPath.str()))
 #else

@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -71,8 +71,11 @@ if(NOT builtin_nlohmannjson)
   if(fail-on-missing)
     find_package(nlohmann_json REQUIRED)
   else()
-    find_package(nlohmann_json)
-    if(NOT nlohmann_json_FOUND)
+    find_package(nlohmann_json QUIET)
+    if(nlohmann_json_FOUND)
+      get_target_property(_nlohmann_json_inlc nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
+      message(STATUS "Found nlohmann/json.hpp in ${_nlohmann_json_inlc} (found version ${nlohmann_json_VERSION})")
+    else()
       message(STATUS "nlohmann/json.hpp not found. Switching on builtin_nlohmannjson option")
       set(builtin_nlohmannjson ON CACHE BOOL "Enabled because nlohmann/json.hpp not found" FORCE)
     endif()
@@ -133,7 +136,9 @@ if(builtin_freetype)
       BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${freetypebuild}
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypebuild}/freetype.lib ${FREETYPE_LIBRARY}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
-      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
+      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY}
+      TIMEOUT 600
+    )
   else()
     set(_freetype_cflags -O)
     set(_freetype_cc ${CMAKE_C_COMPILER})
@@ -153,7 +158,9 @@ if(builtin_freetype)
                           "CC=${_freetype_cc}" CFLAGS=${_freetype_cflags}
       INSTALL_COMMAND ""
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
+      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY}
+      TIMEOUT 600
+    )
   endif()
   set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/include)
   set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
@@ -206,16 +213,25 @@ if(builtin_lzma)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
+    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+      set(LZMA_URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win64.tar.gz)
+      set(LZMA_URL_HASH SHA256=76ba7cdff547141f6d6810c8600a9d782feca343debde378fc8f6a307cbfd1d2)
+    else()
+      set(LZMA_URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz)
+      set(LZMA_URL_HASH SHA256=a923ee68d836de5492d8de0fec467b9536f2543c8579ca11f4b5e6f46a8cda8c)
+    endif()
     ExternalProject_Add(
       LZMA
-      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
-      URL_HASH SHA256=a923ee68d836de5492d8de0fec467b9536f2543c8579ca11f4b5e6f46a8cda8c
+      URL ${LZMA_URL}
+      URL_HASH ${LZMA_URL_HASH}
       PREFIX LZMA
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
-      LOG_DOWNLOAD 1)
+      LOG_DOWNLOAD 1
+      TIMEOUT 600
+    )
     set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
   else()
     if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
@@ -236,11 +252,33 @@ if(builtin_lzma)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
                         --with-pic --disable-shared --quiet
+                        --disable-scripts --disable-xz --disable-xzdec --disable-lzmadec --disable-lzmainfo --disable-lzma-links
                         CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${LIBLZMA_CFLAGS} LDFLAGS=${LIBLZMA_LDFLAGS}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES})
+      BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES}
+      TIMEOUT 600
+    )
     set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   endif()
+endif()
+
+#---Check for xxHash-----------------------------------------------------------------
+if(NOT builtin_xxhash)
+  message(STATUS "Looking for xxHash")
+  if(fail-on-missing)
+    find_package(xxHash REQUIRED)
+  else()
+    find_package(xxHash)
+    if(NOT xxHash_FOUND)
+      message(STATUS "xxHash not found. Switching on builtin_xxhash option")
+      set(builtin_xxhash ON CACHE BOOL "Enabled because xxHash not found (${builtin_xxhash_description})" FORCE)
+    endif()
+  endif()
+endif()
+
+if(builtin_xxhash)
+  list(APPEND ROOT_BUILTINS xxHash)
+  add_subdirectory(builtins/xxhash)
 endif()
 
 #---Check for ZSTD-------------------------------------------------------------------
@@ -269,25 +307,6 @@ endif()
 if(builtin_zstd)
   list(APPEND ROOT_BUILTINS ZSTD)
   add_subdirectory(builtins/zstd)
-endif()
-
-#---Check for xxHash-----------------------------------------------------------------
-if(NOT builtin_xxhash)
-  message(STATUS "Looking for xxHash")
-  if(fail-on-missing)
-    find_package(xxHash REQUIRED)
-  else()
-    find_package(xxHash)
-    if(NOT xxHash_FOUND)
-      message(STATUS "xxHash not found. Switching on builtin_xxhash option")
-      set(builtin_xxhash ON CACHE BOOL "Enabled because xxHash not found (${builtin_xxhash_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-if(builtin_xxhash)
-  list(APPEND ROOT_BUILTINS xxHash)
-  add_subdirectory(builtins/xxhash)
 endif()
 
 #---Check for LZ4--------------------------------------------------------------------
@@ -403,21 +422,21 @@ if(builtin_afterimage)
   set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
-      set(astepbld "libAfterImage - Win32 Debug")
+      set(astepbld "Debug")
     else()
-      set(astepbld "libAfterImage - Win32 Release")
+      set(astepbld "Release")
     endif()
     ExternalProject_Add(
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      UPDATE_COMMAND ${CMAKE_COMMAND} -E remove_directory zlib
-      CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/builtins/zlib zlib
-      BUILD_COMMAND nmake -nologo -f libAfterImage.mak FREETYPEDIRI=-I${FREETYPE_INCLUDE_DIR}
-                    CFG=${astepbld} NMAKECXXFLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-      INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different libAfterImage.lib <INSTALL_DIR>/lib/.
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
+      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_VERBOSE_MAKEFILE=ON -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR}
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${astepbld}
+      INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different ${astepbld}/libAfterImage.lib <INSTALL_DIR>/lib/
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
+      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
+      TIMEOUT 600
+    )
     set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE)
   else()
     message(STATUS "Building AfterImage library included in ROOT itself")
@@ -460,7 +479,9 @@ if(builtin_afterimage)
                         --with-png ${_pnginclude} ${_tiffinclude}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
+      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
+      TIMEOUT 600
+    )
     set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/libAfterImage)
   endif()
   if(builtin_freetype)
@@ -512,6 +533,7 @@ if(mathmore OR builtin_gsl)
                         LDFLAGS=${_gsl_ldflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${GSL_LIBRARIES}
+      TIMEOUT 600
     )
     set(GSL_TARGET GSL)
     # FIXME: one need to find better way to extract path with GSL include files
@@ -788,6 +810,7 @@ if(builtin_fftw3)
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${FFTW_LIBRARIES}
+    TIMEOUT 600
   )
   set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   set(FFTW3_TARGET FFTW3)
@@ -819,6 +842,7 @@ if(fitsio OR builtin_cfitsio)
                 COMMAND ${CMAKE_COMMAND} -E copy ${cfitsiobuild}/cfitsio.lib <INSTALL_DIR>/lib
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
         BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
+        TIMEOUT 600
       )
       set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CFITSIO-prefix/src/CFITSIO)
     else()
@@ -832,6 +856,7 @@ if(fitsio OR builtin_cfitsio)
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
         BUILD_IN_SOURCE 1
         BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
+        TIMEOUT 600
       )
       # We need to know which CURL_LIBRARIES were used in CFITSIO ExternalProject build
       # and which ${CURL_LIBRARIES} should be used after for linking in ROOT together with CFITSIO.
@@ -902,8 +927,8 @@ if(xrootd AND NOT builtin_xrootd)
 endif()
 
 if(builtin_xrootd)
-  set(XROOTD_VERSION 4.12.3)
-  set(XROOTD_VERSIONNUM 400120003)
+  set(XROOTD_VERSION 4.12.8)
+  set(XROOTD_VERSIONNUM 400120008)
   set(XROOTD_SRC_URI ${lcgpackages}/xrootd-${XROOTD_VERSION}.tar.gz)
   set(XROOTD_DESTDIR ${CMAKE_BINARY_DIR})
   set(XROOTD_ROOTDIR ${XROOTD_DESTDIR})
@@ -922,7 +947,7 @@ if(builtin_xrootd)
   ExternalProject_Add(
     XROOTD
     URL ${XROOTD_SRC_URI}
-    URL_HASH SHA256=6f2ca1accc8d49d605706bb556777c753860bf46d845b1ee11393a5cb5987f15
+    URL_HASH SHA256=86d8e4bd7382fb3053002cf3d58b997623d1d26db93c8891080603827f01b4cd
     INSTALL_DIR ${XROOTD_ROOTDIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_BUILD_TYPE=Release
@@ -939,6 +964,7 @@ if(builtin_xrootd)
             COMMAND ${CMAKE_COMMAND} -E copy_directory <INSTALL_DIR>/include/xrootd <INSTALL_DIR>/include
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     BUILD_BYPRODUCTS ${XROOTD_LIBRARIES}
+    TIMEOUT 600
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
 
@@ -1014,29 +1040,6 @@ if(arrow)
     endif()
   endif()
 
-endif()
-
-#---Check for cling and llvm --------------------------------------------------------
-
-set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
-
-if(MSVC)
-  set(CLING_CXXFLAGS "-DNOMINMAX -D_XKEYCHECK_H")
-else()
-  set(CLING_CXXFLAGS "-fvisibility=hidden -Wno-shadow -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long")
-endif()
-if (CMAKE_COMPILER_IS_GNUCXX)
-  set(CLING_CXXFLAGS "${CLING_CXXFLAGS} -Wno-missing-field-initializers")
-endif()
-#---These are the libraries that we link ROOT with CLING---------------------------
-set(CLING_LIBRARIES clingInterpreter clingMetaProcessor clingUtils)
-add_custom_target(CLING)
-add_dependencies(CLING ${CLING_LIBRARIES})
-if (builtin_llvm)
-  add_dependencies(CLING intrinsics_gen)
-endif()
-if (builtin_clang)
-  add_dependencies(CLING clang-headers)
 endif()
 
 #---Check for gfal-------------------------------------------------------------------
@@ -1221,6 +1224,11 @@ if(builtin_tbb)
   endif()
   if(MSVC)
     set(vsdir "vs2013")
+    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+      set(tbb_arch x64)
+    else()
+      set(tbb_arch Win32)
+    endif()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
     ExternalProject_Add(
       TBB
@@ -1228,21 +1236,22 @@ if(builtin_tbb)
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
-      BUILD_COMMAND devenv.exe /useenv /build "Release|Win32" build/${vsdir}/makefile.sln
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
+      BUILD_COMMAND devenv.exe /useenv /build "Release|${tbb_arch}" build/${vsdir}/makefile.sln
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
       BUILD_IN_SOURCE 1
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${TBB_LIBRARIES}
+      TIMEOUT 600
     )
     install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*")
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*")
@@ -1270,6 +1279,7 @@ if(builtin_tbb)
       BUILD_IN_SOURCE 1
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${TBB_LIBRARIES}
+      TIMEOUT 600
     )
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
   endif()
@@ -1332,6 +1342,7 @@ if(vc AND NOT Vc_FOUND)
                -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
                -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
     INSTALL_COMMAND env DESTDIR=${Vc_DESTDIR} ${CMAKE_COMMAND} --build . --target install
+    TIMEOUT 600
   )
 
   set(VC_TARGET Vc)
@@ -1416,6 +1427,7 @@ if(builtin_veccore)
                -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
                -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
     INSTALL_COMMAND env DESTDIR=${VecCore_DESTDIR} ${CMAKE_COMMAND} --build . --target install
+    TIMEOUT 600
   )
 
   set(VECCORE_TARGET VecCore)
@@ -1492,6 +1504,7 @@ if(vdt OR builtin_vdt)
         -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${VDT_LIBRARIES}
+      TIMEOUT 600
     )
     ExternalProject_Add_Step(
        VDT copy2externals
@@ -1754,7 +1767,9 @@ if (testing)
     # Wrap download, configure and build steps in a script to log output
     LOG_DOWNLOAD ON
     LOG_CONFIGURE ON
-    LOG_BUILD ON)
+    LOG_BUILD ON
+    TIMEOUT 600
+  )
 
   # Specify include dirs for gtest and gmock
   ExternalProject_Get_Property(googletest source_dir)
@@ -1778,7 +1793,9 @@ if (testing)
     add_dependencies(${lib} googletest)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
         ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 9)
-      target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
+      # TODO cmake 3.11
+      #target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
+      SET_PROPERTY(TARGET ${lib} APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-Wno-deprecated-copy")
     endif()
   endforeach()
   # Once we require at least cmake 3.11, target_include_directories will work for imported targets
@@ -1815,7 +1832,9 @@ if(webgui)
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
+        TIMEOUT 600
+      )
     else()
       ExternalProject_Add(
         OPENUI5
@@ -1824,7 +1843,9 @@ if(webgui)
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
+        TIMEOUT 600
+      )
     endif()
     install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
   endif()
@@ -1859,4 +1880,25 @@ if(NOT ROOT_HAVE_CXX_ATOMICS_WITHOUT_LIB)
   if(ROOT_ATOMIC_LIB)
     set(ROOT_ATOMIC_LIBS ${ROOT_ATOMIC_LIB})
   endif()
+endif()
+
+#------------------------------------------------------------------------------------
+# Check if the pyspark package is installed on the system.
+# Needed to run tests of the distributed RDataFrame module that use pyspark.
+# The functionality has been tested with pyspark 2.4 and above.
+if(test_distrdf_pyspark)
+  message(STATUS "Looking for PySpark")
+
+  if(fail-on-missing)
+    find_package(PySpark 2.4 REQUIRED)
+  else()
+
+    find_package(PySpark 2.4)
+    if(NOT PySpark_FOUND)
+      message(STATUS "Switching OFF 'test_distrdf_pyspark' option")
+      set(test_distrdf_pyspark OFF CACHE BOOL "Disabled because PySpark not found" FORCE)
+    endif()
+
+  endif()
+
 endif()

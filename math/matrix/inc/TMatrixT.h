@@ -280,6 +280,8 @@ template <class Element> inline Element &TMatrixT<Element>::operator()(Int_t row
    return (fElements[arown*this->fNcols+acoln]);
 }
 
+inline namespace TMatrixTAutoloadOps {
+
 template <class Element> TMatrixT<Element>  operator+  (const TMatrixT   <Element> &source1,const TMatrixT   <Element> &source2);
 template <class Element> TMatrixT<Element>  operator+  (const TMatrixT   <Element> &source1,const TMatrixTSym<Element> &source2);
 template <class Element> TMatrixT<Element>  operator+  (const TMatrixTSym<Element> &source1,const TMatrixT   <Element> &source2);
@@ -339,5 +341,5 @@ template <class Element> void AtMultB(const Element * const ap,Int_t ncolsa,
                                       const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp);
 template <class Element> void AMultBt(const Element * const ap,Int_t na,Int_t ncolsa,
                                       const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp);
-
+} // inline namespace TMatrixTAutoloadOps
 #endif

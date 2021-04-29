@@ -1,14 +1,13 @@
 //===-- llvm-dwarfdump-fuzzer.cpp - Fuzz the llvm-dwarfdump tool ----------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file implements a function that runs llvm-dwarfdump
+/// This file implements a function that runs llvm-dwarfdump
 ///  on a single input. This function is then linked into the Fuzzer library.
 ///
 //===----------------------------------------------------------------------===//
@@ -20,7 +19,7 @@
 using namespace llvm;
 using namespace object;
 
-extern "C" void LLVMFuzzerTestOneInput(uint8_t *data, size_t size) {
+extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size) {
   std::unique_ptr<MemoryBuffer> Buff = MemoryBuffer::getMemBuffer(
       StringRef((const char *)data, size), "", false);
 
@@ -28,9 +27,14 @@ extern "C" void LLVMFuzzerTestOneInput(uint8_t *data, size_t size) {
       ObjectFile::createObjectFile(Buff->getMemBufferRef());
   if (auto E = ObjOrErr.takeError()) {
     consumeError(std::move(E));
-    return;
+    return 0;
   }
   ObjectFile &Obj = *ObjOrErr.get();
-  std::unique_ptr<DIContext> DICtx(new DWARFContextInMemory(Obj));
-  DICtx->dump(nulls(), DIDT_All);
+  std::unique_ptr<DIContext> DICtx = DWARFContext::create(Obj);
+
+
+  DIDumpOptions opts;
+  opts.DumpType = DIDT_All;
+  DICtx->dump(nulls(), opts);
+  return 0;
 }

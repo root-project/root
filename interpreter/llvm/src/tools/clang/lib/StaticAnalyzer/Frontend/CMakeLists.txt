@@ -7,14 +7,16 @@ set(LLVM_LINK_COMPONENTS
 add_clang_library(clangStaticAnalyzerFrontend
   AnalysisConsumer.cpp
   CheckerRegistration.cpp
-  ModelConsumer.cpp
+  CheckerRegistry.cpp
   FrontendActions.cpp
+  ModelConsumer.cpp
   ModelInjector.cpp
 
   LINK_LIBS
   clangAST
   clangAnalysis
   clangBasic
+  clangCrossTU
   clangFrontend
   clangLex
   clangStaticAnalyzerCheckers

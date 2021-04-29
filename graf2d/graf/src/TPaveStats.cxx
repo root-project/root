@@ -32,11 +32,12 @@ The histogram statistics painter class.
 
 To draw histogram statistics and fit parameters.
 
-- [Statistics Display](#PS01)
-- [Fit Statistics](#PS02)
-- [Statistics box editing](#PS03)
+- [Statistics Display](\ref PS01)
+- [Fit Statistics](\ref PS02)
+- [Statistics box editing](\ref PS03)
 
-## <a name="PS01"></a> Statistics Display
+\anchor PS01
+## Statistics Display
 
 The type of information shown in the histogram statistics box can be selected
 with:
@@ -184,7 +185,8 @@ and activate it again with:
       h->SetStats(1).
 ~~~
 
-## <a name="PS02"></a> Fit Statistics
+\anchor PS02
+## Fit Statistics
 
 The type of information about fit parameters printed in the histogram statistics
 box can be selected via the parameter mode. The parameter mode can be
@@ -208,7 +210,8 @@ print fit probability, parameter names/values and errors.
 Note: `gStyle->SetOptFit(1)` means "default value", so it is equivalent
 to `gStyle->SetOptFit(111)`
 
-## <a name="PS03"></a> Statistics box editing
+\anchor PS03
+## Statistics box editing
 
 The following example show how to remove and add a line in a statistics box.
 
@@ -350,7 +353,7 @@ void TPaveStats::Paint(Option_t *option)
    if (textsize == 0)  {
       textsize = 0.92*yspace/(y2 - y1);
       titlesize = textsize;
-      wtok[0] = 0; wtok[1] = 0;
+      wtok[0] = wtok[1] = 0;
       while ((line = (TObject*) next())) {
          if (line->IsA() == TLatex::Class()) {
             latex = (TLatex*)line;
@@ -360,7 +363,7 @@ void TPaveStats::Paint(Option_t *option)
             if (strpbrk(sl, "=") !=0 && print_name == 0) {
                st = strtok(sl, "=");
                Int_t itok = 0;
-               while ( st !=0 ) {
+               while (( st != 0 ) && (itok < 2)) {
                   latex_tok = new TLatex(0.,0.,st);
                   Style_t tfont = latex->GetTextFont();
                   if (tfont == 0) tfont = GetTextFont();

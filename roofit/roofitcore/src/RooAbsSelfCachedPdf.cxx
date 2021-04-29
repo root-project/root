@@ -88,7 +88,7 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
   for (Int_t i=0 ; i<cacheHist.numEntries() ; i++) {
     const RooArgSet* obs = cacheHist.get(i) ;
     Double_t wgt = clone2->getVal(obs) ;
-    cacheHist.set(wgt) ;
+    cacheHist.set(i, wgt, 0.);
   }
 
   cache.pdf()->setUnitNorm(kTRUE) ;

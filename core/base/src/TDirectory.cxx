@@ -1056,7 +1056,6 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title, Bool_t return
    }
    if (!name || !title || !name[0]) return nullptr;
    if (!title[0]) title = name;
-   TDirectory *newdir = nullptr;
    if (const char *slash = strchr(name,'/')) {
       Long_t size = Long_t(slash-name);
       char *workname = new char[size+1];
@@ -1068,15 +1067,12 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title, Bool_t return
          tmpdir = mkdir(workname,title);
       delete[] workname;
       if (!tmpdir) return nullptr;
-      if (!newdir) newdir = tmpdir;
       return tmpdir->mkdir(slash+1);
    }
 
    TDirectory::TContext ctxt(this);
 
-   newdir = new TDirectory(name, title, "", this);
-
-   return newdir;
+   return new TDirectory(name, title, "", this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1206,7 +1202,7 @@ Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_
    }
    TString cmd;
    if (fname.Index(".json") > 0) {
-      cmd.Form("TBufferJSON::ExportToFile(\"%s\",(TObject*) %s, \"%s\");", fname.Data(), TString::LLtoa((Long_t)obj, 10).Data(), (option ? option : ""));
+      cmd.Form("TBufferJSON::ExportToFile(\"%s\",(TObject*) %s, \"%s\");", fname.Data(), TString::LLtoa((Longptr_t)obj, 10).Data(), (option ? option : ""));
       nbytes = gROOT->ProcessLine(cmd);
    } else {
       cmd.Form("TFile::Open(\"%s\",\"recreate\");",fname.Data());
@@ -1257,7 +1253,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
                                  const size_t namesize)
 {
    size_t len = 0;
-   const char *ni = strchr(buffer, ';');
+   const char *ni = buffer ? strchr(buffer, ';') : nullptr;
 
    if (ni) {
       // Found ';'

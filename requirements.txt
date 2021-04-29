@@ -11,3 +11,6 @@ cffi>=1.9.1
 # Notebooks: ROOT C++ kernel
 notebook>=4.4.1
 metakernel>=0.20.0
+
+# Distributed RDataFrame: Spark backend
+pyspark>=2.4

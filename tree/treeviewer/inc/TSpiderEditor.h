@@ -38,30 +38,30 @@ class TGedPatternSelect;
 
 class TSpiderEditor : public TGedFrame {
 protected:
-   TSpider              *fSpider; // Pointer to the TSpider.
-   TGCheckButton        *fDisplayAverage; // Button for the display of the average.
-   TGLineStyleComboBox  *fAvLineStyleCombo; // line style combo box for the average.
-   TGLineWidthComboBox  *fAvLineWidthCombo; // line width combo box for the average.
-   TGColorSelect        *fAvLineColorSelect;// line color widget for the average.
-   TGColorSelect        *fAvFillColorSelect;      // fill color widget for the average.
-   TGedPatternSelect    *fAvFillPatternSelect;    // fill pattern widget for the average.
-   TGNumberEntryField   *fSetNx; // To set the nx number of subpads.
-   TGNumberEntryField   *fSetNy; // To set the ny number of subpads.
-   TGButtonGroup        *fBgroup; // Group of the plot type selection.
-   TGRadioButton        *fPolyLines; // Polyline option.
-   TGRadioButton        *fSegment; // Segment option.
-   TGCompositeFrame     *fBrowse; // Browse tab.
-   TGNumberEntryField   *fGotoEntry; // Jump to an entry field.
-   TGPictureButton      *fGotoNext; // Go to next entries button.
-   const TGPicture      *fPicNext; // Go to next entries picture.
-   TGPictureButton      *fGotoPrevious; // Go to previous entries button.
-   const TGPicture      *fPicPrevious; // Go to previous entries picture.
-   TGPictureButton      *fGotoFollowing; // Go to next entry button.
-   const TGPicture      *fPicFollowing; // Go to next entry picture.
-   TGPictureButton      *fGotoPreceding; // Go to last entry button.
-   const TGPicture      *fPicPreceding; // Go to last entry picture.
-   TGTextEntry          *fAddVar; // Add variable field.
-   TGTextEntry          *fDeleteVar; // Delete variable field.
+   TSpider              *fSpider;              ///< Pointer to the TSpider.
+   TGCheckButton        *fDisplayAverage;      ///< Button for the display of the average.
+   TGLineStyleComboBox  *fAvLineStyleCombo;    ///< line style combo box for the average.
+   TGLineWidthComboBox  *fAvLineWidthCombo;    ///< line width combo box for the average.
+   TGColorSelect        *fAvLineColorSelect;   ///< line color widget for the average.
+   TGColorSelect        *fAvFillColorSelect;   ///< fill color widget for the average.
+   TGedPatternSelect    *fAvFillPatternSelect; ///< fill pattern widget for the average.
+   TGNumberEntryField   *fSetNx;               ///< To set the nx number of subpads.
+   TGNumberEntryField   *fSetNy;               ///< To set the ny number of subpads.
+   TGButtonGroup        *fBgroup;              ///< Group of the plot type selection.
+   TGRadioButton        *fPolyLines;           ///< Polyline option.
+   TGRadioButton        *fSegment;             ///< Segment option.
+   TGCompositeFrame     *fBrowse;              ///< Browse tab.
+   TGNumberEntryField   *fGotoEntry;           ///< Jump to an entry field.
+   TGPictureButton      *fGotoNext;            ///< Go to next entries button.
+   const TGPicture      *fPicNext;             ///< Go to next entries picture.
+   TGPictureButton      *fGotoPrevious;        ///< Go to previous entries button.
+   const TGPicture      *fPicPrevious;         ///< Go to previous entries picture.
+   TGPictureButton      *fGotoFollowing;       ///< Go to next entry button.
+   const TGPicture      *fPicFollowing;        ///< Go to next entry picture.
+   TGPictureButton      *fGotoPreceding;       ///< Go to last entry button.
+   const TGPicture      *fPicPreceding;        ///< Go to last entry picture.
+   TGTextEntry          *fAddVar;              ///< Add variable field.
+   TGTextEntry          *fDeleteVar;           ///< Delete variable field.
 
    virtual void         ConnectSignals2Slots();
    void                 MakeBrowse();

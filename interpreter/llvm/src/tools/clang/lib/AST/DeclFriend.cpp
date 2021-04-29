@@ -1,9 +1,8 @@
-//===--- DeclFriend.cpp - C++ Friend Declaration AST Node Implementation --===//
+//===- DeclFriend.cpp - C++ Friend Declaration AST Node Implementation ----===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,12 +11,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclFriend.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/Basic/LLVM.h"
+#include "llvm/Support/Casting.h"
+#include <cassert>
+#include <cstddef>
+
 using namespace clang;
 
-void FriendDecl::anchor() { }
+void FriendDecl::anchor() {}
 
 FriendDecl *FriendDecl::getNextFriendSlowCase() {
   return cast_or_null<FriendDecl>(
@@ -28,10 +35,10 @@ FriendDecl *FriendDecl::Create(ASTContext &C, DeclContext *DC,
                                SourceLocation L,
                                FriendUnion Friend,
                                SourceLocation FriendL,
-                        ArrayRef<TemplateParameterList*> FriendTypeTPLists) {
+                          ArrayRef<TemplateParameterList *> FriendTypeTPLists) {
 #ifndef NDEBUG
-  if (Friend.is<NamedDecl*>()) {
-    NamedDecl *D = Friend.get<NamedDecl*>();
+  if (Friend.is<NamedDecl *>()) {
+    const auto *D = Friend.get<NamedDecl*>();
     assert(isa<FunctionDecl>(D) ||
            isa<CXXRecordDecl>(D) ||
            isa<FunctionTemplateDecl>(D) ||
@@ -42,15 +49,15 @@ FriendDecl *FriendDecl::Create(ASTContext &C, DeclContext *DC,
     assert(D->getFriendObjectKind() ||
            (cast<CXXRecordDecl>(DC)->getTemplateSpecializationKind()));
     // These template parameters are for friend types only.
-    assert(FriendTypeTPLists.size() == 0);
+    assert(FriendTypeTPLists.empty());
   }
 #endif
 
   std::size_t Extra =
       FriendDecl::additionalSizeToAlloc<TemplateParameterList *>(
           FriendTypeTPLists.size());
-  FriendDecl *FD = new (C, DC, Extra) FriendDecl(DC, L, Friend, FriendL,
-                                                 FriendTypeTPLists);
+  auto *FD = new (C, DC, Extra) FriendDecl(DC, L, Friend, FriendL,
+                                           FriendTypeTPLists);
   cast<CXXRecordDecl>(DC)->pushFriendDecl(FD);
   return FD;
 }

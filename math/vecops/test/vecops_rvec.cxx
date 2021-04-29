@@ -489,9 +489,9 @@ void CheckEq(const T0 &v, const T0 &ref)
    }
 }
 
-TEST(VecOps, inputOutput)
+TEST(VecOps, InputOutputImpl)
 {
-   auto filename = "vecops_inputoutput.root";
+   auto filename = "vecops_inputoutput_impl.root";
    auto treename = "t";
 
    const ROOT::VecOps::RVec<double>::Impl_t dref {1., 2., 3.};
@@ -506,6 +506,7 @@ TEST(VecOps, inputOutput)
    const ROOT::VecOps::RVec<Long64_t>::Impl_t llref {1ULL, 2ULL, 3ULL};
    const ROOT::VecOps::RVec<Short_t>::Impl_t sref {1, 2, 3};
    const ROOT::VecOps::RVec<Char_t>::Impl_t cref {1, 2, 3};
+   const ROOT::VecOps::RVec<bool>::Impl_t bref {true, false, true};
 
    {
       auto d = dref;
@@ -520,6 +521,7 @@ TEST(VecOps, inputOutput)
       auto ll = llref;
       auto s = sref;
       auto c = cref;
+      auto b = bref;
       TFile file(filename, "RECREATE");
       TTree t(treename, treename);
       t.Branch("d", &d);
@@ -534,6 +536,7 @@ TEST(VecOps, inputOutput)
       t.Branch("ll", &ll);
       t.Branch("s", &s);
       t.Branch("c", &c);
+      t.Branch("b", &b);
       t.Fill();
       t.Write();
    }
@@ -550,6 +553,7 @@ TEST(VecOps, inputOutput)
    auto ll = new ROOT::VecOps::RVec<Long64_t>::Impl_t();
    auto s = new ROOT::VecOps::RVec<Short_t>::Impl_t();
    auto c = new ROOT::VecOps::RVec<Char_t>::Impl_t();
+   auto b = new ROOT::VecOps::RVec<bool>::Impl_t();
 
    TFile file(filename);
    TTree *tp;
@@ -568,6 +572,7 @@ TEST(VecOps, inputOutput)
    t.SetBranchAddress("ll", &ll);
    t.SetBranchAddress("s", &s);
    t.SetBranchAddress("c", &c);
+   t.SetBranchAddress("b", &b);
 
    t.GetEntry(0);
    CheckEq(*d, dref);
@@ -580,6 +585,110 @@ TEST(VecOps, inputOutput)
    CheckEq(*f, fref);
    CheckEq(*d, dref);
    CheckEq(*f, fref);
+   CheckEq(*b, bref);
+
+   gSystem->Unlink(filename);
+
+}
+
+
+TEST(VecOps, InputOutput)
+{
+   auto filename = "vecops_inputoutput.root";
+   auto treename = "t";
+
+   const ROOT::VecOps::RVec<double> dref {1., 2., 3.};
+   const ROOT::VecOps::RVec<float> fref {1.f, 2.f, 3.f};
+   const ROOT::VecOps::RVec<UInt_t> uiref {1, 2, 3};
+   const ROOT::VecOps::RVec<ULong_t> ulref {1UL, 2UL, 3UL};
+   const ROOT::VecOps::RVec<ULong64_t> ullref {1ULL, 2ULL, 3ULL};
+   const ROOT::VecOps::RVec<UShort_t> usref {1, 2, 3};
+   const ROOT::VecOps::RVec<UChar_t> ucref {1, 2, 3};
+   const ROOT::VecOps::RVec<Int_t> iref {1, 2, 3};;
+   const ROOT::VecOps::RVec<Long_t> lref {1UL, 2UL, 3UL};;
+   const ROOT::VecOps::RVec<Long64_t> llref {1ULL, 2ULL, 3ULL};
+   const ROOT::VecOps::RVec<Short_t> sref {1, 2, 3};
+   const ROOT::VecOps::RVec<Char_t> cref {1, 2, 3};
+   const ROOT::VecOps::RVec<bool> bref {true, false, true};
+
+   {
+      auto d = dref;
+      auto f = fref;
+      auto ui = uiref;
+      auto ul = ulref;
+      auto ull = ullref;
+      auto us = usref;
+      auto uc = ucref;
+      auto i = iref;
+      auto l = lref;
+      auto ll = llref;
+      auto s = sref;
+      auto c = cref;
+      auto b = bref;
+      TFile file(filename, "RECREATE");
+      TTree t(treename, treename);
+      t.Branch("d", &d);
+      t.Branch("f", &f);
+      t.Branch("ui", &ui);
+      t.Branch("ul", &ul);
+      t.Branch("ull", &ull);
+      t.Branch("us", &us);
+      t.Branch("uc", &uc);
+      t.Branch("i", &i);
+      t.Branch("l", &l);
+      t.Branch("ll", &ll);
+      t.Branch("s", &s);
+      t.Branch("c", &c);
+      t.Branch("b", &b);
+      t.Fill();
+      t.Write();
+   }
+
+   auto d = new ROOT::VecOps::RVec<double>();
+   auto f = new ROOT::VecOps::RVec<float>;
+   auto ui = new ROOT::VecOps::RVec<UInt_t>();
+   auto ul = new ROOT::VecOps::RVec<ULong_t>();
+   auto ull = new ROOT::VecOps::RVec<ULong64_t>();
+   auto us = new ROOT::VecOps::RVec<UShort_t>();
+   auto uc = new ROOT::VecOps::RVec<UChar_t>();
+   auto i = new ROOT::VecOps::RVec<Int_t>();
+   auto l = new ROOT::VecOps::RVec<Long_t>();
+   auto ll = new ROOT::VecOps::RVec<Long64_t>();
+   auto s = new ROOT::VecOps::RVec<Short_t>();
+   auto c = new ROOT::VecOps::RVec<Char_t>();
+   auto b = new ROOT::VecOps::RVec<bool>();
+
+   TFile file(filename);
+   TTree *tp;
+   file.GetObject(treename, tp);
+   auto &t = *tp;
+
+   t.SetBranchAddress("d", &d);
+   t.SetBranchAddress("f", &f);
+   t.SetBranchAddress("ui", &ui);
+   t.SetBranchAddress("ul", &ul);
+   t.SetBranchAddress("ull", &ull);
+   t.SetBranchAddress("us", &us);
+   t.SetBranchAddress("uc", &uc);
+   t.SetBranchAddress("i", &i);
+   t.SetBranchAddress("l", &l);
+   t.SetBranchAddress("ll", &ll);
+   t.SetBranchAddress("s", &s);
+   t.SetBranchAddress("c", &c);
+   t.SetBranchAddress("b", &b);
+
+   t.GetEntry(0);
+   CheckEq(*d, dref);
+   CheckEq(*f, fref);
+   CheckEq(*d, dref);
+   CheckEq(*f, fref);
+   CheckEq(*d, dref);
+   CheckEq(*f, fref);
+   CheckEq(*d, dref);
+   CheckEq(*f, fref);
+   CheckEq(*d, dref);
+   CheckEq(*f, fref);
+   CheckEq(*b, bref);
 
    gSystem->Unlink(filename);
 
@@ -661,6 +770,20 @@ TEST(VecOps, Argsort)
    auto i = Argsort(v);
    ROOT::VecOps::RVec<size_type> ref{1, 2, 0};
    CheckEqual(i, ref);
+}
+
+TEST(VecOps, ArgsortWithComparisonOperator)
+{
+   ROOT::VecOps::RVec<int> v{2, 0, 1};
+   using size_type = typename ROOT::VecOps::RVec<int>::size_type;
+
+   auto i1 = Argsort(v, [](int x, int y){ return x < y; });
+   ROOT::VecOps::RVec<size_type> ref1{1, 2, 0};
+   CheckEqual(i1, ref1);
+
+   auto i2 = Argsort(v, [](int x, int y){ return x > y; });
+   ROOT::VecOps::RVec<size_type> ref2{0, 2, 1};
+   CheckEqual(i2, ref2);
 }
 
 TEST(VecOps, TakeIndices)

@@ -1,9 +1,8 @@
 //===- ARCMigrate.cpp - Clang-C ARC Migration Library ---------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -34,7 +33,7 @@ struct Remap {
 //===----------------------------------------------------------------------===//
 
 CXRemapping clang_getRemappings(const char *migrate_dir_path) {
-#ifndef CLANG_ENABLE_ARCMT
+#if !CLANG_ENABLE_ARCMT
   llvm::errs() << "error: feature not enabled in this build\n";
   return nullptr;
 #else
@@ -77,7 +76,7 @@ CXRemapping clang_getRemappings(const char *migrate_dir_path) {
 
 CXRemapping clang_getRemappingsFromFileList(const char **filePaths,
                                             unsigned numFiles) {
-#ifndef CLANG_ENABLE_ARCMT
+#if !CLANG_ENABLE_ARCMT
   llvm::errs() << "error: feature not enabled in this build\n";
   return nullptr;
 #else

@@ -75,6 +75,10 @@ void REveDataProxyBuilderBase::Build()
          auto itemSize = m_collection->GetNItems(); //cashed
 
          Clean();
+
+         if (!m_collection->GetRnrSelf())
+            return;
+
          for (auto &pp: m_products)
          {
             // printf("build() %s \n", m_collection->GetCName());
@@ -171,7 +175,7 @@ REveDataProxyBuilderBase::Build(const REveDataCollection*, REveElement*, const R
 
 
 void
-REveDataProxyBuilderBase::BuildViewType(const REveDataCollection*, REveElement*, std::string, const REveViewContext*)
+REveDataProxyBuilderBase::BuildViewType(const REveDataCollection*, REveElement*, const std::string&, const REveViewContext*)
 {
    assert("virtual BuildViewType(const FWEventItem*, TEveElementList*, FWViewType::EType, const FWViewContext*) not implemented by inherited class");
 }
@@ -179,7 +183,7 @@ REveDataProxyBuilderBase::BuildViewType(const REveDataCollection*, REveElement*,
 //------------------------------------------------------------------------------
 
 REveElement*
-REveDataProxyBuilderBase::CreateProduct( std::string viewType, const REveViewContext* viewContext)
+REveDataProxyBuilderBase::CreateProduct( const std::string& viewType, const REveViewContext* viewContext)
 {
    if ( m_products.empty() == false)
    {
@@ -316,7 +320,7 @@ void REveDataProxyBuilderBase::CollectionBeingDestroyed(const REveDataCollection
    m_products.clear();
 }
 
-bool REveDataProxyBuilderBase::VisibilityModelChanges(int, REveElement *, const REveViewContext *)
+bool REveDataProxyBuilderBase::VisibilityModelChanges(int, REveElement *, const std::string&, const REveViewContext *)
 {
    return false;
 }

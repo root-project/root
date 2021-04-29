@@ -12,7 +12,7 @@
 
 /** Provider for drawing of ROOT6 classes */
 
-class TLeafDraw6Provider : public TLeafProvider<void> {
+class TLeafDraw6Provider : public TLeafProvider {
 public:
 
    bool AddHist(TVirtualPad *pad, TH1 *hist, const std::string &opt)
@@ -35,6 +35,10 @@ public:
 
       RegisterDraw6(TBranchElement::Class(), [this](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
          return AddHist(pad, DrawBranchElement(obj), opt);
+      });
+
+      RegisterDraw6(TBranch::Class(), [this](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
+         return AddHist(pad, DrawBranch(obj), opt);
       });
 
       RegisterDraw6(TVirtualBranchBrowsable::Class(), [this](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {

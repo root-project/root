@@ -2,7 +2,7 @@
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
- * Copyright (C) 2001, Guy Barrand.                                      *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,16 +13,6 @@
 #define ROOT_TGApplication
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGApplication                                                        //
-//                                                                      //
-// This class initialize the ROOT GUI toolkit.                          //
-// This class must be instantiated exactly once in any given            //
-// application.                                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TApplication.h"
 
 class TGClient;
@@ -31,8 +21,8 @@ class TGClient;
 class TGApplication : public TApplication {
 
 private:
-   TString        fDisplay;           // display server to connect to
-   TGClient      *fClient{nullptr};   // pointer to the client environment
+   TString        fDisplay;           ///< display server to connect to
+   TGClient      *fClient{nullptr};   ///< pointer to the client environment
 
 protected:
    TGApplication() : TApplication() { }

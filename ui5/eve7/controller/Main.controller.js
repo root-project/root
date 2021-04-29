@@ -62,13 +62,15 @@ sap.ui.define(['sap/ui/core/Component',
          console.log('item pressed', item.getText(), elem);
 
          var name = item.getText();
-         if (name.indexOf(" ")>0) name = name.substr(0, name.indexOf(" "));
-
+         if (name.indexOf(" ") > 0) name = name.substr(0, name.indexOf(" "));
          // FIXME: one need better way to deliver parameters to the selected view
          JSROOT.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId, kind: elem.view_kind };
 
          var oRouter = UIComponent.getRouterFor(this);
-         oRouter.navTo("View", { viewName: name });
+         if (name == "Table")
+            oRouter.navTo("Table", { viewName: name });
+         else
+            oRouter.navTo("View", { viewName: name });
       },
 
       updateViewers: function(loading_done) {
@@ -137,7 +139,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      OnEveManagerInit: function() {
+      onEveManagerInit: function() {
          console.log("manager updated");
          this.UpdateCommandsButtons(this.mgr.commands);
          this.updateViewers();
@@ -190,6 +192,50 @@ sap.ui.define(['sap/ui/core/Component',
 
       showHelp : function(oEvent) {
          alert("User support: root-webgui@cern.ch");
+      },
+
+      showLog: function (oEvent) {
+         let oPopover = sap.ui.getCore().byId("logView");
+         if (!oPopover)
+         {
+            let oFT = new sap.m.FormattedText("EveConsoleText", {
+               convertLinksToAnchorTags: sap.m.LinkConversion.All,
+               width: "100%",
+               height: "auto"
+            });
+
+            oPopover = new sap.m.Popover("logView", {
+               placement: sap.m.PlacementType.Auto,
+               title: "Console log",
+               content: [
+                  oFT
+               ]
+            });
+
+            // footer
+            let fa = new sap.m.OverflowToolbar();
+            let btnDebug = new sap.m.CheckBox({ text: "Debug", selected: JSROOT.EVE.gDebug ? false : JSROOT.EVE.gDebug });
+            btnDebug.attachSelect(
+               function (oEvent) {
+                  JSROOT.EVE.gDebug = this.getSelected();
+               }
+            );
+            fa.addContent(btnDebug);
+            let cBtn = new sap.m.Button({ text: "Close", icon: "sap-icon://sys-cancel", press: function () { oPopover.close(); }});
+            fa.addContent(cBtn);
+            oPopover.setFooter(fa);
+
+            // set callback function
+            JSROOT.EVE.console.refresh = this.loadLog;
+         }
+
+         this.loadLog();
+         oPopover.openBy(this.getView().byId("logButton"));
+      },
+
+      loadLog: function () {
+         let oFT = sap.ui.getCore().byId("EveConsoleText");
+         oFT.setHtmlText(JSROOT.EVE.console.txt);
       },
 
       showUserURL : function(oEvent) {

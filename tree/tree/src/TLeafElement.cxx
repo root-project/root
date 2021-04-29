@@ -164,8 +164,10 @@ TString TLeafElement::GetFullName() const
 {
    TBranchElement *br = static_cast<TBranchElement*>(GetBranch());
    if (br->GetType() == 3 || br->GetType() == 4) {
-      //      return TString(br->GetFullName()) + "." + GetName() +  "_";
-      return TString(br->GetFullName()) + "_";
+      TString bname(br->GetFullName());
+      if (bname.Length() && bname[bname.Length()-1]=='.')
+         bname.Remove(bname.Length()-1);
+      return bname + "_";
    } else
       return GetBranch()->GetFullName();
 }

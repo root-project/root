@@ -1,3 +1,4 @@
+import importlib
 import types
 import sys
 import os
@@ -44,6 +45,46 @@ class _gROOTWrapper(object):
 
     def __setattr__(self, name, value):
         return setattr(self._gROOT, name, value)
+
+
+def _create_rdf_experimental_distributed_module(parent):
+    """
+    Create the ROOT.RDF.Experimental.Distributed python module.
+
+    This module will be injected into the ROOT.RDF namespace.
+
+    Arguments:
+        parent: The ROOT.RDF namespace. Needed to define __package__.
+
+    Returns:
+        types.ModuleType: The ROOT.RDF.Experimental.Distributed submodule.
+    """
+    import DistRDF
+
+    # Create dummy ROOT.RDF.Experimental package
+    experimental = types.ModuleType("ROOT.RDF.Experimental")
+    # PEP302 attributes
+    experimental.__file__ = "<namespace ROOT.RDF>"
+    # experimental.__name__ is the constructor argument
+    experimental.__path__ = []  # this makes it a package
+    # experimental.__loader__ is not defined
+    experimental.__package__ = parent
+
+    # Inject submodules
+    experimental.Distributed = DistRDF.create_distributed_module(
+        experimental)
+
+    return experimental
+
+
+def _subimport(name):
+    # type: (str) -> types.ModuleType
+    """
+    Import and return the Python module with the input name.
+
+    Helper function for the __reduce__ method of the ROOTFacade class.
+    """
+    return importlib.import_module(name)
 
 
 class ROOTFacade(types.ModuleType):
@@ -224,12 +265,40 @@ class ROOTFacade(types.ModuleType):
                 logons = [
                     os.path.join(str(self.TROOT.GetEtcDir()), 'system' + name),
                     os.path.expanduser(os.path.join('~', name))
-                    ]
+                ]
                 if logons[-1] != os.path.join(os.getcwd(), name):
                     logons.append(name)
                 for rootlogon in logons:
                     if os.path.exists(rootlogon):
                         self.TApplication.ExecuteFile(rootlogon)
+
+    def __reduce__(self):
+        # type: () -> types.ModuleType
+        """
+        Reduction function of the ROOT facade to customize the (pickle)
+        serialization step.
+
+        Defines the ingredients needed for a correct serialization of the
+        facade, that is a function that imports a Python module and the name of
+        that module, which corresponds to this facade's __name__ attribute. This
+        method helps serialization tools like `cloudpickle`, especially used in
+        distributed environments, that always need to include information about
+        the ROOT module in the serialization step. For example, the following
+        snippet would not work without this method::
+
+            import ROOT
+            import cloudpickle
+
+            def foo():
+                return ROOT.TH1F()
+
+            cloudpickle.loads(cloudpickle.dumps(foo))
+
+        In particular, it would raise::
+
+            TypeError: cannot pickle 'ROOTFacade' object
+        """
+        return _subimport, (self.__name__,)
 
     # Inject version as __version__ property in ROOT module
     @property
@@ -257,8 +326,12 @@ class ROOTFacade(types.ModuleType):
     def RDF(self):
         ns = self._fallback_getattr('RDF')
         try:
+            # Inject MakeNumpyDataFrame function
             from libROOTPythonizations import MakeNumpyDataFrame
             ns.MakeNumpyDataFrame = MakeNumpyDataFrame
+
+            # Inject Experimental.Distributed package into namespace RDF
+            ns.Experimental = _create_rdf_experimental_distributed_module(ns)
         except:
             raise Exception('Failed to pythonize the namespace RDF')
         del type(self).RDF

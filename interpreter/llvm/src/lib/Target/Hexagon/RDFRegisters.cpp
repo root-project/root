@@ -1,15 +1,25 @@
-//===--- RDFRegisters.cpp ---------------------------------------*- C++ -*-===//
+//===- RDFRegisters.cpp ---------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #include "RDFRegisters.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/CodeGen/MachineFunction.h"
+#include "llvm/CodeGen/MachineInstr.h"
+#include "llvm/CodeGen/MachineOperand.h"
+#include "llvm/CodeGen/TargetRegisterInfo.h"
+#include "llvm/MC/LaneBitmask.h"
+#include "llvm/MC/MCRegisterInfo.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/raw_ostream.h"
+#include <cassert>
+#include <cstdint>
+#include <set>
+#include <utility>
 
 using namespace llvm;
 using namespace rdf;
@@ -227,7 +237,6 @@ RegisterRef PhysicalRegisterInfo::mapTo(RegisterRef RR, unsigned R) const {
   llvm_unreachable("Invalid arguments: unrelated registers?");
 }
 
-
 bool RegisterAggr::hasAliasOf(RegisterRef RR) const {
   if (PhysicalRegisterInfo::isRegMaskId(RR.Reg))
     return Units.anyCommon(PRI.getMaskUnits(RR.Reg));
@@ -355,7 +364,7 @@ RegisterRef RegisterAggr::makeRegRef() const {
 void RegisterAggr::print(raw_ostream &OS) const {
   OS << '{';
   for (int U = Units.find_first(); U >= 0; U = Units.find_next(U))
-    OS << ' ' << PrintRegUnit(U, &PRI.getTRI());
+    OS << ' ' << printRegUnit(U, &PRI.getTRI());
   OS << " }";
 }
 
@@ -369,4 +378,3 @@ RegisterAggr::rr_iterator::rr_iterator(const RegisterAggr &RG,
   Pos = End ? Masks.end() : Masks.begin();
   Index = End ? Masks.size() : 0;
 }
-
