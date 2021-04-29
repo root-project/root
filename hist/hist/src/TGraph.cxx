@@ -2214,11 +2214,6 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply the values of a TGraph by a constant c1.
 ///
-/// `this = c1*this`
-///
-/// Note that both contents and errors (if any) are scaled.
-/// This function uses the services of TH1::Add
-///
 /// If option contains "x" the x values are scaled
 /// If option contains "y" the y values are scaled
 /// If option contains "xy" both x and y values are scaled
