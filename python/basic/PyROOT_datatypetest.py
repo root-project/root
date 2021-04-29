@@ -1056,6 +1056,30 @@ class TestClassDATATYPES:
         assert y1 == 1
         assert y2 == 1
 
+    def test28_arraydatamember_lifeline(self):
+        """Test setting of lifeline for array data members"""
+        # 7501
+
+        try:
+            import numpy as np
+        except:
+            raise ImportError("Cannot import numpy")
+
+        import cppyy
+        cppyy.cppdef("""
+        class array_ll {
+        public:
+            float *v1 = nullptr;
+            float *v2 = nullptr;
+        };
+        """)
+        a = cppyy.gbl.array_ll()
+        a.v1 = np.array([1, 2], dtype=np.float32)
+        a.v2 = np.array([3, 4], dtype=np.float32)
+
+        assert a.v1[0] == 1
+        assert a.v1[1] == 2
+
 
 ## actual test run
 if __name__ == '__main__':
