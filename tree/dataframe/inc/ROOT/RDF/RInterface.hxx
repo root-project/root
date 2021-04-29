@@ -588,7 +588,8 @@ public:
                                                  const ColumnNames_t &columnList,
                                                  const RSnapshotOptions &options = RSnapshotOptions())
    {
-      const auto validCols = GetValidatedColumnNames(columnList.size(), columnList);
+      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
+      const auto validCols = GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
 
       const auto fullTreeName = treename;
       const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
@@ -596,7 +597,7 @@ public:
       const auto &dirname = parsedTreePath.fDirName;
 
       auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
-         std::string(filename), std::string(dirname), std::string(treename), columnList, options});
+         std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options});
 
       ::TDirectory::TContext ctxt;
       auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, validCols);
@@ -630,11 +631,15 @@ public:
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames = tree != nullptr ? RDFInternal::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+      // Ignore __rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
+      ColumnNames_t dsColumnsWithoutSizeColumns;
+      std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
+                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "__rdf_sizeof_"; });
       ColumnNames_t columnNames;
-      columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumns.size());
+      columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumnsWithoutSizeColumns.size());
       columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
       columnNames.insert(columnNames.end(), treeBranchNames.begin(), treeBranchNames.end());
-      columnNames.insert(columnNames.end(), dsColumns.begin(), dsColumns.end());
+      columnNames.insert(columnNames.end(), dsColumnsWithoutSizeColumns.begin(), dsColumnsWithoutSizeColumns.end());
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
       return Snapshot(treename, filename, selectedColumns, options);
    }
@@ -726,15 +731,18 @@ public:
                 << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase>*>("
                 << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Cache<";
 
-      const auto validColumnNames = GetValidatedColumnNames(columnList.size(), columnList);
+      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Cache");
+
+      const auto validColumnNames =
+         GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
       const auto colTypes = GetValidatedArgTypes(validColumnNames, fDefines, fLoopManager->GetTree(), fDataSource,
                                                  "Cache", /*vector2rvec=*/false);
       for (const auto &colType : colTypes)
          cacheCall << colType << ", ";
-      if (!columnList.empty())
+      if (!columnListWithoutSizeColumns.empty())
          cacheCall.seekp(-2, cacheCall.cur);                         // remove the last ",
       cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-                << RDFInternal::PrettyPrintAddr(&columnList) << "));";
+                << RDFInternal::PrettyPrintAddr(&columnListWithoutSizeColumns) << "));";
 
       // book the code to jit with the RLoopManager and trigger the event loop
       fLoopManager->ToJitExec(cacheCall.str());
@@ -756,6 +764,10 @@ public:
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames = tree != nullptr ? RDFInternal::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+      // Ignore __rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
+      ColumnNames_t dsColumnsWithoutSizeColumns;
+      std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
+                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "__rdf_sizeof_"; });
       ColumnNames_t columnNames;
       columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumns.size());
       columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
@@ -2661,9 +2673,10 @@ private:
    RResultPtr<RInterface<RLoopManager>> SnapshotImpl(std::string_view fullTreeName, std::string_view filename,
                                                      const ColumnNames_t &columnList, const RSnapshotOptions &options)
    {
-      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columnList.size());
+      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
 
-      const auto validCols = GetValidatedColumnNames(columnList.size(), columnList);
+      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columnListWithoutSizeColumns.size());
+      const auto validCols = GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
       CheckAndFillDSColumns(validCols, TTraits::TypeList<ColumnTypes...>());
 
       const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
@@ -2671,7 +2684,7 @@ private:
       const auto &dirname = parsedTreePath.fDirName;
 
       auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
-         std::string(filename), std::string(dirname), std::string(treename), columnList, options});
+         std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options});
 
       ::TDirectory::TContext ctxt;
       auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, validCols);
@@ -2688,17 +2701,20 @@ private:
    template <typename... ColTypes, std::size_t... S>
    RInterface<RLoopManager> CacheImpl(const ColumnNames_t &columnList, std::index_sequence<S...>)
    {
+      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
+
       // Check at compile time that the columns types are copy constructible
       constexpr bool areCopyConstructible =
          RDFInternal::TEvalAnd<std::is_copy_constructible<ColTypes>::value...>::value;
       static_assert(areCopyConstructible, "Columns of a type which is not copy constructible cannot be cached yet.");
 
-      RDFInternal::CheckTypesAndPars(sizeof...(ColTypes), columnList.size());
+      RDFInternal::CheckTypesAndPars(sizeof...(ColTypes), columnListWithoutSizeColumns.size());
 
-      auto colHolders = std::make_tuple(Take<ColTypes>(columnList[S])...);
-      auto ds = std::make_unique<RLazyDS<ColTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
+      auto colHolders = std::make_tuple(Take<ColTypes>(columnListWithoutSizeColumns[S])...);
+      auto ds = std::make_unique<RLazyDS<ColTypes...>>(
+         std::make_pair(columnListWithoutSizeColumns[S], std::get<S>(colHolders))...);
 
-      RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnList));
+      RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnListWithoutSizeColumns));
 
       return cachedRDF;
    }

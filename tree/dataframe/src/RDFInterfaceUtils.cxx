@@ -342,6 +342,34 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
+/// Take a list of column names, return that list with entries starting by '#' filtered out.
+/// The function throws when filtering out a column this way.
+ColumnNames_t FilterArraySizeColNames(const ColumnNames_t &columnNames, const std::string &action)
+{
+   ColumnNames_t columnListWithoutSizeColumns;
+   ColumnNames_t filteredColumns;
+   std::copy_if(columnNames.begin(), columnNames.end(), std::back_inserter(columnListWithoutSizeColumns),
+                [&](const std::string &name) {
+                   if (name[0] == '#') {
+                     filteredColumns.emplace_back(name);
+                      return false;
+                   } else {
+                      return true;
+                   }
+                });
+
+   if (!filteredColumns.empty()) {
+      std::string msg = "Column name(s) {";
+      for (auto &c : filteredColumns)
+         msg += c + ", ";
+      msg[msg.size() - 2] = '}';
+      msg += "will be ignored. Please go through a valid Alias to " + action + " an array size column";
+      throw std::runtime_error(msg);
+   }
+
+   return columnListWithoutSizeColumns;
+}
+
 std::string ResolveAlias(const std::string &col, const std::map<std::string, std::string> &aliasMap)
 {
    const auto it = aliasMap.find(col);

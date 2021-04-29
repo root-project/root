@@ -287,6 +287,8 @@ void CheckFilter(Filter &)
                  "filter expression returns a type that is not convertible to bool");
 }
 
+ColumnNames_t FilterArraySizeColNames(const ColumnNames_t &columnNames, const std::string &action);
+
 std::string ResolveAlias(const std::string &col, const std::map<std::string, std::string> &aliasMap);
 
 void CheckValidCppVarName(std::string_view var, const std::string &where);
