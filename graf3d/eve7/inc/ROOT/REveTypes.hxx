@@ -18,6 +18,7 @@
 #include "TString.h"
 
 #include <sstream>
+#include <iostream>
 class TGeoManager;
 
 namespace ROOT {
@@ -70,7 +71,13 @@ public:
    bool has_contents();
    void clear();
 
-   REveLog& operator << (const std::string& txt);
+   template <typename T>
+   REveLog &operator<<(const T &x)
+   {
+      fLog << x;
+      std::cout << x;
+      return *this;
+   }
 
    REveLog &operator<<(std::ostream &(*os)(std::ostream &));
 };

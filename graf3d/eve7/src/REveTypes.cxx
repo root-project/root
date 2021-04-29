@@ -50,16 +50,10 @@ void REveLog::add(const std::string& txt) { fLog << txt; std::cout << txt << std
 bool REveLog::has_contents() { return ! fLog.str().empty(); }
 void REveLog::clear() { fLog.clear(); }
 
-REveLog &REveLog::operator<<(const std::string &txt)
-{
-   fLog << txt;
-   std::cout << txt;
-   return *this;
-}
+
 REveLog &REveLog::operator<<(std::ostream &(*os)(std::ostream &))
 {
    fLog << os;
- //  if (os == std::endl)
    std::cout << os;
    return *this;
 }
