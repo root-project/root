@@ -109,7 +109,7 @@ ClassImp(TFolder);
 
 TFolder::TFolder() : TNamed()
 {
-   fFolders = 0;
+   fFolders = nullptr;
    fIsOwner = kFALSE;
 }
 
@@ -127,7 +127,7 @@ TFolder::TFolder(const char *name, const char *title) : TNamed(name,title)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TFolder::TFolder(const TFolder &folder) : TNamed(folder),fFolders(0),fIsOwner(kFALSE)
+TFolder::TFolder(const TFolder &folder) : TNamed(folder),fFolders(nullptr),fIsOwner(kFALSE)
 {
    ((TFolder&)folder).Copy(*this);
 }
@@ -171,7 +171,7 @@ TFolder::~TFolder()
 
 void TFolder::Add(TObject *obj)
 {
-   if (obj == 0 || fFolders == 0) return;
+   if (obj == nullptr || fFolders == nullptr) return;
    obj->SetBit(kMustCleanup);
    fFolders->Add(obj);
 }
@@ -189,11 +189,11 @@ TFolder *TFolder::AddFolder(const char *name, const char *title, TCollection *co
 {
    if (strchr(name,'/')) {
       ::Error("TFolder::TFolder","folder name cannot contain a slash: %s", name);
-      return 0;
+      return nullptr;
    }
    if (strlen(GetName()) == 0) {
       ::Error("TFolder::TFolder","folder name cannot be \"\"");
-      return 0;
+      return nullptr;
    }
    TFolder *folder = new TFolder();
    folder->SetName(name);
@@ -253,7 +253,7 @@ const char *TFolder::FindFullPathName(const char *name) const
       gFolderLevel = -1;
       return gFolderPath;
    }
-   if (name[0] == '/') return 0;
+   if (name[0] == '/') return nullptr;
    TIter next(fFolders);
    TFolder *folder;
    const char *found;
@@ -271,7 +271,7 @@ const char *TFolder::FindFullPathName(const char *name) const
       if (found) return found;
    }
    gFolderLevel--;
-   return 0;
+   return nullptr;
 }
 
 
@@ -282,7 +282,7 @@ const char *TFolder::FindFullPathName(const char *name) const
 const char *TFolder::FindFullPathName(const TObject *) const
 {
    Error("FindFullPathname","Not yet implemented");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -291,7 +291,7 @@ const char *TFolder::FindFullPathName(const TObject *) const
 TObject *TFolder::FindObject(const TObject *) const
 {
    Error("FindObject","Not yet implemented");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -352,7 +352,7 @@ TObject *TFolder::FindObjectAny(const char *name) const
    if (obj || !fFolders) return obj;
 
    //if (!obj->InheritsFrom(TFolder::Class())) continue;
-   if (name[0] == '/') return 0;
+   if (name[0] == '/') return nullptr;
    TIter next(fFolders);
    TFolder *folder;
    TObject *found;
@@ -364,7 +364,7 @@ TObject *TFolder::FindObjectAny(const char *name) const
       found = folder->FindObjectAny(name);
       if (found) return found;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -462,7 +462,7 @@ void TFolder::RecursiveRemove(TObject *obj)
 
 void TFolder::Remove(TObject *obj)
 {
-   if (obj == 0 || fFolders == 0) return;
+   if (obj == nullptr || fFolders == nullptr) return;
    fFolders->Remove(obj);
 }
 

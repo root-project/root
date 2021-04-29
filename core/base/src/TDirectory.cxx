@@ -318,7 +318,7 @@ static TBuffer* R__CreateBuffer()
    Int_t size = 10000;
    void *args[] = { &mode, &size };
    TBuffer *result;
-   creator(0,2,args,&result);
+   creator(nullptr,2,args,&result);
    return result;
 }
 
@@ -413,7 +413,7 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
       return this;
    }
 
-   if (funcname==0 || strlen(funcname)==0) funcname = "GetDirectory";
+   if (funcname==nullptr || strlen(funcname)==0) funcname = "GetDirectory";
 
    TDirectory *result = this;
 
@@ -673,7 +673,7 @@ void TDirectory::Delete(const char *namecycle)
    if(strcmp(name,"*") == 0)   deleteall = 1;
    if(strcmp(name,"*T") == 0){ deleteall = 1; deletetree = 1;}
    if(strcmp(name,"T*") == 0){ deleteall = 1; deletetree = 1;}
-   if(namecycle==0 || !namecycle[0]){ deleteall = 1; deletetree = 1;}
+   if(namecycle==nullptr || !namecycle[0]){ deleteall = 1; deletetree = 1;}
    TRegexp re(name,kTRUE);
    TString s;
    Int_t deleteOK = 0;
@@ -1158,7 +1158,7 @@ void TDirectory::RecursiveRemove(TObject *obj)
 
 TObject *TDirectory::Remove(TObject* obj)
 {
-   TObject *p = 0;
+   TObject *p = nullptr;
    if (fList) {
       p = fList->Remove(obj);
    }
@@ -1173,7 +1173,7 @@ TObject *TDirectory::Remove(TObject* obj)
 
 void TDirectory::rmdir(const char *name)
 {
-   if ((name==0) || (*name==0)) return;
+   if ((name==nullptr) || (*name==0)) return;
 
    TString mask(name);
    mask+=";*";

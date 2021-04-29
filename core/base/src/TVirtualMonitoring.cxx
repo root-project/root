@@ -24,8 +24,8 @@ ClassImp(TVirtualMonitoringWriter);
 ClassImp(TVirtualMonitoringReader);
 
 
-TVirtualMonitoringWriter *gMonitoringWriter = 0;
-TVirtualMonitoringReader *gMonitoringReader = 0;
+TVirtualMonitoringWriter *gMonitoringWriter = nullptr;
+TVirtualMonitoringReader *gMonitoringReader = nullptr;
 
 ////////////////////////////////////////////////////////////
 /// destructor

@@ -36,7 +36,7 @@ Atom_t    gROOT_MESSAGE;
 
 
 TVirtualX     *gGXBatch;  //Global pointer to batch graphics interface
-TVirtualX*   (*gPtr2VirtualX)() = 0; // returns pointer to global object
+TVirtualX*   (*gPtr2VirtualX)() = nullptr; // returns pointer to global object
 
 
 ClassImp(TVirtualX);
@@ -68,9 +68,9 @@ void TVirtualX::GetWindowAttributes(Window_t /*id*/, WindowAttributes_t &attr)
 {
    attr.fX = attr.fY = 0;
    attr.fWidth = attr.fHeight = 0;
-   attr.fVisual   = 0;
+   attr.fVisual   = nullptr;
    attr.fMapState = kIsUnmapped;
-   attr.fScreen   = 0;
+   attr.fScreen   = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2260,7 +2260,7 @@ void TVirtualX::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 char **TVirtualX::ListFonts(const char * /*fontname*/, Int_t /*max*/, Int_t & count)
 {
    count=0;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2359,7 +2359,7 @@ Window_t TVirtualX::GetCurrentWindow() const
 unsigned char *TVirtualX::GetColorBits(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/,
                                        UInt_t /*w*/, UInt_t /*h*/)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

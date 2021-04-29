@@ -407,7 +407,7 @@ void TUUID::GetSystemTime(uuid_time_t *timestamp)
    timestamp->low  = time.LowPart;
 #else
    struct timeval tp;
-   gettimeofday(&tp, 0);
+   gettimeofday(&tp, nullptr);
    // Offset between UUID formatted times and Unix formatted times.
    // UUID UTC base time is October 15, 1582.
    // Unix base time is January 1, 1970.
@@ -437,7 +437,7 @@ void TUUID::GetNodeIdentifier()
          if (getifaddrs(&ifAddrStruct) != 0) {
             adr = 1;
          } else {
-            for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+            for (ifa = ifAddrStruct; ifa != nullptr; ifa = ifa->ifa_next) {
                if (!ifa->ifa_addr) {
                   continue;
                }
@@ -548,7 +548,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
 #if defined(R__LINUX) && !defined(R__WINGCC)
    sysinfo(&r.s);
 #endif
-   gettimeofday(&r.t, 0);
+   gettimeofday(&r.t, nullptr);
    gethostname(r.hostname, 256);
 #endif
    TMD5 md5;

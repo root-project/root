@@ -52,7 +52,7 @@ NOTE: the use of time_t (and its default implementation as a 32 int)
 ClassImp(TTimeStamp);
 
 
-TVirtualMutex *gTimeMutex = 0; // local mutex
+TVirtualMutex *gTimeMutex = nullptr; // local mutex
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write time stamp to std::ostream.
@@ -571,7 +571,7 @@ void TTimeStamp::Set()
    fSec     = Int_t(time.QuadPart/(unsigned __int64) (1000*1000*10));
 #else
    struct timeval tp;
-   gettimeofday(&tp, 0);
+   gettimeofday(&tp, nullptr);
    fSec     = tp.tv_sec;
    fNanoSec = tp.tv_usec*1000;
 #endif

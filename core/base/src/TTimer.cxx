@@ -85,7 +85,7 @@ public:
 
 TTimer::TTimer(Long_t ms, Bool_t mode) : fTime(ms)
 {
-   fObject      = 0;
+   fObject      = nullptr;
    fCommand     = "";
    fSync        = mode;
    fIntSyscalls = kFALSE;
@@ -115,7 +115,7 @@ TTimer::TTimer(TObject *obj, Long_t ms, Bool_t mode) : fTime(ms)
 
 TTimer::TTimer(const char *command, Long_t ms, Bool_t mode) : fTime(ms)
 {
-   fObject      = 0;
+   fObject      = nullptr;
    fCommand     = command;
    fSync        = mode;
    fIntSyscalls = kFALSE;
@@ -173,7 +173,7 @@ void TTimer::Reset()
 
 void TTimer::SetCommand(const char *command)
 {
-   fObject  = 0;
+   fObject  = nullptr;
    fCommand = command;
 }
 

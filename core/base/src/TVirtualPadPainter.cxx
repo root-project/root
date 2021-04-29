@@ -57,7 +57,7 @@ void TVirtualPadPainter::LockPainter()
 
 TVirtualPadPainter *TVirtualPadPainter::PadPainter(Option_t *type)
 {
-   TVirtualPadPainter *painter = 0;
+   TVirtualPadPainter *painter = nullptr;
    TPluginHandler *h = gPluginMgr->FindHandler("TVirtualPadPainter", type);
 
    if (h && h->LoadPlugin() != -1)
