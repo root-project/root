@@ -43,7 +43,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     TThreadImp.h
     TThreadPool.h
     ROOT/RConcurrentHashColl.hxx
-    ROOT/TReentrantRWLock.hxx
     ROOT/TRWSpinLock.hxx
     ROOT/TSpinMutex.hxx
     ROOT/TThreadedObject.hxx

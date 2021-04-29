@@ -2,10 +2,10 @@
 #include "TVirtualMutex.h"
 #include "TMutex.h"
 #include "TVirtualRWMutex.h"
-#include "ROOT/TReentrantRWLock.hxx"
 #include "ROOT/TRWSpinLock.hxx"
 
 #include "../src/TRWMutexImp.h"
+#include "../src/TReentrantRWLock.hxx"
 
 #include "TSystem.h"
 #include "TROOT.h"
