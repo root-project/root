@@ -141,7 +141,12 @@ Bool_t TPython::Initialize()
       PySys_SetArgv(sizeof(argv) / sizeof(argv[0]), argv);
 
       // force loading of the ROOT module
-      PyRun_SimpleString(const_cast<char *>("import ROOT"));
+      const int ret = PyRun_SimpleString(const_cast<char *>("import ROOT"));
+      if( ret != 0 )
+      {
+          std::cerr << "Error: import ROOT failed, check your PYTHONPATH environmental variable." << std::endl;
+          return kFALSE;
+      }
    }
 
    if (!gMainDict) {
