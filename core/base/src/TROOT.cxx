@@ -1579,7 +1579,7 @@ TGlobal *TROOT::GetGlobal(const char *name, Bool_t load) const
 
 TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t /* load */) const
 {
-   if (addr == nullptr || ((Longptr_t)addr) == -1) return 0;
+   if (addr == nullptr || ((Longptr_t)addr) == -1) return nullptr;
 
    TInterpreter::DeclId_t decl = gInterpreter->GetDataMemberAtAddr(addr);
    if (decl) {
