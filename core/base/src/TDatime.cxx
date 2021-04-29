@@ -289,7 +289,7 @@ void TDatime::ReadBuffer(char *&buffer)
 void TDatime::Set()
 {
 #ifndef WIN32
-   time_t tloc   = time(0);
+   time_t tloc   = time(nullptr);
 #ifdef _REENTRANT
    struct tm tpa;
    struct tm *tp = localtime_r(&tloc, &tpa);
