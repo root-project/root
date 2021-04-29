@@ -1870,7 +1870,6 @@ void TGTextEdit::DelChar()
          pos2.fY = ToScrYCoord(fCurrent.fY+1);
          pos.fY = fCurrent.fY - 1;
          fText->DelLine(fCurrent.fY);
-         len = fText->GetLineLength(fCurrent.fY-1);
 
          if (ToScrXCoord(pos.fX, fCurrent.fY-1) >= (Int_t)fCanvas->GetWidth()) {
             SetHsbPosition((ToScrXCoord(pos.fX, pos.fY)+fVisible.fX-fCanvas->GetWidth()/2)/fScrollVal.fX);

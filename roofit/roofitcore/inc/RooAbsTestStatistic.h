@@ -20,6 +20,8 @@
 #include "RooSetProxy.h"
 #include "RooRealProxy.h"
 #include "TStopwatch.h"
+#include "Math/Util.h"
+
 #include <string>
 #include <vector>
 
@@ -38,16 +40,27 @@ class RooAbsTestStatistic : public RooAbsReal {
     friend class RooRealMPFE;
 public:
 
+  struct Configuration {
+    /// Stores the configuration parameters for RooAbsTestStatistic.
+    std::string rangeName = "";
+    std::string addCoefRangeName = "";
+    int nCPU = 1;
+    RooFit::MPSplit interleave = RooFit::BulkPartition;
+    bool verbose = true;
+    bool splitCutRange = false;
+    bool cloneInputData = true;
+    double integrateOverBinsPrecision = -1.;
+    bool binnedL = false;
+  };
+
   // Constructors, assignment etc
-  RooAbsTestStatistic() ;
+  RooAbsTestStatistic() {}
   RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
-		      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-		      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
+                      const RooArgSet& projDeps, Configuration const& cfg);
   RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name=0);
   virtual ~RooAbsTestStatistic();
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
-				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE, Bool_t binnedL=kFALSE) = 0 ;
+                                      const RooArgSet& projDeps, Configuration const& cfg) = 0;
 
   virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
 
@@ -61,8 +74,8 @@ public:
 
   void enableOffsetting(Bool_t flag) ;
   Bool_t isOffsetting() const { return _doOffset ; }
-  virtual Double_t offset() const { return _offset ; }
-  virtual Double_t offsetCarry() const { return _offsetCarry; }
+  virtual Double_t offset() const { return _offset.Sum() ; }
+  virtual Double_t offsetCarry() const { return _offset.Carry(); }
 
 protected:
 
@@ -103,14 +116,14 @@ protected:
   }
 
   // Original arguments
-  RooAbsReal* _func ;              // Pointer to original input function
-  RooAbsData* _data ;              // Pointer to original input dataset
-  const RooArgSet* _projDeps ;     // Pointer to set with projected observables
-  std::string _rangeName ;         // Name of range in which to calculate test statistic
-  std::string _addCoefRangeName ;  // Name of reference to be used for RooAddPdf components
-  Bool_t _splitRange ;             // Split rangeName in RooSimultaneous index labels if true
-  Int_t _simCount ;                // Total number of component p.d.f.s in RooSimultaneous (if any)
-  Bool_t _verbose ;                // Verbose messaging if true
+  RooAbsReal* _func = nullptr;          // Pointer to original input function
+  RooAbsData* _data = nullptr;          // Pointer to original input dataset
+  const RooArgSet* _projDeps = nullptr; // Pointer to set with projected observables
+  std::string _rangeName ;              // Name of range in which to calculate test statistic
+  std::string _addCoefRangeName ;       // Name of reference to be used for RooAddPdf components
+  Bool_t _splitRange = false;           // Split rangeName in RooSimultaneous index labels if true
+  Int_t _simCount = 1;                  // Total number of component p.d.f.s in RooSimultaneous (if any)
+  Bool_t _verbose = false;              // Verbose messaging if true
 
   virtual Bool_t setDataSlave(RooAbsData& /*data*/, Bool_t /*cloneData*/=kTRUE, Bool_t /*ownNewDataAnyway*/=kFALSE) { return kTRUE ; }
 
@@ -120,31 +133,30 @@ protected:
   virtual Bool_t processEmptyDataSets() const { return kTRUE ; }
 
   Bool_t initialize() ;
-  void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;    
-  void initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;
+  void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, std::string const& rangeName, std::string const& addCoefRangeName) ;    
+  void initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, std::string const& rangeName, std::string const& addCoefRangeName) ;
 
-  mutable Bool_t _init ;          //! Is object initialized  
-  GOFOpMode   _gofOpMode ;        // Operation mode of test statistic instance 
+  mutable Bool_t _init = false;   //! Is object initialized  
+  GOFOpMode _gofOpMode = Slave;   // Operation mode of test statistic instance 
 
-  Int_t       _nEvents ;          // Total number of events in test statistic calculation
-  Int_t       _setNum ;           // Partition number of this instance in parallel calculation mode
-  Int_t       _numSets ;          // Total number of partitions in parallel calculation mode
-  Int_t       _extSet ;           //! Number of designated set to calculated extended term
+  Int_t _nEvents = 0;             // Total number of events in test statistic calculation
+  Int_t       _setNum = 0;        // Partition number of this instance in parallel calculation mode
+  Int_t       _numSets = 1;       // Total number of partitions in parallel calculation mode
+  Int_t       _extSet = 0;        //! Number of designated set to calculated extended term
 
   // Simultaneous mode data
-  Int_t          _nGof        ; // Number of sub-contexts 
-  pRooAbsTestStatistic* _gofArray ; //! Array of sub-contexts representing part of the combined test statistic
+  Int_t          _nGof = 0    ; // Number of sub-contexts 
+  pRooAbsTestStatistic* _gofArray = nullptr; //! Array of sub-contexts representing part of the combined test statistic
   std::vector<RooFit::MPSplit> _gofSplitMode ; //! GOF MP Split mode specified by component (when Auto is active)
   
   // Parallel mode data
-  Int_t          _nCPU ;      //  Number of processors to use in parallel calculation mode
-  pRooRealMPFE*  _mpfeArray ; //! Array of parallel execution frond ends
+  Int_t          _nCPU = 1;   //  Number of processors to use in parallel calculation mode
+  pRooRealMPFE*  _mpfeArray = nullptr; //! Array of parallel execution frond ends
 
-  RooFit::MPSplit        _mpinterl ; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
-  Bool_t         _doOffset ; // Apply interval value offset to control numeric precision?
-  mutable Double_t _offset ; //! Offset
-  mutable Double_t _offsetCarry; //! avoids loss of precision
-  mutable Double_t _evalCarry; //! carry of Kahan sum in evaluatePartition
+  RooFit::MPSplit _mpinterl = RooFit::BulkPartition; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
+  Bool_t         _doOffset = false; // Apply interval value offset to control numeric precision?
+  mutable ROOT::Math::KahanSum<double> _offset = 0.0; //! Offset as KahanSum to avoid loss of precision
+  mutable Double_t _evalCarry = 0.0; //! carry of Kahan sum in evaluatePartition
 
   ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
 

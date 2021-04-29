@@ -201,37 +201,6 @@ TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-
-TGeoArb8::TGeoArb8(const TGeoArb8& ga8) :
-  TGeoBBox(ga8),
-  fDz(ga8.fDz)
-{
-   for(Int_t i=0; i<8; i++) {
-      fXY[i][0]=ga8.fXY[i][0];
-      fXY[i][1]=ga8.fXY[i][1];
-   }
-   CopyTwist(ga8.fTwist);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator.
-
-TGeoArb8& TGeoArb8::operator=(const TGeoArb8& ga8)
-{
-   if(this!=&ga8) {
-      TGeoBBox::operator=(ga8);
-      fDz=ga8.fDz;
-      CopyTwist(ga8.fTwist);
-      for(Int_t i=0; i<8; i++) {
-         fXY[i][0]=ga8.fXY[i][0];
-         fXY[i][1]=ga8.fXY[i][1];
-      }
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TGeoArb8::~TGeoArb8()
@@ -591,8 +560,7 @@ Double_t TGeoArb8::DistToPlane(const Double_t *point, const Double_t *dir, Int_t
    Double_t b=dxs*dir[1]-dys*dir[0]+(dtx*point[1]-dty*point[0]+ty2*xs1-ty1*xs2
               +tx1*ys2-tx2*ys1)*dir[2];
    Double_t c=dxs*point[1]-dys*point[0]+xs1*ys2-xs2*ys1;
-   Double_t s=TGeoShape::Big();
-   Double_t x1,x2,y1,y2,xp,yp,zi;
+   Double_t x1,x2,y1,y2,xp,yp,zi,s;
    if (TMath::Abs(a)<eps) {
       // Surface is planar
       if (TMath::Abs(b)<eps) return TGeoShape::Big(); // Track parallel to surface
@@ -915,10 +883,9 @@ Int_t TGeoArb8::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    Double_t lower[8];
    SetPlaneVertices(origin[2]-dd[2], lower);
    SetPlaneVertices(origin[2]+dd[2], upper);
-   Double_t ddmin=TGeoShape::Big();
    for (Int_t iaxis=0; iaxis<2; iaxis++) {
       if (dd[iaxis]>=0) continue;
-      ddmin=TGeoShape::Big();
+      Double_t ddmin = TGeoShape::Big();
       for (Int_t ivert=0; ivert<4; ivert++) {
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-lower[2*ivert+iaxis]));
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-upper[2*ivert+iaxis]));
@@ -1518,13 +1485,12 @@ Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, I
    // compute distance to get outside this shape
    Bool_t in = kTRUE;
    Double_t pts[8];
-   Double_t snxt;
    Double_t xnew, ynew, znew;
    Int_t i,j;
    if (point[2]<-fDz+TGeoShape::Tolerance()) {
       if (dir[2] < TGeoShape::Tolerance()) return TGeoShape::Big();
       in = kFALSE;
-      snxt = -(fDz+point[2])/dir[2];
+      Double_t snxt = -(fDz+point[2])/dir[2];
       xnew = point[0] + snxt*dir[0];
       ynew = point[1] + snxt*dir[1];
       for (i=0;i<4;i++) {
@@ -1536,7 +1502,7 @@ Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, I
    } else if (point[2]>fDz-TGeoShape::Tolerance()) {
       if (dir[2] > -TGeoShape::Tolerance()) return TGeoShape::Big();
       in = kFALSE;
-      snxt = (fDz-point[2])/dir[2];
+      Double_t snxt = (fDz-point[2])/dir[2];
       xnew = point[0] + snxt*dir[0];
       ynew = point[1] + snxt*dir[1];
       for (i=0;i<4;i++) {
@@ -1546,9 +1512,6 @@ Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, I
       }
       if (InsidePolygon(xnew,ynew,pts)) return snxt;
    }
-   snxt = TGeoShape::Big();
-
-
    // check lateral faces
    Double_t dz2 =0.5/fDz;
    Double_t xa,xb,xc,xd;
@@ -1580,7 +1543,7 @@ Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, I
          // face visible from point outside
          in = kFALSE;
          if (ddotn>=0) return TGeoShape::Big();
-         snxt = saf/ddotn;
+         Double_t snxt = saf/ddotn;
          znew = point[2]+snxt*dir[2];
          if (TMath::Abs(znew)<=fDz) {
             xnew = point[0]+snxt*dir[0];
@@ -1708,13 +1671,12 @@ TGeoShape *TGeoTrap::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 
 Double_t TGeoTrap::Safety(const Double_t *point, Bool_t in) const
 {
-   Double_t safe = TGeoShape::Big();
    Double_t saf[5];
    Double_t norm[3]; // normal to current facette
    Int_t i, j;       // current facette index
    Double_t x0, y0, z0=-fDz, x1, y1, z1=fDz, x2, y2;
    Double_t ax, ay, az=z1-z0, bx, by;
-   Double_t fn;
+   Double_t fn, safe;
    //---> compute safety for lateral planes
    for (i=0; i<4; i++) {
       if (in) saf[i] = TGeoShape::Big();
@@ -1725,7 +1687,6 @@ Double_t TGeoTrap::Safety(const Double_t *point, Bool_t in) const
       y1 = fXY[i+4][1];
       ax = x1-x0;
       ay = y1-y0;
-      az = z1-z0;
       j  = (i+1)%4;
       x2 = fXY[j][0];
       y2 = fXY[j][1];
@@ -1753,11 +1714,15 @@ Double_t TGeoTrap::Safety(const Double_t *point, Bool_t in) const
    saf[4] = fDz-TMath::Abs(point[2]);
    if (in) {
       safe = saf[0];
-      for (j=1;j<5;j++) if (saf[j] <safe) safe = saf[j];
+      for (j=1;j<5;j++)
+         if (saf[j] < safe)
+            safe = saf[j];
    } else {
       saf[4]=-saf[4];
       safe = saf[0];
-      for (j=1;j<5;j++) if (saf[j] >safe) safe = saf[j];
+      for (j=1;j<5;j++)
+         if (saf[j] > safe)
+            safe = saf[j];
    }
    return safe;
 }

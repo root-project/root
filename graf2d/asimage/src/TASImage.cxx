@@ -156,7 +156,7 @@ typedef struct {
 #define _alphaBlend(bot, top) {\
    __argb32__ *T = (__argb32__*)(top);\
    __argb32__ *B = (__argb32__*)(bot);\
-   int aa = 255-T->a;\
+   int aa = 255-T->a; /* NOLINT */ \
    if (!aa) {\
       *bot = *top;\
    } else { \
@@ -3382,8 +3382,6 @@ void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
          return;
       }
 
-      x = 0;
-      y = 0;
       fill_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
    }
 
@@ -4091,8 +4089,6 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
    if (!fImage) {
       w = w ? w : 20;
       h = h ? h : 20;
-      x = 0;
-      y = 0;
       fImage = create_asimage(w, h, 0);
       FillRectangle(col, 0, 0, w, h);
       return;
@@ -4902,10 +4898,9 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
    if (!arr) return;
    UInt_t xx = 0;
    UInt_t yy = 0;
-   UInt_t yyy = 0;
 
    for (UInt_t i = 0; i < npt; i++) {
-      yyy = ppt[i].fY*fImage->width;
+      UInt_t yyy = ppt[i].fY*fImage->width;
 
       for (UInt_t j = 0; j < widths[i]; j++) {
          if ((ppt[i].fX >= (Int_t)fImage->width) || (ppt[i].fX < 0) ||
@@ -4917,7 +4912,6 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
          ii = yy*tile->GetWidth() + xx;
          _alphaBlend(&fImage->alt.argb32[idx], &arr[ii]);
       }
-      yyy += fImage->width;;
    }
 }
 
@@ -5984,15 +5978,13 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return in-memory buffer compressed according image type.
-/// Buffer must be deallocated after usage.
+/// Buffer must be deallocated after usage with free(buffer) call.
 /// This method can be used for sending images over network.
 
 void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
 {
    static ASImageExportParams params;
    Bool_t ret = kFALSE;
-   int   isize = 0;
-   char *ibuff = 0;
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
    if (!img) return;
@@ -6006,8 +5998,8 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
    }
 
    if (!ret) {
-      *size = isize;
-      *buffer = ibuff;
+      *size = 0;
+      *buffer = nullptr;
    }
 }
 
@@ -6173,7 +6165,6 @@ void TASImage::CreateThumbnail()
 void TASImage::Streamer(TBuffer &b)
 {
    Bool_t image_type = 0;
-   char *buffer = 0;
    int size = 0;
    int w, h;
    UInt_t R__s, R__c;
@@ -6215,7 +6206,7 @@ void TASImage::Streamer(TBuffer &b)
 
       if (image_type != 0) {     // read PNG compressed image
          b >> size;
-         buffer = new char[size];
+         char *buffer = new char[size];
          b.ReadFastArray(buffer, size);
          SetImageBuffer(&buffer, TImage::kPng);
          delete [] buffer;
@@ -6245,10 +6236,11 @@ void TASImage::Streamer(TBuffer &b)
       b << image_type;
 
       if (image_type != 0) {     // write PNG compressed image
+         char *buffer = nullptr;
          GetImageBuffer(&buffer, &size, TImage::kPng);
          b << size;
          b.WriteFastArray(buffer, size);
-         delete buffer;
+         free(buffer);
       } else {                   // write vector  with palette
          TAttImage::Streamer(b);
          b << fImage->width;
@@ -6743,21 +6735,19 @@ void TASImage::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    char *buf = 0;
    int sz;
 
-   UInt_t w = GetWidth();
-   UInt_t h = GetHeight();
-
-   if (w > 500) { // workaround CINT limitations
-      w = 500;
+   if (GetWidth() > 500) { // workaround CINT limitations
+      UInt_t w = 500;
       Double_t scale = 500./GetWidth();
-      h = TMath::Nint(GetHeight()*scale);
+      UInt_t h = TMath::Nint(GetHeight()*scale);
       Scale(w, h);
    }
 
    GetImageBuffer(&buf, &sz, TImage::kXpm);
+   TString str = buf;
+   free(buf);
 
    TString name = GetName();
    name.ReplaceAll(".", "_");
-   TString str = buf;
    static int ii = 0;
    ii++;
 

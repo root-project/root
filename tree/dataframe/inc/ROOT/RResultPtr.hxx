@@ -22,19 +22,34 @@
 #include <type_traits> // std::is_constructible
 
 namespace ROOT {
+namespace RDF {
+template <typename T>
+class RResultPtr;
+
+template <typename Proxied, typename DataSource>
+class RInterface;
+} // namespace RDF
+
 namespace Internal {
 namespace RDF {
 class GraphCreatorHelper;
+
+// no-op overload
+template <typename T>
+inline void WarnOnLazySnapshotNotTriggered(const ROOT::RDF::RResultPtr<T> &)
+{
+}
+
+template <typename DS>
+void WarnOnLazySnapshotNotTriggered(
+   const ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, DS>> &r)
+{
+   if (!r.IsReady()) {
+      Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   }
+}
 }
 } // namespace Internal
-} // namespace ROOT
-
-namespace ROOT {
-namespace RDF {
-// Fwd decl for MakeResultPtr
-template <typename T>
-class RResultPtr;
-} // namespace RDF
 
 namespace Detail {
 namespace RDF {
@@ -165,6 +180,12 @@ public:
    RResultPtr &operator=(const RResultPtr &) = default;
    RResultPtr &operator=(RResultPtr &&) = default;
    explicit operator bool() const { return bool(fObjPtr); }
+   ~RResultPtr()
+   {
+      if (fObjPtr.use_count() == 1) {
+         ROOT::Internal::RDF::WarnOnLazySnapshotNotTriggered(*this);
+      }
+   }
 
    /// Convert a RResultPtr<T2> to a RResultPtr<T>.
    ///
@@ -324,18 +345,6 @@ public:
       };
       fLoopManager->RegisterCallback(everyNEvents, std::move(c));
       return *this;
-   }
-
-   /// Return a pointer to the result, releasing its ownership and leaving this object empty.
-   T *Release()
-   {
-      if (fActionPtr != nullptr && !fActionPtr->HasRun())
-         TriggerRun();
-      fActionPtr = nullptr;
-      fLoopManager = nullptr;
-      auto p = fObjPtr.get();
-      fObjPtr.reset();
-      return p;
    }
 
    // clang-format off

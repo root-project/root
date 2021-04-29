@@ -312,6 +312,7 @@ void TMVA::MethodCategory::Init()
 void TMVA::MethodCategory::InitCircularTree(const DataSetInfo& dsi)
 {
    delete fCatTree;
+   fCatTree = nullptr;
 
    std::vector<VariableInfo>::const_iterator viIt;
    const std::vector<VariableInfo>& vars  = dsi.GetVariableInfos();

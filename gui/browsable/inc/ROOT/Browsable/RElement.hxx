@@ -53,6 +53,7 @@ public:
       kActImage,   ///< can be shown in image viewer, can provide image
       kActDraw6,   ///< can be drawn inside ROOT6 canvas
       kActDraw7,   ///< can be drawn inside ROOT7 canvas
+      kActCanvas,  ///< indicate that it is canvas and should be drawn directly
       kActGeom     ///< can be shown in geometry viewer
    };
 
@@ -83,6 +84,9 @@ public:
 
    /** Check if want to perform action */
    virtual bool IsCapable(EActionKind action) const { return action == GetDefaultAction(); }
+
+   /** Should item representing element be expand by default */
+   virtual bool IsExpandByDefault() const { return false; }
 
    static std::shared_ptr<RElement> GetSubElement(std::shared_ptr<RElement> &elem, const RElementPath_t &path);
 

@@ -268,3 +268,128 @@ TEST(RNTupleModel, EnforceValidFieldNames)
    auto otherField = otherModel->MakeField<float>("pt", 42.0);
    auto collection = model->MakeCollection("otherModel", std::move(otherModel));
 }
+
+TEST(RNTupleModel, FieldDescriptions)
+{
+   FileRaii fileGuard("test_ntuple_field_descriptions.root");
+   auto model = RNTupleModel::Create();
+
+   auto pt = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+
+   float num = 10.0;
+   model->AddField({"mass", "mass"}, &num);
+
+   auto charge = std::make_unique<RField<float>>(RField<float>("charge"));
+   charge->SetDescription("electric charge");
+   model->AddField(std::move(charge));
+
+   {
+      RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   std::vector<std::string> fieldDescriptions;
+   for (auto& f: ntuple->GetDescriptor().GetTopLevelFields()) {
+      fieldDescriptions.push_back(f.GetFieldDescription());
+   }
+   ASSERT_EQ(3, fieldDescriptions.size());
+   EXPECT_EQ(std::string("transverse momentum"), fieldDescriptions[0]);
+   EXPECT_EQ(std::string("mass"), fieldDescriptions[1]);
+   EXPECT_EQ(std::string("electric charge"), fieldDescriptions[2]);
+}
+
+TEST(RNTupleModel, CollectionFieldDescriptions)
+{
+   FileRaii fileGuard("test_ntuple_collection_field_descriptions.root");
+   {
+      auto muon = RNTupleModel::Create();
+      muon->SetDescription("muons after basic selection");
+
+      auto model = RNTupleModel::Create();
+      model->MakeCollection("Muon", std::move(muon));
+      RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   const auto& muon_desc = *ntuple->GetDescriptor().GetTopLevelFields().begin();
+   EXPECT_EQ(std::string("muons after basic selection"), muon_desc.GetFieldDescription());
+}
+
+TEST(RNTuple, NullSafety)
+{
+   // RNTupleModel
+   auto model = RNTupleModel::Create();
+   try {
+      auto bad = model->MakeCollection("bad", nullptr);
+      FAIL() << "null submodels should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null collectionModel"));
+   }
+   try {
+      model->AddField(nullptr);
+      FAIL() << "null fields should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null field"));
+   }
+   try {
+      model->AddField<float>("pt", nullptr);
+      FAIL() << "null fields should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null field fromWhere"));
+   }
+
+   // RNTupleReader and RNTupleWriter
+   FileRaii fileGuard("test_ntuple_null_safety.root");
+   try {
+      RNTupleWriter ntuple(nullptr,
+         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+      FAIL() << "null models should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
+   }
+   try {
+      RNTupleWriter ntuple(std::move(model), nullptr);
+      FAIL() << "null sinks should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null sink"));
+   }
+   try {
+      auto ntuple = RNTupleWriter::Recreate(nullptr, "myNtuple", fileGuard.GetPath());
+      FAIL() << "null models should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
+   }
+   try {
+      auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "RECREATE", "", 101);
+      auto ntuple = RNTupleWriter::Append(nullptr, "myNtuple", *file);
+      FAIL() << "null models should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
+   }
+
+   try {
+      auto ntuple = RNTupleReader::Open(nullptr, "myNTuple", fileGuard.GetPath());
+      FAIL() << "null models should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
+   }
+   try {
+      RNTupleReader ntuple(nullptr,
+         std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
+      FAIL() << "null models should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
+   }
+   try {
+      RNTupleReader ntuple(RNTupleModel::Create(), nullptr);
+      FAIL() << "null sources should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null source"));
+   }
+   try {
+      RNTupleReader ntuple(nullptr);
+      FAIL() << "null sources should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("null source"));
+   }
+}

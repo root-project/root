@@ -291,13 +291,13 @@ public:
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    TClass           *LoadClass(const char *name, Bool_t silent = kFALSE) const;
    Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
-   Long_t            Macro(const char *filename, Int_t *error = 0, Bool_t padUpdate = kTRUE);
+   Longptr_t         Macro(const char *filename, Int_t *error = 0, Bool_t padUpdate = kTRUE);
    TCanvas          *MakeDefCanvas() const;
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() const { return fMustClean; }
-   Long_t            ProcessLine(const char *line, Int_t *error = 0);
-   Long_t            ProcessLineSync(const char *line, Int_t *error = 0);
-   Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
+   Longptr_t         ProcessLine(const char *line, Int_t *error = 0);
+   Longptr_t         ProcessLineSync(const char *line, Int_t *error = 0);
+   Longptr_t         ProcessLineFast(const char *line, Int_t *error = 0);
    Bool_t            ReadingObject() const;
    void              RecursiveRemove(TObject *obj);
    void              RefreshBrowsers();

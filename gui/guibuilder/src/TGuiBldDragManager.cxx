@@ -370,11 +370,8 @@ void TGuiBldMenuDialog::Build()
 
             // Find out whether we have options ...
 
-            TList *opt;
-            // coverity[returned_pointer]: keep for later use
-            if ((opt = m->GetOptions())) {
+            if (m->GetOptions()) {
                Warning("Dialog", "option menu not yet implemented");
-
             } else {
                // we haven't got options - textfield ...
                Add(argname, val, type);
@@ -400,7 +397,6 @@ void TGuiBldMenuDialog::Build()
    fOK = new TGTextButton(hf, "&OK", 1);
    hf->AddFrame(fOK, l1);
    fWidgets->Add(fOK);
-   height = fOK->GetDefaultHeight();
    width  = TMath::Max(width, fOK->GetDefaultWidth());
 
 /*
@@ -2481,7 +2477,7 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
                TGFrame *p = (TGFrame*)GetEditableParent(fPimpl->fGrab);
 
                if (p) {
-                  if (p == fBuilder->GetMdiMain()->GetCurrent()) {
+                  if (fBuilder && p == fBuilder->GetMdiMain()->GetCurrent()) {
                      UngrabFrame();
                   } else {
                      SelectFrame(p);
@@ -3335,7 +3331,8 @@ Bool_t TGuiBldDragManager::Save(const char *file)
       if (gVirtualX->InheritsFrom("TGX11")) main->SetIconPixmap("bld_rgb.xpm");
       main->SaveSource(fname.Data(), file ? "keep_names quiet" : "keep_names");
 
-      fBuilder->AddMacro(fname.Data(), img);
+      if (fBuilder)
+         fBuilder->AddMacro(fname.Data(), img);
 
    } else {
       Int_t retval;
@@ -3803,7 +3800,7 @@ void TGuiBldDragManager::CheckTargetUnderGrab()
    }
 
    if (!ok) {
-      ok = CheckTargetAtPoint(x - 1, y + h + 1);
+      CheckTargetAtPoint(x - 1, y + h + 1);
    }
 }
 

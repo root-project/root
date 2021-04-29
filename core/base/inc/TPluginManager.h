@@ -144,10 +144,10 @@ public:
    Int_t       CheckPlugin() const;
    Int_t       LoadPlugin();
 
-   template <typename... T> Long_t ExecPluginImpl(const T&... params)
+   template <typename... T> Longptr_t ExecPluginImpl(const T&... params)
    {
       auto nargs = sizeof...(params);
-      if (!CheckForExecPlugin(nargs)) return 0;
+      if (!CheckForExecPlugin((Int_t)nargs)) return 0;
 
       // The fCallEnv object is shared, since the PluginHandler is a global
       // resource ... and both SetParams and Execute ends up taking the lock
@@ -156,13 +156,13 @@ public:
       R__LOCKGUARD(gInterpreterMutex);
       fCallEnv->SetParams(params...);
 
-      Long_t ret;
+      Longptr_t ret;
       fCallEnv->Execute(ret);
 
       return ret;
    }
 
-   template <typename... T> Long_t ExecPlugin(int nargs, const T&... params)
+   template <typename... T> Longptr_t ExecPlugin(int nargs, const T&... params)
    {
       // For backward compatibility.
       if ((gDebug > 1) && (nargs != (int)sizeof...(params))) {

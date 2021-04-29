@@ -15,26 +15,28 @@
 #include "TObject.h"
 #include "TError.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TNDArray                                                             //
-//                                                                      //
-// N-Dim array class.                                                   //
-//                                                                      //
-// Storage layout:                                                      //
-// Assume 3 dimensions, array sizes 2, 4 and 3 i.e. 24 bins:            //
-// Data is stored as [0,0,0], [0,0,1], [0,0,2], [0,1,0],...             //
-//                                                                      //
-// fSizes stores the combined size of each bin in a dimension, i.e. in  //
-// above example it would contain 24, 12, 3, 1.                         //
-//                                                                      //
-// Storage is allocated lazily, only when data is written to the array. //
-//                                                                      //
-// TNDArrayRef gives access to a sub-dimension, e.g. arr[0][1] in above //
-// three-dimensional example, up to an element with conversion operator //
-// to double: double value = arr[0][1][2];                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TNDArray
+
+N-Dim array class.
+
+Storage layout:
+Assume 3 dimensions, array sizes 2, 4 and 3 i.e. 24 bins:
+Data is stored as [0,0,0], [0,0,1], [0,0,2], [0,1,0],...
+
+fSizes stores the combined size of each bin in a dimension, i.e. in
+above example it would contain 24, 12, 3, 1.
+
+Storage is allocated lazily, only when data is written to the array.
+*/
+
+
+/** \class TNDArrayRef
+
+gives access to a sub-dimension, e.g. arr[0][1] in above
+three-dimensional example, up to an element with conversion operator
+to double: double value = arr[0][1][2];
+*/
+
 
 // Array layout:
 // nbins[0] = 2, nbins[1] = 4, nbins[2] = 3 => 24 bins
@@ -90,9 +92,9 @@ private:
    TNDArray& operator=(const TNDArray&); // intentionally not implemented
 
 protected:
-   Int_t  fNdimPlusOne; // Number of dimensions plus one
-   Long64_t* fSizes; //[fNdimPlusOne] bin count
-   ClassDef(TNDArray, 1); //Base for n-dimensional array
+   Int_t  fNdimPlusOne;   ///< Number of dimensions plus one
+   Long64_t* fSizes;      ///<[fNdimPlusOne] bin count
+   ClassDef(TNDArray, 1); ///< Base for n-dimensional array
 };
 
 template <typename T>
@@ -113,9 +115,9 @@ public:
    }
 
 private:
-   const T* fData; // pointer into TNDArray's fData
-   const Long64_t* fSizes; // pointer into TNDArray's fSizes
-   ClassDefNV(TNDArrayRef, 0); // subdimension of a TNDArray
+   const T* fData;             ///< Pointer into TNDArray's fData
+   const Long64_t* fSizes;     ///< Pointer into TNDArray's fSizes
+   ClassDefNV(TNDArrayRef, 0); ///< Subdimension of a TNDArray
 };
 
 template <typename T>

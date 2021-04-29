@@ -43,9 +43,9 @@ void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/)
   // Retrieve study pack 
   _pkg=0 ;
   if (fInput) { 
-    TIterator* iter = fInput->MakeIterator() ;
+    TIter iter = fInput->MakeIterator() ;
     TObject* obj ;
-    while((obj=iter->Next())) {
+    while((obj=iter.Next())) {
       RooStudyPackage* tmp = dynamic_cast<RooStudyPackage*>(obj) ;
       if (tmp) {
 	_pkg = tmp ;

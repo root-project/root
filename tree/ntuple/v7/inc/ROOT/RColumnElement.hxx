@@ -100,6 +100,7 @@ public:
 
    void *GetRawContent() const { return fRawContent; }
    std::size_t GetSize() const { return fSize; }
+   std::size_t GetPackedSize(std::size_t nElements) const { return (nElements * GetBitsOnStorage() + 7) / 8; }
 };
 
 /**
@@ -140,12 +141,45 @@ public:
 };
 
 template <>
+class RColumnElement<std::int8_t, EColumnType::kByte> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = true;
+   static constexpr std::size_t kSize = sizeof(std::int8_t);
+   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   explicit RColumnElement(std::int8_t *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template <>
 class RColumnElement<std::uint8_t, EColumnType::kByte> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
    static constexpr std::size_t kSize = sizeof(std::uint8_t);
    static constexpr std::size_t kBitsOnStorage = kSize * 8;
    explicit RColumnElement(std::uint8_t *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template<>
+class RColumnElement<std::int16_t, EColumnType::kInt16> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = true;
+   static constexpr std::size_t kSize = sizeof(std::int16_t);
+   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   explicit RColumnElement(std::int16_t *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template<>
+class RColumnElement<std::uint16_t, EColumnType::kInt16> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = true;
+   static constexpr std::size_t kSize = sizeof(std::uint16_t);
+   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   explicit RColumnElement(std::uint16_t *value) : RColumnElementBase(value, kSize) {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
 };

@@ -108,11 +108,11 @@ class TGTextLayout : public TObject {
 friend class TGFont;
 
 protected:
-   const TGFont  *fFont;         // The font used when laying out the text.
-   const char    *fString;       // The string that was layed out.
-   Int_t          fWidth;        // The maximum width of all lines in the text layout.
-   Int_t          fNumChunks;    // Number of chunks actually used in following array.
-   LayoutChunk_t *fChunks;       // Array of chunks. The actual size will be maxChunks.
+   const TGFont  *fFont;         ///< The font used when laying out the text.
+   const char    *fString;       ///< The string that was laid out.
+   Int_t          fWidth;        ///< The maximum width of all lines in the text layout.
+   Int_t          fNumChunks;    ///< Number of chunks actually used in following array.
+   LayoutChunk_t *fChunks;       ///< Array of chunks. The actual size will be maxChunks.
 
    TGTextLayout(const TGTextLayout &tlayout) = delete;
    void operator=(const TGTextLayout &tlayout) = delete;
@@ -143,21 +143,21 @@ friend class TGFontPool;
 friend class TGTextLayout;
 
 private:
-   FontStruct_t     fFontStruct;      // Low level graphics fontstruct
-   FontH_t          fFontH;           // Font handle (derived from fontstruct)
-   FontMetrics_t    fFM;              // Cached font metrics
-   FontAttributes_t fFA;              // Actual font attributes obtained when the font was created
-   TObjString      *fNamedHash;       // Pointer to the named object TGFont was based on
-   Int_t            fTabWidth;        // Width of tabs in this font (pixels).
-   Int_t            fUnderlinePos;    // Offset from baseline to origin of underline bar
-                                      // (used for drawing underlines on a non-underlined font).
-   Int_t            fUnderlineHeight; // Height of underline bar (used for drawing
-                                      // underlines on a non-underlined font).
-   char             fTypes[256];      // Array giving types of all characters in
-                                      // the font, used when displaying control characters.
-   Int_t            fWidths[256];     // Array giving widths of all possible characters in the font.
-   Int_t            fBarHeight;       // Height of underline or overstrike bar
-                                      // (used for simulating a native underlined or strikeout font).
+   FontStruct_t     fFontStruct;      ///< Low level graphics fontstruct
+   FontH_t          fFontH;           ///< Font handle (derived from fontstruct)
+   FontMetrics_t    fFM;              ///< Cached font metrics
+   FontAttributes_t fFA;              ///< Actual font attributes obtained when the font was created
+   TObjString      *fNamedHash;       ///< Pointer to the named object TGFont was based on
+   Int_t            fTabWidth;        ///< Width of tabs in this font (pixels).
+   Int_t            fUnderlinePos;    ///< Offset from baseline to origin of underline bar
+                                      ///< (used for drawing underlines on a non-underlined font).
+   Int_t            fUnderlineHeight; ///< Height of underline bar (used for drawing
+                                      ///< underlines on a non-underlined font).
+   char             fTypes[256];      ///< Array giving types of all characters in
+                                      ///< the font, used when displaying control characters.
+   Int_t            fWidths[256];     ///< Array giving widths of all possible characters in the font.
+   Int_t            fBarHeight;       ///< Height of underline or overstrike bar
+                                      ///< (used for simulating a native underlined or strikeout font).
 
 protected:
    TGFont(const char *name)

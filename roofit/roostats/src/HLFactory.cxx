@@ -258,10 +258,10 @@ RooAbsPdf* HLFactory::GetTotBkgPdf(){
 
     RooArgList pdfs("pdfs");
 
-    TIterator* it = fBkgPdfNames.MakeIterator();
+    TIter it = fBkgPdfNames.MakeIterator();
     TObjString* ostring;
     TObject* obj;
-    while ((obj = it->Next())){
+    while ((obj = it.Next())){
         ostring=(TObjString*) obj;
         pdfs.add( *(fWs->pdf(ostring->String())) );
         }
@@ -542,10 +542,10 @@ void HLFactory::fCreateCategory(){
 
     fComboCat=new RooCategory(name,title);
 
-    TIterator* it=fLabelsNames.MakeIterator();
+    TIter it = fLabelsNames.MakeIterator();
     TObjString* ostring;
     TObject* obj;
-    while ((obj = it->Next())){
+    while ((obj = it.Next())){
         ostring=(TObjString*) obj;
         fComboCat->defineType(ostring->String());
         }

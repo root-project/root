@@ -928,7 +928,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          calcZ = function(x,y,z) {
             let arr = (z<0) ? shape.fNlow : shape.fNhigh;
             return ((z<0) ? -shape.fDz : shape.fDz) - (x*arr[0] + y*arr[1]) / arr[2];
-         }
+         };
 
       // create outer/inner tube
       for (let side = 0; side<2; ++side) {
@@ -1032,7 +1032,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(radiusSegments*4),
-          nx1 = 1, ny1 = 0, nx2 = 1, ny2 = 0;
+          nx1, ny1, nx2 = 1, ny2 = 0;
 
       // create tube faces
       for (let seg=0; seg<radiusSegments; ++seg) {
@@ -1165,13 +1165,14 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    function createPolygonBuffer( shape, faces_limit ) {
       let thetaStart = shape.fPhi1,
           thetaLength = shape.fDphi,
-          radiusSegments = 60, factor = 1;
+          radiusSegments, factor;
 
       if (shape._typename == "TGeoPgon") {
          radiusSegments = shape.fNedges;
          factor = 1. / Math.cos(Math.PI/180 * thetaLength / radiusSegments / 2);
       } else {
          radiusSegments = Math.max(5, Math.round(thetaLength/geo.GradPerSegm));
+         factor = 1;
       }
 
       let usage = new Int16Array(2*shape.fNz), numusedlayers = 0, hasrmin = false;
@@ -1559,7 +1560,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
                               r2 * _cos[seg+d1], r2 * _sin[seg+d1], z,
                               r2 * _cos[seg+d2], r2 * _sin[seg+d2], z,
                               r1 * _cos[seg+d2], r1 * _sin[seg+d2], z, skip);
-             creator.setNormal(0,0, (layer===0) ? 1 : -1)
+             creator.setNormal(0,0, (layer===0) ? 1 : -1);
           }
 
       }
@@ -1812,11 +1813,9 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    function createHalfSpace(shape, geom) {
       if (!shape || !shape.fN || !shape.fP) return null;
 
-      // shape.fP = [0,0,15]; shape.fN = [0,1,1];
+      let vertex = new THREE.Vector3(shape.fP[0], shape.fP[1], shape.fP[2]),
+          normal = new THREE.Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
 
-      let vertex = new THREE.Vector3(shape.fP[0], shape.fP[1], shape.fP[2]);
-
-      let normal = new THREE.Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
       normal.normalize();
 
       let sz = 1e10;
@@ -1828,32 +1827,32 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       // console.log('normal', normal, 'vertex', vertex, 'size', sz);
 
-      let v1 = new THREE.Vector3(-sz, -sz/2, 0),
-          v2 = new THREE.Vector3(0, sz, 0),
-          v3 = new THREE.Vector3(sz, -sz/2, 0),
-          v4 = new THREE.Vector3(0, 0, -sz);
-
-      let geometry = new THREE.Geometry();
-
-      geometry.vertices.push(v1, v2, v3, v4);
-
-      geometry.faces.push( new THREE.Face3( 0, 2, 1 ) );
-      geometry.faces.push( new THREE.Face3( 0, 1, 3 ) );
-      geometry.faces.push( new THREE.Face3( 1, 2, 3 ) );
-      geometry.faces.push( new THREE.Face3( 2, 0, 3 ) );
+      let v0 = new THREE.Vector3(-sz, -sz/2, 0),
+          v1 = new THREE.Vector3(0, sz, 0),
+          v2 = new THREE.Vector3(sz, -sz/2, 0),
+          v3 = new THREE.Vector3(0, 0, -sz),
+          geometry = new THREE.BufferGeometry(),
+          positions = new Float32Array([ v0.x,v0.y,v0.z, v2.x,v2.y,v2.z, v1.x,v1.y,v1.z,
+                                         v0.x,v0.y,v0.z, v1.x,v1.y,v1.z, v3.x,v3.y,v3.z,
+                                         v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z,
+                                         v2.x,v2.y,v2.z, v0.x,v0.y,v0.z, v3.x,v3.y,v3.z ]);
+      geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+      geometry.computeVertexNormals();
 
       geometry.lookAt(normal);
-      geometry.computeFaceNormals();
+      geometry.computeVertexNormals();
 
-      v1.add(vertex);
-      v2.add(vertex);
-      v3.add(vertex);
-      v4.add(vertex);
+      for(let k=0;k<positions.length;k+=3) {
+         positions[k] = positions[k] + vertex.x;
+         positions[k+1] = positions[k+1] + vertex.y;
+         positions[k+2] = positions[k+2] + vertex.z;
+      }
+
       return geometry;
    }
 
    /** @summary Returns number of faces for provided geometry
-     * @param geom  - can be THREE.Geometry, THREE.BufferGeometry, ThreeBSP.Geometry or interim array of polygons
+     * @param geom  - can be THREE.BufferGeometry, ThreeBSP.Geometry or interim array of polygons
      * @memberof JSROOT.GEO
      * @private */
    function countGeometryFaces(geom) {
@@ -1919,12 +1918,9 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       if ((n1 + n2 >= faces_limit) || !geom2) {
-         if (geom1.polygons) {
+         if (geom1.polygons)
             geom1 = ThreeBSP.CreateBufferGeometry(geom1.polygons);
-            n1 = countGeometryFaces(geom1);
-         }
          if (matrix1) geom1.applyMatrix4(matrix1);
-         // if (!geom1._exceed_limit) console.log('reach faces limit', faces_limit, 'got', n1, n2);
          geom1._exceed_limit = true;
          return geom1;
       }
@@ -2142,7 +2138,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       let cameraProjectionMatrix = new THREE.Matrix4();
 
       camera.updateMatrixWorld();
-      camera.matrixWorldInverse.getInverse( camera.matrixWorld );
+
+      camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
       cameraProjectionMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse);
 
       return cameraProjectionMatrix;
@@ -2262,7 +2259,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
    /** @summary Set maximal depth for nodes visibility */
    ClonedNodes.prototype.setVisLevel = function(lvl) {
-      this.vislevel = lvl && !isNaN(lvl) ? lvl : 4;
+      this.vislevel = lvl && Number.isInteger(lvl) ? lvl : 4;
    }
 
    /** @summary Returns maximal depth for nodes visibility */
@@ -2272,7 +2269,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
    /** @summary Set maximal number of visible nodes */
    ClonedNodes.prototype.setMaxVisNodes = function(v) {
-      this.maxnodes = !isNaN(v) ? v : 10000;
+      this.maxnodes = Number.isFinite(v) ? v : 10000;
    }
 
    /** @summary Returns configured maximal number of visible nodes */
@@ -2282,7 +2279,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
    /** @summary Insert node into existing array */
    ClonedNodes.prototype.updateNode = function(node) {
-      if (node && !isNaN(node.id) && (node.id < this.nodes.length))
+      if (node && Number.isInteger(node.id) && (node.id < this.nodes.length))
          this.nodes[node.id] = node;
    }
 
@@ -2593,12 +2590,12 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
             if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be build as first
             for (let n=0;n<this.last;++n) entry.stack[n] = this.stack[n+1]; // copy stack
             return entry;
-         }
+         };
 
          if (arg.domatrix) {
             arg.matrices = [];
             arg.mpool = [ new THREE.Matrix4() ]; // pool of Matrix objects to avoid permanent creation
-            arg.getmatrix = function() { return this.matrices[this.last]; }
+            arg.getmatrix = function() { return this.matrices[this.last]; };
          }
       }
 
@@ -3101,7 +3098,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
                    }
 
                 return true;
-             }
+             };
 
              for (let n=0;n<arg.viscnt.length;++n) arg.viscnt[n] = 0;
 
@@ -3128,7 +3125,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
                this.items.push(this.CopyStack(camFact));
          }
          return true;
-      }
+      };
 
       this.scanVisible(arg);
 
@@ -3194,7 +3191,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       // now sort shapes in volume decrease order
-      shapes.sort(function(a,b) { return b.vol*b.factor - a.vol*a.factor; })
+      shapes.sort((a,b) => b.vol*b.factor - a.vol*a.factor);
 
       // now set new shape ids according to the sorted order and delete temporary field
       for (let n=0;n<shapes.length;++n) {
@@ -3465,10 +3462,10 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    geo.cleanupShape = function(shape) {
       if (!shape) return;
 
-      if (shape.geom && (typeof shape.geom.dispose == 'funciton'))
+      if (shape.geom && (typeof shape.geom.dispose == 'function'))
          shape.geom.dispose();
 
-      if (shape.geomZ && (typeof shape.geomZ.dispose == 'funciton'))
+      if (shape.geomZ && (typeof shape.geomZ.dispose == 'function'))
          shape.geomZ.dispose();
 
       delete shape.geom;
@@ -3736,9 +3733,9 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let uniquevis = opt.no_screen ? 0 : clones.markVisibles(true);
       if (uniquevis <= 0)
-         uniquevis = clones.markVisibles(false, false, hide_top);
+         clones.markVisibles(false, false, hide_top);
       else
-         uniquevis = clones.markVisibles(true, true, hide_top); // copy bits once and use normal visibility bits
+         clones.markVisibles(true, true, hide_top); // copy bits once and use normal visibility bits
 
       clones.produceIdShifts();
 
@@ -3754,7 +3751,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let toplevel = new THREE.Object3D();
 
-      for (let n=0; n < draw_nodes.length;++n) {
+      for (let n = 0; n < draw_nodes.length; ++n) {
          let entry = draw_nodes[n];
          if (entry.done) continue;
 
@@ -3790,6 +3787,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          } else {
             mesh = createFlippedMesh(shape, prop.material);
          }
+
+         mesh.name = clones.getNodeName(entry.nodeid);
 
          obj3d.add(mesh);
 

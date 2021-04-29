@@ -850,6 +850,178 @@ Int_t RooAbsCollection::index(const char* name) const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get value of a RooAbsReal stored in set with given name. If none is found, value of defVal is returned.
+/// No error messages are printed unless the verbose flag is set
+
+Double_t RooAbsCollection::getRealValue(const char* name, Double_t defVal, Bool_t verbose) const
+{
+   RooAbsArg* raa = find(name) ;
+   if (!raa) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::getRealValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+      return defVal ;
+   }
+   RooAbsReal* rar = dynamic_cast<RooAbsReal*>(raa) ;
+   if (!rar) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::getRealValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsReal" << endl ;
+      return defVal ;
+   }
+   return rar->getVal() ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set value of a RooAbsRealLValye stored in set with given name to newVal
+/// No error messages are printed unless the verbose flag is set
+
+Bool_t RooAbsCollection::setRealValue(const char* name, Double_t newVal, Bool_t verbose)
+{
+   RooAbsArg* raa = find(name) ;
+   if (!raa) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::setRealValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+      return kTRUE ;
+   }
+   RooAbsRealLValue* rar = dynamic_cast<RooAbsRealLValue*>(raa) ;
+   if (!rar) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::setRealValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsRealLValue" << endl ;
+      return kTRUE;
+   }
+   rar->setVal(newVal) ;
+   return kFALSE ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get state name of a RooAbsCategory stored in set with given name. If none is found, value of defVal is returned.
+/// No error messages are printed unless the verbose flag is set
+
+const char* RooAbsCollection::getCatLabel(const char* name, const char* defVal, Bool_t verbose) const
+{
+   RooAbsArg* raa = find(name) ;
+   if (!raa) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::getCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+      return defVal ;
+   }
+   RooAbsCategory* rac = dynamic_cast<RooAbsCategory*>(raa) ;
+   if (!rac) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::getCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
+      return defVal ;
+   }
+   return rac->getCurrentLabel() ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set state name of a RooAbsCategoryLValue stored in set with given name to newVal.
+/// No error messages are printed unless the verbose flag is set
+
+Bool_t RooAbsCollection::setCatLabel(const char* name, const char* newVal, Bool_t verbose)
+{
+   RooAbsArg* raa = find(name) ;
+   if (!raa) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::setCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+      return kTRUE ;
+   }
+   RooAbsCategoryLValue* rac = dynamic_cast<RooAbsCategoryLValue*>(raa) ;
+   if (!rac) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::setCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
+      return kTRUE ;
+   }
+   rac->setLabel(newVal) ;
+   return kFALSE ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get index value of a RooAbsCategory stored in set with given name. If none is found, value of defVal is returned.
+/// No error messages are printed unless the verbose flag is set
+
+Int_t RooAbsCollection::getCatIndex(const char* name, Int_t defVal, Bool_t verbose) const
+{
+   RooAbsArg* raa = find(name) ;
+   if (!raa) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::getCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+      return defVal ;
+   }
+   RooAbsCategory* rac = dynamic_cast<RooAbsCategory*>(raa) ;
+   if (!rac) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::getCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
+      return defVal ;
+   }
+   return rac->getCurrentIndex() ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set index value of a RooAbsCategoryLValue stored in set with given name to newVal.
+/// No error messages are printed unless the verbose flag is set
+
+Bool_t RooAbsCollection::setCatIndex(const char* name, Int_t newVal, Bool_t verbose)
+{
+   RooAbsArg* raa = find(name) ;
+   if (!raa) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::setCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+      return kTRUE ;
+   }
+   RooAbsCategoryLValue* rac = dynamic_cast<RooAbsCategoryLValue*>(raa) ;
+   if (!rac) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::setCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
+      return kTRUE ;
+   }
+   rac->setIndex(newVal) ;
+   return kFALSE ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get string value of a RooStringVar stored in set with given name. If none is found, value of defVal is returned.
+/// No error messages are printed unless the verbose flag is set
+
+const char* RooAbsCollection::getStringValue(const char* name, const char* defVal, Bool_t verbose) const
+{
+   RooAbsArg* raa = find(name) ;
+   if (!raa) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::getStringValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+      return defVal ;
+   }
+   auto ras = dynamic_cast<const RooStringVar*>(raa) ;
+   if (!ras) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::getStringValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooStringVar" << endl ;
+      return defVal ;
+   }
+
+   return ras->getVal() ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set string value of a RooStringVar stored in set with given name to newVal.
+/// No error messages are printed unless the verbose flag is set
+
+Bool_t RooAbsCollection::setStringValue(const char* name, const char* newVal, Bool_t verbose)
+{
+   RooAbsArg* raa = find(name) ;
+   if (!raa) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::setStringValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+      return kTRUE ;
+   }
+   auto ras = dynamic_cast<RooStringVar*>(raa);
+   if (!ras) {
+      if (verbose) coutE(InputArguments) << "RooAbsCollection::setStringValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooStringVar" << endl ;
+      return kTRUE ;
+   }
+   ras->setVal(newVal);
+
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return comma separated list of contained object names as STL string
 string RooAbsCollection::contentsString() const
 {

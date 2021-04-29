@@ -14,6 +14,28 @@
 
 A TLeaf describes individual elements of a TBranch
 See TBranch structure in TTree.
+
+A TTree object is a list of TBranch.
+A TBranch object is a list of TLeaf.  In most cases, the TBranch
+will have one TLeaf.
+A TLeaf describes the branch data types and holds the data.
+
+A few notes about the data held by the leaf.  It can contain:
+  1. a single object or primitive (e.g., one float),
+  2. a fixed-number of objects (e.g., each entry has two floats).
+     The number of elements per entry is saved in `fLen`.
+  3. a dynamic number of primitives.  The number of objects in each
+     entry is saved in the `fLeafCount` branch.
+
+Note options (2) and (3) can combined - if fLeafCount says an entry
+has 3 elements and fLen is 2, then there will be 6 objects in that
+entry.
+
+Additionally, `fNdata` is transient and generated on read to
+determine the necessary size of a buffer to hold event data;
+depending on the call-site, it may be sized larger than the number
+of elements
+
 */
 
 #include "TLeaf.h"
@@ -22,6 +44,7 @@ See TBranch structure in TTree.
 #include "TTree.h"
 #include "TVirtualPad.h"
 #include "TBrowser.h"
+#include "strlcpy.h"
 
 #include <cctype>
 
@@ -234,7 +257,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    bleft++;
    Int_t nch = strlen(bleft);
    char* countname = new char[nch+1];
-   strcpy(countname, bleft);
+   strlcpy(countname, bleft, nch+1);
    char* bright = (char*) strchr(countname, ']');
    if (!bright) {
       delete[] countname;
@@ -270,7 +293,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
       strcpy(withdot, GetName());
       char* lastdot = strrchr(withdot, '.');
       strcpy(lastdot, countname);
-      leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
+      leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(withdot);
       delete[] withdot;
       withdot = 0;
    }

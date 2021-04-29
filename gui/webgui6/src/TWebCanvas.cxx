@@ -313,7 +313,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       }
    }
 
-   if (need_frame && !frame && CanCreateObject("TFrame")) {
+   if (need_frame && !frame && primitives && CanCreateObject("TFrame")) {
       frame = pad->GetFrame();
       primitives->AddFirst(frame);
    }
@@ -322,7 +322,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       if (title) {
          auto line0 = title->GetLine(0);
          if (line0 && !IsReadOnly()) line0->SetTitle(need_title.c_str());
-      } else if (CanCreateObject("TPaveText")) {
+      } else if (primitives && CanCreateObject("TPaveText")) {
          title = new TPaveText(0, 0, 0, 0, "blNDC");
          title->SetFillColor(gStyle->GetTitleFillColor());
          title->SetFillStyle(gStyle->GetTitleStyle());
@@ -1370,7 +1370,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, TPad *pad, TObjLink *
 
          if (!kind.empty() && (kind.compare(0,7,"member_") == 0)) {
             auto member = kind.substr(7);
-            auto offset = obj->IsA()->GetDataMemberOffset(member.c_str());
+            auto offset = obj->IsA() ? obj->IsA()->GetDataMemberOffset(member.c_str()) : 0;
             if (offset > 0) {
                TObject **mobj = (TObject **)((char*) obj + offset);
                return *mobj;

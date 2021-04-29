@@ -51,6 +51,9 @@ protected:
    Bool_t                SliceCrossingInZ(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
    void                  SetSegsAndPolsNoInside(TBuffer3D &buff) const;
 
+   TGeoPgon(const TGeoPgon&) = delete;
+   TGeoPgon& operator=(const TGeoPgon&) = delete;
+
 public:
    // constructors
    TGeoPgon();

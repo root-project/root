@@ -85,9 +85,8 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
    fSubnames = subnames;
    fUserData = 0;
 
-   fCpos  =
-   fJmode = 0;
-
+   fCpos  = fJmode = 0;
+   fCtw = nullptr;
    fActive = kFALSE;
 
    fFontStruct = GetDefaultFontStruct();
@@ -110,8 +109,6 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
          fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                         fSubnames[i]->GetLength());
       }
-   } else {
-      fCtw = 0;
    }
 
    fViewMode = (EListViewMode)-1;
@@ -149,8 +146,9 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
    fSubnames = subnames;
    fUserData = 0;
 
-   fCpos  =
-   fJmode = 0;
+   fCpos = fJmode = 0;
+
+   fCtw = nullptr;
 
    fActive = kFALSE;
 
@@ -172,8 +170,6 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
          fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                         fSubnames[i]->GetLength());
       }
-   } else {
-      fCtw = 0;
    }
 
    fViewMode = (EListViewMode)-1;
@@ -190,7 +186,11 @@ TGLVEntry::~TGLVEntry()
    if (fSubnames) {
       for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
       delete [] fSubnames;
+      fSubnames = nullptr;
+   }
+   if (fCtw) {
       delete [] fCtw;
+      fCtw = nullptr;
    }
 }
 
@@ -205,11 +205,14 @@ void TGLVEntry::SetSubnames(const char* n1,const char* n2,const char* n3,
    if (fSubnames) {
       for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
       delete [] fSubnames;
+   }
+   if (fCtw) {
       delete [] fCtw;
    }
 
    Int_t ncol = 0;
-   fSubnames = 0;
+   fSubnames = nullptr;
+   fCtw = nullptr;
 
    if (n12 && strlen(n12)) ncol=12;
    else if (n11 && strlen(n11)) ncol=11;
@@ -263,7 +266,7 @@ void TGLVEntry::Activate(Bool_t a)
       fSelPic = new TGSelectedPicture(gClient, fCurrent);
    } else {
       if (fSelPic) delete fSelPic;
-      fSelPic = 0;
+      fSelPic = nullptr;
    }
    DoRedraw();
 }
@@ -848,7 +851,6 @@ Bool_t TGLVContainer::HandleButton(Event_t* event)
          total = selected = 0;
       }
 
-      select_frame = kFALSE;
       while ((el = (TGFrameElement *) next())) {
          select_frame = kFALSE;
 

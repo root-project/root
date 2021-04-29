@@ -58,15 +58,15 @@ private:
    TGLayoutHints       *fMenuBarHelpLayout;
    TGLayoutHints       *fComboLayout;
    TGLayoutHints       *fBarLayout;
-   TGComboBox          *fDrawOption;         // drawing option entry
-   TGLayoutHints       *fExpandLayout;       //
-   Bool_t               fBrowseTextFile;     //
+   TGComboBox          *fDrawOption;         ///< drawing option entry
+   TGLayoutHints       *fExpandLayout;       ///<
+   Bool_t               fBrowseTextFile;     ///<
    TString              fTextFileName;
 
    TList               *fWidgets;
-   TList               *fHistory;            // history of browsing
-   TObject             *fHistoryCursor;      // current hsitory position
-   const TGPicture     *fIconPic;            // icon picture
+   TList               *fHistory;            ///< history of browsing
+   TObject             *fHistoryCursor;      ///< current history position
+   const TGPicture     *fIconPic;            ///< icon picture
 
    void  CreateBrowser(const char *name);
    void  ListTreeHighlight(TGListTreeItem *item);
@@ -102,14 +102,14 @@ protected:
    TRootIconBox        *fIconBox;
    TGCanvas            *fTreeView;
    TGListTree          *fLt;
-   TGButton            *fToolBarButton[7];  // same size as gToolBarData[]
+   TGButton            *fToolBarButton[7];  ///< same size as gToolBarData[]
    TGFSComboBox        *fFSComboBox;
    TGStatusBar         *fStatusBar;
-   TGListTreeItem      *fListLevel;         // current TGListTree level
-   Bool_t               fTreeLock;          // true when we want to lock TGListTree
-   Int_t                fViewMode;          // current IconBox view mode
-   Int_t                fSortMode;          // current IconBox sort mode
-   TGTextEdit          *fTextEdit;          // contents of browsed text file
+   TGListTreeItem      *fListLevel;         ///< current TGListTree level
+   Bool_t               fTreeLock;          ///< true when we want to lock TGListTree
+   Int_t                fViewMode;          ///< current IconBox view mode
+   Int_t                fSortMode;          ///< current IconBox sort mode
+   TGTextEdit          *fTextEdit;          ///< contents of browsed text file
 
 public:
    TRootBrowserLite(TBrowser *b = nullptr, const char *title = "ROOT Browser", UInt_t width = 800, UInt_t height = 500);
@@ -155,7 +155,7 @@ public:
    Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    void     ReallyDelete() override;
 
-   // auxilary (a la private) methods
+   // auxiliary (a la private) methods
    void     ExecMacro();
    void     InterruptMacro();
 

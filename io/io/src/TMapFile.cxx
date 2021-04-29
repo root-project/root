@@ -123,7 +123,7 @@ union semun {
 #endif
 
 
-Long_t TMapFile::fgMapAddress = 0;
+Longptr_t TMapFile::fgMapAddress = 0;
 void  *TMapFile::fgMmallocDesc = 0;
 
 //void *ROOT::Internal::gMmallocDesc = 0; //is initialized in TStorage.cxx
@@ -239,8 +239,8 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
    fSemaphore   = -1;
    fhSemaphore  = 0;
 #else
-   fFd          = (Int_t) INVALID_HANDLE_VALUE;
-   fSemaphore   = (Int_t) INVALID_HANDLE_VALUE;
+   fFd          = (Longptr_t) INVALID_HANDLE_VALUE;
+   fSemaphore   = (Longptr_t) INVALID_HANDLE_VALUE;
 #endif
    fMmallocDesc = nullptr;
    fSize        = size;
@@ -325,7 +325,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 #ifndef WIN32
       fFd = open(fname, O_RDWR | O_CREAT, 0644);
 #else
-      fFd = (Int_t) CreateFile(fname,                    // pointer to name of the file
+      fFd = (Longptr_t) CreateFile(fname,                    // pointer to name of the file
                      GENERIC_WRITE | GENERIC_READ,       // access (read-write) mode
                      FILE_SHARE_WRITE | FILE_SHARE_READ, // share mode
                      NULL,                               // pointer to security attributes
@@ -333,7 +333,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
                      FILE_ATTRIBUTE_TEMPORARY,           // file attributes
                      (HANDLE) NULL);                     // handle to file with attributes to copy
 #endif
-      if (fFd == (Int_t)INVALID_HANDLE_VALUE) {
+      if (fFd == (Longptr_t)INVALID_HANDLE_VALUE) {
          SysError("TMapFile", "file %s can not be opened", fname);
          goto zombie;
       }
@@ -342,7 +342,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 #ifndef WIN32
       fFd = open(fname, O_RDONLY);
 #else
-      fFd = (Int_t) CreateFile(fname,                    // pointer to name of the file
+      fFd = (Longptr_t) CreateFile(fname,                    // pointer to name of the file
                      GENERIC_READ,                       // access (read-write) mode
                      FILE_SHARE_WRITE | FILE_SHARE_READ, // share mode
                      NULL,                               // pointer to security attributes
@@ -350,7 +350,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
                      FILE_ATTRIBUTE_TEMPORARY,           // file attributes
                      (HANDLE) NULL);                     // handle to file with attributes to copy
 #endif
-      if (fFd == (Int_t)INVALID_HANDLE_VALUE) {
+      if (fFd == (Longptr_t)INVALID_HANDLE_VALUE) {
          SysError("TMapFile", "file %s can not be opened for reading", fname);
          goto zombie;
       }
@@ -468,7 +468,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
          goto zombie;
       }
 
-      fBaseAddr = (ULong_t)((struct mdesc *) fMmallocDesc)->base;
+      fBaseAddr = (ULongptr_t)((struct mdesc *) fMmallocDesc)->base;
 
       CreateSemaphore();
 
@@ -512,13 +512,13 @@ zombie:
 /// of TMapFile in the memory mapped heap. It's main purpose is to
 /// correctly create the string data members.
 
-TMapFile::TMapFile(const TMapFile &f, Long_t offset) : TObject(f)
+TMapFile::TMapFile(const TMapFile &f, Longptr_t offset) : TObject(f)
 {
    fFd          = f.fFd;
    fVersion     = f.fVersion;
-   fName        = StrDup((char *)((Long_t)f.fName + offset));
-   fTitle       = StrDup((char *)((Long_t)f.fTitle + offset));
-   fOption      = StrDup((char *)((Long_t)f.fOption + offset));
+   fName        = StrDup((char *)((Longptr_t)f.fName + offset));
+   fTitle       = StrDup((char *)((Longptr_t)f.fTitle + offset));
+   fOption      = StrDup((char *)((Longptr_t)f.fOption + offset));
    fMmallocDesc = f.fMmallocDesc;
    fBaseAddr    = f.fBaseAddr;
    fSize        = f.fSize;
@@ -842,8 +842,8 @@ void TMapFile::CreateSemaphore(int pid)
    char buffer[] ="ROOT_Semaphore_xxxxxxxx";
    int lbuf = strlen(buffer);
    if (!pid) fSemaphore = getpid();
-   fhSemaphore = (ULong_t)CreateMutex(NULL,FALSE,itoa(fSemaphore,&buffer[lbuf-8],16));
-   if (fhSemaphore == 0) fSemaphore = (Int_t)INVALID_HANDLE_VALUE;
+   fhSemaphore = (ULongptr_t)CreateMutex(NULL,FALSE,itoa(fSemaphore,&buffer[lbuf-8],16));
+   if (fhSemaphore == 0) fSemaphore = (Longptr_t)INVALID_HANDLE_VALUE;
 #endif
 #endif
 }
@@ -864,10 +864,10 @@ void TMapFile::DeleteSemaphore()
       semctl(semid, 0, IPC_RMID, set);
    }
 #else
-   if (fSemaphore != (Int_t)INVALID_HANDLE_VALUE) {
+   if (fSemaphore != (Longptr_t)INVALID_HANDLE_VALUE) {
       CloseHandle((HANDLE)fhSemaphore);
       fhSemaphore = 0;
-      fSemaphore  = (Int_t)INVALID_HANDLE_VALUE;
+      fSemaphore  = (Longptr_t)INVALID_HANDLE_VALUE;
    }
 #endif
 #endif
@@ -904,7 +904,7 @@ again:
    }
 #else
    // Enter Critical section to "write" lock
-   if (fSemaphore != (Int_t)INVALID_HANDLE_VALUE)
+   if (fSemaphore != (Longptr_t)INVALID_HANDLE_VALUE)
       WaitForSingleObject((HANDLE)fhSemaphore,INFINITE);
 #endif
 #endif
@@ -937,7 +937,7 @@ Int_t TMapFile::ReleaseSemaphore()
       }
    }
 #else
-   if (fSemaphore != (Int_t)INVALID_HANDLE_VALUE)
+   if (fSemaphore != (Longptr_t)INVALID_HANDLE_VALUE)
       ReleaseMutex((HANDLE)fhSemaphore);
 #endif
 #endif
@@ -1020,10 +1020,10 @@ void TMapFile::Print(Option_t *) const
    Printf("Title:                %s", fTitle);
    if (fMmallocDesc) {
       Printf("Option:               %s", fOption);
-      ULong_t size = (ULong_t)((struct mdesc *)fMmallocDesc)->top - fBaseAddr;
-      Printf("Mapped Memory region: 0x%lx - 0x%lx (%.2f MB)", fBaseAddr, fBaseAddr + size,
+      size_t size = (size_t)((struct mdesc *)fMmallocDesc)->top - fBaseAddr;
+      Printf("Mapped Memory region: 0x%zx - 0x%zx (%.2f MB)", (size_t)fBaseAddr, (size_t)fBaseAddr + size,
              (float)size/1048576);
-      Printf("Current breakval:     0x%lx", (ULong_t)GetBreakval());
+      Printf("Current breakval:     0x%zx", (size_t)GetBreakval());
    } else
       Printf("Option:               file closed");
 }
@@ -1183,7 +1183,7 @@ TMapFile *TMapFile::Create(const char *name, Option_t *option, Int_t size,
 /// program is larger (i.e. has more shared memory occupied) than the
 /// producer. If this is not true inverse the procedure.
 
-void TMapFile::SetMapAddress(Long_t addr)
+void TMapFile::SetMapAddress(Longptr_t addr)
 {
    fgMapAddress = addr;
 }
@@ -1245,8 +1245,8 @@ TMapFile *TMapFile::WhichMapFile(void *addr)
    while (lnk) {
       TMapFile *mf = (TMapFile*)lnk->GetObject();
       if (!mf) return 0;
-      if ((ULong_t)addr >= mf->fBaseAddr + mf->fOffset &&
-          (ULong_t)addr <  (ULong_t)mf->GetBreakval() + mf->fOffset)
+      if ((ULongptr_t)addr >= mf->fBaseAddr + mf->fOffset &&
+          (ULongptr_t)addr <  (ULongptr_t)mf->GetBreakval() + mf->fOffset)
          return mf;
       lnk = lnk->Prev();
    }

@@ -24,6 +24,9 @@ protected :
    Double_t              fRmin2; // inner radius at +dz
    Double_t              fRmax2; // outer radius at +dz
 // methods
+   TGeoCone(const TGeoCone&) = delete;
+   TGeoCone& operator=(const TGeoCone&) = delete;
+
 public:
    // constructors
    TGeoCone();

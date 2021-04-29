@@ -183,7 +183,7 @@ void TMacro::Browse(TBrowser * /*b*/)
       return;
    }
    if (opt.Contains(".C")) {
-      const char *cmd = Form(".x %s((TMacro*)0x%lx)",opt.Data(),(ULong_t)this);
+      const char *cmd = Form(".x %s((TMacro*)0x%zx)",opt.Data(),(size_t)this);
       gROOT->ProcessLine(cmd);
       return;
    }
@@ -265,7 +265,7 @@ Bool_t TMacro::Load() const
 /// Returns the result of the macro (return value or value of the last
 /// expression), cast to a Long_t.
 
-Long_t TMacro::Exec(const char *params, Int_t* error)
+Longptr_t TMacro::Exec(const char *params, Int_t* error)
 {
    if ( !gROOT->GetGlobalFunction(GetName(), nullptr, kTRUE) ) {
       if (!Load()) {
@@ -286,7 +286,7 @@ Long_t TMacro::Exec(const char *params, Int_t* error)
          exec += "(" + p + ")";
       else
          exec += "()";
-      Long_t ret = gROOT->ProcessLine(exec, error);
+      Longptr_t ret = gROOT->ProcessLine(exec, error);
       //enable gROOT->Reset
       gROOT->SetExecutingMacro(kFALSE);
       return ret;

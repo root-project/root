@@ -475,12 +475,12 @@ void TQCommand::SetArgs(Int_t narg, ...)
    va_start(ap, narg);
 
    if (fNRargs != narg ) {
-      delete fRedoArgs;
+      delete [] fRedoArgs;
    }
    fRedoArgs = new Long_t[narg];
 
    if (fNUargs != narg ) {
-      delete fUndoArgs;
+      delete [] fUndoArgs;
    }
    fUndoArgs = new Long_t[narg];
 
@@ -518,7 +518,7 @@ void TQCommand::SetRedoArgs(Int_t narg, ...)
    va_start(ap, narg);
 
    if (fNRargs != narg ) {
-      delete fRedoArgs;
+      delete [] fRedoArgs;
    }
    fRedoArgs = new Long_t[narg];
 
@@ -552,7 +552,7 @@ void TQCommand::SetUndoArgs(Int_t narg, ...)
    va_start(ap, narg);
 
    if (fNUargs != narg ) {
-      delete fUndoArgs;
+      delete [] fUndoArgs;
    }
    fUndoArgs = new Long_t[narg];
 
@@ -1012,7 +1012,7 @@ void TQUndoManager::Add(TObject *obj, Option_t *opt)
 
 void TQUndoManager::CurrentChanged(TQCommand *c)
 {
-   Emit("CurrentChanged(TQCommand*)", (long)c);
+   Emit("CurrentChanged(TQCommand*)", (Longptr_t)c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

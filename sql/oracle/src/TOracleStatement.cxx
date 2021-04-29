@@ -24,9 +24,10 @@
 #include "snprintf.h"
 #include <cstdlib>
 
+#include <occi.h>
+
 ClassImp(TOracleStatement);
 
-using namespace std;
 using namespace oracle::occi;
 
 

@@ -42,6 +42,7 @@ Use RooAbsCollection derived objects for public use
 
 #include <algorithm>
 #include <list>
+#include <vector>
 
 using namespace std;
 
@@ -261,7 +262,7 @@ RooLinkedList::Pool* RooLinkedList::_pool = 0;
 ////////////////////////////////////////////////////////////////////////////////
 
 RooLinkedList::RooLinkedList(Int_t htsize) : 
-  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), _useNptr(kTRUE)
+  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(nullptr), _htableLink(nullptr), _useNptr(kTRUE)
 {
   if (!_pool) _pool = new Pool;
   _pool->acquire();
@@ -271,14 +272,14 @@ RooLinkedList::RooLinkedList(Int_t htsize) :
 /// Copy constructor
 
 RooLinkedList::RooLinkedList(const RooLinkedList& other) :
-  TObject(other), _hashThresh(other._hashThresh), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), 
+  TObject(other), _hashThresh(other._hashThresh), _size(0), _first(0), _last(0), _htableName(nullptr), _htableLink(nullptr), 
   _name(other._name), 
   _useNptr(other._useNptr)
 {
   if (!_pool) _pool = new Pool;
   _pool->acquire();
-  if (other._htableName) _htableName = new RooHashTable(other._htableName->size()) ;
-  if (other._htableLink) _htableLink = new RooHashTable(other._htableLink->size(),RooHashTable::Pointer) ;
+  if (other._htableName) _htableName = std::make_unique<HashTableByName>(other._htableName->size()) ;
+  if (other._htableLink) _htableLink = std::make_unique<HashTableByLink>(other._htableLink->size()) ;
   for (RooLinkedListElem* elem = other._first; elem; elem = elem->_next) {
     Add(elem->_arg, elem->_refCount) ;
   }
@@ -337,25 +338,20 @@ void RooLinkedList::setHashTableSize(Int_t size)
       return ;
     } else {
       // Remove existing hash table
-      delete _htableName ;
-      delete _htableLink ;
-      _htableName = 0 ;
-      _htableLink = 0 ;
+      _htableName.reset(nullptr);
+      _htableLink.reset(nullptr);
     }
   } else {
     
     // (Re)create hash tables
-    if (_htableName) delete _htableName ;
-    _htableName = new RooHashTable(size) ;
-
-     if (_htableLink) delete _htableLink ;
-     _htableLink = new RooHashTable(size,RooHashTable::Pointer) ;
+    _htableName = std::make_unique<HashTableByName>(size) ;
+    _htableLink = std::make_unique<HashTableByLink>(size) ;
     
     // Fill hash table with existing entries
     RooLinkedListElem* ptr = _first ;
     while(ptr) {
-      _htableName->add(ptr->_arg) ;
-      _htableLink->add((TObject*)ptr,ptr->_arg) ;
+      _htableName->insert({ptr->_arg->GetName(), ptr->_arg}) ;
+      _htableLink->insert({ptr->_arg, (TObject*)ptr}) ;
       ptr = ptr->_next ;
     }      
   }
@@ -369,14 +365,8 @@ RooLinkedList::~RooLinkedList()
    // Required since we overload TObject::Hash.
    ROOT::CallRecursiveRemoveIfNeeded(*this);
 
-   if (_htableName) {
-      delete _htableName;
-      _htableName = 0;
-  }
-  if (_htableLink) {
-    delete _htableLink ;
-    _htableLink=0 ;
-  }
+  _htableName.reset(nullptr);
+  _htableLink.reset(nullptr);
   
   Clear() ;
   if (_pool->release()) {
@@ -391,7 +381,9 @@ RooLinkedList::~RooLinkedList()
 RooLinkedListElem* RooLinkedList::findLink(const TObject* arg) const 
 {    
   if (_htableLink) {
-    return _htableLink->findLinkTo(arg) ;  
+    auto found = _htableLink->find(arg);
+    if (found == _htableLink->end()) return nullptr;
+    return (RooLinkedListElem*)found->second;
   }
   
   RooLinkedListElem* ptr = _first;
@@ -419,7 +411,7 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
   if (_htableName) {
 
     // Expand capacity of hash table if #entries>#slots
-    if (_size > _htableName->size()) {
+    if (static_cast<size_t>(_size) > _htableName->size()) {
       setHashTableSize(_size*2) ;
     }
 
@@ -439,8 +431,8 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
 
   if (_htableName){
     //cout << "storing link " << _last << " with hash arg " << arg << endl ;
-    _htableName->add(arg) ;
-    _htableLink->add((TObject*)_last,arg) ;
+    _htableName->insert({arg->GetName(), arg});
+    _htableLink->insert({arg, (TObject*)_last});
   }
 
   _size++ ;
@@ -460,10 +452,10 @@ Bool_t RooLinkedList::Remove(TObject* arg)
   
   // Remove from hash table
   if (_htableName) {
-    _htableName->remove(arg) ;
+    _htableName->erase(arg->GetName()) ;
   }
   if (_htableLink) {
-    _htableLink->remove((TObject*)elem,arg) ;
+    _htableLink->erase(arg) ;
   }
   
   // Update first,last if necessary
@@ -520,12 +512,13 @@ Bool_t RooLinkedList::Replace(const TObject* oldArg, const TObject* newArg)
   if (!elem) return kFALSE ;
   
   if (_htableName) {
-    _htableName->replace(oldArg,newArg) ;
+    _htableName->erase(oldArg->GetName());
+    _htableName->insert({newArg->GetName(), newArg});
   }
   if (_htableLink) {
     // Link is hashed by contents and may change slot in hash table
-    _htableLink->remove((TObject*)elem,(TObject*)oldArg) ;
-    _htableLink->add((TObject*)elem,(TObject*)newArg) ;
+    _htableLink->erase(oldArg) ;
+    _htableLink->insert({newArg, (TObject*)elem}) ;
   }
 
   elem->_arg = (TObject*)newArg ;
@@ -565,14 +558,10 @@ void RooLinkedList::Clear(Option_t *)
   _size = 0 ;
   
   if (_htableName) {
-    Int_t hsize = _htableName->size() ;
-    delete _htableName ;
-    _htableName = new RooHashTable(hsize) ;   
+    _htableName = std::make_unique<HashTableByName>(_htableName->size()) ;
   }
   if (_htableLink) {
-    Int_t hsize = _htableLink->size() ;
-    delete _htableLink ;
-    _htableLink = new RooHashTable(hsize,RooHashTable::Pointer) ;       
+    _htableLink = std::make_unique<HashTableByLink>(_htableLink->size()) ;
   }
 
   // empty index array
@@ -598,14 +587,10 @@ void RooLinkedList::Delete(Option_t *)
   _size = 0 ;
 
   if (_htableName) {
-    Int_t hsize = _htableName->size() ;
-    delete _htableName ;
-    _htableName = new RooHashTable(hsize) ;   
+    _htableName = std::make_unique<HashTableByName>(_htableName->size()) ;
   }
   if (_htableLink) {
-    Int_t hsize = _htableLink->size() ;
-    delete _htableLink ;
-    _htableLink = new RooHashTable(hsize,RooHashTable::Pointer) ;       
+    _htableLink = std::make_unique<HashTableByLink>(_htableLink->size()) ;
   }
 
   // empty index array
@@ -620,7 +605,7 @@ TObject* RooLinkedList::find(const char* name) const
 {
   
   if (_htableName) {
-    RooAbsArg* a = (RooAbsArg*) _htableName->find(name) ;
+    RooAbsArg* a = (RooAbsArg*) (*_htableName)[name] ;
     // RooHashTable::find could return false negative if element was renamed to 'name'.
     // The list search means it won't return false positive, so can return here.
     if (a) return a;
@@ -675,7 +660,7 @@ TObject* RooLinkedList::find(const char* name) const
 RooAbsArg* RooLinkedList::findArg(const RooAbsArg* arg) const 
 {
   if (_htableName) {
-    RooAbsArg* a = (RooAbsArg*) _htableName->findArg(arg) ;
+    RooAbsArg* a = (RooAbsArg*) (*_htableName)[arg->GetName()] ;
     if (a) return a;
     //cout << "RooLinkedList::findArg: possibly renamed '" << arg->GetName() << "', kRenamedArg=" << arg->namePtr()->TestBit(RooNameReg::kRenamedArg) << endl;
     // See if it might have been renamed
@@ -796,14 +781,7 @@ RooLinkedListElem* RooLinkedList::mergesort_impl(
   }
   if (sz <= 16) {
     // for short lists, we sort in an array
-#if !defined(_WIN32) && !defined(R__SOLARIS_CC50)
-    RooLinkedListElem *arr[sz];
-#else // _WIN32 && Solaris
-    // apparently, MSVC is not clever enough to figure out that sz cannot be
-    // zero and is at most sixteen, so we allocate a fixed size array on the
-    // stack instead
-    RooLinkedListElem *arr[16];
-#endif // _WIN32
+    std::vector<RooLinkedListElem *> arr(sz, nullptr);
     for (int i = 0; l1; l1 = l1->_next, ++i) arr[i] = l1;
     // straight insertion sort
     {
@@ -936,4 +914,3 @@ void RooLinkedList::Streamer(TBuffer &R__b)
     R__b << _name ;
   }
 }
-

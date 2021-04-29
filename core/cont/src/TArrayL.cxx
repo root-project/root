@@ -25,7 +25,7 @@ ClassImp(TArrayL);
 
 TArrayL::TArrayL()
 {
-   fArray = 0;
+   fArray = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ TArrayL::TArrayL()
 
 TArrayL::TArrayL(Int_t n)
 {
-   fArray = 0;
+   fArray = nullptr;
    if (n > 0) Set(n);
 }
 
@@ -42,7 +42,7 @@ TArrayL::TArrayL(Int_t n)
 
 TArrayL::TArrayL(Int_t n, const Long_t *array)
 {
-   fArray = 0;
+   fArray = nullptr;
    Set(n, array);
 }
 
@@ -51,7 +51,7 @@ TArrayL::TArrayL(Int_t n, const Long_t *array)
 
 TArrayL::TArrayL(const TArrayL &array) : TArray(array)
 {
-   fArray = 0;
+   fArray = nullptr;
    Set(array.fN, array.fArray);
 }
 
@@ -71,7 +71,7 @@ TArrayL &TArrayL::operator=(const TArrayL &rhs)
 TArrayL::~TArrayL()
 {
    delete [] fArray;
-   fArray = 0;
+   fArray = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,13 +109,16 @@ void TArrayL::Set(Int_t n)
       Long_t *temp = fArray;
       if (n != 0) {
          fArray = new Long_t[n];
-         if (n < fN) memcpy(fArray,temp, n*sizeof(Long_t));
-         else {
-            memcpy(fArray,temp,fN*sizeof(Long_t));
-            memset(&fArray[fN],0,(n-fN)*sizeof(Long_t));
+         if (n < fN) {
+            memcpy(fArray, temp, n*sizeof(Long_t));
+         } else if (temp) {
+            memcpy(fArray, temp, fN*sizeof(Long_t));
+            memset(&fArray[fN], 0, (n-fN)*sizeof(Long_t));
+         } else {
+            memset(fArray, 0, n*sizeof(Long_t));
          }
       } else {
-         fArray = 0;
+         fArray = nullptr;
       }
       if (fN) delete [] temp;
       fN = n;
@@ -130,11 +133,11 @@ void TArrayL::Set(Int_t n, const Long_t *array)
 {
    if (fArray && fN != n) {
       delete [] fArray;
-      fArray = 0;
+      fArray = nullptr;
    }
    fN = n;
-   if (fN == 0) return;
-   if (array == 0) return;
+   if ((fN == 0) || !array)
+      return;
    if (!fArray) fArray = new Long_t[fN];
    memmove(fArray, array, n*sizeof(Long_t));
 }

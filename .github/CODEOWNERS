@@ -4,7 +4,7 @@
 # This should also help provide suggested reviewers for PRs.
 
 # For more information, see:
-# 
+#
 #   - https://github.com/blog/2392-introducing-code-owners
 
 # Coarse-grained ownership
@@ -30,7 +30,7 @@
 /montecarlo/ @Axel-Naumann
 /net/ @gganis
 /proof/ @gganis
-/roofit/ @lmoneta @hageboeck
+/roofit/ @lmoneta @guitargeek @hageboeck
 /rootx/ @Axel-Naumann
 /sql/ @pcanal @linev
 /tmva/ @lmoneta @ashlaban @stwunsch @sitongan

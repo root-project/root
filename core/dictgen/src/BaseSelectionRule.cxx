@@ -450,8 +450,6 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
    }
 
    std::list<std::string>::const_iterator it = patterns_list.begin();
-   size_t pos1, pos2, pos3;
-   pos1= pos2= pos3= std::string::npos;
    bool end = pattern.back() == '*';
 
    // we first check if the last sub-pattern is contained in the test string
@@ -471,7 +469,7 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
    }
 
    // position of the first sub-pattern
-   pos1 = test.find(*it);
+   size_t pos1 = test.find(*it);
 
 
    if (pos1 == std::string::npos || (!begin && pos1 != 0)) { // if the first sub-pattern isn't found in test or if it is found but the
@@ -503,7 +501,7 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
 
    for (; it != patterns_list.end(); ++it) {
       // std::cout<<"sub-pattern = "<<*it<<std::endl;
-      pos2 = test.find(*it);
+      size_t pos2 = test.find(*it);
       if (pos2 <= pos1) {
          return false;
       }

@@ -25,7 +25,7 @@ ClassImp(TArrayF);
 
 TArrayF::TArrayF()
 {
-   fArray = 0;
+   fArray = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ TArrayF::TArrayF()
 
 TArrayF::TArrayF(Int_t n)
 {
-   fArray = 0;
+   fArray = nullptr;
    if (n > 0) Set(n);
 }
 
@@ -42,7 +42,7 @@ TArrayF::TArrayF(Int_t n)
 
 TArrayF::TArrayF(Int_t n, const Float_t *array)
 {
-   fArray = 0;
+   fArray = nullptr;
    Set(n, array);
 }
 
@@ -51,7 +51,7 @@ TArrayF::TArrayF(Int_t n, const Float_t *array)
 
 TArrayF::TArrayF(const TArrayF &array) : TArray(array)
 {
-   fArray = 0;
+   fArray = nullptr;
    Set(array.fN, array.fArray);
 }
 
@@ -71,7 +71,7 @@ TArrayF &TArrayF::operator=(const TArrayF &rhs)
 TArrayF::~TArrayF()
 {
    delete [] fArray;
-   fArray = 0;
+   fArray = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,13 +109,16 @@ void TArrayF::Set(Int_t n)
       Float_t *temp = fArray;
       if (n != 0) {
          fArray = new Float_t[n];
-         if (n < fN) memcpy(fArray,temp, n*sizeof(Float_t));
-         else {
-            memcpy(fArray,temp,fN*sizeof(Float_t));
-            memset(&fArray[fN],0,(n-fN)*sizeof(Float_t));
+         if (n < fN) {
+            memcpy(fArray, temp, n*sizeof(Float_t));
+         } else if (temp) {
+            memcpy(fArray, temp, fN*sizeof(Float_t));
+            memset(&fArray[fN], 0, (n-fN)*sizeof(Float_t));
+         } else {
+            memset(fArray, 0, n*sizeof(Float_t));
          }
       } else {
-         fArray = 0;
+         fArray = nullptr;
       }
       if (fN) delete [] temp;
       fN = n;
@@ -130,11 +133,11 @@ void TArrayF::Set(Int_t n, const Float_t *array)
 {
    if (fArray && fN != n) {
       delete [] fArray;
-      fArray = 0;
+      fArray = nullptr;
    }
    fN = n;
-   if (fN == 0) return;
-   if (array == 0) return;
+   if ((fN == 0) || !array)
+      return;
    if (!fArray) fArray = new Float_t[fN];
    memmove(fArray, array, n*sizeof(Float_t));
 }

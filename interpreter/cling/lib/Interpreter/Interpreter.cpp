@@ -106,6 +106,8 @@ namespace cling {
   }
 
   void Interpreter::PushTransactionRAII::pop() const {
+    if (m_Transaction->getState() == Transaction::kRolledBack)
+      return;
     IncrementalParser::ParseResultTransaction PRT
       = m_Interpreter->m_IncrParser->endTransaction(m_Transaction);
     if (PRT.getPointer()) {
@@ -312,23 +314,17 @@ namespace cling {
     // Now that the transactions have been commited, force symbol emission
     // and overrides.
     if (!isInSyntaxOnlyMode() && !m_Opts.CompilerOpts.CUDADevice) {
-      if (const Transaction* T = getLastTransaction()) {
-        if (auto M = T->getModule()) {
-          for (const llvm::StringRef& Sym : Syms) {
-            const llvm::GlobalValue* GV = M->getNamedValue(Sym);
+      for (const llvm::StringRef& Sym : Syms) {
+        void* Addr = m_Executor->getPointerToGlobalFromJIT(Sym);
 #if defined(__linux__)
-            // libstdc++ mangles at_quick_exit on Linux when g++ < 5
-            if (!GV && Sym.equals("at_quick_exit"))
-                GV = M->getNamedValue("_Z13at_quick_exitPFvvE");
+        // libstdc++ mangles at_quick_exit on Linux when g++ < 5
+        if (!Addr && Sym.equals("at_quick_exit"))
+          Addr = m_Executor->getPointerToGlobalFromJIT("_Z13at_quick_exitPFvvE");
 #endif
-            if (GV) {
-              if (void* Addr = m_Executor->getPointerToGlobalFromJIT(Sym))
-                m_Executor->addSymbol(Sym.str().c_str(), Addr, true);
-              else
-                cling::errs() << Sym << " not defined\n";
-            } else
-                cling::errs() << Sym << " not in Module!\n";
-          }
+        if (!Addr) {
+          cling::errs() << "Replaced symbol " << Sym << " cannot be found in JIT!\n";
+        } else {
+          m_Executor->addSymbol(Sym.str().c_str(), Addr, true);
         }
       }
     }
@@ -1476,6 +1472,7 @@ namespace cling {
   }
 
   void Interpreter::unload(Transaction& T) {
+    T.setUnloading();
     // Clear any stored states that reference the llvm::Module.
     // Do it first in case
     auto Module = T.getModule();

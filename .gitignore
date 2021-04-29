@@ -27,6 +27,7 @@ CMakeLists.txt.user
 .cproject
 .project
 .externalToolBuilders
+.pydevproject
 
 # Vim
 *.swp

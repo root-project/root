@@ -391,7 +391,7 @@ const char *TXMLPlayer::ElementGetter(TClass *cl, const char *membername, int sp
 
 const char *TXMLPlayer::ElementSetter(TClass *cl, const char *membername, char *endch)
 {
-   strcpy(endch, "");
+   strcpy(endch, ""); // NOLINT
 
    TClass *membercl = cl ? cl->GetBaseDataMember(membername) : 0;
    TDataMember *member = membercl ? membercl->GetDataMember(membername) : 0;
@@ -401,7 +401,7 @@ const char *TXMLPlayer::ElementSetter(TClass *cl, const char *membername, char *
       fSetterName = "obj->";
       fSetterName += msetter->GetMethodName();
       fSetterName += "(";
-      strcpy(endch, ")");
+      strcpy(endch, ")"); // NOLINT
    } else if ((member == 0) || (member->Property() & kIsPublic) != 0) {
       fSetterName = "obj->";
       fSetterName += membername;
@@ -978,6 +978,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream &fs, TClass *cl, TStreamerSTL
       case ROOT::kSTLunorderedmultiset: narg = 1; break;
       case ROOT::kSTLunorderedmap: narg = 2; break;
       case ROOT::kSTLunorderedmultimap: narg = 2; break;
+      case ROOT::kROOTRVec: narg = 1; break;
 
       default: return false;
       }

@@ -43,7 +43,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     TThreadImp.h
     TThreadPool.h
     ROOT/RConcurrentHashColl.hxx
-    ROOT/TReentrantRWLock.hxx
     ROOT/TRWSpinLock.hxx
     ROOT/TSpinMutex.hxx
     ROOT/TThreadedObject.hxx
@@ -63,9 +62,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     src/TThreadImp.cxx
   STAGE1
   DICTIONARY_OPTIONS
-    -writeEmptyRootPCM 
+    -writeEmptyRootPCM
   DEPENDENCIES
     Core
+  BUILTINS
+    TBB
   INSTALL_OPTIONS ${installoptions}
 )
 
@@ -80,6 +81,12 @@ target_include_directories(Thread PRIVATE
 # keep include directory for ROOT/RSha256.hxx private
 set_source_files_properties(src/RConcurrentHashColl.cxx
   PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/foundation/res)
+
+if((tbb OR builtin_tbb) AND NOT MSVC)
+  target_include_directories(Thread PRIVATE ${TBB_INCLUDE_DIRS})
+  target_link_libraries(Thread PRIVATE ${TBB_LIBRARIES})
+  set_target_properties(Thread PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
+endif()
 
 if(WIN32)
   target_sources(Thread PRIVATE

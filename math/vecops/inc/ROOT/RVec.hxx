@@ -8,10 +8,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/**
-  \defgroup vecops VecOps
-*/
-
 #ifndef ROOT_RVEC
 #define ROOT_RVEC
 
@@ -44,35 +40,16 @@
 #include <utility>
 #include <tuple>
 
-// TODO remove when fData is removed (6.26)
-#include <map>
-#include <string>
-
 #ifdef R__HAS_VDT
 #include <vdt/vdtMath.h>
 #endif
 
-
-// TODO remove when fData is removed (6.26)
-class TTree;
-class TBranch;
 
 namespace ROOT {
 
 namespace VecOps {
 template<typename T>
 class RVec;
-}
-
-// TODO remove when fData is removed (6.26)
-namespace Internal {
-namespace RDF {
-class BoolArray;
-using BoolArrayMap = std::map<std::string, BoolArray>;
-template <typename T>
-void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &outputTree, const std::string &inName,
-                       const std::string &outName, TBranch *&branch, void *&branchAddress, ROOT::VecOps::RVec<T> *ab);
-}
 }
 
 namespace Detail {
@@ -143,10 +120,18 @@ void EmplaceBack(std::vector<bool> &v, Args &&... args)
 } // End of Internal NS
 
 namespace VecOps {
+
+// Note that we open here with @{ the Doxygen group vecops and it is
+// closed again at the end of the C++ namespace VecOps
+/**
+  * \defgroup vecops VecOps
+  * A "std::vector"-like collection of values implementing handy operation to analyse them
+  * @{
+*/
+
 // clang-format off
 /**
 \class ROOT::VecOps::RVec
-\ingroup vecops
 \brief A "std::vector"-like collection of values implementing handy operation to analyse them
 \tparam T The type of the contained objects
 
@@ -160,15 +145,16 @@ the manipulation and analysis of the data in the RVec.
 \endhtmlonly
 
 ## Table of Contents
-- [Example](#example)
-- [Owning and adopting memory](#owningandadoptingmemory)
-- [Sorting and manipulation of indices](#sorting)
-- [Usage in combination with RDataFrame](#usagetdataframe)
-- [Reference for the RVec class](#RVecdoxyref)
+- [Example](\ref example)
+- [Owning and adopting memory](\ref owningandadoptingmemory)
+- [Sorting and manipulation of indices](\ref sorting)
+- [Usage in combination with RDataFrame](\ref usagetdataframe)
+- [Reference for the RVec class](\ref RVecdoxyref)
 
 Also see the [reference for RVec helper functions](https://root.cern/doc/master/namespaceROOT_1_1VecOps.html).
 
-## <a name="example"></a>Example
+\anchor example
+## Example
 Suppose to have an event featuring a collection of muons with a certain pseudorapidity,
 momentum and charge, e.g.:
 ~~~{.cpp}
@@ -198,7 +184,8 @@ auto goodMuons_pt = mu_pt[ (mu_pt > 10.f && abs(mu_eta) <= 2.f && mu_charge == -
 Now the clean collection of transverse momenta can be used within the rest of the data analysis, for
 example to fill a histogram.
 
-## <a name="owningandadoptingmemory"></a>Owning and adopting memory
+\anchor owningandadoptingmemory
+## Owning and adopting memory
 RVec has contiguous memory associated to it. It can own it or simply adopt it. In the latter case,
 it can be constructed with the address of the memory associated to it and its length. For example:
 ~~~{.cpp}
@@ -210,7 +197,8 @@ If any method which implies a re-allocation is called, e.g. *emplace_back* or *r
 memory is released and new one is allocated. The previous content is copied in the new memory and
 preserved.
 
-## <a name="#sorting"></a>Sorting and manipulation of indices
+\anchor sorting
+## Sorting and manipulation of indices
 
 ### Sorting
 RVec complies to the STL interfaces when it comes to iterations. As a result, standard algorithms
@@ -254,7 +242,8 @@ auto vf_2 = Take(vf, 2); // The content is {1.f, 2.f}
 auto vf_3 = Take(vf, -3); // The content is {2.f, 3.f, 4.f}
 ~~~
 
-## <a name="usagetdataframe"></a>Usage in combination with RDataFrame
+\anchor usagetdataframe
+## Usage in combination with RDataFrame
 RDataFrame leverages internally RVecs. Suppose to have a dataset stored in a
 TTree which holds these columns (here we choose C arrays to represent the
 collections, they could be as well std::vector instances):
@@ -292,12 +281,6 @@ hpt->Draw();
 // clang-format on
 template <typename T>
 class RVec {
-   // TODO remove this friendship in 6.26, when fData is removed
-   friend void ::ROOT::Internal::RDF::SetBranchesHelper<T>(ROOT::Internal::RDF::BoolArrayMap &boolArrays,
-                                                           TTree *inputTree, TTree &outputTree,
-                                                           const std::string &inName, const std::string &outName,
-                                                           TBranch *&branch, void *&branchAddress, RVec<T> *ab);
-
    // Here we check if T is a bool. This is done in order to decide what type
    // to use as a storage. If T is anything but bool, we use a vector<T, RAdoptAllocator<T>>.
    // If T is a bool, we opt for a plain vector<bool> otherwise we'll not be able
@@ -1021,8 +1004,9 @@ void swap(RVec<T> &lhs, RVec<T> &rhs)
 /// using namespace ROOT::VecOps;
 /// RVec<double> v {2., 3., 1.};
 /// auto sortIndices = Argsort(v);
-/// sortIndices
 /// // (ROOT::VecOps::RVec<unsigned long> &) { 2, 0, 1 }
+/// auto values = Take(v, sortIndices)
+/// // (ROOT::VecOps::RVec<double> &) { 1., 2., 3. }
 /// ~~~
 template <typename T>
 RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
@@ -1031,6 +1015,28 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
    RVec<size_type> i(v.size());
    std::iota(i.begin(), i.end(), 0);
    std::sort(i.begin(), i.end(), [&v](size_type i1, size_type i2) { return v[i1] < v[i2]; });
+   return i;
+}
+
+/// Return an RVec of indices that sort the input RVec based on a comparison function.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v {2., 3., 1.};
+/// auto sortIndices = Argsort(v, [](double x, double y) {return x > y;})
+/// // (ROOT::VecOps::RVec<unsigned long> &) { 1, 0, 2 }
+/// auto values = Take(v, sortIndices)
+/// // (ROOT::VecOps::RVec<double> &) { 3., 2., 1. }
+/// ~~~
+template <typename T, typename Compare>
+RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v, Compare &&c)
+{
+   using size_type = typename RVec<T>::size_type;
+   RVec<size_type> i(v.size());
+   std::iota(i.begin(), i.end(), 0);
+   std::sort(i.begin(), i.end(),
+             [&v, &c](size_type i1, size_type i2) { return c(v[i1], v[i2]); });
    return i;
 }
 
@@ -1874,6 +1880,8 @@ RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
 #endif // R__HAS_VDT
 
 #endif // _VECOPS_USE_EXTERN_TEMPLATES
+
+/** @} */ // end of Doxygen group vecops
 
 } // End of VecOps NS
 

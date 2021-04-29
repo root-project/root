@@ -527,10 +527,11 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                            char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
                            void *begin = &(startbuf[0]);
                            void *end = &(endbuf[0]);
-                           proxy->GetFunctionCreateIterators()(cont, &begin, &end, proxy);
+                           proxy->GetFunctionCreateIterators(/* read = */ kFALSE)(cont, &begin, &end, proxy);
                            // We can not get here with a split vector of pointer, so we can indeed assume
                            // that actions->fConfiguration != null.
                            b.ApplySequence(*actions, begin, end);
+
                            if (begin != &(startbuf[0])) {
                               // assert(end != endbuf);
                               proxy->GetFunctionDeleteTwoIterators()(begin,end);
@@ -590,7 +591,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                            char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
                            void *begin = &(startbuf[0]);
                            void *end = &(endbuf[0]);
-                           proxy->GetFunctionCreateIterators()(obj, &begin, &end, proxy);
+                           proxy->GetFunctionCreateIterators(/*read = */ kFALSE)(obj, &begin, &end, proxy);
                            // We can not get here with a split vector of pointer, so we can indeed assume
                            // that actions->fConfiguration != null.
                            b.ApplySequence(*actions, begin, end);

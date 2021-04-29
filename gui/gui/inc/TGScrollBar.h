@@ -33,13 +33,13 @@ private:
    TGScrollBarElement& operator=(const TGScrollBarElement&) = delete;
 
 protected:
-   Int_t            fState;      // state of scrollbar element (button up or down)
-   const TGPicture *fPic;        // picture in scrollbar element
-   const TGPicture *fPicN;       // picture for normal state of scrollbar element
-   const TGPicture *fPicD;       // picture for disabled state of scrollbar element
-   Pixel_t          fBgndColor;  // background color
-   Pixel_t          fHighColor;  // highlight color
-   Int_t            fStyle;      // modern or classic style
+   Int_t            fState;      ///< state of scrollbar element (button up or down)
+   const TGPicture *fPic;        ///< picture in scrollbar element
+   const TGPicture *fPicN;       ///< picture for normal state of scrollbar element
+   const TGPicture *fPicD;       ///< picture for disabled state of scrollbar element
+   Pixel_t          fBgndColor;  ///< background color
+   Pixel_t          fHighColor;  ///< highlight color
+   Int_t            fStyle;      ///< modern or classic style
 
 public:
    TGScrollBarElement(const TGWindow *p = nullptr, const TGPicture *pic = nullptr,
@@ -65,26 +65,26 @@ private:
    TGScrollBar& operator=(const TGScrollBar&) = delete;
 
 protected:
-   Int_t                fX0, fY0;      // current slider position in pixels
-   Int_t                fXp, fYp;      // previous slider position in pixels
-   Bool_t               fDragging;     // in dragging mode?
-   Bool_t               fGrabPointer;  // grab pointer when dragging
-   Int_t                fRange;        // logical upper range of scrollbar
-   Int_t                fPsize;        // logical page size of scrollbar
-   Int_t                fPos;          // logical current position
-   Int_t                fSliderSize;   // logical slider size
-   Int_t                fSliderRange;  // logical slider range
-   Int_t                fSmallInc;     // Small Increment in the sliding algorithm
-   TGScrollBarElement  *fHead;         // head button of scrollbar
-   TGScrollBarElement  *fTail;         // tail button of scrollbar
-   TGScrollBarElement  *fSlider;       // slider
-   const TGPicture     *fHeadPic;      // picture in head (up or left arrow)
-   const TGPicture     *fTailPic;      // picture in tail (down or right arrow)
-   TTimer              *fRepeat;       // repeat rate timer (when mouse stays pressed)
-   Window_t             fSubw;         // sub window in which mouse is pressed
-   Bool_t               fAccelerated;  // kFALSE - normal, kTRUE - accelerated
-   Pixel_t              fBgndColor;    // background color
-   Pixel_t              fHighColor;    // highlight color
+   Int_t                fX0, fY0;      ///< current slider position in pixels
+   Int_t                fXp, fYp;      ///< previous slider position in pixels
+   Bool_t               fDragging;     ///< in dragging mode?
+   Bool_t               fGrabPointer;  ///< grab pointer when dragging
+   Int_t                fRange;        ///< logical upper range of scrollbar
+   Int_t                fPsize;        ///< logical page size of scrollbar
+   Int_t                fPos;          ///< logical current position
+   Int_t                fSliderSize;   ///< logical slider size
+   Int_t                fSliderRange;  ///< logical slider range
+   Int_t                fSmallInc;     ///< Small Increment in the sliding algorithm
+   TGScrollBarElement  *fHead;         ///< head button of scrollbar
+   TGScrollBarElement  *fTail;         ///< tail button of scrollbar
+   TGScrollBarElement  *fSlider;       ///< slider
+   const TGPicture     *fHeadPic;      ///< picture in head (up or left arrow)
+   const TGPicture     *fTailPic;      ///< picture in tail (down or right arrow)
+   TTimer              *fRepeat;       ///< repeat rate timer (when mouse stays pressed)
+   Window_t             fSubw;         ///< sub window in which mouse is pressed
+   Bool_t               fAccelerated;  ///< kFALSE - normal, kTRUE - accelerated
+   Pixel_t              fBgndColor;    ///< background color
+   Pixel_t              fHighColor;    ///< highlight color
 
    static Pixmap_t    fgBckgndPixmap;
    static Int_t       fgScrollBarWidth;

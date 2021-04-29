@@ -8,13 +8,20 @@ import sys
 # Compile list of packages to be ignored in the test
 ignore = []
 
-if sys.version_info[0] == 2 and "ROOTTEST_IGNORE_NUMBA_PY2" in os.environ or \
-   sys.version_info[0] == 3 and "ROOTTEST_IGNORE_NUMBA_PY3" in os.environ:
-       ignore += ['numba', 'cffi']
+# pyspark is always ignored in this test since we use the build option
+# `test_distrdf_pyspark` to check whether the CTest environment is ready for
+# distributed RDataFrame tests of the Spark backend. Those tests will be run
+# only on the nodes where the build option is enabled and `FindPySpark.cmake`
+# was succesfully run during the configuration step.
+ignore.append('pyspark')
 
-if sys.version_info[0] == 2 and "ROOTTEST_IGNORE_JUPYTER_PY2" in os.environ or \
-   sys.version_info[0] == 3 and "ROOTTEST_IGNORE_JUPYTER_PY3" in os.environ:
-       ignore += ['notebook', 'metakernel']
+if sys.version_info[0] == 2 and 'ROOTTEST_IGNORE_NUMBA_PY2' in os.environ or \
+   sys.version_info[0] == 3 and 'ROOTTEST_IGNORE_NUMBA_PY3' in os.environ:
+    ignore += ['numba', 'cffi']
+
+if sys.version_info[0] == 2 and 'ROOTTEST_IGNORE_JUPYTER_PY2' in os.environ or \
+   sys.version_info[0] == 3 and 'ROOTTEST_IGNORE_JUPYTER_PY3' in os.environ:
+    ignore += ['notebook', 'metakernel']
 
 
 class DependencyVersions(unittest.TestCase):

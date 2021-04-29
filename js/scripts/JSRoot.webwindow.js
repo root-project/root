@@ -120,7 +120,8 @@ JSROOT.define([], () => {
       });
 
       req.handle = this;
-      if (kind === "dummy") this.req = req; // remember last dummy request, wait for reply
+      if (!this.req) this.req = req; // any request can be used for response, do not submit dummy until req is there
+      // if (kind === "dummy") this.req = req; // remember last dummy request, wait for reply
       req.send(post);
    }
 
@@ -133,36 +134,35 @@ JSROOT.define([], () => {
          this.connid = null;
          return;
       } else if (res === -1111) {
-         this.nope_cnt = (this.nope_cnt || 0) + 1;
          res = "";
-      } else {
-         delete this.nope_cnt;
       }
+
+      let dummy_tmout = 5;
 
       if (this.connid === "connect") {
          if (!res) {
             this.connid = null;
-            if (typeof this.onerror === 'function') this.onerror("connection rejected");
+            if (typeof this.onerror === 'function')
+               this.onerror("connection rejected");
             return;
          }
 
          this.connid = parseInt(res);
+         dummy_tmout = 100; // when establishing connection, wait a bit longer to submit dummy package
          console.log('Get new longpoll connection with id ' + this.connid);
          if (typeof this.onopen == 'function') this.onopen();
       } else if (this.connid === "close") {
-         if (typeof this.onclose == 'function') this.onclose();
+         if (typeof this.onclose == 'function')
+            this.onclose();
          return;
       } else {
          if ((typeof this.onmessage === 'function') && res)
             this.onmessage({ data: res, offset: _offset });
       }
 
-      if (!this.req) {
-         if (this.nope_cnt && (this.nope_cnt > 10))
-            setTimeout(() => { if (!this.req) this.nextRequest("", "dummy"); }, 50); // minimal timeout to reduce load
-         else
-            this.nextRequest("", "dummy"); // send new poll request when necessary
-      }
+      // minimal timeout to reduce load, generate dummy only if client not submit new request immediately
+      if (!this.req)
+         setTimeout(() => { if (!this.req) this.nextRequest("", "dummy"); }, dummy_tmout);
    }
 
    /** @summary Send data */
@@ -391,7 +391,7 @@ JSROOT.define([], () => {
 
       if (!this._websocket || (this.state <= 0)) return false;
 
-      if (isNaN(chid) || (chid === undefined)) chid = 1; // when not configured, channel 1 is used - main widget
+      if (!Number.isInteger(chid)) chid = 1; // when not configured, channel 1 is used - main widget
 
       if (this.cansend <= 0) console.error('should be queued before sending cansend: ' + this.cansend);
 
@@ -493,29 +493,29 @@ JSROOT.define([], () => {
       this.close();
       if (!href && this.href) href = this.href;
 
-      let pthis = this, ntry = 0,
-          args = (this.key ? ("key=" + this.key) : "");
+      let pthis = this, ntry = 0, args = (this.key ? ("key=" + this.key) : "");
       if (this.token) {
          if (args) args += "&";
          args += "token=" + this.token;
       }
 
-      function retry_open(first_time) {
+      let retry_open = first_time => {
 
-         if (pthis.state != 0) return;
+         if (this.state != 0) return;
 
          if (!first_time) console.log("try connect window again " + new Date().toString());
 
-         if (pthis._websocket) pthis._websocket.close();
-         delete pthis._websocket;
+         if (this._websocket) {
+            this._websocket.close();
+            delete this._websocket;
+         }
 
-         let conn = null;
          if (!href) {
             href = window.location.href;
             if (href && href.indexOf("#") > 0) href = href.substr(0, href.indexOf("#"));
             if (href && href.lastIndexOf("/") > 0) href = href.substr(0, href.lastIndexOf("/") + 1);
          }
-         pthis.href = href;
+         this.href = href;
          ntry++;
 
          if (first_time) console.log('Opening web socket at ' + href);
@@ -524,26 +524,24 @@ JSROOT.define([], () => {
 
          let path = href;
 
-         if (pthis.kind == "file") {
+         if (this.kind == "file") {
             path += "root.filedump";
-            conn = new FileDumpSocket(pthis);
+            this._websocket = new FileDumpSocket(this);
             console.log('configure protocol log ' + path);
-         } else if ((pthis.kind === 'websocket') && first_time) {
+         } else if ((this.kind === 'websocket') && first_time) {
             path = path.replace("http://", "ws://").replace("https://", "wss://") + "root.websocket";
             if (args) path += "?" + args;
             console.log('configure websocket ' + path);
-            conn = new WebSocket(path);
+            this._websocket = new WebSocket(path);
          } else {
             path += "root.longpoll";
             console.log('configure longpoll ' + path);
-            conn = new LongPollSocket(path, (pthis.kind === 'rawlongpoll'), args);
+            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), args);
          }
 
-         if (!conn) return;
+         if (!this._websocket) return;
 
-         pthis._websocket = conn;
-
-         conn.onopen = function() {
+         this._websocket.onopen = function() {
             if ((ntry > 2) && JSROOT.Painter) JSROOT.Painter.showProgress();
             pthis.state = 1;
 
@@ -553,7 +551,7 @@ JSROOT.define([], () => {
             pthis.invokeReceiver(false, "onWebsocketOpened");
          }
 
-         conn.onmessage = function(e) {
+         this._websocket.onmessage = function(e) {
             let msg = e.data;
 
             if (pthis.next_binary) {
@@ -568,7 +566,7 @@ JSROOT.define([], () => {
                   reader.onload = function(event) {
                      // The file's text will be printed here
                      pthis.markQueueItemDone(qitem, event.target.result, 0);
-                  }
+                  };
                   reader.readAsArrayBuffer(msg, e.offset || 0);
                } else {
                   // console.log('got array ' + (typeof msg) + ' len = ' + msg.byteLength);
@@ -611,7 +609,7 @@ JSROOT.define([], () => {
                pthis.send('READY', 0); // send dummy message to server
          }
 
-         conn.onclose = function(arg) {
+         this._websocket.onclose = function(arg) {
             delete pthis._websocket;
             if ((pthis.state > 0) || (arg === "force_close")) {
                console.log('websocket closed');
@@ -620,7 +618,7 @@ JSROOT.define([], () => {
             }
          }
 
-         conn.onerror = function(err) {
+         this._websocket.onerror = function(err) {
             console.log("websocket error " + err);
             if (pthis.state > 0) {
                pthis.invokeReceiver(true, "onWebsocketError", err);
@@ -672,8 +670,8 @@ JSROOT.define([], () => {
 
       let d = JSROOT.decodeUrl();
 
-      // special hold script, prevents headless browser from too early exit
-      if (d.has("batch_mode") && d.get("key") && (JSROOT.browser.isChromeHeadless || JSROOT.browser.isChrome))
+      // special holder script, prevents headless chrome browser from too early exit
+      if (d.has("headless") && d.get("key") && (JSROOT.browser.isChromeHeadless || JSROOT.browser.isChrome))
          JSROOT.loadScript("root_batch_holder.js?key=" + d.get("key"));
 
       if (!arg.platform)
@@ -685,7 +683,7 @@ JSROOT.define([], () => {
          JSROOT.browser.cef3 = true;
 
       if (arg.batch === undefined)
-         arg.batch = d.has("batch_mode");
+         arg.batch = d.has("headless");
 
       if (arg.batch) JSROOT.batch_mode = true;
 

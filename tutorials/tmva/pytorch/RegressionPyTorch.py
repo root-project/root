@@ -30,7 +30,7 @@ factory = TMVA.Factory('TMVARegression', output,
 
 # Load data
 if not isfile('tmva_reg_example.root'):
-    call(['curl', '-O', 'http://root.cern.ch/files/tmva_reg_example.root'])
+    call(['curl', '-L', '-O', 'http://root.cern.ch/files/tmva_reg_example.root'])
 
 data = TFile.Open('tmva_reg_example.root')
 tree = data.Get('TreeR')

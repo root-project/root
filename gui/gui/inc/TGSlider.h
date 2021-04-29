@@ -40,17 +40,17 @@ enum ESliderType {
 class TGSlider : public TGFrame, public TGWidget {
 
 protected:
-   Int_t            fPos;           // logical position between fVmin and fVmax
-   Int_t            fRelPos;        // slider position in pixel coordinates
-   Int_t            fVmin;          // logical lower limit of slider
-   Int_t            fVmax;          // logical upper limit of slider
-   Int_t            fType;          // slider type bits
-   Int_t            fScale;         // tick mark scale
-   Bool_t           fDragging;      // true if in dragging mode
-   const TGPicture *fSliderPic;     // picture to draw slider
-   const TGPicture *fDisabledPic;   // picture to draw disabled slider
+   Int_t            fPos;           ///< logical position between fVmin and fVmax
+   Int_t            fRelPos;        ///< slider position in pixel coordinates
+   Int_t            fVmin;          ///< logical lower limit of slider
+   Int_t            fVmax;          ///< logical upper limit of slider
+   Int_t            fType;          ///< slider type bits
+   Int_t            fScale;         ///< tick mark scale
+   Bool_t           fDragging;      ///< true if in dragging mode
+   const TGPicture *fSliderPic;     ///< picture to draw slider
+   const TGPicture *fDisabledPic;   ///< picture to draw disabled slider
 
-   TString GetTypeString() const;   // used in SavePrimitive
+   TString GetTypeString() const;   ///< used in SavePrimitive
    virtual void CreateDisabledPicture();
 
 private:
@@ -101,7 +101,7 @@ public:
 class TGVSlider : public TGSlider {
 
 protected:
-   Int_t   fYp;      // vertical slider y position in pixel coordinates
+   Int_t   fYp;      ///< vertical slider y position in pixel coordinates
 
    virtual void DoRedraw();
 
@@ -128,7 +128,7 @@ public:
 class TGHSlider : public TGSlider {
 
 protected:
-   Int_t       fXp;     // horizontal slider x position in pixel coordinates
+   Int_t       fXp;     ///< horizontal slider x position in pixel coordinates
 
    virtual void DoRedraw();
 

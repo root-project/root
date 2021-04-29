@@ -2176,8 +2176,8 @@ void TGCanvas::MapSubwindows()
       container->MapSubwindows();
       fVport->MapSubwindows();
       fVport->MapWindow();
+      Layout();
    }
-   Layout();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

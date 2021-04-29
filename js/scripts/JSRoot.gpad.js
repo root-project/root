@@ -1,4 +1,4 @@
-/// @file JSRoot.gpad.js
+// @file JSRoot.gpad.js
 /// JSROOT TPad/TCanvas/TFrame support
 
 JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
@@ -244,7 +244,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       handle.reset = function() {
          this.nminor = this.nmiddle = this.nmajor = 0;
-      }
+      };
 
       handle.next = function(doround) {
          if (this.nminor >= this.minor.length) return false;
@@ -264,16 +264,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.kind = 1;
          }
          return true;
-      }
+      };
 
       handle.last_major = function() {
          return (this.kind !== 1) ? false : this.nmajor == this.major.length;
-      }
+      };
 
       handle.next_major_grpos = function() {
          if (this.nmajor >= this.major.length) return null;
          return this.func(this.major[this.nmajor]);
-      }
+      };
 
       this.order = 0;
       this.ndig = 0;
@@ -414,8 +414,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                acc_x += evnt.dx;
                acc_y += evnt.dy;
 
-               let set_x = title_g.property('shift_x'),
-                   set_y = title_g.property('shift_y'),
+               let set_x, set_y,
                    p = vertical ? acc_y : acc_x, besti = 0;
 
                for (let i=1; i<3; ++i)
@@ -647,7 +646,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let axis = this.getObject(), chOpt = "",
           is_gaxis = (axis && axis._typename === 'TGaxis'),
           axis_g = layer, tickSize = 0.03,
-          scaling_size = 100, draw_lines = true,
+          scaling_size, draw_lines = true,
           pp = this.getPadPainter(),
           pad_w = pp ? pp.getPadWidth() : 10,
           pad_h = pp ? pp.getPadHeight() : 10,
@@ -663,12 +662,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          draw_lines = axis.fLineColor != 0;
          chOpt = axis.fChopt;
          tickSize = axis.fTickSize;
-         scaling_size = (vertical ? 1.7*h : 0.6*w);
+         scaling_size = vertical ? 1.7*h : 0.6*w;
       } else {
          this.createAttLine({ color: axis.fAxisColor, width: 1, style: 1 });
          chOpt = (vertical ^ this.invert_side) ? "-S" : "+S";
          tickSize = axis.fTickLength;
-         scaling_size = (vertical ? pad_w : pad_h);
+         scaling_size = vertical ? pad_w : pad_h;
       }
 
       // indicate that attributes created not for TAttLine, therefore cannot be updated as TAttLine in GED
@@ -749,7 +748,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                r.attr("x", (side > 0) ? (-2*labelSize - 3) : 3)
                 .attr("y", 0)
                 .attr("width", 2*labelSize + 3)
-                .attr("height", h)
+                .attr("height", h);
             else
                r.attr("x", 0).attr("y", (side>0) ? 0 : -labelSize - 3)
                 .attr("width", w).attr("height", labelSize + 3);
@@ -2639,7 +2638,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let hint = obj.processTooltipEvent(pnt);
          if (!hint) hint = { user_info: null };
          hints.push(hint);
-         if (hint && pnt && pnt.painters) hint.painter = obj;
+         if (pnt && pnt.painters) hint.painter = obj;
       });
 
       return hints;
@@ -2681,7 +2680,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       menu.add("separator");
 
-      if (this.activateStatusBar)
+      if (typeof this.hasMenuBar == 'function' && typeof this.actiavteMenuBar == 'function')
+         menu.addchk(this.hasMenuBar(), "Menu bar", flag => this.actiavteMenuBar(flag));
+
+      if (typeof this.hasEventStatus == 'function' && typeof this.activateStatusBar == 'function')
          menu.addchk(this.hasEventStatus(), "Event status", () => this.activateStatusBar('toggle'));
 
       if (this.enlargeMain() || (this.has_canvas && this.hasObjectsToDraw()))
@@ -2825,7 +2827,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.pad.fLeftMargin   = obj.fLeftMargin;
       this.pad.fRightMargin  = obj.fRightMargin;
-      this.pad.fBottomMargin = obj.fBottomMargin
+      this.pad.fBottomMargin = obj.fBottomMargin;
       this.pad.fTopMargin    = obj.fTopMargin;
 
       this.pad.fFillColor = obj.fFillColor;
@@ -3326,7 +3328,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              break;
           default: {
              let indx = parseInt(name);
-             if (!isNaN(indx)) selp = this.painters[indx];
+             if (Number.isInteger(indx)) selp = this.painters[indx];
           }
        }
 
@@ -3733,10 +3735,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Cleanup canvas painter */
    TCanvasPainter.prototype.cleanup = function() {
-     if (this._changed_layout)
-        this.setLayoutKind('simple');
-     delete this._changed_layout;
-     TPadPainter.prototype.cleanup.call(this);
+      if (this._changed_layout)
+         this.setLayoutKind('simple');
+      delete this._changed_layout;
+      TPadPainter.prototype.cleanup.call(this);
    }
 
    /** @summary Returns layout kind */
@@ -3870,7 +3872,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                        ? this.drawInUI5ProjectionArea(canv, drawopt)
                        : this.drawInSidePanel(canv, drawopt);
 
-         promise.then(painter => { this.proj_painter = painter; })
+         promise.then(painter => { this.proj_painter = painter; });
       } else {
          let hp = this.proj_painter.getMainPainter();
          if (hp) hp.updateObject(hist, "hist");
@@ -4196,7 +4198,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    TCanvasPainter.prototype.completeCanvasSnapDrawing = function() {
       if (!this.pad) return;
 
-      if (document) document.title = this.pad.fTitle;
+      if (document && !this.embed_canvas)
+         document.title = this.pad.fTitle;
 
       if (this._all_sections_showed) return;
       this._all_sections_showed = true;

@@ -292,10 +292,14 @@
 #   if defined(__i386__)
 #      define R__BYTESWAP
 #   endif
-#   if defined(__arm__) || defined (__arm64__)
+#   if defined(__x86_64__)
+#      define R__BYTESWAP
+#      define R__B64      /* enable when 64 bit machine */
+#   endif
+#   if defined(__arm__)
 #      define R__BYTESWAP
 #   endif
-#   if defined(__x86_64__)
+#   if defined (__arm64__)
 #      define R__BYTESWAP
 #      define R__B64      /* enable when 64 bit machine */
 #   endif
@@ -384,6 +388,14 @@
 #   define R__ACCESS_IN_SYMBOL
 //#   define __attribute__(X)
 //#   define thread_local static __declspec(thread)
+#endif
+#ifdef _WIN64
+#   define R__WIN64
+#   ifndef WIN64
+#      define WIN64
+#   endif
+#   define __x86_64__ 1
+#   define R__B64      /* enable when 64 bit machine */
 #endif
 
 #ifdef __SC__

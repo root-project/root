@@ -455,8 +455,6 @@ Double_t TGeoBBox::DistFromOutside(const Double_t *point, const Double_t *dir, I
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance from point to box
-   Double_t coord, snxt=TGeoShape::Big();
-   Int_t ibreak=0;
    // protection in case point is actually inside box
    if (in) {
       j = 0;
@@ -472,11 +470,11 @@ Double_t TGeoBBox::DistFromOutside(const Double_t *point, const Double_t *dir, I
    for (i=0; i<3; i++) {
       if (saf[i]<0) continue;
       if (newpt[i]*dir[i] >= 0) continue;
-      snxt = saf[i]/TMath::Abs(dir[i]);
-      ibreak = 0;
+      Double_t snxt = saf[i]/TMath::Abs(dir[i]);
+      Int_t ibreak = 0;
       for (j=0; j<3; j++) {
          if (j==i) continue;
-         coord=newpt[j]+snxt*dir[j];
+         Double_t coord=newpt[j]+snxt*dir[j];
          if (TMath::Abs(coord)>par[j]) {
             ibreak=1;
             break;

@@ -25,7 +25,7 @@ ClassImp(TArrayD);
 
 TArrayD::TArrayD()
 {
-   fArray = 0;
+   fArray = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ TArrayD::TArrayD()
 
 TArrayD::TArrayD(Int_t n)
 {
-   fArray = 0;
+   fArray = nullptr;
    if (n > 0) Set(n);
 }
 
@@ -42,7 +42,7 @@ TArrayD::TArrayD(Int_t n)
 
 TArrayD::TArrayD(Int_t n, const Double_t *array)
 {
-   fArray = 0;
+   fArray = nullptr;
    Set(n, array);
 }
 
@@ -51,7 +51,7 @@ TArrayD::TArrayD(Int_t n, const Double_t *array)
 
 TArrayD::TArrayD(const TArrayD &array) : TArray(array)
 {
-   fArray = 0;
+   fArray = nullptr;
    Set(array.fN, array.fArray);
 }
 
@@ -71,7 +71,7 @@ TArrayD &TArrayD::operator=(const TArrayD &rhs)
 TArrayD::~TArrayD()
 {
    delete [] fArray;
-   fArray = 0;
+   fArray = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,8 +88,8 @@ void TArrayD::Adopt(Int_t n, Double_t *arr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the double c value at position i in the array. Check for out of bounds. 
-/// Warning: the name of the method is misleading, it actually overwrites the position i. 
+/// Set the double c value at position i in the array. Check for out of bounds.
+/// Warning: the name of the method is misleading, it actually overwrites the position i.
 
 void TArrayD::AddAt(Double_t c, Int_t i)
 {
@@ -110,13 +110,16 @@ void TArrayD::Set(Int_t n)
       Double_t *temp = fArray;
       if (n != 0) {
          fArray = new Double_t[n];
-         if (n < fN) memcpy(fArray,temp, n*sizeof(Double_t));
-         else {
-            memcpy(fArray,temp,fN*sizeof(Double_t));
-            memset(&fArray[fN],0,(n-fN)*sizeof(Double_t));
+         if (n < fN) {
+            memcpy(fArray, temp, n*sizeof(Double_t));
+         } else if (temp) {
+            memcpy(fArray, temp, fN*sizeof(Double_t));
+            memset(&fArray[fN], 0, (n-fN)*sizeof(Double_t));
+         } else {
+            memset(fArray, 0, n*sizeof(Double_t));
          }
       } else {
-         fArray = 0;
+         fArray = nullptr;
       }
       if (fN) delete [] temp;
       fN = n;
@@ -131,11 +134,11 @@ void TArrayD::Set(Int_t n, const Double_t *array)
 {
    if (fArray && fN != n) {
       delete [] fArray;
-      fArray = 0;
+      fArray = nullptr;
    }
    fN = n;
-   if (fN == 0) return;
-   if (array == 0) return;
+   if ((fN == 0) || !array)
+      return;
    if (!fArray) fArray = new Double_t[fN];
    memmove(fArray, array, n*sizeof(Double_t));
 }

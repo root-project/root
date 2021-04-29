@@ -94,9 +94,7 @@ sap.ui.define([
       },
 
       sortTable: function (e) {
-         var col = e.mParameters.column;
-         var colId = col.getId();
-
+         // var colId = col.getId();
          var col = e.mParameters.column;
          var bDescending = (e.mParameters.sortOrder == sap.ui.core.SortOrder.Descending);
          var sv = bDescending;
@@ -207,7 +205,7 @@ sap.ui.define([
             var xr = rowData[r];
             for (var xri = 0; xri < xr.length; xri++) {
                var nv = parseFloat(xr[i]);
-               if (nv != NaN) {
+               if (!isNaN(nv)) {
                   rowData[r][ri] = nv;
                }
             }

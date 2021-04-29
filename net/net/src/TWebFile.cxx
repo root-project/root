@@ -928,7 +928,6 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
    }
 
    if (redirect && redir.IsNull()) {
-      ret = -1;
       Error("GetFromWeb10", "error - redirect without location from host %s", fUrl.GetHost());
    }
 
@@ -1351,13 +1350,15 @@ const char *TWebFile::HttpTerminator(const char *start, const char *peeked,
    if (p[0] == '\r' && p[1] == '\n')
       return p + 2;
 #else
-   if (start) { }   // start unused, silence compiler
-   const char *p = (const char*) memchr(peeked, '\n', peeklen);
-   if (p)
-      // p+1 because the line must include '\n'
-      return p + 1;
+   (void) start;   // start unused, silence compiler
+   if (peeked) {
+      const char *p = (const char*) memchr(peeked, '\n', peeklen);
+      if (p)
+         // p+1 because the line must include '\n'
+         return p + 1;
+   }
 #endif
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -95,10 +95,16 @@ bool TClingDataMemberIter::ShouldSkip(const clang::UsingShadowDecl *USD) const
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            TClingClassInfo *ci,
                                            TDictionary::EMemberSelection selection)
-: TClingDeclInfo(nullptr), fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp))
+: TClingDeclInfo(nullptr), fInterp(interp)
 {
 
    R__LOCKGUARD(gInterpreterMutex);
+
+   if (ci) {
+      fClassInfo = *ci;
+   } else {
+      fClassInfo = TClingClassInfo(interp);
+   }
 
    if (!ci || !ci->IsValid()) {
       return;
@@ -113,8 +119,14 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            const clang::ValueDecl *ValD,
                                            TClingClassInfo *ci)
-: TClingDeclInfo(ValD), fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp))
+: TClingDeclInfo(ValD), fInterp(interp)
 {
+
+   if (ci) {
+      fClassInfo = *ci;
+   } else {
+      fClassInfo = TClingClassInfo(interp);
+   }
 
    using namespace llvm;
    const auto DC = ValD->getDeclContext();
@@ -176,7 +188,7 @@ const clang::ValueDecl *TClingDataMemberInfo::GetTargetValueDecl() const
 }
 
 const clang::Type *TClingDataMemberInfo::GetClassAsType() const {
-   return fClassInfo ? fClassInfo->GetType() : nullptr;
+   return fClassInfo.GetType();
 }
 
 int TClingDataMemberInfo::ArrayDim() const
@@ -313,7 +325,7 @@ int TClingDataMemberInfo::Next()
    return fIter.IsValid();
 }
 
-long TClingDataMemberInfo::Offset()
+Longptr_t TClingDataMemberInfo::Offset()
 {
    using namespace clang;
 
@@ -329,7 +341,7 @@ long TClingDataMemberInfo::Offset()
       const clang::ASTRecordLayout &Layout = C.getASTRecordLayout(RD);
       uint64_t bits = Layout.getFieldOffset(FldD->getFieldIndex());
       int64_t offset = C.toCharUnitsFromBits(bits).getQuantity();
-      return static_cast<long>(offset);
+      return static_cast<Longptr_t>(offset);
    }
    else if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
       // Could trigger deserialization of decls, in particular in case
@@ -337,33 +349,33 @@ long TClingDataMemberInfo::Offset()
       //   static constexpr Long64_t something = std::numeric_limits<Long64_t>::max();
       cling::Interpreter::PushTransactionRAII RAII(fInterp);
 
-      if (long addr = reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD))))
+      if (Longptr_t addr = reinterpret_cast<Longptr_t>(fInterp->getAddressOfGlobal(GlobalDecl(VD))))
          return addr;
       auto evalStmt = VD->ensureEvaluatedStmt();
       if (evalStmt && evalStmt->Value) {
          if (const APValue* val = VD->evaluateValue()) {
             if (VD->getType()->isIntegralType(C)) {
-               return reinterpret_cast<long>(val->getInt().getRawData());
+               return reinterpret_cast<Longptr_t>(val->getInt().getRawData());
             } else {
                // The VD stores the init value; its lifetime should the lifetime of
                // this offset.
                switch (val->getKind()) {
                case APValue::Int: {
                   if (val->getInt().isSigned())
-                     fConstInitVal.fLong = (long)val->getInt().getSExtValue();
+                     fConstInitVal.fLong = (Longptr_t)val->getInt().getSExtValue();
                   else
-                     fConstInitVal.fLong = (long)val->getInt().getZExtValue();
-                  return (long) &fConstInitVal.fLong;
+                     fConstInitVal.fLong = (Longptr_t)val->getInt().getZExtValue();
+                  return (Longptr_t) &fConstInitVal.fLong;
                }
                case APValue::Float:
                   if (&val->getFloat().getSemantics()
                       == (const llvm::fltSemantics*)&llvm::APFloat::IEEEsingle()) {
                      fConstInitVal.fFloat = val->getFloat().convertToFloat();
-                     return (long)&fConstInitVal.fFloat;
+                     return (Longptr_t)&fConstInitVal.fFloat;
                   } else if (&val->getFloat().getSemantics()
                              == (const llvm::fltSemantics*) &llvm::APFloat::IEEEdouble()) {
                      fConstInitVal.fDouble = val->getFloat().convertToDouble();
-                     return (long)&fConstInitVal.fDouble;
+                     return (Longptr_t)&fConstInitVal.fDouble;
                   }
                   // else fall-through
                default:
@@ -384,10 +396,10 @@ long TClingDataMemberInfo::Offset()
       // part.
 #ifdef R__BYTESWAP
       // In this case at the beginning.
-      return reinterpret_cast<long>(ECD->getInitVal().getRawData());
+      return reinterpret_cast<Longptr_t>(ECD->getInitVal().getRawData());
 #else
       // In this case in the second part.
-      return reinterpret_cast<long>(((char*)ECD->getInitVal().getRawData())+sizeof(long) );
+      return reinterpret_cast<Longptr_t>(((char*)ECD->getInitVal().getRawData())+sizeof(Longptr_t) );
 #endif
    return -1L;
 }
@@ -426,6 +438,8 @@ long TClingDataMemberInfo::Property() const
          }
 
          declOrParent = llvm::dyn_cast<clang::Decl>(Parent);
+         if (!declOrParent)
+            break;
          if (strictestAccess < declOrParent->getAccess()) {
             strictestAccess = declOrParent->getAccess();
          }

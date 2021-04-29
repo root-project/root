@@ -14,7 +14,6 @@ import functools
 from abc import ABCMeta
 from abc import abstractmethod
 
-import numpy
 import ROOT
 from DistRDF.Backends import Utils
 
@@ -123,7 +122,6 @@ class BaseBackend(ABC):
         initialization = self.initialization
 
         # Build the ranges for the current dataset
-        headnode.npartitions = self.optimize_npartitions(headnode.npartitions)
         ranges = headnode.build_ranges()
 
         def mapper(current_range):
@@ -240,6 +238,11 @@ class BaseBackend(ABC):
                 # Concatenate the partial numpy arrays along the same key of
                 # the dictionary.
                 elif isinstance(mergeable_out, dict):
+                    # Import numpy lazily
+                    try:
+                        import numpy
+                    except ImportError:
+                        raise ImportError("Failed to import numpy during distributed RDataFrame reduce step.")
                     mergeables_out[index] = {
                         key: numpy.concatenate([mergeable_out[key],
                                                 mergeable_in[key]])

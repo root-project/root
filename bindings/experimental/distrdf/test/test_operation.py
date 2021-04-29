@@ -8,17 +8,17 @@ class ClassifyTest(unittest.TestCase):
     def test_action(self):
         """Action nodes are classified accurately."""
         op = Operation("Count")
-        self.assertEqual(op.op_type, Operation.Types.ACTION)
+        self.assertEqual(op.op_type, Operation.ACTION)
 
     def test_instant_action(self):
         """Instant actions are classified accurately."""
         op = Operation("Snapshot")
-        self.assertEqual(op.op_type, Operation.Types.INSTANT_ACTION)
+        self.assertEqual(op.op_type, Operation.INSTANT_ACTION)
 
     def test_transformation(self):
         """Transformation nodes are classified accurately."""
         op = Operation("Define", "c1")
-        self.assertEqual(op.op_type, Operation.Types.TRANSFORMATION)
+        self.assertEqual(op.op_type, Operation.TRANSFORMATION)
 
     def test_none(self):
         """Incorrect operations raise an Exception."""

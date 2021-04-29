@@ -195,7 +195,7 @@ BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const Colu
    R__ASSERT(vars.size() == varTypes.size());
 
    TPRegexp re(R"(\breturn\b)");
-   const bool hasReturnStmt = re.Match(expr) == 1;
+   const bool hasReturnStmt = re.MatchB(expr);
 
    static const std::vector<std::string> fundamentalTypes = {
       "int",
@@ -334,33 +334,39 @@ static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesRe
    }
 }
 
-static bool IsValidCppVarName(const std::string &var)
+} // anonymous namespace
+
+namespace ROOT {
+namespace Internal {
+namespace RDF {
+
+void CheckValidCppVarName(std::string_view var, const std::string &where)
 {
+   bool isValid = true;
+
    if (var.empty())
-      return false;
+      isValid = false;
    const char firstChar = var[0];
 
    // first character must be either a letter or an underscore
    auto isALetter = [](char c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); };
    const bool isValidFirstChar = firstChar == '_' || isALetter(firstChar);
    if (!isValidFirstChar)
-      return false;
+      isValid = false;
 
    // all characters must be either a letter, an underscore or a number
    auto isANumber = [](char c) { return c >= '0' && c <= '9'; };
    auto isValidTok = [&isALetter, &isANumber](char c) { return c == '_' || isALetter(c) || isANumber(c); };
    for (const char c : var)
       if (!isValidTok(c))
-         return false;
+         isValid = false;
 
-   return true;
+   if (!isValid) {
+      const auto error =
+         "RDataFrame::" + where + ": cannot define column \"" + std::string(var) + "\". Not a valid C++ variable name.";
+      throw std::runtime_error(error);
+   }
 }
-
-} // anonymous namespace
-
-namespace ROOT {
-namespace Internal {
-namespace RDF {
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Get all the top-level branches names, including the ones of the friend trees
@@ -405,7 +411,7 @@ ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnName
    // we need to use TPRegexp
    TPRegexp regexp(theRegex);
    for (auto &&colName : colNames) {
-      if ((isEmptyRegex || 0 != regexp.Match(colName.c_str())) && !RDFInternal::IsInternalColumn(colName)) {
+      if ((isEmptyRegex || regexp.MatchB(colName.c_str())) && !RDFInternal::IsInternalColumn(colName)) {
          selectedColumns.emplace_back(colName);
       }
    }
@@ -422,37 +428,70 @@ ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnName
    return selectedColumns;
 }
 
-void CheckDefine(const std::string &where, std::string_view definedColView, const ColumnNames_t &customCols,
-                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &treeColumns,
-                 const ColumnNames_t &dataSourceColumns)
+/// Throw if column `definedColView` is already there.
+void CheckForRedefinition(const std::string &where, std::string_view definedColView, const ColumnNames_t &customCols,
+                          const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &treeColumns,
+                          const ColumnNames_t &dataSourceColumns)
 {
    const std::string definedCol(definedColView); // convert to std::string
    std::string error;
 
-   if (!IsValidCppVarName(definedCol))
-      error = "Not a valid C++ variable name.";
-
-   // check if definedCol has already been `Define`d in the functional graph
-   if (std::find(customCols.begin(), customCols.end(), definedCol) != customCols.end())
-      error = "A column with that name has already been Define'd.";
-
-   // check if definedCol is an alias
    const auto aliasColNameIt = aliasMap.find(definedCol);
-   if (aliasColNameIt != aliasMap.end())
+   const bool isAnAlias = aliasColNameIt != aliasMap.end();
+   if (isAnAlias) {
       error = "An alias with that name, pointing to column \"" + aliasColNameIt->second + "\", already exists.";
+   }
 
-   // check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
-   // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
-   // got it right when we collected the list of available branches.
-   if (std::find(treeColumns.begin(), treeColumns.end(), definedCol) != treeColumns.end())
-      error = "A branch with that name is already present in the input TTree/TChain.";
-
-   // check if definedCol is already present in the data source (but has not yet been `Define`d)
-   if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end())
-      error = "A column with that name is already present in the input data source.";
+   if (error.empty()) {
+      if (std::find(customCols.begin(), customCols.end(), definedCol) != customCols.end())
+         error = "A column with that name has already been Define'd. Use Redefine to force redefinition.";
+      // else, check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
+      // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
+      // got it right when we collected the list of available branches.
+      else if (std::find(treeColumns.begin(), treeColumns.end(), definedCol) != treeColumns.end())
+         error =
+            "A branch with that name is already present in the input TTree/TChain. Use Redefine to force redefinition.";
+      else if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end())
+         error =
+            "A column with that name is already present in the input data source. Use Redefine to force redefinition.";
+   }
 
    if (!error.empty()) {
       error = "RDataFrame::" + where + ": cannot define column \"" + definedCol + "\". " + error;
+      throw std::runtime_error(error);
+   }
+}
+
+/// Throw if column `definedColView` is _not_ already there.
+void CheckForDefinition(const std::string &where, std::string_view definedColView, const ColumnNames_t &customCols,
+                        const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &treeColumns,
+                        const ColumnNames_t &dataSourceColumns)
+{
+   const std::string definedCol(definedColView); // convert to std::string
+   std::string error;
+
+   const auto aliasColNameIt = aliasMap.find(definedCol);
+   const bool isAnAlias = aliasColNameIt != aliasMap.end();
+   if (isAnAlias) {
+      error = "An alias with that name, pointing to column \"" + aliasColNameIt->second +
+              "\", already exists. Aliases cannot be Redefined.";
+   }
+
+   if (error.empty()) {
+      const bool isAlreadyDefined = std::find(customCols.begin(), customCols.end(), definedCol) != customCols.end();
+      // check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
+      // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
+      // got it right when we collected the list of available branches.
+      const bool isABranch = std::find(treeColumns.begin(), treeColumns.end(), definedCol) != treeColumns.end();
+      const bool isADSColumn =
+         std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end();
+
+      if (!isAlreadyDefined && !isABranch && !isADSColumn)
+         error = "No column with that name was found in the dataset. Use Define to create a new column.";
+   }
+
+   if (!error.empty()) {
+      error = "RDataFrame::" + where + ": cannot redefine column \"" + definedCol + "\". " + error;
       throw std::runtime_error(error);
    }
 }
@@ -567,7 +606,8 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
    // Produce code snippet that creates the filter and registers it with the corresponding RJittedFilter
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
    std::stringstream filterInvocation;
-   filterInvocation << "ROOT::Internal::RDF::JitFilterHelper(" << lambdaName << ", {";
+   filterInvocation << "ROOT::Internal::RDF::JitFilterHelper(" << lambdaName << ", new const char*["
+                    << parsedExpr.fUsedCols.size() << "]{";
    for (const auto &col : parsedExpr.fUsedCols)
       filterInvocation << "\"" << col << "\", ";
    if (!parsedExpr.fUsedCols.empty())
@@ -576,7 +616,7 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
    // - jittedFilter: heap-allocated weak_ptr to the actual jittedFilter that will be deleted by JitFilterHelper
    // - prevNodeOnHeap: heap-allocated shared_ptr to the actual previous node that will be deleted by JitFilterHelper
    // - definesOnHeap: heap-allocated, will be deleted by JitFilterHelper
-   filterInvocation << "}, \"" << name << "\", "
+   filterInvocation << "}, " << parsedExpr.fUsedCols.size() << ", \"" << name << "\", "
                     << "reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedFilter>*>("
                     << PrettyPrintAddr(MakeWeakOnHeap(jittedFilter)) << "), "
                     << "reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>(" << prevNodeAddr << "),"
@@ -609,7 +649,8 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm.GetNSlots(), lm.GetDSValuePtrs());
 
    std::stringstream defineInvocation;
-   defineInvocation << "ROOT::Internal::RDF::JitDefineHelper(" << lambdaName << ", {";
+   defineInvocation << "ROOT::Internal::RDF::JitDefineHelper(" << lambdaName << ", new const char*["
+                    << parsedExpr.fUsedCols.size() << "]{";
    for (const auto &col : parsedExpr.fUsedCols) {
       defineInvocation << "\"" << col << "\", ";
    }
@@ -619,8 +660,9 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    // - lm is the loop manager, and if that goes out of scope jitting does not happen at all (i.e. will always be valid)
    // - jittedDefine: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
    // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
-   defineInvocation << "}, \"" << name << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>("
-                    << PrettyPrintAddr(&lm) << "), reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedDefine>*>("
+   defineInvocation << "}, " << parsedExpr.fUsedCols.size() << ", \"" << name
+                    << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>(" << PrettyPrintAddr(&lm)
+                    << "), reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedDefine>*>("
                     << PrettyPrintAddr(MakeWeakOnHeap(jittedDefine))
                     << "), reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesAddr
                     << "), reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>("
@@ -632,7 +674,7 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
 
 // Jit and call something equivalent to "this->BuildAndBook<ColTypes...>(params...)"
 // (see comments in the body for actual jitted code)
-std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
+std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &helperArgType, const std::type_info &at, void *helperArgOnHeap,
                            TTree *tree, const unsigned int nSlots, const RDFInternal::RBookedDefines &customCols,
                            RDataSource *ds, std::weak_ptr<RJittedAction> *jittedActionOnHeap)
@@ -662,19 +704,19 @@ std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::R
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::RDF::CallBuildAction<" << actionTypeName;
    const auto columnTypeNames =
-      GetValidatedArgTypes(bl, customCols, tree, ds, actionTypeNameBase, /*vector2rvec=*/true);
+      GetValidatedArgTypes(cols, customCols, tree, ds, actionTypeNameBase, /*vector2rvec=*/true);
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
    // one need to write: std::hex << std::showbase << (size_t)pointer
    createAction_str << ">(reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>("
-                    << PrettyPrintAddr(prevNode) << "), {";
-   for (auto i = 0u; i < bl.size(); ++i) {
+                    << PrettyPrintAddr(prevNode) << "), new const char*[" << cols.size() << "]{";
+   for (auto i = 0u; i < cols.size(); ++i) {
       if (i != 0u)
          createAction_str << ", ";
-      createAction_str << '"' << bl[i] << '"';
+      createAction_str << '"' << cols[i] << '"';
    }
-   createAction_str << "}, " << nSlots << ", reinterpret_cast<" << helperArgClassName << "*>("
+   createAction_str << "}, " << cols.size() << ", " << nSlots << ", reinterpret_cast<" << helperArgClassName << "*>("
                     << PrettyPrintAddr(helperArgOnHeap)
                     << "), reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedAction>*>("
                     << PrettyPrintAddr(jittedActionOnHeap)

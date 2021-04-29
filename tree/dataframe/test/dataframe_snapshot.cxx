@@ -654,14 +654,49 @@ TEST(RDFSnapshotMore, Lazy)
    gSystem->Unlink(fname1);
 }
 
+TEST(RDFSnapshotMore, LazyJitted)
+{
+   const auto treename = "t";
+   const auto fname = "lazyjittedsnapshot.root";
+   // make sure the file is not here beforehand
+   gSystem->Unlink(fname);
+   RDataFrame d(1);
+   RSnapshotOptions opts = {"RECREATE", ROOT::kZLIB, 0, 0, 99, true};
+   auto ds = d.Alias("c0", "rdfentry_").Snapshot(treename, fname, {"c0"}, opts);
+   EXPECT_TRUE(gSystem->AccessPathName(fname)); // This returns FALSE if the file IS there
+   *ds;
+   EXPECT_FALSE(gSystem->AccessPathName(fname));
+   gSystem->Unlink(fname);
+}
+
+void BookLazySnapshot()
+{
+   auto d = ROOT::RDataFrame(1);
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fLazy = true;
+   d.Snapshot<ULong64_t>("t", "lazysnapshotnottriggered_shouldnotbecreated.root", {"rdfentry_"}, opts);
+}
+
 TEST(RDFSnapshotMore, LazyNotTriggered)
 {
-   {
-      auto d = ROOT::RDataFrame(1);
-      ROOT::RDF::RSnapshotOptions opts;
-      opts.fLazy = true;
-      d.Snapshot<ULong64_t>("t", "foo.root", {"tdfentry_"}, opts);
-   }
+   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot", "A lazy Snapshot action was booked but never triggered.");
+}
+
+RResultPtr<RInterface<RLoopManager, void>> ReturnLazySnapshot(const char *fname)
+{
+   auto d = ROOT::RDataFrame(1);
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fLazy = true;
+   auto res = d.Snapshot<ULong64_t>("t", fname, {"rdfentry_"}, opts);
+   RResultPtr<RInterface<RLoopManager, void>> res2 = res;
+   return res;
+}
+
+TEST(RDFSnapshotMore, LazyTriggeredAfterCopy)
+{
+   const auto fname = "lazysnapshottriggeredaftercopy.root";
+   ROOT_EXPECT_NODIAG(*ReturnLazySnapshot(fname));
+   gSystem->Unlink(fname);
 }
 
 void CheckTClonesArrayOutput(const RVec<TH1D> &hvec)
@@ -775,6 +810,19 @@ TEST(RDFSnapshotMore, ForbiddenOutputFilename)
    // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n"
    // but the address printed changes every time
    EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);
+}
+
+TEST(RDFSnapshotMore, ZeroOutputEntries)
+{
+   const auto fname = "snapshot_zerooutputentries.root";
+   ROOT::RDataFrame(10).Alias("c", "rdfentry_").Filter([] { return false; }).Snapshot<ULong64_t>("t", fname, {"c"});
+   EXPECT_EQ(gSystem->AccessPathName(fname), 0); // This returns 0 if the file IS there
+
+   TFile f(fname);
+   auto *t = f.Get<TTree>("t");
+   EXPECT_NE(t, nullptr);           // TTree "t" should be in there...
+   EXPECT_EQ(t->GetEntries(), 0ll); // ...and have zero entries
+   gSystem->Unlink(fname);
 }
 
 /********* MULTI THREAD TESTS ***********/
@@ -985,15 +1033,7 @@ TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
 TEST(RDFSnapshotMore, LazyNotTriggeredMT)
 {
    ROOT::EnableImplicitMT(4);
-   const auto fname = "lazynottriggeredmt.root";
-   {
-      auto d = ROOT::RDataFrame(8);
-      ROOT::RDF::RSnapshotOptions opts;
-      opts.fLazy = true;
-      d.Snapshot<ULong64_t, ULong64_t>("t", fname, {"tdfentry_", "rdfentry_"}, opts);
-   }
-
-   gSystem->Unlink(fname);
+   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot", "A lazy Snapshot action was booked but never triggered.");
    ROOT::DisableImplicitMT();
 }
 
@@ -1123,6 +1163,19 @@ TEST(RDFSnapshotMore, SetMaxTreeSizeMT)
 
    // Reset TTree max size to its old value
    TTree::SetMaxTreeSize(old_maxtreesize);
+}
+
+TEST(RDFSnapshotMore, ZeroOutputEntriesMT)
+{
+   const auto fname = "snapshot_zerooutputentriesmt.root";
+   ROOT::RDataFrame(10).Alias("c", "rdfentry_").Filter([] { return false; }).Snapshot<ULong64_t>("t", fname, {"c"});
+   EXPECT_EQ(gSystem->AccessPathName(fname), 0); // This returns 0 if the file IS there
+
+   TFile f(fname);
+   auto *t = f.Get<TTree>("t");
+   // TTree "t" should *not* be in there, differently from the single-thread case: see ROOT-10868
+   EXPECT_NE(t, nullptr);
+   gSystem->Unlink(fname);
 }
 
 #endif // R__USE_IMT

@@ -488,7 +488,15 @@ void df103_NanoAODHiggsAnalysis(const bool run_fast = true)
    auto df_h_data_2el2mu = df_data_2el2mu_reco.Define("weight", []() { return 1.0; }, {})
                               .Histo1D({"h_data_2el2mu_doublemu", "", nbins, 70, 180}, "H_mass", "weight");
 
-   // Produce histograms for different channels and make plots
+   // RunGraphs allows to run the event loops of the separate RDataFrame graphs
+   // concurrently. This results in an improved usage of the available resources
+   // if each separate RDataFrame can not utilize all available resources, e.g.,
+   // because not enough data is available.
+   ROOT::RDF::RunGraphs({df_h_sig_4mu, df_h_bkg_4mu, df_h_data_4mu,
+                         df_h_sig_4el, df_h_bkg_4el, df_h_data_4el,
+                         df_h_sig_2el2mu, df_h_bkg_2el2mu, df_h_data_2el2mu});
+
+   // Make plots
    plot(df_h_sig_4mu, df_h_bkg_4mu, df_h_data_4mu, "m_{4#mu} (GeV)", "higgs_4mu.pdf");
    plot(df_h_sig_4el, df_h_bkg_4el, df_h_data_4el, "m_{4e} (GeV)", "higgs_4el.pdf");
    plot(df_h_sig_2el2mu, df_h_bkg_2el2mu, df_h_data_2el2mu, "m_{2e2#mu} (GeV)", "higgs_2el2mu.pdf");

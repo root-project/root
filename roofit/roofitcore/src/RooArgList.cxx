@@ -132,30 +132,6 @@ RooArgList::~RooArgList()
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Array operator. Element in slot `idx` must exist.
-/// \throws std::invalid_argument if `idx` is out of range.
-///
-/// When used as
-/// ```
-///  myArgList[4] = x;
-/// ```
-/// note that the element contained in the list will not be
-/// replaced! Instead, `operator=` of the existing element is called.
-RooAbsArg& RooArgList::operator[](Int_t idx) const 
-{     
-  RooAbsArg* arg = at(idx) ;
-  if (!arg) {
-    coutE(InputArguments) << "RooArgList::operator[](" << GetName() << ") ERROR: index " 
-			  << idx << " out of range (0," << getSize() << ")" << endl ;
-    throw std::invalid_argument(std::string("Index ") + to_string(idx) + " is out of range.");
-  }
-  return *arg ; 
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the contents of the argset in ASCII form to given stream.
 /// 

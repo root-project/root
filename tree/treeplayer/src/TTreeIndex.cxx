@@ -37,7 +37,7 @@ struct IndexSortComparator {
          return *(fValMajor + i1) < *(fValMajor + i2);
    }
 
-  // pointers to the start of index values tables keeping uppder 64bit and lower 64bit
+  // pointers to the start of index values tables keeping upper 64bit and lower 64bit
   // of combined indexed 128bit value
   Long64_t *fValMajor, *fValMinor;
 };
@@ -386,7 +386,7 @@ Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
 /// If it finds a pair that maches val, it returns directly the
 /// index in the table.
 /// If an entry corresponding to major and minor is not found, the function
-/// returns the index of the major,minor pair immediatly lower than the
+/// returns the index of the major,minor pair immediately lower than the
 /// requested value, ie it will return -1 if the pair is lower than
 /// the first entry in the index.
 ///

@@ -49,6 +49,7 @@ allows a simple partial implementation for new OS'es.
 #include <functional>
 #include <iostream>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
@@ -3658,7 +3659,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString librariesWithQuotes;
    TString singleLibrary;
    Bool_t collectingSingleLibraryNameTokens = kFALSE;
-   for (auto tokenObj : *linkLibrariesNoQuotes.Tokenize(" ")) {
+   std::unique_ptr<TObjArray> tokens( linkLibrariesNoQuotes.Tokenize(" ") );
+   for (auto tokenObj : *tokens) {
       singleLibrary = ((TObjString*)tokenObj)->GetString();
       if (singleLibrary[0]=='-' || !AccessPathName(singleLibrary)) {
          if (collectingSingleLibraryNameTokens) {
@@ -4133,7 +4135,7 @@ void TSystem::SetMakeSharedLib(const char *directives)
 /// \param[in] includePath The path to the directory.
 /// \note This interface is mostly relevant for ACLiC and it does *not* inform
 ///       gInterpreter for this include path. If the TInterpreter needs to know
-///       about the include path please use \c gInterpreter->AddIncludePath .
+///       about the include path please use TInterpreter::AddIncludePath() .
 /// \warning The path should start with the \c -I prefix, i.e.
 ///          <tt>gSystem->AddIncludePath("-I /path/to/my/includes")</tt>.
 void TSystem::AddIncludePath(const char *includePath)

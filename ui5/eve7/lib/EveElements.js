@@ -268,7 +268,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    {
       var fcol = jsrp.getColor(ebox.fMainColor);
       var boxMaterial = new THREE.MeshPhongMaterial({color: fcol,  flatShading: true});
-      var fcol = jsrp.getColor(ebox.fMainColor);
 
       // console.log("EveElements.prototype.makeFlatBox triangulate", idxBegin, idxEnd);
       let nTriang = (idxEnd - idxBegin) -2;
@@ -630,26 +629,24 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
         let vbuff = this.obj3d.eve_el.render_data.vtxBuff;
         let nbox = ibuff.length/2;
         let nBoxSelected = cells.length;
-        let boxIdcs = new Array;
+        let boxIdcs = [];
         for (let i = 0; i < cells.length; i++)
         {
             let bin = cells[i].b;
             let slice = cells[i].s;
-            let fraction =  cells[i].f;
-            for (let r = 0; r < nbox; r++) {
-                if (ibuff[r*2] == slice) {
+            // let fraction =  cells[i].f;
+           for (let r = 0; r < nbox; r++) {
+              if (ibuff[r * 2] == slice) {
 
-                if (bin > 0 && ibuff[r*2+1] == bin) {
+                 if (bin > 0 && ibuff[r * 2 + 1] == bin) {
                     boxIdcs.push(r);
                     break;
-                }
-                else if (bin < 0 && ibuff[r*2+1] == Math.abs(bin) && vbuff[r*12+1] < 0)
-                {
+                 } else if (bin < 0 && ibuff[r * 2 + 1] == Math.abs(bin) && vbuff[r * 12 + 1] < 0) {
                     boxIdcs.push(r);
                     break;
-                }
-                }
-            }
+                 }
+              }
+           }
         }
         var idxBuff = [];
         let vtxBuff =  new Float32Array(nBoxSelected * 4 * 3 );
@@ -707,7 +704,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    Calo2DControl.prototype.extractIndex = function(intersect)
    {
       let idx  = Math.floor(intersect.faceIndex/2);
-      return idx;ls
+      return idx;
    }
 
    Calo2DControl.prototype.getTooltipText = function(intersect)

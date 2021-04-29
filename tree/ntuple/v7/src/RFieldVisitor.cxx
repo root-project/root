@@ -181,6 +181,26 @@ void ROOT::Experimental::RPrintValueVisitor::VisitFloatField(const RField<float>
    fOutput << *fValue.Get<float>();
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitCharField(const RField<char> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<char>();
+}
+
+void ROOT::Experimental::RPrintValueVisitor::VisitInt8Field(const RField<std::int8_t> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<std::int8_t>();
+}
+
+void ROOT::Experimental::RPrintValueVisitor::VisitInt16Field(const RField<std::int16_t> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<std::int16_t>();
+}
 
 void ROOT::Experimental::RPrintValueVisitor::VisitIntField(const RField<int> &field)
 {
@@ -189,6 +209,12 @@ void ROOT::Experimental::RPrintValueVisitor::VisitIntField(const RField<int> &fi
    fOutput << *fValue.Get<int>();
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitInt64Field(const RField<std::int64_t> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<std::int64_t>();
+}
 
 void ROOT::Experimental::RPrintValueVisitor::VisitStringField(const RField<std::string> &field)
 {
@@ -206,6 +232,12 @@ void ROOT::Experimental::RPrintValueVisitor::VisitUInt8Field(const RField<std::u
    fOutput << static_cast<int>(*fValue.Get<std::uint8_t>());
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitUInt16Field(const RField<std::uint16_t> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<std::uint16_t>();
+}
 
 void ROOT::Experimental::RPrintValueVisitor::VisitUInt32Field(const RField<std::uint32_t> &field)
 {

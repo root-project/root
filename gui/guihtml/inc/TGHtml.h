@@ -44,6 +44,7 @@ class TGFont;
 class TGIdleHandler;
 class THashTable;
 class TTimer;
+class TGPopupMenu;
 
 //----------------------------------------------------------------------
 
@@ -960,6 +961,9 @@ public:   // reloadable methods
 public:
    const char *GetText() const { return fZText; }
 
+   void HandleMenu(Int_t);
+   void SaveFileAs();
+
    int GetMarginWidth() { return fMargins.fL + fMargins.fR; }
    int GetMarginHeight() { return fMargins.fT + fMargins.fB; }
 
@@ -1125,6 +1129,10 @@ protected:
    virtual void UpdateBackgroundStart();
 
 protected:
+   enum {
+      kM_FILE_SAVEAS, kM_FILE_PRINT
+   };
+
    TGHtmlElement *fPFirst;          // First HTML token on a list of them all
    TGHtmlElement *fPLast;           // Last HTML token on the list
    int            fNToken;          // Number of HTML tokens on the list.
@@ -1179,6 +1187,7 @@ protected:
    TGHtmlScript  *fPScript;         // <SCRIPT> currently being parsed
 
    TGIdleHandler *fIdle;
+   TGPopupMenu   *fMenu;            // popup menu with user actions
 
    // These fields hold state information used by the HtmlAddStyle routine.
    // We have to store this state information here since HtmlAddStyle

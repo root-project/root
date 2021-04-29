@@ -118,18 +118,18 @@ JSROOT.define(['rawinflate'], () => {
       /** @summary Get bytes size of the type */
       GetTypeSize: function(typname) {
          switch (typname) {
-            case jsrio.kBool: return 1;
-            case jsrio.kChar: return 1;
-            case jsrio.kShort: return 2;
-            case jsrio.kInt: return 4;
-            case jsrio.kLong: return 8;
-            case jsrio.kFloat: return 4;
-            case jsrio.kDouble: return 8;
+            case jsrio.kBool:
+            case jsrio.kChar:
             case jsrio.kUChar: return 1;
+            case jsrio.kShort:
             case jsrio.kUShort: return 2;
+            case jsrio.kInt:
+            case jsrio.kFloat:
             case jsrio.kUInt: return 4;
-            case jsrio.kULong: return 8;
-            case jsrio.kLong64: return 8;
+            case jsrio.kLong:
+            case jsrio.kDouble:
+            case jsrio.kULong:
+            case jsrio.kLong64:
             case jsrio.kULong64: return 8;
          }
          return -1;
@@ -224,10 +224,12 @@ JSROOT.define(['rawinflate'], () => {
                   return new Promise((resolveFunc, rejectFunc) => {
 
                      ZstdCodec.run(zstd => {
-                        const simple = new zstd.Simple();
-                        // streaming = new zstd.Streaming();
+                        // const simple = new zstd.Simple();
+                        const streaming = new zstd.Streaming();
 
-                        const data2 = simple.decompress(uint8arr);
+                        // const data2 = simple.decompress(uint8arr);
+                        const data2 = streaming.decompress(uint8arr);
+
                         // console.log(`tgtsize ${tgtsize} zstd size ${data2.length} offset ${data2.byteOffset} rawlen ${data2.buffer.byteLength}`);
 
                         const reslen = data2.length;
@@ -493,12 +495,6 @@ JSROOT.define(['rawinflate'], () => {
             for (; i < n; ++i, o += 4)
                array[i] = view.getInt32(o);
             break;
-         case jsrio.kBits:
-         case jsrio.kUInt:
-            array = new Uint32Array(n);
-            for (; i < n; ++i, o += 4)
-               array[i] = view.getUint32(o);
-            break;
          case jsrio.kShort:
             array = new Int16Array(n);
             for (; i < n; ++i, o += 2)
@@ -529,6 +525,8 @@ JSROOT.define(['rawinflate'], () => {
             throw new Error('kDouble32 should not be used in readFastArray');
          case jsrio.kFloat16:
             throw new Error('kFloat16 should not be used in readFastArray');
+         // case jsrio.kBits:
+         // case jsrio.kUInt:
          default:
             array = new Uint32Array(n);
             for (; i < n; ++i, o += 4)
@@ -664,7 +662,7 @@ JSROOT.define(['rawinflate'], () => {
 
       if (!(bcnt & jsrio.kByteCountMask) || (bcnt == jsrio.kNewClassTag)) {
          tag = bcnt;
-         bcnt = 0;
+         // bcnt = 0;
       } else {
          tag = this.ntou4();
       }
@@ -1032,7 +1030,7 @@ JSROOT.define(['rawinflate'], () => {
                if (parts.length === 3) {
                   segm_start = parseInt(parts[0]);
                   segm_last = parseInt(parts[1]);
-                  if (isNaN(segm_start) || isNaN(segm_last) || (segm_start > segm_last)) {
+                  if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
                      segm_start = 0; segm_last = -1;
                   }
                }
@@ -1088,7 +1086,7 @@ JSROOT.define(['rawinflate'], () => {
                      if (parts.length === 3) {
                         segm_start = parseInt(parts[0]);
                         segm_last = parseInt(parts[1]);
-                        if (isNaN(segm_start) || isNaN(segm_last) || (segm_start > segm_last)) {
+                        if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
                            segm_start = 0; segm_last = -1;
                         }
                      } else {
@@ -1261,7 +1259,7 @@ JSROOT.define(['rawinflate'], () => {
          }
 
          if (!isdir && only_dir)
-            return Promise.reject(Error("Key ${obj_name} is not directory}"));
+            return Promise.reject(Error(`Key ${obj_name} is not directory}`));
 
          read_key = key;
 
@@ -1776,7 +1774,7 @@ JSROOT.define(['rawinflate'], () => {
             streamer[nn].pair_name = (nn == 0) ? "first" : "second";
             streamer[nn].func = function(buf, obj) {
                obj[this.pair_name] = this.readelem(buf);
-            }
+            };
          }
 
       return streamer;
@@ -1944,7 +1942,7 @@ JSROOT.define(['rawinflate'], () => {
                if (buf.ntou1() === 1)
                   obj[this.name] = buf.readFastArray(obj[this.cntname], this.type - jsrio.kOffsetP);
                else
-                  obj[this.name] = new Array();
+                  obj[this.name] = [];
             };
             break;
          case jsrio.kOffsetP + jsrio.kChar:
@@ -2575,7 +2573,7 @@ JSROOT.define(['rawinflate'], () => {
       cs['TMap'] = function(buf, map) {
          if (!map._typename) map._typename = "TMap";
          map.name = "";
-         map.arr = new Array();
+         map.arr = [];
          const ver = buf.last_read_version;
          if (ver > 2) buf.classStreamer(map, "TObject");
          if (ver > 1) map.name = buf.readTString();
@@ -2716,9 +2714,9 @@ JSROOT.define(['rawinflate'], () => {
                   throw new Error(`Problem to decode range setting from streamer element title ${element.fTitle}`);
 
                if (arr.length === 3) nbits = parseInt(arr[2]);
-               if (isNaN(nbits) || (nbits < 2) || (nbits > 32)) nbits = 32;
+               if (!Number.isInteger(nbits) || (nbits < 2) || (nbits > 32)) nbits = 32;
 
-               function parse_range(val) {
+               let parse_range = val => {
                   if (!val) return 0;
                   if (val.indexOf("pi") < 0) return parseFloat(val);
                   val = val.trim();
@@ -2732,14 +2730,17 @@ JSROOT.define(['rawinflate'], () => {
                      case "pi/4": return sign * Math.PI / 4;
                   }
                   return sign * Math.PI;
-               }
+               };
 
                element.fXmin = parse_range(arr[0]);
                element.fXmax = parse_range(arr[1]);
 
-               const bigint = (nbits < 32) ? (1 << nbits) : 0xffffffff;
-               if (element.fXmin < element.fXmax) element.fFactor = bigint / (element.fXmax - element.fXmin);
-               else if (nbits < 15) element.fXmin = nbits;
+               // avoid usage of 1 << nbits, while only works up to 32 bits
+               let bigint = ((nbits >= 0) && (nbits < 32)) ? Math.pow(2, nbits) : 0xffffffff;
+               if (element.fXmin < element.fXmax)
+                  element.fFactor = bigint / (element.fXmax - element.fXmin);
+               else if (nbits < 15)
+                  element.fXmin = nbits;
             }
          }
       }

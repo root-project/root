@@ -18,7 +18,7 @@ if(CMAKE_VERSION VERSION_LESS 3.14.4)
         RESULT_VARIABLE NINJAVERSIONRES)
       if(${NINJAVERSIONRES} EQ 0)
         if(${NINJAVERSION} VERSION_GREATER 1.8.2)
-          message(FATAL_ERROR "You have hit https://gitlab.kitware.com/cmake/cmake/issues/19222\n"
+          message(WARNING "You have hit https://gitlab.kitware.com/cmake/cmake/issues/19222\n"
             "Your build will be indeterministic, i.e. unreliable for incremental builds."
             "To fix this, please install CMake >= 3.14.4!")
         endif()
@@ -85,13 +85,6 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -bind_at_load -m64")
      set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -bind_at_load -m64")
 
-     # Select flags.
-     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g"          CACHE STRING "Flags for a release build with debug info" FORCE)
-     set(CMAKE_CXX_FLAGS_RELEASE        "-O2"             CACHE STRING "Flags for a release build" FORCE)
-     set(CMAKE_CXX_FLAGS_DEBUG          "-g"              CACHE STRING "Flags for a debug build" FORCE)
-     set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g"          CACHE STRING "Flags for a release build with debug info" FORCE)
-     set(CMAKE_C_FLAGS_RELEASE          "-O2"             CACHE STRING "Flags for a release build" FORCE)
-     set(CMAKE_C_FLAGS_DEBUG            "-g"              CACHE STRING "Flags for a debug build" FORCE)
   elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common -Qunused-arguments")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common -Qunused-arguments")
@@ -118,13 +111,6 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
        set(ASAN_EXTRA_EXE_LINKER_FLAGS "-fsanitize=address -static-libsan -Wl,-u,___asan_default_options -Wl,-u,___lsan_default_options -Wl,-u,___lsan_default_suppressions")
      endif()
 
-     # Select flags.
-     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g"          CACHE STRING "Flags for a release build with debug info" FORCE)
-     set(CMAKE_CXX_FLAGS_RELEASE        "-O2"             CACHE STRING "Flags for a release build" FORCE)
-     set(CMAKE_CXX_FLAGS_DEBUG          "-g"              CACHE STRING "Flags for a debug build" FORCE)
-     set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g"          CACHE STRING "Flags for a release build with debug info" FORCE)
-     set(CMAKE_C_FLAGS_RELEASE          "-O2"             CACHE STRING "Flags for a release build" FORCE)
-     set(CMAKE_C_FLAGS_DEBUG            "-g"              CACHE STRING "Flags for a debug build" FORCE)
   else()
     MESSAGE(FATAL_ERROR "There is no setup for this compiler with ID=${CMAKE_CXX_COMPILER_ID} up to now. Don't know what to do. Stop cmake at this point.")
   endif()

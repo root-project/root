@@ -261,6 +261,13 @@ public:
    Bool_t             operator!=(const TIter &aIter) const {
       return !(*this == aIter);
    }
+   TIter &operator=(TIterator *iter)
+   {
+      if (fIterator)
+         delete fIterator;
+      fIterator = iter;
+      return *this;
+   }
    TObject           *operator*() const { return fIterator ? *(*fIterator): nullptr; }
    TIter             &Begin();
    static TIter       End();

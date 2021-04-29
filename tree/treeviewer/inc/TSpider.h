@@ -39,34 +39,34 @@ class TArc;
 
 class TSpider : public TObject, public TAttFill, public TAttLine {
 private:
-   UInt_t                  fNx; // Number of horizontal spider plots.
-   UInt_t                  fNy; // Number of vertical spider plots.
-   UInt_t                  fNcols; // Number of variables.
-   Int_t                   fArraySize; // Actual size of the arrays.
-   Long64_t                fEntry; // Present entry number in fTree.
-   Long64_t                fNentries; // Number of entries.
-   Long64_t                fFirstEntry; // First entry.
-   Long64_t*               fCurrentEntries; //![fNx*fNy] current selected entries;
-   Double_t*               fAve; //[fNcols] Average value of each variable.
-   Double_t*               fMax; //[fNcols]  Maximum value of the variables.
-   Double_t*               fMin; //[fNcols]  Minimum value of the variables.
-   TList*                  fSuperposed; // Superposed spider plots.
-   TTree*                  fTree; // Pointer to the TTree to represent.
-   TPolyLine*              fAveragePoly; // Polygon representing the average variables value.
-   TArc**                  fAverageSlices; //! Average slices.
-   TCanvas*                fCanvas; //! Pointer to the mother pad.
-   TList*                  fFormulas; // List of all formulas to represent.
-   TList*                  fInput; // Used for fSelector.
-   TTreeFormulaManager*    fManager; // Coordinator for the formulas.
-   TGraphPolargram*        fPolargram; // Polar graph.
-   TList*                  fPolyList; // Polygons representing the variables.
-   TTreeFormula*           fSelect; // Selection condition
-   TSelectorDraw*          fSelector; //! Selector.
-   Bool_t                  fAngularLabels; // True if the labels are oriented according to their axis.
-   Bool_t                  fDisplayAverage; // Display or not the average.
-   Bool_t                  fForceDim; // Force dimension.
-   Bool_t                  fSegmentDisplay; // True if displaying a segment plot.
-   Bool_t                  fShowRange; // Show range of variables or not.
+   UInt_t                  fNx;             ///< Number of horizontal spider plots.
+   UInt_t                  fNy;             ///< Number of vertical spider plots.
+   UInt_t                  fNcols;          ///< Number of variables.
+   Int_t                   fArraySize;      ///< Actual size of the arrays.
+   Long64_t                fEntry;          ///< Present entry number in fTree.
+   Long64_t                fNentries;       ///< Number of entries.
+   Long64_t                fFirstEntry;     ///< First entry.
+   Long64_t*               fCurrentEntries; ///<![fNx*fNy] current selected entries;
+   Double_t*               fAve;            ///<[fNcols] Average value of each variable.
+   Double_t*               fMax;            ///<[fNcols]  Maximum value of the variables.
+   Double_t*               fMin;            ///<[fNcols]  Minimum value of the variables.
+   TList*                  fSuperposed;     ///< Superposed spider plots.
+   TTree*                  fTree;           ///< Pointer to the TTree to represent.
+   TPolyLine*              fAveragePoly;    ///< Polygon representing the average variables value.
+   TArc**                  fAverageSlices;  ///<! Average slices.
+   TCanvas*                fCanvas;         ///<! Pointer to the mother pad.
+   TList*                  fFormulas;       ///< List of all formulas to represent.
+   TList*                  fInput;          ///< Used for fSelector.
+   TTreeFormulaManager*    fManager;        ///< Coordinator for the formulas.
+   TGraphPolargram*        fPolargram;      ///< Polar graph.
+   TList*                  fPolyList;       ///< Polygons representing the variables.
+   TTreeFormula*           fSelect;         ///< Selection condition
+   TSelectorDraw*          fSelector;       ///<! Selector.
+   Bool_t                  fAngularLabels;  ///< True if the labels are oriented according to their axis.
+   Bool_t                  fDisplayAverage; ///< Display or not the average.
+   Bool_t                  fForceDim;       ///< Force dimension.
+   Bool_t                  fSegmentDisplay; ///< True if displaying a segment plot.
+   Bool_t                  fShowRange;      ///< Show range of variables or not.
 
    Int_t          FindTextAlign(Double_t theta);
    Double_t       FindTextAngle(Double_t theta);

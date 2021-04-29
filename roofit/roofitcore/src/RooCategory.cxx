@@ -544,9 +544,9 @@ void RooCategory::installSharedRange(std::unique_ptr<RangeMap_t>&& rangeMap) {
   if (existingMap && checkRangeMapsEqual(*rangeMap, *existingMap)) {
     // We know this map, use the shared one.
     _ranges = std::move(existingMap);
-    if (rangeMap.get() == existingMap.get()) {
+    if (rangeMap.get() == _ranges.get()) {
       // This happens when ROOT's IO has written the same pointer twice. We cannot delete now.
-      (void) rangeMap.release(); // clang-tidy is normally right that this leaks. Here, we need to leave the result unused, though.
+      (void) rangeMap.release(); // NOLINT: clang-tidy is normally right that this leaks. Here, we need to leave the result unused, though.
     }
   } else {
     // We don't know this map. Register for sharing.

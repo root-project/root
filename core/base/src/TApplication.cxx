@@ -1247,7 +1247,7 @@ Int_t TApplication::ParseRemoteLine(const char *ln,
 /// The last argument 'script' allows to specify an alternative script to
 /// be executed remotely to startup the session.
 
-Long_t TApplication::ProcessRemote(const char *line, Int_t *)
+Longptr_t TApplication::ProcessRemote(const char *line, Int_t *)
 {
    if (!line) return 0;
 
@@ -1327,7 +1327,7 @@ namespace {
 /// command starting with a ".".
 /// Return the return value of the command cast to a long.
 
-Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
+Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 {
    if (!line || !*line) return 0;
 
@@ -1421,7 +1421,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
          Warning("ProcessLine", "argument(s) \"%s\" ignored with .%c", arguments.Data(),
                  line[1]);
       }
-      Long_t retval = 0;
+      Longptr_t retval = 0;
       if (!mac)
          Error("ProcessLine", "macro %s not found in path %s", fname.Data(),
                TROOT::GetMacroPath());
@@ -1475,7 +1475,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process a file containing a C++ macro.
 
-Long_t TApplication::ProcessFile(const char *file, Int_t *error, Bool_t keep)
+Longptr_t TApplication::ProcessFile(const char *file, Int_t *error, Bool_t keep)
 {
    return ExecuteFile(file, error, keep);
 }
@@ -1484,7 +1484,7 @@ Long_t TApplication::ProcessFile(const char *file, Int_t *error, Bool_t keep)
 /// Execute a file containing a C++ macro (static method). Can be used
 /// while TApplication is not yet created.
 
-Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
+Longptr_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
 {
    static const Int_t kBufSize = 1024;
 
@@ -1522,7 +1522,7 @@ Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
    int ifdef    = 0;
    char *s      = nullptr;
    Bool_t execute = kFALSE;
-   Long_t retval = 0;
+   Longptr_t retval = 0;
 
    while (1) {
       bool res = (bool)macro.getline(currentline, kBufSize);

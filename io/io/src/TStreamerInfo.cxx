@@ -775,7 +775,9 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
 
   } else {
       if (fClass->GetCollectionType() > ROOT::kNotSTL) {
-         if (TClassEdit::IsSTLCont(fClass->GetName())) {
+         const bool isOldRVec = fClass->GetCollectionType() == ROOT::kROOTRVec && (fElements->GetEntries() == 1) &&
+                                !strcmp(fElements->At(0)->GetName(), "fData");
+         if (!isOldRVec && TClassEdit::IsSTLCont(fClass->GetName())) {
             // We have a collection that is indeed an STL collection,
             // we know we don't need its streamerInfo.
             SetBit(kCanDelete);
@@ -1589,10 +1591,15 @@ namespace {
          TStreamerElement *f = (TStreamerElement*) info->GetElements()->At(0);
          TStreamerElement *s = (TStreamerElement*) info->GetElements()->At(1);
 
-         info = old->GetValueClass()->GetStreamerInfo();
-         assert(info->GetElements()->GetEntriesFast() == 2);
-         TStreamerElement *of = (TStreamerElement*) info->GetElements()->At(0);
-         TStreamerElement *os = (TStreamerElement*) info->GetElements()->At(1);
+         // Since we do not create TClass for pair of unknow types, old->GetValueClass can
+         // be nullptr even-though the type used be known.  An example of such change
+         // is `RooExpensiveObjectCache::ExpensiveObject` which used to be recorded
+         // as `ExpensiveObject` in the name of the map ... making it unknown
+         // (and this is precisely the type of change we are trying to handle here/below!)
+         info = old->GetValueClass() ? old->GetValueClass()->GetStreamerInfo() : nullptr;
+         assert(!info || info->GetElements()->GetEntriesFast() == 2);
+         TStreamerElement *of = info ? (TStreamerElement*) info->GetElements()->At(0) : nullptr;
+         TStreamerElement *os = info ? (TStreamerElement*) info->GetElements()->At(1) : nullptr;
 
          TClass *firstNewCl  = f ? f->GetClass() : 0;
          TClass *secondNewCl = s ? s->GetClass() : 0;
@@ -1610,6 +1617,12 @@ namespace {
             TClass *secondAltCl = secondOldCl;
             std::string firstNewName;
             std::string secondNewName;
+            if (!info && !firstOldCl) {
+               firstOldCl = TClass::GetClass(inside[1].c_str(), kTRUE, kTRUE);
+            }
+            if (!info && !secondOldCl) {
+               secondOldCl = TClass::GetClass(inside[2].c_str(), kTRUE, kTRUE);
+            }
             if (firstNewCl && !firstOldCl) {
                firstAltCl = FindAlternate(context, inside[1], firstNewName);
             } else if (firstAltCl) {
@@ -2124,6 +2137,13 @@ void TStreamerInfo::BuildOld()
                }
                int dsize = dm->GetUnitSize();
                element->SetSize(dsize*narr);
+            } else if (strcmp(element->GetName(), "fData") == 0 && strncmp(GetName(), "ROOT::VecOps::RVec", 18) == 0) {
+               Error("BuildCheck", "Reading RVecs that were written directly to file before ROOT v6.24 is not "
+                                   "supported, the program will likely crash.");
+               element->SetOffset(0);
+               element->Init(this);
+               dmType = element->GetTypeName();
+               dmIsPtr = false;
             }
          }
       } // Class corresponding to StreamerInfo is emulated or not.
@@ -4511,8 +4531,7 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
       if (!rule) continue;
 
       TStreamerArtificial *newel;
-      typedef std::vector<TStreamerArtificial*> vec_t;
-      vec_t toAdd;
+      std::vector<TStreamerArtificial*> toAdd;
 
       if (rule->GetTarget()==0) {
          TString newName;
@@ -4582,8 +4601,8 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
          }
       }
       if (loc == -1) {
-         for(vec_t::iterator iter = toAdd.begin(); iter != toAdd.end(); ++iter) {
-            fElements->Add(*iter);
+         for(auto &el : toAdd) {
+            fElements->Add(el);
          }
       } else {
          R__TObjArray_InsertAt(fElements, toAdd, loc);
@@ -5093,7 +5112,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
                TString *st = (TString*)(pointer);
                printf("%s\n",st->Data());
             } else {
-               printf("(%s*)0x%lx\n",GetName(),(ULong_t)pointer);
+               printf("(%s*)0x%zx\n",GetName(),(size_t)pointer);
             }
          }
          return;
@@ -5409,7 +5428,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kObjectp: {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectPointer *el = (TStreamerObjectPointer*)aElement;
-         printf("(%s*)%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
+         printf("(%s*)%zx",el ? el->GetClass()->GetName() : "unknown_type",(size_t)(*obj));
          break;
       }
 
@@ -5417,7 +5436,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kObjectP: {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectPointer *el = (TStreamerObjectPointer*)aElement;
-         printf("(%s*)%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
+         printf("(%s*)%zx",el ? el->GetClass()->GetName() : "unknown_type",(size_t)(*obj));
          break;
       }
 
@@ -5449,7 +5468,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kAnyp:    {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectAnyPointer *el = (TStreamerObjectAnyPointer*)aElement;
-         printf("(%s*)0x%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
+         printf("(%s*)0x%zx",el ? el->GetClass()->GetName() : "unknown_type",(size_t)(*obj));
          break;
       }
 
@@ -5457,7 +5476,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kAnyP:    {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectAnyPointer *el = (TStreamerObjectAnyPointer*)aElement;
-         printf("(%s*)0x%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
+         printf("(%s*)0x%zx",el ? el->GetClass()->GetName() : "unknown_type",(size_t)(*obj));
          break;
       }
       // Any Class not derived from TObject
@@ -5524,10 +5543,10 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
                std::string *st = (std::string*)(ladd);
                printf("%s",st->c_str());
             } else {
-               printf("(%s*)0x%lx",aElement->GetClass()->GetName(),(Long_t)(ladd));
+               printf("(%s*)0x%zx",aElement->GetClass()->GetName(),(size_t)(ladd));
             }
          } else {
-            printf("(unknown_type*)0x%lx",(Long_t)(ladd));
+            printf("(unknown_type*)0x%zx",(size_t)(ladd));
          }
          break;
       }

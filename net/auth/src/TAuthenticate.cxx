@@ -424,8 +424,6 @@ negotia:
    // Set environments
    SetEnvironment();
 
-   st = -1;
-
    //
    // Reset timeout variables and start timer
    fTimeOut = 0;
@@ -1150,7 +1148,7 @@ char *TAuthenticate::PromptPasswd(const char *prompt)
       return StrDup(noint);
    }
 
-   char buf[128];
+   char buf[128] = "";
    const char *pw = buf;
    // Get the plugin for the passwd dialog box, if needed
    if (!gROOT->IsBatch() && (fgPasswdDialog == (TPluginHandler *)(-1)) &&
@@ -1184,7 +1182,7 @@ char *TAuthenticate::PromptPasswd(const char *prompt)
       TString spw(pw);
       if (spw.EndsWith("\n"))
          spw.Remove(spw.Length() - 1);   // get rid of \n
-      char *rpw = StrDup(spw);
+      char *rpw = StrDup(spw.Data());
       return rpw;
    }
    return 0;
@@ -1616,7 +1614,7 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
                Warning("ClearAuth", "problems secure-receiving salt -"
                        " may result in corrupted salt");
                Warning("ClearAuth", "switch off reuse for this session");
-               needsalt = 0;
+               delete [] tmpsalt;
                return 0;
             }
             if (slen) {
@@ -1643,8 +1641,8 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
                }
                if (slen)
                   salt = TString(tmpsalt);
-               delete [] tmpsalt;
             }
+            delete [] tmpsalt;
             if (gDebug > 2)
                Info("ClearAuth", "got salt: '%s' (len: %d)", salt.Data(), slen);
          } else {
@@ -2099,7 +2097,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
    char cinc[20], fileinc[kMAXPATHLEN];
 
    if (gDebug > 2)
-      ::Info("TAuthenticate::FileExpand", "enter ... '%s' ... 0x%lx", fexp, (Long_t)ftmp);
+      ::Info("TAuthenticate::FileExpand", "enter ... '%s' ... 0x%zx", fexp, (size_t)ftmp);
 
    fin = fopen(fexp, "r");
    if (fin == 0)
@@ -2901,6 +2899,11 @@ Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
       // Prepare output
       const size_t strSize = strlen(buftmp) + 1;
       *str = new char[strSize];
+      if (*str == nullptr) {
+         if (gDebug > 0)
+            ::Info("TAuthenticate::SecureRecv","Memory allocation error size (%ld)", (long) strSize);
+         return -1;
+      }
       strlcpy(*str, buftmp, strSize);
 
    } else if (key == 1) {
@@ -3125,7 +3128,7 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
    // Decode it
    R__rsa_NUMBER rsa_n, rsa_d;
 #ifdef R__SSL
-   char *tmprsa = 0;
+   char *tmprsa = nullptr;
    if (TAuthenticate::DecodeRSAPublic(serverPubKey,rsa_n,rsa_d,
                                       &tmprsa) != key) {
       if (tmprsa)
@@ -3144,9 +3147,9 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
    Int_t slen = fgRSAPubExport[key].len;
    Int_t ttmp = 0;
    if (key == 0) {
-      strlcpy(buftmp,fgRSAPubExport[key].keys,slen+1);
-      ttmp = TRSA_fun::RSA_encode()(buftmp, slen, rsa_n, rsa_d);
-      snprintf(buflen, 20, "%d", ttmp);
+      strlcpy(buftmp, fgRSAPubExport[key].keys, sizeof(buftmp));
+      ttmp = TRSA_fun::RSA_encode()(buftmp, slen, rsa_n, rsa_d); // NOLINT: rsa_n, rsa_d are initialized
+      snprintf(buflen, sizeof(buflen), "%d", ttmp);
    } else if (key == 1) {
 #ifdef R__SSL
       Int_t lcmax = RSA_size(RSASSLServer) - 11;
@@ -3262,8 +3265,8 @@ Int_t TAuthenticate::ReadRootAuthrc()
    TString filetmp = "rootauthrc";
    FILE *ftmp = gSystem->TempFileName(filetmp);
    if (gDebug > 2)
-      ::Info("TAuthenticate::ReadRootAuthrc", "got tmp file: %s open at 0x%lx",
-             filetmp.Data(), (Long_t)ftmp);
+      ::Info("TAuthenticate::ReadRootAuthrc", "got tmp file: %s open at 0x%zx",
+             filetmp.Data(), (size_t)ftmp);
    if (ftmp == 0)
       expand = 0;  // Problems opening temporary file: ignore 'include's ...
 

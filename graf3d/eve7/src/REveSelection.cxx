@@ -20,6 +20,8 @@
 
 #include <iostream>
 
+#include <nlohmann/json.hpp>
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 

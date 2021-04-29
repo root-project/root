@@ -29,9 +29,8 @@ class TH1;
 class TPaletteAxis : public TPave {
 
 protected:
-   TGaxis       fAxis;          //  palette axis
-   TH1         *fH;             //! pointer to parent histogram
-   TString      fName;          //  Pave name
+   TGaxis       fAxis;          ///<  Palette axis
+   TH1         *fH;             ///<! Pointer to parent histogram
 
 public:
    // TPaletteAxis status bits
@@ -49,13 +48,11 @@ public:
    TGaxis       *GetAxis() {return &fAxis;}
    Int_t         GetBinColor(Int_t i, Int_t j);
    TH1*          GetHistogram(){return fH;}
-   Option_t     *GetName() const {return fName.Data();}
    virtual char *GetObjectInfo(Int_t px, Int_t py) const;
    Int_t         GetValueColor(Double_t zc);
    virtual void  Paint(Option_t *option="");
    virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    void          SetHistogram(TH1* h) {fH = h;}
-   virtual void  SetName(const char *name="") {fName = name;} // *MENU*
    virtual void  SetLabelColor(Int_t labelcolor) {fAxis.SetLabelColor(labelcolor);} // *MENU*
    virtual void  SetLabelFont(Int_t labelfont) {fAxis.SetLabelFont(labelfont);} // *MENU*
    virtual void  SetLabelOffset(Float_t labeloffset) {fAxis.SetLabelOffset(labeloffset);} // *MENU*
@@ -66,7 +63,7 @@ public:
    virtual void  SetLineWidth(Width_t linewidth) {fAxis.SetLineWidth(linewidth);} // *MENU*
    virtual void  UnZoom();  // *MENU*
 
-   ClassDef(TPaletteAxis,3)  //class used to display a color palette axis for 2-d plots
+   ClassDef(TPaletteAxis,4)  //class used to display a color palette axis for 2-d plots
 };
 
 #endif

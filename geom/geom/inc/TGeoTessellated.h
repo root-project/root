@@ -116,6 +116,9 @@ private:
    std::vector<Vertex_t> fVertices; // List of vertices
    std::vector<TGeoFacet> fFacets;  // List of facets
 
+   TGeoTessellated(const TGeoTessellated&) = delete;
+   TGeoTessellated& operator=(const TGeoTessellated&) = delete;
+
 public:
    // constructors
    TGeoTessellated() {}

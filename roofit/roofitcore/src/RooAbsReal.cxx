@@ -499,28 +499,6 @@ void RooAbsReal::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TSt
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if current value is valid
-
-Bool_t RooAbsReal::isValid() const
-{
-  return isValidReal(_value) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface function to check if given value is a valid value for this object.
-/// This default implementation considers all values valid
-
-Bool_t RooAbsReal::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const
-{
-  return kTRUE ;
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Create a RooProfileLL object that eliminates all nuisance parameters in the
 /// present function. The nuisance parameters are defined as all parameters
 /// of the function except the stated paramsOfInterest
@@ -528,23 +506,20 @@ Bool_t RooAbsReal::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const
 RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
 {
   // Construct name of profile object
-  TString name(Form("%s_Profile[",GetName())) ;
-  TIterator* iter = paramsOfInterest.createIterator() ;
-  RooAbsArg* arg ;
-  Bool_t first(kTRUE) ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  auto name = std::string(GetName()) + "_Profile[";
+  bool first = true;
+  for (auto const& arg : paramsOfInterest) {
     if (first) {
-      first=kFALSE ;
+      first = false ;
     } else {
-      name.Append(",") ;
+      name.append(",") ;
     }
-    name.Append(arg->GetName()) ;
+    name.append(arg->GetName()) ;
   }
-  delete iter ;
-  name.Append("]") ;
+  name.append("]") ;
 
   // Create and return profile object
-  return new RooProfileLL(name.Data(),Form("Profile of %s",GetTitle()),*this,paramsOfInterest) ;
+  return new RooProfileLL(name.c_str(),(std::string("Profile of ") + GetTitle()).c_str(),*this,paramsOfInterest) ;
 }
 
 
@@ -2231,7 +2206,11 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     projection->attachDataSet(*projDataSel) ;
 
     // Construct optimized data weighted average
-    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,RooArgSet()/**projDataSel->get()*/,o.numCPU,o.interleave,kTRUE) ;
+    RooAbsTestStatistic::Configuration cfg;
+    cfg.nCPU = o.numCPU;
+    cfg.interleave = o.interleave;
+    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,RooArgSet()/**projDataSel->get()*/,
+            std::move(cfg), true) ;
     //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,kTRUE) ;
 
     // Do _not_ activate cache-and-track as necessary information to define normalization observables are not present in the underlying dataset
@@ -2602,7 +2581,11 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     }
 
 
-    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,RooArgSet()/**projDataSel->get()*/,o.numCPU,o.interleave,kTRUE) ;
+    RooAbsTestStatistic::Configuration cfg;
+    cfg.nCPU = o.numCPU;
+    cfg.interleave = o.interleave;
+    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,RooArgSet()/**projDataSel->get()*/,
+            std::move(cfg),true) ;
     //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,kTRUE) ;
     dwa.constOptimizeTestStatistic(Activate) ;
 
@@ -4908,19 +4891,26 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 ///
 /// \note Error checking and normalisation (of PDFs) will be performed in getValues().
 ///
-/// \param[in/out] evalData Object holding data that should be used in computations.
+/// \param[in,out] evalData Object holding data that should be used in computations.
 /// Computation results have to be stored here.
 /// \param[in]  normSet  Optional normalisation set passed down to the servers of this object.
 /// \return     Span pointing to the results. The memory is owned by `evalData`.
 RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  if (RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
-    coutI(FastEvaluations) << "The class " << IsA()->GetName() << " does not implement the faster batch evaluation interface."
-        << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
-  }
 
   // Find leaves of the computation graph. Assign known data values to these.
+  //
+  // We can't use RooAbsArg::leafNodeServerList to find all leaves, sometimes a
+  // RooAbsReal sits on top of a leaf in the computation graph but it doesn't
+  // depend on it's values. The example here is a RooRealIntegral, which sets
+  // the leaf values itself to integrate over them. That's why we only add the
+  // parameters and observables here.
   RooArgSet allLeafs;
-  leafNodeServerList(&allLeafs);
+  for(auto const& param : *getParameters(RooArgSet{})) {
+    allLeafs.add(*param);
+  }
+  for(auto const& obs : *getObservables(RooArgSet{})) {
+    allLeafs.add(*obs);
+  }
 
   std::vector<RooAbsRealLValue*> settableLeaves;
   std::vector<RooSpan<const double>> leafValues;
@@ -4949,6 +4939,16 @@ RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, 
   for (auto& i:leafValues) {
     dataSize=std::max(dataSize, i.size());
   }
+
+  // Advising to implement the batch interface makes only sense if the batch was not a scalar.
+  // Otherwise, there would be no speedup benefit.
+  if(dataSize > 1) {
+    if (RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
+      coutI(FastEvaluations) << "The class " << IsA()->GetName() << " does not implement the faster batch evaluation interface."
+          << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
+    }
+  }
+
   auto outputData = evalData.makeBatch(this, dataSize);
 
   {

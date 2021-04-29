@@ -356,7 +356,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       function MakeResizeElements(group, width, height, handler) {
          function make(cursor, d) {
-            let clname = "js_" + cursor.replace('-', '_'),
+            let clname = "js_" + cursor.replace(/[-]/g, '_'),
                elem = group.select('.' + clname);
             if (elem.empty()) elem = group.append('path').classed(clname, true);
             elem.style('opacity', 0).style('cursor', cursor).attr('d', d);

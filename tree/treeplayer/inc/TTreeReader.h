@@ -98,7 +98,7 @@ public:
             this->operator*();
             // Don't set the old entry: op* will if needed, and
             // in most cases it just adds a lot of spinning back
-            // and forth: in most cases teh sequence is ++i; *i.
+            // and forth: in most cases the sequence is ++i; *i.
          }
          return *this;
       }

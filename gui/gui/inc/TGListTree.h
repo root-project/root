@@ -32,22 +32,24 @@ private:
    TGListTreeItem& operator=(const TGListTreeItem&) = delete;
 
 protected:
-   TGClient        *fClient;       // pointer to TGClient
-   TGListTreeItem  *fParent;       // pointer to parent
-   TGListTreeItem  *fFirstchild;   // pointer to first child item
-   TGListTreeItem  *fLastchild;    // pointer to last child item
-   TGListTreeItem  *fPrevsibling;  // pointer to previous sibling
-   TGListTreeItem  *fNextsibling;  // pointer to next sibling
+   TGClient        *fClient;       ///< pointer to TGClient
+   TGListTreeItem  *fParent;       ///< pointer to parent
+   TGListTreeItem  *fFirstchild;   ///< pointer to first child item
+   TGListTreeItem  *fLastchild;    ///< pointer to last child item
+   TGListTreeItem  *fPrevsibling;  ///< pointer to previous sibling
+   TGListTreeItem  *fNextsibling;  ///< pointer to next sibling
 
-   Bool_t           fOpen;         // true if item is open
+   Bool_t           fOpen;         ///< true if item is open
 
-   Int_t            fDNDState;     // EDNDFlags
+   Int_t            fDNDState;     ///< EDNDFlags
 
-   // State managed by TGListTree during drawing.
+   ///@{
+   ///@name State managed by TGListTree during drawing.
    Int_t            fY;            // y position of item
    Int_t            fXtext;        // x position of item text
    Int_t            fYtext;        // y position of item text
    UInt_t           fHeight;       // item height
+   ///@}
 
 public:
    TGListTreeItem(TGClient *client=gClient);
@@ -124,20 +126,20 @@ public:
 class TGListTreeItemStd : public TGListTreeItem
 {
 private:
-   Bool_t           fActive;       // true if item is active
-   Bool_t           fCheckBox;     // true if checkbox is visible
-   Bool_t           fChecked;      // true if item is checked
-   Bool_t           fOwnsData;     // true if user data has to be deleted
-   TString          fText;         // item text
-   TString          fTipText;      // tooltip text
-   const TGPicture *fOpenPic;      // icon for open state
-   const TGPicture *fClosedPic;    // icon for closed state
-   const TGPicture *fCheckedPic;   // icon for checked item
-   const TGPicture *fUncheckedPic; // icon for unchecked item
-   void            *fUserData;     // pointer to user data structure
+   Bool_t           fActive;       ///< true if item is active
+   Bool_t           fCheckBox;     ///< true if checkbox is visible
+   Bool_t           fChecked;      ///< true if item is checked
+   Bool_t           fOwnsData;     ///< true if user data has to be deleted
+   TString          fText;         ///< item text
+   TString          fTipText;      ///< tooltip text
+   const TGPicture *fOpenPic;      ///< icon for open state
+   const TGPicture *fClosedPic;    ///< icon for closed state
+   const TGPicture *fCheckedPic;   ///< icon for checked item
+   const TGPicture *fUncheckedPic; ///< icon for unchecked item
+   void            *fUserData;     ///< pointer to user data structure
 
-   Bool_t           fHasColor;     // true if item has assigned color
-   Color_t          fColor;        // item's color
+   Bool_t           fHasColor;     ///< true if item has assigned color
+   Color_t          fColor;        ///< item's color
 
    TGListTreeItemStd(const TGListTreeItemStd&) = delete;
    TGListTreeItemStd& operator=(const TGListTreeItemStd&) = delete;
@@ -205,41 +207,41 @@ public:
    };
 
 protected:
-   TGListTreeItem  *fFirst;          // pointer to first item in list
-   TGListTreeItem  *fLast;           // pointer to last item in list
-   TGListTreeItem  *fSelected;       // pointer to selected item in list
-   TGListTreeItem  *fCurrent;        // pointer to current item in list
-   TGListTreeItem  *fBelowMouse;     // pointer to item below mouses cursor
-   Int_t            fHspacing;       // horizontal spacing between items
-   Int_t            fVspacing;       // vertical spacing between items
-   Int_t            fIndent;         // number of pixels indentation
-   Int_t            fMargin;         // number of pixels margin from left side
-   Pixel_t          fGrayPixel;      // gray draw color
-   GContext_t       fActiveGC;       // activated (selected) drawing context
-   GContext_t       fDrawGC;         // icon drawing context
-   GContext_t       fLineGC;         // dashed line drawing context
-   GContext_t       fHighlightGC;    // highlighted icon drawing context
-   FontStruct_t     fFont;           // font used to draw item text
-   UInt_t           fDefw;           // default list width
-   UInt_t           fDefh;           // default list height
-   Int_t            fExposeTop;      // top y postion of visible region
-   Int_t            fExposeBottom;   // bottom y position of visible region
-   TGToolTip       *fTip;            // tooltip shown when moving over list items
-   TGListTreeItem  *fTipItem;        // item for which tooltip is set
-   TBufferFile     *fBuf;            // buffer used for Drag and Drop
-   TDNDData         fDNDData;        // Drag and Drop data
-   Atom_t          *fDNDTypeList;    // handles DND types
-   TGListTreeItem  *fDropItem;       // item on which DND is over
-   Bool_t           fAutoTips;       // assume item->fUserData is TObject and use GetTitle() for tip text
-   Bool_t           fAutoCheckBoxPic;// change check box picture if parent and children have diffrent state
-   Bool_t           fDisableOpen;    // disable branch opening on double-clicks
-   Bool_t           fUserControlled; // let user decides what is the behaviour on events
-   Bool_t           fEventHandled;   // flag used from user code to bypass standard event handling
-   UInt_t           fLastEventState; // modifier state of the last keyboard event
+   TGListTreeItem  *fFirst;          ///< pointer to first item in list
+   TGListTreeItem  *fLast;           ///< pointer to last item in list
+   TGListTreeItem  *fSelected;       ///< pointer to selected item in list
+   TGListTreeItem  *fCurrent;        ///< pointer to current item in list
+   TGListTreeItem  *fBelowMouse;     ///< pointer to item below mouses cursor
+   Int_t            fHspacing;       ///< horizontal spacing between items
+   Int_t            fVspacing;       ///< vertical spacing between items
+   Int_t            fIndent;         ///< number of pixels indentation
+   Int_t            fMargin;         ///< number of pixels margin from left side
+   Pixel_t          fGrayPixel;      ///< gray draw color
+   GContext_t       fActiveGC;       ///< activated (selected) drawing context
+   GContext_t       fDrawGC;         ///< icon drawing context
+   GContext_t       fLineGC;         ///< dashed line drawing context
+   GContext_t       fHighlightGC;    ///< highlighted icon drawing context
+   FontStruct_t     fFont;           ///< font used to draw item text
+   UInt_t           fDefw;           ///< default list width
+   UInt_t           fDefh;           ///< default list height
+   Int_t            fExposeTop;      ///< top y postion of visible region
+   Int_t            fExposeBottom;   ///< bottom y position of visible region
+   TGToolTip       *fTip;            ///< tooltip shown when moving over list items
+   TGListTreeItem  *fTipItem;        ///< item for which tooltip is set
+   TBufferFile     *fBuf;            ///< buffer used for Drag and Drop
+   TDNDData         fDNDData;        ///< Drag and Drop data
+   Atom_t          *fDNDTypeList;    ///< handles DND types
+   TGListTreeItem  *fDropItem;       ///< item on which DND is over
+   Bool_t           fAutoTips;       ///< assume item->fUserData is TObject and use GetTitle() for tip text
+   Bool_t           fAutoCheckBoxPic;///< change check box picture if parent and children have diffrent state
+   Bool_t           fDisableOpen;    ///< disable branch opening on double-clicks
+   Bool_t           fUserControlled; ///< let user decides what is the behaviour on events
+   Bool_t           fEventHandled;   ///< flag used from user code to bypass standard event handling
+   UInt_t           fLastEventState; ///< modifier state of the last keyboard event
 
-   EColorMarkupMode fColorMode;      // if/how to render item's main color
-   ECheckMode       fCheckMode;      // how to propagate check properties through the tree
-   GContext_t       fColorGC;        // drawing context for main item color
+   EColorMarkupMode fColorMode;      ///< if/how to render item's main color
+   ECheckMode       fCheckMode;      ///< how to propagate check properties through the tree
+   GContext_t       fColorGC;        ///< drawing context for main item color
 
    static Pixel_t          fgGrayPixel;
    static const TGFont    *fgDefaultFont;
@@ -248,10 +250,10 @@ protected:
    static TGGC            *fgLineGC;
    static TGGC            *fgHighlightGC;
    static TGGC            *fgColorGC;
-   static const TGPicture *fgOpenPic;    // icon for open item
-   static const TGPicture *fgClosedPic;  // icon for closed item
-   static const TGPicture *fgCheckedPic;    // icon for checked item
-   static const TGPicture *fgUncheckedPic;  // icon for unchecked item
+   static const TGPicture *fgOpenPic;       ///< icon for open item
+   static const TGPicture *fgClosedPic;     ///< icon for closed item
+   static const TGPicture *fgCheckedPic;    ///< icon for checked item
+   static const TGPicture *fgUncheckedPic;  ///< icon for unchecked item
 
    static Pixel_t       GetGrayPixel();
    static FontStruct_t  GetDefaultFontStruct();

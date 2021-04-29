@@ -85,14 +85,14 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
   if (vars.getSize()!=dvars->getSize()) {
     coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
 			  << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
-    assert(0) ;
+    throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
   }
 
   for (const auto arg : vars) {
     if (!dvars->find(arg->GetName())) {
       coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
 			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
-      assert(0) ;
+      throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
     }
   }
 
@@ -127,14 +127,14 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
   if (histObs.getSize()!=dvars->getSize()) {
     coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
 			  << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
-    assert(0) ;
+    throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
   }
 
   for (const auto arg : histObs) {
     if (!dvars->find(arg->GetName())) {
       coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
 			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
-      assert(0) ;
+      throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
     }
   }
 
@@ -196,7 +196,7 @@ Double_t RooHistFunc::evaluate() const
     }
   }
 
-  Double_t ret =  _dataHist->weight(_histObsList,_intOrder,kFALSE,_cdfBoundaries) ;  
+  Double_t ret =  _dataHist->weightFast(_histObsList,_intOrder,kFALSE,_cdfBoundaries) ;  
   return ret ;
 }
 

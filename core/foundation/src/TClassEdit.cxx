@@ -547,6 +547,8 @@ ROOT::ESTLType TClassEdit::STLKind(std::string_view type)
             return values[k];
       }
    }
+   if (type.compare(offset, len, "ROOT::VecOps::RVec") == 0)
+      return ROOT::kROOTRVec;
    return ROOT::kNotSTL;
 }
 
@@ -558,8 +560,9 @@ int   TClassEdit::STLArgs(int kind)
    static const char  stln[] =// min number of container arguments
       //     vector, list, deque, map, multimap, set, multiset, bitset,
       {    1,     1,    1,     1,   3,        3,   2,        2,      1,
-      // forward_list, unordered_set, unordered_multiset, unordered_map, unordered_multimap
-                    1,             3,                  3,             4,                  4};
+      // forward_list, unordered_set, unordered_multiset, unordered_map, unordered_multimap, ROOT::RVec
+                    1,             3,                  3,             4,                  4,          1};
+   assert(std::size_t(kind) < sizeof(stln) && "index is out of bounds");
 
    return stln[kind];
 }
@@ -1422,6 +1425,7 @@ bool TClassEdit::IsStdClass(const char *classname)
    if ( strncmp(classname,"unordered_map<",strlen("unordered_map<"))==0) return true;
    if ( strncmp(classname,"unordered_multimap<",strlen("unordered_multimap<"))==0) return true;
    if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
+   if ( strncmp(classname,"ROOT::VecOps::RVec<",strlen("ROOT::VecOps::RVec<"))==0) return true;
 
    return false;
 }
@@ -1463,7 +1467,6 @@ static void ResolveTypedefProcessType(const char *tname,
          }
          else {
             modified = true;
-            mod_start_of_type = start_of_type;
             result += string(tname,0,start_of_type);
             if (constprefix && typeresult.compare(0,6,"const ",6) == 0) {
                result += typeresult.substr(6,string::npos);

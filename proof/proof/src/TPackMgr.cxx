@@ -336,12 +336,12 @@ Int_t TPackMgr::Load(const char *pack, TList *optls)
                   TString argsig(arg->GetTitle());
                   if (argsig.BeginsWith("TList")) {
                      callEnv.ResetParam();
-                     callEnv.SetParam((Long_t) optls);
+                     callEnv.SetParam((Longptr_t) optls);
                   } else if (argsig.BeginsWith("const char")) {
                      callEnv.ResetParam();
                      TObjString *os = optls ? dynamic_cast<TObjString *>(optls->First()) : 0;
                      if (os) {
-                        callEnv.SetParam((Long_t) os->GetName());
+                        callEnv.SetParam((Longptr_t) os->GetName());
                      } else {
                         if (optls && optls->First()) {
                            Log(TString::Format("warning: found object argument of type %s:"
@@ -369,7 +369,7 @@ Int_t TPackMgr::Load(const char *pack, TList *optls)
                rc = -1;
             }
             // Execute
-            Long_t setuprc = (rc == 0) ? 0 : -1;
+            Longptr_t setuprc = (rc == 0) ? 0 : -1;
             if (rc == 0) {
                callEnv.Execute(setuprc);
                if (setuprc < 0) rc = -1;

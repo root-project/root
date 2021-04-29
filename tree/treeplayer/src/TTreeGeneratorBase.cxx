@@ -24,6 +24,10 @@
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
 
+/** \class ROOT::Internal::TTreeGeneratorBase
+Base class for code generators like TTreeProxyGenerator and TTreeReaderGenerator
+*/
+
 namespace ROOT {
 namespace Internal {
 
@@ -79,6 +83,8 @@ namespace Internal {
             case  ROOT::kSTLunorderedmap:      what = "unordered_map"; break;
             case -ROOT::kSTLunorderedmultimap: // same as positive
             case  ROOT::kSTLunorderedmultimap: what = "unordered_multimap"; break;
+            case -ROOT::kROOTRVec:             // same as positive
+            case  ROOT::kROOTRVec:             what = "ROOT/RVec.hxx"; break;
          }
          if (what[0]) {
             directive = "#include <";

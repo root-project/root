@@ -917,15 +917,14 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
   }
 
   // Verify that all members of varList are of type RooRealVar
-  TIterator* iter = varList.createIterator() ;
+  TIter iter = varList.createIterator() ;
   RooAbsArg* arg  ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  while((arg=(RooAbsArg*)iter.Next())) {
     if (!dynamic_cast<RooRealVar*>(arg)) {
       oocoutE((TObject*)0,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName() << "' is not of type RooRealVar" << endl ;
       return 0 ;
     }
   }
-  delete iter ;
 
   RooFitResult* r = new RooFitResult("lastMinuitFit","Last MINUIT fit") ;
 
@@ -1003,13 +1002,13 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
 RooFitResult *RooFitResult::prefitResult(const RooArgList &paramList)
 {
    // Verify that all members of varList are of type RooRealVar
-   TIterator *iter = paramList.createIterator();
+   TIter iter = paramList.createIterator();
    RooAbsArg *arg;
-   while ((arg = (RooAbsArg *)iter->Next())) {
+   while ((arg = (RooAbsArg *)iter.Next())) {
       if (!dynamic_cast<RooRealVar *>(arg)) {
          oocoutE((TObject *)0, InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName()
                                                << "' is not of type RooRealVar" << endl;
-         return 0;
+         return nullptr;
       }
    }
 
@@ -1020,15 +1019,14 @@ RooFitResult *RooFitResult::prefitResult(const RooArgList &paramList)
    RooArgList constPars("constPars");
    RooArgList floatPars("floatPars");
 
-   iter->Reset();
-   while ((arg = (RooAbsArg *)iter->Next())) {
+   iter.Reset();
+   while ((arg = (RooAbsArg *)iter.Next())) {
       if (arg->isConstant()) {
          constPars.addClone(*arg);
       } else {
          floatPars.addClone(*arg);
       }
    }
-   delete iter;
 
    r->setConstParList(constPars);
    r->setInitParList(floatPars);

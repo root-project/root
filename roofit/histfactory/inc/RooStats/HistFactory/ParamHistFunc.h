@@ -12,8 +12,6 @@
 #ifndef ROO_PARAMHISTFUNC
 #define ROO_PARAMHISTFUNC
 
-#include <map>
-#include <vector>
 #include <list>
 #include <string>
 
@@ -97,7 +95,18 @@ protected:
   //RooAbsBinning* _binning;  // Holds the binning of the dataVar (at construction time)
 
   Int_t _numBins;
-  mutable std::map<Int_t, Int_t> _binMap;
+  struct NumBins {
+    NumBins() {}
+    NumBins(int nx, int ny, int nz) : x{nx}, y{ny}, z{nz}, xy{x*y}, xz{x*z}, yz{y*z}, xyz{xy*z} {}
+    int x = 0;
+    int y = 0;
+    int z = 0;
+    int xy = 0;
+    int xz = 0;
+    int yz = 0;
+    int xyz = 0;
+  };
+  mutable NumBins _numBinsPerDim; //!
   mutable RooDataHist _dataSet;
    //Bool_t _normalized;
 
@@ -110,7 +119,10 @@ protected:
   static Int_t GetNumBins( const RooArgSet& vars );
   Double_t evaluate() const;
 
-  ClassDef(ParamHistFunc,5) // Sum of RooAbsReal objects
+private:
+  static NumBins getNumBinsPerDim(RooArgSet const& vars);
+
+  ClassDef(ParamHistFunc,6) // Sum of RooAbsReal objects
 };
 
 #endif

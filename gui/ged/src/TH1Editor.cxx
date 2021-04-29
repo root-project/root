@@ -1755,7 +1755,6 @@ void TH1Editor::DoBinMoved(Int_t numx)
    Int_t* divx = Dividers(nx);
    if (divx[0]==2) {
       fBinSlider->SetPosition(2);
-      numx=1;
       delete [] divx;
       return;
    }

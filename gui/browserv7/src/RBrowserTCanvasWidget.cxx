@@ -38,6 +38,7 @@ public:
       fCanvas->SetTitle(name.c_str());
       fCanvas->ResetBit(TCanvas::kShowEditor);
       fCanvas->ResetBit(TCanvas::kShowToolBar);
+      fCanvas->SetBit(TCanvas::kMenuBar, kTRUE);
       fCanvas->SetCanvas(fCanvas.get());
       fCanvas->SetBatch(kTRUE); // mark canvas as batch
       fCanvas->SetEditable(kTRUE); // ensure fPrimitives are created
@@ -48,6 +49,19 @@ public:
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
    }
+
+   RBrowserTCanvasWidget(const std::string &name, std::unique_ptr<TCanvas> &canv) : RBrowserWidget(name)
+   {
+      fCanvas = std::move(canv);
+      fCanvas->SetBatch(kTRUE); // mark canvas as batch
+
+      // create implementation
+      fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600);
+
+      // assign implementation
+      fCanvas->SetCanvasImp(fWebCanvas);
+   }
+
 
    virtual ~RBrowserTCanvasWidget() = default;
 
@@ -61,6 +75,11 @@ public:
    std::string GetUrl() override
    {
       return "../"s + fWebCanvas->GetWebWindow()->GetAddr() + "/"s;
+   }
+
+   std::string GetTitle() override
+   {
+      return fCanvas->GetName();
    }
 
    bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &opt) override
@@ -88,6 +107,18 @@ protected:
    {
       return std::make_shared<RBrowserTCanvasWidget>(name);
    }
+
+   std::shared_ptr<RBrowserWidget> CreateFor(const std::string &name, std::shared_ptr<Browsable::RElement> &elem) final
+   {
+      auto holder = elem->GetObject();
+      if (!holder) return nullptr;
+
+      auto canv = holder->get_unique<TCanvas>();
+      if (!canv) return nullptr;
+
+      return std::make_shared<RBrowserTCanvasWidget>(name, canv);
+   }
+
 public:
    RBrowserTCanvasProvider() : RBrowserWidgetProvider("tcanvas") {}
    ~RBrowserTCanvasProvider() = default;

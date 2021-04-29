@@ -55,24 +55,25 @@ classes when `TAxis` are drawn. `TGaxis` is the "painter class" of
 occasion  it can be used directly to draw an axis which is not part of a graph
 or an instance. For instance to draw an extra scale on a plot.
 
-- [Basic definition](#GA00)
-- [Definition with a function](#GA01)
-- [Logarithmic axis](#GA02)
-- [Blank axis](#GA03)
-- [Tick marks' orientation](#GA04)
-- [Tick marks' size](#GA05)
-- [Labels' positionning](#GA06)
-- [Labels' orientation](#GA07)
-- [Labels' position on tick marks](#GA08)
-- [Labels' format](#GA09)
-- [Alphanumeric labels](#GA10)
-- [Changing axis labels](#GA10a)
-- [Number of divisions optimisation](#GA11)
-- [Maximum Number of Digits for the axis labels](#GA12)
-- [Optional grid](#GA13)
-- [Time axis](#GA14)
+- [Basic definition](\ref GA00)
+- [Definition with a function](\ref GA01)
+- [Logarithmic axis](\ref GA02)
+- [Blank axis](\ref GA03)
+- [Tick marks' orientation](\ref GA04)
+- [Tick marks' size](\ref GA05)
+- [Labels' positionning](\ref GA06)
+- [Labels' orientation](\ref GA07)
+- [Labels' position on tick marks](\ref GA08)
+- [Labels' format](\ref GA09)
+- [Alphanumeric labels](\ref GA10)
+- [Changing axis labels](\ref GA10a)
+- [Number of divisions optimisation](\ref GA11)
+- [Maximum Number of Digits for the axis labels](\ref GA12)
+- [Optional grid](\ref GA13)
+- [Time axis](\ref GA14)
 
-## <a name="GA00"></a> Basic definition
+\anchor GA00
+## Basic definition
 A `TGaxis` is defined the following way:
 ~~~ {.cpp}
     TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
@@ -146,7 +147,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-## <a name="GA01"></a> Definition with a function
+\anchor GA01
+## Definition with a function
 
 Instead of the wmin,wmax arguments of the normal definition, the
 name of a `TF1` function can be specified. This function will be used to
@@ -207,7 +209,8 @@ Begin_Macro(source)
 End_Macro
 
 
-## <a name="GA02"></a> Logarithmic axis
+\anchor GA02
+## Logarithmic axis
 
 By default axis are linear. To define a `TGaxis` as logarithmic, it is
 enough to create it with the option `"G"`.
@@ -220,11 +223,13 @@ When plotting an histogram or a graph the logarithmic scale can be set using:
 When the `SetMoreLogLabels()` method is called more labels are drawn
 when in logarithmic scale and there is a small number of decades  (less than 3).
 
-## <a name="GA03"></a> Blank axis
+\anchor GA03
+## Blank axis
 To draw only the axis tick marks without the axis body, it is enough to specify
 the option `"B"`. It useful to superpose axis.
 
-## <a name="GA04"></a> Tick marks' orientation
+\anchor GA04
+## Tick marks' orientation
 
 By default tick marks are drawn on the positive side of the axis, except for
 vertical axis for which the default is negative. The `chop` parameter
@@ -235,7 +240,8 @@ allows to control the tick marks orientation:
   - `chopt = "+-"`: tick marks are drawn on both sides of the axis.
   - `chopt = "U"`:  Unlabelled axis, default is labeled.
 
-## <a name="GA05"></a> Tick marks' size
+\anchor GA05
+## Tick marks' size
 
 By default, tick marks have a length equal to 3 per cent of the axis length.
 When the option "S" is specified, the length of the tick marks is equal to
@@ -251,18 +257,21 @@ When plotting an histogram `h` the tick marks size can be changed using:
 A good way to remove tick marks on an axis is to set the tick length to 0:
 `h->GetXaxis()->SetTickLength(0.);`
 
-## <a name="GA06"></a> Labels' positionning
+\anchor GA06
+## Labels' positionning
 
 Labels are normally drawn on side opposite to tick marks. However the option
 `"="` allows to draw them on the same side. The distance between the labels and
 the axis body can be changed with `SetLabelOffset`.
 
-## <a name="GA07"></a> Labels' orientation
+\anchor GA07
+## Labels' orientation
 
 By default axis labels are drawn parallel to the axis. However if the axis is vertical
 then are drawn perpendicular to the axis.
 
-## <a name="GA08"></a> Labels' position on tick marks
+\anchor GA08
+## Labels' position on tick marks
 
 By default axis labels are centered on tick marks. However, for vertical axis,
 they are right adjusted. The `chop` parameter allows to control the labels'
@@ -273,7 +282,8 @@ position on tick marks:
   - `chopt = "C"`: labels are Centered on tick mark.
   - `chopt = "M"`: In the Middle of the divisions.
 
-## <a name="GA09"></a> Labels' format
+\anchor GA09
+## Labels' format
 
 Blank characters are stripped, and then the label is correctly aligned. the dot,
 if last character of the string, is also stripped, unless the option `"."`
@@ -301,7 +311,8 @@ the pad size. It can be negative. `axis` specifies which axis
 (`"x"` or/and `"y"`), default is `"x"` if `axis = "xz"`
 set the two axes
 
-## <a name="GA10"></a> Alphanumeric labels
+\anchor GA10
+## Alphanumeric labels
 
 Axis labels can be any alphanumeric character strings. Such axis can be produced
 only with histograms because the labels'definition is stored in `TAxis`.
@@ -314,7 +325,8 @@ End_Macro
 Because the alphanumeric labels are usually longer that the numeric labels, their
 size is by default equal to `0.66666 * the_numeric_labels_size`.
 
-## <a name="GA10a"></a> Changing axis labels
+\anchor GA10a
+## Changing axis labels
 \since **ROOT version 6.07/07:**
 
 After an axis has been created, TGaxis::ChangeLabel allows to define new text
@@ -336,7 +348,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-## <a name="GA11"></a> Number of divisions optimisation
+\anchor GA11
+## Number of divisions optimisation
 
 By default the number of divisions on axis is optimised to show a coherent
 labelling of the main tick marks. The number of division (`ndiv`) is a
@@ -374,7 +387,8 @@ And other signature is also allowed:
 ~~~ {.cpp}
     h->GetXaxis()->SetNdivisions(10, 5, 0, kTRUE);
 ~~~
-## <a name="GA12"></a> Maximum Number of Digits for the axis labels
+\anchor GA12
+## Maximum Number of Digits for the axis labels
 
 The static function `TGaxis::SetMaxDigits` sets the maximum number of
 digits permitted for the axis labels above which the notation with 10^N is used.
@@ -382,7 +396,8 @@ For example, to accept 6 digits number like 900000 on an axis call
 `TGaxis::SetMaxDigits(6)`. The default value is 5.
 `fgMaxDigits` must be greater than 0.
 
-## <a name="GA13"></a> Optional grid
+\anchor GA13
+## Optional grid
 
 The option `"W"` allows to draw a grid on the primary tick marks. In case
 of a log axis, the grid is only drawn for the primary tick marks if the number
@@ -395,7 +410,8 @@ When plotting an histogram or a graph the grid can be set ON or OFF using:
   - `gPad->SetGridx(1);` set the grid on the Y axis
   - `gPad->SetGrid(1,1);` set the grid on both axis.
 
-## <a name="GA14"></a> Time axis
+\anchor GA14
+## Time axis
 
 Histograms' axis can be defined as "time axis". To do that it is enough to activate
 the TAxis::SetTimeDisplay attribute on a given axis. If `h` is an histogram, it is
@@ -966,7 +982,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t atick[3];
    Double_t tick_side;
    Double_t charheight;
-   Double_t phil, phi, sinphi, cosphi, asinphi, acosphi;
+   Double_t phil, phi, sinphi, cosphi;
    Double_t binLow = 0.,  binLow2 = 0.,  binLow3 = 0.;
    Double_t binHigh = 0., binHigh2 = 0., binHigh3 = 0.;
    Double_t binWidth = 0., binWidth2 = 0., binWidth3 = 0.;
@@ -1361,10 +1377,10 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    }
    cosphi  = TMath::Cos(phi);
    sinphi  = TMath::Sin(phi);
-   acosphi = TMath::Abs(cosphi);
-   asinphi = TMath::Abs(sinphi);
-   if (acosphi <= epsilon) { acosphi = 0;  cosphi  = 0; }
-   if (asinphi <= epsilon) { asinphi = 0;  sinphi  = 0; }
+   if (TMath::Abs(cosphi) <= epsilon)
+      cosphi  = 0;
+   if (TMath::Abs(sinphi) <= epsilon)
+      sinphi  = 0;
 
 // mside positive, tick marks on positive side
 // mside negative, tick marks on negative side

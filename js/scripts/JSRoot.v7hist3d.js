@@ -90,10 +90,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          jsrp.disposeThreejsObject(this.scene);
          if (this.control) this.control.cleanup();
 
-         if (this.renderer) {
-            if (this.renderer.dispose) this.renderer.dispose();
-            if (this.renderer.forceContextLoss) this.renderer.forceContextLoss();
-         }
+         jsrp.cleanupRender3D(this.renderer);
 
          delete this.size_xy3d;
          delete this.size_z3d;
@@ -199,10 +196,10 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
          axis_painter.highlightBin3D(tip, mesh);
 
-         if (!tip && zoom_mesh && axis_painter.Get3DZoomCoord) {
-            let pnt = zoom_mesh.GlobalIntersect(this.raycaster),
+         if (!tip && zoom_mesh && axis_painter.get3dZoomCoord) {
+            let pnt = zoom_mesh.globalIntersect(this.raycaster),
                 axis_name = zoom_mesh.zoom,
-                axis_value = axis_painter.Get3DZoomCoord(pnt, axis_name);
+                axis_value = axis_painter.get3dZoomCoord(pnt, axis_name);
 
             if ((axis_name==="z") && zoom_mesh.use_y_for_z) axis_name = "y";
 
@@ -217,11 +214,11 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          }
 
          return (tip && tip.lines) ? tip : "";
-      }
+      };
 
       this.control.ProcessMouseLeave = function() {
          axis_painter.highlightBin3D(null);
-      }
+      };
 
       this.control.contextMenu = function(pos, intersects) {
          let kind = "painter", p = obj_painter;
@@ -237,7 +234,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          let fp = obj_painter.getFramePainter();
          if (fp && fp.showContextMenu)
             fp.showContextMenu(kind, pos, p);
-      }
+      };
    }
 
    /** @summary call 3D rendering of the histogram drawing
@@ -342,7 +339,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       if (mainp && (!mainp.provideUserTooltip || !mainp.hasUserTooltip())) mainp = null;
 
       if (this.tooltip_selfmesh) {
-         changed_self = (this.tooltip_selfmesh !== selfmesh)
+         changed_self = (this.tooltip_selfmesh !== selfmesh);
          this.tooltip_selfmesh.material.color = this.tooltip_selfmesh.save_color;
          delete this.tooltip_selfmesh;
          changed = true;
@@ -382,7 +379,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             let geom = new THREE.BufferGeometry();
             geom.setAttribute( 'position', new THREE.BufferAttribute( pos, 3 ) );
             geom.setAttribute( 'normal', new THREE.BufferAttribute( norm, 3 ) );
-            let mater = new THREE.MeshBasicMaterial({ color: color, opacity: opacity, flatShading: true });
+            let mater = new THREE.MeshBasicMaterial({ color: color, opacity: opacity });
             tooltip_mesh = new THREE.Mesh(geom, mater);
          } else {
             pos = tooltip_mesh.geometry.attributes.position.array;
@@ -536,7 +533,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             if (!xticks.last_major()) {
                let space = (xticks.next_major_grpos() - grx);
                if (draw_width > 0)
-                  text_scale = Math.min(text_scale, 0.9*space/draw_width)
+                  text_scale = Math.min(text_scale, 0.9*space/draw_width);
                if (this.x_handle.isCenteredLabels()) text3d.grx += space/2;
             }
          }
@@ -553,7 +550,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          lbls.push(text3d);
       }
 
-      this.Get3DZoomCoord = function(point, kind) {
+      this.get3dZoomCoord = function(point, kind) {
          // return axis coordinate from intersection point with axis geometry
          let pos = point[kind], min = this['scale_'+kind+'min'], max = this['scale_'+kind+'max'];
 
@@ -566,27 +563,18 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             pos = min + pos*(max-min);
          }
          return pos;
-      }
+      };
 
-      function CreateZoomMesh(kind, size_3d, use_y_for_z) {
-         let geom = new THREE.Geometry();
+      let CreateZoomMesh = (kind, size_3d, use_y_for_z) => {
 
-         if (kind==="z")
-            geom.vertices.push(
-                  new THREE.Vector3(0,0,0),
-                  new THREE.Vector3(ticklen*4, 0, 0),
-                  new THREE.Vector3(ticklen*4, 0, 2*size_3d),
-                  new THREE.Vector3(0, 0, 2*size_3d));
+         let positions, geom = new THREE.BufferGeometry();
+         if (kind === "z")
+            positions = new Float32Array([0,0,0, ticklen*4,0,2*size_3d, ticklen*4,0,0, 0,0,0, 0,0,2*size_3d, ticklen*4,0,2*size_3d]);
          else
-            geom.vertices.push(
-                  new THREE.Vector3(-size_3d,0,0),
-                  new THREE.Vector3(size_3d,0,0),
-                  new THREE.Vector3(size_3d,-ticklen*4,0),
-                  new THREE.Vector3(-size_3d,-ticklen*4,0));
+            positions = new Float32Array([-size_3d,0,0, size_3d,-ticklen*4,0, size_3d,0,0, -size_3d,0,0, -size_3d,-ticklen*4,0, size_3d,-ticklen*4,0]);
 
-         geom.faces.push(new THREE.Face3(0, 2, 1));
-         geom.faces.push(new THREE.Face3(0, 3, 2));
-         geom.computeFaceNormals();
+         geom.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+         geom.computeVertexNormals();
 
          let material = new THREE.MeshBasicMaterial({ transparent: true,
                                    vertexColors: THREE.NoColors, //   THREE.FaceColors,
@@ -598,14 +586,15 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          mesh.size_3d = size_3d;
          mesh.use_y_for_z = use_y_for_z;
          if (kind=="y") mesh.rotateZ(Math.PI/2).rotateX(Math.PI);
+         mesh.v1 = new THREE.Vector3(positions[0], positions[1], positions[2]);
+         mesh.v2 = new THREE.Vector3(positions[3], positions[4], positions[5]);
+         mesh.v3 = new THREE.Vector3(positions[6], positions[7], positions[8]);
 
-         mesh.GlobalIntersect = function(raycaster) {
-            let plane = new THREE.Plane(),
-                geom = this.geometry;
+         mesh.globalIntersect = function(raycaster) {
+            if (!this.v1 || !this.v2 || !this.v3) return undefined;
 
-            if (!geom || !geom.vertices) return undefined;
-
-            plane.setFromCoplanarPoints(geom.vertices[0], geom.vertices[1], geom.vertices[2]);
+            let plane = new THREE.Plane();
+            plane.setFromCoplanarPoints(this.v1, this.v2, this.v3);
             plane.applyMatrix4(this.matrixWorld);
 
             let v1 = raycaster.ray.origin.clone(),
@@ -622,15 +611,15 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             if (pnt[this.zoom] > max) pnt[this.zoom] = max;
 
             return pnt;
-         }
+         };
 
-         mesh.ShowSelection = function(pnt1,pnt2) {
+         mesh.showSelection = function(pnt1,pnt2) {
             // used to show selection
 
             let tgtmesh = this.children ? this.children[0] : null, gg, kind = this.zoom;
             if (!pnt1 || !pnt2) {
                if (tgtmesh) {
-                  this.remove(tgtmesh)
+                  this.remove(tgtmesh);
                   jsrp.disposeThreejsObject(tgtmesh);
                }
                return tgtmesh;
@@ -660,13 +649,13 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             gg.normalsNeedUpdate = true;
 
             return true;
-         }
+         };
 
          return mesh;
-      }
+      };
 
       let xcont = new THREE.Object3D();
-      xcont.position.set(0, grminy, grminz)
+      xcont.position.set(0, grminy, grminz);
       xcont.rotation.x = 1/4*Math.PI;
       xcont.xyid = 2;
       let xtickslines = jsrp.createLineSegments( ticks, lineMaterial );
@@ -745,7 +734,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             if (!yticks.last_major()) {
                let space = (yticks.next_major_grpos() - gry);
                if (draw_width > 0)
-                  text_scale = Math.min(text_scale, 0.9*space/draw_width)
+                  text_scale = Math.min(text_scale, 0.9*space/draw_width);
                if (this.y_handle.isCenteredLabels()) text3d.gry += space/2;
             }
          }
@@ -1037,7 +1026,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          if (this.options.Zero || (axis_zmin > 0)) return true;
 
          return this._show_empty_bins;
-      }
+      };
 
       // if bin ID fit into 16 bit, use smaller arrays for intersect indexes
       let use16indx = (histo.getBin(i2, j2) < 0xFFFF),
@@ -1180,7 +1169,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          }
 
          //var material = new THREE.MeshLambertMaterial( { color: fcolor } );
-         let material = new THREE.MeshBasicMaterial( { color: fcolor, flatShading: true } );
+         let material = new THREE.MeshBasicMaterial( { color: fcolor } );
 
          let mesh = new THREE.Mesh(geometry, material);
 
@@ -1193,8 +1182,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          mesh.handle = handle;
 
          mesh.tooltip = function(intersect) {
-            if (isNaN(intersect.faceIndex)) {
-               console.error('faceIndex not provided, check three.js version', THREE.REVISION, 'expected r102');
+            if (!Number.isInteger(intersect.faceIndex)) {
+               console.error('faceIndex not provided, check three.js version', THREE.REVISION, 'expected r127');
                return null;
             }
 
@@ -1226,7 +1215,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             if (p.is_projection && (p.getDimension()==2)) tip.$painter = p; // used only for projections
 
             return tip;
-         }
+         };
 
          main.toplevel.add(mesh);
 
@@ -1241,7 +1230,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             let color2 = (rootcolor<2) ? new THREE.Color(0xFF0000) :
                             new THREE.Color(d3.rgb(fcolor).darker(0.5).toString());
 
-            let material2 = new THREE.MeshBasicMaterial( { color: color2, flatShading: true } );
+            let material2 = new THREE.MeshBasicMaterial( { color: color2 } );
 
             let mesh2 = new THREE.Mesh(geom2, material2);
             mesh2.face_to_bins_index = face_to_bins_indx2;
@@ -1495,7 +1484,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       let levels = palette.getContour();
 
       this.buildContour(handle, levels, palette,
-         function(colindx,xp,yp,iminus,iplus,ilevel) {
+         (colindx,xp,yp,iminus,iplus,ilevel) => {
              // ignore less than three points
              if (iplus - iminus < 3) return;
 
@@ -1538,7 +1527,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       // first adjust ranges
 
-      let main_grz = !main.logz ? main.grz : function(value) { return value < axis_zmin ? -0.1 : main.grz(value); }
+      let main_grz = !main.logz ? main.grz : value => (value < axis_zmin) ? -0.1 : main.grz(value);
 
       if ((handle.i2 - handle.i1 < 2) || (handle.j2 - handle.j1 < 2)) return;
 
@@ -1574,7 +1563,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       let loop, nfaces = [], pos = [], indx = [],    // buffers for faces
           nsegments = 0, lpos = null, lindx = 0,     // buffer for lines
           ngridsegments = 0, grid = null, gindx = 0, // buffer for grid lines segments
-          normindx = null;                           // buffer to remember place of vertex for each bin
+          normindx = [];                             // buffer to remember place of vertex for each bin
 
       function CheckSide(z,level1, level2) {
          if (z<level1) return -1;
@@ -1819,12 +1808,12 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             geometry.computeVertexNormals();
             if (donormals && (lvl===1)) RecalculateNormals(geometry.getAttribute('normal').array);
 
-            let fcolor, material, fFillColor = 5;
+            let fcolor, material;
             if (palette) {
                fcolor = palette.getColor(lvl-1);
             } else {
-               fcolor = fFillColor > 1 ? this.getColor(fFillColor) : 'white';
-               if ((this.options.Surf === 14) && (fFillColor<2)) fcolor = this.getColor(48);
+               fcolor = this.getColor(5);
+               // if (this.options.Surf === 14) fcolor = this.getColor(48);
             }
 
             if (this.options.Surf === 14)
@@ -1880,7 +1869,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
              lastcolindx = -1, layerz = 2*main.size_z3d;
 
          this.buildContour(handle, levels, palette,
-            function(colindx,xp,yp,iminus,iplus) {
+            (colindx,xp,yp,iminus,iplus) => {
                 // no need for duplicated point
                 if ((xp[iplus] === xp[iminus]) && (yp[iplus] === yp[iminus])) iplus--;
 
@@ -1928,7 +1917,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
                 geometry.setAttribute( 'normal', new THREE.BufferAttribute( norm, 3 ) );
 
                 let fcolor = palette.getColor(colindx);
-                let material = new THREE.MeshBasicMaterial( { color: fcolor, flatShading: true, side: THREE.DoubleSide, opacity: 0.5  } );
+                let material = new THREE.MeshBasicMaterial( { color: fcolor, side: THREE.DoubleSide, opacity: 0.5 } );
                 let mesh = new THREE.Mesh(geometry, material);
                 mesh.painter = this;
                 main.toplevel.add(mesh);
@@ -1955,7 +1944,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
           // return true if minimal histogram value should be skipped
           if (this.options.Zero || (zmin>0)) return false;
           return !this._show_empty_bins;
-       }
+       };
 
        // loop over the points - first loop counts points, second fill arrays
        for (let loop=0;loop<2;++loop) {
@@ -2017,8 +2006,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
        line.handle = handle;
 
        line.tooltip = function(intersect) {
-          if (isNaN(intersect.index)) {
-             console.error('segment index not provided, check three.js version', THREE.REVISION, 'expected r102');
+          if (!Number.isInteger(intersect.index)) {
+             console.error('segment index not provided, check three.js version', THREE.REVISION, 'expected r127');
              return null;
           }
 
@@ -2043,7 +2032,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
           tip.color = this.tip_color;
 
           return tip;
-       }
+       };
 
        main.toplevel.add(line);
    }
@@ -2057,7 +2046,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
           axis_zmin = pmain.z_handle.gr.domain()[0],
           axis_zmax = pmain.z_handle.gr.domain()[1],
           colindx, bin, i, len = histo.fBins.arr.length,
-          z0 = pmain.grz(axis_zmin), z1 = z0;
+          z0 = pmain.grz(axis_zmin), z1;
 
       // use global coordinates
       this.maxbin = this.gmaxbin;
@@ -2205,7 +2194,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          geometry.computeVertexNormals();
 
          let fcolor = this.fPalette.getColor(colindx);
-         let material = new THREE.MeshBasicMaterial( { color: fcolor, flatShading: true } );
+         let material = new THREE.MeshBasicMaterial( { color: fcolor } );
          let mesh = new THREE.Mesh(geometry, material);
 
          pmain.toplevel.add(mesh);
@@ -2507,8 +2496,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       mesh.tip_color = 0x00FF00;
 
       mesh.tooltip = function(intersect) {
-         if (isNaN(intersect.index)) {
-            console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r102');
+         if (!Number.isInteger(intersect.index)) {
+            console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r127');
             return null;
          }
 
@@ -2529,7 +2518,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          tip.opacity = 0.3;
 
          return tip;
-      }
+      };
 
       return true;
    }
@@ -2561,34 +2550,24 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
          let geom = main.webgl ? new THREE.SphereGeometry(0.5, 16, 12) : new THREE.SphereGeometry(0.5, 8, 6);
          geom.applyMatrix4( new THREE.Matrix4().makeRotationX( Math.PI / 2 ) );
+         geom.computeVertexNormals();
 
-         buffer_size = geom.faces.length*9;
+         let indx = geom.getIndex().array,
+             pos = geom.getAttribute('position').array,
+             norm = geom.getAttribute('normal').array;
+
+         buffer_size = indx.length*3;
          single_bin_verts = new Float32Array(buffer_size);
          single_bin_norms = new Float32Array(buffer_size);
 
-         // Fill a typed array with cube geometry that will be shared by all
-         // (This technically could be put into an InstancedBufferGeometry but
-         // performance gain is likely not huge )
-         for (let face = 0; face < geom.faces.length; ++face) {
-            single_bin_verts[9*face  ] = geom.vertices[geom.faces[face].a].x;
-            single_bin_verts[9*face+1] = geom.vertices[geom.faces[face].a].y;
-            single_bin_verts[9*face+2] = geom.vertices[geom.faces[face].a].z;
-            single_bin_verts[9*face+3] = geom.vertices[geom.faces[face].b].x;
-            single_bin_verts[9*face+4] = geom.vertices[geom.faces[face].b].y;
-            single_bin_verts[9*face+5] = geom.vertices[geom.faces[face].b].z;
-            single_bin_verts[9*face+6] = geom.vertices[geom.faces[face].c].x;
-            single_bin_verts[9*face+7] = geom.vertices[geom.faces[face].c].y;
-            single_bin_verts[9*face+8] = geom.vertices[geom.faces[face].c].z;
-
-            single_bin_norms[9*face  ] = geom.faces[face].vertexNormals[0].x;
-            single_bin_norms[9*face+1] = geom.faces[face].vertexNormals[0].y;
-            single_bin_norms[9*face+2] = geom.faces[face].vertexNormals[0].z;
-            single_bin_norms[9*face+3] = geom.faces[face].vertexNormals[1].x;
-            single_bin_norms[9*face+4] = geom.faces[face].vertexNormals[1].y;
-            single_bin_norms[9*face+5] = geom.faces[face].vertexNormals[1].z;
-            single_bin_norms[9*face+6] = geom.faces[face].vertexNormals[2].x;
-            single_bin_norms[9*face+7] = geom.faces[face].vertexNormals[2].y;
-            single_bin_norms[9*face+8] = geom.faces[face].vertexNormals[2].z;
+         for (let k=0;k<indx.length;++k) {
+            let iii = indx[k]*3;
+            single_bin_verts[k*3] = pos[iii];
+            single_bin_verts[k*3+1] = pos[iii+1];
+            single_bin_verts[k*3+2] = pos[iii+2];
+            single_bin_norms[k*3] = norm[iii];
+            single_bin_norms[k*3+1] = norm[iii+1];
+            single_bin_norms[k*3+2] = norm[iii+2];
          }
 
       } else {
@@ -2781,7 +2760,6 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       for(let ncol=0;ncol<cols_size.length;++ncol) {
          if (!cols_size[ncol]) continue; // ignore dummy colors
 
-         nbins = cols_size[ncol]; // how many bins with specified color
          let nseq = cols_sequence[ncol];
 
          // BufferGeometries that store geometry of all bins
@@ -2809,8 +2787,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          combined_bins.use_scale = use_scale;
 
          combined_bins.tooltip = function(intersect) {
-            if (isNaN(intersect.faceIndex)) {
-               console.error('intersect.faceIndex not provided, check three.js version', THREE.REVISION, 'expected r102');
+            if (!Number.isInteger(intersect.faceIndex)) {
+               console.error('intersect.faceIndex not provided, check three.js version', THREE.REVISION, 'expected r127');
                return null;
             }
             let indx = Math.floor(intersect.faceIndex / this.bins_faces);
@@ -2831,7 +2809,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             tip.color = this.tip_color;
 
             return tip;
-         }
+         };
 
          main.toplevel.add(combined_bins);
 

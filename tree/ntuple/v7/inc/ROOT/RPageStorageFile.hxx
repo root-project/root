@@ -71,13 +71,13 @@ private:
    std::uint64_t fClusterMinOffset = std::uint64_t(-1);
    /// Byte offset of the end of the last page of the current cluster
    std::uint64_t fClusterMaxOffset = 0;
-   /// Helper for zipping keys and header / footer; comprises a 16MB zip buffer
-   RNTupleCompressor fCompressor;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
 protected:
    void CreateImpl(const RNTupleModel &model) final;
    RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
+   RClusterDescriptor::RLocator CommitSealedPageImpl(DescriptorId_t columnId,
+                                                     const RPageStorage::RSealedPage &sealedPage) final;
    RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) final;
    void CommitDatasetImpl() final;
 
@@ -156,8 +156,6 @@ private:
    std::shared_ptr<RPagePool> fPagePool;
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
-   /// Helper to unzip pages and header/footer; comprises a 16MB unzip buffer
-   RNTupleDecompressor fDecompressor;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
    std::unique_ptr<ROOT::Internal::RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
@@ -188,6 +186,9 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
+
+   void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex,
+                       RSealedPage &sealedPage) final;
 
    std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) final;
 

@@ -25,12 +25,12 @@ class TGMime : public TObject {
 friend class TGMimeTypes;
 
 private:
-   TString   fType;       // mime type
-   TString   fPattern;    // filename pattern
-   TString   fAction;     // associated action
-   TString   fIcon;       // associated icon (32x32)
-   TString   fSIcon;      // associated small icon (16x16)
-   TRegexp  *fReg;        // pattern regular expression
+   TString   fType;       ///< mime type
+   TString   fPattern;    ///< filename pattern
+   TString   fAction;     ///< associated action
+   TString   fIcon;       ///< associated icon (32x32)
+   TString   fSIcon;      ///< associated small icon (16x16)
+   TRegexp  *fReg;        ///< pattern regular expression
 
 public:
    TGMime() : fReg(0) {}
@@ -41,10 +41,10 @@ public:
 class TGMimeTypes : public TObject {
 
 protected:
-   TGClient        *fClient;     // client to which mime types belong (display server)
-   TString          fFilename;   // file name of mime type file
-   Bool_t           fChanged;    // true if file has changed
-   TOrdCollection  *fList;       // list of mime types
+   TGClient        *fClient;     ///< client to which mime types belong (display server)
+   TString          fFilename;   ///< file name of mime type file
+   Bool_t           fChanged;    ///< true if file has changed
+   TOrdCollection  *fList;       ///< list of mime types
 
    TGMimeTypes(const TGMimeTypes& gmt);
    TGMimeTypes& operator=(const TGMimeTypes& gmt);

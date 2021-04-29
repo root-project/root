@@ -95,6 +95,7 @@ for single nodes.
 #include "RooVectorDataStore.h"
 #include "RooTreeDataStore.h"
 #include "ROOT/RMakeUnique.hxx"
+#include "RooHelpers.h"
 
 #include <iostream>
 #include <fstream>
@@ -950,11 +951,12 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
 /// \param[in] newSetOrig Set of new servers that should be used instead of the current servers.
 /// \param[in] mustReplaceAll A warning is printed and error status is returned if not all servers could be
 /// substituted successfully.
-/// \param[in] nameChange If false, an object named "x" is replaced with an object named "x" in `newSetOrig`.
-/// If the object in `newSet` is called differently, set `nameChange` to true and use setStringAttribute on the x object:
+/// \param[in] nameChange If false, an object named "x" is only replaced with an object also named "x" in `newSetOrig`.
+/// If the object in `newSet` is called differently, set `nameChange` to true and use setAttribute() on the x object:
 /// ```
-/// objectToReplaceX.setStringAttribute("ORIGNAME", "x")
+/// objectToReplaceX.setAttribute("ORIGNAME:x")
 /// ```
+/// Now, the renamed object will be selected based on the attribute "ORIGNAME:<name>".
 /// \param[in] isRecursionStep Internal switch used when called from recursiveRedirectServers().
 Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursionStep)
 {
@@ -1070,10 +1072,11 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the new server in the specified set that matches the old server.
-/// Allow a name change if nameChange is kTRUE, in which case the new
-/// server is selected by searching for a new server with an attribute
-/// of "ORIGNAME:<oldName>". Return zero if there is not a unique match.
-
+///
+/// \param[in] newSet Search this set by name for a new server.
+/// \param[in] If true, search for an item with the bool attribute "ORIGNAME:<oldName>" set.
+/// Use `<object>.setAttribute("ORIGNAME:<oldName>")` to set this attribute.
+/// \return Pointer to the new server or `nullptr` if there's no unique match.
 RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const
 {
   RooAbsArg *newServer = 0;
@@ -2001,9 +2004,11 @@ RooLinkedList RooAbsArg::getCloningAncestors() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a GraphViz .dot file visualizing the expression tree headed by
 /// this RooAbsArg object. Use the GraphViz tool suite to make e.g. a gif
-/// or ps file from the .dot file
+/// or ps file from the .dot file.
+/// If a node derives from RooAbsReal, its current (unnormalised) value is
+/// printed as well.
 ///
-/// Based on concept developed by Kyle Cranmer
+/// Based on concept developed by Kyle Cranmer.
 
 void RooAbsArg::graphVizTree(const char* fileName, const char* delimiter, bool useTitle, bool useLatex)
 {
@@ -2018,14 +2023,19 @@ void RooAbsArg::graphVizTree(const char* fileName, const char* delimiter, bool u
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the GraphViz representation of the expression tree headed by
 /// this RooAbsArg object to the given ostream.
+/// If a node derives from RooAbsReal, its current (unnormalised) value is
+/// printed as well.
 ///
-/// Based on concept developed by Kyle Cranmer
+/// Based on concept developed by Kyle Cranmer.
 
 void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, bool useLatex)
 {
   if (!os) {
     coutE(InputArguments) << "RooAbsArg::graphVizTree() ERROR: output stream provided as input argument is in invalid state" << endl ;
   }
+
+  // silent warning messages coming when evaluating a RooAddPdf without a normalization set
+  RooHelpers::LocalChangeMsgLevel locmsg(RooFit::WARNING, 0u, RooFit::Eval, false);
 
   // Write header
   os << "digraph \"" << GetName() << "\"{" << endl ;
@@ -2050,6 +2060,10 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
 
     string typeFormat = "\\texttt{";
     string nodeType = (useLatex) ? typeFormat+node->IsA()->GetName()+"}" : node->IsA()->GetName();
+
+    if (auto realNode = dynamic_cast<RooAbsReal*>(node)) {
+      nodeLabel += delimiter + std::to_string(realNode->getVal());
+    }
 
     os << "\"" << nodeName << "\" [ color=" << (node->isFundamental()?"blue":"red")
        << ", label=\"" << nodeType << delimiter << nodeLabel << "\"];" << endl ;

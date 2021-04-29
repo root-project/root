@@ -28,9 +28,9 @@
 #include "TColor.h"
 
 #include <cassert>
-
-
 #include <algorithm>
+
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;

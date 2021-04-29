@@ -166,7 +166,7 @@ void TEntryListArray::Add(const TEntryList *elist)
 
    // Include in this list all the trees present in elist, so the sublists can be added
    // This would happen in any case when calling TEntryList::Add
-   if (elist->GetLists()) { // the other list has lists to hold mutiple trees, add one by one
+   if (elist->GetLists()) { // the other list has lists to hold multiple trees, add one by one
       TIter next(elist->GetLists());
       const TEntryList *e = 0;
       while ((e = (const TEntryList*)next())) {
@@ -181,7 +181,7 @@ void TEntryListArray::Add(const TEntryList *elist)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The method that really adds two entry lists with sublists
-/// If lists are splitted (fLists != 0), look for the ones whose trees match and call the method for those lists.
+/// If lists are split (fLists != 0), look for the ones whose trees match and call the method for those lists.
 /// Add first the sublists, and then use TEntryList::Add to deal with the entries
 
 void TEntryListArray::AddEntriesAndSubLists(const TEntryList *elist)
@@ -193,7 +193,7 @@ void TEntryListArray::AddEntriesAndSubLists(const TEntryList *elist)
    // Add to the entries and sublists of this list, the ones from the other list
    if (!elist) return;
 
-   if (fLists) { // This list is splitted
+   if (fLists) { // This list is split
       TEntryListArray* e = 0;
       TIter next(fLists);
       fN = 0; // reset fN to set it to the sum of fN in each list
@@ -202,13 +202,13 @@ void TEntryListArray::AddEntriesAndSubLists(const TEntryList *elist)
          e->AddEntriesAndSubLists(elist);
          fN += e->GetN();
       }
-   } else if (elist->GetLists()) { // The other list is splitted --> will be called only from the previous if
+   } else if (elist->GetLists()) { // The other list is split --> will be called only from the previous if
       TIter next(elist->GetLists());
       TEntryList *e = 0;
       while ((e = (TEntryList*) next())) {
          AddEntriesAndSubLists(e);
       }
-   } else { // None of the lists are splitted
+   } else { // None of the lists are split
       if (strcmp(elist->GetTreeName(), fTreeName.Data()) || strcmp(elist->GetFileName(), fFileName.Data()))
          return; // Lists are for different trees
       const TEntryListArray *elist_array = dynamic_cast< const TEntryListArray *>(elist);
@@ -263,7 +263,7 @@ void TEntryListArray::AddEntriesAndSubLists(const TEntryList *elist)
 /// - When tree is a chain, the entry is assumed to be global index and the local
 ///
 /// entry is recomputed from the treeoffset information of the chain
-/// When subentry != -1, return true if the enter is present and not splitted
+/// When subentry != -1, return true if the enter is present and not split
 /// or if the subentry list is found and contains \#subentry
 
 Int_t TEntryListArray::Contains(Long64_t entry, TTree *tree, Long64_t subentry)
@@ -313,7 +313,7 @@ void TEntryListArray::ConvertToTEntryListArray(TEntryList *e)
    if (e == fCurrent) {
       fCurrent = earray;
    }
-   // If the list has just been splitted, earray will be the first one
+   // If the list has just been split, earray will be the first one
    // and must keep the current sublists
    if (fSubLists) {
       earray->fSubLists = fSubLists;
@@ -489,7 +489,7 @@ void TEntryListArray::Print(const Option_t* option) const
 
 Bool_t TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
 {
-   Bool_t result = 0;
+   Bool_t result = kFALSE;
 
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
@@ -524,7 +524,7 @@ Bool_t TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
    } else if (subentry == -1) {
       return TEntryList::Remove(entry);
    }
-   return 0;
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -532,7 +532,7 @@ Bool_t TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
 
 Bool_t TEntryListArray::RemoveSubList(TEntryListArray *e, TTree *tree)
 {
-   if (!e) return 0;
+   if (!e) return kFALSE;
    if (tree) {
       SetTree(tree->GetTree());
       TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
@@ -541,17 +541,16 @@ Bool_t TEntryListArray::RemoveSubList(TEntryListArray *e, TTree *tree)
       }
    }
 
-   if (!fSubLists->Remove(e)) {
-      return 0;
+   if (!fSubLists || !fSubLists->Remove(e)) {
+      return kFALSE;
    }
    // fSubLists->Sort(); --> for TObjArray
    delete e;
-   e = 0;
    if (!fSubLists->GetEntries()) {
       delete fSubLists;
-      fSubLists = 0;
+      fSubLists = nullptr;
    }
-   return 1;
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -630,7 +629,7 @@ void TEntryListArray::Subtract(const TEntryList *elist)
 {
    if (!elist) return;
 
-   if (fLists) { // This list is splitted
+   if (fLists) { // This list is split
       TEntryListArray* e = 0;
       TIter next(fLists);
       fN = 0; // reset fN to set it to the sum of fN in each list
@@ -638,13 +637,13 @@ void TEntryListArray::Subtract(const TEntryList *elist)
          e->Subtract(elist);
          fN += e->GetN();
       }
-   } else if (elist->GetLists()) { // The other list is splitted
+   } else if (elist->GetLists()) { // The other list is split
       TIter next(elist->GetLists());
       TEntryList *e = 0;
       while ((e = (TEntryList*) next())) {
          Subtract(e);
       }
-   } else { // None of the lists are splitted
+   } else { // None of the lists are split
       if (strcmp(elist->GetTreeName(), fTreeName.Data()) || strcmp(elist->GetFileName(), fFileName.Data()))
          return; // Lists are for different trees
       const TEntryListArray *elist_array = dynamic_cast< const TEntryListArray *>(elist);
@@ -707,7 +706,7 @@ void TEntryListArray::SetTree(const char *treename, const char *filename)
    TEntryList::SetTree(treename, filename);
    if (fLists && fLists->GetEntries() != nLists) { // fList was created and/or has new additions
       if (nLists == -1) {
-         // The list has just been splitted (fList was created)
+         // The list has just been split (fList was created)
          // There should be two TEntryLists in fLists:
          // must convert both to TEntryListArray
          // and transfer the sublists to the first one

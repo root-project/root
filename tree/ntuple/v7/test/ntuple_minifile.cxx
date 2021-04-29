@@ -172,3 +172,52 @@ TEST(MiniFile, Failures)
       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named 'No such RNTuple' in file '" + fileGuard.GetPath()));
    }
 }
+
+
+TEST(MiniFile, FailOnForwardIncompatibility)
+{
+   FileRaii fileGuard("test_ntuple_minifile_forward_incompat.root");
+
+   // First create a regular RNTuple
+   auto model = RNTupleModel::Create();
+   auto fldPt = model->MakeField<float>("pt", 42.0);
+   {
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
+      writer->Fill();
+   }
+   {
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      ASSERT_EQ(1U, reader->GetNEntries());
+      reader->LoadEntry(0);
+      EXPECT_EQ(42.0, *(reader->GetModel()->GetDefaultEntry()->Get<float>("pt")));
+   }
+
+   // Fix the version numbers in the header
+
+   // Figure out the header offset
+   auto rawFile = RRawFile::Create(fileGuard.GetPath());
+   RMiniFileReader reader(rawFile.get());
+   auto ntuple = reader.GetNTuple("ntuple").Inspect();
+   // Construct incompatible version numbers in little-endian binary format
+   std::uint16_t futureVersion = RNTupleDescriptor::kFrameVersionMin + 1;
+   unsigned char futureVersionLE[2];
+   futureVersionLE[0] = (futureVersion & 0x00FF);
+   futureVersionLE[1] = (futureVersion & 0xFF00) >> 8;
+   // Write out twice (min version and writer version)
+   FILE *f = fopen(fileGuard.GetPath().c_str(), "rb+");
+   ASSERT_TRUE(f != nullptr);
+   int posHeader = ntuple.fSeekHeader;
+   EXPECT_EQ(0, fseek(f, posHeader, SEEK_SET));
+   EXPECT_EQ(2u, fwrite(futureVersionLE, 1, 2, f));
+   EXPECT_EQ(2u, fwrite(futureVersionLE, 1, 2, f));
+   fclose(f);
+
+   try {
+      auto readerFail = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      FAIL() << "unsupported minimum version number should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("RNTuple version too new"));
+   }
+}

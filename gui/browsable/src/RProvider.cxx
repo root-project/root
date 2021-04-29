@@ -18,6 +18,8 @@
 using namespace ROOT::Experimental::Browsable;
 using namespace std::string_literals;
 
+RProvider::BrowseNTupleFunc_t RProvider::gNTupleFunc = nullptr;
+
 //////////////////////////////////////////////////////////////////////////////////
 // Provide map of browsing for different classes
 
@@ -134,6 +136,15 @@ void RProvider::RegisterDraw7(const TClass *cl, Draw7Func_t func)
 }
 
 //////////////////////////////////////////////////////////////////////////////////
+// Register function for browsing RNTuple
+
+void RProvider::RegisterNTupleFunc(BrowseNTupleFunc_t func)
+{
+   gNTupleFunc = func;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
 // Register class with supported libs (if any)
 
 void RProvider::RegisterClass(const std::string &clname, const std::string &iconname,
@@ -165,7 +176,7 @@ const RProvider::StructClass &RProvider::GetClassEntry(const ClassArg &cl)
          for (auto &elem : bmap)
             if (cl.name.compare(0, elem.first.length(), elem.first) == 0)
                return elem.second;
-      } else {
+      } else if (cl.cl) {
          auto bases = const_cast<TClass *>(cl.cl)->GetListOfBases();
          const TClass *basecl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
          if (basecl) return RProvider::GetClassEntry(basecl);
@@ -280,6 +291,26 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<RHolder> &object)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Start browsing of RNTuple
+
+std::shared_ptr<RElement> RProvider::BrowseNTuple(const std::string &tuplename, const std::string &filename)
+{
+   if (!gNTupleFunc) {
+      auto &entry = GetClassEntry("ROOT::Experimental::RNTuple");
+
+      if (entry.browselib.empty())
+         return nullptr;
+
+      gSystem->Load(entry.browselib.c_str());
+   }
+
+   if (!gNTupleFunc)
+      return nullptr;
+
+   return gNTupleFunc(tuplename, filename);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Invoke drawing of object on TCanvas sub-pad
 /// All existing providers are checked, first checked are class matches (including direct parents)
 
@@ -386,6 +417,8 @@ public:
       RegisterClass("ROOT::Experimental::RH1D", "sap-icon://bar-chart", "", "", "libROOTHistDrawProvider");
       RegisterClass("ROOT::Experimental::RH2D", "sap-icon://pixelate", "", "", "libROOTHistDrawProvider");
       RegisterClass("ROOT::Experimental::RH3D", "sap-icon://product", "", "", "libROOTHistDrawProvider");
+      RegisterClass("ROOT::Experimental::RCanvas", "sap-icon://business-objects-experience", "", "", "libROOTHistDrawProvider");
+      RegisterClass("ROOT::Experimental::RNTuple", "sap-icon://table-chart", "libROOTNTupleBrowseProvider", "libROOTNTupleDraw6Provider", "libROOTNTupleDraw7Provider");
    }
 
 } newRDefaultProvider;

@@ -354,31 +354,18 @@ const char *TStreamerElement::GetFullName() const
 void TStreamerElement::GetSequenceType(TString &sequenceType) const
 {
    sequenceType.Clear();
-   Bool_t first = kTRUE;
-   if (TestBit(TStreamerElement::kWholeObject)) {
-      if (!first) sequenceType += ",";
-      first = kFALSE;
-      sequenceType += "wholeObject";
-   }
-   if (TestBit(TStreamerElement::kCache)) {
-      first = kFALSE;
-      sequenceType += "cached";
-   }
-   if (TestBit(TStreamerElement::kRepeat)) {
-      if (!first) sequenceType += ",";
-      first = kFALSE;
-      sequenceType += "repeat";
-   }
-   if (TestBit(TStreamerElement::kDoNotDelete)) {
-      if (!first) sequenceType += ",";
-      first = kFALSE;
-      sequenceType += "nodelete";
-   }
-   if (TestBit(TStreamerElement::kWrite)) {
-      if (!first) sequenceType += ",";
-      first = kFALSE;
-      sequenceType += "write";
-   }
+   auto test_bit = [this, &sequenceType](unsigned bit, const char *name) {
+      if (TestBit(bit)) {
+         if (!sequenceType.IsNull()) sequenceType += ",";
+         sequenceType += name;
+      }
+   };
+
+   test_bit(TStreamerElement::kWholeObject, "wholeObject");
+   test_bit(TStreamerElement::kCache, "cached");
+   test_bit(TStreamerElement::kRepeat, "repeat");
+   test_bit(TStreamerElement::kDoNotDelete, "nodelete");
+   test_bit(TStreamerElement::kWrite, "write");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -944,7 +931,7 @@ TStreamerBasicPointer::~TStreamerBasicPointer()
 ////////////////////////////////////////////////////////////////////////////////
 /// return offset of counter
 
-ULong_t TStreamerBasicPointer::GetMethod() const
+ULongptr_t TStreamerBasicPointer::GetMethod() const
 {
    if (!fCounter) ((TStreamerBasicPointer*)this)->Init();
    if (!fCounter) return 0;
@@ -953,7 +940,7 @@ ULong_t TStreamerBasicPointer::GetMethod() const
    // the left most (non virtual) base classes.  For the other we would
    // really need to use the object coming from the list of real data.
    // (and even that need analysis for virtual base class).
-   return (ULong_t)fCounter->GetOffset();
+   return (ULongptr_t)fCounter->GetOffset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1053,14 +1040,14 @@ TStreamerLoop::~TStreamerLoop()
 ////////////////////////////////////////////////////////////////////////////////
 /// return address of counter
 
-ULong_t TStreamerLoop::GetMethod() const
+ULongptr_t TStreamerLoop::GetMethod() const
 {
    //if (!fCounter) {
    //   Init();
    //   if (!fCounter) return 0;
    //}
    if (!fCounter) return 0;
-   return (ULong_t)fCounter->GetOffset();
+   return (ULongptr_t)fCounter->GetOffset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1153,10 +1140,10 @@ TStreamerBasicType::~TStreamerBasicType()
 ////////////////////////////////////////////////////////////////////////////////
 /// return address of counter
 
-ULong_t TStreamerBasicType::GetMethod() const
+ULongptr_t TStreamerBasicType::GetMethod() const
 {
    if (fType ==  TVirtualStreamerInfo::kCounter ||
-       fType == (TVirtualStreamerInfo::kCounter+TVirtualStreamerInfo::kSkip)) return (ULong_t)&fCounter;
+       fType == (TVirtualStreamerInfo::kCounter+TVirtualStreamerInfo::kSkip)) return (ULongptr_t)&fCounter;
    return 0;
 }
 

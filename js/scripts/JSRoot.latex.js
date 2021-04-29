@@ -177,12 +177,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       while ((str.length > 2) && (str[0] == '{') && (str[str.length - 1] == '}'))
          str = str.substr(1, str.length - 2);
 
-      if (!symbolsRegexCache) {
-         // Create a single regex to detect any symbol to replace
-         symbolsRegexCache = new RegExp('(' + Object.keys(symbols_map).join('|').replace(/\{/g, '\{').replace(/\\}/g, '\\}') + ')', 'g');
-      }
+      // Create a single regex to detect any symbol to replace
+      if (!symbolsRegexCache)
+         symbolsRegexCache = new RegExp('(' + Object.keys(symbols_map).join('|').replace(/\\\{/g, '{').replace(/\\\}/g, '}') + ')', 'g');
 
-      str = str.replace(symbolsRegexCache, function(ch) { return symbols_map[ch]; });
+      str = str.replace(symbolsRegexCache, ch => symbols_map[ch]);
 
       str = str.replace(/\{\}/g, "");
 
@@ -247,7 +246,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (dy1 > 0) { rect.y -= dy1; rect.height += dy1; }
          if (dy2 > 0) rect.height += dy2;
 
-         if (pos.parent) return extend_pos(pos.parent, rect)
+         if (pos.parent) return extend_pos(pos.parent, rect);
 
          // calculate dimensions for the
          arg.text_rect = rect;
@@ -408,10 +407,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             foundarg = label.substr(0, pos);
             if (found.arg == 'int') {
                foundarg = parseInt(foundarg);
-               if (isNaN(foundarg)) { console.log('wrong int argument', label.substr(0, pos)); return false; }
+               if (!Number.isInteger(foundarg)) { console.log('wrong int argument', label.substr(0, pos)); return false; }
             } else if (found.arg == 'float') {
                foundarg = parseFloat(foundarg);
-               if (isNaN(foundarg)) { console.log('wrong float argument', label.substr(0, pos)); return false; }
+               if (!Number.isFinite(foundarg)) { console.log('wrong float argument', label.substr(0, pos)); return false; }
             }
             label = label.substr(pos + 2);
          }
@@ -634,7 +633,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (subpos.square_root) {
                // creating cap for square root
                // while overline symbol does not match with square root, use empty text with overline
-               let len = 2, sqrt_dy = 0, yscale = 1,
+               let sqrt_dy = 0, yscale = 1,
                    bs = get_boundary(subpos.square_root, subpos.sqrt_rect),
                    be = get_boundary(subnode1, subpos.rect);
 
@@ -646,7 +645,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                }
 
                // we taking into account only element width
-               len = be.width / subpos.fsize / yscale;
+               let len = be.width / subpos.fsize / yscale;
 
                let a = "", nn = Math.round(Math.max(len * 3, 2));
                while (nn--) a += '\u203E'; // unicode overline
@@ -977,7 +976,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             p = str.indexOf("]{");
             if (p <= 0) break;
             let colindx = parseInt(str.substr(0, p));
-            if (isNaN(colindx)) break;
+            if (!Number.isInteger(colindx)) break;
             let col = painter.getColor(colindx), cnt = 1;
             str = str.substr(p + 2);
             p = -1;
@@ -1011,18 +1010,20 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    function repairMathJaxSvgSize(painter, mj_node, svg, arg) {
       let transform = value => {
-         if (!value || (typeof value !== "string")) return null;
-         if (value.indexOf("ex") !== value.length - 2) return null;
-         value = parseFloat(value.substr(0, value.length - 2));
-         return isNaN(value) ? null : value * arg.font.size * 0.5;
-      }
+         if (!value || (typeof value !== "string") || (value.length < 3)) return null;
+         let p = value.indexOf("ex");
+         if ((p < 0) || (p !== value.length - 2)) return null;
+         value = parseFloat(value.substr(0, p));
+         return Number.isFinite(value) ? value * arg.font.size * 0.5 : null;
+      };
 
       let width = transform(svg.attr("width")),
           height = transform(svg.attr("height")),
           valign = svg.attr("style");
 
-      if (valign && valign.indexOf("vertical-align:") == 0 && valign.indexOf("ex;") == valign.length - 3) {
-         valign = transform(valign.substr(16, valign.length - 17));
+      if (valign && (valign.length > 18) && valign.indexOf("vertical-align:") == 0) {
+         let p = valign.indexOf("ex;");
+         valign = ((p > 0) && (p == valign.length - 3)) ? transform(valign.substr(16, valign.length - 17)) : null;
       } else {
          valign = null;
       }
@@ -1049,7 +1050,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let mw = parseInt(svg.attr("width")),
           mh = parseInt(svg.attr("height"));
 
-      if (!isNaN(mh) && !isNaN(mw)) {
+      if (Number.isInteger(mh) && Number.isInteger(mw)) {
          if (svg_factor > 0.) {
             mw = mw / svg_factor;
             mh = mh / svg_factor;

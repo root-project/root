@@ -14,7 +14,6 @@
 #include "ROOT/REveProjections.hxx"
 #include "ROOT/REveProjectionManager.hxx"
 #include "ROOT/REveRGBAPalette.hxx"
-//#include "ROOT/REveText.hxx"
 #include "ROOT/REveRenderData.hxx"
 #include "ROOT/REveTrans.hxx"
 
@@ -23,10 +22,10 @@
 #include "TMath.h"
 #include "TAxis.h"
 
-// #include "TGLUtil.h"
-
 #include <cassert>
 #include <iostream>
+
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
 
@@ -1087,10 +1086,10 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId
       UInt_t nEtaBins    = axis->GetNbins();
       Int_t  nSlices     = fData->GetNSlices();
 
-      Float_t *sliceValsUp     = new Float_t[nSlices];
-      Float_t *sliceValsLow    = new Float_t[nSlices];
-      Float_t *sliceValsUpRef  = new Float_t[nSlices];
-      Float_t *sliceValsLowRef = new Float_t[nSlices];
+      std::vector<Float_t> sliceValsUp(nSlices, 0.);
+      std::vector<Float_t> sliceValsLow(nSlices, 0.);
+      std::vector<Float_t> sliceValsUpRef(nSlices, 0.);
+      std::vector<Float_t> sliceValsLowRef(nSlices, 0.);
 
       Float_t  towerH, towerHRef, offUp, offLow;
       REveCaloData::CellData_t cellData;
@@ -1100,16 +1099,12 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId
          if (cellLists[etaBin])
          {
             if (!fCellLists[etaBin]) {
-               delete[] sliceValsUp;
-               delete[] sliceValsLow;
-               delete[] sliceValsUpRef;
-               delete[] sliceValsLowRef;
                throw(eh + "selected cell not in cell list cache.");
             }
             offUp = 0; offLow =0;
             // selected phi sum
             for (Int_t s = 0; s < nSlices; ++s) {
-               sliceValsUp[s] = 0; sliceValsLow[s] = 0;
+               sliceValsUp[s] = sliceValsLow[s] = 0.;
             }
             REveCaloData::vCellId_t& cids = *(cellLists[etaBin]);
             for (REveCaloData::vCellId_i i=cids.begin(); i!=cids.end(); i++) {
@@ -1123,7 +1118,7 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId
             // reference phi sum
             for (Int_t s = 0; s < nSlices; ++s)
             {
-               sliceValsUpRef[s] = 0; sliceValsLowRef[s] = 0;
+               sliceValsUpRef[s] = sliceValsLowRef[s] = 0;
             }
             REveCaloData::vCellId_t& cidsRef = *(fCellLists[etaBin]);
             for (REveCaloData::vCellId_i i=cidsRef.begin(); i!=cidsRef.end(); i++)

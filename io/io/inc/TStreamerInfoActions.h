@@ -172,20 +172,34 @@ namespace TStreamerInfoActions {
    class TActionSequence : public TObject {
       TActionSequence() {};
    public:
+      enum class EStatusBits {
+         kVectorPtrLooper = BIT(14)
+      };
+
       struct SequencePtr;
       using SequenceGetter_t = SequencePtr(*)(TStreamerInfo *info, TVirtualCollectionProxy *collectionProxy, TClass *originalClass);
 
-      TActionSequence(TVirtualStreamerInfo *info, UInt_t maxdata) : fStreamerInfo(info), fLoopConfig(0) { fActions.reserve(maxdata); };
+      TActionSequence(TVirtualStreamerInfo *info, UInt_t maxdata, Bool_t isForVecPtr = kFALSE)
+         : fStreamerInfo(info), fLoopConfig(0)
+      {
+         if (isForVecPtr)
+            SetBit((UInt_t)EStatusBits::kVectorPtrLooper);
+         fActions.reserve(maxdata);
+      };
       ~TActionSequence() {
          delete fLoopConfig;
       }
 
       template <typename action_t>
       void AddAction( action_t action, TConfiguration *conf ) {
-         fActions.push_back( TConfiguredAction(action, conf) );
+         fActions.emplace_back( action, conf );
       }
       void AddAction(const TConfiguredAction &action ) {
          fActions.push_back( action );
+      }
+
+      Bool_t IsForVectorPtrLooper() const {
+         return TestBit((UInt_t)EStatusBits::kVectorPtrLooper);
       }
 
       TVirtualStreamerInfo *fStreamerInfo; ///< StreamerInfo used to derive these actions.

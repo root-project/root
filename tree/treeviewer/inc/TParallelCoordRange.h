@@ -30,11 +30,11 @@ public:
    };
 
 private:
-   Double_t          fMin;    // Min value for the range.
-   Double_t          fMax;    // Max value for the range.
-   const Double_t    fSize;   // Size of the painted range.
-   TParallelCoordVar *fVar;   // Variable owning the range.
-   TParallelCoordSelect* fSelect; // Selection owning the range.
+   Double_t          fMin;        ///< Min value for the range.
+   Double_t          fMax;        ///< Max value for the range.
+   const Double_t    fSize;       ///< Size of the painted range.
+   TParallelCoordVar *fVar;       ///< Variable owning the range.
+   TParallelCoordSelect* fSelect; ///< Selection owning the range.
 
    void              PaintSlider(Double_t value,Bool_t fill=kFALSE);
    TPoint*           GetBindingLinePoints(Int_t pos,Int_t mindragged);

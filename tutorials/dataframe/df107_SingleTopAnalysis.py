@@ -99,7 +99,7 @@ int FindGoodLepton(VecI_t goodlep, VecI_t type, VecF_t lep_pt, VecF_t lep_eta, V
 """)
 
 for s in samples:
-    # Select events with electron or muon trigger and with a missing tranverse energy above 30 GeV
+    # Select events with electron or muon trigger and with a missing transverse energy above 30 GeV
     df[s] = df[s].Filter("trigE || trigM")\
                  .Filter("met_et > 30000")
 
@@ -112,7 +112,7 @@ for s in samples:
                  .Filter("idx_lep != -1")
 
     # Compute transverse mass of the W boson using the missing transverse energy and the good lepton
-    # Use only events with a transverse mass of the reconstruced W boson larger than 60 GeV
+    # Use only events with a transverse mass of the reconstructed W boson larger than 60 GeV
     df[s] = df[s].Define("mtw", "sqrt(2 * lep_pt[idx_lep] * met_et * (1 - cos(lep_phi[idx_lep] - met_phi)))")\
                  .Filter("mtw > 60000")
 

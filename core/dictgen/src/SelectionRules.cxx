@@ -441,13 +441,16 @@ bool SelectionRules::GetDeclName(const clang::Decl* D, std::string& name, std::s
    return true;
 }
 
-void SelectionRules::GetDeclQualName(const clang::Decl* D, std::string& qual_name) const{
+void SelectionRules::GetDeclQualName(const clang::Decl* D, std::string& qual_name) const
+{
    const clang::NamedDecl* N = static_cast<const clang::NamedDecl*> (D);
    llvm::raw_string_ostream stream(qual_name);
-   N->getNameForDiagnostic(stream,N->getASTContext().getPrintingPolicy(),true);
-   }
+   if (N)
+      N->getNameForDiagnostic(stream,N->getASTContext().getPrintingPolicy(),true);
+}
 
-bool SelectionRules::GetFunctionPrototype(const clang::FunctionDecl* F, std::string& prototype) const {
+bool SelectionRules::GetFunctionPrototype(const clang::FunctionDecl* F, std::string& prototype) const
+{
 
    if (!F) {
       return false;
@@ -496,8 +499,10 @@ bool SelectionRules::GetFunctionPrototype(const clang::FunctionDecl* F, std::str
 bool SelectionRules::IsParentClass(const clang::Decl* D) const
 {
    //TagDecl has methods to understand of what kind is the Decl - class, struct or union
-   if (const clang::TagDecl* T
-       = llvm::dyn_cast<clang::TagDecl>(D->getDeclContext()))
+   if (!D)
+      return false;
+   if (const clang::TagDecl *T = llvm::dyn_cast<clang::TagDecl>(
+         D->getDeclContext()))
       return T->isClass() || T->isStruct();
    return false;
 }

@@ -252,7 +252,7 @@ TH1D* TSVDUnfold::Unfold( Int_t kreg )
    Double_t eps = 1e-12;
    Double_t sreg;
 
-   // Copy histogams entries into vector
+   // Copy histograms entries into vector
    if (fToyMode) { H2V( fToyhisto, vb ); H2Verr( fToyhisto, vberr ); }
    else          { H2V( fBdat,     vb ); H2Verr( fBdat,     vberr ); }
 

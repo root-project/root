@@ -1136,7 +1136,7 @@ void TROOT::CloseFiles()
          fSockets->SetBit(kMustCleanup);
       }
       CallFunc_t *socketCloser = gInterpreter->CallFunc_Factory();
-      Long_t offset = 0;
+      Longptr_t offset = 0;
       TClass *socketClass = TClass::GetClass("TSocket");
       gInterpreter->CallFunc_SetFuncProto(socketCloser, socketClass->GetClassInfo(), "Close", "", &offset);
       if (gInterpreter->CallFunc_IsValid(socketCloser)) {
@@ -1162,7 +1162,7 @@ void TROOT::CloseFiles()
                fClosedObjects->AddLast(socket);
             } else {
                // Crap ... this is not a socket, likely Proof or something, let's try to find a Close
-               Long_t other_offset;
+               Longptr_t other_offset;
                CallFunc_t *otherCloser = gInterpreter->CallFunc_Factory();
                gInterpreter->CallFunc_SetFuncProto(otherCloser, socket->IsA()->GetClassInfo(), "Close", "", &other_offset);
                if (gInterpreter->CallFunc_IsValid(otherCloser)) {
@@ -1579,7 +1579,7 @@ TGlobal *TROOT::GetGlobal(const char *name, Bool_t load) const
 
 TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t /* load */) const
 {
-   if (addr == nullptr || ((Long_t)addr) == -1) return nullptr;
+   if (addr == nullptr || ((Longptr_t)addr) == -1) return 0;
 
    TInterpreter::DeclId_t decl = gInterpreter->GetDataMemberAtAddr(addr);
    if (decl) {
@@ -2263,9 +2263,9 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
 /// If padUpdate is true (default) update the current pad.
 /// Returns the macro return value.
 
-Long_t TROOT::Macro(const char *filename, Int_t *error, Bool_t padUpdate)
+Longptr_t TROOT::Macro(const char *filename, Int_t *error, Bool_t padUpdate)
 {
-   Long_t result = 0;
+   Longptr_t result = 0;
 
    if (fInterpreter) {
       TString aclicMode;
@@ -2315,9 +2315,9 @@ void  TROOT::Message(Int_t id, const TObject *obj)
 /// The possible error codes are defined by TInterpreter::EErrorCode. In
 /// particular, error will equal to TInterpreter::kProcessing until the
 /// CINT interpreted thread has finished executing the line.
-/// Returns the result of the command, cast to a Long_t.
+/// Returns the result of the command, cast to a Longptr_t.
 
-Long_t TROOT::ProcessLine(const char *line, Int_t *error)
+Longptr_t TROOT::ProcessLine(const char *line, Int_t *error)
 {
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
@@ -2335,9 +2335,9 @@ Long_t TROOT::ProcessLine(const char *line, Int_t *error)
 /// the line). On non-Win32 platforms there is no difference between
 /// ProcessLine() and ProcessLineSync().
 /// The possible error codes are defined by TInterpreter::EErrorCode.
-/// Returns the result of the command, cast to a Long_t.
+/// Returns the result of the command, cast to a Longptr_t.
 
-Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
+Longptr_t TROOT::ProcessLineSync(const char *line, Int_t *error)
 {
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
@@ -2354,7 +2354,7 @@ Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
 /// In all other cases use TROOT::ProcessLine().
 /// The possible error codes are defined by TInterpreter::EErrorCode.
 
-Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
+Longptr_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 {
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
@@ -2362,7 +2362,7 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
    if (!fApplication.load())
       TApplication::CreateApplication();
 
-   Long_t result = 0;
+   Longptr_t result = 0;
 
    if (fInterpreter) {
       TInterpreter::EErrorCode *code = (TInterpreter::EErrorCode*)error;

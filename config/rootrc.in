@@ -239,7 +239,7 @@ Gui.MimeTypeFile:            $(HOME)/.root.mimes
 # If above does not exists defaults to this:
 #Gui.MimeTypeFile:            @etcdir@/root.mimes
 # Type of Browser: TRootBrowser or TRootBrowserLite
-Browser.Name:                TRootBrowser
+Browser.Name:                @root_browser_class@
 # Browser Options (plugins)
 # F: File browser E: Text Editor H: HTML browser
 # C: Canvas I: I/O redirection P: Proof G: GL viewer

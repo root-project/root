@@ -28,63 +28,63 @@ class TGMimeTypes;
 class TGResourcePool : public TGObject {
 
 private:
-   Pixel_t          fBackColor;        // default background color
-   Pixel_t          fForeColor;        // default foreground color
-   Pixel_t          fHilite;           // default hilite color
-   Pixel_t          fShadow;           // default shadow color
-   Pixel_t          fHighLightColor;   // highlight color
-   Pixel_t          fSelBackColor;     // default selection background color
-   Pixel_t          fSelForeColor;     // default selection foreground color
-   Pixel_t          fDocBackColor;     // default document background color
-   Pixel_t          fDocForeColor;     // default document foreground color
-   Pixel_t          fTipBackColor;     // default tip background color
-   Pixel_t          fTipForeColor;     // default tip foreground color
-   Pixel_t          fWhite;            // white color index
-   Pixel_t          fBlack;            // black color index
+   Pixel_t          fBackColor;        ///< default background color
+   Pixel_t          fForeColor;        ///< default foreground color
+   Pixel_t          fHilite;           ///< default highlight color
+   Pixel_t          fShadow;           ///< default shadow color
+   Pixel_t          fHighLightColor;   ///< highlight color
+   Pixel_t          fSelBackColor;     ///< default selection background color
+   Pixel_t          fSelForeColor;     ///< default selection foreground color
+   Pixel_t          fDocBackColor;     ///< default document background color
+   Pixel_t          fDocForeColor;     ///< default document foreground color
+   Pixel_t          fTipBackColor;     ///< default tip background color
+   Pixel_t          fTipForeColor;     ///< default tip foreground color
+   Pixel_t          fWhite;            ///< white color index
+   Pixel_t          fBlack;            ///< black color index
 
-   TGFontPool      *fFontPool;         // font pool manager
+   TGFontPool      *fFontPool;         ///< font pool manager
 
-   TGFont          *fDefaultFont;      // default font
-   TGFont          *fMenuFont;         // menu font
-   TGFont          *fMenuHiFont;       // menu highlight font
-   TGFont          *fDocFixedFont;     // document fixed font
-   TGFont          *fDocPropFont;      // document proportional font
-   TGFont          *fIconFont;         // icon font
-   TGFont          *fStatusFont;       // status bar font
+   TGFont          *fDefaultFont;      ///< default font
+   TGFont          *fMenuFont;         ///< menu font
+   TGFont          *fMenuHiFont;       ///< menu highlight font
+   TGFont          *fDocFixedFont;     ///< document fixed font
+   TGFont          *fDocPropFont;      ///< document proportional font
+   TGFont          *fIconFont;         ///< icon font
+   TGFont          *fStatusFont;       ///< status bar font
 
-   TGPicturePool   *fPicturePool;        // picture pool manager
+   TGPicturePool   *fPicturePool;        ///< picture pool manager
 
-   const TGPicture *fDefaultBackPicture;    // default background picture
-   const TGPicture *fDefaultDocBackPicture; // default document background picture
+   const TGPicture *fDefaultBackPicture;    ///< default background picture
+   const TGPicture *fDefaultDocBackPicture; ///< default document background picture
 
-   TGGCPool        *fGCPool;           // graphics drawing context pool manager
+   TGGCPool        *fGCPool;           ///< graphics drawing context pool manager
 
-   TGGC            *fWhiteGC;          // white gc
-   TGGC            *fBlackGC;          // black gc
-   TGGC            *fFrameGC;          // frame gc
-   TGGC            *fBckgndGC;         // frame background gc
-   TGGC            *fHiliteGC;         // frame hilite gc
-   TGGC            *fShadowGC;         // frame shadow gc
-   TGGC            *fFocusGC;          // frame focus gc
-   TGGC            *fDocGC;            // document gc
-   TGGC            *fDocbgndGC;        // document background gc
-   TGGC            *fSelGC;            // selection gc
-   TGGC            *fSelbgndGC;        // selection background gc
-   TGGC            *fTipGC;            // tooltip gc
+   TGGC            *fWhiteGC;          ///< white gc
+   TGGC            *fBlackGC;          ///< black gc
+   TGGC            *fFrameGC;          ///< frame gc
+   TGGC            *fBckgndGC;         ///< frame background gc
+   TGGC            *fHiliteGC;         ///< frame hilite gc
+   TGGC            *fShadowGC;         ///< frame shadow gc
+   TGGC            *fFocusGC;          ///< frame focus gc
+   TGGC            *fDocGC;            ///< document gc
+   TGGC            *fDocbgndGC;        ///< document background gc
+   TGGC            *fSelGC;            ///< selection gc
+   TGGC            *fSelbgndGC;        ///< selection background gc
+   TGGC            *fTipGC;            ///< tooltip gc
 
-   Pixmap_t        fCheckered;         // checkered pixmap
-   Pixmap_t        fCheckeredBitmap;   // checkered bitmap
+   Pixmap_t        fCheckered;         ///< checkered pixmap
+   Pixmap_t        fCheckeredBitmap;   ///< checkered bitmap
 
-   Cursor_t        fDefaultCursor;     // default cursor
-   Cursor_t        fGrabCursor;        // grab cursor
-   Cursor_t        fTextCursor;        // text cursor
-   Cursor_t        fWaitCursor;        // wait cursor
+   Cursor_t        fDefaultCursor;     ///< default cursor
+   Cursor_t        fGrabCursor;        ///< grab cursor
+   Cursor_t        fTextCursor;        ///< text cursor
+   Cursor_t        fWaitCursor;        ///< wait cursor
 
-   Colormap_t      fDefaultColormap;   // default colormap
+   Colormap_t      fDefaultColormap;   ///< default colormap
 
-   Atom_t          fClipboardAtom;     // handle to clipboard
+   Atom_t          fClipboardAtom;     ///< handle to clipboard
 
-   TGMimeTypes    *fMimeTypeList;      // list of mime types
+   TGMimeTypes    *fMimeTypeList;      ///< list of mime types
 
 public:
    TGResourcePool(TGClient *client);

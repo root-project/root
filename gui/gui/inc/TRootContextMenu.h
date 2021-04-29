@@ -22,8 +22,8 @@ class TRootDialog;
 class TRootContextMenu : public TGPopupMenu, public TContextMenuImp {
 
 private:
-   TRootDialog *fDialog;    // dialog prompting for command line arguments
-   TList       *fTrash;     // list of objects to be deleted before refilling menu
+   TRootDialog *fDialog;    ///< dialog prompting for command line arguments
+   TList       *fTrash;     ///< list of objects to be deleted before refilling menu
 
    TRootContextMenu(const TRootContextMenu&);
    TRootContextMenu& operator=(const TRootContextMenu&);

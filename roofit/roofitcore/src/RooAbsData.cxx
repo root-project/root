@@ -143,25 +143,21 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
    claimVars(this);
 
    // clone the fundamentals of the given data set into internal buffer
-   TIterator *iter = vars.createIterator();
-   RooAbsArg *var;
-   while ((0 != (var = (RooAbsArg *)iter->Next()))) {
+   for (const auto var : vars) {
       if (!var->isFundamental()) {
          coutE(InputArguments) << "RooAbsDataStore::initialize(" << GetName()
                                << "): Data set cannot contain non-fundamental types, ignoring " << var->GetName()
                                << endl;
+         throw std::invalid_argument(std::string("Only fundamental variables can be placed into datasets. This is violated for ") + var->GetName());
       } else {
          _vars.addClone(*var);
       }
    }
-   delete iter;
 
    // reconnect any parameterized ranges to internal dataset observables
-   iter = _vars.createIterator();
-   while ((0 != (var = (RooAbsArg *)iter->Next()))) {
+   for (auto var : _vars) {
       var->attachDataSet(*this);
    }
-   delete iter;
 
    RooTrace::create(this);
 }
@@ -705,20 +701,22 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   RooCmdArg* autoRD = (RooCmdArg*) argList.find("AutoRangeData") ;
   if (autoRD) {
     Double_t xmin,xmax ;
-    getRange((RooRealVar&)xvar,xmin,xmax,autoRD->getDouble(0),autoRD->getInt(0)) ;
-    RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRD->getInt(1),xmin,xmax).Clone() ;
-    ownedCmds.Add(bincmd) ;
-    argList.Replace(autoRD,bincmd) ;
+    if (!getRange((RooRealVar&)xvar,xmin,xmax,autoRD->getDouble(0),autoRD->getInt(0))) {
+       RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRD->getInt(1),xmin,xmax).Clone() ;
+       ownedCmds.Add(bincmd) ;
+       argList.Replace(autoRD,bincmd) ;
+    }
   }
 
   if (yvar) {
     RooCmdArg* autoRDY = (RooCmdArg*) ((RooCmdArg*)argList.find("YVar"))->subArgs().find("AutoRangeData") ;
     if (autoRDY) {
       Double_t ymin,ymax ;
-      getRange((RooRealVar&)(*yvar),ymin,ymax,autoRDY->getDouble(0),autoRDY->getInt(0)) ;
-      RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRDY->getInt(1),ymin,ymax).Clone() ;
-      //ownedCmds.Add(bincmd) ;
-      ((RooCmdArg*)argList.find("YVar"))->subArgs().Replace(autoRDY,bincmd) ;
+      if (!getRange((RooRealVar&)(*yvar),ymin,ymax,autoRDY->getDouble(0),autoRDY->getInt(0))) {
+         RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRDY->getInt(1),ymin,ymax).Clone() ;
+         //ownedCmds.Add(bincmd) ;
+         ((RooCmdArg*)argList.find("YVar"))->subArgs().Replace(autoRDY,bincmd) ;
+      }
       delete autoRDY ;
     }
   }
@@ -727,10 +725,11 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
     RooCmdArg* autoRDZ = (RooCmdArg*) ((RooCmdArg*)argList.find("ZVar"))->subArgs().find("AutoRangeData") ;
     if (autoRDZ) {
       Double_t zmin,zmax ;
-      getRange((RooRealVar&)(*zvar),zmin,zmax,autoRDZ->getDouble(0),autoRDZ->getInt(0)) ;
-      RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRDZ->getInt(1),zmin,zmax).Clone() ;
-      //ownedCmds.Add(bincmd) ;
-      ((RooCmdArg*)argList.find("ZVar"))->subArgs().Replace(autoRDZ,bincmd) ;
+      if (!getRange((RooRealVar&)(*zvar),zmin,zmax,autoRDZ->getDouble(0),autoRDZ->getInt(0))) {
+         RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRDZ->getInt(1),zmin,zmax).Clone() ;
+         //ownedCmds.Add(bincmd) ;
+         ((RooCmdArg*)argList.find("ZVar"))->subArgs().Replace(autoRDZ,bincmd) ;
+      }
       delete autoRDZ ;
     }
   }

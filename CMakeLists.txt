@@ -55,7 +55,7 @@ if(NOT $ENV{ROOTSYS} STREQUAL "")
   set(ENV{LD_LIBRARY_PATH} "${ENV_LD_LIBRARY_PATH}")
   set(ENV{PYTHONPATH} "${ENV_PYTHONPATH}")
   set(ENV{CMAKE_PREFIX_PATH} "${ENV_CMAKE_PREFIX_PATH}")
-  set(ENV{"ROOTSYS"} ${CMAKE_BINARY_DIR})
+  set(ENV{ROOTSYS} ${CMAKE_BINARY_DIR})
 endif()
 
 set(ROOTSYS ${CMAKE_BINARY_DIR})
@@ -134,9 +134,10 @@ include(CheckAssembler)
 include(CheckIntrinsics)
 
 #---Enable asserts------------------------------------------------------------------------------
-if(NOT asserts)
-  set(CMAKE_CXX_FLAGS_${BUILD_TYPE} "${CMAKE_CXX_FLAGS_${BUILD_TYPE}} -DNDEBUG")
-  set(CMAKE_C_FLAGS_${BUILD_TYPE} "${CMAKE_C_FLAGS_${BUILD_TYPE}} -DNDEBUG")
+if(asserts)
+  string(TOUPPER BUILD_TYPE ${CMAKE_BUILD_TYPE})
+  string(REGEX REPLACE "-[UD]NDEBUG(=.*)?" "" CMAKE_CXX_FLAGS_${BUILD_TYPE} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})
+  string(REGEX REPLACE "-[UD]NDEBUG(=.*)?" "" CMAKE_C_FLAGS_${BUILD_TYPE} ${CMAKE_C_FLAGS_${BUILD_TYPE}})
 endif()
 
 #---Enable CCache ------------------------------------------------------------------------------

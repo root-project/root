@@ -12,7 +12,17 @@
 /** \class TTreeSQL
 \ingroup tree
 
-Implement TTree for a SQL backend
+ A TTree object is a list of TBranch.
+  To Create a TTree object one must:
+   - Create the TTree header via the TTree constructor
+   - Call the TBranch constructor for every branch.
+
+  To Fill this object, use member function Fill with no parameters.
+    The Fill function loops on all defined TBranch.
+
+TTreeSQL is the TTree implementation interfacing with an SQL
+database
+
 */
 
 #include <vector>
@@ -535,7 +545,7 @@ Bool_t TTreeSQL::CreateTable(const TString &table)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Initializeation routine
+/// Initialization routine
 
 void TTreeSQL::Init()
 {

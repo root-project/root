@@ -103,7 +103,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          while ((pos < val.length) && (((val[pos]>='0') && (val[pos]<='9')) || (val[pos]=='.'))) pos++;
 
          let v = parseFloat(val.substr(0, pos));
-         if (isNaN(v)) {
+         if (!Number.isFinite(v)) {
             console.log("Fail to parse RPadLength " + value);
             return Math.round(dflt*sizepx);
          }
@@ -155,7 +155,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           font_weight = this.v7EvalAttr( name + "_font_weight", "");
 
        if (typeof text_size == "string") text_size = parseFloat(text_size);
-       if (isNaN(text_size) || (text_size <= 0)) text_size = 12;
+       if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
        if (!fontScale) fontScale = this.getPadPainter().getPadHeight() || 10;
 
        let handler = new JSROOT.FontHandler(null, text_size, fontScale, font_family, font_style, font_weight);
@@ -374,7 +374,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let toffset = this.v7EvalAttr("time_offset");
          if (toffset !== undefined) {
             toffset = parseFloat(toffset);
-            if (!isNaN(toffset)) this.timeoffset = toffset*1000;
+            if (Number.isFinite(toffset)) this.timeoffset = toffset*1000;
          }
       } else if (this.axis && this.axis.fLabelsIndex) {
          this.kind = 'labels';
@@ -527,7 +527,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       handle.reset = function() {
          this.nminor = this.nmiddle = this.nmajor = 0;
-      }
+      };
 
       handle.next = function(doround) {
          if (this.nminor >= this.minor.length) return false;
@@ -547,16 +547,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.kind = 1;
          }
          return true;
-      }
+      };
 
       handle.last_major = function() {
          return (this.kind !== 1) ? false : this.nmajor == this.major.length;
-      }
+      };
 
       handle.next_major_grpos = function() {
          if (this.nmajor >= this.major.length) return null;
          return this.func(this.major[this.nmajor]);
-      }
+      };
 
       this.order = 0;
       this.ndig = 0;
@@ -745,8 +745,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                acc_x += evnt.dx;
                acc_y += evnt.dy;
 
-               let set_x = title_g.property('shift_x'),
-                   set_y = title_g.property('shift_y'),
+               let set_x, set_y,
                    p = this.vertical ? acc_y : acc_x, besti = 0;
 
                for (let i=1; i<3; ++i)
@@ -1228,18 +1227,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           pos  = pp.getCoordinate(drawable.fPos),
           len  = pp.getPadLength(drawable.fVertical, drawable.fLength),
           reverse = this.v7EvalAttr("reverse", false),
-          min = 0, max = 1;
+          min = drawable.fLabels ? 0 : drawable.fMin,
+          max = drawable.fLabels ? drawable.fLabels.length : drawable.fMax;
 
       // in vertical direction axis drawn in negative direction
       if (drawable.fVertical) len = -len;
-
-      if (drawable.fLabels) {
-         min = 0;
-         max = drawable.fLabels.length;
-      } else {
-         min = drawable.fMin;
-         max = drawable.fMax;
-      }
 
       let smin = this.v7EvalAttr("zoommin"),
           smax = this.v7EvalAttr("zoommax");
@@ -1334,7 +1326,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (arg === 'toggle') arg = this.log ? 0 : 10;
 
       arg = parseFloat(arg);
-      if (!isNaN(arg)) this.changeAxisAttr(2, "log", arg);
+      if (Number.isFinite(arg)) this.changeAxisAttr(2, "log", arg);
    }
 
    /** @summary Provide context menu for axis */
@@ -1366,13 +1358,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          });
          menu.addchk(this.labelsFont.angle, "rotate", res => {
             this.changeAxisAttr(1, "labels_angle", res ? 180 : 0);
-         })
+         });
          menu.add("endsub:");
       }
 
       menu.add("sub:Title", () => {
-         let t = prompt("Enter axis title", this.fTitle);
-         if (t!==null) this.changeAxisAttr(1, "title", t);
+         menu.input("Enter axis title", this.fTitle).then(t => this.changeAxisAttr(1, "title", t));
       });
 
       if (this.fTitle) {
@@ -1764,12 +1755,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let draw_horiz = this.swap_xy ? this.y_handle : this.x_handle,
           draw_vertical = this.swap_xy ? this.x_handle : this.y_handle,
-          disable_axis_draw = false;
-
-      if (!disable_axis_draw) {
-         let pp = this.getPadPainter();
-         if (pp && pp._fast_drawing) disable_axis_draw = true;
-      }
+          pp = this.getPadPainter(),
+          disable_axis_draw = (pp && pp._fast_drawing) ? true : false;
 
       if (!disable_axis_draw) {
          let promise1 = draw_horiz.drawAxis(layer, (sidex > 0) ? `translate(0,${h})` : "", sidex);
@@ -2881,7 +2868,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let hint = obj.processTooltipEvent(pnt);
          if (!hint) hint = { user_info: null };
          hints.push(hint);
-         if (hint && pnt && pnt.painters) hint.painter = obj;
+         if (pnt && pnt.painters) hint.painter = obj;
       });
 
       return hints;
@@ -2891,10 +2878,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    RPadPainter.prototype.fillContextMenu = function(menu) {
 
-      if (this.pad)
-         menu.add("header: " + this.pad._typename + "::" + this.pad.fName);
+      if (this.iscan)
+         menu.add("header: RCanvas");
       else
-         menu.add("header: Canvas");
+         menu.add("header: RPad");
 
       menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
 
@@ -2934,7 +2921,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       menu.add("separator");
 
-      if (this.activateStatusBar)
+      if (typeof this.hasMenuBar == 'function' && typeof this.actiavteMenuBar == 'function')
+         menu.addchk(this.hasMenuBar(), "Menu bar", flag => this.actiavteMenuBar(flag));
+
+      if (typeof this.hasEventStatus == 'function' && typeof this.activateStatusBar == 'function')
          menu.addchk(this.hasEventStatus(), "Event status", () => this.activateStatusBar('toggle'));
 
       if (this.enlargeMain() || (this.has_canvas && this.hasObjectsToDraw()))
@@ -3235,7 +3225,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // if canvas size not specified in batch mode, temporary use 900x700 size
       // if (this.batch_mode && this.iscan && (!padattr.fCw || !padattr.fCh)) { padattr.fCw = 900; padattr.fCh = 700; }
 
-      if (this.iscan && snap.fTitle && (typeof document !== "undefined"))
+      if (this.iscan && snap.fTitle && !this.embed_canvas && (typeof document !== "undefined"))
          document.title = snap.fTitle;
 
       if (this.snapid === undefined) {
@@ -3376,7 +3366,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              break;
           default: {
              let indx = parseInt(name);
-             if (!isNaN(indx)) selp = this.painters[indx];
+             if (Number.isInteger(indx)) selp = this.painters[indx];
           }
        }
 
@@ -3782,6 +3772,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       RPadPainter.call(this, divid, canvas, true);
       this._websocket = null;
       this.tooltip_allowed = JSROOT.settings.Tooltip;
+      this.v7canvas = true;
    }
 
    RCanvasPainter.prototype = Object.create(RPadPainter.prototype);
@@ -3929,7 +3920,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    RCanvasPainter.prototype.saveCanvasAsFile = function(fname) {
       let pnt = fname.indexOf(".");
       this.createImage(fname.substr(pnt+1))
-          .then(res => this.sendWebsocket("SAVE:" + fname + ":" + res));
+          .then(res => { console.log('save', fname, res.length); this.sendWebsocket("SAVE:" + fname + ":" + res); });
    }
 
    /** @summary Send command to server to save canvas with specified name
@@ -4215,7 +4206,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             console.log("Frame moved or zoom is changed - that to do?");
             break;
          case "pave_moved":
-            console.log('TPave is moved inside RCanvas - that to do?')
+            console.log('TPave is moved inside RCanvas - that to do?');
             break;
          default:
             if ((kind.substr(0,5) == "exec:") && painter && painter.snapid) {
@@ -4397,9 +4388,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // simple check - if canvas there, can use painter
       let svg_c = painter.getCanvSvg();
-      let noframe = (frame_kind === false) || (frame_kind == "3d") ? "noframe" : "";
+      // let noframe = (frame_kind === false) || (frame_kind == "3d") ? "noframe" : "";
 
-      let promise = !svg_c.empty() ? Promise.resolve(true) : drawRCanvas(painter.getDom(), null, noframe);
+      let promise = !svg_c.empty() ? Promise.resolve(true) : drawRCanvas(painter.getDom(), null /* , noframe */);
 
       return promise.then(() => {
          if (frame_kind === false) return;
@@ -4853,7 +4844,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                      .style("fill", col)
                      .style("stroke", col)
                      .property("fill0", col)
-                     .property("fill1", d3.rgb(col).darker(0.5).toString())
+                     .property("fill1", d3.rgb(col).darker(0.5).toString());
 
          if (this.isTooltipAllowed())
             r.on('mouseover', function() {
@@ -4962,7 +4953,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             setTimeout(() => {
                if (!zoom_rect_visible && doing_zoom)
                   moving_labels = framep.z_handle.processLabelsMove('start', last_pos);
-            }, 500)
+            }, 500);
          }
 
          let assignHandlers = () => {
@@ -4990,8 +4981,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
-   let drawPalette = (divid, palette, opt) => {
-      let painter = new RPalettePainter(divid, palette, opt);
+   let drawPalette = (divid, palette /*, opt */) => {
+      let painter = new RPalettePainter(divid, palette);
 
       return jsrp.ensureRCanvas(painter, false).then(() => {
          painter.createG(); // just create container, real drawing will be done by histogram
