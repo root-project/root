@@ -2212,6 +2212,31 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Multiply the values of a TGraph by a constant c1.
+///
+/// `this = c1*this`
+///
+/// Note that both contents and errors (if any) are scaled.
+/// This function uses the services of TH1::Add
+///
+/// If option contains "x" the x values are scaled
+/// If option contains "y" the y values are scaled
+/// If option contains "xy" both x and y values are scaled
+
+void TGraph::Scale(Double_t c1, Option_t *option)
+{
+   TString opt = option; opt.ToLower();
+   if (opt.Contains("x")) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetX()[i] *= c1;
+   }
+   if (opt.Contains("y")) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetY()[i] *= c1;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set number of points in the graph
 /// Existing coordinates are preserved
 /// New coordinates above fNpoints are preset to 0.
