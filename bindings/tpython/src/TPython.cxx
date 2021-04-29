@@ -412,7 +412,7 @@ const TPyReturn TPython::Eval(const char *expr)
       return TPyReturn();
    }
 
-   // results that require no convserion
+   // results that require no conversion
    if (result == Py_None || CPyCppyy::CPPInstance_Check(result) || PyBytes_Check(result) || PyFloat_Check(result) ||
        PyLong_Check(result) || PyInt_Check(result))
       return TPyReturn(result);
