@@ -84,6 +84,7 @@ namespace cling {
   class MetaLexer {
   protected:
     const char* bufferStart;
+    const char* bufferEnd;
     const char* curPos;
   public:
     MetaLexer(llvm::StringRef input, bool skipWhiteSpace = false);
@@ -94,8 +95,10 @@ namespace cling {
 
     static void LexPunctuator(const char* C, Token& Tok);
     // TODO: Revise. We might not need that.
-    static bool LexPunctuatorAndAdvance(const char*& curPos, Token& Tok);
-    static void LexQuotedStringAndAdvance(const char*& curPos, Token& Tok);
+    static bool LexPunctuatorAndAdvance(const char*& curPos, Token& Tok,
+                                        const char* lineEnd);
+    static void LexQuotedStringAndAdvance(const char*& curPos, Token& Tok,
+                                          const char* lineEnd);
     void LexConstant(char C, Token& Tok);
     void LexIdentifier(char C, Token& Tok);
     void LexEndOfFile(char C, Token& Tok);

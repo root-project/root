@@ -77,7 +77,7 @@ namespace cling {
       lastKind = int(Tok.getKind());
 
       const char* prevStart = curPos;
-      MetaLexer::LexPunctuatorAndAdvance(curPos, Tok);
+      MetaLexer::LexPunctuatorAndAdvance(curPos, Tok, line.end());
       const int kind = (int)Tok.getKind();
 
       if (kind == commentTok) {
@@ -181,7 +181,7 @@ namespace cling {
             m_ParenStack.pop_back();
         }
         else if (kind >= (int)tok::stringlit && kind <= (int)tok::charlit) {
-          MetaLexer::LexQuotedStringAndAdvance(curPos, Tok);
+          MetaLexer::LexQuotedStringAndAdvance(curPos, Tok, line.end());
         }
       }
     } while (Tok.isNot(tok::eof));

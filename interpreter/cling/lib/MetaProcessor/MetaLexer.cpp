@@ -40,22 +40,25 @@ namespace cling {
   }
 
   MetaLexer::MetaLexer(llvm::StringRef line, bool skipWhite)
-    : bufferStart(line.data()), curPos(line.data()) {
+    : bufferStart(line.data()), bufferEnd(line.end()), curPos(line.data()) {
     if (skipWhite)
       SkipWhitespace();
   }
 
   void MetaLexer::reset(llvm::StringRef line) {
     bufferStart = line.data();
+    bufferEnd = line.end();
     curPos = line.data();
   }
 
   void MetaLexer::Lex(Token& Tok) {
     Tok.startToken(curPos);
-    char C = *curPos++;
+    char C = 0;
+    if (curPos != bufferEnd)
+      C = *curPos++;
     switch (C) {
     case '"': case '\'':
-      return LexQuotedStringAndAdvance(curPos, Tok);
+      return LexQuotedStringAndAdvance(curPos, Tok, bufferEnd);
     case '[': case ']': case '(': case ')': case '{': case '}':
     case '\\': case ',': case '.': case '!': case '?': case '>':
     case '&': case '#': case '@': case '*': case ';':
@@ -63,7 +66,7 @@ namespace cling {
       return LexPunctuator(curPos - 1, Tok);
 
     case '/':
-      if (*curPos == '/') {
+      if (curPos != bufferEnd && *curPos == '/') {
         ++curPos;
         Tok.setKind(tok::comment);
         Tok.setLength(2);
@@ -96,7 +99,8 @@ namespace cling {
     Tok.startToken(curPos);
 
     // consume until we reach one of the "AnyString" delimiters or EOF.
-    while(*curPos != ' ' && *curPos != '\t' && *curPos != '\0') {
+    while(curPos != bufferEnd && *curPos != ' ' && *curPos != '\t'
+          && *curPos != '\0') {
       curPos++;
     }
 
@@ -135,29 +139,36 @@ namespace cling {
     }
   }
 
-  bool MetaLexer::LexPunctuatorAndAdvance(const char*& curPos, Token& Tok) {
+  bool MetaLexer::LexPunctuatorAndAdvance(const char*& curPos, Token& Tok,
+                                          const char* lineEnd) {
     Tok.startToken(curPos);
     bool nextWasPunct = true;
     while (true) {
       // On comment skip until the eof token.
       if (curPos[0] == '/' && curPos[1] == '/') {
-        while (*curPos != '\0' && *curPos != '\r' && *curPos != '\n')
+        while (curPos != lineEnd && *curPos != '\0' && *curPos != '\r' && *curPos != '\n')
           ++curPos;
-        if (*curPos == '\0') {
+        if (curPos == lineEnd || *curPos == '\0') {
           Tok.setBufStart(curPos);
           Tok.setKind(tok::eof);
           Tok.setLength(0);
           return nextWasPunct;
         }
       }
-      MetaLexer::LexPunctuator(curPos++, Tok);
-      if (Tok.isNot(tok::unknown))
+      if (curPos != lineEnd) {
+        MetaLexer::LexPunctuator(curPos++, Tok);
+        if (Tok.isNot(tok::unknown))
+          return nextWasPunct;
+      } else {
+        Tok.setKind(tok::eof);
         return nextWasPunct;
+      }
       nextWasPunct = false;
     }
   }
 
-  void MetaLexer::LexQuotedStringAndAdvance(const char*& curPos, Token& Tok) {
+  void MetaLexer::LexQuotedStringAndAdvance(const char*& curPos, Token& Tok,
+                                            const char* lineEnd) {
     // curPos must be right after the starting quote (single or double),
     // and we will lex until the next one or the end of the line.
 
@@ -185,6 +196,7 @@ namespace cling {
         return;
       }
 
+      assert(curPos != lineEnd && "curPos beyond end of line");
       if (*curPos++ == *Tok.getBufStart()) {
         // curPos points to char after trailing quote.
         Tok.setLength(curPos - Tok.getBufStart());
@@ -200,20 +212,22 @@ namespace cling {
   }
 
   void MetaLexer::LexConstant(char C, Token& Tok) {
-    while (C >= '0' && C <= '9')
+    while (C >= '0' && C <= '9' && curPos != bufferEnd)
       C = *curPos++;
 
-    --curPos; // Back up over the non ident char.
+    if (curPos != bufferEnd)
+      --curPos; // Back up over the non ident char.
     Tok.setLength(curPos - Tok.getBufStart());
     Tok.setKind(tok::constant);
   }
 
   void MetaLexer::LexIdentifier(char C, Token& Tok) {
-    while (C == '_' || (C >= 'A' && C <= 'Z') || (C >= 'a' && C <= 'z')
-           || (C >= '0' && C <= '9'))
+    while ((C == '_' || (C >= 'A' && C <= 'Z') || (C >= 'a' && C <= 'z')
+           || (C >= '0' && C <= '9')) && curPos != bufferEnd)
       C = *curPos++;
 
-    --curPos; // Back up over the non ident char.
+    if (curPos != bufferEnd)
+      --curPos; // Back up over the non ident char.
     Tok.setLength(curPos - Tok.getBufStart());
     if (Tok.getLength())
       Tok.setKind(tok::ident);
@@ -228,7 +242,7 @@ namespace cling {
 
   void MetaLexer::SkipWhitespace() {
     char C = *curPos;
-    while((C == ' ' || C == '\t') && C != '\0')
+    while(curPos + 1 != bufferEnd && (C == ' ' || C == '\t') && C != '\0')
       C = *(++curPos);
   }
 
