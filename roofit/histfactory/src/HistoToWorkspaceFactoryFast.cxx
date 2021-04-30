@@ -554,8 +554,8 @@ namespace HistFactory{
           //	  proto->var(varname.c_str())->setConstant();
           //	  cout <<"setting " << varname << " constant"<<endl;
           cxcoutW(HistFactory) << "Const attribute to <NormFactor> tag is deprecated, will ignore." <<
-              " Instead, add \n\t<ParamSetting Const=\"True\">" << varname << "</ParamSetting>\n" <<
-              " to your top-level XML's <Measurment> entry" << endl;
+              " Instead, add \n\t<ParamSetting Const=\"True\"> " << varname << " </ParamSetting>\n" <<
+              " to your top-level XML's <Measurement> entry" << endl;
         }
         prodNames+=varname;
         rangeNames.push_back(range.str());
