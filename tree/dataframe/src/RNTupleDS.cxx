@@ -180,7 +180,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
       // skeinIDs would already contain the fieldID of "event.tracks"
       skeinIDs.emplace_back(fieldId);
       // There should only be one sub field but it's easiest to access via the sub field range
-      for (const auto &f : desc.GetFieldRange(fieldDesc.GetId())) {
+      for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
          AddField(desc, colName, f.GetId(), skeinIDs);
       }
       // Note that at the end of the recursion, we handled the inner sub collections as well as the
@@ -188,7 +188,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
       return;
    } else if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
       // Inner fields of records are provided as individual RDF columns, e.g. "event.id"
-      for (const auto &f : desc.GetFieldRange(fieldDesc.GetId())) {
+      for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
          auto innerName = colName.empty() ? f.GetFieldName() : (std::string(colName) + "." + f.GetFieldName());
          AddField(desc, innerName, f.GetId(), skeinIDs);
       }
