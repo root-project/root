@@ -53,8 +53,6 @@ void draw_legend()
    auto draw2 = canvas->Draw(pHist2);
    draw2->AttrLine().SetWidth(4).SetColor(RColor::AutoColor());
 
-   canvas->AssignAutoColors();
-
    auto legend = canvas->Draw<RLegend>("Legend title");
    legend->AttrFill().SetStyle(5).SetColor(RColor::kWhite);
    legend->AttrBorder().SetWidth(2).SetColor(RColor::kRed);
@@ -67,4 +65,8 @@ void draw_legend()
 
    canvas->SetSize(1000, 700);
    canvas->Show();
+
+   canvas->SaveAs("legend.json");
+
+
 }

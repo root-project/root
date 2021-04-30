@@ -78,28 +78,6 @@ TEST(Primitives, RText)
    EXPECT_EQ(text->GetAttrText().GetFontFamily(), "Arial");
 }
 
-
-// Test same color functionality
-TEST(Primitives, SameColor)
-{
-   RCanvas canv;
-   auto line1 = canv.Draw<RLine>(RPadPos(0.1_normal, 0.1_normal), RPadPos(0.9_normal,0.9_normal));
-   auto line2 = canv.Draw<RLine>(RPadPos(0.1_normal, 0.9_normal), RPadPos(0.9_normal,0.1_normal));
-   auto line3 = canv.Draw<RLine>(RPadPos(0.9_normal, 0.1_normal), RPadPos(0.1_normal,0.9_normal));
-
-   line1->AttrLine().SetColor(RColor::AutoColor());
-   line2->AttrLine().SetColor(RColor::AutoColor());
-   line3->AttrLine().SetColor(RColor::AutoColor());
-
-   canv.AssignAutoColors();
-
-   EXPECT_EQ(canv.NumPrimitives(), 3u);
-
-   EXPECT_EQ(line1->GetAttrLine().GetColor(), RColor::kRed);
-   EXPECT_EQ(line2->GetAttrLine().GetColor(), RColor::kGreen);
-   EXPECT_EQ(line3->GetAttrLine().GetColor(), RColor::kBlue);
-}
-
 // Test RLegend API
 TEST(Primitives, RLegend)
 {
