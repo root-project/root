@@ -103,36 +103,6 @@ const ROOT::Experimental::RPadBase *ROOT::Experimental::RPadBase::FindPadForPrim
 }
 
 ///////////////////////////////////////////////////////////////////////////
-/// Method collect existing colors and assign new values if required
-
-void ROOT::Experimental::RPadBase::AssignAutoColors()
-{
-   int cnt = 0;
-   RColor col;
-
-   for (auto &drawable : fPrimitives) {
-      for (auto &attr: drawable->fAttr) {
-         // only boolean attribute can return true
-         if (attr.second->GetString() != "auto") continue;
-         auto pos = attr.first.rfind("_color");
-         if ((pos > 0) && (pos == attr.first.length() - 6)) {
-            // FIXME: dummy code to assign autocolors, later should use RPalette
-            switch (cnt++ % 3) {
-              case 0: col = RColor::kRed; break;
-              case 1: col = RColor::kGreen; break;
-              case 2: col = RColor::kBlue; break;
-            }
-
-            auto name = attr.first;
-            // replace "auto" string with color code
-            drawable->fAttr.Clear(name);
-            drawable->fAttr.AddString(name, col.AsString());
-         }
-      }
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////
 /// Create display items for all primitives in the pad
 /// Each display item gets its special id, which used later for client-server communication
 /// Second parameter is version id which already delivered to the client
