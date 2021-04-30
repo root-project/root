@@ -30,8 +30,6 @@ R__LOAD_LIBRARY(libROOTHistDraw)
 
 using namespace ROOT::Experimental;
 
-auto style = std::make_shared<RStyle>(); // keep here to avoid destroy when leaving function scope
-
 void draw_frame()
 {
    // Create the histogram.
@@ -80,9 +78,12 @@ void draw_frame()
 
    subpads[1][0]->Draw<RFrameTitle>("Frame2 title");
 
-   style->ParseString("frame { margin_left: 0.3; margin_right: 0.3; x_line_color_name: blue; y_line_color_name: green; } \n title { margin: 0.02; height: 0.1; text_size: 20; }");
+   auto style = RStyle::Parse("frame { margin_left: 0.3; margin_right: 0.3; x_line_color_name: blue; y_line_color: green; } "
+                              "title { margin: 0.02; height: 0.1; text_size: 20; }");
 
    subpads[1][0]->UseStyle(style);
 
-   canvas->Show("");
+   canvas->Show();
+
+   RDirectory::Heap().Add("custom_style", style); // required to keep style alive
 }

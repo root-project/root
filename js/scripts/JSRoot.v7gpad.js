@@ -130,12 +130,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Evaluate RColor using attribute storage and configured RStyle
      * @private */
    JSROOT.ObjectPainter.prototype.v7EvalColor = function(name, dflt) {
-      let rgb = this.v7EvalAttr(name + "_rgb", "");
-
-      if (rgb)
-         return "#" + rgb + this.v7EvalAttr(name + "_a", "");
-
-      return this.v7EvalAttr(name + "_name", "") || dflt;
+      let val = this.v7EvalAttr(name, "");
+      if (val == "auto") val = "";
+      return val || dflt;
    }
 
    /** @summary Evaluate RAttrText properties

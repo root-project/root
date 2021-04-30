@@ -72,11 +72,12 @@ void draw_subpads()
         "   ticksy: 2;"
         "   x_labels_size: 0.05;" // below 1 is scaling factor for pad height
         "   y_labels_size: 20;"   // just a font size in pixel
-        "   y_labels_color_name: green;"  // and name labels color
+        "   y_labels_color: green;"  // and name labels color
         "}");
   canvas->UseStyle(style);
-  RDirectory::Heap().Add("style", style); // required to keep style alive
 
   canvas->SetSize(1200, 600);
   canvas->Show();
+
+  RDirectory::Heap().Add("custom_style", style); // required to keep style alive
 }

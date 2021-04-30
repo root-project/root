@@ -40,7 +40,7 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<RPadLength> fEndingSize{this, "ending_size", 0.02_normal}; ///<! axis ending size
    RAttrValue<std::string> fTicksSide{this, "ticks_side", "normal"};     ///<! ticks position - normal, invert, both
    RAttrValue<RPadLength> fTicksSize{this, "ticks_size", 0.02_normal};   ///<! ticks size
-   RAttrColor fTicksColor{this, "ticks_color"};                          ///<! ticks color
+   RAttrValue<RColor> fTicksColor{this, "ticks_color", RColor::kBlack};  ///<! ticks color
    RAttrText fLabelsAttr{this, "labels"};                                ///<! text attributes for labels
    RAttrValue<RPadLength> fLabelsOffset{this, "labels_offset", {}};      ///<! axis labels offset - relative
    RAttrValue<bool> fLabelsCenter{this, "labels_center", false};         ///<! center labels
@@ -104,8 +104,7 @@ class RAttrAxis : public RAttrBase {
    std::string GetTicksSide() const { return fTicksSide; }
 
    RAttrAxis &SetTicksColor(const RColor &color) { fTicksColor = color; return *this; }
-   RColor GetTicksColor() const { return fTicksColor.GetColor(); }
-   RAttrColor &AttrTiksColor() { return fTicksColor; }
+   RColor GetTicksColor() const { return fTicksColor; }
 
    RAttrAxis &SetLabelsOffset(const RPadLength &len) { fLabelsOffset = len; return *this; }
    RPadLength GetLabelsOffset() const { return fLabelsOffset; }

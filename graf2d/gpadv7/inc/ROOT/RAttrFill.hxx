@@ -10,7 +10,6 @@
 #define ROOT7_RAttrFill
 
 #include <ROOT/RAttrBase.hxx>
-#include <ROOT/RAttrColor.hxx>
 #include <ROOT/RAttrValue.hxx>
 
 namespace ROOT {
@@ -26,8 +25,8 @@ namespace Experimental {
 
 class RAttrFill : public RAttrBase {
 
-   RAttrColor       fColor{this, "color"};     ///<! fill color
-   RAttrValue<int>  fStyle{this, "style", 1};  ///<! fill style
+   RAttrValue<RColor> fColor{this, "color", RColor::kBlack};  ///<! fill color
+   RAttrValue<int>    fStyle{this, "style", 1};               ///<! fill style
 
    R__ATTR_CLASS(RAttrFill, "fill");
 
@@ -37,8 +36,7 @@ class RAttrFill : public RAttrBase {
 
    ///The fill color
    RAttrFill &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor.GetColor(); }
-   RAttrColor &AttrColor() { return fColor; }
+   RColor GetColor() const { return fColor; }
 
 };
 

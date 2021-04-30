@@ -87,9 +87,9 @@ TEST(Primitives, SameColor)
    auto line2 = canv.Draw<RLine>(RPadPos(0.1_normal, 0.9_normal), RPadPos(0.9_normal,0.1_normal));
    auto line3 = canv.Draw<RLine>(RPadPos(0.9_normal, 0.1_normal), RPadPos(0.1_normal,0.9_normal));
 
-   line1->AttrLine().AttrColor().SetAuto();
-   line2->AttrLine().AttrColor().SetAuto();
-   line3->AttrLine().AttrColor().SetAuto();
+   line1->AttrLine().SetColor(RColor::AutoColor());
+   line2->AttrLine().SetColor(RColor::AutoColor());
+   line3->AttrLine().SetColor(RColor::AutoColor());
 
    canv.AssignAutoColors();
 

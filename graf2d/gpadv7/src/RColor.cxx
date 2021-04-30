@@ -34,34 +34,93 @@ constexpr float RColor::kTransparent;
 constexpr float RColor::kSemiTransparent;
 constexpr float RColor::kOpaque;
 
+std::string kAuto{"auto"};
+
+///////////////////////////////////////////////////////////////////////////
+/// returns true if color stored as RGB
+
+bool RColor::IsRGB() const
+{
+   return (fColor.length() == 7) && (fColor[0] == '#');
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// returns true if color stored as RGBA
+
+bool RColor::IsRGBA() const
+{
+   return (fColor.length() == 9) && (fColor[0] == '#');
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// Set color as RGB
+
+void RColor::SetRGB(uint8_t r, uint8_t g, uint8_t b)
+{
+   fColor = "#"s + toHex(r) + toHex(g) + toHex(b);
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// Set color as RGB
+
+void RColor::SetRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t alpha)
+{
+   fColor = "#"s + toHex(r) + toHex(g) + toHex(b) + toHex(alpha);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+/// Returns true if color specified as name
+
+bool RColor::IsName() const
+{
+   return !fColor.empty() && (fColor[0] != '#') && (fColor[0] != '[') && (fColor != kAuto);
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// Returns true if color specified as auto color
+
+bool RColor::IsAuto() const
+{
+   return fColor == kAuto;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// Returns if color codes index
+
+bool RColor::IsIndex() const
+{
+   return !fColor.empty() && (fColor[0] == '[');
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// Set color alpha, can only be done if real color was assigned before
+
+void RColor::SetAlpha(uint8_t alpha)
+{
+   if (fColor.empty())
+      return;
+
+   if (IsRGB()) {
+      if (alpha != 0xFF)
+         fColor += toHex(alpha);
+   } else if (IsRGBA()) {
+      fColor.resize(7);
+      if (alpha != 0xFF)
+         fColor += toHex(alpha);
+   } else if (IsName() && (alpha != 0xFF)) {
+      auto rgb = ConvertNameToRGB(fColor);
+      if (rgb.size() == 3)
+         SetRGBA(rgb[0], rgb[1], rgb[2], alpha);
+   }
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 /// Converts string name of color in RGB value - when possible
 
-bool RColor::ConvertToRGB(const std::string &name, std::vector<uint8_t> &rgba)
+std::vector<uint8_t> RColor::ConvertNameToRGB(const std::string &name)
 {
-   if (name.empty()) {
-      rgba.clear();
-      return false;
-   }
-
-   if (name[0] == '#') {
-      if ((name.length() != 7) && (name.length() != 9)) return false;
-
-      rgba.resize((name.length() == 7) ? 3 : 4);
-
-      try {
-        rgba[0] = std::stoi(name.substr(1,2), nullptr, 16);
-        rgba[1] = std::stoi(name.substr(3,2), nullptr, 16);
-        rgba[2] = std::stoi(name.substr(5,2), nullptr, 16);
-        if (name.length() == 9)
-           rgba[3] = std::stoi(name.substr(7,2), nullptr, 16);
-      } catch(...) {
-         return false;
-      }
-
-      return true;
-   }
 
    // see https://www.december.com/html/spec/colorsvghex.html
 
@@ -84,19 +143,54 @@ bool RColor::ConvertToRGB(const std::string &name, std::vector<uint8_t> &rgba)
       {"white", kWhite}
    };
 
-   rgba.resize(3);
-   rgba[0] = rgba[1] = rgba[2] = 0;
-
    auto known = known_colors.find(name);
    if (known != known_colors.end()) {
-      rgba[0] = known->second[0];
-      rgba[1] = known->second[1];
-      rgba[2] = known->second[2];
-      return true;
+      std::vector<uint8_t> res;
+      res.resize(3);
+      res[0] = known->second[0];
+      res[1] = known->second[1];
+      res[2] = known->second[2];
+      return res;
    }
 
-   return true;
+   return {};
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+/// Returns color as RGBA array, includes optionally alpha parameter 0..255
+
+std::vector<uint8_t> RColor::AsRGBA() const
+{
+   if (fColor.empty())
+      return {};
+
+   std::vector<uint8_t> rgba;
+
+   if (IsRGB())
+      rgba.resize(3);
+   else if (IsRGBA())
+      rgba.resize(4);
+
+   if (rgba.size() > 0) {
+      try {
+        rgba[0] = std::stoi(fColor.substr(1,2), nullptr, 16);
+        rgba[1] = std::stoi(fColor.substr(3,2), nullptr, 16);
+        rgba[2] = std::stoi(fColor.substr(5,2), nullptr, 16);
+        if (rgba.size() == 4)
+           rgba[3] = std::stoi(fColor.substr(7,2), nullptr, 16);
+      } catch(...) {
+         rgba.clear();
+      }
+      return rgba;
+   }
+
+   if (IsName())
+      return ConvertNameToRGB(fColor);
+
+   return {};
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -141,21 +235,6 @@ bool RColor::SetAlphaHex(const std::string &hex)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-/// Returns color as RGBA array, includes optionally alpha parameter 0..255
-
-std::vector<uint8_t> RColor::AsRGBA() const
-{
-   if (fRGBA.size() > 0)
-      return fRGBA;
-
-   std::vector<uint8_t> rgba;
-
-   ConvertToRGB(fName, rgba);
-
-   return rgba;
-}
-
-///////////////////////////////////////////////////////////////////////////
 /// Returns color value in hex format like "66FF66" - without any prefix
 /// Alpha parameter can be optionally included
 
@@ -165,7 +244,7 @@ std::string RColor::AsHex(bool with_alpha) const
    std::string res;
    if (!rgba.empty()) {
       res = toHex(rgba[0]) + toHex(rgba[1]) + toHex(rgba[2]);
-      if ((rgba.size() == 4) && with_alpha)
+      if (with_alpha)
          res += toHex((rgba.size() == 4) ? rgba[3] : 0xff);
    }
    return res;
@@ -177,12 +256,10 @@ std::string RColor::AsHex(bool with_alpha) const
 
 std::string RColor::AsSVG() const
 {
-   if (!fName.empty())
-      return fName;
+   if (IsName() || IsRGB() || IsRGBA())
+      return fColor;
 
-   auto hex = AsHex();
-   if (!hex.empty()) hex = "#"s + hex;
-   return hex;
+   return ""s;
 }
 
 
@@ -265,3 +342,13 @@ void RColor::SetHLS(float hue, float light, float satur)
 
    SetRGB(toRGB(rh+120), toRGB(rh), toRGB(rh-120));
 }
+
+///////////////////////////////////////////////////////////////////////////
+/// Set the color value from the Hue, Light, Saturation (HLS).
+
+const RColor &RColor::AutoColor()
+{
+   static RColor autoColor("auto");
+   return autoColor;
+}
+

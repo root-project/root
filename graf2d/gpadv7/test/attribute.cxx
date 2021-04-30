@@ -93,7 +93,6 @@ TEST(OptsTest, AttribDiffer) {
    attrs1.AttrBox().AttrBorder().SetWidth(7.);
    EXPECT_NE(attrs1, attrs2);
    EXPECT_NE(attrs2, attrs1);
-   EXPECT_NE(attrs1, attrs3);
    EXPECT_EQ(attrs2, attrs3);
    EXPECT_EQ(attrs3, attrs2);
 
@@ -101,6 +100,7 @@ TEST(OptsTest, AttribDiffer) {
    EXPECT_NE(attrs1, attrs2);
    EXPECT_NE(attrs2, attrs1);
    EXPECT_NE(attrs1, attrs3);
+   EXPECT_NE(attrs3, attrs1);
    EXPECT_NE(attrs2, attrs3);
    EXPECT_NE(attrs3, attrs2);
 }

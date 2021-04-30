@@ -10,7 +10,6 @@
 #define ROOT7_RAttrLine
 
 #include <ROOT/RAttrBase.hxx>
-#include <ROOT/RAttrColor.hxx>
 #include <ROOT/RAttrValue.hxx>
 
 namespace ROOT {
@@ -26,9 +25,9 @@ namespace Experimental {
 
 class RAttrLine : public RAttrBase {
 
-   RAttrColor          fColor{this, "color"};      ///<! line color
-   RAttrValue<double>  fWidth{this, "width", 1.};  ///<! line width
-   RAttrValue<int>     fStyle{this, "style", 1};   ///<! line style
+   RAttrValue<RColor>  fColor{this, "color", RColor::kBlack}; ///<! line color
+   RAttrValue<double>  fWidth{this, "width", 1.};             ///<! line width
+   RAttrValue<int>     fStyle{this, "style", 1};              ///<! line style
 
    R__ATTR_CLASS(RAttrLine, "line");
 
@@ -42,8 +41,7 @@ class RAttrLine : public RAttrBase {
 
    ///The color of the line.
    RAttrLine &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor.GetColor(); }
-   RAttrColor &AttrColor() { return fColor; }
+   RColor GetColor() const { return fColor; }
 
 };
 
