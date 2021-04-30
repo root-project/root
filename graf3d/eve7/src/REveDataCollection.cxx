@@ -247,7 +247,7 @@ void REveDataCollection::AddItem(void *data_ptr, const std::string& /*n*/, const
 
 //------------------------------------------------------------------------------
 
-void REveDataCollection::SetFilterExpr(const TString& filter)
+void REveDataCollection::SetFilterExpr(const char* filter)
 {
    static const REveException eh("REveDataCollection::SetFilterExpr ");
 
