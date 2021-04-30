@@ -213,8 +213,6 @@ public:
 
    /// Convert user coordinates to normal coordinates.
    std::array<RPadLength::Normal, 2> UserToNormal(const std::array<RPadLength::User, 2> &pos) const;
-
-   void AssignAutoColors();
 };
 
 } // namespace Experimental
