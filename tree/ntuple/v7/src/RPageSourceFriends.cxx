@@ -91,7 +91,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
       }
       AddVirtualField(i, desc.GetFieldZero(), 0, desc.GetName());
 
-      for (const auto &c : desc.GetClusterRange()) {
+      for (const auto &c : desc.GetClusterIterable()) {
          fBuilder.AddCluster(fNextId, c.GetVersion(), c.GetFirstEntryIndex(), c.GetNEntries());
          fBuilder.SetClusterLocator(fNextId, c.GetLocator());
          for (auto originColumnId : c.GetColumnIds()) {
