@@ -378,7 +378,7 @@ TEST(RFieldDescriptorRange, SortByLambda)
 }
 
 
-TEST(RColumnDescriptorRange, IterateOverColumns)
+TEST(RColumnDescriptorIterable, IterateOverColumns)
 {
    auto model = RNTupleModel::Create();
    auto floats = model->MakeField<std::vector<float>>("jets");
@@ -396,14 +396,14 @@ TEST(RColumnDescriptorRange, IterateOverColumns)
 
    // No column attached to the zero field
    unsigned int counter = 0;
-   for (const auto &c : desc.GetColumnRange(desc.GetFieldZeroId())) {
+   for (const auto &c : desc.GetColumnIterable(desc.GetFieldZeroId())) {
       (void)c;
       counter++;
    }
    EXPECT_EQ(0u, counter);
 
    const auto tagId = desc.FindFieldId("tag");
-   for (const auto &c : desc.GetColumnRange(tagId)) {
+   for (const auto &c : desc.GetColumnIterable(tagId)) {
       EXPECT_EQ(tagId, c.GetFieldId());
       EXPECT_EQ(counter, c.GetIndex());
       counter++;
@@ -411,7 +411,7 @@ TEST(RColumnDescriptorRange, IterateOverColumns)
    EXPECT_EQ(2, counter);
 
    const auto jetsId = desc.FindFieldId("jets");
-   for (const auto &c : desc.GetColumnRange(desc.FindFieldId("jets"))) {
+   for (const auto &c : desc.GetColumnIterable(desc.FindFieldId("jets"))) {
       EXPECT_EQ(jetsId, c.GetFieldId());
       counter++;
    }

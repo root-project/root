@@ -329,12 +329,12 @@ private:
 public:
    // clang-format off
    /**
-   \class ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorRange
+   \class ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable
    \ingroup NTuple
    \brief Used to loop over a field's associated columns
    */
    // clang-format on
-   class RColumnDescriptorRange {
+   class RColumnDescriptorIterable {
    private:
       /// The associated NTuple for this range.
       const RNTupleDescriptor &fNTuple;
@@ -364,7 +364,7 @@ public:
          bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
       };
 
-      RColumnDescriptorRange(const RNTupleDescriptor &ntuple, const RFieldDescriptor &field)
+      RColumnDescriptorIterable(const RNTupleDescriptor &ntuple, const RFieldDescriptor &field)
          : fNTuple(ntuple)
       {
          for (unsigned int i = 0; true; ++i) {
@@ -550,13 +550,13 @@ public:
       return GetFieldRange(GetFieldZeroId(), comparator);
    }
 
-   RColumnDescriptorRange GetColumnRange(const RFieldDescriptor &fieldDesc) const
+   RColumnDescriptorIterable GetColumnIterable(const RFieldDescriptor &fieldDesc) const
    {
-      return RColumnDescriptorRange(*this, fieldDesc);
+      return RColumnDescriptorIterable(*this, fieldDesc);
    }
-   RColumnDescriptorRange GetColumnRange(DescriptorId_t fieldId) const
+   RColumnDescriptorIterable GetColumnIterable(DescriptorId_t fieldId) const
    {
-      return RColumnDescriptorRange(*this, GetFieldDescriptor(fieldId));
+      return RColumnDescriptorIterable(*this, GetFieldDescriptor(fieldId));
    }
 
    RClusterDescriptorRange GetClusterRange() const
