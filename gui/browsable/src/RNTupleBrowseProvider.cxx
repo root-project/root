@@ -70,7 +70,7 @@ public:
 
    EActionKind GetDefaultAction() const override
    {
-      auto range = fNTuple->GetDescriptor().GetFieldRange(fFieldId);
+      auto range = fNTuple->GetDescriptor().GetFieldIterable(fFieldId);
       if (range.begin() != range.end()) return kActNone;
 
       auto &field = fNTuple->GetDescriptor().GetFieldDescriptor(fFieldId);
@@ -174,7 +174,7 @@ public:
 
    bool CanItemHaveChilds() const override
    {
-      auto subrange = fNTuple->GetDescriptor().GetFieldRange(fFieldIds[fCounter]);
+      auto subrange = fNTuple->GetDescriptor().GetFieldIterable(fFieldIds[fCounter]);
       return subrange.begin() != subrange.end();
    }
 
@@ -183,7 +183,7 @@ public:
    {
 
       int nchilds = 0;
-      for (auto &sub: fNTuple->GetDescriptor().GetFieldRange(fFieldIds[fCounter])) { (void) sub; nchilds++; }
+      for (auto &sub: fNTuple->GetDescriptor().GetFieldIterable(fFieldIds[fCounter])) { (void) sub; nchilds++; }
 
       auto &field = fNTuple->GetDescriptor().GetFieldDescriptor(fFieldIds[fCounter]);
 
@@ -205,7 +205,7 @@ std::unique_ptr<RLevelIter> RFieldElement::GetChildsIter()
 {
    std::vector<ROOT::Experimental::DescriptorId_t> ids;
 
-   for (auto &f : fNTuple->GetDescriptor().GetFieldRange(fFieldId))
+   for (auto &f : fNTuple->GetDescriptor().GetFieldIterable(fFieldId))
       ids.emplace_back(f.GetId());
 
    if (ids.size() == 0) return nullptr;

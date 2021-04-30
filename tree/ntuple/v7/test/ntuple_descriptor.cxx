@@ -257,7 +257,7 @@ TEST(RNTupleDescriptor, QualifiedFieldName)
    EXPECT_STREQ("jets.float", desc.GetQualifiedFieldName(fldIdInner).c_str());
 }
 
-TEST(RFieldDescriptorRange, IterateOverFieldNames)
+TEST(RFieldDescriptorIterable, IterateOverFieldNames)
 {
    auto model = RNTupleModel::Create();
    auto floats = model->MakeField<std::vector<float>>("jets");
@@ -290,12 +290,12 @@ TEST(RFieldDescriptorRange, IterateOverFieldNames)
    // iterate over child field ranges
    const auto& float_vec_desc = *top_level_fields.begin();
    EXPECT_EQ(float_vec_desc.GetFieldName(), std::string("jets"));
-   auto float_vec_child_range = ntuple_desc.GetFieldRange(float_vec_desc);
+   auto float_vec_child_range = ntuple_desc.GetFieldIterable(float_vec_desc);
    std::vector<std::string> child_names{};
    for (auto& child_field: float_vec_child_range) {
       child_names.push_back(child_field.GetFieldName());
       // check the empty range
-      auto float_child_range = ntuple_desc.GetFieldRange(child_field);
+      auto float_child_range = ntuple_desc.GetFieldIterable(child_field);
       EXPECT_EQ(float_child_range.begin(), float_child_range.end());
    }
    ASSERT_EQ(child_names.size(), 1);
@@ -308,14 +308,14 @@ TEST(RFieldDescriptorRange, IterateOverFieldNames)
    EXPECT_EQ(bool_vec_vec_desc.GetFieldName(), std::string("bool_vec_vec"));
 
    child_names.clear();
-   for (auto& child_field: ntuple_desc.GetFieldRange(bool_vec_vec_desc)) {
+   for (auto& child_field: ntuple_desc.GetFieldIterable(bool_vec_vec_desc)) {
       child_names.push_back(child_field.GetFieldName());
    }
    ASSERT_EQ(child_names.size(), 1);
    EXPECT_EQ(child_names[0], std::string("std::vector<bool>"));
 }
 
-TEST(RFieldDescriptorRange, SortByLambda)
+TEST(RFieldDescriptorIterable, SortByLambda)
 {
    auto model = RNTupleModel::Create();
    auto floats = model->MakeField<std::vector<float>>("jets");
