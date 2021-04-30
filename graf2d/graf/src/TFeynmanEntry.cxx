@@ -147,7 +147,6 @@ void TFeynmanEntry::Paint( Option_t* )
      delete t;
      delete u;
      delete particlePair;
-     delete antiparticle;
    }
    else if (fParticle == std::string("curved")) {
       TCurlyArc *curved = new TCurlyArc(fX1, fY1, fRadius, fPhimin, fPhimax);
