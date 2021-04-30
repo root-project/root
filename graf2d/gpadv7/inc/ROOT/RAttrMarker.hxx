@@ -10,7 +10,6 @@
 #define ROOT7_RAttrMarker
 
 #include <ROOT/RAttrBase.hxx>
-#include <ROOT/RAttrColor.hxx>
 #include <ROOT/RAttrValue.hxx>
 
 namespace ROOT {
@@ -26,15 +25,14 @@ namespace Experimental {
 
 class RAttrMarker : public RAttrBase {
 
-   RAttrColor           fColor{this, "color"};      ///<! marker color
-   RAttrValue<double>   fSize{this, "size", 1.};    ///<! marker size
-   RAttrValue<int>      fStyle{this, "style", 1};   ///<! marker style
+   RAttrValue<RColor>   fColor{this, "color", RColor::kBlack};  ///<! marker color
+   RAttrValue<double>   fSize{this, "size", 1.};                ///<! marker size
+   RAttrValue<int>      fStyle{this, "style", 1};               ///<! marker style
 
    R__ATTR_CLASS(RAttrMarker, "marker");
 
    RAttrMarker &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor.GetColor(); }
-   RAttrColor &AttrColor() { return fColor; }
+   RColor GetColor() const { return fColor; }
 
    /// The size of the marker.
    RAttrMarker &SetSize(double size) { fSize = size; return *this; }

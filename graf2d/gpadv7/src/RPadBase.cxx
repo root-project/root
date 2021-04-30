@@ -113,16 +113,20 @@ void ROOT::Experimental::RPadBase::AssignAutoColors()
    for (auto &drawable : fPrimitives) {
       for (auto &attr: drawable->fAttr) {
          // only boolean attribute can return true
-         if (!attr.second->GetBool()) continue;
-         auto pos = attr.first.rfind("_color_auto");
-         if ((pos > 0) && (pos == attr.first.length() - 11)) {
+         if (attr.second->GetString() != "auto") continue;
+         auto pos = attr.first.rfind("_color");
+         if ((pos > 0) && (pos == attr.first.length() - 6)) {
             // FIXME: dummy code to assign autocolors, later should use RPalette
             switch (cnt++ % 3) {
               case 0: col = RColor::kRed; break;
               case 1: col = RColor::kGreen; break;
               case 2: col = RColor::kBlue; break;
             }
-            drawable->fAttr.AddString(attr.first.substr(0,pos) + "_color_rgb", col.AsHex());
+
+            auto name = attr.first;
+            // replace "auto" string with color code
+            drawable->fAttr.Clear(name);
+            drawable->fAttr.AddString(name, col.AsString());
          }
       }
    }

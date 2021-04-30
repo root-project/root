@@ -89,8 +89,10 @@ bool ROOT::Experimental::RAttrBase::IsSame(const RAttrBase &tgt, bool use_style)
 {
    for (const auto &entry : GetDefaults()) {
       if (auto v = AccessValue(entry.first, use_style))
-         if (!tgt.IsValueEqual(entry.first, *v.value, use_style)) return false;
+         if (!tgt.IsValueEqual(entry.first, *v.value, use_style))
+            return false;
    }
+
    return true;
 }
 
@@ -185,6 +187,17 @@ void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, const RPad
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+/// Set RColor value
+
+void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, const RColor &value)
+{
+   if (value.IsEmpty())
+      ClearValue(name);
+   else
+      SetValue(name, value.AsString());
+}
+
+///////////////////////////////////////////////////////////////////////////////
 /// Clear all respective values from drawable. Only defaults can be used
 
 void ROOT::Experimental::RAttrBase::Clear()
@@ -197,7 +210,7 @@ void ROOT::Experimental::RAttrBase::Clear()
 ///////////////////////////////////////////////////////////////////////////////
 /// Collect all attributes in derived class
 /// Works only if such class has dictionary.
-/// In special cases one has to provide implementation - see RAttrColor::CollectDefaults() example
+/// In special cases one has to provide special implementation directly
 
 ROOT::Experimental::RAttrMap ROOT::Experimental::RAttrBase::CollectDefaults() const
 {
@@ -214,7 +227,7 @@ ROOT::Experimental::RAttrMap ROOT::Experimental::RAttrBase::CollectDefaults() co
          }
       }
    } else {
-      R__LOG_ERROR(GPadLog()) << "Missing dictionary for " << info.name() << " class, implement CollectDefaults() like in RAttrColor";
+      R__LOG_ERROR(GPadLog()) << "Missing dictionary for " << info.name() << " class";
    }
 
    return res;

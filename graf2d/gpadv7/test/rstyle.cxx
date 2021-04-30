@@ -62,7 +62,9 @@ TEST(RStyleTest, CreateStyle)
 
 TEST(RStyleTest, CreateCss)
 {
-   auto style = RStyle::Parse("custom { line_width: 2; } #customid { box_fill_style: 5; } .custom_class { text_size: 3; }");
+   auto style = RStyle::Parse(" custom { line_width: 2; line_color: red; }"
+                              " #customid { box_fill_style: 5; }"
+                              " .custom_class { text_size: 3; }");
 
    ASSERT_NE(style, nullptr);
 
@@ -73,6 +75,8 @@ TEST(RStyleTest, CreateCss)
    drawable.UseStyle(style);
 
    EXPECT_DOUBLE_EQ(drawable.GetAttrLine().GetWidth(), 2.);
+
+   EXPECT_EQ(drawable.GetAttrLine().GetColor(), RColor::kRed);
 
    EXPECT_EQ(drawable.AttrBox().GetAttrFill().GetStyle(), 5);
 
