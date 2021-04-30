@@ -47,11 +47,11 @@ void draw_legend()
 
    // draw histogram
    auto draw1 = canvas->Draw(pHist);
-   draw1->AttrLine().SetWidth(2).AttrColor().SetAuto();
+   draw1->AttrLine().SetWidth(2).SetColor(RColor::AutoColor());
 
    // draw histogram
    auto draw2 = canvas->Draw(pHist2);
-   draw2->AttrLine().SetWidth(4).AttrColor().SetAuto();
+   draw2->AttrLine().SetWidth(4).SetColor(RColor::AutoColor());
 
    canvas->AssignAutoColors();
 

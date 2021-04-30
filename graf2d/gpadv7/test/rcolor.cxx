@@ -20,7 +20,7 @@ TEST(RColor, Empty) {
    RColor col;
    EXPECT_EQ(col.AsHex(), "");
    EXPECT_FLOAT_EQ(col.GetAlphaFloat(), 1.);
-   EXPECT_EQ(col.GetName(), "");
+   EXPECT_EQ(col.AsString(), "");
 }
 
 // Test usage of empty color
@@ -49,7 +49,7 @@ TEST(RColor, Alpha) {
 
    static constexpr double delta = 0.01; // approx precision of alpha storage
 
-   RColor col;
+   RColor col{RColor::kBlack};
    col.SetAlphaFloat(0.);
    EXPECT_DOUBLE_EQ(col.GetAlphaFloat(), 0.);
 
