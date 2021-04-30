@@ -438,7 +438,7 @@ public:
 
    // clang-format off
    /**
-   \class ROOT::Experimental::RNTupleDescriptor::RClusterDescriptorRange
+   \class ROOT::Experimental::RNTupleDescriptor::RClusterDescriptorIterable
    \ingroup NTuple
    \brief Used to loop over all the clusters of an ntuple (in unspecified order)
 
@@ -447,7 +447,7 @@ public:
    TODO(jblomer): review naming of *Range classes and possibly rename consistently to *Iterable
    */
    // clang-format on
-   class RClusterDescriptorRange {
+   class RClusterDescriptorIterable {
    private:
       /// The associated NTuple for this range.
       const RNTupleDescriptor &fNTuple;
@@ -476,7 +476,7 @@ public:
          bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
       };
 
-      RClusterDescriptorRange(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) { }
+      RClusterDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) { }
       RIterator begin() { return RIterator(fNTuple, 0); }
       RIterator end() { return RIterator(fNTuple, fNTuple.GetNClusters()); }
    };
@@ -559,9 +559,9 @@ public:
       return RColumnDescriptorIterable(*this, GetFieldDescriptor(fieldId));
    }
 
-   RClusterDescriptorRange GetClusterRange() const
+   RClusterDescriptorIterable GetClusterIterable() const
    {
-      return RClusterDescriptorRange(*this);
+      return RClusterDescriptorIterable(*this);
    }
 
    std::string GetName() const { return fName; }
