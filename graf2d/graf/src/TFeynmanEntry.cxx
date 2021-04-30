@@ -123,6 +123,7 @@ void TFeynmanEntry::Paint( Option_t* )
      TLatex *t = new TLatex(fLabelX, fLabelY, fLabel);
      t->Paint();
      delete t;
+     delete boson;
    }
    else if (particleName == std::string("gluon")) {
      TCurlyLine *gluon = new TCurlyLine(x1, y1, x2, y2);
@@ -131,6 +132,7 @@ void TFeynmanEntry::Paint( Option_t* )
      TLatex *t = new TLatex(fLabelX, fLabelY, fLabel);
      t->Paint();
      delete t;
+     delete gluon;
    }
    else if (fParticle == std::string("pair")) {
      TArc *particlePair = new TArc(fX1, fY1, fRadius);
@@ -144,6 +146,8 @@ void TFeynmanEntry::Paint( Option_t* )
      u->Paint();
      delete t;
      delete u;
+     delete particlePair;
+     delete antiparticle;
    }
    else if (fParticle == std::string("curved")) {
       TCurlyArc *curved = new TCurlyArc(fX1, fY1, fRadius, fPhimin, fPhimax);
@@ -155,6 +159,7 @@ void TFeynmanEntry::Paint( Option_t* )
       TLatex *t = new TLatex(fX1, fY1, fLabel);
       t->Paint();
       delete t;
+      delete curved;
    }
    else{
      Error("TFeynmanEntry::Paint()", "Invalid Particle!");
