@@ -719,4 +719,6 @@ The following builtins have been updated:
 
 These changes will be part of a future 6.24/02.
 
-*Nothing so far.*
+### RDataFrame
+
+- Scaling behavior at high core counts (32+ cores) has been improved (see also [PR #8007](https://github.com/root-project/root/pull/8007)).
