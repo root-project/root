@@ -49,15 +49,6 @@ public:
 
    RColor() = default;
 
-   /** Returns true if no color is specified */
-   bool IsEmpty() const { return fColor.empty(); }
-
-   bool IsRGB() const;
-   bool IsRGBA() const;
-   bool IsName() const;
-   bool IsAuto() const;
-   bool IsIndex() const;
-
    /** Construct color with provided r,g,b values */
    RColor(uint8_t r, uint8_t g, uint8_t b) { SetRGB(r, g, b); }
 
@@ -72,6 +63,18 @@ public:
 
    /** Construct color with provided string  */
    RColor(const std::string &color) { SetColor(color); };
+
+   /** Construct color with provided ordinal value  */
+   RColor(float ordinal) { SetOrdinal(ordinal); };
+
+   /** Returns true if color is empty */
+   bool IsEmpty() const { return fColor.empty(); }
+
+   bool IsRGB() const;
+   bool IsRGBA() const;
+   bool IsName() const;
+   bool IsAuto() const;
+   bool IsOrdinal() const;
 
    /** Set r/g/b components of color */
    void SetRGB(const RGB_t &rgb) { SetRGB(rgb[0], rgb[1], rgb[2]); }
@@ -146,6 +149,9 @@ public:
       }
       return true;
    }
+
+   void SetOrdinal(float val);
+   float GetOrdinal() const;
 
    /** Returns color as it stored as string */
    const std::string& AsString() const { return fColor; }
