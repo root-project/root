@@ -76,9 +76,9 @@ void draw_frame()
 
    auto draw2 = subpads[1][0]->Draw(pHist);
 
-   subpads[1][0]->Draw<RFrameTitle>("Frame2 title");
+   subpads[1][0]->Draw<RFrameTitle>("Frame2 with margins set via CSS");
 
-   auto style = RStyle::Parse("frame { margin_left: 0.3; margin_right: 0.3; x_line_color_name: blue; y_line_color: green; } "
+   auto style = RStyle::Parse("frame { margin_left: 0.1; margin_right: 0.1; margin_all: 0.2; x_line_color_name: blue; y_line_color: green; } "
                               "title { margin: 0.02; height: 0.1; text_size: 20; }");
 
    subpads[1][0]->UseStyle(style);

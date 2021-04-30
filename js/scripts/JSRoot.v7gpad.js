@@ -64,10 +64,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Decode pad length from string, return pixel value
      * @private */
-   JSROOT.ObjectPainter.prototype.v7EvalLength = function(name, sizepx, dflt) {
+   JSROOT.ObjectPainter.prototype.v7EvalLength = function(name, sizepx, dflt, name2) {
       if (sizepx <= 0) sizepx = 1;
 
       let value = this.v7EvalAttr(name);
+
+      if ((value === undefined) && name2)
+         value = this.v7EvalAttr(name2);
 
       if (value === undefined)
          return Math.round(dflt*sizepx);
@@ -1505,10 +1508,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
 
          let rect = this.getPadPainter().getPadRect();
-         this.fX1NDC = this.v7EvalLength("margin_left", rect.width, JSROOT.settings.FrameNDC.fX1NDC) / rect.width;
-         this.fY1NDC = this.v7EvalLength("margin_bottom", rect.height, JSROOT.settings.FrameNDC.fY1NDC) / rect.height;
-         this.fX2NDC = 1 - this.v7EvalLength("margin_right", rect.width, 1-JSROOT.settings.FrameNDC.fX2NDC) / rect.width;
-         this.fY2NDC = 1 - this.v7EvalLength("margin_top", rect.height, 1-JSROOT.settings.FrameNDC.fY2NDC) / rect.height;
+         this.fX1NDC = this.v7EvalLength("margin_left", rect.width, JSROOT.settings.FrameNDC.fX1NDC, "margin_all") / rect.width;
+         this.fY1NDC = this.v7EvalLength("margin_bottom", rect.height, JSROOT.settings.FrameNDC.fY1NDC, "margin_all") / rect.height;
+         this.fX2NDC = 1 - this.v7EvalLength("margin_right", rect.width, 1-JSROOT.settings.FrameNDC.fX2NDC, "margin_all") / rect.width;
+         this.fY2NDC = 1 - this.v7EvalLength("margin_top", rect.height, 1-JSROOT.settings.FrameNDC.fY2NDC, "margin_all") / rect.height;
       }
 
       if (!this.fillatt)
@@ -4683,14 +4686,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       calcColor: function(value, entry1, entry2) {
          let dist = entry2.fOrdinal - entry1.fOrdinal,
-             r1 = (entry2.fOrdinal - value) / dist,
-             r2 = (value - entry1.fOrdinal) / dist;
+             r1 = entry2.fOrdinal - value,
+             r2 = value - entry1.fOrdinal;
+
+         if (!this.fInterpolate || (dist <= 0))
+            return (r1 < r2) ? entry2.fColor : entry1.fColor;
 
          // interpolate
-         let col1 = d3.rgb(JSROOT.v7.extractRColor(entry1.fColor));
-         let col2 = d3.rgb(JSROOT.v7.extractRColor(entry2.fColor));
-
-         let color = d3.rgb(Math.round(col1.r*r1 + col2.r*r2), Math.round(col1.g*r1 + col2.g*r2), Math.round(col1.b*r1 + col2.b*r2));
+         let col1 = d3.rgb(JSROOT.v7.extractRColor(entry1.fColor)),
+             col2 = d3.rgb(JSROOT.v7.extractRColor(entry2.fColor)),
+             color = d3.rgb(Math.round((col1.r*r1 + col2.r*r2)/dist),
+                            Math.round((col1.g*r1 + col2.g*r2)/dist),
+                            Math.round((col1.b*r1 + col2.b*r2)/dist));
 
          return color.toString();
       },
