@@ -102,6 +102,7 @@ void TFeynmanEntry::Paint( Option_t* )
 
       TLatex *t = new TLatex(fLabelX, fLabelY, fLabel);
       t->Paint();
+      delete fermion;
    }
    else if (particleName == std::string("anti-fermion")) {
       TArrow *fermion = new TArrow(x1, y1, x2, y2, 0.03, "-<-");
@@ -109,6 +110,8 @@ void TFeynmanEntry::Paint( Option_t* )
 
       TLatex *t = new TLatex(fLabelX, fLabelY, fLabel);
       t->Paint();
+
+      delete fermion;
    }
    else if (particleName == std::string("boson")) {
      TCurlyLine *boson = new TCurlyLine(x1, y1, x2, y2);

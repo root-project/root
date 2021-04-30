@@ -43,6 +43,6 @@ class TFeynmanEntry : public TObject {
         Double_t     fRadius; ///< Radius for particle pairs
         Double_t     fPhimin; ///< Minimum angle of Arc
         Double_t     fPhimax; ///< Maximum angle of Arc
-        Double_t     fWavy; /// is the curved particle a gluon or not 
+        Double_t     fWavy; /// is the curved particle a gluon or not
 };
 #endif
