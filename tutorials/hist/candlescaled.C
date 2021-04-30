@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Candle Scaled, illustrates what scaleing does on candle and violin charts.
+/// Candle Scaled, illustrates what scaling does on candle and violin charts.
 /// Please try to modify the static functions SetScaledCandle and SetScaledViolin
 ///
 /// \macro_image
@@ -19,26 +19,26 @@ void candlescaled()
 
    float myRand1;
    float myRand2;
-   
+
    for (int j = 0; j < 100000; j++) {
       myRand1 = rng->Gaus(0,1);
       myRand2 = rng->Gaus(0,1);
       h1->Fill(myRand1, myRand2);
       h3->Fill(myRand1, myRand2);
    }
-   
-   
+
+
    c1->cd(1);
-   
+
    TCandle::SetScaledCandle(true); /* This is a global option for all existing candles, default is false */
-   
+
    h1->SetTitle("CandleX scaled");
    h1->DrawCopy("candleX2");
    c1->cd(2);
-   
+
    h3->SetTitle("CandleY scaled");
    h3->DrawCopy("candleY2");
-   
+
    TCandle::SetScaledViolin(true); /* This is a global option for all existing violin, default is true */
    TH2I *h2 = (TH2I*)h1->Clone();
    h2->SetFillStyle(0);
@@ -48,13 +48,13 @@ void candlescaled()
    h4->SetFillStyle(0);
    h4->SetFillColor(kGray+2);
    h4->SetLineColor(kBlue);
-   
+
    c1->cd(3);
    h2->SetTitle("ViolinX unscaled");
    h2->DrawCopy("ViolinX");
    c1->cd(4);
    h4->SetTitle("ViolinY unscaled");
    h4->DrawCopy("ViolinY");
-   
-     
+
+
 }
