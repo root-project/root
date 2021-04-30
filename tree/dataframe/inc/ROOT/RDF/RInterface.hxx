@@ -547,6 +547,11 @@ public:
    /// single-thread and multi-thread runs is different: in single-thread runs, Snapshot will write out a TTree with
    /// the specified name and zero entries; in multi-thread runs, no TTree object will be written out to disk.
    ///
+   /// \note Snapshot will refuse to process columns with names of the form `#columnname`. These are special columns
+   /// made available by some data sources (e.g. RNTupleDS) that represent the size of column `columnname`, and are
+   /// not meant to be written out with that name (which is not a valid C++ variable name). Instead, go through an
+   /// Alias(): `df.Alias("nbar", "#bar").Snapshot(..., {"nbar"})`.
+   ///
    /// ### Example invocations:
    ///
    /// ~~~{.cpp}
@@ -679,6 +684,11 @@ public:
    ///
    /// Use `Cache` if you know you will only need a subset of the (`Filter`ed) data that
    /// fits in memory and that will be accessed many times.
+   ///
+   /// \note Cache will refuse to process columns with names of the form `#columnname`. These are special columns
+   /// made available by some data sources (e.g. RNTupleDS) that represent the size of column `columnname`, and are
+   /// not meant to be written out with that name (which is not a valid C++ variable name). Instead, go through an
+   /// Alias(): `df.Alias("nbar", "#bar").Cache<std::size_t>(..., {"nbar"})`.
    ///
    /// ### Example usage:
    ///
