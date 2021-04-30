@@ -86,12 +86,46 @@ bool RColor::IsAuto() const
 }
 
 ///////////////////////////////////////////////////////////////////////////
-/// Returns if color codes index
+/// Returns if color codes ordinal value from palette
 
-bool RColor::IsIndex() const
+bool RColor::IsOrdinal() const
 {
-   return !fColor.empty() && (fColor[0] == '[');
+   auto len = fColor.length();
+   return (len > 2) && (fColor[0] == '[') && (fColor[len-1] == ']');
 }
+
+///////////////////////////////////////////////////////////////////////////
+/// Set color as ordinal value from RPalette
+/// When object will be painted on the client side,
+/// actual color will be extracted from the RPalette
+/// Only 5 digits after . are stored
+
+void RColor::SetOrdinal(float val)
+{
+   if (val <= 0.) {
+      fColor = "[0]"s;
+   } else if (val >= 1.) {
+      fColor = "[1]"s;
+   } else {
+      char sbuf[30];
+      auto len = snprintf(sbuf, sizeof(sbuf),"[%7.5f]", val);
+      while ((len > 5) && (sbuf[len-2] == '0')) {
+         sbuf[len-2] = ']';
+         sbuf[len-1] = 0;
+         len--;
+      }
+      fColor = sbuf;
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// Return ordinal value, which was set before with SetOrdinal() call
+
+float RColor::GetOrdinal() const
+{
+   return IsOrdinal() ? std::stof(fColor.substr(1, fColor.length()-2)) : -1;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 /// Set color alpha, can only be done if real color was assigned before

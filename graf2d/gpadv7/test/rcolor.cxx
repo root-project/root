@@ -66,6 +66,27 @@ TEST(RColor, Alpha) {
    EXPECT_NEAR(0.8,col.GetAlphaFloat(), delta);
 }
 
+TEST(RColor, Ordinal) {
+
+   static constexpr double delta = 0.00001; // approx precision of ordinal storage
+
+   RColor col;
+   col.SetOrdinal(0.);
+   EXPECT_DOUBLE_EQ(col.GetOrdinal(), 0.);
+
+   col.SetOrdinal(1.);
+   EXPECT_DOUBLE_EQ(col.GetOrdinal(), 1.);
+
+   col.SetOrdinal(0.15);
+   EXPECT_NEAR(0.15, col.GetOrdinal(), delta);
+
+   col.SetOrdinal(0.5);
+   EXPECT_NEAR(0.5, col.GetOrdinal(), delta);
+
+   col.SetOrdinal(0.77);
+   EXPECT_NEAR(0.77, col.GetOrdinal(), delta);
+}
+
 
 TEST(RColor, Predef) {
    {

@@ -131,6 +131,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    JSROOT.ObjectPainter.prototype.v7EvalColor = function(name, dflt) {
       let val = this.v7EvalAttr(name, "");
+      if (!val || (typeof val != "string")) return dflt;
+
       if (val == "auto") {
          let pp = this.getPadPainter();
          if (pp && pp._auto_color_cnt !== undefined) {
@@ -146,8 +148,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             console.error(`Autocolor ${name} not defined yet - please check code`);
             val = "";
          }
+      } else if (val[0]=="[") {
+         let ordinal = parseFloat(val.substr(1, val.length-2));
+         val = "black";
+         if (Number.isFinite(ordinal)) {
+             let pp = this.getPadPainter(),
+                 pal = pp ? pp.getHistPalette() : null;
+             if (pal) val = pal.getColorOrdinal(ordinal);
+         }
       }
-      return val || dflt;
+      return val;
    }
 
    /** @summary Evaluate RAttrText properties
