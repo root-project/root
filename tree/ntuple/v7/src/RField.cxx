@@ -299,11 +299,10 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink)
 {
-   if (fColumns.empty()) {
-      GenerateColumnsImpl();
-      if (!fColumns.empty())
-         fPrincipalColumn = fColumns[0].get();
-   }
+   R__ASSERT(fColumns.empty());
+   GenerateColumnsImpl();
+   if (!fColumns.empty())
+      fPrincipalColumn = fColumns[0].get();
    for (auto& column : fColumns)
       column->Connect(fOnDiskId, &pageSink);
 }
@@ -311,11 +310,10 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &pageSource)
 {
-   if (fColumns.empty()) {
-      GenerateColumnsImpl(pageSource.GetDescriptor());
-      if (!fColumns.empty())
-         fPrincipalColumn = fColumns[0].get();
-   }
+   R__ASSERT(fColumns.empty());
+   GenerateColumnsImpl(pageSource.GetDescriptor());
+   if (!fColumns.empty())
+      fPrincipalColumn = fColumns[0].get();
    for (auto& column : fColumns)
       column->Connect(fOnDiskId, &pageSource);
 }
