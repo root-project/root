@@ -56,7 +56,8 @@ public:
    RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
    ~RRDFCardinalityField() = default;
 
-   void GenerateColumnsImpl() final
+   void GenerateColumnsImpl() final { R__ASSERT(false); } // Field is only used for reading
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final
    {
       RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
       fColumns.emplace_back(std::unique_ptr<ROOT::Experimental::Detail::RColumn>(
@@ -117,9 +118,9 @@ public:
    /// Connect the field and its subfields to the page source
    void Connect(RPageSource &source)
    {
-      fField->ConnectPageStorage(source);
+      fField->ConnectPageSource(source);
       for (auto &f : *fField)
-         f.ConnectPageStorage(source);
+         f.ConnectPageSource(source);
    }
 
    void *GetImpl(Long64_t entry) final

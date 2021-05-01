@@ -102,8 +102,12 @@ protected:
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
    std::vector<std::unique_ptr<RColumn>> fColumns;
 
-   /// Creates the backing columns corresponsing to the field type and name
+   /// Creates the backing columns corresponsing to the field type for writing
    virtual void GenerateColumnsImpl() = 0;
+   /// Creates the backing columns corresponsing to the field type for reading.
+   /// The method should to check, using the page source and fOnDiskId, if the column types match
+   /// and throw if they don't.
+   virtual void GenerateColumnsImpl(const RNTupleDescriptor &desc) = 0;
 
    /// Called by Clone(), which additionally copies the on-disk ID
    virtual std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const = 0;
@@ -239,7 +243,8 @@ public:
 
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
-   void ConnectPageStorage(RPageStorage &pageStorage);
+   void ConnectPageSink(RPageSink &pageSink);
+   void ConnectPageSource(RPageSource &pageSource);
 
    /// Indicates an evolution of the mapping scheme from C++ type to columns
    virtual RNTupleVersion GetFieldVersion() const { return RNTupleVersion(); }
@@ -265,6 +270,7 @@ public:
    RFieldZero() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { }
 
    void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void*) { return Detail::RFieldValue(); }
    Detail::RFieldValue CaptureValue(void*) final { return Detail::RFieldValue(); }
@@ -294,6 +300,7 @@ public:
    ~RClassField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
@@ -326,6 +333,7 @@ public:
    ~RRecordField() = default;
 
    void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) final;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
@@ -354,6 +362,7 @@ public:
    ~RVectorField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
@@ -391,6 +400,7 @@ public:
    ~RArrayField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
@@ -430,6 +440,7 @@ public:
    ~RVariantField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
@@ -480,6 +491,7 @@ public:
    ~RCollectionField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    using Detail::RFieldBase::GenerateValue;
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final {
@@ -515,6 +527,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    ClusterSize_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<ClusterSize_t>(globalIndex);
@@ -565,6 +578,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    bool *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<bool>(globalIndex);
@@ -606,6 +620,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    float *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<float>(globalIndex);
@@ -648,6 +663,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    double *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<double>(globalIndex);
@@ -689,6 +705,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    char *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<char>(globalIndex);
@@ -730,6 +747,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::int8_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int8_t>(globalIndex);
@@ -771,6 +789,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::uint8_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::uint8_t>(globalIndex);
@@ -812,6 +831,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::int16_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int16_t>(globalIndex);
@@ -853,6 +873,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::uint16_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::uint16_t>(globalIndex);
@@ -894,6 +915,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::int32_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int32_t>(globalIndex);
@@ -935,6 +957,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::uint32_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::uint32_t>(globalIndex);
@@ -976,6 +999,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::uint64_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::uint64_t>(globalIndex);
@@ -1017,6 +1041,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::int64_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int64_t>(globalIndex);
@@ -1065,6 +1090,7 @@ public:
    ~RField() = default;
 
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -1200,6 +1226,7 @@ protected:
    void AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
    void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::vector<bool>"; }
@@ -1296,7 +1323,10 @@ public:
       RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
       fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
          Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
-      fPrincipalColumn = fColumns[0].get();
+   }
+   // TODO(jblomer): update together with RVec 2.0
+   void GenerateColumnsImpl(const RNTupleDescriptor & /*desc*/) final {
+      GenerateColumnsImpl();
    }
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final {
       auto vec = reinterpret_cast<ContainerT*>(value.GetRawPtr());
@@ -1382,7 +1412,10 @@ public:
       RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
       fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
          Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
-      fPrincipalColumn = fColumns[0].get();
+   }
+   // TODO(jblomer): update together with RVec 2.0
+   void GenerateColumnsImpl(const RNTupleDescriptor & /*desc*/) final {
+      GenerateColumnsImpl();
    }
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final {
       auto vec = reinterpret_cast<ContainerT*>(value.GetRawPtr());

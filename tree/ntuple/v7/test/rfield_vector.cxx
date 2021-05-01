@@ -62,11 +62,11 @@ TEST(RNTuple, InsideCollection)
    ASSERT_NE(idA, ROOT::Experimental::kInvalidDescriptorId);
    auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("klassVec.a", "float").Unwrap());
    fieldInner->SetOnDiskId(idA);
-   fieldInner->ConnectPageStorage(*source);
+   fieldInner->ConnectPageSource(*source);
 
    auto field = std::make_unique<ROOT::Experimental::RVectorField>("klassVec", std::move(fieldInner));
    field->SetOnDiskId(idKlassVec);
-   field->ConnectPageStorage(*source);
+   field->ConnectPageSource(*source);
 
    auto value = field->GenerateValue();
    field->Read(0, &value);
