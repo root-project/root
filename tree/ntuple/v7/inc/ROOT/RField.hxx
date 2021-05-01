@@ -484,12 +484,12 @@ public:
    using Detail::RFieldBase::GenerateValue;
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final {
       return Detail::RFieldValue(
-         Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>(static_cast<ClusterSize_t*>(where)),
+         Detail::RColumnElement<ClusterSize_t>(static_cast<ClusterSize_t*>(where)),
          this, static_cast<ClusterSize_t*>(where));
    }
    Detail::RFieldValue CaptureValue(void* where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>(static_cast<ClusterSize_t*>(where)), this, where);
+         Detail::RColumnElement<ClusterSize_t>(static_cast<ClusterSize_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return 0; }
    void CommitCluster() final;
@@ -528,13 +528,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>(static_cast<ClusterSize_t*>(where)),
+         Detail::RColumnElement<ClusterSize_t>(static_cast<ClusterSize_t*>(where)),
          this, static_cast<ClusterSize_t*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>(static_cast<ClusterSize_t*>(where)), this, where);
+         Detail::RColumnElement<ClusterSize_t>(static_cast<ClusterSize_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
 
@@ -578,13 +578,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<bool, EColumnType::kBit>(static_cast<bool*>(where)),
+         Detail::RColumnElement<bool>(static_cast<bool*>(where)),
          this, static_cast<bool*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, false); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<bool, EColumnType::kBit>(static_cast<bool*>(where)), this, where);
+         Detail::RColumnElement<bool>(static_cast<bool*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(bool); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -619,13 +619,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)),
+         Detail::RColumnElement<float>(static_cast<float*>(where)),
          this, static_cast<float*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0.0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)), this, where);
+         Detail::RColumnElement<float>(static_cast<float*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(float); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -661,13 +661,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<double, EColumnType::kReal64>(static_cast<double*>(where)),
+         Detail::RColumnElement<double>(static_cast<double*>(where)),
          this, static_cast<double*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0.0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<double, EColumnType::kReal64>(static_cast<double*>(where)), this, where);
+         Detail::RColumnElement<double>(static_cast<double*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(double); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -702,13 +702,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<char, EColumnType::kByte>(static_cast<char*>(where)),
+         Detail::RColumnElement<char>(static_cast<char*>(where)),
          this, static_cast<char*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<char, EColumnType::kByte>(static_cast<char*>(where)), this, where);
+         Detail::RColumnElement<char>(static_cast<char*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(char); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -743,13 +743,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<std::int8_t, EColumnType::kByte>(static_cast<std::int8_t*>(where)),
+         Detail::RColumnElement<std::int8_t>(static_cast<std::int8_t*>(where)),
          this, static_cast<std::int8_t*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<std::int8_t, EColumnType::kByte>(static_cast<std::int8_t*>(where)), this, where);
+         Detail::RColumnElement<std::int8_t>(static_cast<std::int8_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int8_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -784,13 +784,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<std::uint8_t, EColumnType::kByte>(static_cast<std::uint8_t*>(where)),
+         Detail::RColumnElement<std::uint8_t>(static_cast<std::uint8_t*>(where)),
          this, static_cast<std::uint8_t*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<std::uint8_t, EColumnType::kByte>(static_cast<std::uint8_t*>(where)), this, where);
+         Detail::RColumnElement<std::uint8_t>(static_cast<std::uint8_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint8_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -825,13 +825,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<std::int16_t, EColumnType::kInt16>(static_cast<std::int16_t*>(where)),
+         Detail::RColumnElement<std::int16_t>(static_cast<std::int16_t*>(where)),
          this, static_cast<std::int16_t*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<std::int16_t, EColumnType::kInt16>(static_cast<std::int16_t*>(where)), this, where);
+         Detail::RColumnElement<std::int16_t>(static_cast<std::int16_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int16_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -866,13 +866,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<std::uint16_t, EColumnType::kInt16>(static_cast<std::uint16_t*>(where)),
+         Detail::RColumnElement<std::uint16_t>(static_cast<std::uint16_t*>(where)),
          this, static_cast<std::uint16_t*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<std::uint16_t, EColumnType::kInt16>(static_cast<std::uint16_t*>(where)), this, where);
+         Detail::RColumnElement<std::uint16_t>(static_cast<std::uint16_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint16_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -907,13 +907,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<std::int32_t, EColumnType::kInt32>(static_cast<std::int32_t*>(where)),
+         Detail::RColumnElement<std::int32_t>(static_cast<std::int32_t*>(where)),
          this, static_cast<std::int32_t*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<std::int32_t, EColumnType::kInt32>(static_cast<std::int32_t*>(where)), this, where);
+         Detail::RColumnElement<std::int32_t>(static_cast<std::int32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int32_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -948,13 +948,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>(static_cast<std::uint32_t*>(where)),
+         Detail::RColumnElement<std::uint32_t>(static_cast<std::uint32_t*>(where)),
          this, static_cast<std::uint32_t*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>(static_cast<std::uint32_t*>(where)), this, where);
+         Detail::RColumnElement<std::uint32_t>(static_cast<std::uint32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint32_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -989,13 +989,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>(static_cast<std::uint64_t*>(where)),
+         Detail::RColumnElement<std::uint64_t>(static_cast<std::uint64_t*>(where)),
          this, static_cast<std::uint64_t*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>(static_cast<std::uint64_t*>(where)), this, where);
+         Detail::RColumnElement<std::uint64_t>(static_cast<std::uint64_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint64_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1030,13 +1030,13 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
    {
       return Detail::RFieldValue(
-         Detail::RColumnElement<std::int64_t, EColumnType::kInt64>(static_cast<std::int64_t*>(where)),
+         Detail::RColumnElement<std::int64_t>(static_cast<std::int64_t*>(where)),
          this, static_cast<std::int64_t*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<std::int64_t, EColumnType::kInt64>(static_cast<std::int64_t*>(where)), this, where);
+         Detail::RColumnElement<std::int64_t>(static_cast<std::int64_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int64_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;

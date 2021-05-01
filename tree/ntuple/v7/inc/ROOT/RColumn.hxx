@@ -165,7 +165,7 @@ public:
       }
       return reinterpret_cast<CppT*>(
          static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
-         (globalIndex - fCurrentPage.GetGlobalRangeFirst()) * RColumnElement<CppT, EColumnType::kUnknown>::kSize);
+         (globalIndex - fCurrentPage.GetGlobalRangeFirst()) * RColumnElement<CppT>::kSize);
    }
 
    template <typename CppT>
@@ -175,8 +175,7 @@ public:
       }
       return reinterpret_cast<CppT*>(
          static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
-            (clusterIndex.GetIndex() - fCurrentPage.GetClusterRangeFirst()) *
-               RColumnElement<CppT, EColumnType::kUnknown>::kSize);
+            (clusterIndex.GetIndex() - fCurrentPage.GetClusterRangeFirst()) * RColumnElement<CppT>::kSize);
    }
 
    NTupleSize_t GetGlobalIndex(const RClusterIndex &clusterIndex) {

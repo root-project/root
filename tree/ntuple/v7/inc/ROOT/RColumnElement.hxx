@@ -106,7 +106,7 @@ public:
 /**
  * Pairs of C++ type and column type, like float and EColumnType::kReal32
  */
-template <typename CppT, EColumnType ColumnT>
+template <typename CppT, EColumnType ColumnT = EColumnType::kUnknown>
 class RColumnElement : public RColumnElementBase {
 public:
    explicit RColumnElement(CppT* value) : RColumnElementBase(value, sizeof(CppT))
