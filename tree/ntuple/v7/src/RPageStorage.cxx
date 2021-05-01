@@ -183,7 +183,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       );
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fLastFieldId);
       f.SetOnDiskId(fLastFieldId);
-      f.ConnectPageStorage(*this); // issues in turn one or several calls to AddColumn()
+      f.ConnectPageSink(*this); // issues in turn one or several calls to AddColumn()
    }
 
    auto nColumns = fLastColumnId;
