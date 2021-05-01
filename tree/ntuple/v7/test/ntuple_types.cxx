@@ -80,3 +80,19 @@ TEST(RNTuple, UnsupportedStdTypes)
       EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<int> is not supported"));
    }
 }
+
+TEST(RNTuple, Casting)
+{
+   FileRaii fileGuard("test_ntuple_casting.root");
+   auto modelA = RNTupleModel::Create();
+   modelA->MakeField<std::int32_t>("int", 42);
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(modelA), "ntuple", fileGuard.GetPath());
+      writer->Fill();
+   }
+   auto modelB = RNTupleModel::Create();
+   auto fieldCast = modelB->MakeField<std::int64_t>("int");
+   auto reader = RNTupleReader::Open(std::move(modelB), "ntuple", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(42, *fieldCast);
+}
