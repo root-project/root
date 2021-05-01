@@ -411,23 +411,10 @@ void TemplateArgument::print(const PrintingPolicy &Policy,
   }
 
   case Declaration: {
-    NamedDecl *ND = cast<NamedDecl>(getAsDecl());
-    bool needsRef = true;
-    if (auto VD = dyn_cast<ValueDecl>(ND)) {
-      const clang::Type *ArgTy = VD->getType()->getUnqualifiedDesugaredType();
-      const clang::Type *ParmTy
-        = getParamTypeForDecl()->getUnqualifiedDesugaredType();
-      clang::ASTContext& Ctx = ND->getASTContext();
-      needsRef = !Ctx.hasSameType(ArgTy, ParmTy);
-      if (needsRef && (ArgTy->isArrayType() || ArgTy->isFunctionType())) {
-        const clang::Type *decayedArgTy
-          = Ctx.getDecayedType(clang::QualType(ArgTy, 0)).getTypePtr();
-        needsRef = !Ctx.hasSameType(decayedArgTy, ParmTy);
-      }
-    }
-    if (needsRef)
-      Out << '&';
+    NamedDecl *ND = getAsDecl();
+    Out << '&';
     if (ND->getDeclName()) {
+      // FIXME: distinguish between pointer and reference args?
       ND->printQualifiedName(Out);
     } else {
       Out << "(anonymous)";
