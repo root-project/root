@@ -165,11 +165,11 @@ private:
      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName()), fValue(fField.GenerateValue())
    {
       fField.SetOnDiskId(fieldId);
-      fField.ConnectPageStorage(*pageSource);
+      fField.ConnectPageSource(*pageSource);
       for (auto &f : fField) {
          auto subFieldId = pageSource->GetDescriptor().FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId());
          f.SetOnDiskId(subFieldId);
-         f.ConnectPageStorage(*pageSource);
+         f.ConnectPageSource(*pageSource);
       }
    }
 
