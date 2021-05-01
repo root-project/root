@@ -117,6 +117,104 @@ public:
    }
 };
 
+template <>
+class RColumnElement<bool, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(bool);
+   explicit RColumnElement(bool *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<char, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(char);
+   explicit RColumnElement(char *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<std::int8_t, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::int8_t);
+   explicit RColumnElement(std::int8_t *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<std::uint8_t, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::uint8_t);
+   explicit RColumnElement(std::uint8_t *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<std::int16_t, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::int16_t);
+   explicit RColumnElement(std::int16_t *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<std::uint16_t, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::uint16_t);
+   explicit RColumnElement(std::uint16_t *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<std::int32_t, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::int32_t);
+   explicit RColumnElement(std::int32_t *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<std::uint32_t, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::uint32_t);
+   explicit RColumnElement(std::uint32_t *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<std::int64_t, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::int64_t);
+   explicit RColumnElement(std::int64_t *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<std::uint64_t, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::uint64_t);
+   explicit RColumnElement(std::uint64_t *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<float, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(float);
+   explicit RColumnElement(float *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<double, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(double);
+   explicit RColumnElement(double *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<ClusterSize_t, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(ClusterSize_t);
+   explicit RColumnElement(ClusterSize_t *value) : RColumnElementBase(value, kSize) {}
+};
+
+template <>
+class RColumnElement<RColumnSwitch, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(ClusterSize_t);
+   explicit RColumnElement(ClusterSize_t *value) : RColumnElementBase(value, kSize) {}
+};
+
 
 template <>
 class RColumnElement<float, EColumnType::kReal32> : public RColumnElementBase {

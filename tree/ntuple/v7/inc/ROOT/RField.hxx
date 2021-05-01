@@ -517,10 +517,10 @@ public:
    void GenerateColumnsImpl() final;
 
    ClusterSize_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<ClusterSize_t, EColumnType::kIndex>(globalIndex);
+      return fPrincipalColumn->Map<ClusterSize_t>(globalIndex);
    }
    ClusterSize_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<ClusterSize_t, EColumnType::kIndex>(clusterIndex);
+      return fPrincipalColumn->Map<ClusterSize_t>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -567,10 +567,10 @@ public:
    void GenerateColumnsImpl() final;
 
    bool *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<bool, EColumnType::kBit>(globalIndex);
+      return fPrincipalColumn->Map<bool>(globalIndex);
    }
    bool *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<bool, EColumnType::kBit>(clusterIndex);
+      return fPrincipalColumn->Map<bool>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -608,10 +608,10 @@ public:
    void GenerateColumnsImpl() final;
 
    float *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<float, EColumnType::kReal32>(globalIndex);
+      return fPrincipalColumn->Map<float>(globalIndex);
    }
    float *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<float, EColumnType::kReal32>(clusterIndex);
+      return fPrincipalColumn->Map<float>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -650,10 +650,10 @@ public:
    void GenerateColumnsImpl() final;
 
    double *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<double, EColumnType::kReal64>(globalIndex);
+      return fPrincipalColumn->Map<double>(globalIndex);
    }
    double *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<double, EColumnType::kReal64>(clusterIndex);
+      return fPrincipalColumn->Map<double>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -691,10 +691,10 @@ public:
    void GenerateColumnsImpl() final;
 
    char *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<char, EColumnType::kByte>(globalIndex);
+      return fPrincipalColumn->Map<char>(globalIndex);
    }
    char *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<char, EColumnType::kByte>(clusterIndex);
+      return fPrincipalColumn->Map<char>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -732,10 +732,10 @@ public:
    void GenerateColumnsImpl() final;
 
    std::int8_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::int8_t, EColumnType::kByte>(globalIndex);
+      return fPrincipalColumn->Map<std::int8_t>(globalIndex);
    }
    std::int8_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::int8_t, EColumnType::kByte>(clusterIndex);
+      return fPrincipalColumn->Map<std::int8_t>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -773,10 +773,10 @@ public:
    void GenerateColumnsImpl() final;
 
    std::uint8_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::uint8_t, EColumnType::kByte>(globalIndex);
+      return fPrincipalColumn->Map<std::uint8_t>(globalIndex);
    }
    std::uint8_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::uint8_t, EColumnType::kByte>(clusterIndex);
+      return fPrincipalColumn->Map<std::uint8_t>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -814,10 +814,10 @@ public:
    void GenerateColumnsImpl() final;
 
    std::int16_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::int16_t, EColumnType::kInt16>(globalIndex);
+      return fPrincipalColumn->Map<std::int16_t>(globalIndex);
    }
    std::int16_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::int16_t, EColumnType::kInt16>(clusterIndex);
+      return fPrincipalColumn->Map<std::int16_t>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -855,10 +855,10 @@ public:
    void GenerateColumnsImpl() final;
 
    std::uint16_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::uint16_t, EColumnType::kInt16>(globalIndex);
+      return fPrincipalColumn->Map<std::uint16_t>(globalIndex);
    }
    std::uint16_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::uint16_t, EColumnType::kInt16>(clusterIndex);
+      return fPrincipalColumn->Map<std::uint16_t>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -896,10 +896,10 @@ public:
    void GenerateColumnsImpl() final;
 
    std::int32_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::int32_t, EColumnType::kInt32>(globalIndex);
+      return fPrincipalColumn->Map<std::int32_t>(globalIndex);
    }
    std::int32_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::int32_t, EColumnType::kInt32>(clusterIndex);
+      return fPrincipalColumn->Map<std::int32_t>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -937,10 +937,10 @@ public:
    void GenerateColumnsImpl() final;
 
    std::uint32_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::uint32_t, EColumnType::kInt32>(globalIndex);
+      return fPrincipalColumn->Map<std::uint32_t>(globalIndex);
    }
    std::uint32_t *Map(const RClusterIndex clusterIndex) {
-      return fPrincipalColumn->Map<std::uint32_t, EColumnType::kInt32>(clusterIndex);
+      return fPrincipalColumn->Map<std::uint32_t>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -978,10 +978,10 @@ public:
    void GenerateColumnsImpl() final;
 
    std::uint64_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::uint64_t, EColumnType::kInt64>(globalIndex);
+      return fPrincipalColumn->Map<std::uint64_t>(globalIndex);
    }
    std::uint64_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::uint64_t, EColumnType::kInt64>(clusterIndex);
+      return fPrincipalColumn->Map<std::uint64_t>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -1019,10 +1019,10 @@ public:
    void GenerateColumnsImpl() final;
 
    std::int64_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::int64_t, EColumnType::kInt64>(globalIndex);
+      return fPrincipalColumn->Map<std::int64_t>(globalIndex);
    }
    std::int64_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::int64_t, EColumnType::kInt64>(clusterIndex);
+      return fPrincipalColumn->Map<std::int64_t>(clusterIndex);
    }
 
    using Detail::RFieldBase::GenerateValue;
