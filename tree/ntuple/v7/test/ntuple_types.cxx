@@ -90,9 +90,19 @@ TEST(RNTuple, Casting)
       auto writer = RNTupleWriter::Recreate(std::move(modelA), "ntuple", fileGuard.GetPath());
       writer->Fill();
    }
-   auto modelB = RNTupleModel::Create();
-   auto fieldCast = modelB->MakeField<std::int64_t>("int");
-   auto reader = RNTupleReader::Open(std::move(modelB), "ntuple", fileGuard.GetPath());
+
+   try {
+      auto modelB = RNTupleModel::Create();
+      auto fieldCast = modelB->MakeField<float>("int");
+      auto reader = RNTupleReader::Open(std::move(modelB), "ntuple", fileGuard.GetPath());
+      FAIL() << "should not be able to cast int to float";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("Unexpected column type"));
+   }
+
+   auto modelC = RNTupleModel::Create();
+   auto fieldCast = modelC->MakeField<std::int64_t>("int");
+   auto reader = RNTupleReader::Open(std::move(modelC), "ntuple", fileGuard.GetPath());
    reader->LoadEntry(0);
    EXPECT_EQ(42, *fieldCast);
 }
