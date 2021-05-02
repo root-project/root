@@ -312,10 +312,9 @@ ROOT::Experimental::EColumnType ROOT::Experimental::Detail::RFieldBase::EnsureCo
       if (type == columnDesc.GetModel().GetType())
          return type;
    }
-   // TODO(jblomer): spell out column type
-   throw RException(R__FAIL("Unexpected column type: " + std::to_string(int(columnDesc.GetModel().GetType())) + " of "
-                            "column #" + std::to_string(columnIndex) +
-                            " for field " + fName));
+   throw RException(R__FAIL(
+      "Unexpected column type: " + RColumnElementBase::GetTypeName(columnDesc.GetModel().GetType()) + " of "
+      "column #" + std::to_string(columnIndex) + " for field " + fName));
    return columnDesc.GetModel().GetType();
 }
 
