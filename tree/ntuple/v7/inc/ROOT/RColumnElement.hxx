@@ -375,6 +375,20 @@ public:
    void Unpack(void *dst, void *src, std::size_t count) const final;
 };
 
+template <>
+class RColumnElement<std::int64_t, EColumnType::kInt32> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(std::int64_t);
+   static constexpr std::size_t kBitsOnStorage = 32;
+   explicit RColumnElement(std::int64_t *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
+};
+
 } // namespace Detail
 } // namespace Experimental
 } // namespace ROOT

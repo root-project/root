@@ -669,8 +669,15 @@ void ROOT::Experimental::RField<std::int64_t>::GenerateColumnsImpl()
 
 void ROOT::Experimental::RField<std::int64_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
-   EnsureColumnType({EColumnType::kInt64}, 0, desc);
-   GenerateColumnsImpl();
+   auto type = EnsureColumnType({EColumnType::kInt64, EColumnType::kInt32}, 0, desc);
+   RColumnModel model(type, false /* isSorted*/);
+   if (type == EColumnType::kInt64) {
+      fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
+         Detail::RColumn::Create<std::int64_t, EColumnType::kInt64>(model, 0)));
+   } else {
+      fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
+         Detail::RColumn::Create<std::int64_t, EColumnType::kInt32>(model, 0)));
+   }
 }
 
 void ROOT::Experimental::RField<std::int64_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
