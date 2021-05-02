@@ -297,6 +297,29 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
 }
 
 
+ROOT::Experimental::EColumnType ROOT::Experimental::Detail::RFieldBase::EnsureColumnType(
+   const std::vector<EColumnType> &allowedTypes, unsigned int columnIndex, const RNTupleDescriptor &desc)
+{
+   R__ASSERT(!allowedTypes.empty());
+   auto columnId = desc.FindColumnId(fOnDiskId, columnIndex);
+   if (columnId == kInvalidDescriptorId) {
+      throw RException(R__FAIL("Column missing: column #" + std::to_string(columnIndex) +
+                               " for field " + fName));
+   }
+
+   const auto &columnDesc = desc.GetColumnDescriptor(columnId);
+   for (auto type : allowedTypes) {
+      if (type == columnDesc.GetModel().GetType())
+         return type;
+   }
+   // TODO(jblomer): spell out column type
+   throw RException(R__FAIL("Unexpected column type: " + std::to_string(int(columnDesc.GetModel().GetType())) + " of "
+                            "column #" + std::to_string(columnIndex) +
+                            " for field " + fName));
+   return columnDesc.GetModel().GetType();
+}
+
+
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink)
 {
    R__ASSERT(fColumns.empty());
@@ -402,8 +425,9 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GenerateColu
       Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
 }
 
-void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kIndex}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -421,8 +445,9 @@ void ROOT::Experimental::RField<char>::GenerateColumnsImpl()
       char, EColumnType::kByte>(model, 0)));
 }
 
-void ROOT::Experimental::RField<char>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<char>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kByte}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -440,8 +465,9 @@ void ROOT::Experimental::RField<std::int8_t>::GenerateColumnsImpl()
       std::int8_t, EColumnType::kByte>(model, 0)));
 }
 
-void ROOT::Experimental::RField<std::int8_t>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<std::int8_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kByte}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -459,8 +485,9 @@ void ROOT::Experimental::RField<std::uint8_t>::GenerateColumnsImpl()
       std::uint8_t, EColumnType::kByte>(model, 0)));
 }
 
-void ROOT::Experimental::RField<std::uint8_t>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<std::uint8_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kByte}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -479,8 +506,9 @@ void ROOT::Experimental::RField<bool>::GenerateColumnsImpl()
       Detail::RColumn::Create<bool, EColumnType::kBit>(model, 0)));
 }
 
-void ROOT::Experimental::RField<bool>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<bool>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kBit}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -499,8 +527,9 @@ void ROOT::Experimental::RField<float>::GenerateColumnsImpl()
       Detail::RColumn::Create<float, EColumnType::kReal32>(model, 0)));
 }
 
-void ROOT::Experimental::RField<float>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<float>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kReal32}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -519,8 +548,9 @@ void ROOT::Experimental::RField<double>::GenerateColumnsImpl()
       Detail::RColumn::Create<double, EColumnType::kReal64>(model, 0)));
 }
 
-void ROOT::Experimental::RField<double>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<double>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kReal64}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -538,8 +568,9 @@ void ROOT::Experimental::RField<std::int16_t>::GenerateColumnsImpl()
       std::int16_t, EColumnType::kInt16>(model, 0)));
 }
 
-void ROOT::Experimental::RField<std::int16_t>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<std::int16_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kInt16}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -557,8 +588,9 @@ void ROOT::Experimental::RField<std::uint16_t>::GenerateColumnsImpl()
       std::uint16_t, EColumnType::kInt16>(model, 0)));
 }
 
-void ROOT::Experimental::RField<std::uint16_t>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<std::uint16_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kInt16}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -576,8 +608,9 @@ void ROOT::Experimental::RField<std::int32_t>::GenerateColumnsImpl()
       std::int32_t, EColumnType::kInt32>(model, 0)));
 }
 
-void ROOT::Experimental::RField<std::int32_t>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<std::int32_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kInt32}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -595,8 +628,9 @@ void ROOT::Experimental::RField<std::uint32_t>::GenerateColumnsImpl()
       Detail::RColumn::Create<std::uint32_t, EColumnType::kInt32>(model, 0)));
 }
 
-void ROOT::Experimental::RField<std::uint32_t>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<std::uint32_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kInt32}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -614,8 +648,9 @@ void ROOT::Experimental::RField<std::uint64_t>::GenerateColumnsImpl()
       Detail::RColumn::Create<std::uint64_t, EColumnType::kInt64>(model, 0)));
 }
 
-void ROOT::Experimental::RField<std::uint64_t>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<std::uint64_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kInt64}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -633,8 +668,9 @@ void ROOT::Experimental::RField<std::int64_t>::GenerateColumnsImpl()
       Detail::RColumn::Create<std::int64_t, EColumnType::kInt64>(model, 0)));
 }
 
-void ROOT::Experimental::RField<std::int64_t>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<std::int64_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kInt64}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -656,8 +692,10 @@ void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl()
       Detail::RColumn::Create<char, EColumnType::kByte>(modelChars, 1)));
 }
 
-void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kIndex}, 0, desc);
+   EnsureColumnType({EColumnType::kByte}, 1, desc);
    GenerateColumnsImpl();
 }
 
@@ -972,8 +1010,9 @@ void ROOT::Experimental::RVectorField::GenerateColumnsImpl()
       Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
 }
 
-void ROOT::Experimental::RVectorField::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RVectorField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kIndex}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -1072,8 +1111,9 @@ void ROOT::Experimental::RField<std::vector<bool>>::GenerateColumnsImpl()
       Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
 }
 
-void ROOT::Experimental::RField<std::vector<bool>>::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RField<std::vector<bool>>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kIndex}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -1294,8 +1334,9 @@ void ROOT::Experimental::RVariantField::GenerateColumnsImpl()
       Detail::RColumn::Create<RColumnSwitch, EColumnType::kSwitch>(modelSwitch, 0)));
 }
 
-void ROOT::Experimental::RVariantField::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RVariantField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kSwitch}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -1361,8 +1402,9 @@ void ROOT::Experimental::RCollectionField::GenerateColumnsImpl()
       Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
 }
 
-void ROOT::Experimental::RCollectionField::GenerateColumnsImpl(const RNTupleDescriptor &)
+void ROOT::Experimental::RCollectionField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
+   EnsureColumnType({EColumnType::kIndex}, 0, desc);
    GenerateColumnsImpl();
 }
 
