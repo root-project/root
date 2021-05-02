@@ -120,6 +120,11 @@ protected:
       ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), value);
    }
 
+   /// Throws an exception if the column given by fOnDiskId and the columnIndex in the provided descriptor
+   /// is not of one of the allowed types.
+   ROOT::Experimental::EColumnType EnsureColumnType(const std::vector<EColumnType> &allowedTypes,
+                                                    unsigned int columnIndex, const RNTupleDescriptor &desc);
+
 public:
    /// Iterates over the sub tree of fields in depth-first search order
    class RSchemaIterator {
