@@ -69,30 +69,6 @@ static std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
    return GetFieldName(fieldDesc.GetParentId(), ntupleDesc) + "." + fieldDesc.GetFieldName();
 }
 
-static std::string GetColumnTypeName(ROOT::Experimental::EColumnType type)
-{
-   switch (type) {
-   case ROOT::Experimental::EColumnType::kBit:
-      return "Bit";
-   case ROOT::Experimental::EColumnType::kByte:
-      return "Byte";
-   case ROOT::Experimental::EColumnType::kInt32:
-      return "Int32";
-   case ROOT::Experimental::EColumnType::kInt64:
-      return "Int64";
-   case ROOT::Experimental::EColumnType::kReal32:
-      return "Real32";
-   case ROOT::Experimental::EColumnType::kReal64:
-      return "Real64";
-   case ROOT::Experimental::EColumnType::kIndex:
-      return "Index";
-   case ROOT::Experimental::EColumnType::kSwitch:
-      return "Switch";
-   default:
-      return "UNKNOWN";
-   }
-}
-
 } // anonymous namespace
 
 void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) const
@@ -191,7 +167,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       auto avgPageSize = (col.fNPages == 0) ? 0 : (col.fBytesOnStorage / col.fNPages);
       auto avgElementsPerPage = (col.fNPages == 0) ? 0 : (col.fNElements / col.fNPages);
       std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fLocalOrder) + "]"
-         + "  --  " + GetColumnTypeName(col.fType);
+         + "  --  " + Detail::RColumnElementBase::GetTypeName(col.fType);
       std::string id = std::string("{id:") + std::to_string(col.fColumnId) + "}";
       output << nameAndType << std::setw(60 - nameAndType.length()) << id << std::endl;
       output << "    # Elements:          " << col.fNElements << std::endl;

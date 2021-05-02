@@ -24,6 +24,7 @@
 #include <cstring> // for memcpy
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <type_traits>
 
 namespace ROOT {
@@ -71,6 +72,7 @@ public:
 
    static std::unique_ptr<RColumnElementBase> Generate(EColumnType type);
    static std::size_t GetBitsOnStorage(EColumnType type);
+   static std::string GetTypeName(EColumnType type);
 
    /// Write one or multiple column elements into destination
    void WriteTo(void *destination, std::size_t count) const {
