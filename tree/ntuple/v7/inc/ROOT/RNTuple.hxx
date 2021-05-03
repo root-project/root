@@ -247,6 +247,9 @@ triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception 
 // clang-format on
 class RNTupleWriter {
 private:
+   /// The page sink's parallel page compression scheduler if IMT is on.
+   /// Needs to be destructed after the page sink is destructed and so declared before.
+   std::unique_ptr<Detail::RPageStorage::RTaskScheduler> fZipTasks;
    std::unique_ptr<Detail::RPageSink> fSink;
    /// Needs to be destructed before fSink
    std::unique_ptr<RNTupleModel> fModel;

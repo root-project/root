@@ -165,3 +165,45 @@ TEST(RPageSinkBuf, Basics)
       ASSERT_EQ(column, next_page->first);
    }
 }
+
+TEST(RPageSinkBuf, ParallelZip) {
+   ROOT::EnableImplicitMT();
+
+   FileRaii fileGuard("test_ntuple_sinkbuf_pzip.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto floatField = model->MakeField<float>("pt");
+      auto fieldKlassVec = model->MakeField<std::vector<CustomStruct>>("klassVec");
+      auto ntuple = std::make_unique<RNTupleWriter>(std::move(model),
+         std::make_unique<RPageSinkBuf>(std::make_unique<RPageSinkFile>(
+            "buf_pzip", fileGuard.GetPath(), RNTupleWriteOptions()
+      )));
+
+      for (int i = 0; i < 20000; i++) {
+         *floatField = static_cast<float>(i);
+         CustomStruct klass;
+         klass.a = 42.0;
+         klass.v1.emplace_back(static_cast<float>(i));
+         klass.v2.emplace_back(std::vector<float>(3, static_cast<float>(i)));
+         klass.s = "hi" + std::to_string(i);
+         *fieldKlassVec = std::vector<CustomStruct>{klass};
+         ntuple->Fill();
+         if (i && i % 15000 == 0) {
+            ntuple->CommitCluster();
+         }
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("buf_pzip", fileGuard.GetPath());
+   EXPECT_EQ(20000, ntuple->GetNEntries());
+
+   auto viewPt = ntuple->GetView<float>("pt");
+   auto viewKlassVec = ntuple->GetView<std::vector<CustomStruct>>("klassVec");
+   for (auto i : ntuple->GetEntryRange()) {
+      float fi = static_cast<float>(i);
+      EXPECT_EQ(fi, viewPt(i));
+      EXPECT_EQ(std::vector<float>{fi}, viewKlassVec(i).at(0).v1);
+      EXPECT_EQ((std::vector<float>(3, fi)), viewKlassVec(i).at(0).v2.at(0));
+      EXPECT_EQ("hi" + std::to_string(i), viewKlassVec(i).at(0).s);
+   }
+}
