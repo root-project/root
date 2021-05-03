@@ -270,32 +270,39 @@ void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NT
    fPrevClusterNEntries = nEntries;
 }
 
-
 ROOT::Experimental::Detail::RPageStorage::RSealedPage
-ROOT::Experimental::Detail::RPageSink::SealPage(
-   const RPage &page, const RColumnElementBase &element, int compressionSetting)
+ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
+   const RColumnElementBase &element, int compressionSetting, void *buf)
 {
-   unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
+   unsigned char *pageBuf = reinterpret_cast<unsigned char *>(page.GetBuffer());
    bool isAdoptedBuffer = true;
    auto packedBytes = page.GetSize();
 
    if (!element.IsMappable()) {
       packedBytes = element.GetPackedSize(page.GetNElements());
-      buffer = new unsigned char[packedBytes];
+      pageBuf = new unsigned char[packedBytes];
       isAdoptedBuffer = false;
-      element.Pack(buffer, page.GetBuffer(), page.GetNElements());
+      element.Pack(pageBuf, page.GetBuffer(), page.GetNElements());
    }
    auto zippedBytes = packedBytes;
 
    if ((compressionSetting != 0) || !element.IsMappable()) {
-      zippedBytes = fCompressor->Zip(buffer, packedBytes, compressionSetting);
+      zippedBytes = RNTupleCompressor::Zip(pageBuf, packedBytes, compressionSetting, buf);
       if (!isAdoptedBuffer)
-         delete[] buffer;
-      buffer = const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(fCompressor->GetZipBuffer()));
+         delete[] pageBuf;
+      pageBuf = reinterpret_cast<unsigned char *>(buf);
       isAdoptedBuffer = true;
    }
 
    R__ASSERT(isAdoptedBuffer);
 
-   return RSealedPage{buffer, zippedBytes, page.GetNElements()};
+   return RSealedPage{pageBuf, zippedBytes, page.GetNElements()};
+}
+
+ROOT::Experimental::Detail::RPageStorage::RSealedPage
+ROOT::Experimental::Detail::RPageSink::SealPage(
+   const RPage &page, const RColumnElementBase &element, int compressionSetting)
+{
+   R__ASSERT(fCompressor);
+   return SealPage(page, element, compressionSetting, fCompressor->GetZipBuffer());
 }

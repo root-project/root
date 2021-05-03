@@ -182,6 +182,10 @@ protected:
    /// Usage of this method requires construction of fCompressor.
    RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting);
 
+   /// Seal a page using the provided buffer.
+   static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element,
+      int compressionSetting, void *buf);
+
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
