@@ -258,7 +258,7 @@ void REveDataCollection::SetFilterExpr(const char* filter)
    std::stringstream s;
    s << "*((std::function<bool(" << fItemClass->GetName() << "*)>*)" << std::hex << std::showbase << (size_t)&fFilterFoo
      << ") = [](" << fItemClass->GetName() << "* p){" << fItemClass->GetName() << " &i=*p; return ("
-     << fFilterExpr.Data() << "); }";
+     << fFilterExpr.Data() << "); };";
 
    // printf("%s\n", s.Data());
    try {
