@@ -986,8 +986,8 @@ TObject *RooPlot::findObject(const char *name, const TClass* clas) const
 
   TIterator* iter = _items.MakeIterator() ;
   while((obj=iter->Next())) {
-    if ((!name || !TString(name).CompareTo(obj->GetName())) &&
-	(!clas || (obj->IsA()==clas))) {
+    if ((!name || name[0] == '\0' || !TString(name).CompareTo(obj->GetName()))
+        && (!clas || (obj->IsA()==clas))) {
       ret = obj ;
     }
   }
