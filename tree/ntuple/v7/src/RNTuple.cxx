@@ -281,6 +281,12 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    if (!fSink) {
       throw RException(R__FAIL("null sink"));
    }
+#ifdef R__USE_IMT
+   if (IsImplicitMTEnabled()) {
+      fZipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+      fSink->SetTaskScheduler(fZipTasks.get());
+   }
+#endif
    fSink->Create(*fModel.get());
    fMetrics.ObserveMetrics(fSink->GetMetrics());
 }

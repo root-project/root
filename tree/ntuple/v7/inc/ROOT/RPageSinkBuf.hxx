@@ -63,6 +63,9 @@ private:
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
 
+   /// Compress and commit buffered cluster pages in parallel.
+   void ParallelClusterZip(NTupleSize_t nEntries);
+
 protected:
    void CreateImpl(const RNTupleModel &model) final;
    RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;

@@ -16,6 +16,7 @@
 
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 
 ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
@@ -55,6 +56,11 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(
 ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::NTupleSize_t nEntries)
 {
+   if (fTaskScheduler) {
+      ParallelClusterZip(nEntries);
+      return RClusterDescriptor::RLocator{};
+   }
+
    for (auto &bufColumn : fBufferedColumns) {
       for (auto &bufPage : bufColumn.DrainBufferedPages()) {
          fInnerSink->CommitPage(bufColumn.GetHandle(), bufPage);
@@ -81,4 +87,58 @@ ROOT::Experimental::Detail::RPageSinkBuf::ReservePage(ColumnHandle_t columnHandl
 void ROOT::Experimental::Detail::RPageSinkBuf::ReleasePage(RPage &page)
 {
    fInnerSink->ReleasePage(page);
+}
+
+namespace {
+   using namespace ROOT::Experimental::Detail;
+   struct RPageZipItem {
+      RPage fPage;
+      // Compression scratch buffer for fSealedPage.
+      std::unique_ptr<unsigned char[]> fBuf;
+      RPageStorage::RSealedPage fSealedPage;
+      explicit RPageZipItem(RPage page)
+         : fPage(page), fBuf(std::make_unique<unsigned char[]>(fPage.GetSize())) {}
+   };
+} // anonymous namespace
+
+void ROOT::Experimental::Detail::RPageSinkBuf::ParallelClusterZip(
+   ROOT::Experimental::NTupleSize_t nEntries)
+{
+   // TODO(max) add timers like in RPageSourceFile::UnzipClusterImpl
+   R__ASSERT(fTaskScheduler);
+   fTaskScheduler->Reset();
+   // zipItems[nColumns][nColumnPages]
+   std::vector<std::vector<RPageZipItem>> zipItems;
+   for (auto &col : fBufferedColumns) {
+      std::vector<RPageZipItem> zipCol;
+      for (const auto &page : col.DrainBufferedPages()) {
+         zipCol.push_back(RPageZipItem(page));
+      }
+      zipItems.push_back(std::move(zipCol));
+   }
+   // Thread safety: Each task works on a distinct RPageZipItem `zi`.
+   // Task (i,j) seals RPage (i,j) -- zi.fPage -- using the scratch buffer
+   // zi.fBuf.
+   for (std::size_t i = 0; i < fBufferedColumns.size(); i++) {
+      for (std::size_t j = 0; j < zipItems.at(i).size(); j++) {
+         fTaskScheduler->AddTask([this, &zipItems, i, j] {
+            auto &zi = zipItems.at(i).at(j);
+            zi.fSealedPage = SealPage(zi.fPage,
+               *fBufferedColumns.at(i).GetHandle().fColumn->GetElement(),
+               fOptions.GetCompression(), zi.fBuf.get()
+            );
+         });
+      }
+   }
+   fTaskScheduler->Wait();
+
+   for (std::size_t i = 0; i < fBufferedColumns.size(); i++) {
+      for (auto &zi : zipItems.at(i)) {
+         fInnerSink->CommitSealedPage(
+            fBufferedColumns.at(i).GetHandle().fId, zi.fSealedPage
+         );
+         ReleasePage(zi.fPage);
+      }
+   }
+   fInnerSink->CommitCluster(nEntries);
 }
