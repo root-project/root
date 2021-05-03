@@ -1131,12 +1131,17 @@ Double_t RooPlot::chiSquare(const char* curvename, const char* histname, int nFi
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a RooHist (derives from TGraphAsymErrors) containing the residuals of histogram 'histname' with respect
-/// to curve 'curvename'. If normalize is true, the residuals are divided by the error
-/// of the histogram, effectively returning a pull histogram.
+/// Return a RooHist (derives from TGraphAsymErrors) containing the residuals of a histogram.
 /// The plotting range of the graph is adapted to the plotting range of the current plot.
-/// If `useAverage` is true, the histogram is compared with the curve's average values within a given bin.
-/// Otherwise, the curve is interpolated at the bin centres, which is not accurate for curved distributions.
+///
+/// \param histname Name of the data histogram.
+/// Passing an empty string or `nullptr` will create residuals of the last-plotted histogram.
+/// \param curvename Name of the curve to compare to data.
+/// Passing an empty string or `nullptr` will create residuals of the last-plotted curve.
+/// \param normalize If true, the residuals are divided by the error
+/// of the histogram, effectively returning a pull histogram.
+/// \param useAverage If true, the histogram is compared with the curve averaged in each bin.
+/// Otherwise, the curve is evaluated at the bin centres, which is not accurate for strongly curved distributions.
 RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool normalize, bool useAverage) const
 {
   // Find curve object
