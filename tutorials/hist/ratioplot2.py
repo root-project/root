@@ -8,7 +8,7 @@
 ## constructor. Additionally, after calling `TRatioPlot::Draw` the upper and lower y axis
 ## titles are modified.
 ## Confidence interval bands are automatically drawn on the bottom (but can be disabled by draw option `nobands`.
-## nspired by the tutorial of Paul Gessinger.
+## Inspired by the tutorial of Paul Gessinger.
 ## \macro_image
 ## \macro_code
 ##
