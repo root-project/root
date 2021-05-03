@@ -30,13 +30,16 @@ for python_class in python_classes:
     python_classes_dict[python_class.__name__] = python_class
 
 
-def get_defined_attributes(klass):
+def get_defined_attributes(klass, consider_base_classes=False):
     """
-    Get all class attributes that are defined in a given class or in any of its
-    base classes (except for `object`).
+    Get all class attributes that are defined in a given class or optionally in
+    any of its base classes (except for `object`).
     """
 
     blacklist = ["__dict__", "__doc__", "__hash__", "__module__", "__weakref__"]
+
+    if not consider_base_classes:
+        return [attr for attr in klass.__dict__.keys() if attr not in blacklist]
 
     # get a list of this class and all its base classes, excluding `object`
     method_resolution_order = klass.mro()
