@@ -849,7 +849,7 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
    };
    ChangeSentry cs;
 
-   if (gDebug > 0)
+   //if (gDebug > 0)
       ::Info("REveManager::ExecuteCommand", "MIR cmd %s", mir->fCmd.c_str());
 
    try {

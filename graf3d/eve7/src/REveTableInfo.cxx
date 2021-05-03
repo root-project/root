@@ -42,7 +42,7 @@ void REveTableViewInfo::SetDisplayedCollection(ElementId_t collectionId)
    StampObjProps();
 }
 
-void REveTableViewInfo::AddNewColumnToCurrentCollection(const std::string &expr, const std::string &title, int prec)
+void REveTableViewInfo::AddNewColumnToCurrentCollection(const char* expr, const char* title, int prec)
 {
    if (!fDisplayedCollection)
       return;
