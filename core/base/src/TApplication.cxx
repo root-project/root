@@ -684,7 +684,7 @@ static TString UrlGenerator(TString scopeName, EUrl scopeType)
    // We start the URL with a static part, the same for all scopes and members.
    TString url = "https://root.cern/doc/";
    // Then we check the ROOT version used.
-   TPRegexp re4(R"(.*/v(\d)-(\d\d)-00-patches)");
+   TPRegexp re4(R"(.*/(v\d)-(\d\d)-00-patches)");
    const char *branchName = gROOT->GetGitBranch();
    TObjArray *objarr = re4.MatchS(branchName);
    TString version;
