@@ -30,8 +30,33 @@ for python_class in python_classes:
     python_classes_dict[python_class.__name__] = python_class
 
 
-def ismagicfunc(name):
-    return name.startswith("__") and name.endswith("__")
+def get_defined_attributes(klass):
+    """
+    Get all class attributes that are defined in a given class or in any of its
+    base classes (except for `object`).
+    """
+
+    blacklist = ["__dict__", "__doc__", "__hash__", "__module__", "__weakref__"]
+
+    # get a list of this class and all its base classes, excluding `object`
+    method_resolution_order = klass.mro()
+    if object in method_resolution_order:
+        method_resolution_order.remove(object)
+
+    def is_defined(funcname):
+
+        if funcname in blacklist:
+            return False
+
+        in_any_dict = False
+
+        for mro_class in method_resolution_order:
+            if funcname in mro_class.__dict__:
+                in_any_dict = True
+
+        return in_any_dict
+
+    return [attr for attr in dir(klass) if is_defined(attr)]
 
 
 def rebind_instancemethod(to_class, from_class, func_name):
@@ -68,8 +93,8 @@ def pythonize_roofit(klass, name):
     python_klass = python_classes_dict[name]
 
     # list of functions to pythonize, which are assumed to be all functions in
-    # the pyton classes that are not magic functions
-    func_names = [f for f in dir(python_klass) if not ismagicfunc(f)]
+    # that are manually defined in the Python classes or their superclasses
+    func_names = get_defined_attributes(python_klass)
 
     for func_name in func_names:
 
