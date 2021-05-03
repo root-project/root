@@ -411,7 +411,7 @@ ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnName
    // we need to use TPRegexp
    TPRegexp regexp(theRegex);
    for (auto &&colName : colNames) {
-      if ((isEmptyRegex || regexp.MatchB(colName.c_str())) && !RDFInternal::IsInternalColumn(colName)) {
+      if ((isEmptyRegex || regexp.MatchB(colName.c_str())) && !IsInternalColumn(colName)) {
          selectedColumns.emplace_back(colName);
       }
    }
@@ -584,8 +584,7 @@ std::string PrettyPrintAddr(const void *const addr)
 void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
                    std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name,
                    std::string_view expression, const std::map<std::string, std::string> &aliasMap,
-                   const ColumnNames_t &branches, const RDFInternal::RBookedDefines &customCols, TTree *tree,
-                   RDataSource *ds)
+                   const ColumnNames_t &branches, const RBookedDefines &customCols, TTree *tree, RDataSource *ds)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -629,7 +628,7 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
 
 // Jit a Define call
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                             RDataSource *ds, const RDFInternal::RBookedDefines &customCols,
+                                             RDataSource *ds, const RBookedDefines &customCols,
                                              const ColumnNames_t &branches,
                                              std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
 {
@@ -644,7 +643,7 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    const auto lambdaName = DeclareLambda(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfLambda(lambdaName);
 
-   auto definesCopy = new RDFInternal::RBookedDefines(customCols);
+   auto definesCopy = new RBookedDefines(customCols);
    auto definesAddr = PrettyPrintAddr(definesCopy);
    auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm.GetNSlots(), lm.GetDSValuePtrs());
 
@@ -676,8 +675,8 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &helperArgType, const std::type_info &at, void *helperArgOnHeap,
-                           TTree *tree, const unsigned int nSlots, const RDFInternal::RBookedDefines &customCols,
-                           RDataSource *ds, std::weak_ptr<RJittedAction> *jittedActionOnHeap)
+                           TTree *tree, const unsigned int nSlots, const RBookedDefines &customCols, RDataSource *ds,
+                           std::weak_ptr<RJittedAction> *jittedActionOnHeap)
 {
    // retrieve type of result of the action as a string
    auto helperArgClass = TClass::GetClass(helperArgType);
@@ -696,7 +695,7 @@ std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail:
    const std::string actionTypeName = actionTypeClass->GetName();
    const std::string actionTypeNameBase = actionTypeName.substr(actionTypeName.rfind(':') + 1);
 
-   auto definesCopy = new RDFInternal::RBookedDefines(customCols); // deleted in jitted CallBuildAction
+   auto definesCopy = new RBookedDefines(customCols); // deleted in jitted CallBuildAction
    auto definesAddr = PrettyPrintAddr(definesCopy);
 
    // Build a call to CallBuildAction with the appropriate argument. When run through the interpreter, this code will
