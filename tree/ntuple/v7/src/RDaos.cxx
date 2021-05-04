@@ -20,6 +20,13 @@
 #include <stdexcept>
 
 ROOT::Experimental::Detail::RDaosPool::RDaosPool(std::string_view poolUuid, std::string_view serviceReplicas) {
+   {
+      static struct RDaosRAII {
+         RDaosRAII() { daos_init(); }
+         ~RDaosRAII() { daos_fini(); }
+      } RAII = {};
+   }
+
    struct SvcRAII {
       d_rank_list_t *rankList;
       SvcRAII(std::string_view ranks) { rankList = daos_rank_list_parse(ranks.data(), "_"); }
@@ -173,14 +180,3 @@ ROOT::Experimental::Detail::RDaosContainer::WriteObject(const void *buffer, std:
    fSequentialWrOid.lo++;
    return ret;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-namespace {
-static struct RDaosRAII {
-   RDaosRAII() { daos_init(); }
-   ~RDaosRAII() { daos_fini(); }
-} RAII{};
-} // anonymous namespace
