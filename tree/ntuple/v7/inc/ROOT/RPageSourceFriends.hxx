@@ -36,7 +36,7 @@ namespace Detail {
 \brief Virtual storage that combines several other sources horizontally
 */
 // clang-format on
-class RPageSourceFriends : public RPageSource {
+class RPageSourceFriends final : public RPageSource {
 private:
    struct ROriginId {
       std::size_t fSourceIdx = 0;
