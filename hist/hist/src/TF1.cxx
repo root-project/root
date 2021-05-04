@@ -2185,7 +2185,7 @@ Bool_t TF1::ComputeCdfTable(Option_t * option) {
 
 Double_t TF1::GetRandom(TRandom * rng, Option_t * option)
 {
-   //  Check if integral array must be build
+   //  Check if integral array must be built
    if (fIntegral.size() == 0) {
       Bool_t ret = ComputeCdfTable(option);
       if (!ret) return TMath::QuietNaN();
@@ -2238,7 +2238,7 @@ Double_t TF1::GetRandom(TRandom * rng, Option_t * option)
 
 Double_t TF1::GetRandom(Double_t xmin, Double_t xmax, TRandom * rng, Option_t * option)
 {
-   //  Check if integral array must be build
+   //  Check if integral array must be built
    if (fIntegral.size() == 0) {
       Bool_t ret = ComputeCdfTable(option);
       if (!ret) return TMath::QuietNaN();

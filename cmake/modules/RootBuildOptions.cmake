@@ -396,7 +396,7 @@ if(root7)
   endif()
 endif()
 
-#---check if webgui can be build-------------------------------
+#---check if webgui can be built-------------------------------
 if(webgui)
   if(NOT CMAKE_CXX_STANDARD GREATER 11)
     set(webgui OFF CACHE BOOL "(WebGUI requires at least C++14)" FORCE)
