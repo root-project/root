@@ -180,14 +180,25 @@ TEST(RooDataHist, WeightedEntries)
   EXPECT_EQ(weight, weightBin10);
 }
 
-TEST(RooDataHist, ReadV4Legacy)
-{
-  TFile v4Ref("dataHistv4_ref.root");
-  ASSERT_TRUE(v4Ref.IsOpen());
+class RooDataHistIO : public testing::TestWithParam<const char*> {
+public:
+  void SetUp() override {
+    TFile file(GetParam(), "READ");
+    ASSERT_TRUE(file.IsOpen());
 
-  RooDataHist* legacy = nullptr;
-  v4Ref.GetObject("dataHist", legacy);
-  ASSERT_NE(legacy, nullptr);
+    file.GetObject("dataHist", legacy);
+    ASSERT_NE(legacy, nullptr);
+  }
+
+  void TearDown() override {
+    delete legacy;
+  }
+
+protected:
+  RooDataHist* legacy{nullptr};
+};
+
+TEST_P(RooDataHistIO, ReadLegacy) {
 
   RooDataHist& dataHist = *legacy;
 
@@ -237,6 +248,10 @@ TEST(RooDataHist, ReadV4Legacy)
   EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10->find("x"))->getVal(), 0.5, 1.E-1);
   EXPECT_EQ(weight, weightBin10);
 }
+
+
+INSTANTIATE_TEST_SUITE_P(IO_SchemaEvol, RooDataHistIO,
+    testing::Values("dataHistv4_ref.root", "dataHistv5_ref.root", "dataHistv6_ref.root"));
 
 
 void fillHist(TH2D* histo, double content) {
