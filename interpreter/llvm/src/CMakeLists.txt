@@ -2,6 +2,13 @@
 
 cmake_minimum_required(VERSION 3.4.3)
 
+# backport of https://reviews.llvm.org/rG638d84b60b7e7b7fa9099939ab4de2ec1e0c52c3
+# CMP0116: Ninja generators transform `DEPFILE`s from `add_custom_command()`
+# New in CMake 3.20. https://cmake.org/cmake/help/latest/policy/CMP0116.html
+if(POLICY CMP0116)
+  cmake_policy(SET CMP0116 OLD)
+endif()
+
 if(POLICY CMP0068)
   cmake_policy(SET CMP0068 NEW)
   set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR ON)
