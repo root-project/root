@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_vecops
 /// \notebook -nodraw
-/// In this tutorial we learn how combinations of RVecs can be build.
+/// In this tutorial we learn how combinations of RVecs can be built.
 ///
 /// \macro_code
 /// \macro_output

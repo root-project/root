@@ -5598,7 +5598,7 @@ int GenReflexMain(int argc, char **argv)
    const char *outputFilenameUsage =
       "-o, --output\tOutput filename\n"
       "      Output file name. If an existing directory is specified instead of a file,\n"
-      "      then a filename will be build using the name of the input file and will\n"
+      "      then a filename will be built using the name of the input file and will\n"
       "      be placed in the given directory. <headerfile>_rflx.cpp.\n"
       "      NOTA BENE: the dictionaries that will be used within the same project must\n"
       "      have unique names.\n";

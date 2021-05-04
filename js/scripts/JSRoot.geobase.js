@@ -2587,7 +2587,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          arg.last = 0;
          arg.CopyStack = function(factor) {
             let entry = { nodeid: this.nodeid, seqid: this.counter, stack: new Array(this.last) };
-            if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be build as first
+            if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be built as first
             for (let n=0;n<this.last;++n) entry.stack[n] = this.stack[n+1]; // copy stack
             return entry;
          };
@@ -3157,7 +3157,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       return del; //
    }
 
-   /** @summary Collect all uniques shapes which should be build
+   /** @summary Collect all uniques shapes which should be built
     *  @desc Check if same shape used many time for drawing */
    ClonedNodes.prototype.collectShapes = function(lst) {
 

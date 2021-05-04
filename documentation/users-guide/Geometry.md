@@ -625,7 +625,7 @@ expressed in [**g/cm3**].
 
 #### Boxes - TGeoBBox Class
 
-Normally a box has to be build only with 3 parameters: `DX,DY,DZ`
+Normally a box has to be built only with 3 parameters: `DX,DY,DZ`
 representing the half-lengths on X, Y and Z-axes. In this case, the
 origin of the box will match the one of its reference frame and the box
 will range from: `-DX` to `DX` on X-axis, from `-DY` to `DY` on Y and

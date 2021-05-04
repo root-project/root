@@ -1764,7 +1764,7 @@ later with the method `SetWeight()` of the class
 **`TMultiLayerPerceptron`**. Two datasets must be defined before
 learning the network: a training dataset that is used when minimizing
 the error, and a test dataset that will avoid bias. Those two datasets
-can be build aside and then given to the network, or can be build from
+can be built aside and then given to the network, or can be built from
 a standard expression. By default, half of the events are put in both
 datasets.
 

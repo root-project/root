@@ -22,7 +22,7 @@ Box class. All shape primitives inherit from this, their
 
 ### Building boxes
 
- Normally a box has to be build only with 3 parameters : dx, dy, dz
+ Normally a box has to be built only with 3 parameters : dx, dy, dz
 representing the half lengths on X, Y and Z axis. In this case, the origin
 of the box will match the one of its reference frame. The translation of the
 origin is used only by the constructors of all other shapes in order to
