@@ -41,6 +41,7 @@ typedef struct {
 } d_iov_t;
 
 typedef struct {
+	char		unused; // silence [-Wextern-c-compat]
 } d_rank_list_t;
 
 /** Scatter/gather list for memory buffers */
@@ -400,6 +401,7 @@ typedef struct {
 } daos_iod_t;
 
 typedef struct {
+	char		unused; // silence [-Wextern-c-compat]
 } daos_iom_t;
 
 enum {
@@ -410,6 +412,7 @@ enum {
 static inline int daos_obj_generate_id(daos_obj_id_t *oid, daos_ofeat_t ofeats,
 		     daos_oclass_id_t cid, uint32_t args)
 {
+	(void)args;
 	uint64_t hdr;
 
 	/* TODO: add check at here, it should return error if user specified
@@ -447,6 +450,7 @@ int daos_obj_update(daos_handle_t oh, daos_handle_t th, uint64_t flags,
 
 /** daos properties, for pool or container */
 typedef struct {
+	char		unused; // silence [-Wextern-c-compat]
 } daos_prop_t;
 
 
@@ -458,6 +462,7 @@ typedef struct {
 
 /** Container information */
 typedef struct {
+	char		unused; // silence [-Wextern-c-compat]
 } daos_cont_info_t;
 
 d_rank_list_t *daos_rank_list_parse(const char *str, const char *sep);
@@ -474,6 +479,7 @@ int daos_cont_close(daos_handle_t coh, daos_event_t *ev);
 
 /** Storage pool */
 typedef struct {
+	char		unused; // silence [-Wextern-c-compat]
 } daos_pool_info_t;
 
 int daos_pool_connect(const uuid_t uuid, const char *grp,
