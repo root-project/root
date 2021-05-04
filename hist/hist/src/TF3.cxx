@@ -324,7 +324,7 @@ Double_t TF3::GetMaximumXYZ(Double_t &x, Double_t &y, Double_t &z)
 
 void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom, TRandom * rng)
 {
-   //  Check if integral array must be build
+   //  Check if integral array must be built
    Int_t i,j,k,cell;
    Double_t dx   = (fXmax-fXmin)/fNpx;
    Double_t dy   = (fYmax-fYmin)/fNpy;
