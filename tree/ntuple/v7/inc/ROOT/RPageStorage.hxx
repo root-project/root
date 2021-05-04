@@ -112,7 +112,7 @@ public:
 
       /// Returns true for a valid column handle; fColumn and fId should always either both
       /// be valid or both be invalid.
-      operator bool() const { return fId != kInvalidDescriptorId && fColumn; }
+      explicit operator bool() const { return fId != kInvalidDescriptorId && fColumn; }
    };
    /// The column handle identifies a column with the current open page storage
    using ColumnHandle_t = RColumnHandle;
