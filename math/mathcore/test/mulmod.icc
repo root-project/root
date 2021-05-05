@@ -111,10 +111,8 @@ TEST(mod_m, modulus)
 
    mod_m(mul, mod);
 
-   // mod_m does not provide the smallest value, but just a value smaller than
-   // 2 ** 576 that is congruent to mul; in this case, mul itself.
    for (int i = 0; i < 9; i++) {
-      EXPECT_EQ(mod[i], mul[i]);
+      EXPECT_EQ(mod[i], 0);
    }
 }
 
@@ -230,6 +228,8 @@ TEST(mod_m, r_max)
    }
 }
 
+// The modulus m = 2 ** 576 - 2 ** 240 + 1.
+
 TEST(mulmod, simple)
 {
    uint64_t in1[9] = {0};
@@ -247,6 +247,51 @@ TEST(mulmod, simple)
    }
    EXPECT_EQ(inout[3], 0x0000ffffffffffff);
    for (int i = 4; i < 9; i++) {
+      EXPECT_EQ(inout[i], 0);
+   }
+}
+
+TEST(mulmod, modulus)
+{
+   // in1 = m = 2 ** 576 - 2 ** 240 + 1
+   uint64_t in1[9] = {0};
+   in1[0] = 1;
+   in1[3] = 0xffff000000000000;
+   for (int i = 4; i < 9; i++) {
+      in1[i] = 0xffffffffffffffff;
+   }
+   uint64_t inout[9] = {0};
+   inout[0] = 1;
+   // After multiplying the two values, the result will be the modulus m.
+
+   mulmod(in1, inout);
+
+   // mulmod should provide the smallest value congruent to m; in this case 0.
+   for (int i = 0; i < 9; i++) {
+      EXPECT_EQ(inout[i], 0);
+   }
+}
+
+TEST(mulmod, multiple_modulus)
+{
+   // in1 = m = 2 ** 576 - 2 ** 240 + 1
+   uint64_t in1[9] = {0};
+   in1[0] = 1;
+   in1[3] = 0xffff000000000000;
+   for (int i = 4; i < 9; i++) {
+      in1[i] = 0xffffffffffffffff;
+   }
+   uint64_t inout[9];
+   for (int i = 0; i < 9; i++) {
+      inout[i] = 1;
+   }
+   // After multiplying the two values, the result will be a multiple of the
+   // modulus m.
+
+   mulmod(in1, inout);
+
+   // mulmod should provide the smallest value congruent to m; in this case 0.
+   for (int i = 0; i < 9; i++) {
       EXPECT_EQ(inout[i], 0);
    }
 }
