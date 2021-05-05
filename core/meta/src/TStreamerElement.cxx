@@ -2008,6 +2008,7 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
       tmp.fTitle = fTitle;
       tmp.fType = TVirtualStreamerInfo::kStreamer;
       tmp.fSize = fSize;
+      tmp.fArrayDim = fArrayDim;
       tmp.fArrayLength = fArrayLength;
       for(int i = 0; i < 5; ++i)
          tmp.fMaxIndex[i] = fMaxIndex[i];
