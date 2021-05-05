@@ -134,8 +134,7 @@ static void multiply9x9(const uint64_t *in1, const uint64_t *in2, uint64_t *out)
 ///
 /// \f$ m = 2^{576} - 2^{240} + 1 \f$
 ///
-/// Note that this function does *not* return the smallest value congruent to
-/// the modulus, it only guarantees a value smaller than \f$ 2^{576} \$!
+/// The result in out is guaranteed to be smaller than the modulus.
 static void mod_m(const uint64_t *mul, uint64_t *out)
 {
    uint64_t r[9] = {0};
@@ -220,7 +219,18 @@ static void mod_m(const uint64_t *mul, uint64_t *out)
    c += carry;
 
    // c = floor(r / 2 ** 576) has been computed along the way via the carry
-   // flags. Now to update r = r - c * m, it suffices to know c * (-2 ** 240 + 1)
+   // flags. Now if c = 0 and the value currently stored in r is greater or
+   // equal to m, we need cbar = 1 and subtract m, otherwise cbar = c. The
+   // value currently in r is greater or equal to m, if and only if one of
+   // the last 240 bits is set and the upper bits are all set.
+   bool greater_m = r[0] | r[1] | r[2] | (r[3] & 0x0000ffffffffffff);
+   greater_m &= (r[3] >> 48) == 0xffff;
+   for (int i = 4; i < 9; i++) {
+      greater_m &= (r[i] == UINT64_MAX);
+   }
+   c = c + (c == 0 && greater_m);
+
+   // To update r = r - c * m, it suffices to know c * (-2 ** 240 + 1)
    // because the 2 ** 576 will cancel out. Also note that c may be zero, but
    // the operation is still performed to avoid branching.
 
@@ -281,6 +291,8 @@ static void mod_m(const uint64_t *mul, uint64_t *out)
 ///
 /// \param[in] in1 first factor with 9 numbers of 64 bits each
 /// \param[inout] inout second factor and also the output of the same size
+///
+/// The result in inout is guaranteed to be smaller than the modulus.
 static void mulmod(const uint64_t *in1, uint64_t *inout)
 {
    uint64_t mul[2 * 9] = {0};
