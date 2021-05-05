@@ -9,6 +9,7 @@
 #include <set>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 
 #include "TMVA/SOFIE_common.hxx"
 #include "TMVA/ROperator.hxx"
