@@ -1,0 +1,59 @@
+
+Processing execWriteAfterOld.C...
+Warning in <TClass::Init>: no dictionary for class mystrarray is available
+Warning in <TClass::Init>: no dictionary for class container is available
+******************************************************************************
+*Tree    :t         : t                                                      *
+*Entries :        0 : Total =            7892 bytes  File  Size =          0 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Branch  :obj.                                                               *
+*Entries :        0 : BranchElement (see below)                              *
+*............................................................................*
+*Br    0 :obj.fDataTag : string                                              *
+*Entries :        0 : Total  Size=        517 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :obj.fOutputInstance : string                                       *
+*Entries :        0 : Total  Size=        545 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    2 :obj.fOutputNames[4] : string                                       *
+*Entries :        0 : Total  Size=        542 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    3 :vec       : Int_t vec_                                             *
+*Entries :        0 : Total  Size=       2757 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    4 :vec.fDataTag : string fDataTag[vec_]                               *
+*Entries :        0 : Total  Size=        589 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    5 :vec.fOutputInstance : string fOutputInstance[vec_]                 *
+*Entries :        0 : Total  Size=        617 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    6 :vec.fOutputNames[4] : string fOutputNames[vec_]                    *
+*Entries :        0 : Total  Size=        608 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Branch  :cont.                                                              *
+*Entries :        0 : BranchElement (see below)                              *
+*............................................................................*
+*Br    7 :cont.obj  : Int_t cont.obj_                                        *
+*Entries :        0 : Total  Size=       2847 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    8 :cont.obj.fDataTag : string fDataTag[cont.obj_]                     *
+*Entries :        0 : Total  Size=        619 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    9 :cont.obj.fOutputInstance : string fOutputInstance[cont.obj_]       *
+*Entries :        0 : Total  Size=        647 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   10 :cont.obj.fOutputNames[4] : string fOutputNames[cont.obj_]          *
+*Entries :        0 : Total  Size=        638 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
