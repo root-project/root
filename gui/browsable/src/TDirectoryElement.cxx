@@ -109,11 +109,20 @@ Element representing TKey from TDirectory
 
 class TKeyElement : public RElement {
    TDirectory *fDir{nullptr};
-   TKey *fKey{nullptr};
+   std::string fKeyName;
+   std::string fKeyTitle;
+   Short_t fKeyCycle{0};
+   std::string fKeyClass;
    std::shared_ptr<RElement> fElement; ///<! holder of read object
 
 public:
-   TKeyElement(TDirectory *dir, TKey *key) : fDir(dir), fKey(key) {}
+   TKeyElement(TDirectory *dir, TKey *key) : fDir(dir)
+   {
+      fKeyName = key->GetName();
+      fKeyTitle = key->GetTitle();
+      fKeyCycle = key->GetCycle();
+      fKeyClass = key->GetClassName();
+   }
 
    virtual ~TKeyElement() = default;
 
@@ -122,9 +131,9 @@ public:
    {
       if (fElement)
          return fElement->GetName();
-      std::string name = fKey->GetName();
+      std::string name = fKeyName;
       name.append(";");
-      name.append(std::to_string(fKey->GetCycle()));
+      name.append(std::to_string(fKeyCycle));
       return name;
    }
 
@@ -134,7 +143,7 @@ public:
       if (fElement)
          return fElement->GetTitle();
 
-      return fKey->GetTitle();
+      return fKeyTitle;
    }
 
    /** Create iterator for childs elements if any
@@ -145,12 +154,13 @@ public:
       if (fElement)
          return fElement->GetChildsIter();
 
-      std::string clname = fKey->GetClassName();
-
-      if (clname.find("TDirectory") == 0) {
-          auto subdir = fDir->GetDirectory(GetName().c_str());
-          if (!subdir) return nullptr;
-          return std::make_unique<TDirectoryLevelIter>(subdir);
+      if (fKeyClass.find("TDirectory") == 0) {
+         auto subdir = fDir->GetDirectory(fKeyName.c_str());
+         if (!subdir)
+            subdir = fDir->GetDirectory(GetName().c_str());
+         if (!subdir)
+            return nullptr;
+         return std::make_unique<TDirectoryLevelIter>(subdir);
       }
 
       auto obj = GetObject();
@@ -170,20 +180,18 @@ public:
       if (fElement)
          return fElement->GetObject();
 
-      std::string clname = fKey->GetClassName();
-
-      auto obj_class = TClass::GetClass(clname.c_str());
+      auto obj_class = TClass::GetClass(fKeyClass.c_str());
       if (!obj_class)
          return nullptr;
 
-      void *obj = fDir->GetObjectChecked(fKey->GetName(), obj_class);
+      void *obj = fDir->GetObjectChecked(fKeyName.c_str(), obj_class);
       if (!obj)
          return nullptr;
 
       TObject *tobj = (TObject *) obj_class->DynamicCast(TObject::Class(), obj);
 
       if (tobj) {
-         bool owned_by_dir = (fDir->FindObject(tobj) == tobj) || (clname == "TGeoManager");
+         bool owned_by_dir = (fDir->FindObject(tobj) == tobj) || (fKeyClass == "TGeoManager");
 
          return std::make_unique<TObjectHolder>(tobj, !owned_by_dir);
       }
@@ -191,20 +199,17 @@ public:
       return std::make_unique<RAnyObjectHolder>(obj_class, obj, true);
    }
 
-
    EActionKind GetDefaultAction() const override
    {
       if (fElement)
          return fElement->GetDefaultAction();
 
-      std::string clname = fKey->GetClassName();
-      if (clname.empty()) return kActNone;
-      if (clname == "TGeoManager") return kActGeom;
-      if (RProvider::CanDraw6(clname)) return kActDraw6;
-      if (RProvider::CanDraw7(clname)) return kActDraw7;
-      if (RProvider::CanHaveChilds(clname)) return kActBrowse;
+      if (fKeyClass.empty()) return kActNone;
+      if (fKeyClass == "TGeoManager") return kActGeom;
+      if (RProvider::CanDraw6(fKeyClass)) return kActDraw6;
+      if (RProvider::CanDraw7(fKeyClass)) return kActDraw7;
+      if (RProvider::CanHaveChilds(fKeyClass)) return kActBrowse;
       return kActNone;
-
    }
 
    bool IsCapable(EActionKind action) const override
@@ -212,16 +217,15 @@ public:
       if (fElement)
          return fElement->IsCapable(action);
 
-      std::string clname = fKey->GetClassName();
-      if (clname.empty()) return false;
+      if (fKeyClass.empty()) return false;
 
       switch(action) {
-         case kActBrowse: return RProvider::CanHaveChilds(clname);
+         case kActBrowse: return RProvider::CanHaveChilds(fKeyClass);
          case kActEdit: return true;
          case kActImage:
-         case kActDraw6: return RProvider::CanDraw6(clname); // if can draw in TCanvas, can produce image
-         case kActDraw7: return RProvider::CanDraw7(clname);
-         case kActGeom: return (clname == "TGeoManager");
+         case kActDraw6: return RProvider::CanDraw6(fKeyClass); // if can draw in TCanvas, can produce image
+         case kActDraw7: return RProvider::CanDraw7(fKeyClass);
+         case kActGeom: return (fKeyClass == "TGeoManager");
          default: return false;
       }
 
