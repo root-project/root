@@ -35,7 +35,6 @@ ROOT::Experimental::RLogChannel &ROOT::Experimental::BrowserLog() {
 \brief Way to browse (hopefully) everything in %ROOT
 */
 
-
 /////////////////////////////////////////////////////////////////////
 /// set top element for browsing
 
@@ -227,13 +226,25 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable
    if (path.empty())
       return fTopElement;
 
+   // first check direct match in cache
+   for (auto &entry : fCache)
+      if (entry.first == path)
+         return entry.second;
+
    // find best possible entry in cache
    int pos = 0;
    auto elem = fTopElement;
 
    for (auto &entry : fCache) {
+      if (entry.first.size() >= path.size())
+         continue;
+
       auto comp = Browsable::RElement::ComparePaths(path, entry.first);
-      if (comp > pos) { pos = comp; elem = entry.second; }
+
+      if ((comp > pos) && (comp == (int) entry.first.size())) {
+         pos = comp;
+         elem = entry.second;
+      }
    }
 
    while (pos < (int) path.size()) {
@@ -259,8 +270,7 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable
 
       auto subpath = path;
       subpath.resize(pos+1);
-      fCache[subpath] = elem;
-
+      fCache.emplace_back(subpath, elem);
       pos++; // switch to next element
    }
 
