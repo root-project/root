@@ -12,10 +12,6 @@
 
 #include <ROOT/RBrowser.hxx>
 
-#include <ROOT/Browsable/RGroup.hxx>
-#include <ROOT/Browsable/RWrapper.hxx>
-#include <ROOT/Browsable/RProvider.hxx>
-#include <ROOT/Browsable/TObjectHolder.hxx>
 #include <ROOT/Browsable/RSysFile.hxx>
 
 #include <ROOT/RLogger.hxx>
@@ -27,7 +23,6 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "TFolder.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
 #include "TRint.h"
@@ -134,29 +129,7 @@ RBrowser::RBrowser(bool use_rcanvas)
 {
    SetUseRCanvas(use_rcanvas);
 
-   auto comp = std::make_shared<Browsable::RGroup>("top","Root browser");
-
-   auto seldir = Browsable::RSysFile::ProvideTopEntries(comp);
-
-   std::unique_ptr<Browsable::RHolder> rootfold = std::make_unique<Browsable::TObjectHolder>(gROOT->GetRootFolder(), kFALSE);
-   auto elem_root = Browsable::RProvider::Browse(rootfold);
-   if (elem_root)
-      comp->Add(std::make_shared<Browsable::RWrapper>("root", elem_root));
-
-   std::unique_ptr<Browsable::RHolder> rootfiles = std::make_unique<Browsable::TObjectHolder>(gROOT->GetListOfFiles(), kFALSE);
-   auto elem_files = Browsable::RProvider::Browse(rootfiles);
-   if (elem_files) {
-      auto files = std::make_shared<Browsable::RWrapper>("ROOT Files", elem_files);
-      files->SetExpandByDefault(true);
-      comp->Add(files);
-      // if there are any open files, make them visible by default
-      if (elem_files->GetNumChilds() > 0)
-         seldir = {};
-   }
-
-   fBrowsable.SetTopElement(comp);
-
-   fBrowsable.SetWorkingPath(seldir);
+   fBrowsable.CreateDefaultElements();
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -207,6 +180,9 @@ std::string RBrowser::ProcessBrowserRequest(const std::string &msg)
 
    if (!request)
       return ""s;
+
+   if (request->path.empty() && fWidgets.empty() && fBrowsable.GetWorkingPath().empty())
+      fBrowsable.ClearCache();
 
    return "BREPL:"s + fBrowsable.ProcessRequest(*request.get());
 }
