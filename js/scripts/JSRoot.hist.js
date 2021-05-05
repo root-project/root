@@ -2490,7 +2490,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    /** @summary Returns true if stats box fill can be ingored
      * @private */
    THistPainter.prototype.isIgnoreStatsFill = function() {
-      return !this.getObject() || (!this.draw_content && !this.create_stats) || (this.options.Axis > 0);
+      return !this.getObject() || (!this.draw_content && !this.create_stats && !this.snapid) || (this.options.Axis > 0);
    }
 
    /** @summary Create stat box for histogram if required */
@@ -2503,7 +2503,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (!force && !this.options.ForceStat) {
          if (this.options.NoStat || histo.TestBit(TH1StatusBits.kNoStats) || !JSROOT.settings.AutoStat) return null;
 
-         if (!this.draw_content || !this.isMainPainter()) return null;
+         if ((this.options.Axis > 0) || !this.isMainPainter()) return null;
       }
 
       let stats = this.findStat(), st = JSROOT.gStyle,
@@ -4782,7 +4782,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       // this value used for logz scale drawing
       if (this.gminposbin === null) this.gminposbin = this.gmaxbin*1e-4;
 
-      if (this.options.Axis > 0) { // Paint histogram axis only
+      if (this.options.Axis > 0) {
+         // Paint histogram axis only
          this.draw_content = false;
       } else {
          this.draw_content = (this.gmaxbin > 0);
