@@ -21,7 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <map>
+#include <utility>
 
 namespace ROOT {
 namespace Experimental {
@@ -37,7 +37,7 @@ class RBrowserData {
 
    Browsable::RElementPath_t  fWorkingPath;             ///<! path showed in Breadcrumb
 
-   std::map<Browsable::RElementPath_t, std::shared_ptr<Browsable::RElement>> fCache; ///<! already requested elements
+   std::vector<std::pair<Browsable::RElementPath_t, std::shared_ptr<Browsable::RElement>>> fCache; ///<! already requested elements
 
    Browsable::RElementPath_t fLastPath;                  ///<! path to last used element
    std::shared_ptr<Browsable::RElement> fLastElement;    ///<! last element used in request
