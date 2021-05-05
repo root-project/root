@@ -1957,6 +1957,12 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
          R__b >> fCtype;
          R__b.CheckByteCount(R__s, R__c, TStreamerSTL::IsA());
       }
+      // In old versions (prior to v6.24/02) the value of fArrayDim was not stored properly.
+      if (fArrayDim == 0 && fArrayLength > 0) {
+         while(fArrayDim < 5 && fMaxIndex[fArrayDim] != 0) {
+            ++fArrayDim;
+         }
+      }
       if (fSTLtype == ROOT::kSTLmultimap || fSTLtype == ROOT::kSTLset) {
          // For a long time those where inverted in TStreamerElement
          // compared to the other definitions.  When we moved to version '4',
