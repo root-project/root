@@ -14,13 +14,18 @@ Implementation of the RANLUX++ generator
 
 RANLUX++ is an LCG equivalent of RANLUX using 576 bit numbers.
 
-Described in
+The idea of the generator (such as the initialization method) and the algorithm
+for the modulo operation are described in
 A. Sibidanov, *A revision of the subtract-with-borrow random numbergenerators*,
 *Computer Physics Communications*, 221(2017), 299-303,
 preprint https://arxiv.org/pdf/1705.03123.pdf
 
 The code is loosely based on the Assembly implementation by A. Sibidanov
 available at https://github.com/sibidanov/ranluxpp/.
+
+Compared to the original generator, this implementation contains a fix to ensure
+that the modulo operation of the LCG always returns the smallest value congruent
+to the modulus (based on notes by M. Lüscher).
 */
 
 #include "Math/RanluxppEngine.h"
