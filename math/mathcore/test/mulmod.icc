@@ -70,10 +70,7 @@ TEST(multiply9x9, max)
    // and the following Python program:
    //     >>> a = b = (1 << 576) - 1
    //     >>> mul = a * b
-   //     >>> while mul > 0:
-   //     ...     print(hex(mul & 0xffffffffffffffff))
-   //     ...     mul = mul >> 64
-   //     ...
+   //     >>> print(hex(mul))
    EXPECT_EQ(mul[0], 1);
    for (int i = 1; i < 9; i++) {
       EXPECT_EQ(mul[i], 0);
@@ -181,6 +178,11 @@ TEST(mod_m, pattern)
 
 TEST(mod_m, r_min)
 {
+   // To make r = t_0 - (t_1 + t_2) + (t_3 + t_2) * 2 ** 240 minimal (and
+   // negative!), we need t_0 = 0, t_2 = max (because it also aliases the
+   // upper bits of t_1) and t_3 = 0 (it aliases the lower bits of t_1, but
+   // is multiplied with 2 ** 240 for the second, positive term).
+
    uint64_t mul[18] = {0};
    mul[14] = 0xffffffffffff0000;
    for (int i = 15; i < 18; i++) {
@@ -204,6 +206,11 @@ TEST(mod_m, r_min)
 
 TEST(mod_m, r_max)
 {
+   // To make r = t_0 - (t_1 + t_2) + (t_3 + t_2) * 2 ** 240 maximal (and larger
+   // than 2 ** 576!), we need t_0 = max, t_2 = 0 (because it also aliases the
+   // upper bits of t_1) and t_3 = max (it aliases the lower bits of t_1, but is
+   // multiplied with 2 ** 240 for the second, positive term).
+
    uint64_t mul[18] = {0};
    for (int i = 0; i < 14; i++) {
       mul[i] = UINT64_MAX;
@@ -220,6 +227,27 @@ TEST(mod_m, r_max)
    EXPECT_EQ(mod[5], 0xfffffffffffeffff);
    for (int i = 6; i < 9; i++) {
       EXPECT_EQ(mod[i], 0xffffffffffffffff);
+   }
+}
+
+TEST(mulmod, simple)
+{
+   uint64_t in1[9] = {0};
+   uint64_t inout[9] = {0};
+   in1[4] = (uint64_t(1) << 32);
+   inout[4] = (uint64_t(1) << 32);
+   // After multiplying the two values, (2 ** 288) * (2 ** 288) = 2 ** 576.
+
+   mulmod(in1, inout);
+
+   // The same result as mod_m::simple above:
+   // inout = 2 ** 576 - m = 2 ** 240 - 1, all first 240 bits set.
+   for (int i = 0; i < 3; i++) {
+      EXPECT_EQ(inout[i], 0xffffffffffffffff);
+   }
+   EXPECT_EQ(inout[3], 0x0000ffffffffffff);
+   for (int i = 4; i < 9; i++) {
+      EXPECT_EQ(inout[i], 0);
    }
 }
 
@@ -246,7 +274,7 @@ TEST(powermod, mod)
    powermod(base, res, 576);
 
    // The same result as mod_m::simple above:
-   // mod = 2 ** 576 - m = 2 ** 240 - 1, all first 240 bits set.
+   // res = 2 ** 576 - m = 2 ** 240 - 1, all first 240 bits set.
    for (int i = 0; i < 3; i++) {
       EXPECT_EQ(res[i], 0xffffffffffffffff);
    }
