@@ -1038,7 +1038,7 @@ std::shared_ptr<REveGeomViewer> REveManager::ShowGeometry(const RWebDisplayArgs 
 }
 
 //____________________________________________________________________
-void REveManager::BeginChangeGuard()
+void REveManager::BeginChange()
 {
    {
       std::unique_lock lock(fServerState.fMutex);
@@ -1052,7 +1052,7 @@ void REveManager::BeginChangeGuard()
 }
 
 //____________________________________________________________________
-void REveManager::EndChangeGuard()
+void REveManager::EndChange()
 {
    GetScenes()->AcceptChanges(false);
    GetWorld()->EndAcceptingChanges();
@@ -1075,12 +1075,12 @@ RAII guard for locking Eve manager (ctor) and processing changes (dtor).
 //
 REveManager::ChangeGuard::ChangeGuard()
 {
-   gEve->BeginChangeGuard();
+   gEve->BeginChange();
 }
 
 REveManager::ChangeGuard::~ChangeGuard()
 {
-   gEve->EndChangeGuard();
+   gEve->EndChange();
 }
 
 /** \class REveManager::RExceptionHandler

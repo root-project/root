@@ -164,8 +164,8 @@ public:
    REveViewer *SpawnNewViewer(const char *name, const char *title = "");
    REveScene  *SpawnNewScene (const char *name, const char *title = "");
 
-   void BeginChangeGuard();
-   void EndChangeGuard();
+   void BeginChange();
+   void EndChange();
 
    void SceneSubscriberProcessingChanges(unsigned cinnId);
    void SceneSubscriberWaitingResponse(unsigned cinnId);
