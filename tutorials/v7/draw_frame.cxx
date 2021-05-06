@@ -86,12 +86,12 @@ void draw_frame()
 
    // draw line in the frame, allowed to set user coordinate
    auto line2 = subpads[1][0]->Draw<RLine>(RPadPos(20_user, 1.5_user), RPadPos(80_user, 8_user));
-   //line2->SetOnFrame(true); // configured via CSS "onframe"
+   //line2->SetOnFrame(true); // configured via CSS "onframe: true;"
 
    // draw line in the frame, but disable default cutting by the frame borders
    auto line3 = subpads[1][0]->Draw<RLine>(RPadPos(20_user, 8_user), RPadPos(80_user, 1.5_user));
-   //line3->SetOnFrame(true); // configured via CSS "onframe"
-   line3->SetCutByFrame(false);
+   //line3->SetOnFrame(true); // configured via CSS "onframe: true;"
+   line3->SetClipping(false); // can be configure by "clipping: false;" in CSS
 
    auto style = RStyle::Parse("frame { margin_left: 0.1; margin_right: 0.1; margin_all: 0.2; x_line_color_name: blue; y_line_color: green; } "
                               "title { margin: 0.02; height: 0.1; text_size: 20; }"

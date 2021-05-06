@@ -29,14 +29,14 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
        let line         = this.getObject(),
            pp           = this.getPadPainter(),
            onframe      = this.v7EvalAttr("onframe", false) ? pp.getFramePainter() : null,
-           cutbyframe   = onframe ? this.v7EvalAttr("cutbyframe", true) : false,
+           clipping     = onframe ? this.v7EvalAttr("clipping", true) : false,
            p1           = pp.getCoordinate(line.fP1, onframe),
            p2           = pp.getCoordinate(line.fP2, onframe),
            line_width   = this.v7EvalAttr("line_width", 1),
            line_style   = this.v7EvalAttr("line_style", 1),
            line_color   = this.v7EvalColor("line_color", "black");
 
-       this.createG(cutbyframe ? "main_layer" : (onframe ? "upper_layer" : false ));
+       this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 
        this.draw_g
            .append("svg:line")
