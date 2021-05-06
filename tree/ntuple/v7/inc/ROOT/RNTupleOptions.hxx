@@ -17,6 +17,7 @@
 #define ROOT7_RNTupleOptions
 
 #include <Compression.h>
+#include <ROOT/RNTupleUtil.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -46,6 +47,7 @@ All page sink classes need to support the common options.
 class RNTupleWriteOptions {
   int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
   ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
+  NTupleSize_t fNClusterEntries = 64000;
   bool fUseBufferedWrite = true;
 
 public:
@@ -57,6 +59,9 @@ public:
 
   ENTupleContainerFormat GetContainerFormat() const { return fContainerFormat; }
   void SetContainerFormat(ENTupleContainerFormat val) { fContainerFormat = val; }
+
+  NTupleSize_t GetNClusterEntries() const { return fNClusterEntries; }
+  void SetNClusterEntries(NTupleSize_t val) { fNClusterEntries = val; }
 
   bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
   void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
