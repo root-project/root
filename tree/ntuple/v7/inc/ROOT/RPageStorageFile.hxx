@@ -54,9 +54,6 @@ The written file can be either in ROOT format or in RNTuple bare format.
 */
 // clang-format on
 class RPageSinkFile : public RPageSink {
-public:
-   static constexpr std::size_t kDefaultElementsPerPage = 10000;
-
 private:
    /// I/O performance counters that get registered in fMetrics
    struct RCounters {

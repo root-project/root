@@ -234,6 +234,29 @@ TEST(RNTuple, ClusterEntries)
    EXPECT_EQ(20, ntuple->GetDescriptor().GetNClusters());
 }
 
+TEST(RNTuple, ElementsPerPage)
+{
+   FileRaii fileGuard("test_ntuple_elements_per_page.root");
+   auto model = RNTupleModel::Create();
+   auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+
+   {
+      RNTupleWriteOptions opt;
+      opt.SetNElementsPerPage(5);
+      auto ntuple = RNTupleWriter::Recreate(
+         std::move(model), "ntuple", fileGuard.GetPath(), opt
+      );
+      for (int i = 0; i < 100; i++) {
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   auto col0_pages = ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).Clone();
+   // 100 column elements / 5 elements per page
+   EXPECT_EQ(20, col0_pages.fPageInfos.size());
+}
+
 TEST(RNTupleModel, EnforceValidFieldNames)
 {
    auto model = RNTupleModel::Create();
