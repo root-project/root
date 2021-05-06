@@ -492,7 +492,7 @@ while test $# -gt 0; do
             fi
          done
          if test "$found" = "" ; then
-            errors="$errors--has-$target: unknown feature!\n"
+            errors="${errors}--has-$target: unknown feature!\n"
          else
             out="$out no"
          fi
