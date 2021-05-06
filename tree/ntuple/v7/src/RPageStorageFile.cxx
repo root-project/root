@@ -171,7 +171,7 @@ ROOT::Experimental::Detail::RPage
 ROOT::Experimental::Detail::RPageSinkFile::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    if (nElements == 0)
-      nElements = kDefaultElementsPerPage;
+      nElements = fOptions.GetNElementsPerPage();
    auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
    return fPageAllocator->NewPage(columnHandle.fId, elementSize, nElements);
 }

@@ -86,8 +86,6 @@ Currently, an object is allocated for each page + 3 additional objects (anchor/h
 // clang-format on
 class RPageSinkDaos : public RPageSink {
 private:
-   static constexpr std::size_t kDefaultElementsPerPage = 10000;
-
    RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
