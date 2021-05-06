@@ -80,16 +80,24 @@ void draw_frame()
    subpads[1][0]->Draw<RFrameTitle>("Frame2 with margins set via CSS");
 
    // draw line under the frame with line width 3
-   subpads[1][0]->Draw<RLine>(RPadPos(.1_normal, .1_normal), RPadPos(.9_normal , .1_normal))->AttrLine().SetWidth(3);
+   auto line1 = subpads[1][0]->Draw<RLine>(RPadPos(.1_normal, .1_normal), RPadPos(.9_normal , .1_normal));
+   line1->SetOnFrame(false);
+   line1->AttrLine().SetWidth(3);
 
    // draw line in the frame, allowed to set user coordinate
-   subpads[1][0]->Draw<RLine>(RPadPos(20_user-.1_normal, 2_user), RPadPos(80_user+.1_normal , 8_user))->SetOnFrame(true);
+   auto line2 = subpads[1][0]->Draw<RLine>(RPadPos(20_user, 1.5_user), RPadPos(80_user, 8_user));
+   //line2->SetOnFrame(true); // configured via CSS "onframe"
+
+   // draw line in the frame, but disable default cutting by the frame borders
+   auto line3 = subpads[1][0]->Draw<RLine>(RPadPos(20_user, 8_user), RPadPos(80_user, 1.5_user));
+   //line3->SetOnFrame(true); // configured via CSS "onframe"
+   line3->SetCutByFrame(false);
 
    auto style = RStyle::Parse("frame { margin_left: 0.1; margin_right: 0.1; margin_all: 0.2; x_line_color_name: blue; y_line_color: green; } "
-                              "title { margin: 0.02; height: 0.1; text_size: 20; }");
+                              "title { margin: 0.02; height: 0.1; text_size: 20; }"
+                              "line { onframe: true; }");
 
    subpads[1][0]->UseStyle(style);
-
 
    canvas->Show();
 
