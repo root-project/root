@@ -81,6 +81,7 @@ ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx LIBRARIES Core MathCo
 
 ROOT_ADD_GTEST(MulmodUnitOpt mulmod_opt.cxx)
 ROOT_ADD_GTEST(MulmodUnitNoInt128 mulmod_noint128.cxx)
+ROOT_ADD_GTEST(RanluxLCGUnit ranlux_lcg.cxx)
 
 ROOT_ADD_GTEST(RanluxppEngineTests RanluxppEngine.cxx
         LIBRARIES Core MathCore)

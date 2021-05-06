@@ -15,7 +15,7 @@
 
 using namespace ROOT::Math;
 
-TEST(RanluxppEngine, random2048)
+TEST(RanluxppEngine, DISABLED_random2048)
 {
    RanluxppEngine2048 rng(314159265);
    // Match the assembly implementation in skipping the first 11 numbers.
