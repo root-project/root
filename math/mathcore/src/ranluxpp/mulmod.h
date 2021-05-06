@@ -137,98 +137,13 @@ static void multiply9x9(const uint64_t *in1, const uint64_t *in2, uint64_t *out)
 /// The result in out is guaranteed to be smaller than the modulus.
 static void mod_m(const uint64_t *mul, uint64_t *out)
 {
-   uint64_t r[9] = {0};
-
-   // r = t0 - t1 (24 * 24 = 576 bits)
-   unsigned carry = 0;
+   uint64_t r[9];
+   // Assign r = t0
    for (int i = 0; i < 9; i++) {
-      uint64_t t0_i = mul[i];
-      uint64_t r_i = sub_overflow(t0_i, carry, carry);
-
-      uint64_t t1_i = mul[i + 9];
-      r_i = sub_carry(r_i, t1_i, carry);
-      r[i] = r_i;
+      r[i] = mul[i];
    }
-   int64_t c = -((int64_t)carry);
 
-   // r -= t2 (only 240 bits, so need to extend)
-   carry = 0;
-   for (int i = 0; i < 9; i++) {
-      uint64_t r_i = r[i];
-      r_i = sub_overflow(r_i, carry, carry);
-
-      uint64_t t2_bits = 0;
-      if (i < 4) {
-         t2_bits += mul[i + 14] >> 16;
-         if (i < 3) {
-            t2_bits += mul[i + 15] << 48;
-         }
-      }
-      r_i = sub_carry(r_i, t2_bits, carry);
-      r[i] = r_i;
-   }
-   c -= carry;
-
-   // r += (t3 + t2) * 2 ** 240
-   carry = 0;
-   {
-      uint64_t r_3 = r[3];
-      // 16 upper bits
-      uint64_t t2_bits = (mul[14] >> 16) << 48;
-      uint64_t t3_bits = (mul[9] << 48);
-
-      r_3 = add_carry(r_3, t2_bits, carry);
-      r_3 = add_carry(r_3, t3_bits, carry);
-
-      r[3] = r_3;
-   }
-   for (int i = 0; i < 3; i++) {
-      uint64_t r_i = r[i + 4];
-      r_i = add_overflow(r_i, carry, carry);
-
-      uint64_t t2_bits = (mul[14 + i] >> 32) + (mul[15 + i] << 32);
-      uint64_t t3_bits = (mul[9 + i] >> 16) + (mul[10 + i] << 48);
-
-      r_i = add_carry(r_i, t2_bits, carry);
-      r_i = add_carry(r_i, t3_bits, carry);
-
-      r[i + 4] = r_i;
-   }
-   {
-      uint64_t r_7 = r[7];
-      r_7 = add_overflow(r_7, carry, carry);
-
-      uint64_t t2_bits = (mul[17] >> 32);
-      uint64_t t3_bits = (mul[12] >> 16) + (mul[13] << 48);
-
-      r_7 = add_carry(r_7, t2_bits, carry);
-      r_7 = add_carry(r_7, t3_bits, carry);
-
-      r[7] = r_7;
-   }
-   {
-      uint64_t r_8 = r[8];
-      r_8 = add_overflow(r_8, carry, carry);
-
-      uint64_t t3_bits = (mul[13] >> 16) + (mul[14] << 48);
-
-      r_8 = add_carry(r_8, t3_bits, carry);
-
-      r[8] = r_8;
-   }
-   c += carry;
-
-   // c = floor(r / 2 ** 576) has been computed along the way via the carry
-   // flags. Now if c = 0 and the value currently stored in r is greater or
-   // equal to m, we need cbar = 1 and subtract m, otherwise cbar = c. The
-   // value currently in r is greater or equal to m, if and only if one of
-   // the last 240 bits is set and the upper bits are all set.
-   bool greater_m = r[0] | r[1] | r[2] | (r[3] & 0x0000ffffffffffff);
-   greater_m &= (r[3] >> 48) == 0xffff;
-   for (int i = 4; i < 9; i++) {
-      greater_m &= (r[i] == UINT64_MAX);
-   }
-   c = c + (c == 0 && greater_m);
+   int64_t c = compute_r(mul + 9, r);
 
    // To update r = r - c * m, it suffices to know c * (-2 ** 240 + 1)
    // because the 2 ** 576 will cancel out. Also note that c may be zero, but
@@ -257,7 +172,7 @@ static void mod_m(const uint64_t *mul, uint64_t *out)
    // (The assembly implementation shifts by 63, which gives the same result.)
    int64_t t1 = t2 >> 48;
 
-   carry = 0;
+   unsigned carry = 0;
    {
       uint64_t r_0 = r[0];
 
