@@ -25,12 +25,17 @@ available at https://github.com/sibidanov/ranluxpp/.
 
 Compared to the original generator, this implementation contains a fix to ensure
 that the modulo operation of the LCG always returns the smallest value congruent
-to the modulus (based on notes by M. Lüscher).
+to the modulus (based on notes by M. Lüscher). Also, the generator converts the
+LCG state back to RANLUX numbers (implementation based on notes by M. Lüscher).
+This avoids a bias in the generated numbers because the upper bits of the LCG
+state, that is smaller than the modulus \f$ m = 2^{576} - 2^{240} + 1 \f$ (not
+a power of 2!), have a higher probability of being 0 than 1.
 */
 
 #include "Math/RanluxppEngine.h"
 
 #include "ranluxpp/mulmod.h"
+#include "ranluxpp/ranlux_lcg.h"
 
 #include <cassert>
 #include <cstdint>
@@ -70,7 +75,8 @@ template <int w, int p>
 class RanluxppEngineImpl {
 
 private:
-   uint64_t fState[9]; ///< State of the generator
+   uint64_t fState[9]; ///< RANLUX state of the generator
+   unsigned fCarry;    ///< Carry bit of the RANLUX state
    int fPosition = 0;  ///< Current position in bits
 
    static constexpr const uint64_t *kA = RanluxppData<p>::kA;
@@ -79,7 +85,10 @@ private:
    /// Produce next block of random bits
    void Advance()
    {
-      mulmod(kA, fState);
+      uint64_t lcg[9];
+      to_lcg(fState, fCarry, lcg);
+      mulmod(kA, lcg);
+      to_ranlux(lcg, fState, fCarry);
       fPosition = 0;
    }
 
@@ -110,9 +119,10 @@ public:
    /// Initialize and seed the state of the generator
    void SetSeed(uint64_t s)
    {
-      fState[0] = 1;
+      uint64_t lcg[9];
+      lcg[0] = 1;
       for (int i = 1; i < 9; i++) {
-         fState[i] = 0;
+         lcg[i] = 0;
       }
 
       uint64_t a_seed[9];
@@ -121,8 +131,9 @@ public:
       powermod(a_seed, a_seed, uint64_t(1) << 48);
       // Skip another s states.
       powermod(a_seed, a_seed, s);
-      mulmod(a_seed, fState);
+      mulmod(a_seed, lcg);
 
+      to_ranlux(lcg, fState, fCarry);
       fPosition = 0;
    }
 
@@ -145,7 +156,11 @@ public:
 
       uint64_t a_skip[9];
       powermod(kA, a_skip, skip + 1);
-      mulmod(a_skip, fState);
+
+      uint64_t lcg[9];
+      to_lcg(fState, fCarry, lcg);
+      mulmod(a_skip, lcg);
+      to_ranlux(lcg, fState, fCarry);
 
       // Potentially skip numbers in the freshly generated block.
       int remaining = n - skip * nPerState;
