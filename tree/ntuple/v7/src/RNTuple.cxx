@@ -272,7 +272,6 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    : fSink(std::move(sink))
    , fModel(std::move(model))
    , fMetrics("RNTupleWriter")
-   , fClusterSizeEntries(kDefaultClusterSizeEntries)
    , fLastCommitted(0)
    , fNEntries(0)
 {
