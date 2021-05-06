@@ -25,12 +25,16 @@ namespace Experimental {
 class RAttrOnFrame {
 private:
    RAttrValue<bool> fOnFrame;       ///<! is drawable drawn on the frame or not
+   RAttrValue<bool> fCutByFrame;      ///<! if drawable should be cut by frame borders
 public:
 
-   RAttrOnFrame(RDrawable *drawable) : fOnFrame(drawable, "onframe", false) {}
+   RAttrOnFrame(RDrawable *drawable) : fOnFrame(drawable, "onframe", false), fCutByFrame(drawable, "cutbyframe", true) {}
 
    void SetOnFrame(bool on = true) { fOnFrame = on; }
    bool GetOnFrame() const { return fOnFrame; }
+
+   void SetCutByFrame(bool on = true) { fCutByFrame = on; }
+   bool GetCutByFrame() const { return fCutByFrame; }
 };
 
 } // namespace Experimental
