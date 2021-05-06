@@ -22,6 +22,7 @@
 #include "ROOT/RFrame.hxx"
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RStyle.hxx"
+#include "ROOT/RLine.hxx"
 #include "ROOT/RPad.hxx"
 
 // macro must be here while cling is not capable to load
@@ -78,10 +79,17 @@ void draw_frame()
 
    subpads[1][0]->Draw<RFrameTitle>("Frame2 with margins set via CSS");
 
+   // draw line under the frame with line width 3
+   subpads[1][0]->Draw<RLine>(RPadPos(.1_normal, .1_normal), RPadPos(.9_normal , .1_normal))->AttrLine().SetWidth(3);
+
+   // draw line in the frame, allowed to set user coordinate
+   subpads[1][0]->Draw<RLine>(RPadPos(20_user-.1_normal, 2_user), RPadPos(80_user+.1_normal , 8_user))->SetOnFrame(true);
+
    auto style = RStyle::Parse("frame { margin_left: 0.1; margin_right: 0.1; margin_all: 0.2; x_line_color_name: blue; y_line_color: green; } "
                               "title { margin: 0.02; height: 0.1; text_size: 20; }");
 
    subpads[1][0]->UseStyle(style);
+
 
    canvas->Show();
 

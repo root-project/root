@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,6 +11,7 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrLine.hxx>
+#include <ROOT/RAttrOnFrame.hxx>
 #include <ROOT/RPadPos.hxx>
 
 namespace ROOT {
@@ -20,17 +21,18 @@ namespace Experimental {
 \ingroup GrafROOT7
 \brief A simple line.
 \author Olivier Couet <Olivier.Couet@cern.ch>
+\author Sergey Linev <S.Linev@gsi.de>
 \date 2017-10-16
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RLine : public RDrawable {
+class RLine : public RDrawable, public RAttrOnFrame {
 
    RPadPos fP1, fP2;                  ///< line begin/end
    RAttrLine fAttrLine{this, "line"}; ///<! line attributes
 
 public:
-   RLine() : RDrawable("line") {}
+   RLine() : RDrawable("line"), RAttrOnFrame(this) {}
 
    RLine(const RPadPos &p1, const RPadPos &p2) : RLine()
    {
