@@ -967,6 +967,8 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
   // Step 2 - reorder tracked nodes
   std::sort(trackArgs.begin(), trackArgs.end(), [](RooAbsArg* left, RooAbsArg* right){
+    //LM: exclude same comparison. This avoids an issue when using sort in MacOS  versions
+    if (left == right) return false;
     return right->dependsOn(*left);
   });
 
