@@ -48,6 +48,7 @@ class RNTupleWriteOptions {
   int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
   ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
   NTupleSize_t fNClusterEntries = 64000;
+  NTupleSize_t fNElementsPerPage = 10000;
   bool fUseBufferedWrite = true;
 
 public:
@@ -62,6 +63,9 @@ public:
 
   NTupleSize_t GetNClusterEntries() const { return fNClusterEntries; }
   void SetNClusterEntries(NTupleSize_t val) { fNClusterEntries = val; }
+
+  NTupleSize_t GetNElementsPerPage() const { return fNElementsPerPage; }
+  void SetNElementsPerPage(NTupleSize_t val) { fNElementsPerPage = val; }
 
   bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
   void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
