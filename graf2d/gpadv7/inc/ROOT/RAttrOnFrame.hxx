@@ -23,18 +23,19 @@ namespace Experimental {
 */
 
 class RAttrOnFrame {
-private:
-   RAttrValue<bool> fOnFrame;       ///<! is drawable drawn on the frame or not
-   RAttrValue<bool> fCutByFrame;      ///<! if drawable should be cut by frame borders
+
+   RAttrValue<bool> fOnFrame;    ///<! is drawable drawn on the frame or not
+   RAttrValue<bool> fClipping;   ///<! if drawable should be clipped by frame
+
 public:
 
-   RAttrOnFrame(RDrawable *drawable) : fOnFrame(drawable, "onframe", false), fCutByFrame(drawable, "cutbyframe", true) {}
+   RAttrOnFrame(RDrawable *drawable) : fOnFrame(drawable, "onframe", false), fClipping(drawable, "clipping", true) {}
 
    void SetOnFrame(bool on = true) { fOnFrame = on; }
    bool GetOnFrame() const { return fOnFrame; }
 
-   void SetCutByFrame(bool on = true) { fCutByFrame = on; }
-   bool GetCutByFrame() const { return fCutByFrame; }
+   void SetClipping(bool on = true) { fClipping = on; }
+   bool GetClipping() const { return fClipping; }
 };
 
 } // namespace Experimental
