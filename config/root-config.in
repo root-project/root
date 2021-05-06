@@ -48,6 +48,7 @@ libdir=@libdir@
 incdir=@incdir@
 etcdir=@etcdir@
 tutdir=@tutdir@
+all_features="@all_features"
 features="@features@"
 configargs="@configargs@"
 altcc="@altcc@"
@@ -469,16 +470,26 @@ while test $# -gt 0; do
       ;;
     --has-*)
       ### Check for feature
-      f=`echo $1 | sed 's/--has-//'`
-      for c in $features ; do
-         if test "x$c" = "x$f" ; then
+      target=`echo $1 | sed 's/--has-//'`
+		found=""
+      for feature in $features ; do
+         if test "$feature" = "$target" ; then
             out="$out yes"
             break
          fi
-         c=""
+         feature=""
       done
-      if test "x$c" = "x" ; then
-         out="$out no"
+      if test "$feature" = "" ; then
+			for feature in $all_features ; do
+				if test "$feature" = "$target" ; then
+					found="$feature"
+				fi
+			done
+			if test "$found" = "" ; then
+				out="$out --has-$target: unknown feature!"
+			else
+				out="$out no"
+			fi
       fi
       ;;
     --prefix=*)
