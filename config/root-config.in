@@ -48,7 +48,7 @@ libdir=@libdir@
 incdir=@incdir@
 etcdir=@etcdir@
 tutdir=@tutdir@
-all_features="@all_features"
+all_features="@all_features@"
 features="@features@"
 configargs="@configargs@"
 altcc="@altcc@"
@@ -471,8 +471,13 @@ while test $# -gt 0; do
     --has-*)
       ### Check for feature
       target=`echo $1 | sed 's/--has-//'`
-		found=""
+      found=""
       for feature in $features ; do
+         if test "$target" = "" ; then
+            feature="<invalid>"
+            errors="$errors--has-: feature name is required!\n"
+            break
+         fi
          if test "$feature" = "$target" ; then
             out="$out yes"
             break
@@ -480,16 +485,17 @@ while test $# -gt 0; do
          feature=""
       done
       if test "$feature" = "" ; then
-			for feature in $all_features ; do
-				if test "$feature" = "$target" ; then
-					found="$feature"
-				fi
-			done
-			if test "$found" = "" ; then
-				out="$out --has-$target: unknown feature!"
-			else
-				out="$out no"
-			fi
+         for feature in $all_features ; do
+            if test "$feature" = "$target" ; then
+               found="$feature"
+               break
+            fi
+         done
+         if test "$found" = "" ; then
+            errors="$errors--has-$target: unknown feature!\n"
+         else
+            out="$out no"
+         fi
       fi
       ;;
     --prefix=*)
@@ -862,3 +868,7 @@ done
 
 ### Output the stuff
 echo $out
+if test "$errors" != "" ; then
+   echo -en "$errors"
+   exit 1
+fi
