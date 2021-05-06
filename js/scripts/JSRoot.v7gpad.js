@@ -1256,7 +1256,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           max = drawable.fLabels ? drawable.fLabels.length : drawable.fMax;
 
       // in vertical direction axis drawn in negative direction
-      if (drawable.fVertical) len = -len;
+      if (drawable.fVertical) len -= pp.getPadHeight();
 
       let smin = this.v7EvalAttr("zoommin"),
           smax = this.v7EvalAttr("zoommax");
@@ -2269,10 +2269,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       //   menu.addchk(pad.fLogz, "SetLogz", this.toggleAxisLog.bind(main,"z"));
       menu.add("separator");
 
-
-      menu.addchk(this.isTooltipAllowed(), "Show tooltips", function() {
-         this.setTooltipAllowed("toggle");
-      });
+      menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
       menu.addAttributesMenu(this, alone ? "" : "Frame ");
       menu.add("separator");
       menu.add("Save as frame.png", () => this.getPadPainter().saveAs("png", 'frame', 'frame.png'));
@@ -3698,39 +3695,42 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Calculates RPadLength value */
-   RPadPainter.prototype.getPadLength = function(vertical, len, ignore_user) {
-      if (!len) return 0;
+   RPadPainter.prototype.getPadLength = function(vertical, len, frame_painter) {
+      let rect = frame_painter ? frame_painter.getFrameRect() : this.getPadRect();
+      let res = vertical ? rect.height : 0;
+      if (!len) return res;
+
+      let sign = vertical ? -1 : 1;
+
       function GetV(indx, dflt) {
          return (len.fArr && (indx < len.fArr.length)) ? len.fArr[indx] : dflt;
       }
 
-      let norm = GetV(0, 0),
-          pixel = GetV(1, 0),
-          user = ignore_user ? undefined : GetV(2),
-          res = pixel;
-
-      if (norm) {
-         let rect = this.getPadRect();
-         res += (vertical ? rect.height : rect.width) * norm;
+      if (frame_painter) {
+         let user = GetV(2);
+         if ((user !== undefined) && frame_painter.grx && frame_painter.gry)
+            res = vertical ? frame_painter.gry(user) : frame_painter.grx(user);
       }
 
-      if (user !== undefined)
-          console.log('Do implement user coordinates');
+      let norm = GetV(0, 0), pixel = GetV(1, 0);
+
+      res += sign*pixel;
+
+      if (norm)
+         res += sign * (vertical ? rect.height : rect.width) * norm;
+
       return res;
    }
 
 
    /** @summary Calculates pad position for RPadPos values
-     * @param {object} pos - instance of RPadPos */
-   RPadPainter.prototype.getCoordinate = function(pos) {
-      let res = { x: 0, y: 0 };
-
-      if (pos) {
-         res.x = this.getPadLength(false, pos.fHoriz);
-         res.y = this.getPadHeight() - this.getPadLength(true, pos.fVert);
+     * @param {object} pos - instance of RPadPos
+     * @param {object} onframe - if drawing will be performed inside frame, frame painter */
+   RPadPainter.prototype.getCoordinate = function(pos, onframe) {
+      return {
+         x: this.getPadLength(false, pos.fHoriz, onframe),
+         y: this.getPadLength(true, pos.fVert, onframe)
       }
-
-      return res;
    }
 
    /** @summary Decode pad draw options
