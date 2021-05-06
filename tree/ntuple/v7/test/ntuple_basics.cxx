@@ -212,6 +212,27 @@ TEST(RNTuple, Clusters)
    EXPECT_EQ(24.0, (*rdFourVec)[1]);
 }
 
+TEST(RNTuple, ClusterEntries)
+{
+   FileRaii fileGuard("test_ntuple_cluster_entries.root");
+   auto model = RNTupleModel::Create();
+   auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+
+   {
+      RNTupleWriteOptions opt;
+      opt.SetNClusterEntries(5);
+      auto ntuple = RNTupleWriter::Recreate(
+         std::move(model), "ntuple", fileGuard.GetPath(), opt
+      );
+      for (int i = 0; i < 100; i++) {
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // 100 entries / 5 entries per cluster
+   EXPECT_EQ(20, ntuple->GetDescriptor().GetNClusters());
+}
 
 TEST(RNTupleModel, EnforceValidFieldNames)
 {
