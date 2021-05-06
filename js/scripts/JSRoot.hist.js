@@ -2480,7 +2480,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    /** @summary Returns true if stats box fill can be ingored
      * @private */
    THistPainter.prototype.isIgnoreStatsFill = function() {
-      return !this.getObject() || (!this.draw_content && !this.create_stats) || (this.options.Axis > 0);
+      return !this.getObject() || (!this.draw_content && !this.create_stats && !this.snapid) || (this.options.Axis > 0);
    }
 
    /** @summary Create stat box for histogram if required */
@@ -2493,7 +2493,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (!force && !this.options.ForceStat) {
          if (this.options.NoStat || histo.TestBit(TH1StatusBits.kNoStats) || !JSROOT.settings.AutoStat) return null;
 
-         if (!this.draw_content || !this.isMainPainter()) return null;
+         if ((this.options.Axis > 0) || !this.isMainPainter()) return null;
       }
 
       let stats = this.findStat(), st = JSROOT.gStyle,
@@ -2761,8 +2761,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       menu.add("header:"+ histo._typename + "::" + histo.fName);
 
-      if (this.draw_content) {
+      if (this.options.Axis <= 0)
          menu.addchk(this.toggleStat('only-check'), "Show statbox", () => this.toggleStat());
+
+      if (this.draw_content) {
          if (this.getDimension() == 1) {
             menu.add("User range X", () => this.changeUserRange(menu, "X"));
          } else {
@@ -2874,7 +2876,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       pp.addPadButton("arrow_up", "Toggle log y", "ToggleLogY", "PageUp");
       if (this.getDimension() > 1)
          pp.addPadButton("arrow_diag", "Toggle log z", "ToggleLogZ");
-      if (this.draw_content)
+      if (this.options.Axis <= 0)
          pp.addPadButton("statbox", 'Toggle stat box', "ToggleStatBox");
       if (!not_shown) pp.showPadButtons();
    }
@@ -4826,7 +4828,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       // this value used for logz scale drawing
       if (this.gminposbin === null) this.gminposbin = this.gmaxbin*1e-4;
 
-      if (this.options.Axis > 0) { // Paint histogram axis only
+      if (this.options.Axis > 0) {
+         // Paint histogram axis only
          this.draw_content = false;
       } else {
          this.draw_content = (this.gmaxbin > 0);
