@@ -4,6 +4,7 @@
 /// This macro generates a small RH3D, fills it with random values and
 /// draw it in RCanvas, using configured web browser
 ///
+/// \macro_image (json)
 /// \macro_code
 ///
 /// \date 2020-06-18

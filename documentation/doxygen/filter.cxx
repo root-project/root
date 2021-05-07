@@ -55,6 +55,7 @@
 ///  Some tutorials generate pictures (png or pdf) with `Print` or `SaveAs`.
 ///  Such pictures can be displayed with `\macro_image (picture_name.png[.pdf])`
 ///  When the option (js) is used the image is displayed as JavaScript.
+///  For ROOT 7 tutorials, when the option (json) is used the image is displayed as json file.
 ///
 ///  2. `\macro_code`
 ///  The macro code is shown.  A caption can be added: `\macro_code This is code`
@@ -324,6 +325,9 @@ void FilterTutorial()
          ReplaceAll(gLineString,"(nobatch)","");
          bool js = (gLineString.find("(js)") != string::npos);
          ReplaceAll(gLineString,"(js)","");
+         bool json = (gLineString.find("(json)") != string::npos);
+         ReplaceAll(gLineString,"(json)","");
+
          bool image_created_by_macro = (gLineString.find(".png)") != string::npos) ||
                                        (gLineString.find(".svg)") != string::npos) ||
                                        (gLineString.find(".pdf)") != string::npos);
@@ -339,10 +343,18 @@ void FilterTutorial()
          } else if (js) {
             string IN;
             IN = gImageName;
-            int i = IN.find(".C");
+            int i = IN.find(".");
             IN.erase(i,IN.length());
             ExecuteCommand(StringFormat("root -l -b -q \"makerootfile.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
                                          gFileName.c_str(), IN.c_str(), gOutDir.c_str()));
+            ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
+         } else if (json) {
+            string IN;
+            IN = gImageName;
+            int i = IN.find(".");
+            IN.erase(i,IN.length());
+            ExecuteCommand(StringFormat("root -l -b -q --web=batch \"makejsonfile.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                          gFileName.c_str(), IN.c_str(), gOutDir.c_str()));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else {
             if (gPython) {
