@@ -11,6 +11,7 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrMarker.hxx>
+#include <ROOT/RAttrOnFrame.hxx>
 #include <ROOT/RPadPos.hxx>
 
 #include <initializer_list>
@@ -26,13 +27,13 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RMarker : public RDrawable {
+class RMarker : public RDrawable, public RAttrOnFrame {
 
    RPadPos fP;                              ///< position
    RAttrMarker fMarkerAttr{this, "marker"}; ///<! marker attributes
 
 public:
-   RMarker() : RDrawable("marker") {}
+   RMarker() : RDrawable("marker"), RAttrOnFrame(this) {}
 
    RMarker(const RPadPos &p) : RMarker() { fP = p; }
 

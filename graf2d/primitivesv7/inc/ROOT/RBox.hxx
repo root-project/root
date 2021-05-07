@@ -11,6 +11,7 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrBox.hxx>
+#include <ROOT/RAttrOnFrame.hxx>
 #include <ROOT/RPadPos.hxx>
 
 #include <initializer_list>
@@ -27,17 +28,17 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RBox : public RDrawable {
+class RBox : public RDrawable, public RAttrOnFrame {
 
    RPadPos fP1, fP2;               ///< box corners coordinates
    RAttrBox fAttrBox{this, "box"}; ///<! box attributes
 
 protected:
    // constructor for derived classes
-   RBox(const std::string &subtype) : RDrawable(subtype) {}
+   RBox(const std::string &subtype) : RDrawable(subtype), RAttrOnFrame(this) {}
 
 public:
-   RBox() : RDrawable("box") {}
+   RBox() : RDrawable("box"), RAttrOnFrame(this) {}
 
    RBox(const RPadPos &p1, const RPadPos &p2) : RBox()
    {

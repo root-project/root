@@ -3721,7 +3721,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (norm)
          res += sign * (vertical ? getRect().height : getRect().width) * norm;
 
-      return res;
+      return Math.round(res);
    }
 
 
