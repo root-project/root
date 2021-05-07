@@ -29,7 +29,7 @@ class RAttrOnFrame {
 
 public:
 
-   RAttrOnFrame(RDrawable *drawable) : fOnFrame(drawable, "onframe", false), fClipping(drawable, "clipping", true) {}
+   RAttrOnFrame(RDrawable *drawable) : fOnFrame(drawable, "onframe", false), fClipping(drawable, "clipping", false) {}
 
    void SetOnFrame(bool on = true) { fOnFrame = on; }
    bool GetOnFrame() const { return fOnFrame; }

@@ -3696,28 +3696,30 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Calculates RPadLength value */
    RPadPainter.prototype.getPadLength = function(vertical, len, frame_painter) {
-      let rect = frame_painter ? frame_painter.getFrameRect() : this.getPadRect();
-      let res = vertical ? rect.height : 0;
-      if (!len) return res;
-
-      let sign = vertical ? -1 : 1;
-
-      function GetV(indx, dflt) {
-         return (len.fArr && (indx < len.fArr.length)) ? len.fArr[indx] : dflt;
-      }
+      let sign = vertical ? -1 : 1,
+          rect, res,
+          getV = (indx, dflt) => (indx < len.fArr.length) ? len.fArr[indx] : dflt,
+          getRect = () => {
+             if (!rect)
+                rect = frame_painter ? frame_painter.getFrameRect() : this.getPadRect();
+             return rect;
+          };
 
       if (frame_painter) {
-         let user = GetV(2);
-         if ((user !== undefined) && frame_painter.grx && frame_painter.gry)
-            res = vertical ? frame_painter.gry(user) : frame_painter.grx(user);
+         let user = getV(2), func = vertical ? "gry" : "grx";
+         if ((user !== undefined) && frame_painter[func])
+            res = frame_painter[func](user);
       }
 
-      let norm = GetV(0, 0), pixel = GetV(1, 0);
+      if (res === undefined)
+         res = vertical ? getRect().height : 0;
+
+      let norm = getV(0, 0), pixel = getV(1, 0);
 
       res += sign*pixel;
 
       if (norm)
-         res += sign * (vertical ? rect.height : rect.width) * norm;
+         res += sign * (vertical ? getRect().height : getRect().width) * norm;
 
       return res;
    }
@@ -3725,11 +3727,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Calculates pad position for RPadPos values
      * @param {object} pos - instance of RPadPos
-     * @param {object} onframe - if drawing will be performed inside frame, frame painter */
-   RPadPainter.prototype.getCoordinate = function(pos, onframe) {
+     * @param {object} frame_painter - if drawing will be performed inside frame, frame painter */
+   RPadPainter.prototype.getCoordinate = function(pos, frame_painter) {
       return {
-         x: this.getPadLength(false, pos.fHoriz, onframe),
-         y: this.getPadLength(true, pos.fVert, onframe)
+         x: this.getPadLength(false, pos.fHoriz, frame_painter),
+         y: this.getPadLength(true, pos.fVert, frame_painter)
       }
    }
 
