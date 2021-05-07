@@ -150,6 +150,7 @@ private:
    RAttrAxis fAttrX{this, "x"};                   ///<! drawing attributes for X axis
    RAttrAxis fAttrY{this, "y"};                   ///<! drawing attributes for Y axis
    RAttrAxis fAttrZ{this, "z"};                   ///<! drawing attributes for Z axis
+   RAttrValue<bool> fDrawAxes{this, "drawaxes", false}; ///<! draw axes by frame
    RAttrValue<bool> fGridX{this, "gridx", false}; ///<! show grid for X axis
    RAttrValue<bool> fGridY{this, "gridy", false}; ///<! show grid for Y axis
    RAttrValue<bool> fSwapX{this, "swapx", false}; ///<! swap position of X axis
@@ -196,8 +197,10 @@ public:
       }
    };
 
-
    RFrame(TRootIOCtor*) : RFrame() {}
+
+   bool GetDrawAxes() const { return fDrawAxes; }
+   RFrame &SetDrawAxes(bool on = true) { fDrawAxes = on; return *this; }
 
    const RAttrMargins &GetMargins() const { return fMargins; }
    RFrame &SetMargins(const RAttrMargins &margins) { fMargins = margins; return *this; }
