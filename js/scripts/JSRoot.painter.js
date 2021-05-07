@@ -1872,32 +1872,39 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.getG = function() { return this.draw_g; }
 
    /** @summary (re)creates svg:g element for object drawings
-     * @desc either one attach svg:g to pad list of primitives (default)
-     * or svg:g element created in specified frame layer (default main_layer)
-     * @param {boolean} [frame_layer] - when specified, <g> element will be created inside frame, otherwise in the pad
+     * @desc either one attach svg:g to pad primitives (default)
+     * or svg:g element created in specified frame layer ("main_layer" will be used when true specified)
+     * @param {boolean|string} [frame_layer] - when specified, <g> element will be created inside frame layer, otherwise in the pad
      * @protected */
    ObjectPainter.prototype.createG = function(frame_layer) {
-      if (this.draw_g) {
-         // one should keep svg:g element on its place
-         // d3.selectAll(this.draw_g.node().childNodes).remove();
-         this.draw_g.selectAll('*').remove();
-      } else if (frame_layer) {
+
+      let layer;
+
+      if (frame_layer) {
          let frame = this.getFrameSvg();
-         if (frame.empty()) return frame;
+         if (frame.empty()) {
+            console.error('Not found frame to create g element inside');
+            return frame;
+         }
          if (typeof frame_layer != 'string') frame_layer = "main_layer";
-         let layer = frame.select("." + frame_layer);
-         if (layer.empty()) layer = frame.select(".main_layer");
-         this.draw_g = layer.append("svg:g");
+         layer = frame.select("." + frame_layer);
       } else {
-         let layer = this.getLayerSvg("primitives_layer");
+         layer = this.getLayerSvg("primitives_layer");
+      }
+
+      if (this.draw_g && this.draw_g.node().parentNode !== layer.node()) {
+         console.log('g element chanes its layer!!');
+         this.removeG();
+      }
+
+      if (this.draw_g) {
+         // clear all elements, keep g element on its place
+         this.draw_g.selectAll('*').remove();
+      } else {
          this.draw_g = layer.append("svg:g");
 
-         // layer.selectAll(".most_upper_primitives").raise();
-         let up = [], chlds = layer.node().childNodes;
-         for (let n = 0; n < chlds.length; ++n)
-            if (d3.select(chlds[n]).classed("most_upper_primitives")) up.push(chlds[n]);
-
-         up.forEach(top => { d3.select(top).raise(); });
+         if (!frame_layer)
+            layer.selectChildren(".most_upper_primitives").raise();
       }
 
       // set attributes for debugging
