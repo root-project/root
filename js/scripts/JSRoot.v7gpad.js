@@ -914,7 +914,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (res)
          axis_g.append("svg:path")
                .attr("d", res)
-               .style('stroke', this.ticksColor || this.lineatt.color);
+               .style('stroke', this.ticksColor || this.lineatt.color)
+               .style('stroke-width', !this.ticksWidth || (this.ticksWidth == 1) ? null : this.ticksWidth);
 
        let gap0 = Math.round(0.25*this.ticksSize), gap = Math.round(1.25*this.ticksSize);
        return { "-1": (side > 0) || ticks_plusminus ? gap : gap0,
@@ -1121,6 +1122,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.ticksSize = this.v7EvalLength("ticks_size", this.scaling_size, 0.02);
       this.ticksSide = this.v7EvalAttr("ticks_side", "normal");
       this.ticksColor = this.v7EvalColor("ticks_color", "");
+      this.ticksWidth = this.v7EvalAttr("ticks_width", 1);
       this.labelsOffset = this.v7EvalLength("labels_offset", this.scaling_size, 0);
 
       this.fTitle = this.v7EvalAttr("title", "");
@@ -1504,6 +1506,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return this.fLastEventPnt;
    }
 
+   /** @summary Update graphical attributes */
    RFramePainter.prototype.updateAttributes = function(force) {
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
 
@@ -1642,11 +1645,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.yaxis = yaxis;
       this.zaxis = zaxis;
 
-      let min, max;
-
       if (this.xmin == this.xmax) {
-         min = this.v7EvalAttr("x_min");
-         max = this.v7EvalAttr("x_max");
+         let min = this.v7EvalAttr("x_min"),
+             max = this.v7EvalAttr("x_max");
 
          if (min !== undefined) xmin = min;
          if (max !== undefined) xmax = max;
@@ -1668,8 +1669,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (this.ymin == this.ymax) {
-         min = this.v7EvalAttr("y_min");
-         max = this.v7EvalAttr("y_max");
+         let min = this.v7EvalAttr("y_min"),
+             max = this.v7EvalAttr("y_max");
 
          if (min !== undefined) ymin = min;
          if (max !== undefined) ymax = max;
@@ -1691,8 +1692,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (this.zmin == this.zmax) {
-         min = this.v7EvalAttr("z_min");
-         max = this.v7EvalAttr("z_max");
+         let min = this.v7EvalAttr("z_min"),
+             max = this.v7EvalAttr("z_max");
 
          if (min !== undefined) zmin = min;
          if (max !== undefined) zmax = max;
@@ -2010,9 +2011,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               .attr("height", h)
               .attr("viewBox", "0 0 " + w + " " + h);
 
-      if (JSROOT.batch_mode) return;
+      let promise = Promise.resolve(true);
 
-      JSROOT.require(['interactive']).then(inter => {
+      if (this.v7EvalAttr("drawaxes")) {
+         this.setAxesRanges();
+         promise = this.drawAxes();
+      }
+
+      if (JSROOT.batch_mode) return promise;
+
+      return promise.then(() => JSROOT.require(['interactive'])).then(inter => {
          top_rect.attr("pointer-events", "visibleFill");  // let process mouse events inside frame
          inter.FrameInteractive.assign(this);
          this.addBasicInteractivity();
@@ -4405,7 +4413,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    function drawPadSnapshot(divid, snap /*, opt*/) {
       let painter = new RCanvasPainter(divid, null);
       painter.normal_canvas = false;
-      painter.batch_mode = true;
+      painter.batch_mode = JSROOT.batch_mode;
       return painter.redrawPadSnap(snap).then(() => {
          painter.showPadButtons();
          return painter;

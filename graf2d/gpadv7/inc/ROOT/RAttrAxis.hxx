@@ -14,6 +14,7 @@
 #include <ROOT/RAttrText.hxx>
 #include <ROOT/RAttrValue.hxx>
 #include <ROOT/RPadLength.hxx>
+#include "TMath.h"
 
 namespace ROOT {
 namespace Experimental {
@@ -28,6 +29,8 @@ namespace Experimental {
 
 class RAttrAxis : public RAttrBase {
 
+   RAttrValue<double> fMin{this, "min", 0.};                             ///<! axis min
+   RAttrValue<double> fMax{this, "max", 0.};                             ///<! axis max
    RAttrValue<double> fZoomMin{this, "zoommin", 0.};                     ///<! axis zoom min
    RAttrValue<double> fZoomMax{this, "zoommax", 0.};                     ///<! axis zoom max
    RAttrValue<double> fLog{this, "log", 0};                              ///<! log scale, <1 off, 1 - base10, 2 - base 2, 2.71 - exp, 3, 4, ...
@@ -41,6 +44,7 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<std::string> fTicksSide{this, "ticks_side", "normal"};     ///<! ticks position - normal, invert, both
    RAttrValue<RPadLength> fTicksSize{this, "ticks_size", 0.02_normal};   ///<! ticks size
    RAttrValue<RColor> fTicksColor{this, "ticks_color", RColor::kBlack};  ///<! ticks color
+   RAttrValue<int> fTicksWidth{this, "ticks_width", 1};                  ///<! ticks width
    RAttrText fLabelsAttr{this, "labels"};                                ///<! text attributes for labels
    RAttrValue<RPadLength> fLabelsOffset{this, "labels_offset", {}};      ///<! axis labels offset - relative
    RAttrValue<bool> fLabelsCenter{this, "labels_center", false};         ///<! center labels
@@ -50,6 +54,16 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<RPadLength> fTitleOffset{this, "title_offset", {}};        ///<! axis title offset - relative
 
    R__ATTR_CLASS(RAttrAxis, "axis");
+
+   RAttrAxis &SetMin(double min) { fMin = min; return *this; }
+   RAttrAxis &SetMax(double max) { fMax = max; return *this; }
+   double GetMin() const { return fMin; }
+   double GetMax() const { return fMax; }
+   bool HasMin() const { return fMin.Has(); }
+   bool HasMax() const { return fMax.Has(); }
+
+   RAttrAxis &SetMinMax(double min, double max) { SetMin(min); SetMax(max); return *this; }
+   void ClearMinMax() { fMin.Clear(); fMax.Clear(); }
 
    RAttrAxis &SetZoomMin(double min) { fZoomMin = min; return *this; }
    RAttrAxis &SetZoomMax(double max) { fZoomMax = max; return *this; }
@@ -63,6 +77,10 @@ class RAttrAxis : public RAttrBase {
 
    RAttrAxis &SetLog(double base = 10) { fLog = (base < 1) ? 0 : base; return *this; }
    double GetLog() const { return fLog; }
+   bool IsLogScale() const { return GetLog() > 0.999999; }
+   bool IsLog10() const { auto l = GetLog(); return (TMath::Abs(l-1.) < 1e-6) || (TMath::Abs(l-10.) < 1e-6); }
+   bool IsLog2() const { return TMath::Abs(GetLog() - 2.) < 1e-6; }
+   bool IsLn() const { return TMath::Abs(GetLog() - 2.7) < 0.1; }
 
    RAttrAxis &SetReverse(bool on = true) { fReverse = on; return *this; }
    bool GetReverse() const { return fReverse; }
@@ -105,6 +123,9 @@ class RAttrAxis : public RAttrBase {
 
    RAttrAxis &SetTicksColor(const RColor &color) { fTicksColor = color; return *this; }
    RColor GetTicksColor() const { return fTicksColor; }
+
+   RAttrAxis &SetTicksWidth(int width) { fTicksWidth = width; return *this; }
+   int GetTicksWidth() const { return fTicksWidth; }
 
    RAttrAxis &SetLabelsOffset(const RPadLength &len) { fLabelsOffset = len; return *this; }
    RPadLength GetLabelsOffset() const { return fLabelsOffset; }
