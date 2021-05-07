@@ -251,7 +251,6 @@ private:
    /// Needs to be destructed before fSink
    std::unique_ptr<RNTupleModel> fModel;
    Detail::RNTupleMetrics fMetrics;
-   NTupleSize_t fClusterSizeEntries;
    NTupleSize_t fLastCommitted;
    NTupleSize_t fNEntries;
 
