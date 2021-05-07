@@ -25,7 +25,7 @@ available at https://github.com/sibidanov/ranluxpp/.
 
 #include "Math/RanluxppEngine.h"
 
-#include "mulmod.h"
+#include "ranluxpp/mulmod.h"
 
 #include <cassert>
 #include <cstdint>
