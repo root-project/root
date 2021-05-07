@@ -104,8 +104,8 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:MetaCling>
         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
 
-string(TOUPPER ${LLVM_BUILD_TYPE} THE_BUILD_TYPE)
-if(${THE_BUILD_TYPE} STREQUAL DEBUG OR ${THE_BUILD_TYPE} STREQUAL RELWITHDEBINFO)
+string(TOUPPER "${LLVM_BUILD_TYPE}" THE_BUILD_TYPE)
+if("${THE_BUILD_TYPE}" STREQUAL DEBUG OR "${THE_BUILD_TYPE}" STREQUAL RELWITHDEBINFO)
   # When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.
   add_dependencies(Cling rootcling_stage1)
 endif()
