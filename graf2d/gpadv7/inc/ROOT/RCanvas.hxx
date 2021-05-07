@@ -123,11 +123,19 @@ public:
       return fPainter->AddPanel(panel->GetWindow());
    }
 
-   // Get modify counter
+   /// Get modify counter
    uint64_t GetModified() const { return fModified; }
 
    // Set newest version to all primitives
    void Modified() { SetDrawableVersion(IncModified()); }
+
+   /// Set newest version to specified drawable
+   void Modified(std::shared_ptr<RDrawable> drawable)
+   {
+      // TODO: may be check that drawable belong to the canvas
+      if (drawable)
+         drawable->SetDrawableVersion(IncModified());
+   }
 
    // Return if canvas was modified and not yet updated
    bool IsModified() const;
