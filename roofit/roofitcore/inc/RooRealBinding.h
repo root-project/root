@@ -34,6 +34,7 @@ public:
 
   virtual Double_t operator()(const Double_t xvector[]) const;
   virtual RooSpan<const double> getValues(std::vector<RooSpan<const double>> coordinates) const;
+  RooSpan<const double> getValuesOfBoundFunction(RooBatchCompute::RunContext& evalData) const;
   virtual Double_t getMinLimit(UInt_t dimension) const;
   virtual Double_t getMaxLimit(UInt_t dimension) const;
 
@@ -43,6 +44,8 @@ public:
   virtual const char* getName() const ; 
 
   virtual std::list<Double_t>* binBoundaries(Int_t) const ;
+  /// Return a pointer to the observable that defines the `i`-th dimension of the function.
+  RooAbsRealLValue* observable(unsigned int i) const { return i < _vars.size() ? _vars[i] : nullptr; }
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
 
 protected:

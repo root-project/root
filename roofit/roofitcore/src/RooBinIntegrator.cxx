@@ -254,7 +254,7 @@ Double_t RooBinIntegrator::integral(const Double_t *)
 
       // Reset computation results to only contain known bin centres, and keep all memory intact:
       _evalData->spans = _evalDataOrig->spans;
-      auto results = realBinding->getValues(*_evalData);
+      auto results = realBinding->getValuesOfBoundFunction(*_evalData);
       assert(results.size() == binb.size() - 1);
 
       for (unsigned int ibin = 0; ibin < binb.size() - 1; ++ibin) {

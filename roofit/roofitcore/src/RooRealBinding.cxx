@@ -197,6 +197,8 @@ Double_t RooRealBinding::operator()(const Double_t xvector[]) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the bound object at all locations indicated by the data in `coordinates`.
+/// If `_clipInvalid` is set, the function is set to zero at all points in the arguments
+/// that are not within the range of the observables.
 /// \param coordinates Vector of spans that contain the points where the function should be evaluated.
 /// The ordinal position in the vector corresponds to the ordinal position in the set of
 /// {observables, parameters} that were passed to the constructor.
@@ -233,8 +235,7 @@ RooSpan<const double> RooRealBinding::getValues(std::vector<RooSpan<const double
   if (!parametersValid)
     return {};
 
-  auto results = _func->getValues(*_evalData, _nset);
-  assert(coordinates.front().size() == results.size());
+  auto results = getValuesOfBoundFunction(*_evalData);
 
   if (_clipInvalid) {
     RooSpan<double> resultsWritable(_evalData->getWritableBatch(_func));
@@ -254,6 +255,18 @@ RooSpan<const double> RooRealBinding::getValues(std::vector<RooSpan<const double
   }
 
   return results;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the bound object at all locations indicated by the data in `evalData`.
+/// \see RooAbsReal::getValues().
+/// \param[in/out] evalData Struct with spans pointing to the data to be used for evaluation.
+/// The spans can either have a size of `n`, in which case a batch of `n` results is returned, or they can have
+/// a size of 1. In the latter case, the value in the span is broadcast to all `n` events.
+/// \return Batch of function values for each coordinate given in the input spans.
+RooSpan<const double> RooRealBinding::getValuesOfBoundFunction(RooBatchCompute::RunContext& evalData) const {
+  return _func->getValues(evalData, _nset);
 }
 
 
