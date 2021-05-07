@@ -134,7 +134,7 @@ protected:
    // MIR execution
    std::thread       fMIRExecThread;
    ServerState       fServerState;
-   std::unordered_map<std::string, TMethodCall*> fMethCallMap;
+   std::unordered_map<std::string, std::shared_ptr<TMethodCall> > fMethCallMap;
 
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);

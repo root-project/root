@@ -184,8 +184,6 @@ REveManager::~REveManager()
    fHighlight->DecDenyDestroy();
    fSelection->DecDenyDestroy();
 
-   for (auto i = fMethCallMap.begin(); i != fMethCallMap.end(); ++i) delete i->second;
-
    delete fGeometryAliases;
    delete fGeometries;
    delete fVizDB;
@@ -873,7 +871,7 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
          throw eh + "Dynamic cast from REveElement to '" + mir->fCtype + "' failed.";
 
       std::string tag(mir->fCtype + "::" + m.str(1));
-      TMethodCall *mc;
+      std::shared_ptr<TMethodCall> mc;
 
       auto mmi = fMethCallMap.find(tag);
       if (mmi != fMethCallMap.end())
@@ -885,7 +883,7 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
          const TMethod *meth = call_cls->GetMethodAllAny(m.str(1).c_str());
          if ( ! meth)
             throw eh + "Can not find TMethod matching '" + m.str(1) + "'.";
-         mc = new TMethodCall(meth);
+         mc = std::make_shared<TMethodCall>(meth);
          fMethCallMap.insert(std::make_pair(tag, mc));
       }
 
