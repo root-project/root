@@ -8,7 +8,11 @@
 
 import ROOT
 import array
-import numpy as np
+try:
+    import numpy as np
+except:
+    print("Failed to import numpy.")
+    exit()
 
 ## example 1D function
 
