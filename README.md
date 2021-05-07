@@ -69,7 +69,7 @@ Make a directory for building
 Run cmake and make
 
     $ cmake ../root
-    $ make -j8
+    $ make -jn # where n is the number of cores 
 
 Setup and run ROOT
 
