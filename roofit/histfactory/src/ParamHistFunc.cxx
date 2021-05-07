@@ -45,6 +45,7 @@
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooWorkspace.h"
+#include "RunContext.h"
 
 #include "TH1.h"
 
@@ -580,6 +581,48 @@ Double_t ParamHistFunc::evaluate() const
   return getParameter().getVal();
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find all bins corresponding to the values of the observables in `evalData`, and evaluate
+/// the associated parameters.
+/// \param[in/out] evalData Input/output data for evaluating the ParamHistFunc.
+/// \param[in] normSet Normalisation set passed on to objects that are serving values to us.
+RooSpan<double> ParamHistFunc::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  std::vector<double> oldValues;
+  std::vector<RooSpan<const double>> data;
+  std::size_t batchSize = 0;
+
+  // Retrieve data for all variables
+  for (auto arg : _dataVars) {
+    const auto* var = static_cast<RooRealVar*>(arg);
+    oldValues.push_back(var->getVal());
+    data.push_back(var->getValues(evalData, normSet));
+    batchSize = std::max(batchSize, data.back().size());
+  }
+
+  // Run computation for each entry in the dataset
+  RooSpan<double> output = evalData.makeBatch(this, batchSize);
+
+  for (std::size_t i = 0; i < batchSize; ++i) {
+    for (unsigned int j = 0; j < _dataVars.size(); ++j) {
+      assert(i < data[j].size());
+      auto& var = static_cast<RooRealVar&>(_dataVars[j]);
+      var.setCachedValue(data[j][i], /*notifyClients=*/false);
+    }
+
+    const auto index = _dataSet.getIndex(_dataVars, /*fast=*/true);
+    const RooRealVar& param = getParameter(index);
+    output[i] = param.getVal();
+  }
+
+  // Restore old values
+  for (unsigned int j = 0; j < _dataVars.size(); ++j) {
+    auto& var = static_cast<RooRealVar&>(_dataVars[j]);
+    var.setCachedValue(oldValues[j], /*notifyClients=*/false);
+  }
+
+  return output;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise that all integrals can be handled internally.
