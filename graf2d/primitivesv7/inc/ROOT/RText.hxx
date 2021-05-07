@@ -11,6 +11,7 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrText.hxx>
+#include <ROOT/RAttrOnFrame.hxx>
 #include <ROOT/RPadPos.hxx>
 
 #include <string>
@@ -27,14 +28,14 @@ namespace Experimental {
 welcome!
 */
 
-class RText : public RDrawable {
+class RText : public RDrawable, public RAttrOnFrame {
 
    std::string fText;                 ///< text to display
    RPadPos fPos;                      ///< position
    RAttrText fAttrText{this, "text"}; ///<! text attributes
 
 public:
-   RText() : RDrawable("text") {}
+   RText() : RDrawable("text"), RAttrOnFrame(this) {}
 
    RText(const std::string &txt) : RText() { fText = txt; }
 
