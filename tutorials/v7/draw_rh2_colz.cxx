@@ -4,6 +4,7 @@
 /// This macro generates a small V7 TH2D, fills it with random values and
 /// draw it in a V7 canvas, using configured web browser
 ///
+/// \macro_image (json)
 /// \macro_code
 ///
 /// \date 2020-03-04

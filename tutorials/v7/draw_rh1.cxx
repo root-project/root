@@ -4,6 +4,7 @@
 /// This macro generates two RH1D, fills them and draw with different options in RCanvas.
 /// The canvas is display in the web browser
 ///
+/// \macro_image (json)
 /// \macro_code
 ///
 /// \date 2015-03-22
