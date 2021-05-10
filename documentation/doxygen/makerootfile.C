@@ -42,18 +42,28 @@ void makerootfile(const char *MacroName, const char *IN, const char *OutDir, boo
       canvas = (TCanvas*)next();
       cw = canvas->GetWindowWidth();
       ch = canvas->GetWindowHeight();
-      fprintf(fh,"<div id=\"draw_pict%d_%s\" style=\"width:%dpx; height:%dpx\">\n</div>\n",
-              i,IN,cw,ch);
+      fprintf(fh,"<div id=\"draw_pict%d_%s\" style=\"width:%dpx; height:%dpx\"></div>\n", i,IN,cw,ch);
    }
    fprintf(fh,"</center>\n");
 
-   fprintf(fh,"<script src=\"https://root.cern/js/dev/scripts/JSRoot.core.min.js\" type=\"text/javascript\"></script>\n");
-   fprintf(fh,"<script type='text/javascript'>JSROOT.openFile(\"./%s.root\")",IN);
-   for (i=1; i<=ImageNum; i++) {
-      fprintf(fh,".then(file => file.readObject(\"pict%d_%s\")).then(obj => JSROOT.draw(\"draw_pict%d_%s\", obj, \"\"))",
-                 i,IN,i,IN);
-   }
-   fprintf(fh,";</script>\n");
+   fprintf(fh,"<script type=\"text/javascript\">\n");
+   fprintf(fh,"   function load_jsroot_%s() {\n", IN);
+   fprintf(fh,"      return new Promise(resolveFunc => {\n");
+   fprintf(fh,"         if (typeof JSROOT != 'undefined') return resolveFunc(true);\n");
+   fprintf(fh,"         let script = document.createElement('script');\n");
+   fprintf(fh,"         script.src = 'https://root.cern/js/dev/scripts/JSRoot.core.min.js';\n");
+   fprintf(fh,"         script.onload = resolveFunc;\n");
+   fprintf(fh,"         document.head.appendChild(script);\n");
+   fprintf(fh,"      });\n");
+   fprintf(fh,"   }\n");
+   fprintf(fh,"   load_jsroot_%s().then(() => {\n", IN);
+   fprintf(fh,"      JSROOT.settings.HandleKeys = false;\n");
+   fprintf(fh,"      return JSROOT.openFile(\"./%s.root\");\n",IN);
+   fprintf(fh,"   }).then(file => {\n");
+   for (i=1; i<=ImageNum; i++)
+      fprintf(fh,"      file.readObject(\"pict%d_%s\").then(obj%d => JSROOT.draw(\"draw_pict%d_%s\", obj%d, \"\"));\n", i,IN,i, i,IN,i);
+   fprintf(fh,"   });\n");
+   fprintf(fh,"</script>\n");
 
    fclose(fh);
 }
