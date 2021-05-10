@@ -1,9 +1,6 @@
 /// Generates the json file output of the macro MacroName
 
 #include "ROOT/RCanvas.hxx"
-#include "ROOT/RColor.hxx"
-#include "ROOT/RText.hxx"
-#include "ROOT/RPadPos.hxx"
 
 void makejsonfile(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py)
 {
@@ -31,8 +28,9 @@ void makejsonfile(const char *MacroName, const char *IN, const char *OutDir, boo
    FILE *fh = fopen(TString::Format("%s/macros/%s.html",OutDir,IN), "w");
    fprintf(fh,"<script src=\"https://root.cern/js/dev/scripts/JSRoot.core.min.js\" type=\"text/javascript\"></script>\n");
    fprintf(fh,"<div id=\"draw_json_%s\" style=\"width:700px; height:500px\"></div>\n", IN);
-   fprintf(fh,"<script type='text/javascript'>JSROOT.httpRequest(\"./%s.json\",\"object\")",IN);
-   fprintf(fh,".then(obj => JSROOT.draw(\"draw_json_%s\", obj))", IN);
-   fprintf(fh,";</script>\n");
+   fprintf(fh,"<script type=\"text/javascript\">\n");
+   fprintf(fh,"JSROOT.settings.HandleKeys = false;\n");
+   fprintf(fh,"JSROOT.httpRequest('./%s.json','object').then(obj => JSROOT.draw('draw_json_%s', obj));\n", IN, IN);
+   fprintf(fh,"</script>\n");
    fclose(fh);
 }
