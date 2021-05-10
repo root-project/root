@@ -68,7 +68,7 @@ public:
 
   void initializeBarlowCache();
 
-  RooArgSet* getParameters(const RooArgSet* depList, Bool_t stripDisconnected=kTRUE) const;
+  bool getParameters(const RooArgSet* depList, RooArgSet& outputSet, bool stripDisconnected=true) const;
 
   // void setAlwaysStartFromMin(Bool_t flag) { _startFromMin = flag ; }
   // Bool_t alwaysStartFromMin() const { return _startFromMin ; }
