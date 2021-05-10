@@ -692,12 +692,31 @@ RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
 /// for deleting the returned argset. The complement of this function
 /// is getParameters().
 
-RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly) const
+RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, bool valueOnly) const
 {
-  //cout << "RooAbsArg::getObservables(" << GetName() << ")" << endl ;
+  auto depList = new RooArgSet;
+  getObservables(dataList, *depList, valueOnly);
+  return depList;
+}
 
-  RooArgSet* depList = new RooArgSet("dependents") ;
-  if (!dataList) return depList ;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list of leaf nodes in the arg tree starting with
+/// ourself as top node that match any of the names the args in the
+/// supplied argset.
+/// Returns `true` only if something went wrong.
+/// The complement of this function is getParameters().
+/// \param[in] dataList Set of leaf nodes to match.
+/// \param[out] outputSet Output set.
+/// \param[in] valueOnly If this parameter is true, we only match leafs that
+///                      depend on the value of any arg in `dataList`.
+
+bool RooAbsArg::getObservables(const RooArgSet* dataList, RooArgSet& outputSet, bool valueOnly) const
+{
+  outputSet.clear();
+  outputSet.setName("dependents");
+
+  if (!dataList) return false;
 
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
@@ -706,18 +725,18 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly
   if (valueOnly) {
     for (const auto arg : leafList) {
       if (arg->dependsOnValue(*dataList) && arg->isLValue()) {
-        depList->add(*arg) ;
+        outputSet.add(*arg) ;
       }
     }
   } else {
     for (const auto arg : leafList) {
       if (arg->dependsOn(*dataList) && arg->isLValue()) {
-        depList->add(*arg) ;
+        outputSet.add(*arg) ;
       }
     }
   }
 
-  return depList ;
+  return false;
 }
 
 
