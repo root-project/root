@@ -210,6 +210,11 @@ namespace Math {
       void Gaussian2D(double sigmaX, double sigmaY, double rho, double &x, double &y) const;
 
       /**
+         Multivariate Gaussian distribution
+      */
+      void GaussianND(const int dim, double *pars, double *covmat, double *genpars) const;
+
+      /**
          Exponential distribution
       */
       double Exponential(double mu) const;
