@@ -47,7 +47,7 @@ All page sink classes need to support the common options.
 class RNTupleWriteOptions {
    int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
    ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
-   NTupleSize_t fNClusterEntries = 64000;
+   NTupleSize_t fNEntriesPerCluster = 64000;
    NTupleSize_t fNElementsPerPage = 10000;
    bool fUseBufferedWrite = true;
 
@@ -61,11 +61,11 @@ public:
    ENTupleContainerFormat GetContainerFormat() const { return fContainerFormat; }
    void SetContainerFormat(ENTupleContainerFormat val) { fContainerFormat = val; }
 
-   NTupleSize_t GetNClusterEntries() const { return fNClusterEntries; }
-   void SetNClusterEntries(NTupleSize_t val) { fNClusterEntries = val; }
-
    NTupleSize_t GetNElementsPerPage() const { return fNElementsPerPage; }
    void SetNElementsPerPage(NTupleSize_t val) { fNElementsPerPage = val; }
+
+   NTupleSize_t GetNEntriesPerCluster() const { return fNEntriesPerCluster; }
+   void SetNEntriesPerCluster(NTupleSize_t val) { fNEntriesPerCluster = val; }
 
    bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
    void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
