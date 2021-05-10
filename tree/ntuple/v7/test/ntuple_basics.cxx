@@ -252,7 +252,7 @@ TEST(RNTuple, ElementsPerPage)
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   auto col0_pages = ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).Clone();
+   const auto &col0_pages = ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0);
    // 100 column elements / 5 elements per page
    EXPECT_EQ(20, col0_pages.fPageInfos.size());
 }
