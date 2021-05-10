@@ -34,7 +34,7 @@ The class representing the collection of selection rules.
 
 #include "cling/Interpreter/Interpreter.h"
 
-const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = 0) ;
+const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = nullptr) ;
 
 void SelectionRules::AddClassSelectionRule(const ClassSelectionRule& classSel)
 {
@@ -328,7 +328,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::EnumDecl *D
       return IsEnumSelected(D, qual_name);
    }
 
-   return 0;
+   return nullptr;
 }
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::VarDecl* D) const
@@ -346,7 +346,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::VarDecl* D)
 const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::FieldDecl* /* D */) const
 {
    // Currently rootcling does not need any information about fields.
-   return 0;
+   return nullptr;
 #if 0
    std::string str_name;   // name of the Decl
    std::string qual_name;  // fully qualified name of the Decl
@@ -370,7 +370,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::FunctionDec
 const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::Decl *D) const
 {
    if (!D) {
-      return 0;
+      return nullptr;
    }
 
    clang::Decl::Kind declkind = D->getKind();
@@ -412,7 +412,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::Decl *D) co
       return IsDeclSelected(llvm::dyn_cast<clang::FieldDecl>(D));
    default:
       // Humm we are not treating this case!
-      return 0;
+      return nullptr;
    }
 
    // std::string str_name;   // name of the Decl
@@ -571,15 +571,15 @@ bool SelectionRules::GetParentName(const clang::Decl* D, std::string& parent_nam
 const ClassSelectionRule *SelectionRules::IsNamespaceSelected(const clang::Decl* D, const std::string& qual_name) const
 {
    const clang::NamespaceDecl* N = llvm::dyn_cast<clang::NamespaceDecl> (D); //TagDecl has methods to understand of what kind is the Decl
-   if (N==0) {
+   if (N==nullptr) {
       std::cout<<"\n\tCouldn't cast Decl to NamespaceDecl";
-      return 0;
+      return nullptr;
    }
 
-   const ClassSelectionRule *selector = 0;
+   const ClassSelectionRule *selector = nullptr;
    int fImplNo = 0;
-   const ClassSelectionRule *explicit_selector = 0;
-   const ClassSelectionRule *specific_pattern_selector = 0;
+   const ClassSelectionRule *explicit_selector = nullptr;
+   const ClassSelectionRule *specific_pattern_selector = nullptr;
    int fFileNo = 0;
 
    // NOTE: should we separate namespaces from classes in the rules?
@@ -616,7 +616,7 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(const clang::Decl*
                   std::cout<<"\tNo returned"<<std::endl;
 #endif
 
-                  return 0; // explicit No returned
+                  return nullptr; // explicit No returned
                }
             }
             if (match == BaseSelectionRule::kPattern) {
@@ -624,10 +624,10 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(const clang::Decl*
                if (it->GetAttributeValue("pattern", pattern_value) &&
                    (pattern_value == "*" || pattern_value == "*::*")) ++fImplNo;
                else
-                  return 0;
+                  return nullptr;
             }
             else
-               return 0;
+               return nullptr;
          }
          else if (it->GetSelected() == BaseSelectionRule::kDontCare && !(it->HasMethodSelectionRules()) && !(it->HasFieldSelectionRules())) {
 
@@ -635,7 +635,7 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(const clang::Decl*
             std::cout<<"Empty dontC returned = No"<<std::endl;
 #endif
 
-            return 0;
+            return nullptr;
          }
       }
    }
@@ -648,7 +648,7 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(const clang::Decl*
 
       if (explicit_selector) return explicit_selector;
       else if (specific_pattern_selector) return specific_pattern_selector;
-      else if (fImplNo > 0) return 0;
+      else if (fImplNo > 0) return nullptr;
       else return selector;
    }
    else {
@@ -661,7 +661,7 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(const clang::Decl*
       if (selector)
          return selector;
       else
-         return 0;
+         return nullptr;
    }
 
 }
@@ -675,7 +675,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(const clang::Decl* D, 
    if (!tagDecl && !typeDefNameDecl) { // Ill posed
       ROOT::TMetaUtils::Error("SelectionRules::IsClassSelected",
             "Cannot cast Decl to TagDecl and Decl is not a typedef.\n");
-      return 0;
+      return nullptr;
       }
 
    if (!tagDecl && typeDefNameDecl){ // Let's try to fetch the underlying RecordDecl
@@ -683,7 +683,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(const clang::Decl* D, 
       if (!recordDecl){
          ROOT::TMetaUtils::Error("SelectionRules::IsClassSelected",
                                  "Cannot get RecordDecl behind TypedefDecl.\n");
-         return 0;
+         return nullptr;
       }
       tagDecl = recordDecl;
    }
@@ -691,12 +691,12 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(const clang::Decl* D, 
    // At this point tagDecl must be well defined
    const bool isLinkDefFile =  IsLinkdefFile();
    if (!( isLinkDefFile || tagDecl->isClass() || tagDecl->isStruct() ))
-      return 0; // Union for Genreflex
+      return nullptr; // Union for Genreflex
 
-   const ClassSelectionRule *selector = 0;
+   const ClassSelectionRule *selector = nullptr;
    int fImplNo = 0;
-   const ClassSelectionRule *explicit_selector = 0;
-   const ClassSelectionRule *specific_pattern_selector = 0;
+   const ClassSelectionRule *explicit_selector = nullptr;
+   const ClassSelectionRule *specific_pattern_selector = nullptr;
    int fFileNo = 0;
 
    // iterate through all class selection rles
@@ -770,7 +770,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(const clang::Decl* D, 
       // for rootcint explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes
       if (explicit_selector) return explicit_selector;
       else if (specific_pattern_selector) return specific_pattern_selector;
-      else if (fImplNo > 0) return 0;
+      else if (fImplNo > 0) return nullptr;
       else return selector;
    }
    else {
@@ -785,7 +785,7 @@ const BaseSelectionRule *SelectionRules::IsVarSelected(const clang::VarDecl* D, 
    std::list<VariableSelectionRule>::const_iterator it = fVariableSelectionRules.begin();
    std::list<VariableSelectionRule>::const_iterator it_end =  fVariableSelectionRules.end();
 
-   const BaseSelectionRule *selector = 0;
+   const BaseSelectionRule *selector = nullptr;
 
    // iterate through all the rules
    // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
@@ -794,7 +794,7 @@ const BaseSelectionRule *SelectionRules::IsVarSelected(const clang::VarDecl* D, 
       if (BaseSelectionRule::kNoMatch != it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false)) {
          if (it->GetSelected() == BaseSelectionRule::kNo) {
             // The rule did explicitly request to not select this entity.
-            return 0;
+            return nullptr;
          } else {
             selector = &(*it);
          }
@@ -835,7 +835,7 @@ const BaseSelectionRule *SelectionRules::IsFunSelected(const clang::FunctionDecl
 
 const BaseSelectionRule *SelectionRules::IsEnumSelected(const clang::EnumDecl* D, const std::string& qual_name) const
 {
-   const BaseSelectionRule *selector = 0;
+   const BaseSelectionRule *selector = nullptr;
 
    // iterate through all the rules
    // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
@@ -844,7 +844,7 @@ const BaseSelectionRule *SelectionRules::IsEnumSelected(const clang::EnumDecl* D
       if (BaseSelectionRule::kNoMatch != rule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false)) {
          if (rule.GetSelected() == BaseSelectionRule::kNo) {
             // The rule did explicitly request to not select this entity.
-            return 0;
+            return nullptr;
          } else {
             selector = &rule;
          }
@@ -858,9 +858,9 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(const clang::VarDe
 {
 
 
-   const BaseSelectionRule *selector = 0;
+   const BaseSelectionRule *selector = nullptr;
    int fImplNo = 0;
-   const BaseSelectionRule *explicit_selector = 0;
+   const BaseSelectionRule *explicit_selector = nullptr;
 
    std::string name_value;
    std::string pattern_value;
@@ -883,15 +883,15 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(const clang::VarDe
             }
          }
          else {
-            if (!IsLinkdefFile()) return 0;
+            if (!IsLinkdefFile()) return nullptr;
             else {
                if (selRule.GetAttributeValue("pattern", pattern_value)) {
                   if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
                   else
-                     return 0;
+                     return nullptr;
                }
                else
-                  return 0;
+                  return nullptr;
             }
          }
       }
@@ -904,7 +904,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(const clang::VarDe
 #endif
 
       if (explicit_selector) return explicit_selector;
-      else if (fImplNo > 0) return 0;
+      else if (fImplNo > 0) return nullptr;
       else return selector;
    }
    else{
@@ -924,9 +924,9 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(const clang::Funct
    GetFunctionPrototype(D, prototype);
    prototype = qual_name + prototype;
 
-   const BaseSelectionRule *selector = 0;
+   const BaseSelectionRule *selector = nullptr;
    int fImplNo = 0;
-   const BaseSelectionRule *explicit_selector = 0;
+   const BaseSelectionRule *explicit_selector = nullptr;
 
    std::string pattern_value;
    for(auto& selRule : fFunctionSelectionRules) {
@@ -948,15 +948,15 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(const clang::Funct
             }
          }
          else {
-            if (!IsLinkdefFile()) return 0;
+            if (!IsLinkdefFile()) return nullptr;
             else {
                if (selRule.GetAttributeValue("pattern", pattern_value)) {
                   if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
                   else
-                     return 0;
+                     return nullptr;
                }
                else
-                  return 0;
+                  return nullptr;
             }
          }
       }
@@ -964,7 +964,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(const clang::Funct
 
    if (IsLinkdefFile()) {
       if (explicit_selector) return explicit_selector;
-      else if (fImplNo > 0) return 0;
+      else if (fImplNo > 0) return nullptr;
       else return selector;
    }
    else{
@@ -980,9 +980,9 @@ const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(const clang::Enum
    it = fEnumSelectionRules.begin();
    it_end = fEnumSelectionRules.end();
 
-   const BaseSelectionRule *selector = 0;
+   const BaseSelectionRule *selector = nullptr;
    int fImplNo = 0;
-   const BaseSelectionRule *explicit_selector = 0;
+   const BaseSelectionRule *explicit_selector = nullptr;
 
    std::string name_value;
    std::string pattern_value;
@@ -1003,15 +1003,15 @@ const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(const clang::Enum
             }
          }
          else {
-            if (!IsLinkdefFile()) return 0;
+            if (!IsLinkdefFile()) return nullptr;
             else {
                if (it->GetAttributeValue("pattern", pattern_value)) {
                   if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
                   else
-                     return 0;
+                     return nullptr;
                }
                else
-                  return 0;
+                  return nullptr;
             }
          }
       }
@@ -1024,7 +1024,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(const clang::Enum
 #endif
 
       if (explicit_selector) return explicit_selector;
-      else if (fImplNo > 0) return 0;
+      else if (fImplNo > 0) return nullptr;
       else return selector;
    }
    else{
@@ -1061,9 +1061,9 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
 
    int expl_Yes = 0, impl_r_Yes = 0, impl_rr_Yes = 0;
    int impl_r_No = 0, impl_rr_No = 0;
-   const BaseSelectionRule *explicit_r = 0;
-   const BaseSelectionRule *implicit_r = 0;
-   const BaseSelectionRule *implicit_rr = 0;
+   const BaseSelectionRule *explicit_r = nullptr;
+   const BaseSelectionRule *implicit_r = nullptr;
+   const BaseSelectionRule *implicit_rr = nullptr;
 
    if (D->getKind() == clang::Decl::CXXMethod){
       // we first check the explicit rules for the method (in case of constructors and destructors we check the parent)
@@ -1083,7 +1083,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
                   std::cout<<"\tExplicit rule BaseSelectionRule::kNo found"<<std::endl;
 #endif
 
-                  return 0; // == explicit BaseSelectionRule::kNo
+                  return nullptr; // == explicit BaseSelectionRule::kNo
 
             }
          } else if (match == BaseSelectionRule::kPattern) {
@@ -1152,7 +1152,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
          std::cout<<"\tImplicit_rr rule BaseSelectionRule::kNo found"<<std::endl;
 #endif
 
-         return 0;
+         return nullptr;
       }
       else {
 
@@ -1170,7 +1170,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
          std::cout<<"\tImplicit_r rule BaseSelectionRule::kNo found"<<std::endl;
 #endif
 
-         return 0;
+         return nullptr;
       }
       else {
 
@@ -1190,11 +1190,11 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
 
 
       std::string parent_name, parent_qual_name;
-      if (!GetParentName(D, parent_name, parent_qual_name)) return 0;
+      if (!GetParentName(D, parent_name, parent_qual_name)) return nullptr;
 
-      const BaseSelectionRule *selector = 0;
+      const BaseSelectionRule *selector = nullptr;
       int fImplNo = 0;
-      const BaseSelectionRule *explicit_selector = 0;
+      const BaseSelectionRule *explicit_selector = nullptr;
 
       // the same as with isClass selected
       // I wanted to use GetParentDecl and then to pass is to isClassSelected because I didn't wanted to repeat
@@ -1224,10 +1224,10 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
                if (it->GetAttributeValue("pattern", pattern_value)) {
                   if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
                   else
-                     return 0;
+                     return nullptr;
                }
                else
-                  return 0;
+                  return nullptr;
             }
          }
       }
@@ -1249,7 +1249,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
          std::cout<<"\tReturning No"<<std::endl;
 #endif
 
-         return 0;
+         return nullptr;
       }
       else {
 
@@ -1261,7 +1261,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
       }
    }
 
-   return 0;
+   return nullptr;
 
 }
 
@@ -1272,11 +1272,11 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(const clang::Decl* D, 
 
    if (IsParentClass(D))
    {
-      if (!GetParentName(D, parent_name, parent_qual_name)) return 0;
+      if (!GetParentName(D, parent_name, parent_qual_name)) return nullptr;
 
-      const BaseSelectionRule *selector = 0;
+      const BaseSelectionRule *selector = nullptr;
       Int_t fImplNo = 0;
-      const BaseSelectionRule *explicit_selector = 0;
+      const BaseSelectionRule *explicit_selector = nullptr;
       int fFileNo = 0;
 
       //DEBUG std::cout<<"\n\tParent is class";
@@ -1309,17 +1309,17 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(const clang::Decl* D, 
                      std::cout<<"\tNo returned"<<std::endl;
 #endif
 
-                     return 0; // in genreflex we can't have that situation
+                     return nullptr; // in genreflex we can't have that situation
                   }
                }
                else {
                   if (match == BaseSelectionRule::kPattern && it->GetAttributeValue("pattern", pattern_value)) {
                      if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
                      else
-                        return 0;
+                        return nullptr;
                   }
                   else
-                     return 0;
+                     return nullptr;
                }
             }
             else if (it->GetSelected() == BaseSelectionRule::kDontCare) // - we check the method and field selection rules for the class
@@ -1330,7 +1330,7 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(const clang::Decl* D, 
                   std::cout<<"\tNo fields and methods"<<std::endl;
 #endif
 
-                  return 0; // == BaseSelectionRule::kNo
+                  return nullptr; // == BaseSelectionRule::kNo
                }
                else {
                   clang::Decl::Kind kind = D->getKind();
@@ -1357,7 +1357,7 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(const clang::Decl* D, 
                      mem_it_end = members.end();
                      for (; mem_it != mem_it_end; ++mem_it) {
                         if (BaseSelectionRule::kName == mem_it->Match(llvm::dyn_cast<clang::NamedDecl>(D), str_name, prototype, false)) {
-                           if (mem_it->GetSelected() == BaseSelectionRule::kNo) return 0;
+                           if (mem_it->GetSelected() == BaseSelectionRule::kNo) return nullptr;
                         }
                      }
                   }
@@ -1385,7 +1385,7 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(const clang::Decl* D, 
             std::cout<<"\tReturning No"<<std::endl;
 #endif
 
-            return 0;
+            return nullptr;
          }
          else {
 
@@ -1402,7 +1402,7 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(const clang::Decl* D, 
       }
    }
    else {
-      return 0;
+      return nullptr;
    }
 }
 
@@ -1429,7 +1429,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
          const char* attrVal = nullptr;
          if (!name.empty()) attrVal = name.c_str();
 
-         ROOT::TMetaUtils::Warning(0,"Unused %s rule: %s\n", attrName, attrVal);
+         ROOT::TMetaUtils::Warning(nullptr,"Unused %s rule: %s\n", attrName, attrVal);
       }
    }
 
@@ -1521,7 +1521,7 @@ bool SelectionRules::SearchNames(cling::Interpreter &interp)
          std::string name_value;
          it->GetAttributeValue("name", name_value);
          // In Class selection rules, we should be interested in scopes.
-         const clang::Type *typeptr = 0;
+         const clang::Type *typeptr = nullptr;
          const clang::CXXRecordDecl *target
             = ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), interp,
                                             true /*diag*/, &typeptr);
