@@ -220,7 +220,7 @@ TEST(RNTuple, ClusterEntries)
 
    {
       RNTupleWriteOptions opt;
-      opt.SetNClusterEntries(5);
+      opt.SetNEntriesPerCluster(5);
       auto ntuple = RNTupleWriter::Recreate(
          std::move(model), "ntuple", fileGuard.GetPath(), opt
       );
