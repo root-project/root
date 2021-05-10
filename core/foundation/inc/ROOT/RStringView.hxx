@@ -14,7 +14,7 @@
 
 #include "RConfigure.h"
 
-#if defined(R__HAS_STD_STRING_VIEW) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || ( __cplusplus >= 201703L )
+#if defined(R__HAS_STD_STRING_VIEW) || _MSVC_LANG >= 201703L || __cplusplus >= 201703L
 
 #include <string_view>
 
