@@ -5,6 +5,16 @@
 bool test(TTree*);
 
 const char* fname = "index64.root";
+#if __APPLE__ and __arm64__
+  // Apple M1 has long double == double; these values exceed its range
+  // and cannot be represented as (even temporary) expression results.
+  // There would be a warning if you'd try.
+  const Long64_t bigval   = 0xFFFFFFFFFFFF;
+  const ULong64_t biguval = 0xFFFFFFFFFFFF0;
+#else
+  const Long64_t bigval   = 0xFFFFFFFFFFFFFFF;  // still positive number
+  const ULong64_t biguval = 0xFFFFFFFFFFFFFFF0;  // "negative" number
+#endif
 
 int runindex64(){
 
@@ -19,8 +29,6 @@ int runindex64(){
   tree->Branch("run", &run, "run/l");
   tree->Branch("event", &event, "event/l");
 
-  const Long64_t bigval = 0xFFFFFFFFFFFFFFF;  // still positive number
-  const ULong64_t biguval = 0xFFFFFFFFFFFFFFF0;  // "negative" number
   ULong64_t events[] = { 1,2,3, bigval, biguval, 5 };
   run = 5;
   for(int i=0; i<sizeof(events)/sizeof(*events); i++){
@@ -35,7 +43,7 @@ int runindex64(){
   cout<<"Tree BuildIndex returns "<<tree->BuildIndex("run", "event")<<endl;
   cout << "Entry should be 3: " << tree->GetEntryNumberWithIndex(5,bigval) << endl;
   cout << "Entry should be 6: " << tree->GetEntryNumberWithIndex(4,bigval) << endl;
-  
+
   test(tree);
   file.Close();
 
@@ -58,6 +66,6 @@ bool test(TTree *chain)
   cout<<"BuildIndex returns "<<chain->BuildIndex("run", "event")<<endl;
   cout<<"Try to get value that is not in the chain, this should return a -1:"<<endl;
   cout<<chain->GetEntryWithIndex(500)<<endl;
-  cout<<(int)chain->GetEntryNumberWithIndex(5,0xFFFFFFFFFFFFFFF)<<endl;
+  cout<<(int)chain->GetEntryNumberWithIndex(5, bigval)<<endl;
   return (chain->GetEntryNumberWithIndex(500)==-1);
 }
