@@ -4919,12 +4919,12 @@ RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, 
   // the leaf values itself to integrate over them. That's why we only add the
   // parameters and observables here.
   RooArgSet allLeafs;
-  for(auto const& param : *getParameters(RooArgSet{})) {
-    allLeafs.add(*param);
-  }
-  for(auto const& obs : *getObservables(RooArgSet{})) {
-    allLeafs.add(*obs);
-  }
+  RooArgSet parameters;
+  RooArgSet observables;
+  getParameters(normSet, parameters);
+  getObservables(normSet, observables);
+  allLeafs.add(parameters);
+  allLeafs.add(observables);
 
   std::vector<RooAbsRealLValue*> settableLeaves;
   std::vector<RooSpan<const double>> leafValues;
