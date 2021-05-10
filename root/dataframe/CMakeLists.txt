@@ -26,11 +26,14 @@ ROOTTEST_ADD_TEST(test_trainCache
                   COPY_TO_BUILDDIR bigFile.root
                   MACRO test_trainCache.C
                   OUTREF test_trainCache.ref)
-# ROOT-9628
-ROOTTEST_ADD_TEST(test_chainZombieFile
-                  COPY_TO_BUILDDIR input1.root input2.root
-                  ${WILLFAIL_ON_WIN32}
-                  MACRO test_chainZombieFile.C)
+
+if(NOT (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64) OR M1_BROKEN_TESTS)
+  # ROOT-9628
+  ROOTTEST_ADD_TEST(test_chainZombieFile
+                    COPY_TO_BUILDDIR input1.root input2.root
+                    ${WILLFAIL_ON_WIN32}
+                    MACRO test_chainZombieFile.C)
+endif()
 
 # ROOT-9366
 # We use this to write something like the FCC data model, dictionaries done with aclic
@@ -54,10 +57,12 @@ ROOTTEST_ADD_TEST(test_gdirectoryRestore
 ROOTTEST_ADD_TEST(templateRecursionLimit
                   MACRO test_templateRecursionLimit.C)
 
-ROOTTEST_ADD_TEST(missingBranches
-                  MACRO test_missingBranches.C
-                  ERRREF test_missingBranches.eref
-                  ${WILLFAIL_ON_WIN32})
+if(NOT (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64) OR M1_BROKEN_TESTS)
+  ROOTTEST_ADD_TEST(missingBranches
+                    MACRO test_missingBranches.C
+                    ERRREF test_missingBranches.eref
+                    ${WILLFAIL_ON_WIN32})
+endif()
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
 ROOTTEST_GENERATE_EXECUTABLE(test_hugeRDF test_hugeRDF.cxx
