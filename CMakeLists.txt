@@ -156,13 +156,14 @@ set(compression_default "zlib" CACHE STRING "" FORCE)
 get_filename_component(ROOT_LIBRARY_DIR "${ROOTSYS}/lib" ABSOLUTE)
 
 # Detect bitness.
-if(CMAKE_SYSTEM_PROCESSOR MATCHES amd64.*|x86_64.*|aarch64.*|ppc64.*
-   OR (CMAKE_VERSION VERSION_LESS 3.0 AND CMAKE_SYSTEM_NAME STREQUAL Darwin) )
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(64BIT 1)
   message("-- Check for bitness: Found 64 bit architecture.")
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES i686.*|i386.*|x86.*)
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
   set(32BIT 1)
   message("-- Check for bitness: Found 32 bit architecture.")
+else()
+  message(FATAL_ERROR "-- Check for bitness: no support for ${CMAKE_SIZEOF_VOID_P}*8 bit processors.")
 endif()
 
 if (MSVC)
