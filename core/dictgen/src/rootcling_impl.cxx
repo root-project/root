@@ -294,7 +294,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
             } else {
                userDefinedProperty = name + propNames::separator + value;
             }
-            ROOT::TMetaUtils::Info(0, "%s %s\n", varName.c_str(), userDefinedProperty.c_str());
+            ROOT::TMetaUtils::Info(nullptr, "%s %s\n", varName.c_str(), userDefinedProperty.c_str());
             decl.addAttr(new(C) clang::AnnotateAttr(commentRange, C, userDefinedProperty, 0));
 
          }
