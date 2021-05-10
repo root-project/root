@@ -132,7 +132,7 @@ TString::TString(const char *cs, Ssiz_t n)
       return;
    }
    char *data = Init(n, n);
-   memcpy(data, cs, n);
+   memmove(data, cs, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
