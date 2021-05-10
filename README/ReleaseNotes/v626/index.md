@@ -124,6 +124,9 @@ From now on, the likelihoods are normalized by the sum of integrals in each rang
 
 ## Class Reference Guide
 
+- Images for ROOT7 tutorials can be generated, in json format, using the directive using
+  `\macro_image (json)` in the macro header.
+
 
 ## Build, Configuration and Testing Infrastructure
 

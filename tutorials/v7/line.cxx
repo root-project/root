@@ -42,8 +42,7 @@ void line()
 
    canvas->SetSize(900, 700);
 
-   // requires Chrome browser, runs in headless mode
    canvas->SaveAs("line.png");
 
-   // canvas->Show();
+   canvas->Show();
 }

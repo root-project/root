@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_v7
 ///
+/// \macro_image (json)
 /// \macro_code
 ///
 /// \date 2020-02-20

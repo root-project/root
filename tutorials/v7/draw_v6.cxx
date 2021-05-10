@@ -3,6 +3,7 @@
 ///
 /// This macro shows how ROOT objects like TH1, TH2, TGraph can be drawn in RCanvas.
 ///
+/// \macro_image (json)
 /// \macro_code
 ///
 /// \date 2017-06-02

@@ -1,7 +1,5 @@
 /// Generates the root file output of the macro MacroName
 
-
-
 void makerootfile(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py)
 {
 

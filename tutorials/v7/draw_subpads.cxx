@@ -4,6 +4,7 @@
 /// This ROOT 7 example demonstrates how to create a ROOT 7 canvas (RCanvas),
 /// divide on subpads and draw histograms there
 ///
+/// \macro_image (json)
 /// \macro_code
 ///
 /// \date 2018-03-13
