@@ -42,5 +42,7 @@ void line()
 
    canvas->SetSize(900, 700);
 
+   canvas->SaveAs("line.png");
+
    canvas->Show();
 }
