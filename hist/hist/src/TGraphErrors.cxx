@@ -800,6 +800,7 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 void TGraphErrors::Scale(Double_t c1, Option_t *option)
 {
    TGraph::Scale(c1, option);
+   TString opt = option; opt.ToLower();
    if (opt.Contains("x") && GetEX()) {
       for (Int_t i=0; i<GetN(); i++)
          GetEX()[i] *= c1;
