@@ -1231,6 +1231,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          * when histogram not draw, defined by other painters */
       isAllowedDefaultYZooming: function() {
 
+         if (this.self_drawaxes) return true;
+
          let pad_painter = this.getPadPainter();
          if (pad_painter && pad_painter.painters)
             for (let k = 0; k < pad_painter.painters.length; ++k) {

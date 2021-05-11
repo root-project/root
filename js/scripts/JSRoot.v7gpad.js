@@ -1902,6 +1902,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.keys_handler = null;
       }
       delete this.enabledKeys;
+      delete this.self_drawaxes;
 
       delete this.xaxis;
       delete this.yaxis;
@@ -2014,8 +2015,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let promise = Promise.resolve(true);
 
       if (this.v7EvalAttr("drawaxes")) {
+         this.self_drawaxes = true;
          this.setAxesRanges();
-         promise = this.drawAxes();
+         promise = this.drawAxes().then(() => this.addInteractivity());
       }
 
       if (JSROOT.batch_mode) return promise;
@@ -2103,48 +2105,58 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       let changed = false, changes = {},
-          r_x = "", r_y = "", r_z = "",
+          r_x = "", r_y = "", r_z = "", is_any_check = false,
          req = {
          _typename: "ROOT::Experimental::RFrame::RUserRanges",
          values: [0, 0, 0, 0, 0, 0],
          flags: [false, false, false, false, false, false]
       };
 
+
+      let checkZooming = (painter, force) => {
+         if (!force && (typeof painter.canZoomInside != 'function')) return;
+
+         is_any_check = true;
+
+         if (zoom_x && (force || painter.canZoomInside("x", xmin, xmax))) {
+            this.zoom_xmin = xmin;
+            this.zoom_xmax = xmax;
+            changed = true; r_x = "0";
+            zoom_x = false;
+            this.v7AttrChange(changes, "x_zoommin", xmin);
+            this.v7AttrChange(changes, "x_zoommax", xmax);
+            req.values[0] = xmin; req.values[1] = xmax;
+            req.flags[0] = req.flags[1] = true;
+         }
+         if (zoom_y && (force || painter.canZoomInside("y", ymin, ymax))) {
+            this.zoom_ymin = ymin;
+            this.zoom_ymax = ymax;
+            changed = true; r_y = "1";
+            zoom_y = false;
+            this.v7AttrChange(changes, "y_zoommin", ymin);
+            this.v7AttrChange(changes, "y_zoommax", ymax);
+            req.values[2] = ymin; req.values[3] = ymax;
+            req.flags[2] = req.flags[3] = true;
+         }
+         if (zoom_z && (force || painter.canZoomInside("z", zmin, zmax))) {
+            this.zoom_zmin = zmin;
+            this.zoom_zmax = zmax;
+            changed = true; r_z = "2";
+            zoom_z = false;
+            this.v7AttrChange(changes, "z_zoommin", zmin);
+            this.v7AttrChange(changes, "z_zoommax", zmax);
+            req.values[4] = zmin; req.values[5] = zmax;
+            req.flags[4] = req.flags[5] = true;
+         }
+      };
+
       // first process zooming (if any)
       if (zoom_x || zoom_y || zoom_z)
-         this.forEachPainter(obj => {
-            if (typeof obj.canZoomInside != 'function') return;
-            if (zoom_x && obj.canZoomInside("x", xmin, xmax)) {
-               this.zoom_xmin = xmin;
-               this.zoom_xmax = xmax;
-               changed = true; r_x = "0";
-               zoom_x = false;
-               this.v7AttrChange(changes, "x_zoommin", xmin);
-               this.v7AttrChange(changes, "x_zoommax", xmax);
-               req.values[0] = xmin; req.values[1] = xmax;
-               req.flags[0] = req.flags[1] = true;
-            }
-            if (zoom_y && obj.canZoomInside("y", ymin, ymax)) {
-               this.zoom_ymin = ymin;
-               this.zoom_ymax = ymax;
-               changed = true; r_y = "1";
-               zoom_y = false;
-               this.v7AttrChange(changes, "y_zoommin", ymin);
-               this.v7AttrChange(changes, "y_zoommax", ymax);
-               req.values[2] = ymin; req.values[3] = ymax;
-               req.flags[2] = req.flags[3] = true;
-            }
-            if (zoom_z && obj.canZoomInside("z", zmin, zmax)) {
-               this.zoom_zmin = zmin;
-               this.zoom_zmax = zmax;
-               changed = true; r_z = "2";
-               zoom_z = false;
-               this.v7AttrChange(changes, "z_zoommin", zmin);
-               this.v7AttrChange(changes, "z_zoommax", zmax);
-               req.values[4] = zmin; req.values[5] = zmax;
-               req.flags[4] = req.flags[5] = true;
-            }
-         });
+         this.forEachPainter(painter => checkZooming(painter));
+
+      // force zooming when no any other painter can verify zoom range
+      if (!is_any_check && this.self_drawaxes)
+         checkZooming(null, true);
 
       // and process unzoom, if any
       if (unzoom_x || unzoom_y || unzoom_z) {
