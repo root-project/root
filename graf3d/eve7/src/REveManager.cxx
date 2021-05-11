@@ -689,7 +689,7 @@ void REveManager::QuitRoot()
 
 void REveManager::WindowConnect(unsigned connid)
 {
-   std::unique_lock lock(fServerState.fMutex);
+   std::unique_lock<std::mutex> lock(fServerState.fMutex);
    while (fServerState.fVal == ServerState::UpdatingScenes)
    {
        fServerState.fCV.wait(lock);
@@ -737,7 +737,7 @@ void REveManager::WindowConnect(unsigned connid)
 
 void REveManager::WindowDisconnect(unsigned connid)
 {
-   std::unique_lock lock(fServerState.fMutex);
+   std::unique_lock<std::mutex> lock(fServerState.fMutex);
    while (fServerState.fVal != ServerState::Waiting)
    {
        fServerState.fCV.wait(lock);
@@ -788,7 +788,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
    // client status data
    if (arg.compare("__REveDoneChanges") == 0) {
 
-      std::unique_lock lock(fServerState.fMutex);
+      std::unique_lock<std::mutex> lock(fServerState.fMutex);
 
       for (auto &conn : fConnList) {
          if (conn.fId == connid) {
@@ -820,7 +820,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 //____________________________________________________________________
 void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std::string& ctype)
 {
-   std::unique_lock lock(fServerState.fMutex);
+   std::unique_lock<std::mutex> lock(fServerState.fMutex);
    fMIRqueue.push(std::shared_ptr<MIR>(new MIR(cmd, id, ctype)));
    if (fServerState.fVal == ServerState::Waiting)
       fServerState.fCV.notify_all();
@@ -934,7 +934,7 @@ void REveManager::MIRExecThread()
 #endif
    while (true)
    {
-      std::unique_lock lock(fServerState.fMutex);
+      std::unique_lock<std::mutex> lock(fServerState.fMutex);
       abcLabel:
       if (fMIRqueue.empty())
       {
@@ -1039,7 +1039,7 @@ std::shared_ptr<REveGeomViewer> REveManager::ShowGeometry(const RWebDisplayArgs 
 void REveManager::BeginChange()
 {
    {
-      std::unique_lock lock(fServerState.fMutex);
+      std::unique_lock<std::mutex> lock(fServerState.fMutex);
       while (fServerState.fVal != ServerState::Waiting) {
          fServerState.fCV.wait(lock);
       }
@@ -1057,7 +1057,7 @@ void REveManager::EndChange()
 
    PublishChanges();
 
-   std::unique_lock lock(fServerState.fMutex);
+   std::unique_lock<std::mutex> lock(fServerState.fMutex);
    fServerState.fVal = fConnList.empty() ? ServerState::Waiting : ServerState::UpdatingClients;
    fServerState.fCV.notify_all();
 }
