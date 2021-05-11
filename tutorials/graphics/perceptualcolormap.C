@@ -41,7 +41,7 @@ void Perceptual_Colormap(TH2D *h, Double_t val_cut) {
 
    TColor::CreateGradientColorTable(Number,Stops,Red,Green,Blue,nb);
 
-   // Histogram drawaing
+   // Histogram drawing
    h->Draw("colz");
 }
 

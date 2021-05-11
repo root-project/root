@@ -15,9 +15,9 @@
   <li><b><tt>ROOT::Math::MinimizerOptions</tt></b>: new class keeping the minimizer control parameters, minimizer name and algorithms. Static values of the parameter exist and can be set and retrieved via corresponding static methods.
   <li><b>Fitting Classes</b>: improve in general all classes in view of using them in the histogram and graph fitting routines. Few bugs have been as well fixed (see the <a href="http://root.cern.ch/viewcvs?rev=25486&root=root&view=rev">cvs log</a> for details). The fitter class, <tt>ROOT::Fit::Fitter</tt> is used now to implement the fit functionality of the Hist library (i.e. <tt>TH1::Fit</tt>, <tt>TGraph::Fit</tt>/
   <br>
-  The Fitter class has been changed to retain a pointer to the Minimizer and Objective function of the last fit. The objective function depends on a reference to the data and the model function, therefore the objective function pointer is valid as far the data and the model function are mantained alive.
+  The Fitter class has been changed to retain a pointer to the Minimizer and Objective function of the last fit. The objective function depends on a reference to the data and the model function, therefore the objective function pointer is valid as far the data and the model function are maintained alive.
   <br>
-  The library provides the implmentation of standard objective function like the Chi2 function, the Poisson likelihood function (for binned likelihood fits) and the loh likelihood function (for unbinned fits). These standard objective functions can be created with or without gradient functionality. In the first case the minimization will be performed using the gradient provided by the function. These functions can also be used in specialized fitting methods like Fumili or the GSL non-linear least square.
+  The library provides the implementation of standard objective function like the Chi2 function, the Poisson likelihood function (for binned likelihood fits) and the loh likelihood function (for unbinned fits). These standard objective functions can be created with or without gradient functionality. In the first case the minimization will be performed using the gradient provided by the function. These functions can also be used in specialized fitting methods like Fumili or the GSL non-linear least square.
  </li>
   </ul>
 
@@ -41,7 +41,7 @@
     </ul>
 <h4>Minuit2</h4>
     <ul>
-      <li>Add support to perform parallel minimization using a thread for each gradient calculation  with openMP. In the ROOT environment the Minuit2 library can be build using openMP ( <em>-fopenmp</em> compilation flag for gcc) if the environment variables <em>USE_PARALLEL_MINUIT2</em> and <em>USE_OPENMP</em> are set.
+      <li>Add support to perform parallel minimization using a thread for each gradient calculation  with openMP. In the ROOT environment the Minuit2 library can be built using openMP ( <em>-fopenmp</em> compilation flag for gcc) if the environment variables <em>USE_PARALLEL_MINUIT2</em> and <em>USE_OPENMP</em> are set.
       In the Minuit2 standalone built libraries (using autoconf) support for openMP is automatically enabled, whenever the compiler supports it (for example for gcc version >= 4.2). Some small changes have been applied in Minuit2 to make it thread safe. For example, when transforming from internal to external values, the parameter values are not cached anymore in MnUserTransformation class.
  <li><tt>DavidonErrorUpdator</tt>: add an additional check to avoid a division by zero.
  <li>In <tt>Minuit2Minimizer</tt> fill the status information according to the minimizer result
