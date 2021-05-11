@@ -136,7 +136,7 @@ public:
   }
    REveDataItemList* GetItemList() {return fItemList;}
 
-   void SetFilterExpr(const TString &filter);
+   void SetFilterExpr(const char* filter);
    void ApplyFilter();
 
    Int_t GetNItems() const { return (Int_t) fItemList->fItems.size(); }

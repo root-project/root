@@ -17,6 +17,8 @@
 
 #include "TString.h"
 
+#include <sstream>
+#include <iostream>
 class TGeoManager;
 
 namespace ROOT {
@@ -52,6 +54,35 @@ REveException operator+(const REveException &s1, const std::string &s2);
 REveException operator+(const REveException &s1, const TString &s2);
 REveException operator+(const REveException &s1, const char *s2);
 REveException operator+(const REveException &s1, ElementId_t x);
+
+////////////////////////////////////////////////////////////////////////////////
+/// REveLogger
+/// Collect log entries during building of Eve scenes / objects and report
+/// them to stdout and to web clients.
+////////////////////////////////////////////////////////////////////////////////
+
+class REveLog
+{
+   friend class REveManager;
+   std::stringstream fLog;
+public:
+   void add(const char* txt);
+   void add(const std::string& txt);
+   bool has_contents();
+   void clear();
+
+   template <typename T>
+   REveLog &operator<<(const T &x)
+   {
+      fLog << x;
+      std::cout << x;
+      return *this;
+   }
+
+   REveLog &operator<<(std::ostream &(*os)(std::ostream &));
+};
+
+extern thread_local REveLog gEveLog;
 
 } // namespace Experimental
 } // namespace ROOT

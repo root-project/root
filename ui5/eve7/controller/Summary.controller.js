@@ -169,7 +169,7 @@ sap.ui.define([
          }
 
          // FIXME: provide more generic code which should
-         this.mgr.SendMIR("NewElementPicked(" + objid + ",false,false)",
+         this.mgr.SendMIR("NewElementPickedStr(" + objid + ",false,false)",
                           this.mgr.global_highlight_id, "ROOT::Experimental::REveSelection");
       },
 

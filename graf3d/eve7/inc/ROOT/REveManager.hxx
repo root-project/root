@@ -17,16 +17,18 @@
 #include <ROOT/RWebDisplayArgs.hxx>
 
 #include "TSysEvtHandler.h"
-#include "TTimer.h"
 
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <memory>
+#include <queue>
 #include <unordered_map>
 
 class TMap;
 class TExMap;
-class TMacro;
-class TFolder;
 class TGeoManager;
+class TMethodCall;
 
 namespace ROOT {
 namespace Experimental {
@@ -40,48 +42,57 @@ class REveSceneList;
 class RWebWindow;
 class REveGeomViewer;
 
+
 class REveManager
 {
    REveManager(const REveManager&) = delete;
    REveManager& operator=(const REveManager&) = delete;
 
 public:
-   class RRedrawDisabler {
-   private:
-      RRedrawDisabler(const RRedrawDisabler &) = delete;
-      RRedrawDisabler &operator=(const RRedrawDisabler &) = delete;
-
-      REveManager *fMgr{nullptr};
-
-   public:
-      RRedrawDisabler(REveManager *m) : fMgr(m)
-      {
-         if (fMgr)
-            fMgr->DisableRedraw();
-      }
-      virtual ~RRedrawDisabler()
-      {
-         if (fMgr)
-            fMgr->EnableRedraw();
-      }
-   };
-
    class RExceptionHandler : public TStdExceptionHandler {
    public:
       RExceptionHandler() : TStdExceptionHandler() { Add(); }
       virtual ~RExceptionHandler()                 { Remove(); }
 
-      virtual EStatus  Handle(std::exception& exc);
+      virtual EStatus Handle(std::exception& exc);
+   };
 
-      ClassDef(RExceptionHandler, 0);
+   class ChangeGuard {
+      public:
+      ChangeGuard();
+      ~ChangeGuard();
    };
 
    struct Conn
    {
+      enum EConnState {Free, Processing, WaitingResponse };
       unsigned fId{0};
+      EConnState   fState{Free};
 
       Conn() = default;
       Conn(unsigned int cId) : fId(cId) {}
+   };
+
+   class ServerState
+   {
+   public:
+      enum EServerState {Waiting, UpdatingScenes, UpdatingClients};
+
+      std::mutex fMutex{};
+      std::condition_variable fCV{};
+
+      EServerState fVal{Waiting};
+   };
+
+   class MIR
+   {
+      public:
+       MIR(const std::string& cmd, ElementId_t id, const std::string& ctype)
+       :fCmd(cmd), fId(id), fCtype(ctype){}
+
+       std::string fCmd;
+       ElementId_t fId;
+       std::string fCtype;
    };
 
 protected:
@@ -94,8 +105,6 @@ protected:
    TMap                     *fGeometries{nullptr};      //  TODO: use std::map<std::string, std::unique_ptr<TGeoManager>>
    TMap                     *fGeometryAliases{nullptr}; //  TODO: use std::map<std::string, std::string>
 
-   TFolder                  *fMacroFolder{nullptr};
-
    REveScene                *fWorld{nullptr};
 
    REveViewerList           *fViewers{nullptr};
@@ -103,14 +112,9 @@ protected:
 
    REveScene                *fGlobalScene{nullptr};
    REveScene                *fEventScene{nullptr};
-
-   Int_t                     fRedrawDisabled{0};
-   Bool_t                    fFullRedraw{kFALSE};
    Bool_t                    fResetCameras{kFALSE};
    Bool_t                    fDropLogicals{kFALSE};
    Bool_t                    fKeepEmptyCont{kFALSE};
-   Bool_t                    fTimerActive{kFALSE};
-   TTimer                    fRedrawTimer;
 
    // ElementId management
    std::unordered_map<ElementId_t, REveElement*> fElementIdMap;
@@ -125,10 +129,20 @@ protected:
 
    std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
    std::vector<Conn>                                fConnList;
+   std::queue<std::shared_ptr<MIR> >                fMIRqueue;
+
+   // MIR execution
+   std::thread       fMIRExecThread;
+   ServerState       fServerState;
+   std::unordered_map<std::string, std::shared_ptr<TMethodCall> > fMethCallMap;
 
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
    void WindowDisconnect(unsigned connid);
+
+   void MIRExecThread();
+   void ExecuteMIR(std::shared_ptr<MIR> mir);
+   void PublishChanges();
 
 public:
    REveManager(); // (Bool_t map_window=kTRUE, Option_t* opt="FI");
@@ -139,28 +153,31 @@ public:
    REveSelection *GetSelection() const { return fSelection; }
    REveSelection *GetHighlight() const { return fHighlight; }
 
-   REveSceneList *GetScenes() const { return fScenes; }
+   REveSceneList  *GetScenes()  const { return fScenes;  }
    REveViewerList *GetViewers() const { return fViewers; }
 
    REveScene *GetGlobalScene() const { return fGlobalScene; }
-   REveScene *GetEventScene() const { return fEventScene; }
+   REveScene *GetEventScene()  const { return fEventScene;  }
 
    REveScene *GetWorld() const { return fWorld; }
 
    REveViewer *SpawnNewViewer(const char *name, const char *title = "");
-   REveScene *SpawnNewScene(const char *name, const char *title = "");
+   REveScene  *SpawnNewScene (const char *name, const char *title = "");
 
-   TFolder *GetMacroFolder() const { return fMacroFolder; }
-   TMacro *GetMacro(const char *name) const;
+   void BeginChange();
+   void EndChange();
 
-   void DisableRedraw() { ++fRedrawDisabled; }
-   void EnableRedraw()  { --fRedrawDisabled; if (fRedrawDisabled <= 0) Redraw3D(); }
+   void SceneSubscriberProcessingChanges(unsigned cinnId);
+   void SceneSubscriberWaitingResponse(unsigned cinnId);
+
+   bool ClientConnectionsFree() const;
+
+   void DisableRedraw() { printf("REveManager::DisableRedraw obsolete \n"); }
+   void EnableRedraw()  { printf("REveManager::EnableRedraw obsolete \n");  }
 
    void Redraw3D(Bool_t resetCameras = kFALSE, Bool_t dropLogicals = kFALSE)
    {
-      if (fRedrawDisabled <= 0 && !fTimerActive) RegisterRedraw3D();
-      if (resetCameras) fResetCameras = kTRUE;
-      if (dropLogicals) fDropLogicals = kTRUE;
+     printf("REveManager::Redraw3D oboslete %d %d\n",resetCameras , dropLogicals);
    }
    void RegisterRedraw3D();
    void DoRedraw3D();
@@ -209,23 +226,22 @@ public:
    void SetDefaultHtmlPage(const std::string& path);
    void SetClientVersion(const std::string& version);
 
+   void ScheduleMIR(const std::string &cmd, ElementId_t i, const std::string& ctype);
+
    static REveManager* Create();
    static void         Terminate();
+   static void         ExecuteInMainThread(std::function<void()> func);
+   static void         QuitRoot();
+
 
    // Access to internals, needed for low-level control in advanced
    // applications.
-
-   void EnforceTimerActive (Bool_t ta) { fTimerActive = ta; }
 
    std::shared_ptr<RWebWindow> GetWebWindow() const { return fWebWindow; }
 
    // void Send(void* buff, unsigned connid);
    void Send(unsigned connid, const std::string &data);
    void SendBinary(unsigned connid, const void *data, std::size_t len);
-
-   void DestroyElementsOf(REveElement::List_t &els);
-
-   void BroadcastElementsOf(REveElement::List_t &els);
 
    void Show(const RWebDisplayArgs &args = "");
 
