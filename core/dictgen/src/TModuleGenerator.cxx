@@ -316,7 +316,7 @@ std::ostream &TModuleGenerator::WriteStringVec(const std::vector<std::string> &v
    for (auto const & theStr : vec) {
       out << "\"" << theStr << "\",\n";
    }
-   out << "0" << std::endl;
+   out << "nullptr" << std::endl;
    return out;
 }
 
@@ -340,7 +340,7 @@ std::ostream &TModuleGenerator::WriteStringPairVec(const StringPairVec_t &vec,
       }
       out << "\",\n";
    }
-   out << "0" << std::endl;
+   out << "nullptr" << std::endl;
    return out;
 }
 
