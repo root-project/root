@@ -212,95 +212,6 @@ std::shared_ptr<ROOT::Experimental::RFrame> ROOT::Experimental::RPadBase::GetFra
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-/// Get a pad axis from the RFrame.
-/// \param dimension - Index of the dimension of the RFrame user coordinate system.
-
-ROOT::Experimental::RPadUserAxisBase* ROOT::Experimental::RPadBase::GetAxis(size_t dimension) const
-{
-   auto frame = GetFrame();
-
-   if (frame && dimension < frame->GetNDimensions())
-      return &frame->GetUserAxis(dimension);
-   return nullptr;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/// Get a pad axis from the RFrame.
-/// \param dimension - Index of the dimension of the RFrame user coordinate system.
-
-ROOT::Experimental::RPadUserAxisBase* ROOT::Experimental::RPadBase::GetOrCreateAxis(size_t dimension)
-{
-   auto frame = GetOrCreateFrame();
-   frame->GrowToDimensions(dimension);
-   return &frame->GetUserAxis(dimension);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/// Set the range of an axis as begin, end.
-
-void ROOT::Experimental::RPadBase::SetAxisBounds(int dimension, double begin, double end)
-{
-   GetOrCreateFrame()->GrowToDimensions(dimension);
-   GetAxis(dimension)->SetBounds(begin, end);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/// Set the range of an axis as bound kind and bound (up or down).
-
-void ROOT::Experimental::RPadBase::SetAxisBound(int dimension, RPadUserAxisBase::EAxisBoundsKind boundsKind, double bound)
-{
-   GetOrCreateFrame()->GrowToDimensions(dimension);
-   GetAxis(dimension)->SetBound(boundsKind, bound);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/// Set the range of an axis as bound kind and bound (up or down).
-
-void ROOT::Experimental::RPadBase::SetAxisAutoBounds(int dimension)
-{
-   GetOrCreateFrame()->GrowToDimensions(dimension);
-   GetAxis(dimension)->SetAutoBounds();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/// Set the range of an axis as bound kind and bound (up or down).
-
-void ROOT::Experimental::RPadBase::SetAllAxisBounds(const std::vector<std::array<double, 2>> &vecBeginAndEnd)
-{
-   auto frame = GetOrCreateFrame();
-
-   frame->GrowToDimensions(vecBeginAndEnd.size());
-   if (vecBeginAndEnd.size() != frame->GetNDimensions()) {
-      R__LOG_ERROR(GPadLog())
-         << "Array of axis bound has wrong size " <<  vecBeginAndEnd.size()
-         << " versus numer of axes in frame " << frame->GetNDimensions();
-      return;
-   }
-
-   for (size_t i = 0, n = frame->GetNDimensions(); i < n; ++i)
-      frame->GetUserAxis(i).SetBounds(vecBeginAndEnd[i][0], vecBeginAndEnd[i][1]);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/// Set the range of an axis as bound kind and bound (up or down).
-
-void ROOT::Experimental::RPadBase::SetAllAxisBound(const std::vector<BoundKindAndValue> &vecBoundAndKind)
-{
-   auto frame = GetOrCreateFrame();
-
-   frame->GrowToDimensions(vecBoundAndKind.size());
-   if (vecBoundAndKind.size() != frame->GetNDimensions()) {
-      R__LOG_ERROR(GPadLog())
-         << "Array of axis bound has wrong size " << vecBoundAndKind.size()
-         << " versus numer of axes in frame " << frame->GetNDimensions();
-      return;
-   }
-
-   for (size_t i = 0, n = frame->GetNDimensions(); i < n; ++i)
-      frame->GetUserAxis(i).SetBound(vecBoundAndKind[i].fKind, vecBoundAndKind[i].fBound);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 /// Collect all shared items to resolve shared_ptr after IO
 
 void ROOT::Experimental::RPadBase::CollectShared(Internal::RIOSharedVector_t &vect)
@@ -310,28 +221,6 @@ void ROOT::Experimental::RPadBase::CollectShared(Internal::RIOSharedVector_t &ve
       auto drawable = handle.get();
       if (drawable) drawable->CollectShared(vect);
    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/// Set the range of an axis as bound kind and bound (up or down).
-
-void ROOT::Experimental::RPadBase::SetAllAxisAutoBounds()
-{
-   auto frame = GetOrCreateFrame();
-
-   for (size_t i = 0, n = frame->GetNDimensions(); i < n; ++i)
-      frame->GetUserAxis(i).SetAutoBounds();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/// Convert user coordinates to normal coordinates.
-
-std::array<ROOT::Experimental::RPadLength::Normal, 2> ROOT::Experimental::RPadBase::UserToNormal(const std::array<RPadLength::User, 2> &pos) const
-{
-   auto frame = GetFrame();
-   if (!frame) return {};
-
-   return frame->UserToNormal(pos);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
