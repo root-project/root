@@ -1184,7 +1184,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
    dictStream << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "atomic_TClass_ptr " << clsname << "::fgIsA(0);  // static to hold class pointer" << std::endl
+   dictStream << "atomic_TClass_ptr " << clsname << "::fgIsA(nullptr);  // static to hold class pointer" << std::endl
               << std::endl
 
               << "//_______________________________________"
@@ -1198,14 +1198,14 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
    if (add_template_keyword) dictStream << "template <> ";
    dictStream << "const char *" << clsname << "::ImplFileName()"  << std::endl << "{" << std::endl
               << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
-              << "*)0x0)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
+              << "*)nullptr)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
 
               << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
    dictStream << "int " << clsname << "::ImplFileLine()" << std::endl << "{" << std::endl
               << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
-              << "*)0x0)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
+              << "*)nullptr)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
 
               << "//_______________________________________"
               << "_______________________________________" << std::endl;
@@ -1216,7 +1216,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
    if (autoLoad)
       dictStream << "   gInterpreter->AutoLoad(\"" << fullname << "\");\n";
    dictStream    << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
-                 << "*)0x0)->GetClass();" << std::endl
+                 << "*)nullptr)->GetClass();" << std::endl
                  << "   return fgIsA;\n"
                  << "}" << std::endl << std::endl
 
@@ -1228,7 +1228,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
       dictStream << "   Dictionary();\n";
    } else {
       dictStream << "   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
-      dictStream << fullname << "*)0x0)->GetClass(); }" << std::endl;
+      dictStream << fullname << "*)nullptr)->GetClass(); }" << std::endl;
    }
    dictStream    << "   return fgIsA;" << std::endl
                  << "}" << std::endl << std::endl;
@@ -1297,7 +1297,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
       if (filename[i] == '\\') filename[i] = '/';
    }
    dictStream << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << std::endl
-              << "                     ::ROOT::Internal::DefineBehavior((void*)0,(void*)0)," << std::endl
+              << "                     ::ROOT::Internal::DefineBehavior((void*)nullptr,(void*)nullptr)," << std::endl
               << "                     ";
 
    if (Namespace__HasMethod(cl, "Dictionary", interp)) {
