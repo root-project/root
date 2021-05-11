@@ -91,6 +91,8 @@ From now on, the likelihoods are normalized by the sum of integrals in each rang
 
 ## 2D Graphics Libraries
 
+- Implement the option `X+` and `Y+` for reverse axis on TGraph.
+
 
 ## 3D Graphics Libraries
 
