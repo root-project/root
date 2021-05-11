@@ -6410,10 +6410,10 @@ Int_t TTree::LoadBaskets(Long64_t maxmemory)
 
 Long64_t TTree::LoadTree(Long64_t entry)
 {
-   // We already have been visited while recursively looking
-   // through the friends tree, let return
+   // We have already been visited while recursively looking
+   // through the friend trees, let's return
    if (kLoadTree & fFriendLockStatus) {
-      // We need to return a negative value to avoid a circular list of friend
+      // We need to return a negative value to avoid a circular list of friends
       // to think that there is always an entry somewhere in the list.
       return -1;
    }
