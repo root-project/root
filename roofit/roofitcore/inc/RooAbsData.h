@@ -251,6 +251,10 @@ public:
 
   static StorageType getDefaultStorageType();
 
+  std::unique_ptr<RooArgSet> getGlobalObservables() const;
+  void setGlobalObservables(RooAbsCollection const& args);
+  bool hasGlobalObservablesDefined() const { return static_cast<bool>(gloablObservablesIndices_); }
+
 protected:
 
   static StorageType defaultStorageType ;
@@ -296,7 +300,10 @@ protected:
   std::map<std::string,RooAbsData*> _ownedComponents ; // Owned external components
 
 private:
-   ClassDef(RooAbsData, 5) // Abstract data collection
+
+  std::unique_ptr<std::vector<int>> gloablObservablesIndices_ = nullptr;
+
+  ClassDef(RooAbsData, 6) // Abstract data collection
 };
 
 #endif

@@ -259,3 +259,21 @@ TEST(RooDataSet, CrashAfterImportFromTree) {
   EXPECT_EQ(static_cast<RooRealVar*>(data_set->get(1)->find("var"))->getVal(), 2.);
 
 }
+
+/// root-project/root#8123: Attach global observables to dataset
+TEST(RooDataSet, GlobalObservables) {
+
+  RooRealVar x("x", "x", 0);
+  RooRealVar y("y", "y", 0);
+  RooRealVar z("z", "z", 0);
+
+  RooDataSet dataSet{"data", "data", RooArgSet{x, y, z}};
+  dataSet.get()->Print();
+
+  dataSet.setGlobalObservables(RooArgSet{z});
+  auto globs = dataSet.getGlobalObservables();
+
+  EXPECT_FALSE(globs->find(x));
+  EXPECT_FALSE(globs->find(y));
+  EXPECT_TRUE(globs->find(z));
+}

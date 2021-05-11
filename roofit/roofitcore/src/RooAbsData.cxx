@@ -50,7 +50,7 @@ points for its contents and provides an iterator over its elements
 #include "RooCategory.h"
 #include "RooTrace.h"
 #include "RooUniformBinning.h"
-
+#include "RooMsgService.h"
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
 #include "RooPlot.h"
@@ -63,6 +63,8 @@ points for its contents and provides an iterator over its elements
 #include "TH2.h"
 #include "TH3.h"
 #include "Math/Util.h"
+
+#include "ROOT/RMakeUnique.hxx"
 
 
 using namespace std;
@@ -2401,6 +2403,51 @@ void RooAbsData::RecursiveRemove(TObject *obj)
   for(auto &iter : _ownedComponents) {
     if (iter.second == obj) {
       iter.second = nullptr;
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the global observables of this RooAbsData.
+/// This only works if they have been set with
+/// `RooAbsData::setGlobalObservables` before.
+
+std::unique_ptr<RooArgSet> RooAbsData::getGlobalObservables() const {
+  if(!gloablObservablesIndices_) {
+    auto errorMsg = std::string("RooAbsData::getGlobalObservables failed for RooAbsData \"")
+        + GetName() + "\" because no global observables have not been set. "
+        + "Please call RooAbsData::setGlobalObservables before.";
+    coutE(DataHandling) <<  errorMsg << std::endl;
+    throw std::runtime_error(errorMsg);
+  }
+  auto out = std::make_unique<RooArgSet>();
+  for(auto const& idx : *gloablObservablesIndices_) {
+    out->add(*_vars[idx]);
+  }
+  return out;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the global observables of this RooAbsData.
+
+void RooAbsData::setGlobalObservables(RooAbsCollection const& args) {
+  if(gloablObservablesIndices_) {
+    gloablObservablesIndices_->clear();
+    coutI(DataHandling) << "RooAbsData::setGlobalObservables for RooAbsData \"" << GetName()
+        << "\": has already been called before." << std::endl;
+  } else {
+    gloablObservablesIndices_ = std::make_unique<std::vector<int>>();
+  } 
+  for(auto const& arg : args) {
+    int idx = _vars.index(arg->GetName());
+    if(idx >= 0) {
+      gloablObservablesIndices_->push_back(idx);
+    }
+    else {
+      auto errorMsg = std::string("RooAbsData::setGlobalObservables failed for RooAbsData \"")
+          + GetName() + "\" because the variable \"" + arg->GetName() + "\" is not available in the data.";
+      coutE(DataHandling) <<  errorMsg << std::endl;
+      throw std::runtime_error(errorMsg);
     }
   }
 }
