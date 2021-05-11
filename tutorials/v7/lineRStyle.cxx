@@ -49,6 +49,6 @@ void lineRStyle()
 
    canvas->Show();
 
-   // after leaving function scope style will be destroyed, one has to preserve it extra
-   RDirectory::Heap().Add("custom_style", style);
+   // after leaving function scope style will be destroyed, one has to preserve it
+   RDirectory::Heap().Add("line_style", style);
 }

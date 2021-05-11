@@ -80,5 +80,5 @@ void draw_subpads()
   canvas->SetSize(1200, 600);
   canvas->Show();
 
-  RDirectory::Heap().Add("custom_style", style); // required to keep style alive
+  RDirectory::Heap().Add("subpads_style", style); // required to keep style alive
 }
