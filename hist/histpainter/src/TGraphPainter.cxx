@@ -3992,8 +3992,10 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 
    Bool_t lrx = opt.Contains("rx");
    Bool_t lry = opt.Contains("ry");
+   Bool_t lxp = opt.Contains("x+");
+   Bool_t lyp = opt.Contains("y+");
    Bool_t axis = opt.Contains("a");
-   opt.ReplaceAll("a", "");
+   opt.ReplaceAll("a", "0");
 
    Double_t LOX = theHist->GetXaxis()->GetLabelOffset();
    Double_t TLX = theHist->GetXaxis()->GetTickLength();
@@ -4013,7 +4015,7 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          theHist->GetYaxis()->SetLabelOffset(999.);
          theHist->GetYaxis()->SetAxisColor(gPad->GetFrameFillColor());
       }
-      theHist->Paint("0");
+      theHist->Paint(opt.Data());
    }
 
    Int_t     N  = theGraph->GetN();
@@ -4051,10 +4053,13 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
             GL = (YA2 - YA1) / (gPad->GetY2() - gPad->GetY1());
             optax.Append("W");
          }
+         Double_t ypos;
+         if (lxp) ypos = gPad->GetUymax();
+         else     ypos = gPad->GetUymin();
          auto *theNewAxis = new TGaxis(gPad->GetUxmax(),
-                                       gPad->GetUymin(),
+                                       ypos,
                                        gPad->GetUxmin(),
-                                       gPad->GetUymin(),
+                                       ypos,
                                        theGraph->GetXaxis()->GetXmin(),
                                        theGraph->GetXaxis()->GetXmax(),
                                        theHist->GetNdivisions("X"),
@@ -4084,9 +4089,12 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
             GL = (XA2 - XA1) / (gPad->GetX2() - gPad->GetX1());
             optax.Append("W");
          }
-         auto *theNewAxis = new TGaxis(gPad->GetUxmin(),
+         Double_t xpos;
+         if (lyp) xpos = gPad->GetUxmax();
+         else     xpos = gPad->GetUxmin();
+         auto *theNewAxis = new TGaxis(xpos,
                                        gPad->GetUymax(),
-                                       gPad->GetUxmin(),
+                                       xpos,
                                        gPad->GetUymin(),
                                        theGraph->GetYaxis()->GetXmin(),
                                        theGraph->GetYaxis()->GetXmax(),
