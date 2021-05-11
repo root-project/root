@@ -53,7 +53,6 @@ public:
   virtual ExtendMode extendMode() const ;
 
   virtual Double_t expectedEvents(const RooArgSet* nset) const ;
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
