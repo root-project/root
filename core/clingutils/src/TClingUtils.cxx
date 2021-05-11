@@ -1790,7 +1790,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    }
 
    if (HasIOConstructor(decl, args, ctorTypes, interp)) {
-      finalString << "   static void *new_" << mappedname.c_str() << "(void *p = 0);" << "\n";
+      finalString << "   static void *new_" << mappedname.c_str() << "(void *p = nullptr);" << "\n";
 
       if (args.size()==0 && NeedDestructor(decl, interp))
       {
@@ -1902,11 +1902,11 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    finalString << "   static TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol << "*)" << "\n" << "   {" << "\n";
 
-   finalString << "      " << csymbol << " *ptr = 0;" << "\n";
+   finalString << "      " << csymbol << " *ptr = nullptr;" << "\n";
 
    //fprintf(fp, "      static ::ROOT::ClassInfo< %s > \n",classname.c_str());
    if (ClassInfo__HasMethod(decl,"IsA",interp) ) {
-      finalString << "      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< "  << csymbol << " >(0);" << "\n";
+      finalString << "      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< "  << csymbol << " >(nullptr);" << "\n";
    }
    else {
       finalString << "      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(" << csymbol << "));" << "\n";
@@ -2081,20 +2081,20 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    if (!isStdNotString && !ROOT::TMetaUtils::hasOpaqueTypedef(cl, interp, normCtxt)) {
       // The GenerateInitInstance for STL are not unique and should not be externally accessible
-      finalString << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol << "*)" << "\n" << "   {\n      return GenerateInitInstanceLocal((" << csymbol << "*)0);\n   }" << "\n";
+      finalString << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol << "*)" << "\n" << "   {\n      return GenerateInitInstanceLocal((" << csymbol << "*)nullptr);\n   }" << "\n";
    }
 
    finalString << "   // Static variable to force the class initialization" << "\n";
    // must be one long line otherwise UseDummy does not work
 
 
-   finalString << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const " << csymbol << "*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));" << "\n";
+   finalString << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const " << csymbol << "*)nullptr); R__UseDummy(_R__UNIQUE_DICT_(Init));" << "\n";
 
    if (!ClassInfo__HasMethod(decl,"Dictionary",interp) || IsTemplate(*decl)) {
       finalString <<  "\n" << "   // Dictionary for non-ClassDef classes" << "\n"
                   << "   static TClass *" << mappedname << "_Dictionary() {\n"
                   << "      TClass* theClass ="
-                  << "::ROOT::GenerateInitInstanceLocal((const " << csymbol << "*)0x0)->GetClass();\n"
+                  << "::ROOT::GenerateInitInstanceLocal((const " << csymbol << "*)nullptr)->GetClass();\n"
                   << "      " << mappedname << "_TClassManip(theClass);\n";
       finalString << "   return theClass;\n";
       finalString << "   }\n\n";
