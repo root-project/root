@@ -410,7 +410,7 @@ enum {
 };
 
 static inline int daos_obj_generate_id(daos_obj_id_t *oid, daos_ofeat_t ofeats,
-		     daos_oclass_id_t cid, uint32_t args)
+		     daos_oclass_id_t cid, uint32_t /*args*/)
 {
 	(void)args;
 	uint64_t hdr;
