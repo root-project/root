@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include <ROOT/REveTypes.hxx>
-
+#include <iostream>
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
@@ -40,3 +40,20 @@ REveException REX::operator+(const REveException &s1,  const char *s2)
 
 REveException REX::operator+(const REveException &s1, ElementId_t x)
 { REveException r(s1); r.append(std::to_string(x)); return r; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+thread_local REX::REveLog REX::gEveLog;
+
+void REveLog::add(const char* txt) { fLog << txt; std::cout << txt << std::endl;}
+void REveLog::add(const std::string& txt) { fLog << txt; std::cout << txt << std::endl;}
+bool REveLog::has_contents() { return ! fLog.str().empty(); }
+void REveLog::clear() { fLog.clear(); }
+
+
+REveLog &REveLog::operator<<(std::ostream &(*os)(std::ostream &))
+{
+   fLog << os;
+   std::cout << os;
+   return *this;
+}

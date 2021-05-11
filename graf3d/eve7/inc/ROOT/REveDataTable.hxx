@@ -50,6 +50,7 @@ public:
    TString fExpression;
    FieldType_e fType; // can we auto detect this?
    Int_t fPrecision{2};
+   TClass* fClassType{nullptr};
 
    std::string fTrue{"*"};
    std::string fFalse{" "};
@@ -64,6 +65,7 @@ public:
 
    void SetExpressionAndType(const std::string &expr, FieldType_e type);
    void SetExpressionAndType(const std::string &expr, FieldType_e type, TClass* c);
+   std::string GetFunctionExpressionString() const;
    void SetPrecision(Int_t prec);
 
    std::string EvalExpr(void *iptr) const;

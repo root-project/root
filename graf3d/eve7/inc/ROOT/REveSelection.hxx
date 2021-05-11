@@ -145,6 +145,7 @@ public:
    virtual void UserUnPickedElement(REveElement *el);
 
    void NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& secondary_idcs={});
+   void NewElementPickedStr(ElementId_t id, bool multi, bool secondary, const char* secondary_idcs="");
    void ClearSelection();
 
    int  RemoveImpliedSelectedReferencesTo(REveElement *el);

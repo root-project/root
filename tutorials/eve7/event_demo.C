@@ -23,6 +23,7 @@
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveElement.hxx>
+#include <ROOT/REveCompound.hxx>
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveUtil.hxx>
 #include <ROOT/REveGeoShape.hxx>
@@ -70,7 +71,7 @@ void addPoints()
 {
    REX::REveElement* event = eveMng->GetEventScene();
 
-   auto pntHolder = new REX::REveElement("Hits");
+   auto pntHolder = new REX::REveCompound("Hits");
 
    auto ps1 = getPointSet(20, 100);
    ps1->SetName("Points_1");
@@ -97,7 +98,7 @@ void addTracks()
    prop->SetMaxZ(600);
    prop->SetMaxOrbs(6);
 
-   auto trackHolder = new REX::REveElement("Tracks");
+   auto trackHolder = new REX::REveCompound("Tracks");
 
    double v = 0.2;
    double m = 5;
@@ -105,14 +106,14 @@ void addTracks()
    int N_Tracks = 10 + r.Integer(20);
    for (int i = 0; i < N_Tracks; i++)
    {
-      TParticle* p = new TParticle();
+      TParticle p;
 
       int pdg = 11 * (r.Integer(2) > 0 ? 1 : -1);
-      p->SetPdgCode(pdg);
+      p.SetPdgCode(pdg);
 
-      p->SetProductionVertex(r.Uniform(-v,v), r.Uniform(-v,v), r.Uniform(-v,v), 1);
-      p->SetMomentum(r.Uniform(-m,m), r.Uniform(-m,m), r.Uniform(-m,m)*r.Uniform(1, 3), 1);
-      auto track = new REX::REveTrack(p, 1, prop);
+      p.SetProductionVertex(r.Uniform(-v,v), r.Uniform(-v,v), r.Uniform(-v,v), 1);
+      p.SetMomentum(r.Uniform(-m,m), r.Uniform(-m,m), r.Uniform(-m,m)*r.Uniform(1, 3), 1);
+      auto track = new REX::REveTrack(&p, 1, prop);
       track->MakeTrack();
       if (i % 4 == 3) track->SetLineStyle(2); // enabled dashed style for some tracks
       track->SetMainColor(kBlue);
@@ -129,7 +130,7 @@ void addJets()
    TRandom &r = *gRandom;
 
    REX::REveElement *event = eveMng->GetEventScene();
-   auto jetHolder = new REX::REveElement("Jets");
+   auto jetHolder = new REX::REveCompound("Jets");
 
    int N_Jets = 5 + r.Integer(5);
    for (int i = 0; i < N_Jets; i++)
@@ -223,34 +224,98 @@ void projectScenes(bool geomp, bool eventp)
 
 class EventManager : public REX::REveElement
 {
+private:
+   bool fAutoplay{false};
+   int  fPlayDelay{10};
+   int  fCount{0};
+
+   std::chrono::time_point<std::chrono::system_clock> fPrevTime;
+   std::chrono::duration<double> fDeltaTime{1};
+
+   std::thread* fTimerThread{nullptr};
+   std::mutex fMutex;
+   std::condition_variable fCV;
+
+
 public:
-   EventManager() = default;
+   EventManager()
+   {
+      std::chrono::milliseconds ms(100);
+      fDeltaTime = ms;
+   }
 
    virtual ~EventManager() {}
 
-   virtual void NextEvent()
+   void NextEvent()
    {
-      eveMng->DisableRedraw();
-      auto scene =  eveMng->GetEventScene();
+      auto scene = eveMng->GetEventScene();
       scene->DestroyElements();
       makeEventScene();
-      for (auto &ie : scene->RefChildren())
-      {
+      for (auto &ie : scene->RefChildren()) {
          if (mngRhoPhi)
-         mngRhoPhi->ImportElements(ie, rPhiEventScene);
+            mngRhoPhi->ImportElements(ie, rPhiEventScene);
          if (mngRhoZ)
-         mngRhoZ  ->ImportElements(ie, rhoZEventScene);
+            mngRhoZ->ImportElements(ie, rhoZEventScene);
       }
-      eveMng->EnableRedraw();
-      eveMng->DoRedraw3D();
+      // if (++fCount % 10 == 0) printf("At event %d\n", fCount);
+   }
+
+   void autoplay_scheduler()
+   {
+      while (true) {
+         bool autoplay;
+         {
+            std::unique_lock<std::mutex> lock{fMutex};
+            if (!fAutoplay) {
+               // printf("exit thread pre wait\n");
+               return;
+            }
+            if (fCV.wait_for(lock, fDeltaTime) != std::cv_status::timeout) {
+               printf("autoplay not timed out \n");
+               if (!fAutoplay) {
+                  printf("exit thread post wait\n");
+                  return;
+               } else {
+                  continue;
+               }
+            }
+            autoplay = fAutoplay;
+         }
+         if (autoplay) {
+            REX::REveManager::ChangeGuard ch;
+            NextEvent();
+         } else {
+            return;
+         }
+      }
+   }
+
+   void Autoplay()
+   {
+      static std::mutex autoplay_mutex;
+      std::unique_lock<std::mutex> aplock{autoplay_mutex};
+      {
+         std::unique_lock<std::mutex> lock{fMutex};
+         fAutoplay = !fAutoplay;
+         if (fAutoplay) {
+            if (fTimerThread) {
+               fTimerThread->join();
+               delete fTimerThread;
+               fTimerThread = nullptr;
+            }
+            NextEvent();
+            fTimerThread = new std::thread{[this] { autoplay_scheduler(); }};
+         } else {
+            fCV.notify_all();
+         }
+      }
    }
 
    virtual void QuitRoot()
    {
       printf("Quit ROOT\n");
-      if (gApplication) gApplication->Terminate();
+      REX::REveManager::QuitRoot();
    }
-
 };
 
 void event_demo()
@@ -269,6 +334,8 @@ void event_demo()
    eveMng->GetWorld()->AddCommand("QuitRoot", "sap-icon://log", eventMng, "QuitRoot()");
 
    eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", eventMng, "NextEvent()");
+
+   eveMng->GetWorld()->AddCommand("Autoplay", "sap-icon://refresh", eventMng, "Autoplay()");
 
    makeGeometryScene();
    makeEventScene();

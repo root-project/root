@@ -16,7 +16,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       this.glctrl  = glctrl;
       this.creator = glctrl.viewer.creator;
       this.id2obj_map  = new Map; // base on element id
-      this.mid2obj_map = new Map; // base on master id
 
       this.first_time = true;
 
@@ -64,10 +63,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       }
    }
 
-   EveScene.prototype.getObj3D = function(elementId, is_master)
+   EveScene.prototype.getObj3D = function(elementId)
    {
-      let map = is_master ? this.mid2obj_map : this.id2obj_map;
-      return map.get(elementId);
+      return this.id2obj_map.get(elementId);
    }
 
    EveScene.prototype.create3DObjects = function(all_ancestor_children_visible, prnt, res3d)
@@ -101,7 +99,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                   res3d.push(obj3d);
 
                   this.id2obj_map.set(elem.fElementId, obj3d);
-                  if (elem.fMasterId) this.mid2obj_map.set(elem.fMasterId, obj3d);
 
                   obj3d.visible = elem.fRnrSelf && all_ancestor_children_visible;
                   obj3d.all_ancestor_children_visible = all_ancestor_children_visible;
@@ -207,7 +204,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       container.add(obj3d);
 
       this.id2obj_map.set(el.fElementId, obj3d);
-      if (el.fMasterId) this.mid2obj_map.set(el.fMasterId, obj3d);
    }
 
    EveScene.prototype.replaceElement = function (el) {
@@ -227,20 +223,13 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          obj3d.visible = visible;
          container.add(obj3d);
 
-
          this.id2obj_map.set(el.fElementId, obj3d);
-         if (el.fMasterId) this.mid2obj_map.set(el.fMasterId, obj3d);
 
          this.glctrl.viewer.render();
       }
       catch (e) {
          console.error("replace element", e);
       }
-   }
-
-   EveScene.prototype.elementRemoved = function()
-   {
-      // XXXXX how is this empty? not called?
    }
 
    EveScene.prototype.elementsRemoved = function(ids)
@@ -252,7 +241,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          if (!obj3d) {
             let el = this.mgr.GetElement(elId);
             if (el && el.render_data) {
-               console.log("ERROR EveScene.prototype.elementsRemoved can't find obj3d ",this.mgr.GetElement(el));
+               console.log("ERROR EveScene.prototype.elementsRemoved can't find obj3d ", this.mgr.GetElement(el));
             }
             continue;
          }
@@ -261,6 +250,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          container.remove(obj3d);
 
          this.id2obj_map.delete(elId);
+
+         if (typeof obj3d.dispose !== 'function')
+            console.log("EveScene.elementsRemoved no dispose function for " + this.mgr.GetElement(elId)._typename, ", rnr obj ", obj3d._typename);
+         else
+            obj3d.dispose();
       }
    }
 
@@ -300,23 +294,35 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    // Selection handling
    //==============================================================================
 
-   /** interactive handler. Calculates selection state, apply to element and distribute to other scene */
-   EveScene.prototype.processElementSelected = function(obj3d, indx, event)
+   EveScene.prototype.sanitizeIndx = function(indx)
    {
-      // MT BEGIN
-      // console.log("EveScene.prototype.processElementSelected", obj3d, col, indx, evnt);
+      if (Array.isArray(indx))    return indx.length > 0 ? indx : undefined;
+      if (Number.isInteger(indx)) return [ indx ];
+      return undefined;
+   }
 
-      let is_multi  = event && event.ctrlKey ? true : false;
+   EveScene.prototype.sendSelectMIR = function(sel_id, obj3d, is_multi, indx)
+   {
+      indx = this.sanitizeIndx(indx);
       let is_secsel = indx !== undefined;
 
-      let fcall = "NewElementPicked(" + (obj3d ? obj3d.eve_el.fElementId : 0) + `, ${is_multi}, ${is_secsel}`;
+      let fcall = "NewElementPickedStr(" + (obj3d ? obj3d.eve_el.fElementId : 0) + `, ${is_multi}, ${is_secsel}`;
       if (is_secsel)
       {
-         fcall += ", { " + (Array.isArray(indx) ? indx.join(", ") : indx) + " }";
+         fcall += ", \"" + indx.join(",") + "\"";
       }
       fcall += ")";
 
-      this.mgr.SendMIR(fcall, this.mgr.global_selection_id, "ROOT::Experimental::REveSelection");
+      this.mgr.SendMIR(fcall, sel_id, "ROOT::Experimental::REveSelection");
+   }
+
+   /** interactive handler. Calculates selection state, apply to element and distribute to other scene */
+   EveScene.prototype.processElementSelected = function(obj3d, indx, event)
+   {
+      // console.log("EveScene.prototype.processElementSelected", obj3d, col, indx, evnt);
+
+      let is_multi  = event && event.ctrlKey ? true : false;
+      this.sendSelectMIR(this.mgr.global_selection_id, obj3d, is_multi, indx);
 
       return true;
    }
@@ -327,7 +333,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       if (this.mgr.MatchSelection(this.mgr.global_selection_id, obj3d.eve_el, indx))
          return true;
 
-
       // Need check for duplicates before call server, else server will un-higlight highlighted element
       // console.log("EveScene.prototype.processElementHighlighted", obj3d.eve_el.fElementId, indx, evnt);
       if (this.mgr.MatchSelection(this.mgr.global_highlight_id, obj3d.eve_el, indx))
@@ -337,19 +342,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       if (this.mgr.CheckSendThreshold())
          return true;
 
-      let is_multi  = false;
-      let is_secsel = indx !== undefined;
-
-      let fcall = "NewElementPicked(" + obj3d.eve_el.fElementId + `, ${is_multi}, ${is_secsel}`;
-      if (is_secsel)
-         fcall += ", { " + (Array.isArray(indx) ? indx.join(", ") : indx) + " }";
-      fcall += ")";
-
-      this.mgr.SendMIR(fcall, this.mgr.global_highlight_id, "ROOT::Experimental::REveSelection");
+      this.sendSelectMIR(this.mgr.global_highlight_id, obj3d, false, indx);
 
       return true;
    }
-
 
    EveScene.prototype.clearHighlight = function()
    {
@@ -361,16 +357,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       if (this.mgr.CheckSendThreshold())
          return true;
 
-      let is_multi  = false;
-      let is_secsel = false;
-
       let so = this.mgr.GetElement(this.mgr.global_highlight_id);
 
       if (so && so.prev_sel_list && so.prev_sel_list.length)
       {
-         let fcall = "NewElementPicked(" + 0 + `, ${is_multi}, ${is_secsel}` + ")";
-
-         this.mgr.SendMIR(fcall, this.mgr.global_highlight_id, "ROOT::Experimental::REveSelection");
+         this.sendSelectMIR(this.mgr.global_highlight_id, 0, false);
       }
 
       return true;

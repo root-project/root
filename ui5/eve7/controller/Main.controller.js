@@ -235,7 +235,7 @@ sap.ui.define(['sap/ui/core/Component',
 
       loadLog: function () {
          let oFT = sap.ui.getCore().byId("EveConsoleText");
-         oFT.setHtmlText(JSROOT.EVE.console.txt);
+         oFT.setHtmlText(JSROOT.EVE.console.txt.replace(/\n/g, "<p>"));
       },
 
       showUserURL : function(oEvent) {

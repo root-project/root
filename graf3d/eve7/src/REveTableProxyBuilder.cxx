@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TClass.h"
+#include "TROOT.h"
 #include <ROOT/REveTableProxyBuilder.hxx>
 #include <ROOT/REveTableInfo.hxx>
 #include <ROOT/REveViewContext.hxx>
@@ -51,15 +52,20 @@ void REveTableProxyBuilder::Build(const REveDataCollection* collection, REveElem
 
    if (info->GetConfigChanged() || fTable->NumChildren() == 0) {
       fTable->DestroyElements();
+      std::stringstream ss;
       REveTableHandle::Entries_t& tableEntries =  context->GetTableViewInfo()->RefTableEntries(collection->GetItemClass()->GetName());
       for (const REveTableEntry& spec : tableEntries) {
          auto c = new REveDataColumn(spec.fName.c_str());
          fTable->AddElement(c);
          using namespace std::string_literals;
          std::string exp  =  spec.fExpression;
-         c->SetExpressionAndType(exp.c_str(), spec.fType);
          c->SetPrecision(spec.fPrecision);
+         c->SetExpressionAndType(exp.c_str(), spec.fType);
+         ss << c->GetFunctionExpressionString();
+         ss << "\n";
       }
+      // std::cout << ss.str();
+      gROOT->ProcessLine(ss.str().c_str());
    }
    fTable->StampObjProps();
 }

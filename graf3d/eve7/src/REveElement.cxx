@@ -439,7 +439,6 @@ void REveElement::VizDB_Apply(const std::string& tag)
    if (ApplyVizTag(tag))
    {
       PropagateVizParamsToProjecteds();
-      REX::gEve->Redraw3D();
    }
 }
 
@@ -453,7 +452,6 @@ void REveElement::VizDB_Reapply()
    {
       CopyVizParamsFromDB();
       PropagateVizParamsToProjecteds();
-      REX::gEve->Redraw3D();
    }
 }
 
@@ -475,7 +473,6 @@ void REveElement::VizDB_UpdateModel(Bool_t update)
          // XXX have a matching fVizModel. Or something.
          Error("VizDB_UpdateModel", "update from vizdb -> elements not implemented.");
          // fVizModel->PropagateVizParamsToElements(fVizModel);
-         // REX::gEve->Redraw3D();
       }
    }
    else
@@ -500,9 +497,7 @@ void REveElement::VizDB_Insert(const std::string& tag, Bool_t replace, Bool_t up
       return;
    }
    el->CopyVizParams(this);
-   Bool_t succ = REX::gEve->InsertVizDBEntry(tag, el, replace, update);
-   if (succ && update)
-      REX::gEve->Redraw3D();
+   REX::gEve->InsertVizDBEntry(tag, el, replace, update);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1210,7 +1205,6 @@ void REveElement::Annihilate()
    AnnihilateRecursively();
 
    // XXXX ????? Annihilate flag ???? Is it different than regular remove ????
-   // REX::gEve->Redraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1241,7 +1235,6 @@ void REveElement::Destroy()
 
    PreDeleteElement();
    delete this;
-   REX::gEve->Redraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1284,8 +1277,6 @@ void REveElement::DestroyElements()
          RemoveElement(c);
       }
    }
-
-   REX::gEve->Redraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
