@@ -793,15 +793,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Load MathJax functionality,
      * @desc one need not only to load script but wait for initialization
      * @private */
-   ltx.LoadMathjax = function() {
-      let loading = (JSROOT._.mj_loading !== undefined);
+   ltx.loadMathjax = () => {
+      let loading = (ltx._mj_loading !== undefined);
 
       if (!loading && (typeof MathJax != "undefined"))
          return Promise.resolve(MathJax);
 
-      if (!loading) JSROOT._.mj_loading = [];
+      if (!loading) ltx._mj_loading = [];
 
-      let promise = new Promise(resolve => { JSROOT._.mj_loading ? JSROOT._.mj_loading.push(resolve) : resolve(MathJax); });
+      let promise = new Promise(resolve => { ltx._mj_loading ? ltx._mj_loading.push(resolve) : resolve(MathJax); });
 
       if (loading) return promise;
 
@@ -836,8 +836,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             startup: {
                ready: function() {
                   MathJax.startup.defaultReady();
-                  let arr = JSROOT._.mj_loading;
-                  delete JSROOT._.mj_loading;
+                  let arr = ltx._mj_loading;
+                  delete ltx._mj_loading;
                   arr.forEach(func => func(MathJax));
                }
             }
@@ -867,8 +867,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                       });
                       MathJax.startup.useAdaptor('jsdomAdaptor', true);
                       MathJax.startup.defaultReady();
-                      let arr = JSROOT._.mj_loading;
-                      delete JSROOT._.mj_loading;
+                      let arr = ltx._mj_loading;
+                      delete ltx._mj_loading;
                       arr.forEach(func => func(MathJax));
                 }
              }
@@ -1093,7 +1093,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let mtext = translateMath(arg.text, arg.latex, arg.color, painter),
           options = { em: arg.font.size, ex: arg.font.size/2, family: arg.font.name, scale: 1, containerWidth: -1, lineWidth: 100000 };
 
-      return ltx.LoadMathjax()
+      return ltx.loadMathjax()
              .then(() => MathJax.tex2svgPromise(mtext, options))
              .then(elem => {
                  let svg = d3.select(elem).select("svg");
@@ -1110,7 +1110,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Just typeset HTML node with MathJax
      * @private */
    ltx.typesetMathjax = function(node) {
-      return ltx.LoadMathjax()
+      return ltx.loadMathjax()
                 .then(() => MathJax.typesetPromise(node ? [node] : undefined));
    }
 
