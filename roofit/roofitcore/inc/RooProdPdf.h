@@ -68,7 +68,6 @@ public:
 
   virtual ExtendMode extendMode() const ;
   virtual Double_t expectedEvents(const RooArgSet* nset) const ; 
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
 
   const RooArgList& pdfList() const { return _pdfList ; }
 

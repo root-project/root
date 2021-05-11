@@ -44,8 +44,6 @@ public:
   virtual Bool_t selfNormalized() const { return kTRUE ; }
   virtual ExtendMode extendMode() const { return CanBeExtended ; }
   virtual Double_t expectedEvents(const RooArgSet* nset) const ;
-  ///See expectedEvents(const RooArgSet* nset) const
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
 
 protected:
 

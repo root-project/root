@@ -31,11 +31,8 @@ public:
   Double_t evaluate() const { return 1. ; }
 
   virtual ExtendMode extendMode() const { return CanBeExtended ; }
+  /// Return number of expected events, in other words the value of the associated n parameter.
   virtual Double_t expectedEvents(const RooArgSet* nset) const ;
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { 
-    // Return number of expected events, i.e. the value of the associated n parameter
-    return expectedEvents(&nset) ; 
-  }
 
 protected:
 

@@ -242,9 +242,14 @@ public:
   inline Bool_t mustBeExtended() const {
     return (extendMode() == MustBeExtended) ; 
   }
+  /// Return expected number of events to be used in calculation of extended
+  /// likelihood.
   virtual Double_t expectedEvents(const RooArgSet* nset) const ; 
-  /// Return expected number of events to be used in calculation of extended likelihood.
-  virtual Double_t expectedEvents(const RooArgSet& nset) const {
+  /// Return expected number of events to be used in calculation of extended
+  /// likelihood. This function should not be overridden, as it just redirects
+  /// to the actual virtual function but takes a RooArgSet reference instead of
+  /// pointer (\see expectedEvents(const RooArgSet*) const).
+  double expectedEvents(const RooArgSet& nset) const {
     return expectedEvents(&nset) ; 
   }
 

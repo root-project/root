@@ -66,7 +66,6 @@ public:
   bool selfNormalized() const override { return true; }
 
   ExtendMode extendMode() const override { return _pdf->extendMode(); }
-  using RooAbsPdf::expectedEvents;
   virtual Double_t expectedEvents(const RooArgSet* nset) const override { return _pdf->expectedEvents(nset); }
 
   /// Forwards to the PDF's implementation.
