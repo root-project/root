@@ -14,7 +14,7 @@
 #include <ROOT/RAttrText.hxx>
 #include <ROOT/RAttrValue.hxx>
 #include <ROOT/RPadLength.hxx>
-#include "TMath.h"
+#include <cmath>
 
 namespace ROOT {
 namespace Experimental {
@@ -78,9 +78,9 @@ class RAttrAxis : public RAttrBase {
    RAttrAxis &SetLog(double base = 10) { fLog = (base < 1) ? 0 : base; return *this; }
    double GetLog() const { return fLog; }
    bool IsLogScale() const { return GetLog() > 0.999999; }
-   bool IsLog10() const { auto l = GetLog(); return (TMath::Abs(l-1.) < 1e-6) || (TMath::Abs(l-10.) < 1e-6); }
-   bool IsLog2() const { return TMath::Abs(GetLog() - 2.) < 1e-6; }
-   bool IsLn() const { return TMath::Abs(GetLog() - 2.7) < 0.1; }
+   bool IsLog10() const { auto l = GetLog(); return (std::fabs(l-1.) < 1e-6) || (std::fabs(l-10.) < 1e-6); }
+   bool IsLog2() const { return std::fabs(GetLog() - 2.) < 1e-6; }
+   bool IsLn() const { return std::fabs(GetLog() - 2.71828) < 0.1; }
 
    RAttrAxis &SetReverse(bool on = true) { fReverse = on; return *this; }
    bool GetReverse() const { return fReverse; }
