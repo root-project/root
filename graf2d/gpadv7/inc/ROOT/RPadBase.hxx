@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <vector>
+#include <algorithm>
 
 namespace ROOT {
 namespace Experimental {
