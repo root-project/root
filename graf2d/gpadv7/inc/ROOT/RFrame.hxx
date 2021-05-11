@@ -17,7 +17,6 @@
 #include "ROOT/RAttrMargins.hxx"
 #include "ROOT/RAttrAxis.hxx"
 #include "ROOT/RAttrValue.hxx"
-#include "ROOT/RPadUserAxis.hxx"
 
 #include <memory>
 #include <map>
@@ -159,20 +158,13 @@ private:
    RAttrValue<int> fTicksY{this, "ticksy", 1};    ///<! Y ticks drawing
    std::map<unsigned, RUserRanges> fClientRanges; ///<! individual client ranges
 
-   /// Mapping of user coordinates to normal coordinates, one entry per dimension.
-   std::vector<std::unique_ptr<RPadUserAxisBase>> fUserCoord;
-
    RFrame(const RFrame &) = delete;
    RFrame &operator=(const RFrame &) = delete;
 
    // Default constructor
    RFrame() : RDrawable("frame")
    {
-      GrowToDimensions(2);
    }
-
-   /// Constructor taking user coordinate system, position and extent.
-   explicit RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords);
 
    void SetClientRanges(unsigned connid, const RUserRanges &ranges, bool ismainconn);
 
@@ -247,24 +239,6 @@ public:
    int GetTicksY() const { return fTicksY; }
 
    void GetClientRanges(unsigned connid, RUserRanges &ranges);
-
-   /// Create `nDimensions` default axes for the user coordinate system.
-   void GrowToDimensions(size_t nDimensions);
-
-   /// Get the number of axes.
-   size_t GetNDimensions() const { return fUserCoord.size(); }
-
-   /// Get the current user coordinate system for a given dimension.
-   RPadUserAxisBase &GetUserAxis(size_t dimension) const { return *fUserCoord[dimension]; }
-
-   /// Set the user coordinate system.
-   void SetUserAxis(std::vector<std::unique_ptr<RPadUserAxisBase>> &&axes) { fUserCoord = std::move(axes); }
-
-   /// Convert user coordinates to normal coordinates.
-   std::array<RPadLength::Normal, 2> UserToNormal(const std::array<RPadLength::User, 2> &pos) const
-   {
-      return {{fUserCoord[0]->ToNormal(pos[0]), fUserCoord[1]->ToNormal(pos[1])}};
-   }
 };
 
 

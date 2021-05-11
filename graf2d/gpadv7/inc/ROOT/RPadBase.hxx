@@ -13,7 +13,6 @@
 #include "ROOT/RFrame.hxx"
 #include "ROOT/RPadExtent.hxx"
 #include "ROOT/RPadPos.hxx"
-#include "ROOT/RPadUserAxis.hxx"
 #include "ROOT/TypeTraits.hxx"
 
 #include <memory>
@@ -185,34 +184,11 @@ public:
    std::shared_ptr<RFrame> GetFrame();
    const std::shared_ptr<RFrame> GetFrame() const;
 
-   RPadUserAxisBase* GetOrCreateAxis(size_t dimension);
-   RPadUserAxisBase* GetAxis(size_t dimension) const;
-
-   void SetAxisBounds(int dimension, double begin, double end);
-   void SetAxisBound(int dimension, RPadUserAxisBase::EAxisBoundsKind boundsKind, double bound);
-   void SetAxisAutoBounds(int dimension);
-
-   void SetAllAxisBounds(const std::vector<std::array<double, 2>> &vecBeginAndEnd);
-
-   /// Simple struct representing an axis bound.
-   struct BoundKindAndValue {
-      RPadUserAxisBase::EAxisBoundsKind fKind = RPadUserAxisBase::kAxisBoundsAuto;
-      double fBound = 0.;
-   };
-   void SetAllAxisBound(const std::vector<BoundKindAndValue> &vecBoundAndKind);
-   void SetAllAxisAutoBounds();
-
-   /// Convert a `Pixel` position to Canvas-normalized positions.
-   virtual std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const = 0;
-
    /// Access to the top-most canvas, if any (const version).
    virtual const RCanvas *GetCanvas() const = 0;
 
    /// Access to the top-most canvas, if any (non-const version).
    virtual RCanvas *GetCanvas() = 0;
-
-   /// Convert user coordinates to normal coordinates.
-   std::array<RPadLength::Normal, 2> UserToNormal(const std::array<RPadLength::User, 2> &pos) const;
 };
 
 } // namespace Experimental

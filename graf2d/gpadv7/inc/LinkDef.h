@@ -39,8 +39,6 @@
 #pragma link C++ class ROOT::Experimental::RMenuItems+;
 #pragma link C++ class ROOT::Experimental::RDrawableMenuRequest+;
 #pragma link C++ class ROOT::Experimental::TObjectDrawable+;
-#pragma link C++ class ROOT::Experimental::RPadUserAxisBase+;
-#pragma link C++ class ROOT::Experimental::RPadCartesianUserAxis+;
 #pragma link C++ class ROOT::Experimental::RPadExtent+;
 #pragma link C++ class ROOT::Experimental::RPadPos+;
 #pragma link C++ class ROOT::Experimental::RChangeAttrRequest+;
