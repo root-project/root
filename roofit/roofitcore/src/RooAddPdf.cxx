@@ -1064,61 +1064,33 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
 
 Double_t RooAddPdf::expectedEvents(const RooArgSet* nset) const
 {
-  Double_t expectedTotal(0.0);
+  double expectedTotal{0.0};
 
   cxcoutD(Caching) << "RooAddPdf::expectedEvents(" << GetName() << ") calling getProjCache with nset = " << (nset?*nset:RooArgSet()) << endl ;
-  CacheElem* cache = getProjCache(nset) ;
-  updateCoefficients(*cache,nset) ;
+  CacheElem& cache = *getProjCache(nset) ;
+  updateCoefficients(cache,nset) ;
 
-  if (cache->_rangeProjList.getSize()>0) {
+  if (!cache._rangeProjList.empty()) {
 
-    RooFIter iter1 = cache->_refRangeProjList.fwdIterator() ;
-    RooFIter iter2 = cache->_rangeProjList.fwdIterator() ;
-    RooFIter iter3 = _pdfList.fwdIterator() ;
-
-    if (_allExtendable) {
-
-      RooAbsPdf* pdf ;
-      while ((pdf=(RooAbsPdf*)iter3.next())) {
-	RooAbsReal* r1 = (RooAbsReal*)iter1.next() ;
-	RooAbsReal* r2 = (RooAbsReal*)iter2.next() ;
-	expectedTotal += (r2->getVal()/r1->getVal()) * pdf->expectedEvents(nset) ;
-      }
-
-    } else {
-
-      RooFIter citer = _coefList.fwdIterator() ;
-      RooAbsReal* coef ;
-      while((coef=(RooAbsReal*)citer.next())) {
-	Double_t ncomp = coef->getVal(nset) ;
-	RooAbsReal* r1 = (RooAbsReal*)iter1.next() ;
-	RooAbsReal* r2 = (RooAbsReal*)iter2.next() ;
-	expectedTotal += (r2->getVal()/r1->getVal()) * ncomp ;
-      }
+    for (std::size_t i = 0; i < _pdfList.size(); ++i) {
+      auto const& r1 = static_cast<RooAbsReal&>(cache._refRangeProjList[i]);
+      auto const& r2 = static_cast<RooAbsReal&>(cache._rangeProjList[i]);
+      double ncomp = _allExtendable ? static_cast<RooAbsPdf&>(_pdfList[i]).expectedEvents(nset)
+                                    : static_cast<RooAbsReal&>(_coefList[i]).getVal(nset);
+      expectedTotal += (r2.getVal()/r1.getVal()) * ncomp ;
 
     }
-
-
 
   } else {
 
     if (_allExtendable) {
-
-      RooFIter iter = _pdfList.fwdIterator() ;
-      RooAbsPdf* pdf ;
-      while((pdf=(RooAbsPdf*)iter.next())) {
-	expectedTotal += pdf->expectedEvents(nset) ;
+      for(auto const& arg : _pdfList) {
+        expectedTotal += static_cast<RooAbsPdf*>(arg)->expectedEvents(nset) ;
       }
-
     } else {
-
-      RooFIter citer = _coefList.fwdIterator() ;
-      RooAbsReal* coef ;
-      while((coef=(RooAbsReal*)citer.next())) {
-	Double_t ncomp = coef->getVal(nset) ;
-	expectedTotal += ncomp ;
+      for(auto const& arg : _coefList) {
+        expectedTotal += static_cast<RooAbsReal*>(arg)->getVal(nset) ;
       }
-
     }
 
   }
