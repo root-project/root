@@ -16,7 +16,7 @@
 
 import ast
 import sys
-from os import path, walk
+from os import path, scandir
 
 if len(sys.argv) < 2:
     print("Please provide the directory where documented .py files are.")
@@ -24,14 +24,31 @@ if len(sys.argv) < 2:
 
 pyz_dir = sys.argv[1]
 
-(_, _, filenames) = next(walk(pyz_dir))
+
+def run_fast_scandir(dir, ext):    # dir: str, ext: list
+    subfolders, files = [], []
+
+    for f in scandir(dir):
+        if f.is_dir():
+            subfolders.append(f.path)
+        if f.is_file():
+            if path.splitext(f.name)[1].lower() in ext:
+                files.append(f.path)
+
+
+    for dir in list(subfolders):
+        sf, f = run_fast_scandir(dir, ext)
+        subfolders.extend(sf)
+        files.extend(f)
+    return subfolders, files
+
+
+_, filenames = run_fast_scandir(pyz_dir, [".py"])
+
 
 # Iterate over pythonization files
-for pyz_file in filenames:
-    if not pyz_file.endswith('.py'):
-        continue
+for pyz_file_path in filenames:
 
-    pyz_file_path = pyz_dir + path.sep + pyz_file
     with open(pyz_file_path) as fd:
         file_contents = fd.read()
 
