@@ -5,6 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 #---Check for installed packages depending on the build options/components enabled --
+include(CheckCXXSourceCompiles)
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
@@ -1238,6 +1239,25 @@ if(imt AND NOT builtin_tbb)
       set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled, but TBB was not found" FORCE)
     endif()
   endif()
+
+  # Check that the found TBB does not use captured exceptions.
+  if(TBB_FOUND)
+    set(CMAKE_REQUIRED_INCLUDES "${TBB_INCLUDE_DIRS}")
+    check_cxx_source_compiles("
+#include <tbb/tbb_config.h>
+#if TBB_USE_CAPTURED_EXCEPTION == 1
+#error TBB uses tbb::captured_exception, not suitable for ROOT!
+#endif
+int main() { return 0; }" tbb_exception_result)
+    if(NOT tbb_exception_result)
+      if(fail-on-missing)
+        message(FATAL_ERROR "Found TBB uses tbb::captured_exception, not suitable for ROOT!")
+      endif()
+      message(STATUS "Found TBB uses tbb::captured_exception, enabling 'builtin_tbb' option")
+      set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled and found TBB is not suitable" FORCE)
+    endif()
+  endif()
+
   set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
 endif()
 
@@ -1891,7 +1911,6 @@ endif()
 # using atomic operations without the help of a library. Only if it can't do we start
 # looking for libatomic for the build.
 #
-include(CheckCXXSourceCompiles)
 check_cxx_source_compiles("
 #include <atomic>
 #include <cstdint>
