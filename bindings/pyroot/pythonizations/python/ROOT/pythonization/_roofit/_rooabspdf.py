@@ -10,6 +10,33 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+r'''
+/**
+\class RooAbsPdf
+\brief \parblock \endparblock
+\htmlonly
+<div class="pyrootbox">
+\endhtmlonly
+
+## PyROOT
+
+Some member functions of RooAbsPdf that take a RooCmdArg as argument also support keyword arguments.
+So far, this applies to RooAbsPdf::fitTo and RooAbsPdf::plotOn.
+For example, the following code is equivalent in PyROOT:
+\code{.py}
+# Directly passing a RooCmdArg:
+pdf.fitTo(data, ROOT.RooFit.Range("r1"))
+
+# With keyword arguments:
+pdf.fitTo(data, Range="r1")
+\endcode
+
+\htmlonly
+</div>
+\endhtmlonly
+*/
+'''
+
 
 from ._rooabsreal import RooAbsReal
 from ._utils import _getter
