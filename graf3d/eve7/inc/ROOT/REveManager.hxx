@@ -13,6 +13,7 @@
 #define ROOT7_REveManager
 
 #include <ROOT/REveElement.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include <ROOT/RWebDisplayArgs.hxx>
 
@@ -95,6 +96,34 @@ public:
        std::string fCtype;
    };
 
+   struct Logger {
+      class Handler : public RLogHandler {
+         Logger *fLogger;
+
+      public:
+         Handler(Logger &logger) : fLogger(&logger) {}
+
+         bool Emit(const RLogEntry &entry) override
+         {
+            fLogger->fLogEntries.emplace_back(entry);
+            // Stop emission.
+            return false;
+         }
+      };
+
+      std::vector<RLogEntry> fLogEntries;
+      Handler *fHandler;
+
+      Logger()
+      {
+         auto uptr = std::make_unique<Handler>(*this);
+         fHandler = uptr.get();
+         RLogManager::Get().PushFront(std::move(uptr));
+      }
+
+      ~Logger() { RLogManager::Get().Remove(fHandler); }
+   };
+
 protected:
    RExceptionHandler        *fExcHandler{nullptr};   //!< exception handler
 
@@ -135,6 +164,8 @@ protected:
    std::thread       fMIRExecThread;
    ServerState       fServerState;
    std::unordered_map<std::string, std::shared_ptr<TMethodCall> > fMethCallMap;
+
+   Logger            fLogger;
 
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);

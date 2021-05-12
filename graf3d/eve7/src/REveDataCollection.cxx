@@ -268,7 +268,7 @@ void REveDataCollection::SetFilterExpr(const char* filter)
    }
    catch (const std::exception &exc)
    {
-      gEveLog << "EveDataCollection::SetFilterExpr" << exc.what();
+      R__LOG_ERROR(EveLog()) << "EveDataCollection::SetFilterExpr" << exc.what();
    }
 }
 

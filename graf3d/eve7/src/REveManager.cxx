@@ -898,9 +898,9 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
       // std::cout << cmd.str() << std::endl;
       // gROOT->ProcessLine(cmd.str().c_str());
    } catch (std::exception &e) {
-      gEveLog << "REveManager::ExecuteCommand " << e.what() << std::endl;
+      R__LOG_ERROR(EveLog()) << "REveManager::ExecuteCommand " << e.what() << std::endl;
    } catch (...) {
-      gEveLog << "REveManager::ExecuteCommand unknow execption \n";
+      R__LOG_ERROR(EveLog()) << "REveManager::ExecuteCommand unknow execption \n";
    }
 }
 
@@ -917,11 +917,31 @@ void REveManager::PublishChanges()
    fScenes->ProcessSceneChanges();
    jobj["content"] = "EndChanges";
 
-   if (gEveLog.has_contents())
-   {
-      jobj["log"] = gEveLog.fLog.str();
-      gEveLog.clear();
+   if (!fLogger.fLogEntries.empty()) {
+
+      constexpr static int numLevels = static_cast<int>(ELogLevel::kDebug) + 1;
+      constexpr static std::array<const char *, numLevels> sTag{
+         {"{unset-error-level please report}", "FATAL", "Error", "Warning", "Info", "Debug"}};
+
+      std::stringstream strm;
+      for (auto entry : fLogger.fLogEntries) {
+
+         auto channel = entry.fChannel;
+         if (channel && !channel->GetName().empty())
+            strm << '[' << channel->GetName() << "] ";
+
+         int cappedLevel = std::min(static_cast<int>(entry.fLevel), numLevels - 1);
+         strm << sTag[cappedLevel];
+
+         if (!entry.fLocation.fFile.empty())
+            strm << " " << entry.fLocation.fFile << ':' << entry.fLocation.fLine;
+         if (!entry.fLocation.fFuncName.empty())
+            strm << " in " << entry.fLocation.fFuncName;
+      }
+      jobj["log"] = strm.str();
+      fLogger.fLogEntries.clear();
    }
+
    fWebWindow->Send(0, jobj.dump());
 }
 
