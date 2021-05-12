@@ -14,6 +14,7 @@
 #include <ROOT/REveProjectionManager.hxx>
 #include <ROOT/REveViewContext.hxx>
 #include <ROOT/REveCompound.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include <cassert>
 
@@ -157,7 +158,7 @@ void REveDataProxyBuilderBase::Build()
          }
       }
       catch (const std::runtime_error &iException) {
-         gEveLog << "Caught exception in build function for item " << m_collection->GetName() << ":\n"
+         R__LOG_ERROR(EveLog()) << "Caught exception in build function for item " << m_collection->GetName() << ":\n"
                  << iException.what() << std::endl;
       }
    }
