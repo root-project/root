@@ -77,7 +77,7 @@
 
 // REveTypes
 #pragma link C++ class ROOT::Experimental::REveException+;
-#pragma link C++ class ROOT::Experimental::REveLog+;
+//#pragma link C++ class ROOT::Experimental::REveLog+;
 
 // REveUtil
 #pragma link C++ class ROOT::Experimental::REveUtil+;
