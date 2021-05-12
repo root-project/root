@@ -33,10 +33,6 @@
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
-REX::RLogChannel &REX::EveLog() {
-   static RLogChannel sLog("ROOT.Eve");
-   return sLog;
-}
 
 /** \class REveUtil
 \ingroup REve
