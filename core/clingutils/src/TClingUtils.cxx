@@ -1358,7 +1358,8 @@ bool ROOT::TMetaUtils::HasCustomConvStreamerMemberFunction(const AnnotatedRecord
 
 void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext)
 {
-   ROOT::TMetaUtils::GetFullyQualifiedTypeName(qual_name, type, forcontext.getASTContext());
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(qual_name, type, forcontext.getASTContext(),
+      llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(&forcontext));
 }
 
 //----
