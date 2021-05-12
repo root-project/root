@@ -3995,7 +3995,7 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    Bool_t lxp = opt.Contains("x+");
    Bool_t lyp = opt.Contains("y+");
    Bool_t axis = opt.Contains("a");
-   opt.ReplaceAll("a", "0");
+   opt.ReplaceAll("a", "");
 
    Double_t LOX = theHist->GetXaxis()->GetLabelOffset();
    Double_t TLX = theHist->GetXaxis()->GetTickLength();
@@ -4015,7 +4015,10 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          theHist->GetYaxis()->SetLabelOffset(999.);
          theHist->GetYaxis()->SetAxisColor(gPad->GetFrameFillColor());
       }
-      theHist->Paint(opt.Data());
+      TString opth = "0";
+      if (lxp) opth.Append("x+");
+      if (lyp) opth.Append("y+");
+      theHist->Paint(opth.Data());
    }
 
    Int_t     N  = theGraph->GetN();
