@@ -1,3 +1,7 @@
+// Require TBB without captured exceptions
+#define TBB_USE_CAPTURED_EXCEPTION 0
+#include "tbb/tbb_config.h"
+
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROpaqueTaskArena.hxx"
 #if !defined(_MSC_VER)

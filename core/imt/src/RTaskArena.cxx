@@ -1,3 +1,7 @@
+// Require TBB without captured exceptions
+#define TBB_USE_CAPTURED_EXCEPTION 0
+#include "tbb/tbb_config.h"
+
 #include "ROOT/RTaskArena.hxx"
 #include "ROpaqueTaskArena.hxx"
 #include "TError.h"
