@@ -855,7 +855,8 @@ TEST_P(RDFSimpleTests, NonExistingFileInChain)
    bool exceptionCaught = false;
    try {
       ROOT_EXPECT_ERROR(df.Count().GetValue(), "TFile::TFile", expecteddiag.Data());
-   } catch (const std::runtime_error &e) {
+   // Catch not only std::runtime_error, but also tbb::captured_exception from worker threads.
+   } catch (const std::exception &e) {
       const std::string expected_msg =
          ROOT::IsImplicitMTEnabled()
             ? "TTreeProcessorMT::Process: an error occurred while opening file \"doesnotexist.root\""
