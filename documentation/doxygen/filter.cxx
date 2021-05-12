@@ -54,8 +54,8 @@
 ///  is passed, the macro is executed without the batch option.
 ///  Some tutorials generate pictures (png or pdf) with `Print` or `SaveAs`.
 ///  Such pictures can be displayed with `\macro_image (picture_name.png[.pdf])`
-///  When the option (js) is used the image is displayed as JavaScript.
-///  For ROOT 7 tutorials, when the option (json) is used the image is displayed as json file.
+///  When the option (tcanvas_js) is used the image is displayed as JavaScript.
+///  For ROOT 7 tutorials, when the option (rcanvas_js) is used the image is displayed as json file.
 ///
 ///  2. `\macro_code`
 ///  The macro code is shown.  A caption can be added: `\macro_code This is code`
@@ -323,10 +323,10 @@ void FilterTutorial()
       if (gLineString.find("\\macro_image") != string::npos) {
          bool nobatch = (gLineString.find("(nobatch)") != string::npos);
          ReplaceAll(gLineString,"(nobatch)","");
-         bool js = (gLineString.find("(js)") != string::npos);
-         ReplaceAll(gLineString,"(js)","");
-         bool json = (gLineString.find("(json)") != string::npos);
-         ReplaceAll(gLineString,"(json)","");
+         bool tcanvas_js = (gLineString.find("(tcanvas_js)") != string::npos);
+         ReplaceAll(gLineString,"(tcanvas_js)","");
+         bool rcanvas_js = (gLineString.find("(rcanvas_js)") != string::npos);
+         ReplaceAll(gLineString,"(rcanvas_js)","");
 
          bool image_created_by_macro = (gLineString.find(".png)") != string::npos) ||
                                        (gLineString.find(".svg)") != string::npos) ||
@@ -340,20 +340,20 @@ void FilterTutorial()
             ExecuteCommand(StringFormat("mv %s %s/html", image_name.c_str(), gOutDir.c_str()));
             ReplaceAll(gLineString, "macro_image (", "image html ");
             ReplaceAll(gLineString, ")", "");
-         } else if (js) {
+         } else if (tcanvas_js) {
             string IN;
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat("root -l -b -q \"makerootfile.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+            ExecuteCommand(StringFormat("root -l -b -q \"MakeTCanvasJS.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
                                          gFileName.c_str(), IN.c_str(), gOutDir.c_str()));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
-         } else if (json) {
+         } else if (rcanvas_js) {
             string IN;
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat("root -l -b -q --web=batch \"makejsonfile.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+            ExecuteCommand(StringFormat("root -l -b -q --web=batch \"MakeRCanvasJS.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
                                           gFileName.c_str(), IN.c_str(), gOutDir.c_str()));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else {

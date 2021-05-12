@@ -1,7 +1,9 @@
 /// \file
 /// \ingroup tutorial_v7
 ///
-/// \macro_image (json)
+/// This ROOT 7 example shows the various line styles.
+///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2018-03-18

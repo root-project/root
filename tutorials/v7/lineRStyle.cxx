@@ -4,7 +4,7 @@
 /// This ROOT 7 example demonstrates how to customize RLine object using RStyle
 /// "normal" coordinates' system.
 ///
-/// \macro_image (json)
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2019-10-04

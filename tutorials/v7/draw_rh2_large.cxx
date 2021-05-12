@@ -4,7 +4,7 @@
 /// This macro generates really large RH2D histogram, fills it with predefined pattern and
 /// draw it in a RCanvas, using Optmize() drawing mode
 ///
-/// \macro_image (json)
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2020-06-26

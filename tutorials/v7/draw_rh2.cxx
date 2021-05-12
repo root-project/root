@@ -3,7 +3,7 @@
 ///
 /// This macro generates RH2D and draw it with different options in RCanvas
 ///
-/// \macro_image (json)
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2020-06-25
