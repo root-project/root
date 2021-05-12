@@ -11,6 +11,33 @@
 ################################################################################
 
 
+r'''
+/**
+\class RooAbsData
+\brief \parblock \endparblock
+\htmlonly
+<div class="pyrootbox">
+\endhtmlonly
+
+## PyROOT
+
+Some member functions of RooAbsData that take a RooCmdArg as argument also support keyword arguments.
+So far, this applies to RooAbsData::plotOn.
+For example, the following code is equivalent in PyROOT:
+\code{.py}
+# Directly passing a RooCmdArg:
+data.plotOn(frame, ROOT.RooFit.CutRange("r1"))
+
+# With keyword arguments:
+data.plotOn(frame, CutRange="r1")
+\endcode
+
+\htmlonly
+</div>
+\endhtmlonly
+*/
+'''
+
 from ._utils import _getter
 
 
