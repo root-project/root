@@ -106,8 +106,7 @@ public:
          bool Emit(const RLogEntry &entry) override
          {
             fLogger->fLogEntries.emplace_back(entry);
-            // Stop emission.
-            return false;
+            return true;
          }
       };
 
