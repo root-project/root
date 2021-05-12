@@ -11,6 +11,33 @@
 ################################################################################
 
 
+r'''
+/**
+\class RooAbsReal
+\brief \parblock \endparblock
+\htmlonly
+<div class="pyrootbox">
+\endhtmlonly
+
+## PyROOT
+
+Some member functions of RooAbsReal that take a RooCmdArg as argument also support keyword arguments.
+So far, this applies to RooAbsReal::plotOn.
+For example, the following code is equivalent in PyROOT:
+\code{.py}
+# Directly passing a RooCmdArg:
+var.plotOn(frame, ROOT.RooFit.Components("background"))
+
+# With keyword arguments:
+var.plotOn(frame, Components="background")
+\endcode
+
+\htmlonly
+</div>
+\endhtmlonly
+*/
+'''
+
 from ._utils import _getter
 
 
