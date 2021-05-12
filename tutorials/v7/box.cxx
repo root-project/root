@@ -5,7 +5,7 @@
 /// draw ROOT 7 boxes in it (RBox). It generates a set of boxes using the
 /// "normal" coordinates' system.
 ///
-/// \macro_image (json)
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2018-10-10

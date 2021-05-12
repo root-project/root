@@ -1,7 +1,9 @@
 /// \file
 /// \ingroup tutorial_v7
 ///
-/// \macro_image (json)
+/// This ROOT 7 example shows how to create a frame.
+///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2020-02-20

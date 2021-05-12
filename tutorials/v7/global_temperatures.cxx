@@ -6,7 +6,7 @@
 /// average temperature per city by season. Then it does the same for average temperature per city for the years between 1993-2002, and 2003-2013.
 /// Finally, the tutorial visualizes this processed data through histograms.
 ///
-/// \macro_image (json)
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 ///

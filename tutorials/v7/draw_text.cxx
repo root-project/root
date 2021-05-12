@@ -4,7 +4,7 @@
 /// This macro demonstrate the text attributes for RText. Angle, size and color are
 /// changed in a loop. The text alignment and the text font are fixed.
 ///
-/// \macro_image (json)
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2017-10-17

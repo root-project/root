@@ -4,7 +4,7 @@
 /// This ROOT7 example demonstrates how to create a RCanvas and
 /// draw several RAxis objects with different options.
 ///
-/// \macro_image (json)
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2020-11-03

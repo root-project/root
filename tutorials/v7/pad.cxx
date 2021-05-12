@@ -1,7 +1,10 @@
 /// \file
 /// \ingroup tutorial_v7
 ///
-/// \macro_image (json)
+/// This ROOT 7 example demonstrates how to create a ROOT 7 canvas (RCanvas) and
+/// and divide it in 9 sub-pads.
+///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2015-03-22
