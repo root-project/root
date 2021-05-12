@@ -2,7 +2,7 @@
 
 #include "ROOT/RCanvas.hxx"
 
-void makejsonfile(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py)
+void MakeRCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py)
 {
    using namespace ROOT::Experimental;
 

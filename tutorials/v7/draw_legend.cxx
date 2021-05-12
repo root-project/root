@@ -4,7 +4,7 @@
 /// This macro generates two TH1D objects and build RLegend
 /// In addition use of auto colors are shown
 ///
-/// \macro_image (json)
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2019-10-09
