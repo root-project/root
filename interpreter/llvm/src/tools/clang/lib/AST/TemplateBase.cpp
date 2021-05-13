@@ -76,12 +76,15 @@ static void printIntegral(const TemplateArgument &TemplArg,
     Out << "'";
   } else {
     Out << Val;
-    // Handle cases where the value is too large to fit into the underlying type
-    // i.e. where the unsignedness matters.
+    if (T->isUnsignedIntegerType())
+      Out << 'u';
     if (const BuiltinType *BT = T->getAs<BuiltinType>()) {
-      if (BT->getKind() == BuiltinType::ULongLong
-          && Val.isNegative())
-        Out << "ull";
+      if (BT->getKind() == BuiltinType::ULong
+          || BT->getKind() == BuiltinType::Long)
+        Out << 'l';
+      else if (BT->getKind() == BuiltinType::ULongLong
+               || BT->getKind() == BuiltinType::LongLong)
+        Out << "ll";
     }
   }
 }
