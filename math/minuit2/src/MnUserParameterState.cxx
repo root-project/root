@@ -312,8 +312,8 @@ void MnUserParameterState::Fix(unsigned int e)
 void MnUserParameterState::Release(unsigned int e)
 {
    // release parameter e (external index)
-   // no-op if parameter is const
-   if (Parameter(e).IsConst())
+   // no-op if parameter is const or if it is not fixed
+   if (Parameter(e).IsConst() || !Parameter(e).IsFixed())
       return;
    fParameters.Release(e);
    fCovarianceValid = false;
