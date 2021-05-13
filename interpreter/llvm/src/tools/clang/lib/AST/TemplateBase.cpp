@@ -76,16 +76,6 @@ static void printIntegral(const TemplateArgument &TemplArg,
     Out << "'";
   } else {
     Out << Val;
-    if (T->isUnsignedIntegerType())
-      Out << 'u';
-    if (const BuiltinType *BT = T->getAs<BuiltinType>()) {
-      if (BT->getKind() == BuiltinType::ULong
-          || BT->getKind() == BuiltinType::Long)
-        Out << 'l';
-      else if (BT->getKind() == BuiltinType::ULongLong
-               || BT->getKind() == BuiltinType::LongLong)
-        Out << "ll";
-    }
   }
 }
 
