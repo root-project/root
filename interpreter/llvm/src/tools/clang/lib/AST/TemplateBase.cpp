@@ -79,7 +79,7 @@ static void printIntegral(const TemplateArgument &TemplArg,
     // Handle cases where the value is too large to fit into the underlying type
     // i.e. where the unsignedness matters.
     if (T->isBuiltinType()) {
-      if (Val.isUnsigned() && Val.getBitWidth() == 64 && Val.countLeadingOnes())
+      if (Val.isUnsigned() && Val.getBitWidth() == 64 && Val.isNegative())
         Out << "ull";
     }
   }
