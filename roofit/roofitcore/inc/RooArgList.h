@@ -68,7 +68,7 @@ public:
 
   /// Return object at given index, or nullptr if index is out of range
   inline RooAbsArg* at(Int_t idx) const { 
-    if (idx < 0) idx = _list.size()+idx; // allows for python style list access from the back
+    if (idx < 0) idx += _list.size(); // allows for python style list access from the back
     if (idx < 0 || idx >= static_cast<Int_t>(_list.size()))
       return nullptr;
 
