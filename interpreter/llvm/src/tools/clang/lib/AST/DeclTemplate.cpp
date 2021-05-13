@@ -138,6 +138,18 @@ static void AdoptTemplateParameterList(TemplateParameterList *Params,
   }
 }
 
+bool TemplateParameterList::shouldIncludeTypeForArgument(
+    const TemplateParameterList *TPL, unsigned Idx) {
+  if (!TPL || Idx >= TPL->size())
+    return true;
+  const NamedDecl *TemplParam = TPL->getParam(Idx);
+  if (const auto *ParamValueDecl =
+          dyn_cast<NonTypeTemplateParmDecl>(TemplParam))
+    if (ParamValueDecl->getType()->getContainedDeducedType())
+      return true;
+  return false;
+}
+
 namespace clang {
 
 void *allocateDefaultArgStorageChain(const ASTContext &C) {
