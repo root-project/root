@@ -1637,82 +1637,61 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return value.toPrecision(4);
    }
 
+   /** @summary Set axix range */
+   RFramePainter.prototype._setAxisRange = function(prefix, vmin, vmax) {
+      let nmin = prefix + "min", nmax = prefix + "max";
+      if (this[nmin] != this[nmax]) return;
+      let min = this.v7EvalAttr(prefix + "_min"),
+          max = this.v7EvalAttr(prefix + "_max");
+
+      if (min !== undefined) vmin = min;
+      if (max !== undefined) vmax = max;
+
+      if (vmin < vmax) {
+         this[nmin] = vmin;
+         this[nmax] = vmax;
+      }
+
+      let nzmin = "zoom_" + prefix + "min", nzmax = "zoom_" + prefix + "max";
+
+      if ((this[nzmin] == this[nzmax]) && !this.zoomChangedInteractive(prefix)) {
+         min = this.v7EvalAttr(prefix + "_zoommin");
+         max = this.v7EvalAttr(prefix + "_zoommax");
+
+         if ((min !== undefined) || (max !== undefined)) {
+            this[nzmin] = (min === undefined) ? this[nmin] : min;
+            this[nzmax] = (max === undefined) ? this[nmax] : max;
+         }
+      }
+   }
+
    /** @summary Set axes ranges for drawing, check configured attributes if range already specified */
    RFramePainter.prototype.setAxesRanges = function(xaxis, xmin, xmax, yaxis, ymin, ymax, zaxis, zmin, zmax) {
       if (this.axes_drawn) return;
-
       this.xaxis = xaxis;
+      this._setAxisRange("x", xmin, xmax);
       this.yaxis = yaxis;
+      this._setAxisRange("y", ymin, ymax);
       this.zaxis = zaxis;
+      this._setAxisRange("z", zmin, zmax);
+   }
 
-      if (this.xmin == this.xmax) {
-         let min = this.v7EvalAttr("x_min"),
-             max = this.v7EvalAttr("x_max");
-
-         if (min !== undefined) xmin = min;
-         if (max !== undefined) xmax = max;
-
-         if (xmin < xmax) {
-            this.xmin = xmin;
-            this.xmax = xmax;
-         }
-
-         if ((this.zoom_xmin == this.zoom_xmax) && !this.zoomChangedInteractive("x")) {
-            min = this.v7EvalAttr("x_zoommin");
-            max = this.v7EvalAttr("x_zoommax");
-
-            if ((min !== undefined) || (max !== undefined)) {
-               this.zoom_xmin = (min === undefined) ? this.xmin : min;
-               this.zoom_xmax = (max === undefined) ? this.xmax : max;
-            }
-         }
+   /** @summary Set second axes ranges */
+   RFramePainter.prototype.setAxes2Ranges = function(second_x, xaxis, xmin, xmax, second_y, yaxis, ymin, ymax) {
+      if (second_x) {
+         this.x2axis = xaxis;
+         this._setAxisRange("x2", xmin, xmax);
       }
-
-      if (this.ymin == this.ymax) {
-         let min = this.v7EvalAttr("y_min"),
-             max = this.v7EvalAttr("y_max");
-
-         if (min !== undefined) ymin = min;
-         if (max !== undefined) ymax = max;
-
-         if (ymin < ymax) {
-            this.ymin = ymin;
-            this.ymax = ymax;
-         }
-
-         if ((this.zoom_ymin == this.zoom_ymax) && !this.zoomChangedInteractive("y")) {
-            min = this.v7EvalAttr("y_zoommin");
-            max = this.v7EvalAttr("y_zoommax");
-
-            if ((min !== undefined) || (max !== undefined)) {
-               this.zoom_ymin = (min === undefined) ? this.ymin : min;
-               this.zoom_ymax = (max === undefined) ? this.ymax : max;
-            }
-         }
+      if (second_y) {
+         this.y2axis = yaxis;
+         this._setAxisRange("y2", ymin, ymax);
       }
+   }
 
-      if (this.zmin == this.zmax) {
-         let min = this.v7EvalAttr("z_min"),
-             max = this.v7EvalAttr("z_max");
-
-         if (min !== undefined) zmin = min;
-         if (max !== undefined) zmax = max;
-
-         if (zmin < zmax) {
-            this.zmin = zmin;
-            this.zmax = zmax;
-         }
-
-         if ((this.zoom_zmin == this.zoom_zmax) && !this.zoomChangedInteractive("z")) {
-            min = this.v7EvalAttr("z_zoommin");
-            max = this.v7EvalAttr("z_zoommax");
-
-            if ((min !== undefined) || (max !== undefined)) {
-               this.zoom_zmin = (min === undefined) ? this.zmin : min;
-               this.zoom_zmax = (max === undefined) ? this.zmax : max;
-            }
-         }
-      }
+   /** @summary Identify if requested axes are drawn
+     * @desc Checks if x/y axes are drawn. Also if second side is already there */
+   RFramePainter.prototype.hasDrawnAxes = function(second_x, second_y) {
+      return !second_x && !second_y ? this.axes_drawn : false;
    }
 
    /** @summary Draw configured axes on the frame
@@ -1781,15 +1760,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let draw_horiz = this.swap_xy ? this.y_handle : this.x_handle,
           draw_vertical = this.swap_xy ? this.x_handle : this.y_handle,
-          pp = this.getPadPainter(),
-          disable_axis_draw = (pp && pp._fast_drawing) ? true : false;
+          pp = this.getPadPainter(), draw_promise;
 
-      if (!disable_axis_draw) {
+      if (pp && pp._fast_drawing) {
+         draw_promise = Promise.resolve(true)
+      } else {
          let promise1 = draw_horiz.drawAxis(layer, (sidex > 0) ? `translate(0,${h})` : "", sidex);
 
          let promise2 = draw_vertical.drawAxis(layer, (sidey > 0) ? `translate(0,${h})` : `translate(${w},${h})`, sidey);
 
-         return Promise.all([promise1, promise2]).then(() => {
+         draw_promise = Promise.all([promise1, promise2]).then(() => {
 
             let again = [];
             if (ticksx > 1)
@@ -1799,16 +1779,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                again.push(draw_vertical.drawAxisOtherPlace(layer, (sidey < 0) ? `translate(0,${h})` : `translate(${w},${h})`, -sidey, ticksy == 2));
 
              return Promise.all(again);
-         }).then(() => {
-             this.drawGrids();
-             this.axes_drawn = true;
-             return true;
-         });
+         }).then(() => this.drawGrids());
       }
 
-      this.axes_drawn = true;
-
-      return Promise.resolve(true);
+      return draw_promise.then(() => {
+         this.axes_drawn = true;
+         return true;
+      });
    }
 
    /** @summary function called at the end of resize of frame
