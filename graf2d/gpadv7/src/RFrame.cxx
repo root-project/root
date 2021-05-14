@@ -74,6 +74,8 @@ void RFrame::SetClientRanges(unsigned connid, const RUserRanges &ranges, bool is
       AssignZoomRange(0, AttrX(), ranges);
       AssignZoomRange(1, AttrY(), ranges);
       AssignZoomRange(2, AttrZ(), ranges);
+      AssignZoomRange(3, AttrX2(), ranges);
+      AssignZoomRange(4, AttrY2(), ranges);
    }
 
    if (fClientRanges.find(connid) == fClientRanges.end()) {
