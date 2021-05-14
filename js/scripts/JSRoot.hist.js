@@ -2331,7 +2331,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
          fp.createXY2(opts);
 
-         return fp.drawAxes2();
+         return fp.drawAxes2(opts.second_x, opts.second_y);
       } else {
          fp.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
 
@@ -2723,8 +2723,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
      * @returns {Promise} for ready
      * @private */
    THistPainter.prototype.addInteractivity = function() {
-      let ismain = this.isMainPainter(), second_axis = (this.options.AxisPos > 0);
-      let fp = ismain || second_axis ? this.getFramePainter() : null;
+      let ismain = this.isMainPainter(),
+          second_axis = (this.options.AxisPos > 0),
+          fp = ismain || second_axis ? this.getFramePainter() : null;
       return fp ? fp.addInteractivity(!ismain && second_axis) : Promise.resolve(false);
    }
 

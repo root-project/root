@@ -700,6 +700,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             setTimeout(this.processFrameTooltipEvent.bind(this, hintsg.property('last_point'), null), 10);
       },
 
+      /** @summary Add interactive handlers */
       addInteractivity: function(for_second_axes) {
 
          let pp = this.getPadPainter(),
@@ -765,6 +766,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return Promise.resolve(this);
       },
 
+      /** @summary Add keys handler */
       addKeysHandler: function() {
          if (this.keys_handler || (typeof window == 'undefined')) return;
 
@@ -773,6 +775,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          window.addEventListener('keydown', this.keys_handler, false);
       },
 
+      /** @summary Handle key press */
       processKeyPress: function(evnt) {
          let main = this.selectDom();
          if (!JSROOT.settings.HandleKeys || main.empty() || (this.enabledKeys === false)) return;
@@ -862,6 +865,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return res;
       },
 
+      /** @summary Start mouse rect zooming */
       startRectSel: function(evnt) {
          // ignore when touch selection is activated
 
@@ -918,6 +922,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             setTimeout(() => this.startLabelsMove(), 500);
       },
 
+      /** @summary Starts labels move */
       startLabelsMove: function() {
          if (this.zoom_rect) return;
 
@@ -930,6 +935,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       },
 
+      /** @summary Process mouse rect zooming */
       moveRectSel: function(evnt) {
 
          if ((this.zoom_kind == 0) || (this.zoom_kind > 100)) return;
@@ -970,6 +976,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.zoom_rect.attr("x", x).attr("y", y).attr("width", w).attr("height", h);
       },
 
+      /** @summary Finish mouse rect zooming */
       endRectSel: function(evnt) {
          if ((this.zoom_kind == 0) || (this.zoom_kind > 100)) return;
 
@@ -1027,7 +1034,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             }
          }
 
-         let pnt =  (kind===1) ? { x: this.zoom_origin[0], y: this.zoom_origin[1] } : null;
+         let pnt = (kind===1) ? { x: this.zoom_origin[0], y: this.zoom_origin[1] } : null;
 
          this.clearInteractiveElements();
 
@@ -1050,6 +1057,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       },
 
+      /** @summary Handle mouse double click on frame */
       mouseDoubleClick: function(evnt) {
          evnt.preventDefault();
          let m = d3.pointer(evnt, this.getFrameSvg().node()),
@@ -1077,6 +1085,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          });
       },
 
+      /** @summary Start touch zoom */
       startTouchZoom: function(evnt) {
          // in case when zooming was started, block any other kind of events
          if (this.zoom_kind != 0) {
@@ -1159,12 +1168,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                .attr("width", this.zoom_origin[0] - this.zoom_curr[0])
                .attr("height", this.zoom_origin[1] - this.zoom_curr[1]);
 
-         d3.select(window).on("touchmove.zoomRect", this.moveTouchSel.bind(this))
-                          .on("touchcancel.zoomRect", this.endTouchSel.bind(this))
-                          .on("touchend.zoomRect", this.endTouchSel.bind(this));
+         d3.select(window).on("touchmove.zoomRect", this.moveTouchZoom.bind(this))
+                          .on("touchcancel.zoomRect", this.endTouchZoom.bind(this))
+                          .on("touchend.zoomRect", this.endTouchZoom.bind(this));
       },
 
-      moveTouchSel: function(evnt) {
+      /** @summary Move touch zooming */
+      moveTouchZoom: function(evnt) {
          if (this.zoom_kind < 100) return;
 
          evnt.preventDefault();
@@ -1197,7 +1207,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          evnt.stopPropagation();
       },
 
-      endTouchSel: function(evnt) {
+      /** @summary End touch zooming handler */
+      endTouchZoom: function(evnt) {
 
          this.getFrameSvg().on("touchcancel", null)
                          .on("touchend", null);
@@ -1328,6 +1339,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       },
 
+      /** @summary Show frame context menu */
       showContextMenu: function(kind, evnt, obj) {
 
          // ignore context menu when touches zooming is ongoing
@@ -1452,6 +1464,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          delete this[fld];
       },
 
+      /** @summary Clear frame interactive elements */
       clearInteractiveElements: function() {
          if (jsrp.closeMenu) jsrp.closeMenu();
          this.zoom_kind = 0;
@@ -1461,36 +1474,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          delete this.zoom_lastpos;
          delete this.zoom_labels;
 
-
          // enable tooltip in frame painter
          setPainterTooltipEnabled(this, true);
       },
 
-      /** Assign frame interactive methods */
+      /** @summary Assign frame interactive methods */
       assign: function(painter) {
          JSROOT.extend(painter, this);
-
-         /*
-         painter.addBasicInteractivity = this.addBasicInteractivity;
-         painter.addInteractivity = this.addInteractivity;
-         painter.addKeysHandler = this.addKeysHandler;
-         painter.processKeyPress = this.processKeyPress;
-         painter.processFrameClick = this.processFrameClick;
-         painter.startRectSel = this.startRectSel;
-         painter.moveRectSel = this.moveRectSel;
-         painter.endRectSel = this.endRectSel;
-         painter.mouseDoubleClick = this.mouseDoubleClick;
-         painter.startTouchZoom = this.startTouchZoom;
-         painter.moveTouchSel = this.moveTouchSel;
-         painter.endTouchSel = this.endTouchSel;
-         painter.analyzeMouseWheelEvent = this.analyzeMouseWheelEvent;
-         painter.isAllowedDefaultYZooming = this.isAllowedDefaultYZooming;
-         painter.mouseWheel = this.mouseWheel;
-         painter.showContextMenu = this.showContextMenu;
-         painter.startTouchMenu = this.startTouchMenu;
-         painter.endTouchMenu = this.endTouchMenu;
-         painter.clearInteractiveElements = this.clearInteractiveElements;
-         */
       }
 
    } // FrameInterative

@@ -1048,7 +1048,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.zmax = zmax;
    }
 
-   /** @summary Configure frame axes ranges */
+   /** @summary Configure secondary frame axes ranges */
    TFramePainter.prototype.setAxes2Ranges = function(second_x, xaxis, xmin, xmax, second_y, yaxis, ymin, ymax) {
       if (second_x) {
          this.x2axis = xaxis;
@@ -1532,7 +1532,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary draw second axes (if any)  */
-   TFramePainter.prototype.drawAxes2 = function() {
+   TFramePainter.prototype.drawAxes2 = function(second_x, second_y) {
 
       let layer = this.getFrameSvg().select(".axis_layer"),
           w = this.getFrameWidth(),
@@ -1540,13 +1540,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           pp = this.getPadPainter(),
           pad = pp.getRootPad(true);
 
-      if (this.x2_handle) {
+      if (second_x) {
          this.x2_handle.invert_side = true;
          this.x2_handle.lbls_both_sides = false;
          this.x2_handle.has_obstacle = false;
       }
 
-      if (this.y2_handle) {
+      if (second_y) {
          this.y2_handle.invert_side = true;
          this.y2_handle.lbls_both_sides = false;
       }
@@ -1559,7 +1559,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (pp && pp._fast_drawing) draw_horiz = draw_vertical = null;
       }
 
-      let promise1 = Promise.resolve(true), promise2 = Promise.resolve(true);
+      let promise1 = true, promise2 = true;
 
       if (draw_horiz)
          promise1 = draw_horiz.drawAxis(layer, w, h,

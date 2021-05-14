@@ -144,6 +144,8 @@ class RHist1Drawable final : public RHistDrawable<1> {
    RAttrValue<double> fBarOffset{this, "bar_offset", 0.}; ///<!  bar offset
    RAttrValue<double> fBarWidth{this, "bar_width", 1.};   ///<!  bar width
    RAttrValue<bool> fText{this, "text", false};           ///<! draw text
+   RAttrValue<bool> fSecondX{this, "secondx", false};     ///<! is draw second x axis for histogram
+   RAttrValue<bool> fSecondY{this, "secondy", false};     ///<! is draw second y axis for histogram
 
 protected:
    std::unique_ptr<RDisplayItem> CreateHistDisplay(const RDisplayContext &) override;
@@ -165,6 +167,18 @@ public:
    RHist1Drawable &Line() { SetDrawKind("l"); return *this; }
    RHist1Drawable &Lego(int kind = 0) { SetDrawKind("lego", kind); return *this; }
    RHist1Drawable &Text(bool on = true) { fText = on; return *this; }
+   RHist1Drawable &SecondX(bool on = true) { fSecondX = on; return *this; }
+   RHist1Drawable &SecondY(bool on = true) { fSecondY = on; return *this; }
+
+   bool IsBar() const { return GetDrawKind() == "bar"; }
+   bool IsError() const { return GetDrawKind() == "err"; }
+   bool IsMarker() const { return GetDrawKind() == "p"; }
+   bool IsHist() const { return GetDrawKind() == "hist"; }
+   bool IsLine() const { return GetDrawKind() == "l"; }
+   bool IsLego() const { return GetDrawKind() == "lego"; }
+   bool IsText() const { return fText; }
+   bool IsSecondX() const { return fSecondX; }
+   bool IsSecondY() const { return fSecondY; }
 
    double GetBarOffset() const { return fBarOffset; }
    double GetBarWidth() const { return fBarWidth; }

@@ -149,6 +149,8 @@ private:
    RAttrAxis fAttrX{this, "x"};                   ///<! drawing attributes for X axis
    RAttrAxis fAttrY{this, "y"};                   ///<! drawing attributes for Y axis
    RAttrAxis fAttrZ{this, "z"};                   ///<! drawing attributes for Z axis
+   RAttrAxis fAttrX2{this, "x2"};                 ///<! drawing attributes for X2 axis
+   RAttrAxis fAttrY2{this, "y2"};                 ///<! drawing attributes for Y2 axis
    RAttrValue<bool> fDrawAxes{this, "drawaxes", false}; ///<! draw axes by frame
    RAttrValue<bool> fGridX{this, "gridx", false}; ///<! show grid for X axis
    RAttrValue<bool> fGridY{this, "gridy", false}; ///<! show grid for Y axis
@@ -217,6 +219,14 @@ public:
    const RAttrAxis &GetAttrZ() const { return fAttrZ; }
    RFrame &SetAttrZ(const RAttrAxis &axis) { fAttrZ = axis; return *this; }
    RAttrAxis &AttrZ() { return fAttrZ; }
+
+   const RAttrAxis &GetAttrX2() const { return fAttrX2; }
+   RFrame &SetAttrX2(const RAttrAxis &axis) { fAttrX2 = axis; return *this; }
+   RAttrAxis &AttrX2() { return fAttrX2; }
+
+   const RAttrAxis &GetAttrY2() const { return fAttrY2; }
+   RFrame &SetAttrY2(const RAttrAxis &axis) { fAttrY2 = axis; return *this; }
+   RAttrAxis &AttrY2() { return fAttrY2; }
 
    RFrame &SetGridX(bool on = true) { fGridX = on; return *this; }
    bool GetGridX() const { return fGridX; }
