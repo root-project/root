@@ -1,9 +1,11 @@
 # JSROOT changelog
 
 ## Changes in dev
-1. Fully deprecate old JSRootCore.js script, one have to use  JSRoot.core.js
-2. Upgrade three.js to r127
-3. Upgrade d3.js to 6.7.0
+1. Support fully interactive second X/Y axis for histograms, graphs, functions and spline
+2. Support X+, Y+, RX, RY draw options for TF1
+3. Remove deprecated JSRootCore.js script, one have to use JSRoot.core.js
+4. Upgrade three.js to r127
+5. Upgrade d3.js to 6.7.0
 
 
 ## Changes in 6.1.0
