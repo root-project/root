@@ -111,6 +111,8 @@ public:
   RooAbsArg *find(const char *name) const ;
   RooAbsArg *find(const RooAbsArg&) const ;
 
+  TObject* FindObject(const char* name) const { return find(name); }
+
   /// Check if collection contains an argument with the same name as var.
   /// To check for a specific instance, use containsInstance().
   Bool_t contains(const RooAbsArg& var) const { 
