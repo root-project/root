@@ -103,14 +103,9 @@ public:
       public:
          Handler(Logger &logger) : fLogger(&logger) {}
 
-         bool Emit(const RLogEntry &entry) override
-         {
-            fLogger->fLogEntries.emplace_back(entry);
-            return true;
-         }
+         bool Emit(const RLogEntry &entry) override;
       };
 
-      std::vector<RLogEntry> fLogEntries;
       Handler *fHandler;
 
       Logger()

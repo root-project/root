@@ -50,6 +50,7 @@ namespace REX = ROOT::Experimental;
 
 REveManager *REX::gEve = nullptr;
 
+thread_local std::vector<RLogEntry> gEveLogEntries;
 /** \class REveManager
 \ingroup REve
 Central application manager for Eve.
@@ -917,14 +918,14 @@ void REveManager::PublishChanges()
    fScenes->ProcessSceneChanges();
    jobj["content"] = "EndChanges";
 
-   if (!fLogger.fLogEntries.empty()) {
+   if (!gEveLogEntries.empty()) {
 
       constexpr static int numLevels = static_cast<int>(ELogLevel::kDebug) + 1;
       constexpr static std::array<const char *, numLevels> sTag{
          {"{unset-error-level please report}", "FATAL", "Error", "Warning", "Info", "Debug"}};
 
       std::stringstream strm;
-      for (auto entry : fLogger.fLogEntries) {
+      for (auto entry : gEveLogEntries) {
 
          auto channel = entry.fChannel;
          if (channel && !channel->GetName().empty())
@@ -939,7 +940,7 @@ void REveManager::PublishChanges()
             strm << " in " << entry.fLocation.fFuncName;
       }
       jobj["log"] = strm.str();
-      fLogger.fLogEntries.clear();
+      gEveLogEntries.clear();
    }
 
    fWebWindow->Send(0, jobj.dump());
@@ -1119,4 +1120,14 @@ TStdExceptionHandler::EStatus REveManager::RExceptionHandler::Handle(std::except
       return kSEHandled;
    }
    return kSEProceed;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Utility to stream loggs to client.
+
+bool REveManager::Logger::Handler::Emit(const RLogEntry &entry)
+{
+   gEveLogEntries.emplace_back(entry);
+   return true;
 }
