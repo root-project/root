@@ -783,7 +783,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 
    // this should not happen, just check
    if (!found) {
-      R__LOG_ERROR(EveLog()) << "Internal error - no connection with id " << connid << " found";
+      R__LOG_ERROR(REveLog()) << "Internal error - no connection with id " << connid << " found";
       return;
    }
    // client status data
@@ -899,9 +899,9 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
       // std::cout << cmd.str() << std::endl;
       // gROOT->ProcessLine(cmd.str().c_str());
    } catch (std::exception &e) {
-      R__LOG_ERROR(EveLog()) << "REveManager::ExecuteCommand " << e.what() << std::endl;
+      R__LOG_ERROR(REveLog()) << "REveManager::ExecuteCommand " << e.what() << std::endl;
    } catch (...) {
-      R__LOG_ERROR(EveLog()) << "REveManager::ExecuteCommand unknow execption \n";
+      R__LOG_ERROR(REveLog()) << "REveManager::ExecuteCommand unknow execption \n";
    }
 }
 
