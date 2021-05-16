@@ -15,6 +15,7 @@ import cppyy
 
 from ROOT import pythonization
 
+from ._rooabscollection import RooAbsCollection
 from ._rooabsdata import RooAbsData
 from ._rooabspdf import RooAbsPdf
 from ._rooabsreal import RooAbsReal
@@ -22,7 +23,7 @@ from ._rooworkspace import RooWorkspace
 
 
 # list of python classes that are used to pythonize RooFit classes
-python_classes = [RooAbsData, RooAbsPdf, RooAbsReal, RooWorkspace]
+python_classes = [RooAbsCollection, RooAbsData, RooAbsPdf, RooAbsReal, RooWorkspace]
 
 # create a dictionary for convenient access to python classes
 python_classes_dict = dict()
