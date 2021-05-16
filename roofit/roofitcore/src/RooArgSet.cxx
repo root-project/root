@@ -252,45 +252,6 @@ void RooArgSet::processArg(const RooArgList& list) {
     _name = list.GetName();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Add element to non-owning set. The operation will fail if
-/// a similarly named object already exists in the set, or
-/// the set is specified to own its elements. Eventual error messages
-/// can be suppressed with the silent flag
-
-Bool_t RooArgSet::add(const RooAbsArg& var, Bool_t silent) 
-{
-  return checkForDup(var,silent)? kFALSE : RooAbsCollection::add(var,silent) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add element to an owning set. The operation will fail if
-/// a similarly named object already exists in the set, or
-/// the set is not specified to own its elements. Eventual error messages
-/// can be suppressed with the silent flag
-
-Bool_t RooArgSet::addOwned(RooAbsArg& var, Bool_t silent)
-{
-  return checkForDup(var,silent)? kFALSE : RooAbsCollection::addOwned(var,silent) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add clone of specified element to an owning set. If sucessful, the
-/// set will own the clone, not the original. The operation will fail if
-/// a similarly named object already exists in the set, or
-/// the set is not specified to own its elements. Eventual error messages
-/// can be suppressed with the silent flag
-
-RooAbsArg* RooArgSet::addClone(const RooAbsArg& var, Bool_t silent) 
-{
-  return checkForDup(var,silent)? 0 : RooAbsCollection::addClone(var,silent) ;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get reference to an element using its name. Named element must exist in set.
