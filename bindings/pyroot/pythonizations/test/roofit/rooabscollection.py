@@ -50,6 +50,34 @@ class TestRooAbsCollection(unittest.TestCase):
         with self.assertRaises(StopIteration):
             next(it)
 
+    def _test_contains(self, collection_class):
+        var0 = ROOT.RooRealVar("var0", "var0", 0)
+        var1 = ROOT.RooRealVar("var1", "var1", 1)
+
+        # The next variable has a duplicate name on purpose the check if it's
+        # really the name that is used as the key in RooAbsCollections.
+        var2 = ROOT.RooRealVar("var0", "var0", 0)
+
+        coll = collection_class(var0)
+
+        # expected behaviour
+        self.assertTrue(var0 in coll)
+        self.assertTrue("var0" in coll)
+
+        self.assertTrue(not var1 in coll)
+        self.assertTrue(not "var1" in coll)
+
+        self.assertTrue(var2 in coll)
+        self.assertTrue(not "var2" in coll)
+
+        # ensure consistency with RooAbsCollection::find
+        variables = [var0, var1, var2]
+
+        for i, vptr in enumerate(variables):
+            vname = "var" + str(i)
+            self.assertEqual(coll.find(vptr) == vptr, vptr in coll)
+            self.assertEqual(coll.find(vname) == vptr, vname in coll)
+
     # Tests
     def test_len_rooarglist(self):
         self._test_len(ROOT.RooArgList)
@@ -68,6 +96,12 @@ class TestRooAbsCollection(unittest.TestCase):
 
     def test_iterator_rooargset(self):
         self._test_iterator(ROOT.RooArgSet)
+
+    def test_contains_rooarglist(self):
+        self._test_contains(ROOT.RooArgList)
+
+    def test_contains_rooargset(self):
+        self._test_contains(ROOT.RooArgSet)
 
 
 if __name__ == "__main__":
