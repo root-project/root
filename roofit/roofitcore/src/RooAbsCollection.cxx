@@ -114,7 +114,7 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
   _list.reserve(other._list.size());
 
   for (auto item : other._list) {
-    add(*item);
+    insert(item);
   }
 }
 
@@ -402,6 +402,8 @@ void RooAbsCollection::assignFast(const RooAbsCollection& other, Bool_t setValDi
 
 Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent)
 {
+  if(!canBeAdded(var, silent)) return false;
+
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::addOwned: can only add to an owned list" << endl;
@@ -425,6 +427,8 @@ Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent)
 
 RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent)
 {
+  if(!canBeAdded(var, silent)) return nullptr;
+
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::addClone: can only add to an owned list" << endl;
@@ -450,6 +454,8 @@ RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent)
 
 Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent)
 {
+  if(!canBeAdded(var, silent)) return false;
+
   // check that this isn't a copy of a list
   if(_ownCont && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::add: cannot add to an owned list" << endl;

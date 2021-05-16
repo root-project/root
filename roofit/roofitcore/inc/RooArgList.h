@@ -78,14 +78,17 @@ public:
   }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) ;  
+  virtual bool readFromStream(std::istream& is, bool compact, bool verbose=false);
+  virtual void writeToStream(std::ostream& os, bool compact); 
 
   /// Access element by index.
   RooAbsArg& operator[](Int_t idx) const {
     assert(0 <= idx && idx < static_cast<Int_t>(_list.size()));
     return *_list[idx];
   }
+
+protected:
+  virtual bool canBeAdded(RooAbsArg const&, bool) const  { return true; }
 
 private:
   void processArg(const RooAbsArg& arg) { add(arg); }
