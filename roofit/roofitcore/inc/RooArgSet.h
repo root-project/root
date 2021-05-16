@@ -90,27 +90,18 @@ public:
   TObject* create(const char* newname) const override { return new RooArgSet(newname); }
   RooArgSet& operator=(const RooArgSet& other) { RooAbsCollection::operator=(other) ; return *this ;}
 
-  using RooAbsCollection::add;
-  Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) override;
-
-  using RooAbsCollection::addOwned;
-  Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE) override;
-
-  using RooAbsCollection::addClone;
-  RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) override;
-
   using RooAbsCollection::operator[];
   RooAbsArg& operator[](const TString& str) const;
 
 
   /// Shortcut for readFromStream(std::istream&, Bool_t, const char*, const char*, Bool_t), setting
   /// `flagReadAtt` and `section` to 0.
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) {
+  virtual bool readFromStream(std::istream& is, bool compact, bool verbose=false) {
     // I/O streaming interface (machine readable)
     return readFromStream(is, compact, 0, 0, verbose) ;
   }
   Bool_t readFromStream(std::istream& is, Bool_t compact, const char* flagReadAtt, const char* section, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact, const char* section=0) const;  
+  virtual void writeToStream(std::ostream& os, bool compact, const char* section=0) const;
   void writeToFile(const char* fileName) const ;
   Bool_t readFromFile(const char* fileName, const char* flagReadAtt=0, const char* section=0, Bool_t verbose=kFALSE) ;
 
@@ -132,6 +123,9 @@ public:
 
 protected:
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;
+  virtual bool canBeAdded(const RooAbsArg& arg, bool silent) const override {
+    return !checkForDup(arg, silent);
+  }
 
 private:
   void processArg(const RooAbsArg& var) { add(var); }

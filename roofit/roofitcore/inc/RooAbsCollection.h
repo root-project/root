@@ -290,6 +290,9 @@ protected:
   void makeStructureTag() ;
   void makeTypedStructureTag() ;
 
+  /// Determine whether it's possible to add a given RooAbsArg to the collection or not.
+  virtual bool canBeAdded(const RooAbsArg& arg, bool silent) const = 0;
+
 private:
   std::unique_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const;
   mutable std::unique_ptr<std::unordered_map<const TNamed*, Storage_t::value_type>> _nameToItemMap; //!
