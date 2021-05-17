@@ -542,6 +542,22 @@ cols = df.Filter("x > 10").AsNumpy(["x", "y"])
 print(cols["x"], cols["y"])
 ~~~
 
+### Processing data stored in NumPy arrays
+
+In case you have data in NumPy arrays in Python and you want to process the data with ROOT, you can easily
+create a RDataFrame using `ROOT.RDF.MakeNumpyDataFrame`. The factory function returns a new RDataFrame with
+the column names defined by the keys of the given dictionary with NumPy arrays. Only arrays of fundamental types (integers and floating point values) are supported and the arrays must have the same length. Data is read directly from the arrays: no copies are performed.
+
+~~~{.py}
+# Read data from numpy arrays
+# The column names in the RDataFrame are taken from the dictionary keys.
+x, y = numpy.array([1, 2, 3]), numpy.array([4, 5, 6])
+df = ROOT.RDF.MakeNumpyDataFrame({"x": x, "y": y})
+
+# Use RDataFrame as usual, e.g. write out a ROOT file
+df.Define("z", "x + y").Snapshot("tree", "file.root")
+~~~
+
 \anchor distrdf
 ## Distributed execution in Python
 
@@ -612,22 +628,6 @@ df = RDataFrame("mytree", "myfile.root", sparkcontext = sc)
 
 If an instance of [SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
 is not provided, the default behaviour is to create one in the background for you.
-
-### Processing data stored in NumPy arrays
-
-In case you have data in NumPy arrays in Python and you want to process the data with ROOT, you can easily
-create a RDataFrame using `ROOT.RDF.MakeNumpyDataFrame`. The factory function returns a new RDataFrame with
-the column names defined by the keys of the given dictionary with NumPy arrays. Only arrays of fundamental types (integers and floating point values) are supported and the arrays must have the same length. Data is read directly from the arrays: no copies are performed.
-
-~~~{.py}
-# Read data from numpy arrays
-# The column names in the RDataFrame are taken from the dictionary keys.
-x, y = numpy.array([1, 2, 3]), numpy.array([4, 5, 6])
-df = ROOT.RDF.MakeNumpyDataFrame({"x": x, "y": y})
-
-# Use RDataFrame as usual, e.g. write out a ROOT file
-df.Define("z", "x + y").Snapshot("tree", "file.root")
-~~~
 
 \anchor transformations
 ## Transformations
