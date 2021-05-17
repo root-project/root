@@ -138,7 +138,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (val == "auto") {
          let pp = this.getPadPainter();
-         if (pp && pp._auto_color_cnt !== undefined) {
+         if (pp && (pp._auto_color_cnt !== undefined)) {
             let pal = pp.getHistPalette();
             let cnt = pp._auto_color_cnt++, num = pp._num_primitives - 1;
             if (num < 2) num = 2;
@@ -1369,10 +1369,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       menu.add("endsub:");
 
       menu.add("sub:Ticks");
-      menu.addRColorMenu("color", this.ticksColor, col => this.changeAxisAttr(1, "ticks_color_name", col));
+      menu.addRColorMenu("color", this.ticksColor, col => this.changeAxisAttr(1, "ticks_color", col));
       menu.addSizeMenu("size", 0, 0.05, 0.01, this.ticksSize/this.scaling_size, sz => this.changeAxisAttr(1, "ticks_size", sz));
       menu.addSelectMenu("side", ["normal", "invert", "both"], this.ticksSide, side => this.changeAxisAttr(1, "ticks_side", side));
-
       menu.add("endsub:");
 
       if (!this.optionUnlab && this.labelsFont) {
@@ -2117,7 +2116,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary function can be used for zooming into specified range
      * @desc if both limits for each axis 0 (like xmin==xmax==0), axis will be unzoomed
-    * @returns {Promise} with boolean flag if zoom operation was performed */
+     * @returns {Promise} with boolean flag if zoom operation was performed */
    RFramePainter.prototype.zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
 
       // disable zooming when axis conversion is enabled
@@ -2229,8 +2228,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (this.v7CommMode() == JSROOT.v7.CommMode.kNormal)
          this.v7SubmitRequest("zoom", { _typename: "ROOT::Experimental::RFrame::RZoomRequest", ranges: req });
 
-      // this.v7SendAttrChanges(changes);
-
       return this.interactiveRedraw("pad", "zoom" + r_x + r_y + r_z).then(() => true);
    }
 
@@ -2307,27 +2304,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Unzoom specified axes
      * @returns {Promise} with boolean flag if zoom is changed */
    RFramePainter.prototype.unzoom = function(dox, doy, doz) {
-      if (dox == "x2") {
-         if (!this.x2_handle || (this.zoom_x2min === this.zoom_x2max))
-            return Promise.resolve(false);
+      if (dox == "all")
+         return this.unzoom("x2").then(() => this.unzoom("y2")).then(() => this.unzoom("xyz"));
 
-         this.zoom_x2min = this.zoom_x2max = 0;
-         return this.interactiveRedraw("pad", "zoom").then(() => {
-            this.zoomChangedInteractive("x2", "unzoom");
-            return true;
+      if ((dox == "x2") || (dox == "y2"))
+         return this.zoomSingle(dox, 0, 0).then(changed => {
+            if (changed) this.zoomChangedInteractive(dox, "unzoom");
+            return changed;
          });
-      }
-
-      if (dox == "y2") {
-         if (!this.y2_handle || (this.zoom_y2min === this.zoom_y2max))
-            return Promise.resolve(false);
-
-         this.zoom_y2min = this.zoom_y2max = 0;
-         return this.interactiveRedraw("pad", "zoom").then(() => {
-            this.zoomChangedInteractive("y2", "unzoom");
-            return true;
-         });
-      }
 
       if (typeof dox === 'undefined') { dox = doy = doz = true; } else
       if (typeof dox === 'string') { doz = dox.indexOf("z") >= 0; doy = dox.indexOf("y") >= 0; dox = dox.indexOf("x") >= 0; }
@@ -2409,12 +2393,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.add("Unzoom Y", () => this.unzoom("y"));
       if (this.zoom_zmin !== this.zoom_zmax)
          menu.add("Unzoom Z", () => this.unzoom("z"));
-      menu.add("Unzoom all", () => this.unzoom("xyz"));
+      if (this.zoom_x2min !== this.zoom_x2max)
+         menu.add("Unzoom X2", () => this.unzoom("x2"));
+      if (this.zoom_y2min !== this.zoom_y2max)
+         menu.add("Unzoom Y2", () => this.unzoom("y2"));
+      menu.add("Unzoom all", () => this.unzoom("all"));
 
-      // menu.addchk(this.logx, "SetLogx", this.toggleAxisLog.bind(this,"x"));
-      // menu.addchk(this.logy, "SetLogy", this.toggleAxisLog.bind(this,"y"));
-      // if (this.getDimension() == 2)
-      //   menu.addchk(pad.fLogz, "SetLogz", this.toggleAxisLog.bind(main,"z"));
       menu.add("separator");
 
       menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));

@@ -1920,7 +1920,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.add("Unzoom Y", () => this.unzoom("y"));
       if (this.zoom_zmin !== this.zoom_zmax)
          menu.add("Unzoom Z", () => this.unzoom("z"));
-      menu.add("Unzoom all", () => this.unzoom("xyz"));
+      if (this.zoom_x2min !== this.zoom_x2max)
+         menu.add("Unzoom X2", () => this.unzoom("x2"));
+      if (this.zoom_y2min !== this.zoom_y2max)
+         menu.add("Unzoom Y2", () => this.unzoom("y2"));
+      menu.add("Unzoom all", () => this.unzoom("all"));
 
       if (pad) {
          menu.addchk(pad.fLogx, "SetLogx", () => this.toggleAxisLog("x"));
@@ -2143,27 +2147,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Unzoom speicified axes
      * @returns {Promise} with boolean flag if zooming changed */
    TFramePainter.prototype.unzoom = function(dox, doy, doz) {
-      if (dox == "x2") {
-         if (!this.x2_handle || (this.zoom_x2min === this.zoom_x2max))
-            return Promise.resolve(false);
+      if (dox == "all")
+         return this.unzoom("x2").then(() => this.unzoom("y2")).then(() => this.unzoom("xyz"));
 
-         this.zoom_x2min = this.zoom_x2max = 0;
-         return this.interactiveRedraw("pad", "zoom").then(() => {
-            this.zoomChangedInteractive("x2", "unzoom");
-            return true;
+      if ((dox == "x2") || (dox == "y2"))
+         return this.zoomSingle(dox, 0, 0).then(changed => {
+            if (changed) this.zoomChangedInteractive(dox, "unzoom");
+            return changed;
          });
-      }
-
-      if (dox == "y2") {
-         if (!this.y2_handle || (this.zoom_y2min === this.zoom_y2max))
-            return Promise.resolve(false);
-
-         this.zoom_y2min = this.zoom_y2max = 0;
-         return this.interactiveRedraw("pad", "zoom").then(() => {
-            this.zoomChangedInteractive("y2", "unzoom");
-            return true;
-         });
-      }
 
       if (typeof dox === 'undefined') { dox = doy = doz = true; } else
       if (typeof dox === 'string') { doz = dox.indexOf("z") >= 0; doy = dox.indexOf("y") >= 0; dox = dox.indexOf("x") >= 0; }

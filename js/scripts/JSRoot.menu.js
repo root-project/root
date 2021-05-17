@@ -377,20 +377,25 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
         * @protected */
       addRColorMenu(name, value, set_func) {
          // if (value === undefined) return;
-         let colors = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
+         let colors = ['default', 'black', 'white', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
 
          this.add("sub:" + name, () => {
             this.input("Enter color name - empty string will reset color", value).then(set_func);
          });
-         let col = null, fillcol = 'black', coltxt = 'default', bkgr = '';
-         for (let n = -1; n < colors.length; ++n) {
-            if (n >= 0) {
-               coltxt = col = colors[n];
-               bkgr = "background-color:" + col;
-               fillcol = (col == 'white') ? 'black' : 'white';
+         let fillcol = 'black';
+         for (let n = 0; n < colors.length; ++n) {
+            let coltxt = colors[n], match = false, bkgr = '';
+            if (n > 0) {
+               bkgr = "background-color:" + coltxt;
+               fillcol = (coltxt == 'white') ? 'black' : 'white';
+
+               if ((typeof value === 'string') && value && (value != 'auto') && (value[0] != '['))
+                  match = (d3.rgb(value).toString() == d3.rgb(coltxt).toString());
+            } else {
+               match = !value;
             }
             let svg = `<svg width='100' height='18' style='margin:0px;${bkgr}'><text x='4' y='12' style='font-size:12px' fill='${fillcol}'>${coltxt}</text></svg>`;
-            this.addchk(value == col, svg, coltxt, res => set_func(res == 'default' ? null : res));
+            this.addchk(match, svg, coltxt, res => set_func(res == 'default' ? null : res));
          }
          this.add("endsub:");
       }
@@ -399,7 +404,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
         * @protected */
       addRAttrTextItems(fontHandler, opts, set_func) {
          if (!opts) opts = {};
-         this.addRColorMenu("color", fontHandler.color, sel => set_func({ name: "color_name", value: sel }));
+         this.addRColorMenu("color", fontHandler.color, sel => set_func({ name: "color", value: sel }));
          if (fontHandler.scaled)
             this.addSizeMenu("size", 0.01, 0.10, 0.01, fontHandler.size /fontHandler.scale, sz => set_func({ name: "size", value: sz }));
          else
