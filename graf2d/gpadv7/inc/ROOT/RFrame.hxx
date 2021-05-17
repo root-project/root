@@ -138,8 +138,9 @@ public:
          UpdateDim(0, src);
          UpdateDim(1, src);
          UpdateDim(2, src);
+         UpdateDim(3, src);
+         UpdateDim(4, src);
       }
-
    };
 
 private:
