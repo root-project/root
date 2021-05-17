@@ -19,6 +19,8 @@
 
 #include <ROOT/RPageStorage.hxx>
 
+#include <iterator>
+#include <list>
 #include <memory>
 
 namespace ROOT {
@@ -37,21 +39,45 @@ private:
    /// A buffered column. The column is not responsible for RPage memory management (i.e.
    /// ReservePage/ReleasePage), which is handled by the enclosing RPageSinkBuf.
    class RColumnBuf {
-   private:
-      std::pair<RPageStorage::ColumnHandle_t, std::vector<RPage>> fBuf;
    public:
-      void BufferPage(RPageStorage::ColumnHandle_t columnHandle, const RPage &page) {
-         if (!fBuf.first) {
-            fBuf.first = columnHandle;
+      struct RPageZipItem {
+         RPage fPage;
+         // Compression scratch buffer for fSealedPage.
+         std::unique_ptr<unsigned char[]> fBuf;
+         RPageStorage::RSealedPage fSealedPage;
+         explicit RPageZipItem(RPage page)
+            : fPage(page), fBuf(nullptr) {}
+         bool IsSealed() {
+            return fSealedPage.fBuffer != nullptr;
          }
-         fBuf.second.push_back(page);
+         void AllocateSealedPageBuf() {
+            fBuf = std::make_unique<unsigned char[]>(fPage.GetSize());
+         }
+      };
+      /// Returns an iterator to the newly buffered page. The iterator remains
+      /// valid until the return value of DrainBufferedPages() is destroyed.
+      std::list<RPageZipItem>::iterator BufferPage(
+         RPageStorage::ColumnHandle_t columnHandle, const RPage &page)
+      {
+         if (!fCol) {
+            fCol = columnHandle;
+         }
+         fBufferedPages.push_back(RPageZipItem(page));
+         return std::prev(fBufferedPages.end());
       }
-      const RPageStorage::ColumnHandle_t &GetHandle() const { return fBuf.first; }
-      std::vector<RPage> DrainBufferedPages() {
-         std::vector<RPage> drained;
-         std::swap(fBuf.second, drained);
+      const RPageStorage::ColumnHandle_t &GetHandle() const { return fCol; }
+      // When the return value of DrainBufferedPages() is destroyed, all iterators
+      // returned by GetBuffer are invalidated.
+      std::list<RPageZipItem> DrainBufferedPages() {
+         std::list<RPageZipItem> drained;
+         std::swap(fBufferedPages, drained);
          return drained;
       }
+   private:
+      RPageStorage::ColumnHandle_t fCol;
+      // Using a linked list guarantees that references to list elements are
+      // never invalidated by appends in BufferPage.
+      std::list<RPageZipItem> fBufferedPages;
    };
 
 private:
@@ -62,9 +88,6 @@ private:
    std::unique_ptr<RNTupleModel> fInnerModel;
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
-
-   /// Compress and commit buffered cluster pages in parallel.
-   void ParallelClusterZip(NTupleSize_t nEntries);
 
 protected:
    void CreateImpl(const RNTupleModel &model) final;
