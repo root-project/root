@@ -56,7 +56,9 @@ public:
    RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
    ~RRDFCardinalityField() = default;
 
-   void GenerateColumnsImpl() final { R__ASSERT(false); } // Field is only used for reading
+   // Field is only used for reading
+   void GenerateColumnsImpl() final { R__ASSERT(false && "Cardinality fields must only be used for reading"); }
+
    void GenerateColumnsImpl(const RNTupleDescriptor &) final
    {
       RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
