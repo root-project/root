@@ -5993,8 +5993,11 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
       case TImage::kXpm:
          ret = ASImage2xpmRawBuff(img, (CARD8 **)buffer, size, 0);
          break;
-      default:
+      case TImage::kPng:
          ret = ASImage2PNGBuff(img, (CARD8 **)buffer, size, &params);
+         break;
+      default:
+         ret = kFALSE;
    }
 
    if (!ret) {
@@ -6059,9 +6062,11 @@ Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
          }
          break;
       }
-      default:
+      case TImage::kXpm:
          fImage = PNGBuff2ASimage((CARD8 *)*buffer, &params);
          break;
+      default:
+         fImage = nullptr;
    }
 
    if (!fImage) {
