@@ -213,7 +213,7 @@ public:
 template <>
 class RColumnElement<RColumnSwitch, EColumnType::kUnknown> : public RColumnElementBase {
 public:
-   static constexpr std::size_t kSize = sizeof(ClusterSize_t);
+   static constexpr std::size_t kSize = sizeof(RColumnSwitch);
    explicit RColumnElement(RColumnSwitch *value) : RColumnElementBase(value, kSize) {}
 };
 
