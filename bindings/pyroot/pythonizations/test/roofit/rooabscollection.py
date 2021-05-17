@@ -78,6 +78,26 @@ class TestRooAbsCollection(unittest.TestCase):
             self.assertEqual(coll.find(vptr) == vptr, vptr in coll)
             self.assertEqual(coll.find(vname) == vptr, vname in coll)
 
+    def _test_getitem(self, collection_class):
+
+        var0 = ROOT.RooRealVar("var0", "var0", 0)
+        var1 = ROOT.RooRealVar("var1", "var1", 1)
+
+        coll = collection_class(var0, var1)
+
+        with self.assertRaises(TypeError):
+            coll[1.5]
+
+        with self.assertRaises(IndexError):
+            coll[2]
+
+        with self.assertRaises(IndexError):
+            coll[-3]
+
+        # check if negative indexing works
+        self.assertEqual(coll[0], coll[-2])
+        self.assertEqual(coll[1], coll[-1])
+
     # Tests
     def test_len_rooarglist(self):
         self._test_len(ROOT.RooArgList)
@@ -102,6 +122,18 @@ class TestRooAbsCollection(unittest.TestCase):
 
     def test_contains_rooargset(self):
         self._test_contains(ROOT.RooArgSet)
+
+    def test_getitem_rooarglist(self):
+        self._test_getitem(ROOT.RooArgList)
+        # The RooArgList doesn't support string keys
+        with self.assertRaises(TypeError):
+            ROOT.RooArgList()["name"]
+
+    def test_getitem_rooargset(self):
+        self._test_getitem(ROOT.RooArgSet)
+        # The RooArgSet supports string keys
+        var0 = ROOT.RooRealVar("var0", "var0", 0)
+        self.assertEqual(ROOT.RooArgSet(var0)["var0"], var0)
 
 
 if __name__ == "__main__":

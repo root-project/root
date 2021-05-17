@@ -19,11 +19,13 @@ from ._rooabscollection import RooAbsCollection
 from ._rooabsdata import RooAbsData
 from ._rooabspdf import RooAbsPdf
 from ._rooabsreal import RooAbsReal
+from ._rooarglist import RooArgList
+from ._rooargset import RooArgSet
 from ._rooworkspace import RooWorkspace
 
 
 # list of python classes that are used to pythonize RooFit classes
-python_classes = [RooAbsCollection, RooAbsData, RooAbsPdf, RooAbsReal, RooWorkspace]
+python_classes = [RooAbsCollection, RooAbsData, RooAbsPdf, RooAbsReal, RooArgList, RooArgSet, RooWorkspace]
 
 # create a dictionary for convenient access to python classes
 python_classes_dict = dict()
@@ -82,6 +84,15 @@ def rebind_instancemethod(to_class, from_class, func_name):
     setattr(to_class, func_name, to_method)
 
 
+def make_func_name_orig(func_name):
+    """Return the name that we will give to the original cppyy function."""
+    # special treatment of magic functions, e.g.: __getitem__ > _getitem
+    if func_name.startswith("__") and func_name.endswith("__"):
+        func_name = func_name[2:-2]
+
+    return "_" + func_name
+
+
 @pythonization()
 def pythonize_roofit(klass, name):
     # Parameters:
@@ -106,7 +117,7 @@ def pythonize_roofit(klass, name):
         # pythonization, we rename it and prefix it with an underscore
         if hasattr(klass, func_name):
             # new name for original function
-            func_name_orig = "_" + func_name
+            func_name_orig = make_func_name_orig(func_name)
 
             setattr(klass, func_name_orig, getattr(klass, func_name))
 
