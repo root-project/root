@@ -1729,7 +1729,7 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (imgY < 0)  py = py - imgY;
 
       ASImage *image = fImage;
-      if (fScaledImage) image = fScaledImage->fImage;
+      if (fScaledImage && fScaledImage->fImage) image = fScaledImage->fImage;
 
       if (imgX >= (int)image->width)  px = px - imgX + image->width - 1;
       if (imgY >= (int)image->height) py = py - imgY + image->height - 1;
