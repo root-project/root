@@ -6062,7 +6062,7 @@ Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
          }
          break;
       }
-      case TImage::kXpm:
+      case TImage::kPng:
          fImage = PNGBuff2ASimage((CARD8 *)*buffer, &params);
          break;
       default:
