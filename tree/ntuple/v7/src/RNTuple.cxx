@@ -40,6 +40,11 @@
 
 
 #ifdef R__USE_IMT
+ROOT::Experimental::RNTupleImtTaskScheduler::RNTupleImtTaskScheduler()
+{
+   Reset();
+}
+
 void ROOT::Experimental::RNTupleImtTaskScheduler::Reset()
 {
    fTaskGroup = std::make_unique<TTaskGroup>();
