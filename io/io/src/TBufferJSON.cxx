@@ -1218,8 +1218,14 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
 
    switch (special_kind) {
    case 0:
-      if (!base_class)
-         elem_name = elem->GetName();
+      if (base_class) return;
+      elem_name = elem->GetName();
+      if (strcmp(elem_name,"fLineStyle") == 0)
+         if ((strcmp(elem->GetTypeName(),"TString") == 0) && (strcmp(elem->GetFullName(),"fLineStyle[30]") == 0)) {
+            auto st1 = fStack.at(fStack.size() - 2).get();
+            if (st1->IsStreamerInfo() && st1->fInfo && (strcmp(st1->fInfo->GetName(),"TStyle") == 0))
+               elem_name = "fLineStyles";
+         }
       break;
    case TClassEdit::kVector: elem_name = "fVector"; break;
    case TClassEdit::kList: elem_name = "fList"; break;
