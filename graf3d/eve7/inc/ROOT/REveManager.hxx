@@ -98,7 +98,6 @@ public:
 
    struct Logger {
       class Handler : public RLogHandler {
-         Logger *fLogger;
 
       public:
          Handler(Logger &logger) : fLogger(&logger) {}
