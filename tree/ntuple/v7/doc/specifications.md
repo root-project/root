@@ -304,9 +304,10 @@ The footer envelope has the following structure:
 
 - Feature flags
 - Header checksum (CRC32)
-- Collection frame of extension header envelope links
-- Collection frame of meta-data block envelope links
-- Collection frame of cluster summary record frames
+- List frame of extension header envelope links
+- List frame of meta-data block envelope links
+- List frame of column group record frames
+- List frame of cluster summary record frames
 
 The header checksum can be used to cross-check that header and footer belong together.
 
@@ -315,6 +316,18 @@ They are necessary when fields have been backfilled during writing.
 
 The ntuple meta-data can be split over multiple meta-data envelopes (see below).
 
+#### Column Group Record Frame
+The column group record frame is used to set IDs for certain subsets of column IDs.
+Column groups are only used when there are sharded clusters.
+Otherwise the enclosing list frame in the footer envelope is empty and all clusters span all columns.
+The purpose of column groups is to prevent repetition of column ID ranges in cluster summaries.
+
+The column group record frame consists of a list frame of 32bit integer items.
+Every item denotes a column ID that is part of this particular column group.
+The ID of the column group is given implicitly by the order of column groups.
+
+
+#### Cluster Summary Record Frame
 The cluster summary record frame starts with the entry range:
 
 ```
@@ -331,11 +344,11 @@ The cluster summary record frame starts with the entry range:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-The entry rage is followed by the page list envelope link.
+The entry range is followed by the page list envelope link (but see flags).
 
-If flag 0x01 (partial cluster) is set, an additional collection frame follows with the column range.
-The column range is the list of column IDs that is used in the cluster.
-Of flags is zero, the cluster stores the event range of _all_ the columns.
+If flag 0x01 (sharded cluster) is set,
+an additional 32bit integer containing the column group ID follows the flags field.
+If flags is zero, the cluster stores the event range of _all_ the columns.
 
 
 ### Page List Envelope
