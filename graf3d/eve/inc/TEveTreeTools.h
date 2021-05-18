@@ -21,19 +21,19 @@
 
 class TEveSelectorToEventList : public TSelectorDraw
 {
-   TEveSelectorToEventList(const TEveSelectorToEventList&);            // Not implemented
-   TEveSelectorToEventList& operator=(const TEveSelectorToEventList&); // Not implemented
+   TEveSelectorToEventList(const TEveSelectorToEventList&) = delete;
+   TEveSelectorToEventList& operator=(const TEveSelectorToEventList&) = delete;
 
 protected:
    TEventList* fEvList;
-   TList       fInput;
+   TList       fInputList;
 public:
    TEveSelectorToEventList(TEventList* evl, const char* sel);
 
    virtual Int_t  Version() const { return 1; }
    virtual Bool_t Process(Long64_t entry);
 
-   ClassDef(TEveSelectorToEventList, 1); // TSelector that stores entry numbers of matching TTree entries into an event-list.
+   ClassDef(TEveSelectorToEventList, 2); // TSelector that stores entry numbers of matching TTree entries into an event-list.
 };
 
 /******************************************************************************/
@@ -65,11 +65,11 @@ public:
 
 class TEvePointSelector : public TSelectorDraw
 {
-   TEvePointSelector(const TEvePointSelector&);            // Not implemented
-   TEvePointSelector& operator=(const TEvePointSelector&); // Not implemented
+   TEvePointSelector(const TEvePointSelector&) = delete;
+   TEvePointSelector& operator=(const TEvePointSelector&) = delete;
 
 protected:
-   TTree                  *fTree;
+   TTree                  *fSelectTree;
    TEvePointSelectorConsumer *fConsumer;
 
    TString                 fVarexp;
@@ -78,7 +78,7 @@ protected:
    TString                 fSubIdExp;
    Int_t                   fSubIdNum;
 
-   TList                   fInput;
+   TList                   fInputList;
 
 public:
    TEvePointSelector(TTree* t=0, TEvePointSelectorConsumer* c=0,
@@ -90,8 +90,8 @@ public:
    virtual void  TakeAction();
 
 
-   TTree* GetTree() const   { return fTree; }
-   void   SetTree(TTree* t) { fTree = t; }
+   TTree* GetTree() const   { return fSelectTree; }
+   void   SetTree(TTree* t) { fSelectTree = t; }
 
    TEvePointSelectorConsumer* GetConsumer() const { return fConsumer; }
    void SetConsumer(TEvePointSelectorConsumer* c) { fConsumer = c; }
@@ -107,7 +107,7 @@ public:
 
    Int_t GetSubIdNum() const { return fSubIdNum; }
 
-   ClassDef(TEvePointSelector, 1); // TSelector for direct extraction of point-like data from a Tree.
+   ClassDef(TEvePointSelector, 2); // TSelector for direct extraction of point-like data from a Tree.
 };
 
 #endif
