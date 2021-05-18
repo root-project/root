@@ -377,10 +377,10 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
     // Add two points to make curve jump from 0 to yval at the left end of the plotting range.
     // This ensures that filled polygons are drawn properly. The first point needs to be to the
     // left of the second. Since points are sorted later, its x coordinate is shifted by 1/1000 dx.
-    addPoint(xlo-dx*1.001, 0);
+    addPoint(xlo-dx*0.001, 0);
     addPoint(xlo-dx,yval[0]) ;
   } else if (wmode==Straight) {
-    addPoint(xlo,0) ;
+    addPoint(xlo-dx*0.001,0) ;
   }
 
   addPoint(xlo,yval[0]);
@@ -409,9 +409,9 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
     // Add two points to close polygon. The order matters. Since they are sorted in x later, the second
     // point is shifted by 1/1000 * dx.
     addPoint(xhi+dx,yval[minPoints-1]) ;
-    addPoint(xhi+dx*1.001, 0);
+    addPoint(xhi+dx*0.001, 0);
   } else if (wmode==Straight) {
-    addPoint(xhi,0) ;
+    addPoint(xhi+dx*0.001,0) ;
   }
 }
 
