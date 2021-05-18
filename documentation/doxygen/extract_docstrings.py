@@ -16,7 +16,15 @@
 
 import ast
 import sys
-from os import path, scandir
+from os import path
+
+# Inspired from https://pypi.org/project/scandir/:
+# Use the built-in version of scandir/walk if possible, otherwise
+# use the scandir module
+try:
+    from os import scandir
+except ImportError:
+    from scandir import scandir
 
 if len(sys.argv) < 2:
     print("Please provide the directory where documented .py files are.")
