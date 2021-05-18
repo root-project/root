@@ -56,7 +56,7 @@ public:
     // Expand parameter pack in C++ 11 way:
     int dummy[] = { 0, (processArg(moreArgsOrName), 0) ... };
     (void)dummy;
-  };
+  }
 
   /// Construct from iterators.
   /// \tparam Iterator_t An iterator pointing to RooFit objects or references thereof.
