@@ -54,6 +54,13 @@ private:
             fBuf = std::make_unique<unsigned char[]>(fPage.GetSize());
          }
       };
+   public:
+      RColumnBuf() = default;
+      RColumnBuf(const RColumnBuf&) = delete;
+      RColumnBuf& operator=(const RColumnBuf&) = delete;
+      RColumnBuf(RColumnBuf&&) = default;
+      RColumnBuf& operator=(RColumnBuf&&) = default;
+      ~RColumnBuf() = default;
       /// Returns an iterator to the newly buffered page. The iterator remains
       /// valid until the return value of DrainBufferedPages() is destroyed.
       std::list<RPageZipItem>::iterator BufferPage(
