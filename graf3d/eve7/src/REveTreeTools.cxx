@@ -33,6 +33,7 @@ an event-list.
 REveSelectorToEventList::REveSelectorToEventList(TEventList* evl, const char* sel) :
    TSelectorDraw(), fEvList(evl)
 {
+   fInputList.SetOwner(kTRUE);
    fInputList.Add(new TNamed("varexp", ""));
    fInputList.Add(new TNamed("selection", sel));
    SetInputList(&fInputList);
@@ -75,6 +76,7 @@ REvePointSelector::REvePointSelector(TTree* t,
    fSubIdExp  (),
    fSubIdNum  (0)
 {
+   fInputList.SetOwner(kTRUE);
    SetInputList(&fInputList);
 }
 
