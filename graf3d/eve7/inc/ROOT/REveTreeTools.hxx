@@ -30,7 +30,7 @@ class REveSelectorToEventList : public TSelectorDraw
 
 protected:
    TEventList *fEvList{nullptr};
-   TList fInput;
+   TList fInputList;
 
 public:
    REveSelectorToEventList(TEventList *evl, const char *sel);
@@ -39,7 +39,7 @@ public:
    virtual Int_t Version() const { return 1; }
    virtual Bool_t Process(Long64_t entry);
 
-   ClassDef(REveSelectorToEventList, 1); // TSelector that stores entry numbers of matching TTree entries into an event-list.
+   ClassDef(REveSelectorToEventList, 2); // TSelector that stores entry numbers of matching TTree entries into an event-list.
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +79,7 @@ class REvePointSelector : public TSelectorDraw
    REvePointSelector &operator=(const REvePointSelector &) = delete;
 
 protected:
-   TTree *fTree{nullptr};
+   TTree *fSelectTree{nullptr};
    REvePointSelectorConsumer *fConsumer{nullptr};
 
    TString fVarexp;
@@ -88,7 +88,7 @@ protected:
    TString fSubIdExp;
    Int_t fSubIdNum;
 
-   TList fInput;
+   TList fInputList;
 
 public:
    REvePointSelector(TTree *t = nullptr, REvePointSelectorConsumer *c = nullptr, const char *vexp = "", const char *sel = "");
@@ -98,8 +98,8 @@ public:
    virtual Long64_t Select(TTree *t, const char *selection = nullptr);
    virtual void TakeAction();
 
-   TTree *GetTree() const { return fTree; }
-   void SetTree(TTree *t) { fTree = t; }
+   TTree *GetTree() const { return fSelectTree; }
+   void SetTree(TTree *t) { fSelectTree = t; }
 
    REvePointSelectorConsumer *GetConsumer() const { return fConsumer; }
    void SetConsumer(REvePointSelectorConsumer *c) { fConsumer = c; }
@@ -115,7 +115,7 @@ public:
 
    Int_t GetSubIdNum() const { return fSubIdNum; }
 
-   ClassDef(REvePointSelector, 1); // TSelector for direct extraction of point-like data from a Tree.
+   ClassDef(REvePointSelector, 2); // TSelector for direct extraction of point-like data from a Tree.
 };
 
 } // namespace Experimental
