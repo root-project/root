@@ -20,7 +20,16 @@
 #include <ROOT/RPageSinkBuf.hxx>
 
 ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
-   : RPageSink(inner->GetNTupleName(), inner->GetWriteOptions()), fInnerSink(std::move(inner)) {}
+   : RPageSink(inner->GetNTupleName(), inner->GetWriteOptions())
+   , fMetrics("RPageSinkBuf")
+   , fInnerSink(std::move(inner))
+{
+   fCounters = std::unique_ptr<RCounters>(new RCounters{
+      *fMetrics.MakeCounter<RNTuplePlainCounter*>("ParallelZip", "",
+         "compressing pages in parallel")
+   });
+   fMetrics.ObserveMetrics(fInnerSink->GetMetrics());
+}
 
 void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model)
 {
@@ -42,6 +51,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    if (!fTaskScheduler) {
       return RClusterDescriptor::RLocator{};
    }
+   fCounters->fParallelZip.SetValue(1);
    // Safety: std::list<T>::iterators are guaranteed to be valid until the
    // element is destroyed. In other words, all buffered page iterators are
    // valid until the return value of DrainBufferedPages() goes out of scope in
