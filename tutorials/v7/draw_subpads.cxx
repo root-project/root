@@ -1,8 +1,8 @@
 /// \file
 /// \ingroup tutorial_v7
-//
+///
 /// This ROOT 7 example demonstrates how to create a ROOT 7 canvas (RCanvas),
-/// divide on subpads and draw histograms there
+/// divide on sub-pads and draw histograms there
 ///
 /// \macro_image (rcanvas_js)
 /// \macro_code
