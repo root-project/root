@@ -55,7 +55,7 @@ REveException operator+(const REveException &s1, const char *s2);
 REveException operator+(const REveException &s1, ElementId_t x);
 
 /// Log channel for Eve diagnostics.
-RLogChannel &EveLog();
+RLogChannel &REveLog();
 
 } // namespace Experimental
 } // namespace ROOT

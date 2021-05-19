@@ -98,24 +98,14 @@ public:
 
    struct Logger {
       class Handler : public RLogHandler {
-         Logger *fLogger;
-
-      public:
-         Handler(Logger &logger) : fLogger(&logger) {}
-
-         bool Emit(const RLogEntry &entry) override
-         {
-            fLogger->fLogEntries.emplace_back(entry);
-            return true;
-         }
+        public:
+         bool Emit(const RLogEntry &entry) override;
       };
 
-      std::vector<RLogEntry> fLogEntries;
       Handler *fHandler;
-
       Logger()
       {
-         auto uptr = std::make_unique<Handler>(*this);
+         auto uptr = std::make_unique<Handler>();
          fHandler = uptr.get();
          RLogManager::Get().PushFront(std::move(uptr));
       }
