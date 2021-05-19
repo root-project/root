@@ -1281,7 +1281,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           left = handle.i1,
           right = handle.i2,
           di = handle.stepi,
-          pmain = this.getFramePainter(),
           histo = this.getHisto(), xaxis = this.getAxis("x"),
           res = "", lastbin = false,
           startx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
@@ -3066,7 +3065,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    RH2Painter.prototype.drawBinsCandle = function(funcs, w) {
       let histo = this.getHisto(), yaxis = this.getAxis("y"),
           handle = this.prepareDraw(),
-          pmain = this.getFramePainter(), // used for axis values conversions
           i, j, y, sum1, cont, center, counter, integral, pnt,
           bars = "", markers = "", posy;
 
