@@ -1375,7 +1375,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
 
-   /** @summary grid can only be drawn by first painter */
+   /** @summary Draw axes grids
+     * @desc Called immediately after axes drawing */
    TFramePainter.prototype.drawGrids = function() {
 
       let layer = this.getFrameSvg().select(".grid_layer");
@@ -3111,8 +3112,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (objpainter && lst && lst[indx] && (objpainter.snapid === undefined)) {
          // keep snap id in painter, will be used for the
          let pi = this.painters.indexOf(objpainter);
-         if (pi<0) this.painters.push(objpainter);
-         objpainter.snapid = lst[indx].fObjectID;
+         if (pi < 0) this.painters.push(objpainter);
+
+         if (typeof objpainter.setSnapId == 'function')
+            objpainter.setSnapId(lst[indx].fObjectID);
+         else
+            objpainter.snapid = lst[indx].fObjectID;
+
          if (objpainter.$primary && (pi > 0) && this.painters[pi-1].$secondary) {
             this.painters[pi-1].snapid = objpainter.snapid + "#hist";
             console.log('ASSIGN SECONDARY HIST ID', this.painters[pi-1].snapid);
@@ -3132,7 +3138,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this._snaps_map = {}; // to control how much snaps are drawn
          this._num_primitives = lst ? lst.length : 0;
       }
-
 
       ++indx; // change to the next snap
 
@@ -4484,6 +4489,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             break;
          default:
             if ((kind.substr(0,5) == "exec:") && painter && painter.snapid) {
+               console.log('Call exec', painter.snapid);
+
                msg = "PRIMIT6:" + JSROOT.toJSON({
                   _typename: "TWebObjectOptions",
                   snapid: painter.snapid.toString() + (subelem ? "#"+subelem : ""),
