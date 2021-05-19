@@ -1136,7 +1136,7 @@ void TCanvas::Flush()
    TPad *padsav = (TPad*)gPad;
    cd();
    if (!IsBatch()) {
-      if (!UseGL() || fGLDevice == -1) {
+      if (!UseGL() || fGLDevice == -1 || !gGLManager) {
          gVirtualX->SelectWindow(fCanvasID);
          gPad = padsav; //don't do cd() because than also the pixmap is changed
          CopyPixmaps();
@@ -2536,7 +2536,7 @@ void TCanvas::Update()
 
       if (!IsBatch()) FeedbackMode(kFALSE); // Goto double buffer mode
 
-      if (!UseGL() || fGLDevice == -1) PaintModified(); // Repaint all modified pad's
+      if (!UseGL() || fGLDevice == -1 || !gGLManager) PaintModified(); // Repaint all modified pad's
 
       Flush(); // Copy all pad pixmaps to the screen
 
