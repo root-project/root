@@ -1291,11 +1291,7 @@ void TypePrinter::printTemplateSpecializationBefore(
   IncludeStrongLifetimeRAII Strong(Policy);
   T->getTemplateName().print(OS, Policy);
 
-  const TemplateParameterList *TPL = nullptr;
-  if (TemplateDecl *TD = T->getTemplateName().getAsTemplateDecl())
-    TPL = TD->getTemplateParameters();
-
-  printTemplateArgumentList(OS, T->template_arguments(), Policy, TPL);
+  printTemplateArgumentList(OS, T->template_arguments(), Policy);
   spaceBeforePlaceHolder(OS);
 }
 
