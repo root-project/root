@@ -480,7 +480,7 @@ std::unordered_set<ROOT::Experimental::DescriptorId_t> ROOT::Experimental::RClus
 
 bool ROOT::Experimental::RClusterDescriptor::ContainsColumn(DescriptorId_t columnId) const
 {
-   return fColumnRanges.count(columnId) > 0;
+   return fColumnRanges.find(columnId) != fColumnRanges.end();
 }
 
 
