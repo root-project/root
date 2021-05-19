@@ -1729,7 +1729,7 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (imgY < 0)  py = py - imgY;
 
       ASImage *image = fImage;
-      if (fScaledImage) image = fScaledImage->fImage;
+      if (fScaledImage && fScaledImage->fImage) image = fScaledImage->fImage;
 
       if (imgX >= (int)image->width)  px = px - imgX + image->width - 1;
       if (imgY >= (int)image->height) py = py - imgY + image->height - 1;
@@ -5993,8 +5993,11 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
       case TImage::kXpm:
          ret = ASImage2xpmRawBuff(img, (CARD8 **)buffer, size, 0);
          break;
-      default:
+      case TImage::kPng:
          ret = ASImage2PNGBuff(img, (CARD8 **)buffer, size, &params);
+         break;
+      default:
+         ret = kFALSE;
    }
 
    if (!ret) {
@@ -6059,9 +6062,11 @@ Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
          }
          break;
       }
-      default:
+      case TImage::kPng:
          fImage = PNGBuff2ASimage((CARD8 *)*buffer, &params);
          break;
+      default:
+         fImage = nullptr;
    }
 
    if (!fImage) {
