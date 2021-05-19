@@ -17,6 +17,7 @@
 #ifndef ROOT7_RPageSinkBuf
 #define ROOT7_RPageSinkBuf
 
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RPageStorage.hxx>
 
 #include <iterator>
@@ -88,6 +89,12 @@ private:
    };
 
 private:
+   /// I/O performance counters that get registered in fMetrics
+   struct RCounters {
+      RNTuplePlainCounter &fParallelZip;
+   };
+   std::unique_ptr<RCounters> fCounters;
+   RNTupleMetrics fMetrics;
    /// The inner sink, responsible for actually performing I/O.
    std::unique_ptr<RPageSink> fInnerSink;
    /// The buffered page sink maintains a copy of the RNTupleModel for the inner sink.
@@ -114,7 +121,7 @@ public:
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
    void ReleasePage(RPage &page) final;
 
-   RNTupleMetrics &GetMetrics() final { return fInnerSink->GetMetrics(); }
+   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 } // namespace Detail
