@@ -744,14 +744,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                           .style("opacity", "0")
                           .style("cursor", "crosshair");
 
-            if (vertical)
-               r.attr("x", (side > 0) ? (-2*labelSize - 3) : 3)
+            if (vertical) {
+               let rw = (labelMaxWidth || 2*labelSize) + 3;
+               r.attr("x", (side > 0) ? -rw : 0)
                 .attr("y", 0)
-                .attr("width", 2*labelSize + 3)
+                .attr("width", rw)
                 .attr("height", h);
-            else
-               r.attr("x", 0).attr("y", (side>0) ? 0 : -labelSize - 3)
+            } else {
+               r.attr("x", 0).attr("y", (side > 0) ? 0 : -labelSize - 3)
                 .attr("width", w).attr("height", labelSize + 3);
+            }
          }
 
          this.position = 0;

@@ -2383,11 +2383,11 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
           print_entries = Math.floor(dostat / 10) % 10,
           print_mean = Math.floor(dostat / 100) % 10,
           print_rms = Math.floor(dostat / 1000) % 10,
+          print_integral = Math.floor(dostat / 1000000) % 10;
           // print_under = Math.floor(dostat / 10000) % 10,
           // print_over = Math.floor(dostat / 100000) % 10,
-          print_integral = Math.floor(dostat / 1000000) % 10;
-      //var print_skew = Math.floor(dostat / 10000000) % 10;
-      //var print_kurt = Math.floor(dostat / 100000000) % 10;
+          // print_skew = Math.floor(dostat / 10000000) % 10,
+          // print_kurt = Math.floor(dostat / 100000000) % 10;
 
       stat.clearPave();
 

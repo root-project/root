@@ -362,6 +362,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TPaveStats *stats = nullptr;
          TObject *palette = nullptr;
 
+         hist->BufferEmpty();
+
          while ((fobj = fiter()) != nullptr) {
            if (fobj->InheritsFrom(TPaveStats::Class()))
                stats = dynamic_cast<TPaveStats *> (fobj);
@@ -409,11 +411,12 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          }
 
          if (title && first_obj) hopt.Append(";;use_pad_title");
-         if (stats) hopt.Append(";;use_pad_stats");
+
+         // if (stats) hopt.Append(";;use_pad_stats");
+
          if (palette) hopt.Append(";;use_pad_palette");
 
          paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
-
 
          // do not extract objects from list of functions - stats and func need to be handled together with hist
          //
