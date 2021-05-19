@@ -203,6 +203,18 @@ public:
       fField.Read(clusterIndex, &fValue);
       return *fValue.Get<T>();
    }
+
+   template <typename C = T>
+   typename std::enable_if_t<Internal::IsMappable<FieldT>::value, const C*>
+   MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fField.MapV(globalIndex, nItems);
+   }
+
+   template <typename C = T>
+   typename std::enable_if_t<Internal::IsMappable<FieldT>::value, const C*>
+   MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fField.MapV(clusterIndex, nItems);
+   }
 };
 
 

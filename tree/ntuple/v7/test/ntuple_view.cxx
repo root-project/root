@@ -54,6 +54,47 @@ TEST(RNTuple, View)
    EXPECT_EQ(3, n);
 }
 
+TEST(RNTuple, BulkView)
+{
+   FileRaii fileGuard("test_ntuple_bulk_view.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   auto eltsPerPage = 10'000;
+   {
+      RNTupleWriteOptions opt;
+      opt.SetNElementsPerPage(eltsPerPage);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple",
+         fileGuard.GetPath(), opt);
+      for (int i = 0; i < 100'000; i++) {
+         ntuple->Fill();
+      }
+   }
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto viewPt = ntuple->GetView<float>("pt");
+
+   NTupleSize_t nPageItems = 0;
+   const float *buf = viewPt.MapV(0, nPageItems);
+   ASSERT_EQ(eltsPerPage, nPageItems);
+   auto dest = std::make_unique<float[]>(nPageItems);
+   memcpy(dest.get(), buf, sizeof(float) * nPageItems);
+   for (NTupleSize_t i = 0; i < nPageItems; i++) {
+      ASSERT_EQ(42.0f, dest.get()[i]) << i;
+   }
+   // second last element
+   buf = viewPt.MapV(eltsPerPage - 2, nPageItems);
+   ASSERT_EQ(2, nPageItems);
+   for (NTupleSize_t i = 0; i < nPageItems; i++) {
+      ASSERT_EQ(42.0f, buf[i]) << i;
+   }
+   // last element
+   buf = viewPt.MapV(eltsPerPage - 1, nPageItems);
+   ASSERT_EQ(1, nPageItems);
+   for (NTupleSize_t i = 0; i < nPageItems; i++) {
+      ASSERT_EQ(42.0f, buf[i]) << i;
+   }
+}
+
 TEST(RNTuple, Composable)
 {
    FileRaii fileGuard("test_ntuple_composable.root");
