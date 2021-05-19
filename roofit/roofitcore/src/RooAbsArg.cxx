@@ -1516,7 +1516,7 @@ void RooAbsArg::printTree(ostream& os, TString /*indent*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Ostream operator
 
-ostream& operator<<(ostream& os, RooAbsArg &arg)
+ostream& operator<<(ostream& os, RooAbsArg const& arg)
 {
   arg.writeToStream(os,kTRUE) ;
   return os ;
