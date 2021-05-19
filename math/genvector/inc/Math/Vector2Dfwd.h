@@ -34,7 +34,7 @@ namespace ROOT {
       /**
          2D Vector based on the cartesian coordinates x,y in double precision
 
-       To use it use `#include <Vector2D.h>`
+       To use it add the line `#include <Vector2D.h>`
 
        See the documentation on the DisplacementVector2D page.
       */
@@ -44,7 +44,7 @@ namespace ROOT {
       /**
          2D Vector based on the cartesian coordinates x,y,z in single precision
 
-       To use it use `#include <Vector2D.h>`
+       To use it add the line `#include <Vector2D.h>`
 
        See the documentation on the DisplacementVector2D page.
       */
@@ -54,7 +54,7 @@ namespace ROOT {
       /**
          2D Vector based on the polar coordinates rho, phi in double precision.
 
-       To use it use `#include <Vector2D.h>`
+       To use it add the line `#include <Vector2D.h>`
 
        See the documentation on the DisplacementVector2D page.
       */
@@ -64,7 +64,7 @@ namespace ROOT {
       /**
          2D Vector based on the polar coordinates rho, phi in single precision.
 
-       To use it use `#include <Vector2D.h>`
+       To use it add the line `#include <Vector2D.h>`
 
        See the documentation on the DisplacementVector2D page.
       */

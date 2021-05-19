@@ -37,7 +37,7 @@ namespace ROOT {
     /**
        3D Vector based on the cartesian coordinates x,y,z in double precision
 
-       To use it use `#include <Vector3D.h>`
+       To use it add the line `#include <Vector3D.h>`
 
        See the documentation on the DisplacementVector3D page.
     */
@@ -45,7 +45,7 @@ namespace ROOT {
     /**
        3D Vector based on the cartesian coordinates x,y,z in single precision
 
-       To use it use `#include <Vector3D.h>`
+       To use it add the line `#include <Vector3D.h>`
 
        See the documentation on the DisplacementVector3D page.
     */
@@ -55,7 +55,7 @@ namespace ROOT {
     /**
        3D Vector based on the eta based cylindrical coordinates rho, eta, phi in double precision.
 
-       To use it use `#include <Vector3D.h>`
+       To use it add the line `#include <Vector3D.h>`
 
        See the documentation on the DisplacementVector3D page.
     */
@@ -63,7 +63,7 @@ namespace ROOT {
     /**
        3D Vector based on the eta based cylindrical coordinates rho, eta, phi in single precision.
 
-       To use it use `#include <Vector3D.h>`
+       To use it add the line `#include <Vector3D.h>`
 
        See the documentation on the DisplacementVector3D page.
     */
@@ -73,7 +73,7 @@ namespace ROOT {
     /**
        3D Vector based on the polar coordinates rho, theta, phi in double precision.
 
-       To use it use `#include <Vector3D.h>`
+       To use it add the line `#include <Vector3D.h>`
 
        See the documentation on the DisplacementVector3D page.
     */
@@ -81,7 +81,7 @@ namespace ROOT {
     /**
        3D Vector based on the polar coordinates rho, theta, phi in single precision.
 
-       To use it use `#include <Vector3D.h>`
+       To use it add the line `#include <Vector3D.h>`
 
        See the documentation on the DisplacementVector3D page.
     */
@@ -91,7 +91,7 @@ namespace ROOT {
     /**
        3D Vector based on the cylindrical coordinates rho, z, phi in double precision.
 
-       To use it use `#include <Vector3D.h>`
+       To use it add the line `#include <Vector3D.h>`
 
        See the documentation on the DisplacementVector3D page.
     */
@@ -99,7 +99,7 @@ namespace ROOT {
     /**
        3D Vector based on the cylindrical coordinates rho, z, phi in single precision.
 
-       To use it use `#include <Vector3D.h>`
+       To use it add the line `#include <Vector3D.h>`
 
        See the documentation on the DisplacementVector3D page.
     */

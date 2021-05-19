@@ -39,7 +39,7 @@ namespace ROOT {
     /**
        LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in double precision with metric (-,-,-,+)
 
-       To use it use `#include <Vector4D.h>`
+       To use it add the line `#include <Vector4D.h>`
 
        See the documentation on the LorentzVector page.
     */
@@ -51,7 +51,7 @@ namespace ROOT {
     /**
        LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in float precision with metric (-,-,-,+)
 
-       To use it use `#include <Vector4D.h>`
+       To use it add the line `#include <Vector4D.h>`
 
        See the documentation on the LorentzVector page.
     */
@@ -61,7 +61,7 @@ namespace ROOT {
     /**
        LorentzVector based on the x, y, z,  and Mass in double precision
 
-       To use it use `#include <Vector4D.h>`
+       To use it add the line `#include <Vector4D.h>`
 
        See the documentation on the LorentzVector page.
     */
@@ -70,7 +70,7 @@ namespace ROOT {
     /**
        LorentzVector based on the cylindrical coordinates Pt, eta, phi and E (rho, eta, phi, t) in double precision
 
-       To use it use `#include <Vector4D.h>`
+       To use it add the line `#include <Vector4D.h>`
 
        See the documentation on the LorentzVector page.
     */
@@ -79,7 +79,7 @@ namespace ROOT {
     /**
        LorentzVector based on the cylindrical coordinates pt, eta, phi and Mass in double precision
 
-       To use it use `#include <Vector4D.h>`
+       To use it add the line `#include <Vector4D.h>`
 
        See the documentation on the LorentzVector page.
     */
