@@ -615,6 +615,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       histo.fYaxis.fXmin = ymin;
       histo.fYaxis.fXmax = ymax;
 
+      histo.fMinimum = tf1.fMinimum;
+      histo.fMaximum = tf1.fMaximum;
+
       return histo;
    }
 

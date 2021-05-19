@@ -1574,8 +1574,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
-   /** @summary Draw frame grids
-     * @desc grid can only be drawn by first painter */
+   /** @summary Draw axes grids
+     * @desc Called immediately after axes drawing */
    RFramePainter.prototype.drawGrids = function() {
       let layer = this.getFrameSvg().select(".grid_layer");
 
@@ -1591,10 +1591,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if ((grid_style < 0) || (grid_style >= jsrp.root_line_styles.length)) grid_style = 11;
 
+      if (this.x_handle)
+         this.x_handle.draw_grid = gridx;
+
       // add a grid on x axis, if the option is set
-      if (this.x_handle && gridx) {
+      if (this.x_handle && this.x_handle.draw_grid) {
          let grid = "";
-         for (let n=0;n<this.x_handle.ticks.length;++n)
+         for (let n = 0; n < this.x_handle.ticks.length; ++n)
             if (this.swap_xy)
                grid += "M0,"+(h+this.x_handle.ticks[n])+"h"+w;
             else
@@ -1608,10 +1611,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                  .style("stroke-dasharray", jsrp.root_line_styles[grid_style]);
       }
 
+      if (this.y_handle)
+         this.y_handle.draw_grid = gridy;
+
       // add a grid on y axis, if the option is set
-      if (this.y_handle && gridy) {
+      if (this.y_handle && this.y_handle.draw_grid) {
          let grid = "";
-         for (let n=0;n<this.y_handle.ticks.length;++n)
+         for (let n = 0; n < this.y_handle.ticks.length; ++n)
             if (this.swap_xy)
                grid += "M"+this.y_handle.ticks[n]+",0v"+h;
             else
@@ -1733,10 +1739,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.x_handle = new RAxisPainter(this.getDom(), this, this.xaxis, "x_");
       this.x_handle.setPadName(this.getPadName());
       this.x_handle.snapid = this.snapid;
+      this.x_handle.draw_swapside = (sidex < 0);
+      this.x_handle.draw_ticks = ticksx;
 
       this.y_handle = new RAxisPainter(this.getDom(), this, this.yaxis, "y_");
       this.y_handle.setPadName(this.getPadName());
       this.y_handle.snapid = this.snapid;
+      this.y_handle.draw_swapside = (sidey < 0);
+      this.y_handle.draw_ticks = ticksy;
 
       this.z_handle = new RAxisPainter(this.getDom(), this, this.zaxis, "z_");
       this.z_handle.setPadName(this.getPadName());
@@ -1762,9 +1772,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (pp && pp._fast_drawing) {
          draw_promise = Promise.resolve(true)
       } else {
-         let promise1 = draw_horiz.drawAxis(layer, (sidex > 0) ? `translate(0,${h})` : "", sidex);
+         let promise1 = (ticksx > 0) ? draw_horiz.drawAxis(layer, (sidex > 0) ? `translate(0,${h})` : "", sidex) : true;
 
-         let promise2 = draw_vertical.drawAxis(layer, (sidey > 0) ? `translate(0,${h})` : `translate(${w},${h})`, sidey);
+         let promise2 = (ticksy > 0) ? draw_vertical.drawAxis(layer, (sidey > 0) ? `translate(0,${h})` : `translate(${w},${h})`, sidey) : true;
 
          draw_promise = Promise.all([promise1, promise2]).then(() => {
 
@@ -2039,15 +2049,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       } else {
          top_rect = this.draw_g.select("rect");
          main_svg = this.draw_g.select(".main_layer");
-
-         if (this.axes_drawn) {
-            let xmin = this.v7EvalAttr("x_zoommin"),
-                xmax = this.v7EvalAttr("x_zoommax"),
-                ymin = this.v7EvalAttr("y_zoommin"),
-                ymax = this.v7EvalAttr("y_zoommax");
-
-            console.log('TODO: RFrame zooming update', xmin, xmax, ymin, ymax);
-         }
       }
 
       this.axes_drawn = false;
@@ -2355,7 +2356,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (value) this[fld] = true;
    }
 
-
    /** @summary Fill menu for frame when server is not there */
    RFramePainter.prototype.fillObjectOfflineMenu = function(menu, kind) {
       if ((kind!="x") && (kind!="y")) return;
@@ -2366,6 +2366,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       //   menu.addchk(this["log"+kind], "SetLog"+kind, this.toggleAxisLog.bind(this, kind));
 
       // here should be all axes attributes in offline
+   }
+
+   /** @summary Set grid drawing for specified axis */
+   RFramePainter.prototype.changeFrameAttr = function(attr, value) {
+      let changes = {};
+      this.v7AttrChange(changes, attr, value);
+      this.v7SetAttr(attr, value);
+      this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
+      this.redrawPad();
    }
 
    /** @summary Fill context menu */
@@ -2402,6 +2411,32 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       menu.add("separator");
 
       menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
+
+      if (this.x_handle)
+         menu.addchk(this.x_handle.draw_grid, "Grid x", flag => this.changeFrameAttr("gridx", flag));
+      if (this.y_handle)
+         menu.addchk(this.y_handle.draw_grid, "Grid y", flag => this.changeFrameAttr("gridy", flag));
+      if (this.x_handle && !this.x2_handle)
+         menu.addchk(this.x_handle.draw_swapside, "Swap x", flag => this.changeFrameAttr("swapx", flag));
+      if (this.y_handle && !this.y2_handle)
+         menu.addchk(this.y_handle.draw_swapside, "Swap y", flag => this.changeFrameAttr("swapy", flag));
+      if (this.x_handle && !this.x2_handle) {
+         menu.add("sub:Ticks x");
+         menu.addchk(this.x_handle.draw_ticks == 0, "off", () => this.changeFrameAttr("ticksx", 0));
+         menu.addchk(this.x_handle.draw_ticks == 1, "normal", () => this.changeFrameAttr("ticksx", 1));
+         menu.addchk(this.x_handle.draw_ticks == 2, "ticks on both sides", () => this.changeFrameAttr("ticksx", 2));
+         menu.addchk(this.x_handle.draw_ticks == 3, "labels on both sides", () => this.changeFrameAttr("ticksx", 3));
+         menu.add("endsub:");
+       }
+      if (this.y_handle && !this.y2_handle) {
+         menu.add("sub:Ticks y");
+         menu.addchk(this.y_handle.draw_ticks == 0, "off", () => this.changeFrameAttr("ticksy", 0));
+         menu.addchk(this.y_handle.draw_ticks == 1, "normal", () => this.changeFrameAttr("ticksy", 1));
+         menu.addchk(this.y_handle.draw_ticks == 2, "ticks on both sides", () => this.changeFrameAttr("ticksy", 2));
+         menu.addchk(this.y_handle.draw_ticks == 3, "labels on both sides", () => this.changeFrameAttr("ticksy", 3));
+         menu.add("endsub:");
+       }
+
       menu.addAttributesMenu(this, alone ? "" : "Frame ");
       menu.add("separator");
       menu.add("Save as frame.png", () => this.getPadPainter().saveAs("png", 'frame', 'frame.png'));
@@ -2421,16 +2456,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    RFramePainter.prototype.showAxisStatus = function(axis_name, evnt) {
 
-      let taxis = null, hint_name = axis_name, hint_title = "TAxis",
+      let taxis = null, hint_name = axis_name, hint_title = "axis",
           m = d3.pointer(evnt, this.getFrameSvg().node()), id = (axis_name=="x") ? 0 : 1;
 
-      if (taxis) { hint_name = taxis.fName; hint_title = taxis.fTitle || "histogram TAxis object"; }
+      if (taxis) { hint_name = taxis.fName; hint_title = taxis.fTitle || "axis object"; }
 
       if (this.swap_xy) id = 1-id;
 
       let axis_value = this.revertAxis(axis_name, m[id]);
 
-      this.showObjectStatus(hint_name, hint_title, axis_name + " : " + this.axisAsText(axis_name, axis_value), m[0]+","+m[1]);
+      this.showObjectStatus(hint_name, hint_title, axis_name + " : " + this.axisAsText(axis_name, axis_value), Math.round(m[0])+","+Math.round(m[1]));
    }
 
    /** @summary Add interactive keys handlers
@@ -3044,39 +3079,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
 
-      if (!this._websocket) {
-
-         function ToggleGridField(arg) {
-            this.pad[arg] = this.pad[arg] ? 0 : 1;
-            let main = this.getMainPainter();
-            if (main && (typeof main.drawGrids == 'function')) main.drawGrids();
-         }
-
-         function SetTickField(arg) {
-            this.pad[arg.substr(1)] = parseInt(arg[0]);
-
-            let main = this.getMainPainter();
-            if (main && (typeof main.drawAxes == 'function')) main.drawAxes();
-         }
-
-         menu.addchk(this.pad.fGridx, 'Grid x', 'fGridx', ToggleGridField);
-         menu.addchk(this.pad.fGridy, 'Grid y', 'fGridy', ToggleGridField);
-         menu.add("sub:Ticks x");
-         menu.addchk(this.pad.fTickx == 0, "normal", "0fTickx", SetTickField);
-         menu.addchk(this.pad.fTickx == 1, "ticks on both sides", "1fTickx", SetTickField);
-         menu.addchk(this.pad.fTickx == 2, "labels up", "2fTickx", SetTickField);
-         menu.add("endsub:");
-         menu.add("sub:Ticks y");
-         menu.addchk(this.pad.fTicky == 0, "normal", "0fTicky", SetTickField);
-         menu.addchk(this.pad.fTicky == 1, "ticks on both side", "1fTicky", SetTickField);
-         menu.addchk(this.pad.fTicky == 2, "labels right", "2fTicky", SetTickField);
-         menu.add("endsub:");
-
-         //menu.addchk(this.pad.fTickx, 'Tick x', 'fTickx', ToggleField);
-         //menu.addchk(this.pad.fTicky, 'Tick y', 'fTicky', ToggleField);
-
+      if (!this._websocket)
          menu.addAttributesMenu(this);
-      }
 
       menu.add("separator");
 
@@ -3090,7 +3094,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.addchk((this.enlargeMain('state')=='on'), "Enlarge " + (this.iscan ? "canvas" : "pad"), () => this.enlargePad());
 
       let fname = this.this_pad_name;
-      if (fname.length===0) fname = this.iscan ? "canvas" : "pad";
+      if (!fname) fname = this.iscan ? "canvas" : "pad";
       menu.add("Save as "+fname+".png", fname+".png", () => this.saveAs("png", false));
       menu.add("Save as "+fname+".svg", fname+".svg", () => this.saveAs("svg", false));
 
