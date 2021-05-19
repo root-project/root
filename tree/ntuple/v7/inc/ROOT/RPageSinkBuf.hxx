@@ -48,7 +48,7 @@ private:
          RPageStorage::RSealedPage fSealedPage;
          explicit RPageZipItem(RPage page)
             : fPage(page), fBuf(nullptr) {}
-         bool IsSealed() {
+         bool IsSealed() const {
             return fSealedPage.fBuffer != nullptr;
          }
          void AllocateSealedPageBuf() {
@@ -112,7 +112,7 @@ protected:
 
 public:
    explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
-   RPageSinkBuf(const RPageSink&) = delete;
+   RPageSinkBuf(const RPageSinkBuf&) = delete;
    RPageSinkBuf& operator=(const RPageSinkBuf&) = delete;
    RPageSinkBuf(RPageSinkBuf&&) = default;
    RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
