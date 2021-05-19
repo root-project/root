@@ -389,7 +389,7 @@ void plot(T sig, T bkg, T data, const std::string &x_label, const std::string &f
    legend.AddEntry(&h_data, "Data", "PE1");
    legend.AddEntry(&h_bkg, "ZZ", "f");
    legend.AddEntry(&h_cmb, "m_{H} = 125 GeV", "f");
-   legend.Draw();
+   legend.DrawClone();
 
    // Add header
    TLatex cms_label;
