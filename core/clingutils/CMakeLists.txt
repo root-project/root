@@ -134,7 +134,9 @@ foreach(file ${custom_modulemaps}
         Interpreter/RuntimePrintValue.h
         Interpreter/RuntimeUniverse.h
         Interpreter/RuntimeOptions.h
-        Interpreter/Value.h)
+        Interpreter/Value.h
+        Interpreter/Visibility.h
+        )
   get_filename_component(path ${file} PATH)
   set(dest_file ${file})
   if (${file} STREQUAL "module.modulemap.build")
