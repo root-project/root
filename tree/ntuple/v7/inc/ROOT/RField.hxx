@@ -633,6 +633,12 @@ public:
    float *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<float>(clusterIndex);
    }
+   float *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<float>(globalIndex, nItems);
+   }
+   float *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<float>(clusterIndex, nItems);
+   }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>

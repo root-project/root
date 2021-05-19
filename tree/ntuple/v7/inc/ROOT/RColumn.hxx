@@ -160,22 +160,38 @@ public:
 
    template <typename CppT>
    CppT *Map(const NTupleSize_t globalIndex) {
+      NTupleSize_t nItems;
+      return MapV<CppT>(globalIndex, nItems);
+   }
+
+   template <typename CppT>
+   CppT *Map(const RClusterIndex &clusterIndex) {
+      NTupleSize_t nItems;
+      return MapV<CppT>(clusterIndex, nItems);
+   }
+
+   template <typename CppT>
+   CppT *MapV(const NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       if (!fCurrentPage.Contains(globalIndex)) {
          MapPage(globalIndex);
       }
+      // +1 to go from 0-based indexing to 1-based number of items
+      nItems = fCurrentPage.GetGlobalRangeLast() - globalIndex + 1;
       return reinterpret_cast<CppT*>(
          static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
          (globalIndex - fCurrentPage.GetGlobalRangeFirst()) * RColumnElement<CppT>::kSize);
    }
 
    template <typename CppT>
-   CppT *Map(const RClusterIndex &clusterIndex) {
+   CppT *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
       if (!fCurrentPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
+      // +1 to go from 0-based indexing to 1-based number of items
+      nItems = fCurrentPage.GetClusterRangeLast() - clusterIndex.GetIndex() + 1;
       return reinterpret_cast<CppT*>(
          static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
-            (clusterIndex.GetIndex() - fCurrentPage.GetClusterRangeFirst()) * RColumnElement<CppT>::kSize);
+         (clusterIndex.GetIndex() - fCurrentPage.GetClusterRangeFirst()) * RColumnElement<CppT>::kSize);
    }
 
    NTupleSize_t GetGlobalIndex(const RClusterIndex &clusterIndex) {
