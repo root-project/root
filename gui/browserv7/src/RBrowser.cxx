@@ -583,7 +583,6 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
                ProcessSaveFile(editor->fFileName, editor->fContent);
                ProcessRunMacro(editor->fFileName);
             }
-
          }
       }
    } else if (kind == "NEWWIDGET") {
