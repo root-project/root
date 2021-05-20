@@ -364,7 +364,8 @@ endif()
 set(webgui_defvalue ${root7_defvalue})
 
 #---Enable asserts for Debug builds and for the dev mode---------------------------------------
-if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR dev)
+string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
+if(BUILD_TYPE_UPPER STREQUAL DEBUG OR dev)
   set(asserts_defvalue ON)
 endif()
 
