@@ -49,7 +49,7 @@ protected:
    }
 
 public:
-   static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t::ValueType"; }
+   static std::string TypeName() { return "std::size_t"; }
    RRDFCardinalityField()
       : ROOT::Experimental::Detail::RFieldBase("", TypeName(), ENTupleStructure::kLeaf, false /* isSimple */) {}
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
@@ -69,20 +69,22 @@ public:
 
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
    {
-      return ROOT::Experimental::Detail::RFieldValue(this, static_cast<ClusterSize_t *>(where));
+      return ROOT::Experimental::Detail::RFieldValue(this, static_cast<std::size_t *>(where));
    }
    ROOT::Experimental::Detail::RFieldValue CaptureValue(void *where) final
    {
       return ROOT::Experimental::Detail::RFieldValue(true /* captureFlag */, this, where);
    }
-   size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
+   size_t GetValueSize() const final { return sizeof(std::size_t); }
 
    /// Get the number of elements of the collection identified by globalIndex
    void
    ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, ROOT::Experimental::Detail::RFieldValue *value) final
    {
       RClusterIndex collectionStart;
-      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, value->Get<ClusterSize_t>());
+      ClusterSize_t size;
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
+      *value->Get<std::size_t>() = size;
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
@@ -90,7 +92,9 @@ public:
                           ROOT::Experimental::Detail::RFieldValue *value) final
    {
       RClusterIndex collectionStart;
-      fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, value->Get<ClusterSize_t>());
+      ClusterSize_t size;
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
+      *value->Get<std::size_t>() = size;
    }
 };
 
