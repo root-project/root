@@ -3124,15 +3124,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }).then(menu => menu.show());
    }
 
+   /** @summary Redraw pad means redraw ourself
+     * @returns {Promise} when redrawing ready */
    RPadPainter.prototype.redrawPad = function(reason) {
-      this.redraw(reason);
-   }
-
-   RPadPainter.prototype.redraw = function(reason) {
 
       // prevent redrawing
-      if (this._doing_pad_draw)
-         return console.log('Prevent pad redrawing');
+      if (this._doing_pad_draw) {
+         console.log('Prevent RPad redrawing');
+         return Promise.resolve(false);
+      }
 
       let showsubitems = true;
 
@@ -3143,16 +3143,32 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       // even sub-pad is not visible, we should redraw sub-sub-pads to hide them as well
-      for (let i = 0; i < this.painters.length; ++i) {
-         let sub = this.painters[i];
-         if (showsubitems || sub.this_pad_name) sub.redraw(reason);
-      }
+      let redrawNext = indx => {
+         while (indx < this.painters.length) {
+            let sub = this.painters[indx++], res = 0;
+            if (showsubitems || sub.this_pad_name)
+               res = sub.redraw(reason);
 
-      if (jsrp.getActivePad() === this) {
-         let canp = this.getCanvPainter();
-         if (canp) canp.producePadEvent("padredraw", this);
-      }
+            if (jsrp.isPromise(res))
+               return res.then(() => redrawNext(indx));
+         }
+         return Promise.resolve(true);
+      };
+
+      return redrawNext(0).then(() => {
+         if (jsrp.getActivePad() === this) {
+            let canp = this.getCanvPainter();
+            if (canp) canp.producePadEvent("padredraw", this);
+         }
+         return true;
+      });
    }
+
+   /** @summary redraw pad */
+   RPadPainter.prototype.redraw = function(reason) {
+      return this.redrawPad(reason);
+   }
+
 
    /** @summary Checks if pad should be redrawn by resize
      * @private */
@@ -3270,10 +3286,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                return this.drawNextSnap(lst, indx);
             });
 
-         if (objpainter.updateObject(snap.fDrawable || snap.fObject || snap, snap.fOption || ""))
-            objpainter.redraw();
+         let promise;
 
-         return this.drawNextSnap(lst, indx); // call next
+         if (objpainter.updateObject(snap.fDrawable || snap.fObject || snap, snap.fOption || ""))
+            promise = objpainter.redraw();
+
+         if (!jsrp.isPromise(promise)) promise = Promise.resolve(true);
+
+         return promise.then(() => this.drawNextSnap(lst, indx)); // call next
       }
 
       if (snap._typename == "ROOT::Experimental::RPadDisplayItem") { // subpad
@@ -3480,7 +3500,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (jsrp.getActivePad() === this) {
             let canp = this.getCanvPainter();
-
             if (canp) canp.producePadEvent("padredraw", this);
          }
 
