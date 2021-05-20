@@ -12,6 +12,8 @@
 #include <ROOT/Browsable/RProvider.hxx>
 #include <ROOT/Browsable/TObjectHolder.hxx>
 #include <ROOT/Browsable/TKeyItem.hxx>
+#include <ROOT/Browsable/TObjectItem.hxx>
+#include <ROOT/Browsable/TObjectElement.hxx>
 
 #include <ROOT/RLogger.hxx>
 
@@ -35,14 +37,27 @@ Iterator over keys in TDirectory
 class TDirectoryLevelIter : public RLevelIter {
    TDirectory *fDir{nullptr};         ///<! current directory handle
    std::unique_ptr<TIterator>  fIter; ///<! created iterator
+   Bool_t fKeysIter{kTRUE};           ///<! iterating over keys list (default)
    TKey *fKey{nullptr};               ///<! currently selected key
+   TObject *fObj{nullptr};            ///<! currently selected object
    std::string fCurrentName;          ///<! current key name
 
    bool CreateIter()
    {
       if (!fDir) return false;
-      fIter.reset(fDir->GetListOfKeys()->MakeIterator());
+      fObj = nullptr;
       fKey = nullptr;
+      auto lst = fDir->GetListOfKeys();
+      if (lst->GetSize() == 0) {
+         auto olst = fDir->GetList();
+         if (olst->GetSize() > 0) {
+            fKeysIter = false;
+            fIter.reset(olst->MakeIterator());
+            return true;
+         }
+      }
+      fKeysIter = true;
+      fIter.reset(lst->MakeIterator());
       return true;
    }
 
@@ -51,7 +66,17 @@ class TDirectoryLevelIter : public RLevelIter {
       fCurrentName.clear();
       if (!fIter) return false;
 
-      fKey = dynamic_cast<TKey *>(fIter->Next());
+      fObj = fIter->Next();
+      if (!fObj) {
+         fIter.reset();
+         return false;
+      }
+      if (!fKeysIter) {
+         fCurrentName = fObj->GetName();
+         return true;
+      }
+
+      fKey = dynamic_cast<TKey *>(fObj);
 
       if (!fKey) {
          fIter.reset();
@@ -79,12 +104,24 @@ public:
 
    bool CanItemHaveChilds() const override
    {
-      return RProvider::CanHaveChilds(fKey->GetClassName());
+      if (!fKeysIter && fObj)
+         return RProvider::CanHaveChilds(fObj->IsA()->GetName());
+      if (fKeysIter && fKey)
+         return RProvider::CanHaveChilds(fKey->GetClassName());
+      return false;
    }
 
    /** Create element for the browser */
    std::unique_ptr<RItem> CreateItem() override
    {
+      if (!fKeysIter && fObj) {
+         auto item = std::make_unique<TObjectItem>(GetItemName(), CanItemHaveChilds() ? -1 : 0);
+         item->SetClassName(fObj->IsA()->GetName());
+         item->SetIcon(RProvider::GetClassIcon(fObj->IsA()->GetName()));
+         item->SetTitle(fObj->GetTitle());
+         return item;
+      }
+
       auto item = std::make_unique<TKeyItem>(GetItemName(), CanItemHaveChilds() ? -1 : 0);
       item->SetClassName(fKey->GetClassName());
       item->SetIcon(RProvider::GetClassIcon(fKey->GetClassName()));
@@ -246,6 +283,9 @@ public:
 
 std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
 {
+   if (!fKeysIter && fObj)
+      return std::make_shared<TObjectElement>(fObj);
+
    if ("ROOT::Experimental::RNTuple"s == fKey->GetClassName())
       return RProvider::BrowseNTuple(fKey->GetName(), fDir->GetFile()->GetName());
 
