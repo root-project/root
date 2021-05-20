@@ -17,7 +17,6 @@
 
 #include "RooAbsReal.h"
 #include "RooArgList.h"
-#include "RooFitDriver.h"
 
 #include "Math/IFunction.h"
 #include "Fit/ParameterSettings.h"

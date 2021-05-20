@@ -1,7 +1,7 @@
 #ifndef ROO_FIT_DRIVER_H
 #define ROO_FIT_DRIVER_H
 
-#include "RooBatchCompute.h"
+#include "rbc.h"
 #include "RooNLLVarNew.h"
 
 #include <queue>
