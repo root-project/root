@@ -535,8 +535,9 @@ void TDavixFileInternal::parseConfig()
    // WLCG Bearer tokens check
    std::string prefix = "Bearer ";
    auto token = DiscoverToken();
-   if (token.c_str()) {
+   if (!token.empty()) {
       // header: "Authorization: Bearer mytoken"
+      R__LOG_INFO(TDavixLogChannel()) << "Using Bearer token: " << token;
       davixParam->addHeader("Authorization", prefix + token);
    }
 
