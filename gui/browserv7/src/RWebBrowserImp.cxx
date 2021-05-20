@@ -12,6 +12,9 @@
 
 #include <ROOT/RWebBrowserImp.hxx>
 
+#include "TROOT.h"
+
+
 using namespace ROOT::Experimental;
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -74,6 +77,18 @@ void RWebBrowserImp::Refresh(Bool_t)
 void RWebBrowserImp::Show()
 {
    fWebBrowser->Show();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////
+/// Browse specified object
+
+void RWebBrowserImp::BrowseObj(TObject *obj)
+{
+   if (obj == gROOT) return;
+
+   if (gROOT->GetListOfFiles()->FindObject(obj))
+      fWebBrowser->SetWorkingPath("ROOT Files");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

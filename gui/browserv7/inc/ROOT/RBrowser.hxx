@@ -77,6 +77,8 @@ public:
    /// hide Browser
    void Hide();
 
+   void SetWorkingPath(const std::string &path);
+
 };
 
 } // namespace Experimental
