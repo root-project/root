@@ -20,6 +20,7 @@ using namespace ROOT::Experimental;
 RWebBrowserImp::RWebBrowserImp(TBrowser *b) : TBrowserImp(b)
 {
    fWebBrowser = std::make_shared<RBrowser>();
+   fWebBrowser->AddTCanvas();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -30,6 +31,7 @@ RWebBrowserImp::RWebBrowserImp(TBrowser *b, const char *title, UInt_t width, UIn
    fWidth = width;
    fHeight = height;
    fWebBrowser = std::make_shared<RBrowser>();
+   fWebBrowser->AddTCanvas();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -42,6 +44,7 @@ RWebBrowserImp::RWebBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y,
    fWidth = width;
    fHeight = height;
    fWebBrowser = std::make_shared<RBrowser>();
+   fWebBrowser->AddTCanvas();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

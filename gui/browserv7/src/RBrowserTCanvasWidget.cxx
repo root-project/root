@@ -48,6 +48,8 @@ public:
 
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
+
+      gPad = fCanvas.get();
    }
 
    RBrowserTCanvasWidget(const std::string &name, std::unique_ptr<TCanvas> &canv) : RBrowserWidget(name)
@@ -60,12 +62,18 @@ public:
 
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
-   }
 
+      gPad = fCanvas.get();
+   }
 
    virtual ~RBrowserTCanvasWidget() = default;
 
    std::string GetKind() const override { return "tcanvas"s; }
+
+   void SetActive() override
+   {
+      gPad = fCanvas.get();
+   }
 
    void Show(const std::string &arg) override
    {
