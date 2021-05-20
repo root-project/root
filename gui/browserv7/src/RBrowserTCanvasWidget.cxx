@@ -15,6 +15,8 @@
 #include <ROOT/Browsable/RProvider.hxx>
 
 #include "TCanvas.h"
+#include "TROOT.h"
+#include "TClass.h"
 #include "TWebCanvas.h"
 
 using namespace ROOT::Experimental;
@@ -28,6 +30,33 @@ class RBrowserTCanvasWidget : public RBrowserWidget {
    TWebCanvas *fWebCanvas{nullptr};  ///<! web implementation, owned by TCanvas
 
    std::unique_ptr<Browsable::RHolder> fObject; // TObject drawing in the TCanvas
+
+   void SetPrivateCanvasFields(bool on_init)
+   {
+      Long_t offset = TCanvas::Class()->GetDataMemberOffset("fCanvasID");
+      if (offset > 0) {
+         Int_t *id = (Int_t *)((char*) fCanvas.get() + offset);
+         if (*id == fCanvas->GetCanvasID()) *id = on_init ? 111222333 : -1;
+      } else {
+         printf("ERROR: Cannot modify TCanvas::fCanvasID data member\n");
+      }
+
+      offset = TCanvas::Class()->GetDataMemberOffset("fPixmapID");
+      if (offset > 0) {
+         Int_t *id = (Int_t *)((char*) fCanvas.get() + offset);
+         if (*id == fCanvas->GetPixmapID()) *id = on_init ? 332211 : -1;
+      } else {
+         printf("ERROR: Cannot modify TCanvas::fPixmapID data member\n");
+      }
+
+      offset = TCanvas::Class()->GetDataMemberOffset("fMother");
+      if (offset > 0) {
+         TPad **moth = (TPad **)((char*) fCanvas.get() + offset);
+         if (*moth == fCanvas->GetMother()) *moth = on_init ? fCanvas.get() : nullptr;
+      } else {
+         printf("ERROR: Cannot set TCanvas::fMother data member\n");
+      }
+   }
 
 public:
 
@@ -49,7 +78,8 @@ public:
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
 
-      gPad = fCanvas.get();
+      SetPrivateCanvasFields(true);
+      fCanvas->cd();
    }
 
    RBrowserTCanvasWidget(const std::string &name, std::unique_ptr<TCanvas> &canv) : RBrowserWidget(name)
@@ -62,17 +92,24 @@ public:
 
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
-
-      gPad = fCanvas.get();
+      SetPrivateCanvasFields(true);
+      fCanvas->cd();
    }
 
-   virtual ~RBrowserTCanvasWidget() = default;
+   virtual ~RBrowserTCanvasWidget()
+   {
+      SetPrivateCanvasFields(false);
+
+      gROOT->GetListOfCanvases()->Remove(fCanvas.get());
+
+      fCanvas->Close();
+   }
 
    std::string GetKind() const override { return "tcanvas"s; }
 
    void SetActive() override
    {
-      gPad = fCanvas.get();
+      fCanvas->cd();
    }
 
    void Show(const std::string &arg) override
