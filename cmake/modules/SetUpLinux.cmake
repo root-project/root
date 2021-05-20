@@ -33,9 +33,6 @@ else()
   message(FATAL_ERROR "Unknown processor: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
-# We should be case insensitive:
-string(TOUPPER "${CMAKE_BUILD_TYPE}" _BUILD_TYPE_UPPER)
-
 # JIT must be able to resolve symbols from all ROOT binaries.
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
