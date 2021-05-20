@@ -10,11 +10,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFit_RooBatchCompute_Batches_h
-#define RooFit_RooBatchCompute_Batches_h
+#ifndef ROOFIT_BATCHCOMPUTE_BATCHES_H
+#define ROOFIT_BATCHCOMPUTE_BATCHES_H
 
-#include "RooBatchCompute.h"
 #include "RooSpan.h"
+#include "RooBatchCompute.h"
 
 #include <stdint.h>
 #include <vector>
@@ -25,7 +25,6 @@
 #define __global__
 #define __host__
 #endif // #ifndef __CUDACC__
-class RooAbsReal;
 
 namespace RooBatchCompute {
 

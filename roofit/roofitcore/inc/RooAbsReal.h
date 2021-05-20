@@ -23,8 +23,7 @@
 #include "RooArgList.h"
 #include "RooGlobalFunc.h"
 #include "RooSpan.h"
-
-#include <map>
+#include "RooBatchCompute.h"
 
 class RooArgList ;
 class RooDataSet ;
@@ -43,10 +42,6 @@ class RooFitResult ;
 class RooAbsMoment ;
 class RooDerivative ;
 class RooVectorDataStore ;
-namespace RooBatchCompute{
-struct RunContext;
-typedef std::unordered_map<const RooAbsReal*,RooSpan<const double>> DataMap;
-}
 struct TreeReadBuffer; /// A space to attach TBranches
 namespace ROOT {
 namespace Experimental {
@@ -59,9 +54,10 @@ class TH1F;
 class TH2F;
 class TH3F;
 
-#include <list>
-#include <string>
 #include <iostream>
+#include <list>
+#include <map>
+#include <string>
 #include <sstream>
 
 class RooAbsReal : public RooAbsArg {
