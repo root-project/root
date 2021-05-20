@@ -14,11 +14,6 @@ JSROOT.define(['d3'], (d3) => {
    else if (d3.version !== '6.7.0')
       console.log(`Reuse existing d3.js version ${d3.version}, expected 6.7.0`);
 
-
-   function isPromise(obj) {
-      return obj && (typeof obj == 'object') && (typeof obj.then == 'function');
-   }
-
    // ==========================================================================================
 
    /** @summary Draw options interpreter
@@ -123,6 +118,10 @@ JSROOT.define(['d3'], (d3) => {
       JSROOT.require(['menu']).then(() => {
          jsrp.closeMenu(menuname);
       });
+   }
+
+   jsrp.isPromise = function(obj) {
+      return obj && (typeof obj == 'object') && (typeof obj.then == 'function');
    }
 
    /** @summary Read style and settings from URL
@@ -2289,7 +2288,7 @@ JSROOT.define(['d3'], (d3) => {
       else if (arg !== false)
          res = this.redraw(reason);
 
-      if (!isPromise(res)) res = Promise.resolve(false);
+      if (!jsrp.isPromise(res)) res = Promise.resolve(false);
 
       return res.then(() => {
          // inform GED that something changes
@@ -3665,7 +3664,7 @@ JSROOT.define(['d3'], (d3) => {
          } else {
             promise = handle.func(dom, obj, opt);
 
-            if (!isPromise(promise)) promise = Promise.resolve(promise);
+            if (!jsrp.isPromise(promise)) promise = Promise.resolve(promise);
          }
 
          return promise.then(p => {
