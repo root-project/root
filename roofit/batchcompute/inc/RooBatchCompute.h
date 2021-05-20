@@ -19,11 +19,9 @@
 
 #include "DllImport.h" //for R__EXTERN, needed for windows
 
-#include <vector>
 #include <functional>
-
-class RooAbsReal;
-class RooListProxy;
+#include <unordered_map>
+#include <vector>
 
 /**
  * Namespace for dispatching RooFit computations to various backends.
@@ -46,7 +44,7 @@ typedef std::vector<double> ArgVector;
 typedef double *__restrict RestrictArr;
 typedef const double *__restrict InputArr;
 
-enum Computer{AddPdf, ArgusBG, Bernstein, Exponential, Gaussian, NegativeLogarithms};
+enum Computer{AddPdf, ArgusBG, Bernstein, Exponential, Gaussian, NegativeLogarithms, ProdPdf};
 
 /**
  * \brief The interface which should be implemented to provide optimised computation functions for implementations of RooAbsReal::evaluateSpan().
