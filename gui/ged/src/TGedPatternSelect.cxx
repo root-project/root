@@ -36,7 +36,7 @@ The TGedPatternPopup is a popup containing a TGedPatternSelector.
 */
 
 
-/** \class  The TGedPatternSelect
+/** \class  TGedPatternSelect
     \ingroup ged
 
 is a button with pattern area with
