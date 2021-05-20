@@ -187,6 +187,20 @@ constexpr Double_t GnUncertainty()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Bohr radius in m
+constexpr Double_t A0()
+{
+   return 5.29177210903e-11;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Bohr radius uncertainty
+constexpr Double_t A0Uncertainty() 
+{
+   return 1.5e-10;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Planck's constant in \f$ J s \f$
 /// \f[ h \f]
 constexpr Double_t H()
@@ -268,6 +282,20 @@ constexpr Double_t KUncertainty()
 {
    // constant is exact according to 2019 redefinition 
    // (https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units)
+   return 0.0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Coulomb Constant in \f$ kgm^3s^{-2}C^{-2} \f$
+constexpr Double_t Ke()
+{
+   return 8.9875517923e9; 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Coulomb Constant Uncertainty.
+constexpr Double_t KeUncertainty()
+{
    return 0.0;
 }
 
