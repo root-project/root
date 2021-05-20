@@ -34,6 +34,7 @@ public:
    void      Iconify() final;
    void      Refresh(Bool_t = kFALSE) final;
    void      Show() final;
+   void      BrowseObj(TObject *) final;
 
    static TBrowserImp *NewBrowser(TBrowser *b = nullptr, const char *title = "ROOT Browser", UInt_t width = 800, UInt_t height = 500, Option_t *opt = "");
    static TBrowserImp *NewBrowser(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt = "");
