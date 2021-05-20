@@ -540,6 +540,12 @@ public:
    ClusterSize_t *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<ClusterSize_t>(clusterIndex);
    }
+   ClusterSize_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<ClusterSize_t>(globalIndex, nItems);
+   }
+   ClusterSize_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<ClusterSize_t>(clusterIndex, nItems);
+   }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -590,6 +596,12 @@ public:
    }
    bool *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<bool>(clusterIndex);
+   }
+   bool *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<bool>(globalIndex, nItems);
+   }
+   bool *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<bool>(clusterIndex, nItems);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -682,6 +694,12 @@ public:
    double *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<double>(clusterIndex);
    }
+   double *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<double>(globalIndex, nItems);
+   }
+   double *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<double>(clusterIndex, nItems);
+   }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -723,6 +741,12 @@ public:
    }
    char *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<char>(clusterIndex);
+   }
+   char *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<char>(globalIndex, nItems);
+   }
+   char *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<char>(clusterIndex, nItems);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -766,6 +790,12 @@ public:
    std::int8_t *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<std::int8_t>(clusterIndex);
    }
+   std::int8_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::int8_t>(globalIndex, nItems);
+   }
+   std::int8_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::int8_t>(clusterIndex, nItems);
+   }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -807,6 +837,12 @@ public:
    }
    std::uint8_t *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<std::uint8_t>(clusterIndex);
+   }
+   std::uint8_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::uint8_t>(globalIndex, nItems);
+   }
+   std::uint8_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::uint8_t>(clusterIndex, nItems);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -850,6 +886,12 @@ public:
    std::int16_t *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<std::int16_t>(clusterIndex);
    }
+   std::int16_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::int16_t>(globalIndex, nItems);
+   }
+   std::int16_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::int16_t>(clusterIndex, nItems);
+   }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -891,6 +933,12 @@ public:
    }
    std::uint16_t *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<std::uint16_t>(clusterIndex);
+   }
+   std::uint16_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::uint16_t>(globalIndex, nItems);
+   }
+   std::uint16_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::uint16_t>(clusterIndex, nItems);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -934,6 +982,12 @@ public:
    std::int32_t *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<std::int32_t>(clusterIndex);
    }
+   std::int32_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::int32_t>(globalIndex, nItems);
+   }
+   std::int32_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::int32_t>(clusterIndex, nItems);
+   }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -975,6 +1029,12 @@ public:
    }
    std::uint32_t *Map(const RClusterIndex clusterIndex) {
       return fPrincipalColumn->Map<std::uint32_t>(clusterIndex);
+   }
+   std::uint32_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::uint32_t>(globalIndex, nItems);
+   }
+   std::uint32_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::uint32_t>(clusterIndex, nItems);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -1018,6 +1078,12 @@ public:
    std::uint64_t *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<std::uint64_t>(clusterIndex);
    }
+   std::uint64_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::uint64_t>(globalIndex, nItems);
+   }
+   std::uint64_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::uint64_t>(clusterIndex, nItems);
+   }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -1059,6 +1125,12 @@ public:
    }
    std::int64_t *Map(const RClusterIndex &clusterIndex) {
       return fPrincipalColumn->Map<std::int64_t>(clusterIndex);
+   }
+   std::int64_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::int64_t>(globalIndex, nItems);
+   }
+   std::int64_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fPrincipalColumn->MapV<std::int64_t>(clusterIndex, nItems);
    }
 
    using Detail::RFieldBase::GenerateValue;

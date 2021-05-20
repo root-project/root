@@ -50,6 +50,7 @@
 #endif
 #include <vector>
 
+using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using EColumnType = ROOT::Experimental::EColumnType;
 using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
