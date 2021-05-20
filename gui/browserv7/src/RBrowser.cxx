@@ -354,6 +354,16 @@ std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Create new widget and send init message to the client
+
+void RBrowser::AddInitWidget(const std::string &kind)
+{
+   auto widget = AddWidget(kind);
+   if (widget && fWebWindow && (fWebWindow->NumConnections() > 0))
+      fWebWindow->Send(0, NewWidgetMsg(widget));
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns active geometry viewer (if any)
 
 std::shared_ptr<RBrowserWidget> RBrowser::FindWidget(const std::string &name) const
