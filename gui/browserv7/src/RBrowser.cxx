@@ -599,3 +599,18 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Set working path in the browser
+
+void RBrowser::SetWorkingPath(const std::string &path)
+{
+   auto p = Browsable::RElement::ParsePath(path);
+   auto elem = fBrowsable.GetSubElement(p);
+   if (elem) {
+      fBrowsable.SetWorkingPath(p);
+      if (fWebWindow && (fWebWindow->NumConnections() > 0))
+         fWebWindow->Send(0, GetCurrentWorkingDirectory());
+   }
+}
+
