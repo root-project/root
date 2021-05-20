@@ -537,7 +537,7 @@ void TDavixFileInternal::parseConfig()
    auto token = DiscoverToken();
    if (!token.empty()) {
       // header: "Authorization: Bearer mytoken"
-      R__LOG_INFO(TDavixLogChannel()) << "Using Bearer token: " << token;
+      R__LOG_INFO(TDavixLogChannel()) << "Using Bearer token starting with: " << token.substr(0, 3);
       davixParam->addHeader("Authorization", prefix + token);
    }
 
