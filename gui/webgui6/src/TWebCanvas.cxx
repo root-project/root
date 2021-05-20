@@ -371,7 +371,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
               palette = fobj;
          }
 
-         if (!stats && first_obj && CanCreateObject("TPaveStats")) {
+         if (!stats && first_obj && (gStyle->GetOptStat() > 0) && CanCreateObject("TPaveStats")) {
             stats  = new TPaveStats(
                            gStyle->GetStatX() - gStyle->GetStatW(),
                            gStyle->GetStatY() - gStyle->GetStatH(),
