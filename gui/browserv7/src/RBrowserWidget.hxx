@@ -43,6 +43,8 @@ public:
 
    virtual void ResetConn() {}
 
+   virtual void SetActive() {}
+
    void SetPath(const Browsable::RElementPath_t &path) { fPath = path; }
    const Browsable::RElementPath_t &GetPath() const { return fPath; }
 
