@@ -497,8 +497,9 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   }
 
   // If not create it now
-  std::unique_ptr<RooArgSet> depList{getObservables(iset)} ;
-  RooAbsReal* norm = createIntegral(*depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName)) ;
+  RooArgSet depList;
+  getObservables(iset, depList);
+  RooAbsReal* norm = createIntegral(depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName)) ;
 
   // Store it in the cache
   cache = new CacheElem(*norm) ;
@@ -551,20 +552,21 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
     ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
   }
 
-  std::unique_ptr<RooArgSet> depList(getObservables(nset));
+  RooArgSet depList;
+  getObservables(nset, depList);
 
   if (_verboseEval>0) {
     if (!selfNormalized()) {
       cxcoutD(Tracing) << IsA()->GetName() << "::syncNormalization(" << GetName()
 	   << ") recreating normalization integral " << endl ;
-      if (depList) depList->printStream(ccoutD(Tracing),kName|kValue|kArgs,kSingleLine) ; else ccoutD(Tracing) << "<none>" << endl ;
+      depList.printStream(ccoutD(Tracing),kName|kValue|kArgs,kSingleLine) ;
     } else {
       cxcoutD(Tracing) << IsA()->GetName() << "::syncNormalization(" << GetName() << ") selfNormalized, creating unit norm" << endl;
     }
   }
 
   // Destroy old normalization & create new
-  if (selfNormalized() || !dependsOn(*depList)) {
+  if (selfNormalized() || !dependsOn(depList)) {
     auto ntitle = std::string(GetTitle()) + " Unit Normalization";
     auto nname = std::string(GetName()) + "_UnitNorm";
     _norm = new RooRealVar(nname.c_str(),ntitle.c_str(),1) ;
@@ -572,7 +574,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
     const char* nr = (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : 0)) ;
 
 //     cout << "RooAbsPdf::syncNormalization(" << GetName() << ") rangeName for normalization is " << (nr?nr:"<null>") << endl ;
-    RooAbsReal* normInt = createIntegral(*depList,*getIntegratorConfig(),nr) ;
+    RooAbsReal* normInt = createIntegral(depList,*getIntegratorConfig(),nr) ;
     normInt->getVal() ;
 //     cout << "resulting normInt = " << normInt->GetName() << endl ;
 
@@ -587,7 +589,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
 
       if (cacheParams->getSize()>0) {
 	cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams->getSize()
-			 << "-dim value cache for integral over " << *depList << " as a function of " << *cacheParams << " in range " << (nr?nr:"<default>") <<  endl ;
+			 << "-dim value cache for integral over " << depList << " as a function of " << *cacheParams << " in range " << (nr?nr:"<default>") <<  endl ;
 	string name = Form("%s_CACHE_[%s]",normInt->GetName(),cacheParams->contentsString().c_str()) ;
 	RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*normInt,*cacheParams) ;
 	cachedIntegral->setInterpolationOrder(2) ;
@@ -934,8 +936,9 @@ RooAbsReal *createMultiRangeNLLCorrectionTerm(RooAbsPdf const &pdf, RooAbsData c
       auto sumEntriesCurrent = data.sumEntries("1", currentRangeName.c_str());
       sumEntriesTotal += sumEntriesCurrent;
 
-      auto pdfIntegralCurrent =
-         pdf.createIntegral(*pdf.getObservables(data), nullptr, nullptr, currentRangeName.c_str());
+      RooArgSet depList;
+      pdf.getObservables(data.get(), depList);
+      auto pdfIntegralCurrent = pdf.createIntegral(depList, nullptr, nullptr, currentRangeName.c_str());
 
       auto term = new RooFormulaVar((currentName + "_correctionTerm").c_str(),
                                     (std::string("-(") + std::to_string(sumEntriesCurrent) + " * log(x[0]))").c_str(),
@@ -1081,8 +1084,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     Double_t rangeHi = pc.getDouble("rangeHi") ;
 
     // Create range with name 'fit' with above limits on all observables
-    RooArgSet* obs = getObservables(&data) ;
-    for (auto arg : *obs) {
+    RooArgSet obs;
+    getObservables(data.get(), obs) ;
+    for (auto arg : obs) {
       RooRealVar* rrv =  dynamic_cast<RooRealVar*>(arg) ;
       if (rrv) rrv->setRange("fit",rangeLo,rangeHi) ;
     }
@@ -1237,7 +1241,8 @@ int RooAbsPdf::calculateAsymptoticCorrectedCovMatrix(Minimizer &minimizer, RooAb
          num(k, l) = 0.0;
       }
    }
-   RooArgSet *obs = this->getObservables(data);
+   RooArgSet obs;
+   this->getObservables(data.get(), obs);
    // Create derivative objects
    std::vector<std::unique_ptr<RooDerivative>> derivatives;
    const RooArgList &floated = rw->floatParsFinal();
@@ -1246,13 +1251,13 @@ int RooAbsPdf::calculateAsymptoticCorrectedCovMatrix(Minimizer &minimizer, RooAb
    for (const auto paramresult : floated) {
       auto paraminternal = static_cast<RooRealVar *>(floatingparams->find(*paramresult));
       assert(floatingparams->find(*paramresult)->IsA() == RooRealVar::Class());
-      derivatives.emplace_back(this->derivative(*paraminternal, *obs, 1));
+      derivatives.emplace_back(this->derivative(*paraminternal, obs, 1));
    }
 
    // Loop over data
    for (int j = 0; j < data.numEntries(); j++) {
       // Sets obs to current data point, this is where the pdf will be evaluated
-      *obs = *data.get(j);
+      obs = *data.get(j);
       // Determine first derivatives
       std::vector<double> diffs(floated.getSize(), 0.0);
       for (int k = 0; k < floated.getSize(); k++) {
@@ -1265,7 +1270,7 @@ int RooAbsPdf::calculateAsymptoticCorrectedCovMatrix(Minimizer &minimizer, RooAb
          diffs[k] = diff;
       }
       // Fill numerator matrix
-      double prob = getVal(obs);
+      double prob = getVal(&obs);
       for (int k = 0; k < floated.getSize(); k++) {
          for (int l = 0; l < floated.getSize(); l++) {
             num(k, l) += data.weight() * data.weight() * diffs[k] * diffs[l] / (prob * prob);
