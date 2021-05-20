@@ -479,6 +479,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case kIDF_CANCEL:
                      fFileInfo->SetFilename(nullptr);
+                     if (fDlgType == kDOpen || fDlgType == kDSave)
+                        fFileInfo->SetIniDir(nullptr);
                      if (fFc->GetDisplayStat())
                         fFc->SetDisplayStat(kFALSE);
                      fFileInfo->DeleteFileNamesList();
