@@ -121,8 +121,8 @@ protected:
    }
 
    /// Throws an exception if the column given by fOnDiskId and the columnIndex in the provided descriptor
-   /// is not of one of the allowed types.
-   ROOT::Experimental::EColumnType EnsureColumnType(const std::vector<EColumnType> &allowedTypes,
+   /// is not of one of the requested types.
+   ROOT::Experimental::EColumnType EnsureColumnType(const std::vector<EColumnType> &requestedTypes,
                                                     unsigned int columnIndex, const RNTupleDescriptor &desc);
 
 public:

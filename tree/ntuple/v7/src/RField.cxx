@@ -298,9 +298,9 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
 
 
 ROOT::Experimental::EColumnType ROOT::Experimental::Detail::RFieldBase::EnsureColumnType(
-   const std::vector<EColumnType> &allowedTypes, unsigned int columnIndex, const RNTupleDescriptor &desc)
+   const std::vector<EColumnType> &requestedTypes, unsigned int columnIndex, const RNTupleDescriptor &desc)
 {
-   R__ASSERT(!allowedTypes.empty());
+   R__ASSERT(!requestedTypes.empty());
    auto columnId = desc.FindColumnId(fOnDiskId, columnIndex);
    if (columnId == kInvalidDescriptorId) {
       throw RException(R__FAIL("Column missing: column #" + std::to_string(columnIndex) +
@@ -308,13 +308,24 @@ ROOT::Experimental::EColumnType ROOT::Experimental::Detail::RFieldBase::EnsureCo
    }
 
    const auto &columnDesc = desc.GetColumnDescriptor(columnId);
-   for (auto type : allowedTypes) {
+   for (auto type : requestedTypes) {
       if (type == columnDesc.GetModel().GetType())
          return type;
    }
    throw RException(R__FAIL(
-      "Unexpected column type: " + RColumnElementBase::GetTypeName(columnDesc.GetModel().GetType()) + " of "
-      "column #" + std::to_string(columnIndex) + " for field " + fName));
+      "On-disk type `" + RColumnElementBase::GetTypeName(columnDesc.GetModel().GetType()) +
+         "` of column #" + std::to_string(columnIndex) + " for field `" + fName +
+         "` is not convertible to requested type" + [&]{
+            std::string typeStr = requestedTypes.size() > 1 ? "s " : " ";
+            for (std::size_t i = 0; i < requestedTypes.size(); i++) {
+               typeStr += "`" + RColumnElementBase::GetTypeName(requestedTypes[i]) + "`";
+               if (i != requestedTypes.size() - 1) {
+                  typeStr += ", ";
+               }
+            }
+            return typeStr;
+         }()
+   ));
    return columnDesc.GetModel().GetType();
 }
 
