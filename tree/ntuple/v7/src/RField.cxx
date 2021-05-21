@@ -315,7 +315,7 @@ ROOT::Experimental::EColumnType ROOT::Experimental::Detail::RFieldBase::EnsureCo
    throw RException(R__FAIL(
       "On-disk type `" + RColumnElementBase::GetTypeName(columnDesc.GetModel().GetType()) +
          "` of column #" + std::to_string(columnIndex) + " for field `" + fName +
-         "` is not convertible to requested type" + [&]{
+         "` is not convertible to the requested type" + [&]{
             std::string typeStr = requestedTypes.size() > 1 ? "s " : " ";
             for (std::size_t i = 0; i < requestedTypes.size(); i++) {
                typeStr += "`" + RColumnElementBase::GetTypeName(requestedTypes[i]) + "`";
