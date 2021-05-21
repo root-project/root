@@ -14,8 +14,6 @@
 # These files are linked into rootcling_stage1 and libCling. rootcling accesses
 # them through rootcling_impl.
 
-ROOT_ADD_COMPILE_OPTIONS(-Wno-class-memaccess)
-
 ROOT_OBJECT_LIBRARY(Dictgen
   BaseSelectionRule.cxx
   ClassSelectionRule.cxx
