@@ -131,6 +131,9 @@ else()
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
   set(CMAKE_C_VISIBILITY_PRESET hidden)
 endif()
+if (NOT MSVC AND NOT APPLE)
+  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS "-fno-semantic-interposition")
+endif()
 set(CMAKE_VISIBILITY_INLINES_HIDDEN "ON")
 
 #--- Build LLVM/Clang with modules -----------------------------------------------------------------
