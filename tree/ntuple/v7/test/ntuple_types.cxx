@@ -97,7 +97,7 @@ TEST(RNTuple, Casting)
       auto reader = RNTupleReader::Open(std::move(modelB), "ntuple", fileGuard.GetPath());
       FAIL() << "should not be able to cast int to float";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("not convertible to requested type"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("not convertible to the requested type"));
    }
 
    auto modelC = RNTupleModel::Create();
