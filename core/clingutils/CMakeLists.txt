@@ -36,7 +36,10 @@ target_include_directories(ClingUtils PRIVATE
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
 target_include_directories(ClingUtils SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
+set_target_properties(ClingUtils PROPERTIES
+  COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
 
 ROOT_INSTALL_HEADERS()
 
