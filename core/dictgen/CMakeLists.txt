@@ -46,8 +46,11 @@ target_include_directories(Dictgen PRIVATE
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
 target_include_directories(Dictgen SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
+set_target_properties(Dictgen PROPERTIES
+  COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 CHECK_CXX_COMPILER_FLAG("-fno-rtti" CXX_HAS_fno_rtti)
 if(CXX_HAS_fno_rtti)
     set_source_files_properties(src/rootcling_impl.cxx   PROPERTIES COMPILE_FLAGS "-fno-rtti")

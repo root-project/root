@@ -8,8 +8,6 @@
 # symbols from libCore.
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
-
 if(MSVC)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingRdictModuleFileExtension.cxx COMPILE_FLAGS -GR-)
@@ -61,6 +59,11 @@ target_include_directories(MetaCling PRIVATE
    ${CMAKE_SOURCE_DIR}/core/gui/inc
    ${CMAKE_SOURCE_DIR}/io/io/inc
    ${CMAKE_BINARY_DIR}/ginclude
+)
+
+set_target_properties(MetaCling PROPERTIES
+  COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
 )
 
 if(MSVC)
