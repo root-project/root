@@ -44,7 +44,7 @@ protected:
    Bool_t fImportEmpty{kFALSE};           // import sub-trees with no projectable elements
 
    virtual Bool_t ShouldImport(REveElement *el);
-   virtual void   UpdateDependentElsAndScenes(REveElement *root);
+   virtual void   UpdateDependentElements(REveElement *root);
 
 public:
    REveProjectionManager(REveProjection::EPType_e type = REveProjection::kPT_Unknown);
