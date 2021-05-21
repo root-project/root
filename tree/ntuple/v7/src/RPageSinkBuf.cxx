@@ -46,17 +46,16 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    // make sure the page is aware of how many elements it will have
    R__ASSERT(bufPage.TryGrow(page.GetNElements()));
    memcpy(bufPage.GetBuffer(), page.GetBuffer(), page.GetSize());
-   std::list<RColumnBuf::RPageZipItem>::iterator zipItem =
+   // Safety: RColumnBuf::iterators are guaranteed to be valid until the
+   // element is destroyed. In other words, all buffered page iterators are
+   // valid until the return value of DrainBufferedPages() goes out of scope in
+   // CommitCluster().
+   RColumnBuf::iterator zipItem =
       fBufferedColumns.at(columnHandle.fId).BufferPage(columnHandle, bufPage);
    if (!fTaskScheduler) {
       return RClusterDescriptor::RLocator{};
    }
    fCounters->fParallelZip.SetValue(1);
-   // Safety: std::list<T>::iterators are guaranteed to be valid until the
-   // element is destroyed. In other words, all buffered page iterators are
-   // valid until the return value of DrainBufferedPages() goes out of scope in
-   // CommitCluster().
-   //
    // Thread safety: Each thread works on a distinct zipItem which owns its
    // compression buffer.
    zipItem->AllocateSealedPageBuf();
