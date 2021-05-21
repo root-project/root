@@ -40,8 +40,14 @@ int do_work(const char* fileName, const char* outFileName, const char* treeName,
                   .Define("b1_square", "b1 * b1")
                   .Define("b2_vector", [](float b2){ std::vector<float> v; for (int i=0;i < 3; i++) v.push_back(b2*i); return v;}, {"b2"});
 
+   ROOT::RDF::RSnapshotOptions opts;
+   // we need a small autoflush setting to trigger partial merges with TFileMerger in the MT case, which
+   // tests https://github.com/root-project/root/issues/8226
+   opts.fAutoFlush = 10;
+
    /****** non-jitted snapshot *******/
-   auto snapshot_tdf =  d2.Snapshot<int, int, std::vector<float>, A>(outTreeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
+   auto snapshot_tdf = d2.Snapshot<int, int, std::vector<float>, A>(outTreeName, outFileName,
+                                                                    {"b1", "b1_square", "b2_vector", "a"}, opts);
 
    // Open the new file and list the branches of the tree
    TFile f(outFileName);
