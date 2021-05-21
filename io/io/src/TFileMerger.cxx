@@ -546,10 +546,11 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    auto getDirectory = [&dirtodelete](TDirectory *parent, const char *name, const TString &pathname)
    {
       TDirectory *result = dynamic_cast<TDirectory*>(parent->GetList()->FindObject(name));
-      if (!result)
+      if (!result) {
          result = parent->GetDirectory(pathname);
-      else
-         dirtodelete.Add(result);
+         if (result && result != parent)
+            dirtodelete.Add(result);
+      }
 
       return result;
    };
