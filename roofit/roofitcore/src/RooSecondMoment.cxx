@@ -77,11 +77,10 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   if (centr) {
 
     string m1name=Form("%s_moment1",GetName()) ;
-    RooAbsReal* mom1 = func.mean(x) ;
-    _mean.setArg(*mom1) ;
+    _mean.putOwnedArg(std::unique_ptr<RooAbsMoment>{func.mean(x)}) ;
     
     string pname=Form("%s_product",name) ;
-    _xfOffset = mom1->getVal() ;
+    _xfOffset = _mean->getVal() ;
     XF = new RooFormulaVar(pname.c_str(),Form("pow((@0-%f),2)*@1",_xfOffset),RooArgList(x,func)) ;  
         
   } else {
@@ -125,11 +124,10 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   if (centr) {
 
     string m1name=Form("%s_moment1",GetName()) ;
-    RooAbsReal* mom1 = func.mean(x,nset) ;
-    _mean.setArg(*mom1) ;
+    _mean.putOwnedArg(std::unique_ptr<RooAbsMoment>{func.mean(x,nset)}) ;
     
     string pname=Form("%s_product",name) ;
-    _xfOffset = mom1->getVal() ;
+    _xfOffset = _mean->getVal() ;
     XF = new RooFormulaVar(pname.c_str(),Form("pow((@0-%f),2)*@1",_xfOffset),RooArgList(x,func)) ;  
 
 
