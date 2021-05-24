@@ -76,10 +76,8 @@ TEST(RNTuple, BulkView)
    NTupleSize_t nPageItems = 0;
    const float *buf = viewPt.MapV(0, nPageItems);
    ASSERT_EQ(eltsPerPage, nPageItems);
-   auto dest = std::make_unique<float[]>(nPageItems);
-   memcpy(dest.get(), buf, sizeof(float) * nPageItems);
    for (NTupleSize_t i = 0; i < nPageItems; i++) {
-      ASSERT_EQ(42.0f, dest.get()[i]) << i;
+      ASSERT_EQ(42.0f, buf[i]) << i;
    }
    // second last element
    buf = viewPt.MapV(eltsPerPage - 2, nPageItems);
@@ -121,6 +119,7 @@ TEST(RNTuple, BulkViewCollection)
    ASSERT_EQ(eltsPerPage, nPageItems);
    std::unique_ptr<ClusterSize_t[]> offsets = std::make_unique<ClusterSize_t[]>(nPageItems + 1);
    auto raw_offsets = offsets.get();
+   // offsets implicitly start at zero, RNTuple does not store that information
    raw_offsets[0] = 0;
    memcpy(raw_offsets + 1, offsets_buf, sizeof(ClusterSize_t) * nPageItems);
    for (NTupleSize_t i = 1; i < nPageItems + 1; i++) {
