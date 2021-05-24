@@ -145,7 +145,8 @@ bool TemplateParameterList::shouldIncludeTypeForArgument(
   const NamedDecl *TemplParam = TPL->getParam(Idx);
   if (const auto *ParamValueDecl =
           dyn_cast<NonTypeTemplateParmDecl>(TemplParam))
-    if (ParamValueDecl->getType()->getContainedDeducedType())
+    if (ParamValueDecl->getType()->getContainedDeducedType() ||
+        ParamValueDecl->getType()->isDependentType())
       return true;
   return false;
 }
