@@ -629,6 +629,15 @@ df = RDataFrame("mytree", "myfile.root", sparkcontext = sc)
 If an instance of [SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
 is not provided, the default behaviour is to create one in the background for you.
 
+### Distributed Snapshot
+
+The Snapshot operation behaves slightly differently when executed distributedly. First off, it requires the path
+supplied to the Snapshot call to be accessible from any worker of the cluster and from the client machine (in general
+it should be provided as an absolute path). Another important difference is that `n` separate files will be produced,
+where `n` is the number of dataset partitions. As with local RDataFrame, the result of a Snapshot on a distributed
+RDataFrame is another distributed RDataFrame on which we can define a new computation graph and run more distributed
+computations.
+
 \anchor transformations
 ## Transformations
 \anchor Filters
