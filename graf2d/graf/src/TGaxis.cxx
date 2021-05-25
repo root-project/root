@@ -2338,7 +2338,7 @@ L200:
       textaxis->SetTextSize (GetTitleSize());
       charheight = GetTitleSize();
       if ((GetTextFont() % 10) > 2) {
-         charheight = charheight/(gPad->GetWh()*gPad->GetHNDC());
+         charheight /= padh;
       }
       if (x1 == x0) {
          if (autotoff) {
