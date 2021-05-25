@@ -300,12 +300,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
           if(NOT ${dir} MATCHES "^[$]")
              list(APPEND incdirs ${dir})
           endif()
-          if(${dir} MATCHES "^${CMAKE_SOURCE_DIR}")
+          string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" tmp_src_dir ${CMAKE_SOURCE_DIR})
+          if(${dir} MATCHES "^${tmp_src_dir}")
              list(APPEND headerdirs ${dir})
           endif()
        endforeach()
     endif()
-
 
     # if (cxxmodules OR runtime_cxxmodules)
     # Comments from Vassil:
